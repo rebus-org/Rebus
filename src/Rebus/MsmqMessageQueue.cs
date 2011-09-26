@@ -18,14 +18,20 @@ namespace Rebus
 
         public object ReceiveMessage()
         {
+            // TODO: enlist in ambient tx if one is present
+            var messageQueueTransaction = new MessageQueueTransaction();
             try
             {
-                var message = inputQueue.Receive(TimeSpan.FromSeconds(2));
+                messageQueueTransaction.Begin();
+                var message = inputQueue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
                 if (message == null) return null;
-                return message.Body;
+                var body = message.Body;
+                messageQueueTransaction.Commit();
+                return body;
             }
             catch(MessageQueueException e)
             {
+                messageQueueTransaction.Abort();
                 return null;
             }
         }
