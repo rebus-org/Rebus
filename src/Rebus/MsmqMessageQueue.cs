@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using System.Messaging;
+using Rebus.Cruft;
 
 namespace Rebus
 {
-    public class MsmqMessageQueue : IMessageQueue
+    public class MsmqMessageQueue : ISendMessages, IReceiveMessages
     {
         readonly IProvideMessageTypes provideMessageTypes;
-        ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
-        MessageQueue inputQueue;
+        readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
+        readonly MessageQueue inputQueue;
 
         public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
         {
@@ -45,6 +46,7 @@ namespace Rebus
                 }
             }
 
+            // TODO: enlist in ambient tx if one is present
             var messageQueueTransaction = new MessageQueueTransaction();
             messageQueueTransaction.Begin();
             outputQueue.Send(message, messageQueueTransaction);

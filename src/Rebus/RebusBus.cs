@@ -1,19 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
+using Rebus.Cruft;
 
 namespace Rebus
 {
     public class RebusBus
     {
-        readonly IMessageQueue messageQueue;
+        readonly ISendMessages sendMessages;
+        readonly IReceiveMessages receiveMessages;
         readonly IHandlerFactory handlerFactory;
         readonly List<Worker> workers = new List<Worker>();
 
-        public RebusBus(IMessageQueue messageQueue, IHandlerFactory handlerFactory)
+        public RebusBus(IHandlerFactory handlerFactory, ISendMessages sendMessages, IReceiveMessages receiveMessages)
         {
-            this.messageQueue = messageQueue;
             this.handlerFactory = handlerFactory;
+            this.sendMessages = sendMessages;
+            this.receiveMessages = receiveMessages;
         }
 
         public void Start()
@@ -23,21 +27,21 @@ namespace Rebus
 
         public void Send(string endpoint, object message)
         {
-            messageQueue.Send(endpoint, message);
+            sendMessages.Send(endpoint, message);
         }
 
         class Worker : IDisposable
         {
             readonly Thread workerThread;
-            readonly IMessageQueue messageQueue;
+            readonly IReceiveMessages receiveMessages;
             readonly IHandlerFactory handlerFactory;
 
             volatile bool shouldExit;
             volatile bool shouldWork;
 
-            public Worker(IMessageQueue messageQueue, IHandlerFactory handlerFactory)
+            public Worker(IReceiveMessages receiveMessages, IHandlerFactory handlerFactory)
             {
-                this.messageQueue = messageQueue;
+                this.receiveMessages = receiveMessages;
                 this.handlerFactory = handlerFactory;
                 workerThread = new Thread(DoWork);
                 workerThread.Start();
@@ -69,6 +73,31 @@ namespace Rebus
                 }
             }
 
+            /// <summary>
+            /// Private strongly typed dispatcher method
+            /// </summary>
+            void Dispatch<T>(T message)
+            {
+                IHandleMessages<T> handler = null;
+
+                try
+                {
+                    handler = handlerFactory.GetHandlerInstanceFor<T>();
+                    handler.Handle(message);
+                }
+                catch (TargetInvocationException ex)
+                {
+                    throw ex.InnerException;
+                }
+                finally
+                {
+                    if (handler != null)
+                    {
+                        handlerFactory.ReleaseHandlerInstance(handler);
+                    }
+                }
+            }
+
             void DoWork()
             {
                 while (!shouldExit)
@@ -83,32 +112,17 @@ namespace Rebus
 
                     try
                     {
-                        var message = messageQueue.ReceiveMessage();
+                        var message = receiveMessages.ReceiveMessage();
 
                         if (message == null) continue;
 
-                        handlerInstance = handlerFactory.GetType()
-                            .GetMethod("GetHandlerInstanceFor")
+                        GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
                             .MakeGenericMethod(message.GetType())
-                            .Invoke(handlerFactory, new object[0]);
-
-                        handlerInstance.GetType()
-                            .GetMethod("Handle")
-                            .Invoke(handlerInstance, new[] { message });
+                            .Invoke(this, new[] { message });
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
-                    }
-                    finally
-                    {
-                        if (handlerInstance != null)
-                        {
-                            //handlerFactory.GetType()
-                            //    .GetMethod("ReleaseHandlerInstance")
-                            //    .MakeGenericMethod(handlerInstance.GetType())
-                            //    .Invoke(handlerFactory, new[] { handlerInstance });
-                        }
                     }
                 }
             }
@@ -116,7 +130,7 @@ namespace Rebus
 
         void AddWorker()
         {
-            var worker = new Worker(messageQueue, handlerFactory);
+            var worker = new Worker(receiveMessages, handlerFactory);
             workers.Add(worker);
             worker.Start();
         }

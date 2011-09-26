@@ -1,4 +1,4 @@
-namespace Rebus
+namespace Rebus.Cruft
 {
     public interface IQueue
     {

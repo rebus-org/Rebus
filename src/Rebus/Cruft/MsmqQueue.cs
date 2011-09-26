@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Messaging;
 
-namespace Rebus
+namespace Rebus.Cruft
 {
     public class MsmqQueue : IQueue
     {

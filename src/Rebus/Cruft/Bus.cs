@@ -4,20 +4,17 @@ using System.Collections.Generic;
 using System.Messaging;
 using System.Threading;
 
-namespace Rebus
+namespace Rebus.Cruft
 {
     public class Bus : IDisposable
     {
-        readonly string path;
+        [ThreadStatic] static MessageQueueTransaction tx;
         readonly IHandlerBuilder handlerBuilder;
+        readonly MessageQueue messageQueue;
+        readonly string path;
         readonly IQueue queue;
         readonly ConcurrentDictionary<string, Msmq.Sender> senders = new ConcurrentDictionary<string, Msmq.Sender>();
         readonly List<Worker> workers = new List<Worker>();
-
-        [ThreadStatic]
-        static MessageQueueTransaction tx;
-
-        readonly MessageQueue messageQueue;
 
         public Bus(string path, IHandlerBuilder handlerBuilder, IProvideMessageTypes provideMessageTypes, IQueue queue)
         {
@@ -26,11 +23,21 @@ namespace Rebus
             this.queue = queue;
 
             messageQueue = MessageQueue.Exists(path)
-                   ? new MessageQueue(path)
-                   : MessageQueue.Create(path, transactional: true);
+                               ? new MessageQueue(path)
+                               : MessageQueue.Create(path, transactional: true);
 
             messageQueue.Formatter = new XmlMessageFormatter(provideMessageTypes.GetMessageTypes());
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            workers.ForEach(w => w.Stop());
+            workers.ForEach(w => w.Dispose());
+        }
+
+        #endregion
 
         public void Start()
         {
@@ -80,7 +87,8 @@ namespace Rebus
         {
             if (numberOfWorkers < 0)
             {
-                throw new InvalidOperationException(string.Format("Number of workers set to {0} - should be 0 or more", numberOfWorkers));
+                throw new InvalidOperationException(string.Format("Number of workers set to {0} - should be 0 or more",
+                                                                  numberOfWorkers));
             }
 
             while (numberOfWorkers > workers.Count)
@@ -92,17 +100,11 @@ namespace Rebus
 
             while (numberOfWorkers < workers.Count)
             {
-                for (var index = workers.Count - 1; index > numberOfWorkers; index--)
+                for (int index = workers.Count - 1; index > numberOfWorkers; index--)
                 {
                     workers[index].Stop();
                 }
             }
-        }
-
-        public void Dispose()
-        {
-            workers.ForEach(w => w.Stop());
-            workers.ForEach(w => w.Dispose());
         }
     }
 
@@ -111,7 +113,7 @@ namespace Rebus
         Type[] GetMessageTypes();
     }
 
-    class Worker : IDisposable
+    internal class Worker : IDisposable
     {
         readonly IHandlerBuilder handlerBuilder;
         readonly Msmq.Receiver receiver;
@@ -126,6 +128,20 @@ namespace Rebus
             receiver = new Msmq.Receiver(messageQueue);
             workerThread.Start();
         }
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Stop();
+
+            if (!workerThread.Join(TimeSpan.FromSeconds(30)))
+            {
+                workerThread.Abort();
+            }
+        }
+
+        #endregion
 
         public void Start()
         {
@@ -159,24 +175,14 @@ namespace Rebus
 
         void MessageReceived(object message)
         {
-            var handlerInstance = handlerBuilder.GetType()
+            object handlerInstance = handlerBuilder.GetType()
                 .GetMethod("GetHandlerInstanceFor")
                 .MakeGenericMethod(message.GetType())
                 .Invoke(handlerBuilder, new object[0]);
 
             handlerInstance.GetType()
                 .GetMethod("Handle")
-                .Invoke(handlerInstance, new[] { message });
-        }
-
-        public void Dispose()
-        {
-            Stop();
-
-            if (!workerThread.Join(TimeSpan.FromSeconds(30)))
-            {
-                workerThread.Abort();
-            }
+                .Invoke(handlerInstance, new[] {message});
         }
     }
 

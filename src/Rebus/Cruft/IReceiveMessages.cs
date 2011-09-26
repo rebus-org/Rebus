@@ -1,7 +1,6 @@
-namespace Rebus
+namespace Rebus.Cruft
 {
     public interface IReceiveMessages
     {
-        object ReceiveMessage();
     }
 }

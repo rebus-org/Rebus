@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Cruft;
 using Shouldly;
 
 namespace Rebus.Tests

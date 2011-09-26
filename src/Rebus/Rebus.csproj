@@ -43,15 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bus.cs" />
-    <Compile Include="IMessageQueue.cs" />
-    <Compile Include="IQueue.cs" />
+    <Compile Include="Cruft\Bus.cs" />
+    <Compile Include="Cruft\IQueue.cs" />
+    <Compile Include="Cruft\IReceiveMessages.cs" />
+    <Compile Include="Cruft\ISendMessages.cs" />
+    <Compile Include="Cruft\Msmq.cs" />
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
-    <Compile Include="Msmq.cs" />
     <Compile Include="MsmqMessageQueue.cs" />
-    <Compile Include="MsmqQueue.cs" />
-    <Compile Include="MsmqReceiveMessages.cs" />
+    <Compile Include="Cruft\MsmqQueue.cs" />
+    <Compile Include="Cruft\MsmqReceiveMessages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RebusBus.cs" />
   </ItemGroup>

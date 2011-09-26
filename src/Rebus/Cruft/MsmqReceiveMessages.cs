@@ -1,6 +1,6 @@
 using System.Messaging;
 
-namespace Rebus
+namespace Rebus.Cruft
 {
     class MsmqReceiveMessages : IReceiveMessages
     {

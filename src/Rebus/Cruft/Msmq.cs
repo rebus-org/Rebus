@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Messaging;
 
-namespace Rebus
+namespace Rebus.Cruft
 {
     public class Msmq : IDisposable
     {

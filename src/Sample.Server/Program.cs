@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus;
+using Rebus.Cruft;
 using Sample.Server.Messages;
 
 namespace Sample.Server
@@ -22,7 +23,10 @@ namespace Sample.Server
         {
             var program = new Program();
 
-            var bus = new RebusBus(new MsmqMessageQueue(@".\private$\sample.server", program), program);
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", program);
+            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue);
+
+            program.Bus = bus;
 
             bus.Start();
 

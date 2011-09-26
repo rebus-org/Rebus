@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus;
+using Rebus.Cruft;
 using Rebus.Tests;
 
 namespace TestApp
