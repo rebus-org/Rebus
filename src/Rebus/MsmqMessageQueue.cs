@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Messaging;
-using Rebus.Cruft;
 
 namespace Rebus
 {

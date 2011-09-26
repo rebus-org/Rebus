@@ -1,6 +1,5 @@
 ﻿using System;
 using Rebus;
-using Rebus.Cruft;
 using Sample.Server.Messages;
 
 namespace Sample.Client

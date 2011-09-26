@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
-using Rebus.Cruft;
 
 namespace Rebus
 {
@@ -140,5 +139,10 @@ namespace Rebus
     {
         IHandleMessages<T> GetHandlerInstanceFor<T>();
         void ReleaseHandlerInstance<T>(IHandleMessages<T> handlerInstance);
+    }
+
+    public interface IHandleMessages<T>
+    {
+        void Handle(T message);
     }
 }
