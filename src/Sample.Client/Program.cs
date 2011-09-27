@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using Rebus;
 using Sample.Server.Messages;
 
@@ -43,11 +45,11 @@ namespace Sample.Client
             return typeof(Ping).Assembly.GetTypes();
         }
 
-        public IHandleMessages<T> GetHandlerInstanceFor<T>()
+        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             try
             {
-                return (IHandleMessages<T>)this;
+                return new[] { (IHandleMessages<T>)this };
             }
             catch (Exception e)
             {
@@ -56,7 +58,7 @@ namespace Sample.Client
             }
         }
 
-        public void ReleaseHandlerInstance<T>(IHandleMessages<T> handlerInstance)
+        public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
         {
         }
 

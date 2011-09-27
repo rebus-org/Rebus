@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 
@@ -19,9 +20,10 @@ namespace Rebus
             this.receiveMessages = receiveMessages;
         }
 
-        public void Start()
+        public RebusBus Start()
         {
             AddWorker();
+            return this;
         }
 
         public void Send(string endpoint, object message)
@@ -77,12 +79,18 @@ namespace Rebus
             /// </summary>
             void Dispatch<T>(T message)
             {
-                IHandleMessages<T> handler = null;
+                IHandleMessages<T>[] handlers = null;
 
                 try
                 {
-                    handler = handlerFactory.GetHandlerInstanceFor<T>();
-                    handler.Handle(message);
+                    handlers = handlerFactory
+                        .GetHandlerInstancesFor<T>()
+                        .ToArray();
+
+                    foreach (var handler in handlers)
+                    {
+                        handler.Handle(message);
+                    }
                 }
                 catch (TargetInvocationException ex)
                 {
@@ -90,9 +98,9 @@ namespace Rebus
                 }
                 finally
                 {
-                    if (handler != null)
+                    if (handlers != null)
                     {
-                        handlerFactory.ReleaseHandlerInstance(handler);
+                        handlerFactory.ReleaseHandlerInstances(handlers);
                     }
                 }
             }
@@ -137,8 +145,8 @@ namespace Rebus
 
     public interface IHandlerFactory
     {
-        IHandleMessages<T> GetHandlerInstanceFor<T>();
-        void ReleaseHandlerInstance<T>(IHandleMessages<T> handlerInstance);
+        IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
+        void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);
     }
 
     public interface IHandleMessages<T>
