@@ -46,21 +46,20 @@ namespace Sample.Server
             }
             catch(Exception e)
             {
-                Console.WriteLine("Could not dispatch message of type {0}", typeof(T));
+                Console.WriteLine("Could not dispatch message of type {0}: {1}", typeof(T), e);
                 return null;
             }
         }
 
         public void ReleaseHandlerInstance<T>(IHandleMessages<T> handlerInstance)
         {
-            throw new NotImplementedException();
         }
 
         public void Handle(Ping message)
         {
-            Console.WriteLine("Got ping: {0}", message.Message);
+            Console.WriteLine("Got {0}", message.Message);
 
-            Bus.Send(@".\private$\sample.client", new Pong { Message = string.Format("Server got '{0}'", message.Message) });
+            Bus.Send(@".\private$\sample.client", new Pong { Message = message.Message });
         }
 
         public RebusBus Bus { get; set; }

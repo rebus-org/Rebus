@@ -12,7 +12,7 @@ namespace Sample.Client
             {
                 Run();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }
@@ -27,10 +27,14 @@ namespace Sample.Client
 
             do
             {
-                Console.WriteLine("Type a message to the server:");
-                var message = Console.ReadLine();
-                if (string.IsNullOrWhiteSpace(message)) break;
-                bus.Send(@".\private$\sample.server", new Ping {Message = message});
+                Console.WriteLine("How many messages would you like to send?");
+                var count = int.Parse(Console.ReadLine());
+
+                for (var counter = 1; counter <= count; counter++)
+                {
+                    bus.Send(@".\private$\sample.server", new Ping { Message = string.Format("Msg. {0}", counter) });
+                }
+
             } while (true);
         }
 
@@ -43,9 +47,9 @@ namespace Sample.Client
         {
             try
             {
-                return (IHandleMessages<T>) this;
+                return (IHandleMessages<T>)this;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine("Could not dispatch message of type {0}", typeof(T));
                 return null;

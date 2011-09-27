@@ -65,7 +65,7 @@ namespace Rebus
             return messageQueue;
         }
 
-        static MessageQueue GetMessageQueue(string path, bool createIfNotExists)
+        MessageQueue GetMessageQueue(string path, bool createIfNotExists)
         {
             var queueExists = MessageQueue.Exists(path);
 
