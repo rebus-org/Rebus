@@ -1,4 +1,4 @@
-namespace Rebus
+namespace Rebus.Messages
 {
     public class SubscriptionMessage
     {

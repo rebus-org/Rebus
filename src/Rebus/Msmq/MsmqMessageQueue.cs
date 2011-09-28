@@ -2,15 +2,16 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
+using Rebus.Messages;
 
-namespace Rebus
+namespace Rebus.Msmq
 {
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages
     {
         readonly IProvideMessageTypes provideMessageTypes;
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
-        string inputQueuePath;
+        readonly string inputQueuePath;
 
         public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
         {

@@ -1,3 +1,5 @@
+using Rebus.Msmq;
+
 namespace Rebus.Tests
 {
     /// <summary>

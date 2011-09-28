@@ -1,6 +1,6 @@
 using System.Xml.Serialization;
 
-namespace Rebus
+namespace Rebus.Messages
 {
     [XmlInclude(typeof(SubscriptionMessage))]
     public class TransportMessage

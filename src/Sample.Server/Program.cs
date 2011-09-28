@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rebus;
+using Rebus.Msmq;
 using Sample.Server.Messages;
 
 namespace Sample.Server

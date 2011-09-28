@@ -1,4 +1,15 @@
 - Serialize messages inside a transport message
+
 - Implement header mechanism
 	- ReturnAddress
 	- ?
+
+- Make serializer be able to serialize "everything"
+	- Custom complex classes
+	- Inheritance hierarchies
+	- Possibly interfaces?
+
+- Implement polymorphic message dispatch
+
+- Implement MSMQ subscription storage
+	- Make MsmqMessageQueue implement IStoreSubscriptions
