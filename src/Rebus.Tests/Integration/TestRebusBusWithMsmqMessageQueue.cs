@@ -25,7 +25,7 @@ namespace Rebus.Tests.Integration
                                                                       manualResetEvent.Set();
                                                                   }))
                 .Start();
-            
+
             senderBus.Send(recipientQueueName, "yo!");
 
             manualResetEvent.WaitOne(TimeSpan.FromSeconds(5));
@@ -40,11 +40,12 @@ namespace Rebus.Tests.Integration
             var replierQueueName = PrivateQueueNamed("test.replier");
 
             var requestorGotMessageEvent = new ManualResetEvent(false);
-            var requestorBus = CreateBus(requestorQueueName, new TestHandlerFactory().Handle<string>(str => requestorGotMessageEvent.Set()));
+            var requestorBus = CreateBus(requestorQueueName,
+                                         new TestHandlerFactory().Handle<string>(str => requestorGotMessageEvent.Set()));
 
             var replierHandlerFactory = new TestHandlerFactory();
             var replierBus = CreateBus(replierQueueName, replierHandlerFactory);
-            
+
             replierHandlerFactory.Handle<string>(str => replierBus.Reply("pong!"));
 
             requestorBus.Start();
@@ -55,6 +56,55 @@ namespace Rebus.Tests.Integration
             if (!requestorGotMessageEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
                 Assert.Fail("Requestor did not receive a reply within timeout");
+            }
+        }
+
+        [Test]
+        public void PublishSubscribeWorks()
+        {
+            var publisherInputQueue = PrivateQueueNamed("test.publisher");
+            var publisherBus = CreateBus(publisherInputQueue, new TestHandlerFactory()).Start();
+
+            var firstSubscriberResetEvent = new AutoResetEvent(false);
+            var secondSubscriberResetEvent = new AutoResetEvent(false);
+
+            var firstSubscriberInputQueue = PrivateQueueNamed("test.subscriber1");
+            var firstSubscriberHandlerFactory = new TestHandlerFactory()
+                .Handle<string>(s =>
+                                    {
+                                        if (s == "hello peeps!")
+                                        {
+                                            firstSubscriberResetEvent.Set();
+                                        }
+                                    });
+            var firstSubscriberBus = CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
+            firstSubscriberBus.Subscribe<string>(publisherInputQueue);
+
+            var secondSubscriberInputQueue = PrivateQueueNamed("test.subscriber2");
+            var secondSubscriberHandlerFactory = new TestHandlerFactory()
+                .Handle<string>(s =>
+                                    {
+                                        if (s == "hello peeps!")
+                                        {
+                                            secondSubscriberResetEvent.Set();
+                                        }
+                                    });
+            var secondSubscriberBus = CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
+            secondSubscriberBus.Subscribe<string>(publisherInputQueue);
+
+            // allow the publisher to receive the subscriptions....
+            Thread.Sleep(500);
+
+            publisherBus.Publish("hello peeps!");
+
+            if (!firstSubscriberResetEvent.WaitOne(TimeSpan.FromSeconds(3)))
+            {
+                Assert.Fail("First subscriber did not receive the event");
+            }
+
+            if (!secondSubscriberResetEvent.WaitOne(TimeSpan.FromSeconds(3)))
+            {
+                Assert.Fail("Second subscriber did not receive the event");
             }
         }
     }

@@ -87,6 +87,7 @@ namespace Rebus
             var messageQueue = GetMessageQueue(path, createIfNotExists);
             var messageTypes = provideMessageTypes.GetMessageTypes().ToList();
             messageTypes.Add(typeof(TransportMessage));
+            messageTypes.Add(typeof(SubscriptionMessage));
             messageQueue.Formatter = new XmlMessageFormatter(messageTypes.ToArray());
             return messageQueue;
         }

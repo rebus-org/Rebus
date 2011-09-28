@@ -24,7 +24,7 @@ namespace Sample.Server
             var program = new Program();
 
             var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", program);
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue);
+            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage());
 
             program.Bus = bus;
 

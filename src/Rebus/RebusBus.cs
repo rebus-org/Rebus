@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -10,14 +11,16 @@ namespace Rebus
     {
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
+        readonly IStoreSubscriptions storeSubscriptions;
         readonly IHandlerFactory handlerFactory;
         readonly List<Worker> workers = new List<Worker>();
 
-        public RebusBus(IHandlerFactory handlerFactory, ISendMessages sendMessages, IReceiveMessages receiveMessages)
+        public RebusBus(IHandlerFactory handlerFactory, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions)
         {
             this.handlerFactory = handlerFactory;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
+            this.storeSubscriptions = storeSubscriptions;
         }
 
         public RebusBus Start()
@@ -54,14 +57,14 @@ namespace Rebus
             return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
         }
 
-        class MessageContext
+        class MessageContext : IDisposable
         {
             [ThreadStatic]
             static MessageContext current;
 
-            public static MessageContext Current
+            public MessageContext()
             {
-                set { current = value; }
+                current = this;
             }
 
             public string ReturnAddressOfCurrentTransportMessage { get; set; }
@@ -75,6 +78,11 @@ namespace Rebus
 
                 return current;
             }
+
+            public void Dispose()
+            {
+                current = null;
+            }
         }
 
         class Worker : IDisposable
@@ -82,14 +90,16 @@ namespace Rebus
             readonly Thread workerThread;
             readonly IReceiveMessages receiveMessages;
             readonly IHandlerFactory handlerFactory;
+            readonly IStoreSubscriptions storeSubscriptions;
 
             volatile bool shouldExit;
             volatile bool shouldWork;
 
-            public Worker(IReceiveMessages receiveMessages, IHandlerFactory handlerFactory)
+            public Worker(IReceiveMessages receiveMessages, IHandlerFactory handlerFactory, IStoreSubscriptions storeSubscriptions)
             {
                 this.receiveMessages = receiveMessages;
                 this.handlerFactory = handlerFactory;
+                this.storeSubscriptions = storeSubscriptions;
                 workerThread = new Thread(DoWork);
                 workerThread.Start();
             }
@@ -133,7 +143,7 @@ namespace Rebus
                         .GetHandlerInstancesFor<T>()
                         .ToArray();
 
-                    foreach (var handler in handlers)
+                    foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
                     {
                         handler.Handle(message);
                     }
@@ -148,6 +158,33 @@ namespace Rebus
                     {
                         handlerFactory.ReleaseHandlerInstances(handlers);
                     }
+                }
+            }
+
+            IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
+            {
+                if (typeof(T) == typeof(SubscriptionMessage))
+                {
+                    return new[] {(IHandleMessages<T>) new SubHandler(storeSubscriptions)};
+                }
+
+                return new IHandleMessages<T>[0];
+            }
+
+            class SubHandler : IHandleMessages<SubscriptionMessage>
+            {
+                IStoreSubscriptions storeSubscriptions;
+
+                public SubHandler(IStoreSubscriptions storeSubscriptions)
+                {
+                    this.storeSubscriptions = storeSubscriptions;
+                }
+
+                public void Handle(SubscriptionMessage message)
+                {
+                    var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+
+                    storeSubscriptions.Save(Type.GetType(message.Type), subscriberInputQueue);
                 }
             }
 
@@ -167,26 +204,25 @@ namespace Rebus
 
                         if (transportMessage == null) continue;
 
-                        MessageContext.Current = new MessageContext
-                                                     {
-                                                         ReturnAddressOfCurrentTransportMessage =
-                                                             transportMessage.ReturnAddress
-                                                     };
+                        var messageContext = new MessageContext
+                                                 {
+                                                     ReturnAddressOfCurrentTransportMessage =
+                                                         transportMessage.ReturnAddress
+                                                 };
 
-                        foreach (var message in transportMessage.Messages)
+                        using (messageContext)
                         {
-                            GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
-                                .MakeGenericMethod(message.GetType())
-                                .Invoke(this, new[] { message });
+                            foreach (var message in transportMessage.Messages)
+                            {
+                                GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
+                                    .MakeGenericMethod(message.GetType())
+                                    .Invoke(this, new[] {message});
+                            }
                         }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
-                    }
-                    finally
-                    {
-                        MessageContext.Current = null;
                     }
                 }
             }
@@ -194,20 +230,33 @@ namespace Rebus
 
         void AddWorker()
         {
-            var worker = new Worker(receiveMessages, handlerFactory);
+            var worker = new Worker(receiveMessages, handlerFactory, storeSubscriptions);
             workers.Add(worker);
             worker.Start();
         }
-    }
 
-    public interface IHandlerFactory
-    {
-        IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
-        void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);
-    }
+        public void Subscribe<TMessage>(string publisherInputQueue)
+        {
+            sendMessages.Send(publisherInputQueue,
+                              new TransportMessage
+                                  {
+                                      ReturnAddress = receiveMessages.InputQueue,
+                                      Messages = new object[]
+                                                     {
+                                                         new SubscriptionMessage
+                                                             {
+                                                                 Type = typeof (TMessage).FullName,
+                                                             }
+                                                     }
+                                  });
+        }
 
-    public interface IHandleMessages<T>
-    {
-        void Handle(T message);
+        public void Publish(object message)
+        {
+            foreach(var subscriberInputQueue in storeSubscriptions.GetSubscribers(message.GetType()))
+            {
+                Send(subscriberInputQueue, message);
+            }
+        }
     }
 }

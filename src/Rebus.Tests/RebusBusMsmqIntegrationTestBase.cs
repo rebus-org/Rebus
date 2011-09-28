@@ -11,7 +11,7 @@ namespace Rebus.Tests
             var testMessageTypeProvider = new TestMessageTypeProvider();
             var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider);
 
-            return new RebusBus(handlerFactory, messageQueue, messageQueue);
+            return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage());
         }
 
         protected string PrivateQueueNamed(string queueName)
