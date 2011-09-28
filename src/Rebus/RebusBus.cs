@@ -22,13 +22,59 @@ namespace Rebus
 
         public RebusBus Start()
         {
-            AddWorker();
+            return Start(1);
+        }
+
+        public RebusBus Start(int numberOfWorkers)
+        {
+            numberOfWorkers.Times(AddWorker);
             return this;
         }
 
         public void Send(string endpoint, object message)
         {
-            sendMessages.Send(endpoint, message);
+            sendMessages.Send(endpoint, new TransportMessage
+                                            {
+                                                Messages = new[] { message },
+                                                ReturnAddress = receiveMessages.InputQueue,
+                                            });
+        }
+
+        public void Reply(object message)
+        {
+            sendMessages.Send(GetReturnAddress(), new TransportMessage
+                                                      {
+                                                          Messages = new[] { message },
+                                                          ReturnAddress = receiveMessages.InputQueue,
+                                                      });
+        }
+
+        string GetReturnAddress()
+        {
+            return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+        }
+
+        class MessageContext
+        {
+            [ThreadStatic]
+            static MessageContext current;
+
+            public static MessageContext Current
+            {
+                set { current = value; }
+            }
+
+            public string ReturnAddressOfCurrentTransportMessage { get; set; }
+
+            public static MessageContext GetCurrent()
+            {
+                if (current == null)
+                {
+                    throw new InvalidOperationException("No message context available - the MessageContext instance will only be set during the handling of messages, and it is available only on the worker thread.");
+                }
+
+                return current;
+            }
         }
 
         class Worker : IDisposable
@@ -115,21 +161,32 @@ namespace Rebus
                         continue;
                     }
 
-                    object handlerInstance = null;
-
                     try
                     {
-                        var message = receiveMessages.ReceiveMessage();
+                        var transportMessage = receiveMessages.ReceiveMessage();
 
-                        if (message == null) continue;
+                        if (transportMessage == null) continue;
 
-                        GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
-                            .MakeGenericMethod(message.GetType())
-                            .Invoke(this, new[] { message });
+                        MessageContext.Current = new MessageContext
+                                                     {
+                                                         ReturnAddressOfCurrentTransportMessage =
+                                                             transportMessage.ReturnAddress
+                                                     };
+
+                        foreach (var message in transportMessage.Messages)
+                        {
+                            GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
+                                .MakeGenericMethod(message.GetType())
+                                .Invoke(this, new[] { message });
+                        }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                    }
+                    finally
+                    {
+                        MessageContext.Current = null;
                     }
                 }
             }

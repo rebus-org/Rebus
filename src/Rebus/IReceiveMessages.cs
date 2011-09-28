@@ -2,6 +2,7 @@ namespace Rebus
 {
     public interface IReceiveMessages
     {
-        object ReceiveMessage();
+        TransportMessage ReceiveMessage();
+        string InputQueue { get; }
     }
 }

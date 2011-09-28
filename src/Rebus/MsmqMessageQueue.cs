@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Messaging;
 
 namespace Rebus
@@ -9,34 +10,57 @@ namespace Rebus
         readonly IProvideMessageTypes provideMessageTypes;
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
+        string inputQueuePath;
 
         public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
         {
+            this.inputQueuePath = inputQueuePath;
             this.provideMessageTypes = provideMessageTypes;
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
         }
 
-        public object ReceiveMessage()
+        public TransportMessage ReceiveMessage()
         {
             // TODO: enlist in ambient tx if one is present
             var messageQueueTransaction = new MessageQueueTransaction();
+            var commit = true;
             try
             {
                 messageQueueTransaction.Begin();
                 var message = inputQueue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
-                if (message == null) return null;
+                if (message == null)
+                {
+                    messageQueueTransaction.Commit();
+                    return null;
+                }
                 var body = message.Body;
+                if (body == null)
+                {
+                    messageQueueTransaction.Commit();
+                    return null;
+                }
+                var transportMessage = (TransportMessage)body;
                 messageQueueTransaction.Commit();
-                return body;
+                return transportMessage;
             }
-            catch(MessageQueueException e)
+            catch(MessageQueueException)
+            {
+                messageQueueTransaction.Abort();
+                return null;
+            }
+            catch (Exception)
             {
                 messageQueueTransaction.Abort();
                 return null;
             }
         }
 
-        public void Send(string recipient, object message)
+        public string InputQueue
+        {
+            get { return inputQueuePath; }
+        }
+
+        public void Send(string recipient, TransportMessage message)
         {
             MessageQueue outputQueue;
             if (!outputQueues.TryGetValue(recipient, out outputQueue))
@@ -61,7 +85,9 @@ namespace Rebus
         MessageQueue CreateMessageQueue(string path, bool createIfNotExists)
         {
             var messageQueue = GetMessageQueue(path, createIfNotExists);
-            messageQueue.Formatter = new XmlMessageFormatter(provideMessageTypes.GetMessageTypes());
+            var messageTypes = provideMessageTypes.GetMessageTypes().ToList();
+            messageTypes.Add(typeof(TransportMessage));
+            messageQueue.Formatter = new XmlMessageFormatter(messageTypes.ToArray());
             return messageQueue;
         }
 

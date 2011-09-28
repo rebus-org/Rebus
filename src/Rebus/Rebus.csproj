@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="IProvideMessageTypes.cs" />
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />

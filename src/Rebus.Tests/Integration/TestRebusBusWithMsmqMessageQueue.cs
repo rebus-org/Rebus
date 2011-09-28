@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.Integration)]
-    public class TestRebusBusWithMsmqMessageQueue
+    public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
         [Test]
         public void CanSendAndReceiveMessagesLikeExpected()
@@ -18,13 +16,15 @@ namespace Rebus.Tests.Integration
 
             var manualResetEvent = new ManualResetEvent(false);
 
-            var senderBus = GetBus(senderQueueName, str => { });
-            
-            GetBus(recipientQueueName, str =>
-                                           {
-                                               recipientWasCalled = true;
-                                               manualResetEvent.Set();
-                                           });
+            var senderBus = CreateBus(senderQueueName, new TestHandlerFactory()).Start();
+
+            CreateBus(recipientQueueName, new TestHandlerFactory()
+                                              .Handle<string>(str =>
+                                                                  {
+                                                                      recipientWasCalled = true;
+                                                                      manualResetEvent.Set();
+                                                                  }))
+                .Start();
             
             senderBus.Send(recipientQueueName, "yo!");
 
@@ -33,66 +33,29 @@ namespace Rebus.Tests.Integration
             Assert.IsTrue(recipientWasCalled, "The recipient did not receive a call within allotted timeout");
         }
 
-        static RebusBus GetBus(string senderQueueName, Action<string> handlerMethod)
+        [Test]
+        public void RequestReplyWorks()
         {
-            var testHandlerFactory = new TestHandlerFactory();
-            testHandlerFactory.Handle(handlerMethod);
+            var requestorQueueName = PrivateQueueNamed("test.requestor");
+            var replierQueueName = PrivateQueueNamed("test.replier");
+
+            var requestorGotMessageEvent = new ManualResetEvent(false);
+            var requestorBus = CreateBus(requestorQueueName, new TestHandlerFactory().Handle<string>(str => requestorGotMessageEvent.Set()));
+
+            var replierHandlerFactory = new TestHandlerFactory();
+            var replierBus = CreateBus(replierQueueName, replierHandlerFactory);
             
-            var testMessageTypeProvider = new TestMessageTypeProvider();
-            var messageQueue = new MsmqMessageQueue(senderQueueName, testMessageTypeProvider);
-            
-            return new RebusBus(testHandlerFactory, messageQueue, messageQueue)
-                .Start();
-        }
+            replierHandlerFactory.Handle<string>(str => replierBus.Reply("pong!"));
 
-        string PrivateQueueNamed(string queueName)
-        {
-            return string.Format(@".\private$\{0}", queueName);
-        }
-    }
+            requestorBus.Start();
+            replierBus.Start();
 
-    public class TestMessageTypeProvider : IProvideMessageTypes
-    {
-        public Type[] GetMessageTypes()
-        {
-            return new[] {typeof (string)};
-        }
-    }
+            requestorBus.Send(replierQueueName, "ping?");
 
-    public class TestHandlerFactory : IHandlerFactory
-    {
-        readonly List<object> handlers = new List<object>();
-
-        class HandlerMethodWrapper<T> : IHandleMessages<T>
-        {
-            readonly Action<T> action;
-
-            public HandlerMethodWrapper(Action<T> action)
+            if (!requestorGotMessageEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
-                this.action = action;
+                Assert.Fail("Requestor did not receive a reply within timeout");
             }
-
-            public void Handle(T message)
-            {
-                action(message);
-            }
-        }
-
-        public void Handle<T>(Action<T> handlerMethod)
-        {
-            handlers.Add(new HandlerMethodWrapper<T>(handlerMethod));
-        }
-
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
-        {
-            return handlers
-                .Where(h => h is IHandleMessages<T>)
-                .Cast<IHandleMessages<T>>()
-                .ToList();
-        }
-
-        public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
-        {
         }
     }
 }

@@ -1,0 +1,4 @@
+- Serialize messages inside a transport message
+- Implement header mechanism
+	- ReturnAddress
+	- ?
