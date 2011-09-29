@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Transactions;
 using Rebus.Messages;
 
 namespace Rebus
@@ -169,22 +170,27 @@ namespace Rebus
 
                     try
                     {
-                        var transportMessage = receiveMessages.ReceiveMessage();
-
-                        if (transportMessage == null) continue;
-
-                        var messageContext = new MessageContext
-                                                 {
-                                                     ReturnAddressOfCurrentTransportMessage =
-                                                         transportMessage.ReturnAddress
-                                                 };
-
-                        using (messageContext)
+                        using (var transactionScope = new TransactionScope())
                         {
-                            foreach (var message in transportMessage.Messages)
+                            var transportMessage = receiveMessages.ReceiveMessage();
+
+                            if (transportMessage == null) continue;
+
+                            var messageContext = new MessageContext
+                                                     {
+                                                         ReturnAddressOfCurrentTransportMessage =
+                                                             transportMessage.ReturnAddress
+                                                     };
+
+                            using (messageContext)
                             {
-                                Dispatch(message);
+                                foreach (var message in transportMessage.Messages)
+                                {
+                                    Dispatch(message);
+                                }
                             }
+
+                            transactionScope.Complete();
                         }
                     }
                     catch (Exception e)

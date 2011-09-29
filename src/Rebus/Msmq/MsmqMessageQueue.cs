@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
+using System.Transactions;
 using Rebus.Messages;
 
 namespace Rebus.Msmq
@@ -23,35 +24,35 @@ namespace Rebus.Msmq
         public TransportMessage ReceiveMessage()
         {
             // TODO: enlist in ambient tx if one is present
-            var messageQueueTransaction = new MessageQueueTransaction();
-            var commit = true;
+            var transactionWrapper = new MsmqTransactionWrapper();
+
             try
             {
-                messageQueueTransaction.Begin();
-                var message = inputQueue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
+                transactionWrapper.Begin();
+                var message = inputQueue.Receive(TimeSpan.FromSeconds(2), transactionWrapper.MessageQueueTransaction);
                 if (message == null)
                 {
-                    messageQueueTransaction.Commit();
+                    transactionWrapper.Commit();
                     return null;
                 }
                 var body = message.Body;
                 if (body == null)
                 {
-                    messageQueueTransaction.Commit();
+                    transactionWrapper.Commit();
                     return null;
                 }
                 var transportMessage = (TransportMessage)body;
-                messageQueueTransaction.Commit();
+                transactionWrapper.Commit();
                 return transportMessage;
             }
             catch(MessageQueueException)
             {
-                messageQueueTransaction.Abort();
+                transactionWrapper.Abort();
                 return null;
             }
             catch (Exception)
             {
-                messageQueueTransaction.Abort();
+                transactionWrapper.Abort();
                 return null;
             }
         }
@@ -103,6 +104,75 @@ namespace Rebus.Msmq
             }
 
             return new MessageQueue(path);
+        }
+    }
+
+    public class MsmqTransactionWrapper : ISinglePhaseNotification
+    {
+        readonly MessageQueueTransaction messageQueueTransaction;
+        readonly bool enlistedInAmbientTx;
+
+        public MsmqTransactionWrapper()
+        {
+            messageQueueTransaction = new MessageQueueTransaction();
+            
+            if (Transaction.Current != null)
+            {
+                enlistedInAmbientTx = true;
+                Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
+            }
+
+            messageQueueTransaction.Begin();
+        }
+
+        public MessageQueueTransaction MessageQueueTransaction
+        {
+            get { return messageQueueTransaction; }
+        }
+
+        public void Prepare(PreparingEnlistment preparingEnlistment)
+        {
+            Console.WriteLine("Prepare");
+        }
+
+        public void Commit(Enlistment enlistment)
+        {
+            Console.WriteLine("Commit");
+            messageQueueTransaction.Commit();
+        }
+
+        public void Rollback(Enlistment enlistment)
+        {
+            Console.WriteLine("RollBack");
+            messageQueueTransaction.Abort();
+        }
+
+        public void InDoubt(Enlistment enlistment)
+        {
+            Console.WriteLine("InDoubt");
+        }
+
+        public void SinglePhaseCommit(SinglePhaseEnlistment singlePhaseEnlistment)
+        {
+            Console.WriteLine("SinglePhaseCommit");
+        }
+
+        public void Begin()
+        {
+            if (enlistedInAmbientTx) return;
+            messageQueueTransaction.Begin();
+        }
+
+        public void Commit()
+        {
+            if (enlistedInAmbientTx) return;
+            messageQueueTransaction.Commit();
+        }
+
+        public void Abort()
+        {
+            if (enlistedInAmbientTx) return;
+            messageQueueTransaction.Abort();
         }
     }
 }

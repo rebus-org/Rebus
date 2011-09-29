@@ -8,6 +8,43 @@ namespace Rebus.Tests.Integration
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
         [Test]
+        public void CanReceiveMessagesInTransaction()
+        {
+            // arrange
+            var senderQueueName = PrivateQueueNamed("test.tx.sender");
+            var senderBus = CreateBus(senderQueueName, new TestHandlerFactory());
+
+            var resetEvent = new ManualResetEvent(false);
+            var receivedMessageCount = 0;
+            var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
+            CreateBus(receiverQueueName,
+                      new TestHandlerFactory()
+                          .Handle<string>(str =>
+                                              {
+                                                  if (str == "HELLO!")
+                                                  {
+                                                      receivedMessageCount++;
+
+                                                      Console.WriteLine("msg!");
+
+                                                      // throw the first twi times the message is delivered
+                                                      if (receivedMessageCount < 3) throw new Exception("oh noes!");
+
+                                                      // the third time, we continue
+                                                      resetEvent.Set();
+                                                  }
+                                              }))
+                .Start();
+
+            senderBus.Send(receiverQueueName, "HELLO!");
+
+            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(3)))
+            {
+                Assert.Fail("Did not receive message three times within timeout");
+            }
+        }
+
+        [Test]
         public void CanSendAndReceiveMessagesLikeExpected()
         {
             var recipientWasCalled = false;
