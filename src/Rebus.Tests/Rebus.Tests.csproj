@@ -67,6 +67,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCategories.cs" />
     <Compile Include="Integration\TestRebusBusWithMsmqMessageQueue.cs" />
+    <Compile Include="Unit\FixtureBase.cs" />
+    <Compile Include="Unit\TestRebusBus.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

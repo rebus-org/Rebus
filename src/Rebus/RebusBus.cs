@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -131,37 +130,6 @@ namespace Rebus
                 }
             }
 
-            /// <summary>
-            /// Private strongly typed dispatcher method
-            /// </summary>
-            void Dispatch<T>(T message)
-            {
-                IHandleMessages<T>[] handlers = null;
-
-                try
-                {
-                    handlers = handlerFactory
-                        .GetHandlerInstancesFor<T>()
-                        .ToArray();
-
-                    foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
-                    {
-                        handler.Handle(message);
-                    }
-                }
-                catch (TargetInvocationException ex)
-                {
-                    throw ex.InnerException;
-                }
-                finally
-                {
-                    if (handlers != null)
-                    {
-                        handlerFactory.ReleaseHandlerInstances(handlers);
-                    }
-                }
-            }
-
             IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
             {
                 if (typeof(T) == typeof(SubscriptionMessage))
@@ -174,7 +142,7 @@ namespace Rebus
 
             class SubHandler : IHandleMessages<SubscriptionMessage>
             {
-                IStoreSubscriptions storeSubscriptions;
+                readonly IStoreSubscriptions storeSubscriptions;
 
                 public SubHandler(IStoreSubscriptions storeSubscriptions)
                 {
@@ -215,15 +183,79 @@ namespace Rebus
                         {
                             foreach (var message in transportMessage.Messages)
                             {
-                                GetType().GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.NonPublic)
-                                    .MakeGenericMethod(message.GetType())
-                                    .Invoke(this, new[] {message});
+                                Dispatch(message);
                             }
                         }
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
+                    }
+                }
+            }
+
+            void Dispatch(object message)
+            {
+                var messageType = message.GetType();
+
+                try
+                {
+                    foreach (var typeToDispatch in GetTypesToDispatch(messageType))
+                    {
+                        GetType().GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
+                            .MakeGenericMethod(typeToDispatch)
+                            .Invoke(this, new[] {message});
+                    }
+                }
+                catch(TargetInvocationException tae)
+                {
+                    throw tae.InnerException;
+                }
+            }
+
+            Type[] GetTypesToDispatch(Type messageType)
+            {
+                var types = new HashSet<Type>();
+                AddTypesFrom(messageType, types);
+                return types.ToArray();
+            }
+
+            static void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
+            {
+                typeSet.Add(messageType);
+                foreach (var interfaceType in messageType.GetInterfaces())
+                {
+                    typeSet.Add(interfaceType);
+                }
+                if (messageType.BaseType != null)
+                {
+                    AddTypesFrom(messageType.BaseType, typeSet);
+                }
+            }
+
+            /// <summary>
+            /// Private strongly typed dispatcher method
+            /// </summary>
+            void DispatchGeneric<T>(T message)
+            {
+                IHandleMessages<T>[] handlers = null;
+
+                try
+                {
+                    handlers = handlerFactory
+                        .GetHandlerInstancesFor<T>()
+                        .ToArray();
+
+                    foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
+                    {
+                        handler.Handle(message);
+                    }
+                }
+                finally
+                {
+                    if (handlers != null)
+                    {
+                        handlerFactory.ReleaseHandlerInstances(handlers);
                     }
                 }
             }

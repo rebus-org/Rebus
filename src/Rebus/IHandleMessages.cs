@@ -1,6 +1,6 @@
 namespace Rebus
 {
-    public interface IHandleMessages<T>
+    public interface IHandleMessages<in T>
     {
         void Handle(T message);
     }
