@@ -11,13 +11,13 @@ namespace Rebus.Tests.Unit
     {
         RebusBus bus;
         IReceiveMessages receiveMessages;
-        IHandlerFactory handlerFactory;
+        IActivateHandlers activateHandlers;
 
         protected override void DoSetUp()
         {
             receiveMessages = Mock<IReceiveMessages>();
-            handlerFactory = Mock<IHandlerFactory>();
-            bus = new RebusBus(handlerFactory,
+            activateHandlers = Mock<IActivateHandlers>();
+            bus = new RebusBus(activateHandlers,
                                Mock<ISendMessages>(),
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
@@ -40,13 +40,13 @@ namespace Rebus.Tests.Unit
 
             var handler = new SomeHandler(manualResetEvent);
             
-            handlerFactory.Stub(f => f.GetHandlerInstancesFor<IFirstInterface>())
+            activateHandlers.Stub(f => f.GetHandlerInstancesFor<IFirstInterface>())
                 .Return(new[] {(IHandleMessages<IFirstInterface>) handler});
             
-            handlerFactory.Stub(f => f.GetHandlerInstancesFor<ISecondInterface>())
+            activateHandlers.Stub(f => f.GetHandlerInstancesFor<ISecondInterface>())
                 .Return(new[] {(IHandleMessages<ISecondInterface>) handler});
             
-            handlerFactory.Stub(f => f.GetHandlerInstancesFor<PolymorphicMessage>())
+            activateHandlers.Stub(f => f.GetHandlerInstancesFor<PolymorphicMessage>())
                 .Return(new IHandleMessages<PolymorphicMessage>[0]);
 
             bus.Start();

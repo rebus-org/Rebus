@@ -6,7 +6,7 @@ namespace Rebus
     /// Implement this in order to delegate the instantiation work to your
     /// IoC container. Seriously, do it.
     /// </summary>
-    public interface IHandlerFactory
+    public interface IActivateHandlers
     {
         IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
         void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);

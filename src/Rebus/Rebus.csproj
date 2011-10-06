@@ -50,7 +50,7 @@
     <Compile Include="Extensions.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
-    <Compile Include="IHandlerFactory.cs" />
+    <Compile Include="IActivateHandlers.cs" />
     <Compile Include="IDetermineDestination.cs" />
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="MessageContext.cs" />

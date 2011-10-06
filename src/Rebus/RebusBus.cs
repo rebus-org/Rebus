@@ -14,16 +14,16 @@ namespace Rebus
         readonly IReceiveMessages receiveMessages;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly IDetermineDestination determineDestination;
-        readonly IHandlerFactory handlerFactory;
+        readonly IActivateHandlers activateHandlers;
         readonly List<Worker> workers = new List<Worker>();
 
-        public RebusBus(IHandlerFactory handlerFactory, 
+        public RebusBus(IActivateHandlers activateHandlers, 
             ISendMessages sendMessages, 
             IReceiveMessages receiveMessages, 
             IStoreSubscriptions storeSubscriptions,
             IDetermineDestination determineDestination)
         {
-            this.handlerFactory = handlerFactory;
+            this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
             this.storeSubscriptions = storeSubscriptions;
@@ -80,16 +80,16 @@ namespace Rebus
         {
             readonly Thread workerThread;
             readonly IReceiveMessages receiveMessages;
-            readonly IHandlerFactory handlerFactory;
+            readonly IActivateHandlers activateHandlers;
             readonly IStoreSubscriptions storeSubscriptions;
 
             volatile bool shouldExit;
             volatile bool shouldWork;
 
-            public Worker(IReceiveMessages receiveMessages, IHandlerFactory handlerFactory, IStoreSubscriptions storeSubscriptions)
+            public Worker(IReceiveMessages receiveMessages, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions)
             {
                 this.receiveMessages = receiveMessages;
-                this.handlerFactory = handlerFactory;
+                this.activateHandlers = activateHandlers;
                 this.storeSubscriptions = storeSubscriptions;
                 workerThread = new Thread(DoWork);
                 workerThread.Start();
@@ -232,13 +232,13 @@ namespace Rebus
 
                 try
                 {
-                    var handlerInstances = handlerFactory.GetHandlerInstancesFor<T>();
+                    var handlerInstances = activateHandlers.GetHandlerInstancesFor<T>();
                     if (handlerInstances == null)
                     {
                         throw new ApplicationException(
                             string.Format(
                                 "Handler factory of type {0} returned null when asked to get handlers for messages of type {1}",
-                                handlerFactory.GetType(), typeof (T)));
+                                activateHandlers.GetType(), typeof (T)));
                     }
                     
                     handlers = handlerInstances.ToArray();
@@ -252,7 +252,7 @@ namespace Rebus
                 {
                     if (handlers != null)
                     {
-                        handlerFactory.ReleaseHandlerInstances(handlers);
+                        activateHandlers.ReleaseHandlerInstances(handlers);
                     }
                 }
             }
@@ -260,7 +260,7 @@ namespace Rebus
 
         void AddWorker()
         {
-            var worker = new Worker(receiveMessages, handlerFactory, storeSubscriptions);
+            var worker = new Worker(receiveMessages, activateHandlers, storeSubscriptions);
             workers.Add(worker);
             worker.Start();
         }

@@ -12,13 +12,13 @@ namespace Rebus.Tests.Integration
         {
             // arrange
             var senderQueueName = PrivateQueueNamed("test.tx.sender");
-            var senderBus = CreateBus(senderQueueName, new TestHandlerFactory());
+            var senderBus = CreateBus(senderQueueName, new TestHandlerActivator());
 
             var resetEvent = new ManualResetEvent(false);
             var receivedMessageCount = 0;
             var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
             CreateBus(receiverQueueName,
-                      new TestHandlerFactory()
+                      new TestHandlerActivator()
                           .Handle<string>(str =>
                                               {
                                                   if (str == "HELLO!")
@@ -53,9 +53,9 @@ namespace Rebus.Tests.Integration
 
             var manualResetEvent = new ManualResetEvent(false);
 
-            var senderBus = CreateBus(senderQueueName, new TestHandlerFactory()).Start();
+            var senderBus = CreateBus(senderQueueName, new TestHandlerActivator()).Start();
 
-            CreateBus(recipientQueueName, new TestHandlerFactory()
+            CreateBus(recipientQueueName, new TestHandlerActivator()
                                               .Handle<string>(str =>
                                                                   {
                                                                       recipientWasCalled = true;
@@ -78,9 +78,9 @@ namespace Rebus.Tests.Integration
 
             var requestorGotMessageEvent = new ManualResetEvent(false);
             var requestorBus = CreateBus(requestorQueueName,
-                                         new TestHandlerFactory().Handle<string>(str => requestorGotMessageEvent.Set()));
+                                         new TestHandlerActivator().Handle<string>(str => requestorGotMessageEvent.Set()));
 
-            var replierHandlerFactory = new TestHandlerFactory();
+            var replierHandlerFactory = new TestHandlerActivator();
             var replierBus = CreateBus(replierQueueName, replierHandlerFactory);
 
             replierHandlerFactory.Handle<string>(str => replierBus.Reply("pong!"));
@@ -100,13 +100,13 @@ namespace Rebus.Tests.Integration
         public void PublishSubscribeWorks()
         {
             var publisherInputQueue = PrivateQueueNamed("test.publisher");
-            var publisherBus = CreateBus(publisherInputQueue, new TestHandlerFactory()).Start();
+            var publisherBus = CreateBus(publisherInputQueue, new TestHandlerActivator()).Start();
 
             var firstSubscriberResetEvent = new AutoResetEvent(false);
             var secondSubscriberResetEvent = new AutoResetEvent(false);
 
             var firstSubscriberInputQueue = PrivateQueueNamed("test.subscriber1");
-            var firstSubscriberHandlerFactory = new TestHandlerFactory()
+            var firstSubscriberHandlerFactory = new TestHandlerActivator()
                 .Handle<string>(s =>
                                     {
                                         if (s == "hello peeps!")
@@ -118,7 +118,7 @@ namespace Rebus.Tests.Integration
             firstSubscriberBus.Subscribe<string>(publisherInputQueue);
 
             var secondSubscriberInputQueue = PrivateQueueNamed("test.subscriber2");
-            var secondSubscriberHandlerFactory = new TestHandlerFactory()
+            var secondSubscriberHandlerFactory = new TestHandlerActivator()
                 .Handle<string>(s =>
                                     {
                                         if (s == "hello peeps!")

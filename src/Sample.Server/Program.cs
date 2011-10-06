@@ -8,7 +8,7 @@ using Sample.Server.Messages;
 
 namespace Sample.Server
 {
-    class Program : IHandlerFactory, IHandleMessages<Ping>, IDetermineDestination
+    class Program : IActivateHandlers, IHandleMessages<Ping>, IDetermineDestination
     {
         static void Main()
         {

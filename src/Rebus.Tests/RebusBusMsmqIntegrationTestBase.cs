@@ -12,11 +12,11 @@ namespace Rebus.Tests
     /// </summary>
     public class RebusBusMsmqIntegrationTestBase : IDetermineDestination
     {
-        protected RebusBus CreateBus(string inputQueueName, IHandlerFactory handlerFactory)
+        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers)
         {
             var messageQueue = new MsmqMessageQueue(inputQueueName, new JsonMessageSerializer())
                 .PurgeInputQueue();
-            return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
+            return new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
         }
 
         protected string PrivateQueueNamed(string queueName)
