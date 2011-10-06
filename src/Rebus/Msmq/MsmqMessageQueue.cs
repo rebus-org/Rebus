@@ -14,6 +14,8 @@ namespace Rebus.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
 
+        [ThreadStatic] static MsmqTransactionWrapper currentTransaction;
+
         public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
         {
             this.inputQueuePath = inputQueuePath;
@@ -23,7 +25,6 @@ namespace Rebus.Msmq
 
         public TransportMessage ReceiveMessage()
         {
-            // TODO: enlist in ambient tx if one is present
             var transactionWrapper = new MsmqTransactionWrapper();
 
             try
@@ -45,13 +46,14 @@ namespace Rebus.Msmq
                 transactionWrapper.Commit();
                 return transportMessage;
             }
-            catch(MessageQueueException)
+            catch(MessageQueueException e)
             {
                 transactionWrapper.Abort();
                 return null;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Console.WriteLine(e);
                 transactionWrapper.Abort();
                 return null;
             }
@@ -77,11 +79,20 @@ namespace Rebus.Msmq
                 }
             }
 
-            // TODO: enlist in ambient tx if one is present
-            var messageQueueTransaction = new MessageQueueTransaction();
-            messageQueueTransaction.Begin();
-            outputQueue.Send(message, messageQueueTransaction);
-            messageQueueTransaction.Commit();
+            var transactionWrapper = GetOrCreateTransactionWrapper();
+            outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
+            transactionWrapper.Commit();
+        }
+
+        static MsmqTransactionWrapper GetOrCreateTransactionWrapper()
+        {
+            if (currentTransaction != null)
+                return currentTransaction;
+
+            currentTransaction = new MsmqTransactionWrapper();
+            currentTransaction.Finished += () => currentTransaction = null;
+
+            return currentTransaction;
         }
 
         MessageQueue CreateMessageQueue(string path, bool createIfNotExists)
@@ -105,12 +116,31 @@ namespace Rebus.Msmq
 
             return new MessageQueue(path);
         }
+
+        public static string PrivateQueue(string queueName)
+        {
+            return string.Format(@".\private$\{0}", queueName);
+        }
+
+        public void Purge()
+        {
+            inputQueue.Purge();
+        }
     }
 
-    public class MsmqTransactionWrapper : ISinglePhaseNotification
+    /// <summary>
+    /// Wraps a <see cref="MessageQueueTransaction"/>, hooking it up to the ongoing
+    /// ambient transaction if one is started, ignoring any calls to <see cref="Commit()"/>
+    /// and <see cref="Abort"/>. If no ambient transaction was there, calls to
+    /// <see cref="Commit()"/> and <see cref="Abort"/> will just be passed on to
+    /// the wrapped transaction.
+    /// </summary>
+    public class MsmqTransactionWrapper : IEnlistmentNotification
     {
         readonly MessageQueueTransaction messageQueueTransaction;
         readonly bool enlistedInAmbientTx;
+
+        public event Action Finished = delegate { }; 
 
         public MsmqTransactionWrapper()
         {
@@ -132,47 +162,47 @@ namespace Rebus.Msmq
 
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
-            Console.WriteLine("Prepare");
+            preparingEnlistment.Prepared();
         }
 
         public void Commit(Enlistment enlistment)
         {
-            Console.WriteLine("Commit");
             messageQueueTransaction.Commit();
+            enlistment.Done();
+            Finished();
         }
 
         public void Rollback(Enlistment enlistment)
         {
-            Console.WriteLine("RollBack");
             messageQueueTransaction.Abort();
+            enlistment.Done();
+            Finished();
         }
 
         public void InDoubt(Enlistment enlistment)
         {
-            Console.WriteLine("InDoubt");
-        }
-
-        public void SinglePhaseCommit(SinglePhaseEnlistment singlePhaseEnlistment)
-        {
-            Console.WriteLine("SinglePhaseCommit");
+            messageQueueTransaction.Abort();
+            enlistment.Done();
+            Finished();
         }
 
         public void Begin()
         {
-            if (enlistedInAmbientTx) return;
-            messageQueueTransaction.Begin();
+            // is begun already in the ctor
         }
 
         public void Commit()
         {
             if (enlistedInAmbientTx) return;
             messageQueueTransaction.Commit();
+            Finished();
         }
 
         public void Abort()
         {
             if (enlistedInAmbientTx) return;
             messageQueueTransaction.Abort();
+            Finished();
         }
     }
 }

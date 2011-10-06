@@ -52,6 +52,7 @@
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -59,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="RebusBusMsmqIntegrationTestBase.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="TestHandlerFactory.cs" />
