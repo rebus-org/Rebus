@@ -1,3 +1,4 @@
+using Rebus.Json;
 using Rebus.Msmq;
 
 namespace Rebus.Tests
@@ -11,7 +12,7 @@ namespace Rebus.Tests
         protected static RebusBus CreateBus(string inputQueueName, IHandlerFactory handlerFactory)
         {
             var testMessageTypeProvider = new TestMessageTypeProvider();
-            var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider)
+            var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider, new JsonMessageSerializer())
                 .PurgeInputQueue();
             return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage());
         }

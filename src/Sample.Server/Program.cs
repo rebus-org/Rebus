@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rebus;
+using Rebus.Json;
 using Rebus.Msmq;
 using Sample.Server.Messages;
 
@@ -23,7 +24,7 @@ namespace Sample.Server
         static void Run()
         {
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", program)
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", program, new JsonMessageSerializer())
                 .PurgeInputQueue();
             var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage());
             

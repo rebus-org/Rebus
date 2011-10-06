@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Concurrent;
-using System.IO;
 using System.Linq;
 using System.Messaging;
-using System.Text;
-using System.Transactions;
-using Newtonsoft.Json;
 using Rebus.Messages;
 
 namespace Rebus.Msmq
 {
+    /// <summary>
+    /// MSMQ implementation of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>. Will
+    /// enlist in ambient transaction during send and receive if one is present. Uses JSON serialization
+    /// of objects in messages as default.
+    /// </summary>
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages
     {
         readonly IProvideMessageTypes provideMessageTypes;
+        readonly IMessageSerializer messageSerializer;
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
@@ -20,10 +22,11 @@ namespace Rebus.Msmq
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
 
-        public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
+        public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes, IMessageSerializer messageSerializer)
         {
             this.inputQueuePath = inputQueuePath;
             this.provideMessageTypes = provideMessageTypes;
+            this.messageSerializer = messageSerializer;
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
         }
 
@@ -106,7 +109,7 @@ namespace Rebus.Msmq
             messageTypes.Add(typeof(TransportMessage));
             messageTypes.Add(typeof(SubscriptionMessage));
             messageQueue.Formatter = new BinaryMessageFormatter();
-            messageQueue.Formatter = new JsonMessageFormatter();
+            messageQueue.Formatter = new RebusTransportMessageFormatter(messageSerializer);
             return messageQueue;
         }
 
@@ -131,118 +134,6 @@ namespace Rebus.Msmq
         {
             inputQueue.Purge();
             return this;
-        }
-    }
-
-    public class JsonMessageFormatter : IMessageFormatter
-    {
-        static readonly JsonSerializerSettings Settings = new JsonSerializerSettings{TypeNameHandling=TypeNameHandling.All};
-        static readonly Encoding Encoding = Encoding.UTF8;
-
-        public object Clone()
-        {
-            return this;
-        }
-
-        public bool CanRead(Message message)
-        {
-            return true;
-        }
-
-        public void Write(Message message, object obj)
-        {
-            var buffer = Encoding.GetBytes(JsonConvert.SerializeObject(obj, Formatting.Indented, Settings));
-
-            // intentionally not disposing the stream - MSMQ does that
-            var memoryStream = new MemoryStream(buffer);
-            message.BodyStream = memoryStream;
-            message.Label = ((TransportMessage) obj).GetLabel();
-        }
-
-        public object Read(Message message)
-        {
-            using(var reader = new StreamReader(message.BodyStream, Encoding))
-            {
-                return JsonConvert.DeserializeObject(reader.ReadToEnd(), Settings);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Wraps a <see cref="MessageQueueTransaction"/>, hooking it up to the ongoing
-    /// ambient transaction if one is started, ignoring any calls to <see cref="Commit()"/>
-    /// and <see cref="Abort"/>. If no ambient transaction was there, calls to
-    /// <see cref="Commit()"/> and <see cref="Abort"/> will just be passed on to
-    /// the wrapped transaction.
-    /// </summary>
-    public class MsmqTransactionWrapper : IEnlistmentNotification
-    {
-        readonly MessageQueueTransaction messageQueueTransaction;
-        readonly bool enlistedInAmbientTx;
-
-        public event Action Finished = delegate { };
-
-        public MsmqTransactionWrapper()
-        {
-            messageQueueTransaction = new MessageQueueTransaction();
-
-            if (Transaction.Current != null)
-            {
-                enlistedInAmbientTx = true;
-                Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
-            }
-
-            messageQueueTransaction.Begin();
-        }
-
-        public MessageQueueTransaction MessageQueueTransaction
-        {
-            get { return messageQueueTransaction; }
-        }
-
-        public void Prepare(PreparingEnlistment preparingEnlistment)
-        {
-            preparingEnlistment.Prepared();
-        }
-
-        public void Commit(Enlistment enlistment)
-        {
-            messageQueueTransaction.Commit();
-            enlistment.Done();
-            Finished();
-        }
-
-        public void Rollback(Enlistment enlistment)
-        {
-            messageQueueTransaction.Abort();
-            enlistment.Done();
-            Finished();
-        }
-
-        public void InDoubt(Enlistment enlistment)
-        {
-            messageQueueTransaction.Abort();
-            enlistment.Done();
-            Finished();
-        }
-
-        public void Begin()
-        {
-            // is begun already in the ctor
-        }
-
-        public void Commit()
-        {
-            if (enlistedInAmbientTx) return;
-            messageQueueTransaction.Commit();
-            Finished();
-        }
-
-        public void Abort()
-        {
-            if (enlistedInAmbientTx) return;
-            messageQueueTransaction.Abort();
-            Finished();
         }
     }
 }

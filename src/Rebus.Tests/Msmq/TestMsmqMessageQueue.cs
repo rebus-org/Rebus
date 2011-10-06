@@ -2,6 +2,7 @@
 using System.Messaging;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Json;
 using Rebus.Messages;
 using Rebus.Msmq;
 
@@ -17,13 +18,16 @@ namespace Rebus.Tests.Msmq
         [SetUp]
         public void SetUp()
         {
-            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"), this);
+            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"), this, new JsonMessageSerializer());
             destinationQueuePath = MsmqMessageQueue.PrivateQueue("test.msmq.tx.destination");
 
             if (!MessageQueue.Exists(destinationQueuePath))
                 MessageQueue.Create(destinationQueuePath, transactional: true);
 
-            destinationQueue = new MessageQueue(destinationQueuePath) {Formatter = new JsonMessageFormatter()};
+            destinationQueue = new MessageQueue(destinationQueuePath)
+                                   {
+                                       Formatter = new RebusTransportMessageFormatter(new JsonMessageSerializer())
+                                   };
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
