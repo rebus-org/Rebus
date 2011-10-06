@@ -8,21 +8,60 @@ using Rhino.Mocks;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestRebusBus : FixtureBase, IDetermineDestination
+    public class TestRebusBus : FixtureBase
     {
         RebusBus bus;
         IReceiveMessages receiveMessages;
         IActivateHandlers activateHandlers;
+        IDetermineDestination determineDestination;
+        ISendMessages sendMessages;
 
         protected override void DoSetUp()
         {
             receiveMessages = Mock<IReceiveMessages>();
             activateHandlers = Mock<IActivateHandlers>();
+            determineDestination = Mock<IDetermineDestination>();
+            sendMessages = Mock<ISendMessages>();
             bus = new RebusBus(activateHandlers,
-                               Mock<ISendMessages>(),
+                               sendMessages,
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
-                               this);
+                               determineDestination);
+        }
+
+        [Test]
+        public void SendsMessagesToTheRightDestination()
+        {
+            // arrange
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (PolymorphicMessage))).Return("woolala");
+            var theMessageThatWasSent = new PolymorphicMessage();
+
+            // act
+            bus.Send(theMessageThatWasSent);
+
+            // assert
+            sendMessages
+                .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
+                                             Arg<TransportMessage>.Matches(t => t.Messages[0] == theMessageThatWasSent)));
+        }
+
+        [Test]
+        public void SubscribesToMessagesFromTheRightPublisher()
+        {
+            // arrange
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
+            receiveMessages.Stub(r => r.InputQueue).Return("my input queue");
+
+            // act
+            bus.Subscribe<PolymorphicMessage>();
+
+            // assert
+            sendMessages
+                .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
+                                             Arg<TransportMessage>.Matches(
+                                                 t => t.ReturnAddress == "my input queue" &&
+                                                 ((SubscriptionMessage) t.Messages[0]).Type ==
+                                                 typeof (PolymorphicMessage).FullName)));
         }
 
         [Test]
@@ -97,10 +136,5 @@ namespace Rebus.Tests.Unit
         interface IFirstInterface {}
         interface ISecondInterface {}
         class PolymorphicMessage : IFirstInterface, ISecondInterface{}
-
-        public string GetEndpointFor(Type messageType)
-        {
-            throw new AssertionException(string.Format("Has no routing logic for {0}", messageType));
-        }
     }
 }
