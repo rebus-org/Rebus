@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Messaging;
+using System.Text;
 using System.Transactions;
+using Newtonsoft.Json;
 using Rebus.Messages;
 
 namespace Rebus.Msmq
@@ -14,7 +17,8 @@ namespace Rebus.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
 
-        [ThreadStatic] static MsmqTransactionWrapper currentTransaction;
+        [ThreadStatic]
+        static MsmqTransactionWrapper currentTransaction;
 
         public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes)
         {
@@ -46,7 +50,7 @@ namespace Rebus.Msmq
                 transactionWrapper.Commit();
                 return transportMessage;
             }
-            catch(MessageQueueException e)
+            catch (MessageQueueException e)
             {
                 transactionWrapper.Abort();
                 return null;
@@ -101,7 +105,8 @@ namespace Rebus.Msmq
             var messageTypes = provideMessageTypes.GetMessageTypes().ToList();
             messageTypes.Add(typeof(TransportMessage));
             messageTypes.Add(typeof(SubscriptionMessage));
-            messageQueue.Formatter = new XmlMessageFormatter(messageTypes.ToArray());
+            messageQueue.Formatter = new BinaryMessageFormatter();
+            messageQueue.Formatter = new JsonMessageFormatter();
             return messageQueue;
         }
 
@@ -122,9 +127,44 @@ namespace Rebus.Msmq
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public void Purge()
+        public MsmqMessageQueue PurgeInputQueue()
         {
             inputQueue.Purge();
+            return this;
+        }
+    }
+
+    public class JsonMessageFormatter : IMessageFormatter
+    {
+        static readonly JsonSerializerSettings Settings = new JsonSerializerSettings{TypeNameHandling=TypeNameHandling.All};
+        static readonly Encoding Encoding = Encoding.UTF8;
+
+        public object Clone()
+        {
+            return this;
+        }
+
+        public bool CanRead(Message message)
+        {
+            return true;
+        }
+
+        public void Write(Message message, object obj)
+        {
+            var buffer = Encoding.GetBytes(JsonConvert.SerializeObject(obj, Formatting.Indented, Settings));
+
+            // intentionally not disposing the stream - MSMQ does that
+            var memoryStream = new MemoryStream(buffer);
+            message.BodyStream = memoryStream;
+            message.Label = ((TransportMessage) obj).GetLabel();
+        }
+
+        public object Read(Message message)
+        {
+            using(var reader = new StreamReader(message.BodyStream, Encoding))
+            {
+                return JsonConvert.DeserializeObject(reader.ReadToEnd(), Settings);
+            }
         }
     }
 
@@ -140,12 +180,12 @@ namespace Rebus.Msmq
         readonly MessageQueueTransaction messageQueueTransaction;
         readonly bool enlistedInAmbientTx;
 
-        public event Action Finished = delegate { }; 
+        public event Action Finished = delegate { };
 
         public MsmqTransactionWrapper()
         {
             messageQueueTransaction = new MessageQueueTransaction();
-            
+
             if (Transaction.Current != null)
             {
                 enlistedInAmbientTx = true;

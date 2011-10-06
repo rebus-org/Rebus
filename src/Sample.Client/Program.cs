@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using Rebus;
 using Rebus.Msmq;
@@ -24,7 +23,8 @@ namespace Sample.Client
         static void Run()
         {
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client", program);
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client", program)
+                .PurgeInputQueue();
             var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage());
             bus.Start();
 
@@ -48,15 +48,12 @@ namespace Sample.Client
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            try
+            if (typeof(T) == typeof(Pong))
             {
-                return new[] { (IHandleMessages<T>)this };
+                return new[] {(IHandleMessages<T>) this};
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Could not dispatch message of type {0}", typeof(T));
-                return null;
-            }
+
+            return new IHandleMessages<T>[0];
         }
 
         public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)

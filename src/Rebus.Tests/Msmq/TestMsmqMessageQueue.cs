@@ -23,10 +23,9 @@ namespace Rebus.Tests.Msmq
             if (!MessageQueue.Exists(destinationQueuePath))
                 MessageQueue.Create(destinationQueuePath, transactional: true);
 
-            destinationQueue = new MessageQueue(destinationQueuePath);
-            destinationQueue.Formatter = new XmlMessageFormatter(new[] { typeof(TransportMessage) });
+            destinationQueue = new MessageQueue(destinationQueuePath) {Formatter = new JsonMessageFormatter()};
 
-            senderQueue.Purge();
+            senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
         }
 

@@ -11,8 +11,8 @@ namespace Rebus.Tests
         protected static RebusBus CreateBus(string inputQueueName, IHandlerFactory handlerFactory)
         {
             var testMessageTypeProvider = new TestMessageTypeProvider();
-            var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider);
-
+            var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider)
+                .PurgeInputQueue();
             return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage());
         }
 

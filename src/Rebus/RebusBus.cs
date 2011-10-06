@@ -248,9 +248,16 @@ namespace Rebus
 
                 try
                 {
-                    handlers = handlerFactory
-                        .GetHandlerInstancesFor<T>()
-                        .ToArray();
+                    var handlerInstances = handlerFactory.GetHandlerInstancesFor<T>();
+                    if (handlerInstances == null)
+                    {
+                        throw new ApplicationException(
+                            string.Format(
+                                "Handler factory of type {0} returned null when asked to get handlers for messages of type {1}",
+                                handlerFactory.GetType(), typeof (T)));
+                    }
+                    
+                    handlers = handlerInstances.ToArray();
 
                     foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
                     {
