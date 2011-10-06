@@ -7,7 +7,7 @@ namespace Rebus.Serialization.Json
     /// Implementation of <see cref="InMemorySubscriptionStorage"/> that uses
     /// the ubiquitous NewtonSoft JSON serializer to serialize and deserialize messages.
     /// </summary>
-    public class JsonMessageSerializer : IMessageSerializer
+    public class JsonMessageSerializer : ISerializeMessages
     {
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};

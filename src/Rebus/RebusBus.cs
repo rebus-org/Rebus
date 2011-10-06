@@ -8,20 +8,26 @@ using Rebus.Messages;
 
 namespace Rebus
 {
-    public class RebusBus
+    public class RebusBus : IBus
     {
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
         readonly IStoreSubscriptions storeSubscriptions;
+        readonly IDetermineDestination determineDestination;
         readonly IHandlerFactory handlerFactory;
         readonly List<Worker> workers = new List<Worker>();
 
-        public RebusBus(IHandlerFactory handlerFactory, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions)
+        public RebusBus(IHandlerFactory handlerFactory, 
+            ISendMessages sendMessages, 
+            IReceiveMessages receiveMessages, 
+            IStoreSubscriptions storeSubscriptions,
+            IDetermineDestination determineDestination)
         {
             this.handlerFactory = handlerFactory;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
             this.storeSubscriptions = storeSubscriptions;
+            this.determineDestination = determineDestination;
         }
 
         public RebusBus Start()
@@ -44,6 +50,12 @@ namespace Rebus
                                             });
         }
 
+        public void Send(object message)
+        {
+            var endpoint = determineDestination.GetEndpointFor(message.GetType());
+            Send(endpoint, message);
+        }
+
         public void Reply(object message)
         {
             sendMessages.Send(GetReturnAddress(), new TransportMessage
@@ -53,37 +65,15 @@ namespace Rebus
                                                       });
         }
 
+        public void Subscribe<TMessage>()
+        {
+            var endpoint = determineDestination.GetEndpointFor(typeof(TMessage));
+            Subscribe<TMessage>(endpoint);
+        }
+
         string GetReturnAddress()
         {
             return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
-        }
-
-        class MessageContext : IDisposable
-        {
-            [ThreadStatic]
-            static MessageContext current;
-
-            public MessageContext()
-            {
-                current = this;
-            }
-
-            public string ReturnAddressOfCurrentTransportMessage { get; set; }
-
-            public static MessageContext GetCurrent()
-            {
-                if (current == null)
-                {
-                    throw new InvalidOperationException("No message context available - the MessageContext instance will only be set during the handling of messages, and it is available only on the worker thread.");
-                }
-
-                return current;
-            }
-
-            public void Dispose()
-            {
-                current = null;
-            }
         }
 
         class Worker : IDisposable
@@ -176,13 +166,7 @@ namespace Rebus
 
                             if (transportMessage == null) continue;
 
-                            var messageContext = new MessageContext
-                                                     {
-                                                         ReturnAddressOfCurrentTransportMessage =
-                                                             transportMessage.ReturnAddress
-                                                     };
-
-                            using (messageContext)
+                            using (MessageContext.Enter(transportMessage.ReturnAddress))
                             {
                                 foreach (var message in transportMessage.Messages)
                                 {
@@ -226,7 +210,7 @@ namespace Rebus
                 return types.ToArray();
             }
 
-            static void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
+            void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
             {
                 typeSet.Add(messageType);
                 foreach (var interfaceType in messageType.GetInterfaces())

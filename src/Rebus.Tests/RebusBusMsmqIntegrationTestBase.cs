@@ -1,3 +1,5 @@
+using System;
+using NUnit.Framework;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
@@ -8,19 +10,23 @@ namespace Rebus.Tests
     /// Test base class with helpers for running integration tests with
     /// <see cref="RebusBus"/> and <see cref="MsmqMessageQueue"/>.
     /// </summary>
-    public class RebusBusMsmqIntegrationTestBase
+    public class RebusBusMsmqIntegrationTestBase : IDetermineDestination
     {
-        protected static RebusBus CreateBus(string inputQueueName, IHandlerFactory handlerFactory)
+        protected RebusBus CreateBus(string inputQueueName, IHandlerFactory handlerFactory)
         {
-            var testMessageTypeProvider = new TestMessageTypeProvider();
-            var messageQueue = new MsmqMessageQueue(inputQueueName, testMessageTypeProvider, new JsonMessageSerializer())
+            var messageQueue = new MsmqMessageQueue(inputQueueName, new JsonMessageSerializer())
                 .PurgeInputQueue();
-            return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage());
+            return new RebusBus(handlerFactory, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
         }
 
         protected string PrivateQueueNamed(string queueName)
         {
             return string.Format(@".\private$\{0}", queueName);
+        }
+
+        public string GetEndpointFor(Type messageType)
+        {
+            throw new AssertionException(string.Format("Cannot route {0}", messageType));
         }
     }
 }

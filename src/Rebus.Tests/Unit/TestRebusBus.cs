@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -8,7 +7,7 @@ using Rhino.Mocks;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestRebusBus : FixtureBase
+    public class TestRebusBus : FixtureBase, IDetermineDestination
     {
         RebusBus bus;
         IReceiveMessages receiveMessages;
@@ -21,7 +20,8 @@ namespace Rebus.Tests.Unit
             bus = new RebusBus(handlerFactory,
                                Mock<ISendMessages>(),
                                receiveMessages,
-                               Mock<IStoreSubscriptions>());
+                               Mock<IStoreSubscriptions>(),
+                               this);
         }
 
         [Test]
@@ -96,5 +96,10 @@ namespace Rebus.Tests.Unit
         interface IFirstInterface {}
         interface ISecondInterface {}
         class PolymorphicMessage : IFirstInterface, ISecondInterface{}
+
+        public string GetEndpointFor(Type messageType)
+        {
+            throw new AssertionException(string.Format("Has no routing logic for {0}", messageType));
+        }
     }
 }

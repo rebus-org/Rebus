@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Messaging;
 using Rebus.Messages;
 
@@ -13,8 +12,7 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages
     {
-        readonly IProvideMessageTypes provideMessageTypes;
-        readonly IMessageSerializer messageSerializer;
+        readonly ISerializeMessages serializeMessages;
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
@@ -22,11 +20,10 @@ namespace Rebus.Transports.Msmq
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
 
-        public MsmqMessageQueue(string inputQueuePath, IProvideMessageTypes provideMessageTypes, IMessageSerializer messageSerializer)
+        public MsmqMessageQueue(string inputQueuePath, ISerializeMessages serializeMessages)
         {
             this.inputQueuePath = inputQueuePath;
-            this.provideMessageTypes = provideMessageTypes;
-            this.messageSerializer = messageSerializer;
+            this.serializeMessages = serializeMessages;
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
         }
 
@@ -105,11 +102,7 @@ namespace Rebus.Transports.Msmq
         MessageQueue CreateMessageQueue(string path, bool createIfNotExists)
         {
             var messageQueue = GetMessageQueue(path, createIfNotExists);
-            var messageTypes = provideMessageTypes.GetMessageTypes().ToList();
-            messageTypes.Add(typeof(TransportMessage));
-            messageTypes.Add(typeof(SubscriptionMessage));
-            messageQueue.Formatter = new BinaryMessageFormatter();
-            messageQueue.Formatter = new RebusTransportMessageFormatter(messageSerializer);
+            messageQueue.Formatter = new RebusTransportMessageFormatter(serializeMessages);
             return messageQueue;
         }
 

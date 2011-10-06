@@ -48,11 +48,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extensions.cs" />
+    <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IHandlerFactory.cs" />
-    <Compile Include="IMessageSerializer.cs" />
+    <Compile Include="IDetermineDestination.cs" />
+    <Compile Include="ISerializeMessages.cs" />
+    <Compile Include="MessageContext.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
-    <Compile Include="IProvideMessageTypes.cs" />
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
     <Compile Include="IStoreSubscriptions.cs" />

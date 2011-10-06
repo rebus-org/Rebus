@@ -8,7 +8,7 @@ using Sample.Server.Messages;
 
 namespace Sample.Client
 {
-    class Program : IProvideMessageTypes, IHandlerFactory, IHandleMessages<Pong>
+    class Program : IHandlerFactory, IHandleMessages<Pong>, IDetermineDestination
     {
         static void Main()
         {
@@ -25,9 +25,9 @@ namespace Sample.Client
         static void Run()
         {
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client", program, new JsonMessageSerializer())
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client", new JsonMessageSerializer())
                 .PurgeInputQueue();
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage());
+            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage(), program);
             bus.Start();
 
             do
@@ -37,15 +37,10 @@ namespace Sample.Client
 
                 for (var counter = 1; counter <= count; counter++)
                 {
-                    bus.Send(@".\private$\sample.server", new Ping { Message = string.Format("Msg. {0}", counter) });
+                    bus.Send(new Ping { Message = string.Format("Msg. {0}", counter) });
                 }
 
             } while (true);
-        }
-
-        public Type[] GetMessageTypes()
-        {
-            return typeof(Ping).Assembly.GetTypes();
         }
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
@@ -65,6 +60,16 @@ namespace Sample.Client
         public void Handle(Pong message)
         {
             Console.WriteLine("Pong: {0}", message.Message);
+        }
+
+        public string GetEndpointFor(Type messageType)
+        {
+            if (messageType == typeof(Ping))
+            {
+                return @".\private$\sample.server";
+            }
+
+            throw new ArgumentException(string.Format("Has no routing information for {0}", messageType));
         }
     }
 }

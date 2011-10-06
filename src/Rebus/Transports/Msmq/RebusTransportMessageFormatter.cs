@@ -12,12 +12,12 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class RebusTransportMessageFormatter : IMessageFormatter
     {
-        readonly IMessageSerializer messageSerializer;
+        readonly ISerializeMessages serializeMessages;
         static readonly Encoding Encoding = Encoding.UTF8;
 
-        public RebusTransportMessageFormatter(IMessageSerializer messageSerializer)
+        public RebusTransportMessageFormatter(ISerializeMessages serializeMessages)
         {
-            this.messageSerializer = messageSerializer;
+            this.serializeMessages = serializeMessages;
         }
 
         public object Clone()
@@ -33,12 +33,12 @@ namespace Rebus.Transports.Msmq
         public object Read(Message message)
         {
             using (var reader = new StreamReader(message.BodyStream, Encoding))
-                return messageSerializer.Deserialize(reader.ReadToEnd());
+                return serializeMessages.Deserialize(reader.ReadToEnd());
         }
 
         public void Write(Message message, object obj)
         {
-            message.BodyStream = new MemoryStream(Encoding.GetBytes(messageSerializer.Serialize(obj)));
+            message.BodyStream = new MemoryStream(Encoding.GetBytes(serializeMessages.Serialize(obj)));
             message.Label = ((TransportMessage) obj).GetLabel();
         }
     }

@@ -9,7 +9,7 @@ using Rebus.Transports.Msmq;
 namespace Rebus.Tests.Msmq
 {
     [TestFixture]
-    public class TestMsmqMessageQueue : IProvideMessageTypes
+    public class TestMsmqMessageQueue
     {
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
@@ -18,7 +18,7 @@ namespace Rebus.Tests.Msmq
         [SetUp]
         public void SetUp()
         {
-            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"), this, new JsonMessageSerializer());
+            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"), new JsonMessageSerializer());
             destinationQueuePath = MsmqMessageQueue.PrivateQueue("test.msmq.tx.destination");
 
             if (!MessageQueue.Exists(destinationQueuePath))
@@ -92,11 +92,6 @@ namespace Rebus.Tests.Msmq
             {
                 return null;
             }
-        }
-
-        public Type[] GetMessageTypes()
-        {
-            return new[] { typeof(string) };
         }
     }
 }

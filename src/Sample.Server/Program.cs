@@ -8,7 +8,7 @@ using Sample.Server.Messages;
 
 namespace Sample.Server
 {
-    class Program : IProvideMessageTypes, IHandlerFactory, IHandleMessages<Ping>
+    class Program : IHandlerFactory, IHandleMessages<Ping>, IDetermineDestination
     {
         static void Main()
         {
@@ -25,9 +25,9 @@ namespace Sample.Server
         static void Run()
         {
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", program, new JsonMessageSerializer())
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server", new JsonMessageSerializer())
                 .PurgeInputQueue();
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage());
+            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage(), program);
             
             program.Bus = bus;
 
@@ -35,11 +35,6 @@ namespace Sample.Server
 
             Console.WriteLine("Server listening...");
             Console.ReadKey();
-        }
-
-        public Type[] GetMessageTypes()
-        {
-            return typeof (Ping).Assembly.GetTypes();
         }
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
@@ -60,9 +55,14 @@ namespace Sample.Server
         {
             Console.WriteLine("Got {0}", message.Message);
 
-            Bus.Send(@".\private$\sample.client", new Pong { Message = message.Message });
+            Bus.Reply(new Pong { Message = message.Message });
         }
 
         public RebusBus Bus { get; set; }
+        
+        public string GetEndpointFor(Type messageType)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
