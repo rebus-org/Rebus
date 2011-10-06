@@ -1,7 +1,12 @@
 ﻿using Newtonsoft.Json;
+using Rebus.Persistence.InMemory;
 
-namespace Rebus.Json
+namespace Rebus.Serialization.Json
 {
+    /// <summary>
+    /// Implementation of <see cref="InMemorySubscriptionStorage"/> that uses
+    /// the ubiquitous NewtonSoft JSON serializer to serialize and deserialize messages.
+    /// </summary>
     public class JsonMessageSerializer : IMessageSerializer
     {
         static readonly JsonSerializerSettings Settings =

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 
-namespace Rebus
+namespace Rebus.Persistence.InMemory
 {
     public class InMemorySubscriptionStorage : IStoreSubscriptions
     {

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rebus;
-using Rebus.Json;
-using Rebus.Msmq;
+using Rebus.Persistence.InMemory;
+using Rebus.Serialization.Json;
+using Rebus.Transports.Msmq;
 using Sample.Server.Messages;
 
 namespace Sample.Client

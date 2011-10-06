@@ -3,7 +3,7 @@ using System.Messaging;
 using System.Text;
 using Rebus.Messages;
 
-namespace Rebus.Msmq
+namespace Rebus.Transports.Msmq
 {
     /// <summary>
     /// MSMQ message formatter that should be capable of properly formatting MSMQ

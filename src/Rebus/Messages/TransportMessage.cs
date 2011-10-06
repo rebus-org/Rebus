@@ -1,9 +1,10 @@
-using System.Xml.Serialization;
 using System.Linq;
 
 namespace Rebus.Messages
 {
-    [XmlInclude(typeof(SubscriptionMessage))]
+    /// <summary>
+    /// Message wrapper object that may contain multiple logical messages.
+    /// </summary>
     public class TransportMessage
     {
         public string ReturnAddress { get; set; }

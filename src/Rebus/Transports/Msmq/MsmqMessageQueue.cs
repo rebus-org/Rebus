@@ -4,7 +4,7 @@ using System.Linq;
 using System.Messaging;
 using Rebus.Messages;
 
-namespace Rebus.Msmq
+namespace Rebus.Transports.Msmq
 {
     /// <summary>
     /// MSMQ implementation of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>. Will

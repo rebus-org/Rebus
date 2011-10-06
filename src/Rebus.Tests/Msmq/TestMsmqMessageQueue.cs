@@ -2,9 +2,9 @@
 using System.Messaging;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Json;
 using Rebus.Messages;
-using Rebus.Msmq;
+using Rebus.Serialization.Json;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Msmq
 {

@@ -2,7 +2,7 @@ using System;
 using System.Messaging;
 using System.Transactions;
 
-namespace Rebus.Msmq
+namespace Rebus.Transports.Msmq
 {
     /// <summary>
     /// Wraps a <see cref="MessageQueueTransaction"/>, hooking it up to the ongoing

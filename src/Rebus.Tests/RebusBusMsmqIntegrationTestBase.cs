@@ -1,5 +1,6 @@
-using Rebus.Json;
-using Rebus.Msmq;
+using Rebus.Persistence.InMemory;
+using Rebus.Serialization.Json;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests
 {
