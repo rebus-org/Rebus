@@ -42,6 +42,11 @@ namespace Rebus.Bus
             return this;
         }
 
+        public void Send(object message)
+        {
+            Send(determineDestination.GetEndpointFor(message.GetType()), message);
+        }
+
         public void Send(string endpoint, object message)
         {
             sendMessages.Send(endpoint, new TransportMessage
@@ -51,9 +56,12 @@ namespace Rebus.Bus
                                             });
         }
 
-        public void Send(object message)
+        public void Publish(object message)
         {
-            Send(determineDestination.GetEndpointFor(message.GetType()), message);
+            foreach (var subscriberInputQueue in storeSubscriptions.GetSubscribers(message.GetType()))
+            {
+                Send(subscriberInputQueue, message);
+            }
         }
 
         public void Reply(object message)
@@ -70,9 +78,26 @@ namespace Rebus.Bus
             Subscribe<TMessage>(determineDestination.GetEndpointFor(typeof(TMessage)));
         }
 
-        string GetReturnAddress()
+        public void Subscribe<TMessage>(string publisherInputQueue)
         {
-            return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+            sendMessages.Send(publisherInputQueue,
+                              new TransportMessage
+                              {
+                                  ReturnAddress = receiveMessages.InputQueue,
+                                  Messages = new object[]
+                                                     {
+                                                         new SubscriptionMessage
+                                                             {
+                                                                 Type = typeof (TMessage).FullName,
+                                                             }
+                                                     }
+                              });
+        }
+
+        public void Dispose()
+        {
+            workers.ForEach(w => w.Stop());
+            workers.ForEach(w => w.Dispose());
         }
 
         class Worker : IDisposable
@@ -202,6 +227,9 @@ namespace Rebus.Bus
                 }
             }
 
+            /// <summary>
+            /// TODO perf: cache types to dispatch - no need to dribble recursively every time
+            /// </summary>
             Type[] GetTypesToDispatch(Type messageType)
             {
                 var types = new HashSet<Type>();
@@ -260,34 +288,9 @@ namespace Rebus.Bus
             worker.Start();
         }
 
-        public void Subscribe<TMessage>(string publisherInputQueue)
+        string GetReturnAddress()
         {
-            sendMessages.Send(publisherInputQueue,
-                              new TransportMessage
-                                  {
-                                      ReturnAddress = receiveMessages.InputQueue,
-                                      Messages = new object[]
-                                                     {
-                                                         new SubscriptionMessage
-                                                             {
-                                                                 Type = typeof (TMessage).FullName,
-                                                             }
-                                                     }
-                                  });
-        }
-
-        public void Publish(object message)
-        {
-            foreach(var subscriberInputQueue in storeSubscriptions.GetSubscribers(message.GetType()))
-            {
-                Send(subscriberInputQueue, message);
-            }
-        }
-
-        public void Dispose()
-        {
-            workers.ForEach(w => w.Stop());
-            workers.ForEach(w => w.Dispose());
+            return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
         }
     }
 }
