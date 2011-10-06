@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Rebus;
+using Rebus.Bus;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;

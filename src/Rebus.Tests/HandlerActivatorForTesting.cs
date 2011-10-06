@@ -7,7 +7,7 @@ namespace Rebus.Tests
     /// <summary>
     /// Handler factory that allows lambdas to be registered as message handlers.
     /// </summary>
-    public class TestHandlerActivator : IActivateHandlers
+    public class HandlerActivatorForTesting : IActivateHandlers
     {
         readonly List<object> handlers = new List<object>();
 
@@ -26,7 +26,7 @@ namespace Rebus.Tests
             }
         }
 
-        public TestHandlerActivator Handle<T>(Action<T> handlerMethod)
+        public HandlerActivatorForTesting Handle<T>(Action<T> handlerMethod)
         {
             handlers.Add(new HandlerMethodWrapper<T>(handlerMethod));
             return this;

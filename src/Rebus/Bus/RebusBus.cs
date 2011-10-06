@@ -4,9 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
+using Rebus.Extensions;
 using Rebus.Messages;
 
-namespace Rebus
+namespace Rebus.Bus
 {
     public class RebusBus : IBus
     {

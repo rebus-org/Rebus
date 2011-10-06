@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace Rebus
+namespace Rebus.Extensions
 {
-    static class Extensions
+    static class IntExt
     {
         public static void Times(this int count, Action action)
         {

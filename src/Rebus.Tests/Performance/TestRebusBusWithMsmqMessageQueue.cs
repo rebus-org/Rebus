@@ -16,11 +16,11 @@ namespace Rebus.Tests.Performance
 
             const int numberOfMessages = 1000;
 
-            var senderBus = CreateBus(senderQueueName, new TestHandlerActivator()).Start();
+            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
             var manualResetEvent = new ManualResetEvent(false);
             var receivedMessagesCount = 0;
-            var recipientBus = CreateBus(recipientQueueName, new TestHandlerActivator()
+            var recipientBus = CreateBus(recipientQueueName, new HandlerActivatorForTesting()
                                                                  .Handle<string>(str =>
                                                                                      {
                                                                                          receivedMessagesCount++;

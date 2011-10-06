@@ -63,7 +63,7 @@
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="RebusBusMsmqIntegrationTestBase.cs" />
     <Compile Include="TestExtensions.cs" />
-    <Compile Include="TestHandlerActivator.cs" />
+    <Compile Include="HandlerActivatorForTesting.cs" />
     <Compile Include="Performance\TestRebusBusWithMsmqMessageQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCategories.cs" />

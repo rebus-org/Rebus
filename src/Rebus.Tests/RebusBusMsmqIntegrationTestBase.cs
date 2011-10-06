@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;

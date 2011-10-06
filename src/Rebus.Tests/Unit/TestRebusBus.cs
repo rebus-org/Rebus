@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Messages;
 using Rhino.Mocks;
 
