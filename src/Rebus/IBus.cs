@@ -1,3 +1,4 @@
+using System;
 using Rebus.Bus;
 
 namespace Rebus
@@ -6,7 +7,7 @@ namespace Rebus
     /// This is the main API of Rebus. Most application code should not depend on
     /// any other operation of <see cref="RebusBus"/>.
     /// </summary>
-    public interface IBus
+    public interface IBus : IDisposable
     {
         void Send(object message);
         void Reply(object message);

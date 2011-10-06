@@ -53,8 +53,7 @@ namespace Rebus.Bus
 
         public void Send(object message)
         {
-            var endpoint = determineDestination.GetEndpointFor(message.GetType());
-            Send(endpoint, message);
+            Send(determineDestination.GetEndpointFor(message.GetType()), message);
         }
 
         public void Reply(object message)
@@ -68,8 +67,7 @@ namespace Rebus.Bus
 
         public void Subscribe<TMessage>()
         {
-            var endpoint = determineDestination.GetEndpointFor(typeof(TMessage));
-            Subscribe<TMessage>(endpoint);
+            Subscribe<TMessage>(determineDestination.GetEndpointFor(typeof(TMessage)));
         }
 
         string GetReturnAddress()
@@ -288,6 +286,12 @@ namespace Rebus.Bus
             {
                 Send(subscriberInputQueue, message);
             }
+        }
+
+        public void Dispose()
+        {
+            workers.ForEach(w => w.Stop());
+            workers.ForEach(w => w.Dispose());
         }
     }
 }

@@ -15,6 +15,16 @@ namespace Rebus.Tests.Unit
         {
         }
 
+        [TearDown]
+        public void TearDown()
+        {
+            DoTearDown();
+        }
+
+        protected virtual void DoTearDown()
+        {
+        }
+
         protected T Mock<T>() where T : class
         {
             return MockRepository.GenerateMock<T>();

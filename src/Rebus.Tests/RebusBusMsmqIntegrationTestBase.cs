@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
@@ -13,11 +14,27 @@ namespace Rebus.Tests
     /// </summary>
     public class RebusBusMsmqIntegrationTestBase : IDetermineDestination
     {
+        List<RebusBus> buses;
+
+        [SetUp]
+        public void SetUp()
+        {
+            buses = new List<RebusBus>();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            buses.ForEach(b => b.Dispose());
+        }
+
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers)
         {
             var messageQueue = new MsmqMessageQueue(inputQueueName, new JsonMessageSerializer())
                 .PurgeInputQueue();
-            return new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
+            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
+            buses.Add(bus);
+            return bus;
         }
 
         protected string PrivateQueueNamed(string queueName)

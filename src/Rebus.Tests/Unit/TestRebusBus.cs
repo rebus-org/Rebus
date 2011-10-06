@@ -29,6 +29,11 @@ namespace Rebus.Tests.Unit
                                determineDestination);
         }
 
+        protected override void DoTearDown()
+        {
+            bus.Dispose();
+        }
+
         [Test]
         public void SendsMessagesToTheRightDestination()
         {
