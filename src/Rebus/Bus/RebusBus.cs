@@ -232,13 +232,9 @@ namespace Rebus.Bus
                 try
                 {
                     var handlerInstances = activateHandlers.GetHandlerInstancesFor<T>();
-                    if (handlerInstances == null)
-                    {
-                        throw new ApplicationException(
-                            string.Format(
-                                "Handler factory of type {0} returned null when asked to get handlers for messages of type {1}",
-                                activateHandlers.GetType(), typeof (T)));
-                    }
+                    
+                    // if we didn't get anything, just carry on... might not be what we want, but let's just do that for now
+                    if (handlerInstances == null) return;
                     
                     handlers = handlerInstances.ToArray();
 
