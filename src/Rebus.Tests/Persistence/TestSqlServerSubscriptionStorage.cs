@@ -4,10 +4,9 @@ using Rebus.Persistence.SqlServer;
 namespace Rebus.Tests.Persistence
 {
     [TestFixture]
-    public class TestSqlServerSubscriptionStorage
+    public class TestSqlServerSubscriptionStorage : DbFixtureBase
     {
         SqlServerSubscriptionStorage storage;
-        const string ConnectionString = "data source=.;integrated security=sspi;initial catalog=rebus_test";
 
         [TestFixtureSetUp]
         public void TestFixtureSetUp()
@@ -18,12 +17,12 @@ namespace Rebus.Tests.Persistence
         public void SetUp()
         {
             storage = new SqlServerSubscriptionStorage(ConnectionString);
+            DeleteRows("subscriptions");
         }
 
         [TearDown]
         public void TearDown()
         {
-            
         }
 
         [Test]

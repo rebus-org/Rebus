@@ -20,24 +20,28 @@ namespace Rebus.Persistence.SqlServer
             {
                 connection.Open();
 
-                var command = connection.CreateCommand();
-                command.CommandText = @"insert into subscriptions 
-                                            (message_type, endpoint) 
-                                            values (@message_type, @endpoint)";
-
-                command.Parameters.AddWithValue("message_type", messageType.FullName);
-                command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
-
-                try
+                using (var command = connection.CreateCommand())
                 {
-                    command.ExecuteNonQuery();
-                }
-                catch (SqlException ex)
-                {
-                    if (!ex.Errors.Cast<SqlError>()
-                        .Any(e => e.ToString().Contains("Violation of PRIMARY KEY constraint 'PK_subscriptions'")))
+                    command.CommandText = @"insert into subscriptions 
+                                                (message_type, endpoint) 
+                                                values (@message_type, @endpoint)";
+
+                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+                    command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
+
+                    try
                     {
-                        throw;
+                        command.ExecuteNonQuery();
+                    }
+                    catch (SqlException ex)
+                    {
+                        if (!ex.Errors.Cast<SqlError>()
+                                 .Any(
+                                     e =>
+                                     e.ToString().Contains("Violation of PRIMARY KEY constraint 'PK_subscriptions'")))
+                        {
+                            throw;
+                        }
                     }
                 }
             }
@@ -49,21 +53,23 @@ namespace Rebus.Persistence.SqlServer
             {
                 connection.Open();
 
-                var command = connection.CreateCommand();
-                command.CommandText = @"select endpoint from subscriptions 
-                                            where message_type = @message_type";
-
-                command.Parameters.AddWithValue("message_type", messageType.FullName);
-
-                var endpoints = new List<string>();
-                using (var reader = command.ExecuteReader())
+                using (var command = connection.CreateCommand())
                 {
-                    while(reader.Read())
+                    command.CommandText = @"select endpoint from subscriptions
+                                                where message_type = @message_type";
+
+                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+
+                    var endpoints = new List<string>();
+                    using (var reader = command.ExecuteReader())
                     {
-                        endpoints.Add((string) reader["endpoint"]);
+                        while (reader.Read())
+                        {
+                            endpoints.Add((string) reader["endpoint"]);
+                        }
                     }
+                    return endpoints.ToArray();
                 }
-                return endpoints.ToArray();
             }
         }
     }
