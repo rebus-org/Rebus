@@ -59,6 +59,7 @@
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
     <Compile Include="IStoreSubscriptions.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />

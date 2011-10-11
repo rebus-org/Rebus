@@ -61,6 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
+    <Compile Include="Persistence\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="RebusBusMsmqIntegrationTestBase.cs" />
     <Compile Include="TestExtensions.cs" />
     <Compile Include="HandlerActivatorForTesting.cs" />

@@ -64,7 +64,7 @@ namespace Rebus.Tests.Unit
             sendMessages
                 .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
                                              Arg<TransportMessage>.Matches(
-                                                 t => t.Headers["returnAddress"] == "my input queue" &&
+                                                 t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
                                                  ((SubscriptionMessage) t.Messages[0]).Type ==
                                                  typeof (PolymorphicMessage).FullName)));
         }

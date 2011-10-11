@@ -53,7 +53,7 @@ namespace Rebus.Bus
             sendMessages.Send(endpoint, new TransportMessage
                                             {
                                                 Messages = new[] {message},
-                                                Headers = {{"returnAddress", receiveMessages.InputQueue}}
+                                                Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                             });
         }
 
@@ -71,7 +71,7 @@ namespace Rebus.Bus
                               new TransportMessage
                                   {
                                       Messages = new[] {message},
-                                      Headers = {{"returnAddress", receiveMessages.InputQueue}}
+                                      Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                   });
         }
 
@@ -92,7 +92,7 @@ namespace Rebus.Bus
                                                                  Type = typeof (TMessage).FullName,
                                                              }
                                                      },
-                                      Headers = {{"returnAddress", receiveMessages.InputQueue}}
+                                      Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                   });
         }
 
@@ -119,7 +119,7 @@ namespace Rebus.Bus
                 this.activateHandlers = activateHandlers;
                 this.storeSubscriptions = storeSubscriptions;
                 this.errorTracker = errorTracker;
-                workerThread = new Thread(DoWork);
+                workerThread = new Thread(MainLoop);
                 workerThread.Start();
             }
 
@@ -178,7 +178,7 @@ namespace Rebus.Bus
                 }
             }
 
-            void DoWork()
+            void MainLoop()
             {
                 while (!shouldExit)
                 {
@@ -190,47 +190,52 @@ namespace Rebus.Bus
 
                     try
                     {
-                        using (var transactionScope = new TransactionScope())
-                        {
-                            var transportMessage = receiveMessages.ReceiveMessage();
-
-                            if (transportMessage == null) continue;
-
-                            var id = transportMessage.Id;
-
-                            if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
-                            {
-                                transportMessage.Headers["errorMessage"] = errorTracker.GetErrorText(id);
-                                MessageFailedMaxNumberOfTimes(transportMessage);
-                                errorTracker.SignOff(id);
-                            }
-                            else
-                            {
-                                try
-                                {
-                                    using (MessageContext.Enter(transportMessage.GetHeader("returnAddress")))
-                                    {
-                                        foreach (var message in transportMessage.Messages)
-                                        {
-                                            Dispatch(message);
-                                        }
-                                    }
-                                }
-                                catch(Exception e)
-                                {
-                                    errorTracker.TrackError(id, e);
-                                    throw;
-                                }
-                            }
-
-                            transactionScope.Complete();
-                            errorTracker.SignOff(id);
-                        }
+                        TryProcessIncomingMessage();
                     }
                     catch (Exception e)
                     {
                         Console.WriteLine(e);
                     }
+                }
+            }
+
+            void TryProcessIncomingMessage()
+            {
+                using (var transactionScope = new TransactionScope())
+                {
+                    var transportMessage = receiveMessages.ReceiveMessage();
+
+                    if (transportMessage == null) return;
+
+                    var id = transportMessage.Id;
+
+                    if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
+                    {
+                        transportMessage.SetHeader(Headers.ErrorMessage, errorTracker.GetErrorText(id));
+                        MessageFailedMaxNumberOfTimes(transportMessage);
+                        errorTracker.SignOff(id);
+                    }
+                    else
+                    {
+                        try
+                        {
+                            using (MessageContext.Enter(transportMessage.GetHeader(Headers.ReturnAddress)))
+                            {
+                                foreach (var message in transportMessage.Messages)
+                                {
+                                    Dispatch(message);
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            errorTracker.TrackError(id, e);
+                            throw;
+                        }
+                    }
+
+                    transactionScope.Complete();
+                    errorTracker.SignOff(id);
                 }
             }
 

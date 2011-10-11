@@ -17,7 +17,12 @@ namespace Rebus.Messages
         public string Id { get; set; }
         public Dictionary<string, string> Headers { get; set; }
         public object[] Messages { get; set; }
-        
+
+        public void SetHeader(string key, string value)
+        {
+            Headers[key] = value;
+        }
+
         public string GetHeader(string key)
         {
             return Headers.ContainsKey(key)
@@ -30,9 +35,13 @@ namespace Rebus.Messages
             if (Messages == null || Messages.Length == 0)
                 return "Empty TransportMessage";
 
-            return Messages.Length == 1
-                       ? Messages[0].GetType().Name
-                       : string.Join(", ", Messages.Select(m => m.GetType().Name));
+            return string.Join(" + ", Messages.Select(m => m.GetType().Name));
         }
+    }
+
+    public class Headers
+    {
+        public const string ReturnAddress = "returnAddress";
+        public const string ErrorMessage = "errorMessage";
     }
 }
