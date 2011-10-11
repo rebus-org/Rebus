@@ -47,10 +47,11 @@ namespace Rebus.Transports.Msmq
                     return null;
                 }
                 var transportMessage = (TransportMessage)body;
+                transportMessage.Id = message.Id;
                 transactionWrapper.Commit();
                 return transportMessage;
             }
-            catch (MessageQueueException e)
+            catch (MessageQueueException)
             {
                 transactionWrapper.Abort();
                 return null;

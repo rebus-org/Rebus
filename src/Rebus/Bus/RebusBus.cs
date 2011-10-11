@@ -17,10 +17,11 @@ namespace Rebus.Bus
         readonly IDetermineDestination determineDestination;
         readonly IActivateHandlers activateHandlers;
         readonly List<Worker> workers = new List<Worker>();
+        readonly ErrorTracker errorTracker = new ErrorTracker();
 
-        public RebusBus(IActivateHandlers activateHandlers, 
-            ISendMessages sendMessages, 
-            IReceiveMessages receiveMessages, 
+        public RebusBus(IActivateHandlers activateHandlers,
+            ISendMessages sendMessages,
+            IReceiveMessages receiveMessages,
             IStoreSubscriptions storeSubscriptions,
             IDetermineDestination determineDestination)
         {
@@ -51,8 +52,8 @@ namespace Rebus.Bus
         {
             sendMessages.Send(endpoint, new TransportMessage
                                             {
-                                                Messages = new[] { message },
-                                                ReturnAddress = receiveMessages.InputQueue,
+                                                Messages = new[] {message},
+                                                Headers = {{"returnAddress", receiveMessages.InputQueue}}
                                             });
         }
 
@@ -66,11 +67,12 @@ namespace Rebus.Bus
 
         public void Reply(object message)
         {
-            sendMessages.Send(GetReturnAddress(), new TransportMessage
-                                                      {
-                                                          Messages = new[] { message },
-                                                          ReturnAddress = receiveMessages.InputQueue,
-                                                      });
+            sendMessages.Send(GetReturnAddress(),
+                              new TransportMessage
+                                  {
+                                      Messages = new[] {message},
+                                      Headers = {{"returnAddress", receiveMessages.InputQueue}}
+                                  });
         }
 
         public void Subscribe<TMessage>()
@@ -82,16 +84,16 @@ namespace Rebus.Bus
         {
             sendMessages.Send(publisherInputQueue,
                               new TransportMessage
-                              {
-                                  ReturnAddress = receiveMessages.InputQueue,
-                                  Messages = new object[]
+                                  {
+                                      Messages = new object[]
                                                      {
                                                          new SubscriptionMessage
                                                              {
                                                                  Type = typeof (TMessage).FullName,
                                                              }
-                                                     }
-                              });
+                                                     },
+                                      Headers = {{"returnAddress", receiveMessages.InputQueue}}
+                                  });
         }
 
         public void Dispose()
@@ -106,18 +108,22 @@ namespace Rebus.Bus
             readonly IReceiveMessages receiveMessages;
             readonly IActivateHandlers activateHandlers;
             readonly IStoreSubscriptions storeSubscriptions;
+            readonly ErrorTracker errorTracker;
 
             volatile bool shouldExit;
             volatile bool shouldWork;
 
-            public Worker(IReceiveMessages receiveMessages, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions)
+            public Worker(IReceiveMessages receiveMessages, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, ErrorTracker errorTracker)
             {
                 this.receiveMessages = receiveMessages;
                 this.activateHandlers = activateHandlers;
                 this.storeSubscriptions = storeSubscriptions;
+                this.errorTracker = errorTracker;
                 workerThread = new Thread(DoWork);
                 workerThread.Start();
             }
+
+            public event Action<TransportMessage> MessageFailedMaxNumberOfTimes = delegate { };
 
             public void Start()
             {
@@ -149,7 +155,7 @@ namespace Rebus.Bus
             {
                 if (typeof(T) == typeof(SubscriptionMessage))
                 {
-                    return new[] {(IHandleMessages<T>) new SubHandler(storeSubscriptions)};
+                    return new[] { (IHandleMessages<T>)new SubHandler(storeSubscriptions) };
                 }
 
                 return new IHandleMessages<T>[0];
@@ -190,15 +196,35 @@ namespace Rebus.Bus
 
                             if (transportMessage == null) continue;
 
-                            using (MessageContext.Enter(transportMessage.ReturnAddress))
+                            var id = transportMessage.Id;
+
+                            if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                             {
-                                foreach (var message in transportMessage.Messages)
+                                transportMessage.Headers["errorMessage"] = errorTracker.GetErrorText(id);
+                                MessageFailedMaxNumberOfTimes(transportMessage);
+                                errorTracker.SignOff(id);
+                            }
+                            else
+                            {
+                                try
                                 {
-                                    Dispatch(message);
+                                    using (MessageContext.Enter(transportMessage.GetHeader("returnAddress")))
+                                    {
+                                        foreach (var message in transportMessage.Messages)
+                                        {
+                                            Dispatch(message);
+                                        }
+                                    }
+                                }
+                                catch(Exception e)
+                                {
+                                    errorTracker.TrackError(id, e);
+                                    throw;
                                 }
                             }
 
                             transactionScope.Complete();
+                            errorTracker.SignOff(id);
                         }
                     }
                     catch (Exception e)
@@ -218,10 +244,10 @@ namespace Rebus.Bus
                     {
                         GetType().GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
                             .MakeGenericMethod(typeToDispatch)
-                            .Invoke(this, new[] {message});
+                            .Invoke(this, new[] { message });
                     }
                 }
-                catch(TargetInvocationException tae)
+                catch (TargetInvocationException tae)
                 {
                     throw tae.InnerException;
                 }
@@ -260,10 +286,10 @@ namespace Rebus.Bus
                 try
                 {
                     var handlerInstances = activateHandlers.GetHandlerInstancesFor<T>();
-                    
+
                     // if we didn't get anything, just carry on... might not be what we want, but let's just do that for now
                     if (handlerInstances == null) return;
-                    
+
                     handlers = handlerInstances.ToArray();
 
                     foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
@@ -283,9 +309,15 @@ namespace Rebus.Bus
 
         void AddWorker()
         {
-            var worker = new Worker(receiveMessages, activateHandlers, storeSubscriptions);
+            var worker = new Worker(receiveMessages, activateHandlers, storeSubscriptions, errorTracker);
             workers.Add(worker);
+            worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
             worker.Start();
+        }
+
+        void HandleMessageFailedMaxNumberOfTimes(TransportMessage message)
+        {
+            sendMessages.Send(@".\private$\error", message);
         }
 
         string GetReturnAddress()

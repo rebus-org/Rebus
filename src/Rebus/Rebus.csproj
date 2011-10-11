@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bus\ErrorTracker.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />

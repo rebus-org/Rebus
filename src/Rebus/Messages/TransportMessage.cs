@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Rebus.Messages
@@ -7,8 +9,21 @@ namespace Rebus.Messages
     /// </summary>
     public class TransportMessage
     {
-        public string ReturnAddress { get; set; }
+        public TransportMessage()
+        {
+            Headers = new Dictionary<string, string>();
+        }
+
+        public string Id { get; set; }
+        public Dictionary<string, string> Headers { get; set; }
         public object[] Messages { get; set; }
+        
+        public string GetHeader(string key)
+        {
+            return Headers.ContainsKey(key)
+                       ? Headers[key]
+                       : null;
+        }
 
         public string GetLabel()
         {

@@ -1,12 +1,66 @@
 ﻿using System;
+using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Messages;
+using Rebus.Serialization.Json;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.Integration)]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
+        [Test]
+        public void TestOfRetryLogic()
+        {
+            // arrange
+            var errorQueueName = PrivateQueueNamed("error");
+            if (!MessageQueue.Exists(errorQueueName))
+            {
+                MessageQueue.Create(errorQueueName);
+            }
+
+            var errorQueue = new MessageQueue(errorQueueName);
+            errorQueue.Formatter = new RebusTransportMessageFormatter(new JsonMessageSerializer());
+            errorQueue.Purge();
+
+            var retriedTooManyTimes = false;
+            var senderQueueName = PrivateQueueNamed("test.tx.sender");
+            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting());
+
+            var resetEvent = new ManualResetEvent(false);
+            var receivedMessageCount = 0;
+            var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
+            CreateBus(receiverQueueName,
+                      new HandlerActivatorForTesting()
+                          .Handle<string>(str =>
+                                              {
+                                                  if (str != "HELLO!") return;
+                                                  
+                                                  receivedMessageCount++;
+
+                                                  if (receivedMessageCount > 5)
+                                                  {
+                                                      retriedTooManyTimes = true;
+                                                      resetEvent.Set();
+                                                  }
+                                                  else
+                                                  {
+                                                      throw new Exception("oh noes!");
+                                                  }
+                                              }))
+                .Start();
+
+            senderBus.Send(receiverQueueName, "HELLO!");
+
+            var errorMessage = (TransportMessage) errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+
+            Assert.IsFalse(retriedTooManyTimes, "Apparently, the message was delivered more than 5 times which is the default number of retries");
+            Assert.AreEqual("HELLO!", errorMessage.Messages[0]);
+            Assert.IsTrue(errorMessage.Headers["errorMessage"].Contains("oh noes!"));
+        }
+
         [Test]
         public void CanReceiveMessagesInTransaction()
         {
@@ -21,18 +75,15 @@ namespace Rebus.Tests.Integration
                       new HandlerActivatorForTesting()
                           .Handle<string>(str =>
                                               {
-                                                  if (str == "HELLO!")
-                                                  {
-                                                      receivedMessageCount++;
+                                                  if (str != "HELLO!") return;
+                                                  
+                                                  receivedMessageCount++;
 
-                                                      Console.WriteLine("msg!");
+                                                  // throw the first two times the message is delivered
+                                                  if (receivedMessageCount < 3) throw new Exception("oh noes!");
 
-                                                      // throw the first twi times the message is delivered
-                                                      if (receivedMessageCount < 3) throw new Exception("oh noes!");
-
-                                                      // the third time, we continue
-                                                      resetEvent.Set();
-                                                  }
+                                                  // the third time, we continue
+                                                  resetEvent.Set();
                                               }))
                 .Start();
 
