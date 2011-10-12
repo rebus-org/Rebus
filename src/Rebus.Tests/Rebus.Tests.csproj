@@ -60,7 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\TestBusFactory.cs" />
+    <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Persistence\DbFixtureBase.cs" />
     <Compile Include="Persistence\TestSqlServerSubscriptionStorage.cs" />

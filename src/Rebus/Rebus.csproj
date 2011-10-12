@@ -48,8 +48,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bus\ErrorTracker.cs" />
-    <Compile Include="Config\BusFactory.cs" />
-    <Compile Include="Exceptions\RebusConfigurationException.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
@@ -62,10 +60,8 @@
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
     <Compile Include="IStoreSubscriptions.cs" />
-    <Compile Include="Persistence\SqlServer\SqlServerConfiguration.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
-    <Compile Include="Transports\Msmq\MsmqConfiguration.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
     <Compile Include="Transports\Msmq\MsmqTransactionWrapper.cs" />

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Messaging;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
@@ -45,6 +46,14 @@ namespace Rebus.Tests
         public string GetEndpointFor(Type messageType)
         {
             throw new AssertionException(string.Format("Cannot route {0}", messageType));
+        }
+
+        protected static void EnsureQueueExists(string errorQueueName)
+        {
+            if (!MessageQueue.Exists(errorQueueName))
+            {
+                MessageQueue.Create(errorQueueName);
+            }
         }
     }
 }
