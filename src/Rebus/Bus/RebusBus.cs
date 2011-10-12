@@ -9,7 +9,7 @@ using Rebus.Messages;
 
 namespace Rebus.Bus
 {
-    public class RebusBus : IBus
+    public class RebusBus : IStartableBus, IBus
     {
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
@@ -32,7 +32,7 @@ namespace Rebus.Bus
             this.determineDestination = determineDestination;
         }
 
-        public RebusBus Start()
+        public IBus Start()
         {
             return Start(1);
         }
@@ -43,7 +43,7 @@ namespace Rebus.Bus
             return this;
         }
 
-        public void Send(object message)
+        public void Send<TMessage>(TMessage message)
         {
             Send(determineDestination.GetEndpointFor(message.GetType()), message);
         }
@@ -57,7 +57,7 @@ namespace Rebus.Bus
                                             });
         }
 
-        public void Publish(object message)
+        public void Publish<TEvent>(TEvent message)
         {
             foreach (var subscriberInputQueue in storeSubscriptions.GetSubscribers(message.GetType()))
             {
@@ -65,12 +65,12 @@ namespace Rebus.Bus
             }
         }
 
-        public void Reply(object message)
+        public void Reply<TReply>(TReply message)
         {
             sendMessages.Send(GetReturnAddress(),
                               new TransportMessage
                                   {
-                                      Messages = new[] {message},
+                                      Messages = new object[] {message},
                                       Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                   });
         }

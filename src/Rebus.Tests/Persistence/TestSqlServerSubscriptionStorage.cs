@@ -45,6 +45,19 @@ namespace Rebus.Tests.Persistence
             storage.Save(typeof(SomeType), "sometype_subscriber");
         }
 
+        [Test]
+        public void AddingSubscriptionIsIdempotent()
+        {
+            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+
+            var subscribers = storage.GetSubscribers(typeof(ThirdType));
+
+            Assert.AreEqual(1, subscribers.Length);
+        }
+
         class SomeType {}
         class AnotherType {}
         class ThirdType {}

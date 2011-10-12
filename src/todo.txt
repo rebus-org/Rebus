@@ -11,5 +11,9 @@
 
 - Implement polymorphic message dispatch
 
+- Implement DB subscription storage
+
 - Implement MSMQ subscription storage
 	- Make MsmqMessageQueue implement IStoreSubscriptions
+
+- Implement configuration API

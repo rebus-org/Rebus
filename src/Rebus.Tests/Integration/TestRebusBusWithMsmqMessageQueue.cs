@@ -2,6 +2,7 @@
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
@@ -104,7 +105,7 @@ namespace Rebus.Tests.Integration
 
             var manualResetEvent = new ManualResetEvent(false);
 
-            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
+            var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
 
             CreateBus(recipientQueueName, new HandlerActivatorForTesting()
                                               .Handle<string>(str =>
@@ -165,7 +166,7 @@ namespace Rebus.Tests.Integration
                                             firstSubscriberResetEvent.Set();
                                         }
                                     });
-            var firstSubscriberBus = CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
+            var firstSubscriberBus = (RebusBus)CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
             firstSubscriberBus.Subscribe<string>(publisherInputQueue);
 
             var secondSubscriberInputQueue = PrivateQueueNamed("test.subscriber2");
@@ -177,7 +178,7 @@ namespace Rebus.Tests.Integration
                                             secondSubscriberResetEvent.Set();
                                         }
                                     });
-            var secondSubscriberBus = CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
+            var secondSubscriberBus = (RebusBus)CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
             secondSubscriberBus.Subscribe<string>(publisherInputQueue);
 
             // allow the publisher to receive the subscriptions....

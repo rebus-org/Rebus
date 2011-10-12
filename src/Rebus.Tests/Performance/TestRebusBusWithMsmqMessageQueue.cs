@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 
 namespace Rebus.Tests.Performance
 {
@@ -16,7 +17,7 @@ namespace Rebus.Tests.Performance
 
             const int numberOfMessages = 1000;
 
-            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
+            var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
             var manualResetEvent = new ManualResetEvent(false);
             var receivedMessagesCount = 0;
