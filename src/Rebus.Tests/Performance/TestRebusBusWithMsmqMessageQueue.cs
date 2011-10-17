@@ -9,28 +9,28 @@ namespace Rebus.Tests.Performance
     [TestFixture]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
-        [Test]
-        public void TestSendAndReceiveMessages()
+        [TestCase(15)]
+        public void TestSendAndReceiveMessages(int numberOfWorkers)
         {
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
 
-            const int numberOfMessages = 1000;
+            const int numberOfMessages = 2000;
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
             var manualResetEvent = new ManualResetEvent(false);
             var receivedMessagesCount = 0;
-            var recipientBus = CreateBus(recipientQueueName, new HandlerActivatorForTesting()
-                                                                 .Handle<string>(str =>
-                                                                                     {
-                                                                                         receivedMessagesCount++;
-                                                                                         if (receivedMessagesCount ==
-                                                                                             numberOfMessages)
-                                                                                         {
-                                                                                             manualResetEvent.Set();
-                                                                                         }
-                                                                                     }));
+            var recipientBus = CreateBus(recipientQueueName,
+                                         new HandlerActivatorForTesting()
+                                             .Handle<string>(str =>
+                                                                 {
+                                                                     receivedMessagesCount++;
+                                                                     if (receivedMessagesCount == numberOfMessages)
+                                                                     {
+                                                                         manualResetEvent.Set();
+                                                                     }
+                                                                 }));
 
             // send
             var stopwatch = Stopwatch.StartNew();
@@ -43,7 +43,6 @@ namespace Rebus.Tests.Performance
 
             // receive
             stopwatch = Stopwatch.StartNew();
-            const int numberOfWorkers = 8;
             recipientBus.Start(numberOfWorkers);
             if (!manualResetEvent.WaitOne(TimeSpan.FromMinutes(1)))
             {

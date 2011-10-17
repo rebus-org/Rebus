@@ -1,11 +1,13 @@
-﻿namespace Rebus
+﻿using Rebus.Messages;
+
+namespace Rebus
 {
     /// <summary>
     /// Implement this to specify how messages are represented as strings.
     /// </summary>
     public interface ISerializeMessages
     {
-        string Serialize(object obj);
-        object Deserialize(string str);
+        TransportMessage Serialize(Message message);
+        Message Deserialize(TransportMessage transportMessage);
     }
 }

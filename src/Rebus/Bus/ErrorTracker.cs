@@ -11,13 +11,13 @@ namespace Rebus.Bus
 
         public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
-            var trackedMessage = trackedMessages.GetOrAdd(id, i => new TrackedMessage());
+            var trackedMessage = GetOrAdd(id);
             return trackedMessage.Errors >= 5;
         }
 
         public string GetErrorText(string id)
         {
-            var trackedMessage = trackedMessages.GetOrAdd(id, i => new TrackedMessage());
+            var trackedMessage = GetOrAdd(id);
             return trackedMessage.GetErrorMessages();
         }
 
@@ -29,8 +29,17 @@ namespace Rebus.Bus
 
         public void TrackError(string id, Exception exception)
         {
-            var trackedMessage = trackedMessages.GetOrAdd(id, i => new TrackedMessage());
+            var trackedMessage = GetOrAdd(id);
             trackedMessage.AddError(exception);
+        }
+
+        TrackedMessage GetOrAdd(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                throw new ArgumentException(string.Format("Id of message to track is null! Cannot track message errors with a null id"));
+            }
+            return trackedMessages.GetOrAdd(id, i => new TrackedMessage());
         }
 
         class TrackedMessage

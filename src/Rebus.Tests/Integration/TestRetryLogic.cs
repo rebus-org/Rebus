@@ -1,9 +1,9 @@
 using System;
 using System.Messaging;
+using System.Text;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
-using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Integration
@@ -27,8 +27,14 @@ namespace Rebus.Tests.Integration
 
             messageQueueOfReceiver.Send("bla bla bla bla bla bla cannot be deserialized properly!!", MessageQueueTransactionType.Single);
 
-            var errorMessage = (string)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
-            Assert.AreEqual("bla bla bla bla bla bla cannot be deserialized properly!!", errorMessage);
+            var errorMessage = (TransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+            
+            // this is how the XML formatter serializes a single string:
+            var expected = "<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>";
+            
+            // and this is the data we successfully moved to the error queue
+            var actual = Encoding.UTF8.GetString(errorMessage.Data);
+            Assert.AreEqual(expected, actual);
         }
 
         [Test]
@@ -66,11 +72,11 @@ namespace Rebus.Tests.Integration
 
             senderBus.Send(receiverQueueName, "HELLO!");
 
-            var errorMessage = (TransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+            var transportMessage = (TransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+            var errorMessage = serializer.Deserialize(transportMessage);
 
             Assert.IsFalse(retriedTooManyTimes, "Apparently, the message was delivered more than 5 times which is the default number of retries");
             Assert.AreEqual("HELLO!", errorMessage.Messages[0]);
-            Assert.IsTrue(errorMessage.Headers["errorMessage"].Contains("oh noes!"));
         }
 
         MessageQueue GetMessageQueue(string queueName)
@@ -78,7 +84,7 @@ namespace Rebus.Tests.Integration
             var errorQueueName = PrivateQueueNamed(queueName);
             EnsureQueueExists(errorQueueName);
             var errorQueue = new MessageQueue(errorQueueName);
-            errorQueue.Formatter = new RebusTransportMessageFormatter(new JsonMessageSerializer());
+            errorQueue.Formatter = new RebusTransportMessageFormatter();
             errorQueue.Purge();
             return errorQueue;
         }

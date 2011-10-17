@@ -56,19 +56,21 @@
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="IStartableBus.cs" />
     <Compile Include="MessageContext.cs" />
+    <Compile Include="Messages\IRawMessage.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
     <Compile Include="IStoreSubscriptions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
+    <Compile Include="TransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
     <Compile Include="Transports\Msmq\MsmqTransactionWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Messages\SubscriptionMessage.cs" />
-    <Compile Include="Messages\TransportMessage.cs" />
+    <Compile Include="Messages\Message.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

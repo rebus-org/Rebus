@@ -15,6 +15,7 @@ namespace Rebus.Tests.Unit
         IActivateHandlers activateHandlers;
         IDetermineDestination determineDestination;
         ISendMessages sendMessages;
+        ISerializeMessages serializeMessages;
 
         protected override void DoSetUp()
         {
@@ -22,11 +23,13 @@ namespace Rebus.Tests.Unit
             activateHandlers = Mock<IActivateHandlers>();
             determineDestination = Mock<IDetermineDestination>();
             sendMessages = Mock<ISendMessages>();
+            serializeMessages = Mock<ISerializeMessages>();
             bus = new RebusBus(activateHandlers,
                                sendMessages,
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
-                               determineDestination);
+                               determineDestination,
+                               serializeMessages);
         }
 
         protected override void DoTearDown()
@@ -41,13 +44,15 @@ namespace Rebus.Tests.Unit
             determineDestination.Stub(d => d.GetEndpointFor(typeof (PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
+            var someTransportMessage = new TransportMessage();
+            serializeMessages.Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Messages[0] == theMessageThatWasSent)))
+                .Return(someTransportMessage);
+
             // act
             bus.Send(theMessageThatWasSent);
 
             // assert
-            sendMessages
-                .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
-                                             Arg<TransportMessage>.Matches(t => t.Messages[0] == theMessageThatWasSent)));
+            sendMessages.AssertWasCalled(s => s.Send("woolala", someTransportMessage));
         }
 
         [Test]
@@ -57,25 +62,29 @@ namespace Rebus.Tests.Unit
             determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             receiveMessages.Stub(r => r.InputQueue).Return("my input queue");
 
+            var someTransportMessage = new TransportMessage();
+            serializeMessages
+                .Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
+                                                                 ((SubscriptionMessage) t.Messages[0]).Type ==
+                                                                 typeof (PolymorphicMessage).FullName)))
+                .Return(someTransportMessage);
+
             // act
             bus.Subscribe<PolymorphicMessage>();
 
             // assert
-            sendMessages
-                .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
-                                             Arg<TransportMessage>.Matches(
-                                                 t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
-                                                 ((SubscriptionMessage) t.Messages[0]).Type ==
-                                                 typeof (PolymorphicMessage).FullName)));
+            sendMessages.AssertWasCalled(s => s.Send("woolala", someTransportMessage));
         }
 
         [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
-            receiveMessages.Stub(r => r.ReceiveMessage())
-                .Return(new TransportMessage
+            var someTransportMessage = new TransportMessage{Id="some id"};
+            receiveMessages.Stub(r => r.ReceiveMessage()).Return(someTransportMessage);
+
+            serializeMessages.Stub(s => s.Deserialize(someTransportMessage))
+                .Return(new Message
                             {
-                                Id = "some id",
                                 Messages = new object[]
                                                {
                                                    new PolymorphicMessage()

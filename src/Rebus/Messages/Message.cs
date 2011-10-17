@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,14 +6,13 @@ namespace Rebus.Messages
     /// <summary>
     /// Message wrapper object that may contain multiple logical messages.
     /// </summary>
-    public class TransportMessage
+    public class Message
     {
-        public TransportMessage()
+        public Message()
         {
             Headers = new Dictionary<string, string>();
         }
 
-        public string Id { get; set; }
         public Dictionary<string, string> Headers { get; set; }
         public object[] Messages { get; set; }
 
@@ -33,7 +31,7 @@ namespace Rebus.Messages
         public string GetLabel()
         {
             if (Messages == null || Messages.Length == 0)
-                return "Empty TransportMessage";
+                return "Empty Message";
 
             return string.Join(" + ", Messages.Select(m => m.GetType().Name));
         }

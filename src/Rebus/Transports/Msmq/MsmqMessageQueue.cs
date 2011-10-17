@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Messaging;
 using Rebus.Messages;
+using Message = Rebus.Messages.Message;
 
 namespace Rebus.Transports.Msmq
 {
@@ -12,7 +13,6 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages
     {
-        readonly ISerializeMessages serializeMessages;
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
@@ -20,10 +20,9 @@ namespace Rebus.Transports.Msmq
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
 
-        public MsmqMessageQueue(string inputQueuePath, ISerializeMessages serializeMessages)
+        public MsmqMessageQueue(string inputQueuePath)
         {
             this.inputQueuePath = inputQueuePath;
-            this.serializeMessages = serializeMessages;
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
         }
 
@@ -46,7 +45,7 @@ namespace Rebus.Transports.Msmq
                     transactionWrapper.Commit();
                     return null;
                 }
-                var transportMessage = (TransportMessage)body;
+                var transportMessage = (TransportMessage) body;
                 transportMessage.Id = message.Id;
                 transactionWrapper.Commit();
                 return transportMessage;
@@ -103,7 +102,7 @@ namespace Rebus.Transports.Msmq
         MessageQueue CreateMessageQueue(string path, bool createIfNotExists)
         {
             var messageQueue = GetMessageQueue(path, createIfNotExists);
-            messageQueue.Formatter = new RebusTransportMessageFormatter(serializeMessages);
+            messageQueue.Formatter = new RebusTransportMessageFormatter();
             return messageQueue;
         }
 

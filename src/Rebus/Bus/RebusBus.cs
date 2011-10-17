@@ -16,6 +16,7 @@ namespace Rebus.Bus
         readonly IStoreSubscriptions storeSubscriptions;
         readonly IDetermineDestination determineDestination;
         readonly IActivateHandlers activateHandlers;
+        readonly ISerializeMessages serializeMessages;
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
@@ -23,13 +24,14 @@ namespace Rebus.Bus
             ISendMessages sendMessages,
             IReceiveMessages receiveMessages,
             IStoreSubscriptions storeSubscriptions,
-            IDetermineDestination determineDestination)
+            IDetermineDestination determineDestination, ISerializeMessages serializeMessages)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
             this.storeSubscriptions = storeSubscriptions;
             this.determineDestination = determineDestination;
+            this.serializeMessages = serializeMessages;
         }
 
         public IBus Start()
@@ -50,11 +52,20 @@ namespace Rebus.Bus
 
         public void Send(string endpoint, object message)
         {
-            sendMessages.Send(endpoint, new TransportMessage
-                                            {
-                                                Messages = new[] {message},
-                                                Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
-                                            });
+            var transportMessage = serializeMessages
+                .Serialize(new Message
+                               {
+                                   Messages = new[] {message},
+                                   Headers =
+                                       {
+                                           {
+                                               Headers.ReturnAddress,
+                                               receiveMessages.InputQueue
+                                               }
+                                       }
+                               });
+
+            sendMessages.Send(endpoint, transportMessage);
         }
 
         public void Publish<TEvent>(TEvent message)
@@ -67,12 +78,14 @@ namespace Rebus.Bus
 
         public void Reply<TReply>(TReply message)
         {
-            sendMessages.Send(GetReturnAddress(),
-                              new TransportMessage
-                                  {
-                                      Messages = new object[] {message},
-                                      Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
-                                  });
+            var transportMessage = serializeMessages
+                .Serialize(new Message
+                               {
+                                   Messages = new object[] {message},
+                                   Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
+                               });
+            
+            sendMessages.Send(GetReturnAddress(), transportMessage);
         }
 
         public void Subscribe<TMessage>()
@@ -82,18 +95,20 @@ namespace Rebus.Bus
 
         public void Subscribe<TMessage>(string publisherInputQueue)
         {
-            sendMessages.Send(publisherInputQueue,
-                              new TransportMessage
-                                  {
-                                      Messages = new object[]
-                                                     {
-                                                         new SubscriptionMessage
-                                                             {
-                                                                 Type = typeof (TMessage).FullName,
-                                                             }
-                                                     },
-                                      Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
-                                  });
+            var transportMessage = serializeMessages
+                .Serialize(new Message
+                               {
+                                   Messages = new object[]
+                                                  {
+                                                      new SubscriptionMessage
+                                                          {
+                                                              Type = typeof (TMessage).FullName,
+                                                          }
+                                                  },
+                                   Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
+                               });
+
+            sendMessages.Send(publisherInputQueue, transportMessage);
         }
 
         public void Dispose()
@@ -105,19 +120,25 @@ namespace Rebus.Bus
         class Worker : IDisposable
         {
             readonly Thread workerThread;
+            readonly ErrorTracker errorTracker;
             readonly IReceiveMessages receiveMessages;
             readonly IActivateHandlers activateHandlers;
             readonly IStoreSubscriptions storeSubscriptions;
-            readonly ErrorTracker errorTracker;
+            readonly ISerializeMessages serializeMessages;
 
             volatile bool shouldExit;
             volatile bool shouldWork;
 
-            public Worker(IReceiveMessages receiveMessages, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, ErrorTracker errorTracker)
+            public Worker(ErrorTracker errorTracker, 
+                IReceiveMessages receiveMessages, 
+                IActivateHandlers activateHandlers, 
+                IStoreSubscriptions storeSubscriptions,
+                ISerializeMessages serializeMessages)
             {
                 this.receiveMessages = receiveMessages;
                 this.activateHandlers = activateHandlers;
                 this.storeSubscriptions = storeSubscriptions;
+                this.serializeMessages = serializeMessages;
                 this.errorTracker = errorTracker;
                 workerThread = new Thread(MainLoop);
                 workerThread.Start();
@@ -211,7 +232,6 @@ namespace Rebus.Bus
 
                     if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                     {
-                        transportMessage.SetHeader(Headers.ErrorMessage, errorTracker.GetErrorText(id));
                         MessageFailedMaxNumberOfTimes(transportMessage);
                         errorTracker.SignOff(id);
                     }
@@ -219,11 +239,13 @@ namespace Rebus.Bus
                     {
                         try
                         {
-                            using (MessageContext.Enter(transportMessage.GetHeader(Headers.ReturnAddress)))
+                            var message = serializeMessages.Deserialize(transportMessage);
+                            
+                            using (MessageContext.Enter(message.GetHeader(Headers.ReturnAddress)))
                             {
-                                foreach (var message in transportMessage.Messages)
+                                foreach (var logicalMessage in message.Messages)
                                 {
-                                    Dispatch(message);
+                                    Dispatch(logicalMessage);
                                 }
                             }
                         }
@@ -314,15 +336,15 @@ namespace Rebus.Bus
 
         void AddWorker()
         {
-            var worker = new Worker(receiveMessages, activateHandlers, storeSubscriptions, errorTracker);
+            var worker = new Worker(errorTracker, receiveMessages, activateHandlers, storeSubscriptions, serializeMessages);
             workers.Add(worker);
             worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
             worker.Start();
         }
 
-        void HandleMessageFailedMaxNumberOfTimes(TransportMessage message)
+        void HandleMessageFailedMaxNumberOfTimes(TransportMessage transportMessage)
         {
-            sendMessages.Send(@".\private$\error", message);
+            sendMessages.Send(@".\private$\error", transportMessage);
         }
 
         string GetReturnAddress()

@@ -1,5 +1,3 @@
-using Rebus.Messages;
-
 namespace Rebus
 {
     /// <summary>

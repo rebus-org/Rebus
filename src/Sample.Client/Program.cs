@@ -26,9 +26,8 @@ namespace Sample.Client
         static void Run()
         {
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client", new JsonMessageSerializer())
-                .PurgeInputQueue();
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage(), program);
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client").PurgeInputQueue();
+            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, new InMemorySubscriptionStorage(), program, new JsonMessageSerializer());
             bus.Start();
 
             do

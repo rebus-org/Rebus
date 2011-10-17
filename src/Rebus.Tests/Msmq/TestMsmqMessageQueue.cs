@@ -2,9 +2,9 @@
 using System.Messaging;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
+using Message = Rebus.Messages.Message;
 
 namespace Rebus.Tests.Msmq
 {
@@ -14,11 +14,13 @@ namespace Rebus.Tests.Msmq
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
         string destinationQueuePath;
+        JsonMessageSerializer serializer;
 
         [SetUp]
         public void SetUp()
         {
-            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"), new JsonMessageSerializer());
+            serializer = new JsonMessageSerializer();
+            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"));
             destinationQueuePath = MsmqMessageQueue.PrivateQueue("test.msmq.tx.destination");
 
             if (!MessageQueue.Exists(destinationQueuePath))
@@ -26,7 +28,7 @@ namespace Rebus.Tests.Msmq
 
             destinationQueue = new MessageQueue(destinationQueuePath)
                                    {
-                                       Formatter = new RebusTransportMessageFormatter(new JsonMessageSerializer())
+                                       Formatter = new RebusTransportMessageFormatter()
                                    };
 
             senderQueue.PurgeInputQueue();
@@ -39,22 +41,23 @@ namespace Rebus.Tests.Msmq
             using (var tx = new TransactionScope())
             {
                 senderQueue.Send(destinationQueuePath,
-                                 new TransportMessage
-                                     {
-                                         Messages = new object[]
-                                                        {
-                                                            "W00t!"
-                                                        }
-                                     });
+                                 serializer.Serialize(new Message
+                                                          {
+                                                              Messages = new object[]
+                                                                             {
+                                                                                 "W00t!"
+                                                                             }
+                                                          }));
 
                 tx.Complete();
             }
 
-            var message = Receive();
+            var msmqMessage = Receive();
 
-            Assert.IsNotNull(message, "No message was received within timeout!");
-            var transportMessage = (TransportMessage)message.Body;
-            Assert.AreEqual("W00t!", transportMessage.Messages[0]);
+            Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
+            var transportMessage = (TransportMessage)msmqMessage.Body;
+            var message = serializer.Deserialize(transportMessage);
+            Assert.AreEqual("W00t!", message.Messages[0]);
         }
 
         [Test]
@@ -63,13 +66,13 @@ namespace Rebus.Tests.Msmq
             using (new TransactionScope())
             {
                 senderQueue.Send(destinationQueuePath,
-                                 new TransportMessage
-                                     {
-                                         Messages = new object[]
-                                                        {
-                                                            "W00t! should not be delivered!"
-                                                        }
-                                     });
+                                 serializer.Serialize(new Message
+                                                          {
+                                                              Messages = new object[]
+                                                                             {
+                                                                                 "W00t! should not be delivered!"
+                                                                             }
+                                                          }));
 
                 //< we exit the scope without completing it!
             }
@@ -82,7 +85,7 @@ namespace Rebus.Tests.Msmq
             }
         }
 
-        Message Receive()
+        System.Messaging.Message Receive()
         {
             try
             {

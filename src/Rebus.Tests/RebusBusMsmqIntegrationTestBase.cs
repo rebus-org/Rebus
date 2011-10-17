@@ -16,6 +16,8 @@ namespace Rebus.Tests
     public class RebusBusMsmqIntegrationTestBase : IDetermineDestination
     {
         List<RebusBus> buses;
+        
+        protected JsonMessageSerializer serializer;
 
         [SetUp]
         public void SetUp()
@@ -31,9 +33,10 @@ namespace Rebus.Tests
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers)
         {
-            var messageQueue = new MsmqMessageQueue(inputQueueName, new JsonMessageSerializer())
-                .PurgeInputQueue();
-            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this);
+            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
+            serializer = new JsonMessageSerializer();
+            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this,
+                                   serializer);
             buses.Add(bus);
             return bus;
         }
