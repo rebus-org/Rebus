@@ -7,16 +7,17 @@ In fact, its goal is to copy NServiceBus in almost every aspect, only deviating 
 
 * (much much) better error messages
 * a simpler and more intuitive configuration story
-
-and not having
-
-* ANY kind of Doodleware
-* dependencies on anything but .NET 4 BCL and Log4net
+* not quite as many options
+* no doodleware
+* dependencies only on .NET 4 BCL and Log4net
 
 Oh, and Rebus is free as in beer and speech.
 
 Why?
 ====
+
+Motivation
+=====
 
 I am a happy NServiceBus user, and I still am. It just puzzles me that 
 
