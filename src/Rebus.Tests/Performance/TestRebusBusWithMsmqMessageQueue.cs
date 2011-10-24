@@ -9,13 +9,13 @@ namespace Rebus.Tests.Performance
     [TestFixture]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
-        [TestCase(15)]
+        [TestCase(20)]
         public void TestSendAndReceiveMessages(int numberOfWorkers)
         {
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
 
-            const int numberOfMessages = 5000;
+            const int numberOfMessages = 2000;
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
@@ -55,5 +55,32 @@ namespace Rebus.Tests.Performance
                               elapsed.TotalSeconds,
                               numberOfMessages/elapsed.TotalSeconds);
         }
+
+        /*
+15 threads:
+DEBUG:
+Sending 5000 messages took 8,8 s - that's 567 msg/sec
+Receiving 5000 messages with 15 workers took 4,2 s - that's 1202 msg/sec          
+         
+RELEASE:
+Sending 5000 messages took 8,8 s - that's 571 msg/sec
+Receiving 5000 messages with 15 workers took 2,7 s - that's 1884 msg/sec
+
+CACHING of dispatch MethodInfo inside Worker:
+Sending 5000 messages took 8,3 s - that's 602 msg/sec
+Receiving 5000 messages with 15 workers took 2,3 s - that's 2141 msg/sec
+
+CACHING of types to dispatch (polymorphic dispatch):
+Sending 5000 messages took 8,0 s - that's 624 msg/sec
+Receiving 5000 messages with 15 workers took 2,1 s - that's 2415 msg/sec
+          
+20 threads:
+Sending 5000 messages took 7,9 s - that's 636 msg/sec
+Receiving 5000 messages with 20 workers took 2,0 s - that's 2494 msg/sec
+
+Sending 15000 messages took 25,7 s - that's 583 msg/sec
+Receiving 15000 messages with 20 workers took 6,0 s - that's 2512 msg/sec
+
+         */
     }
 }

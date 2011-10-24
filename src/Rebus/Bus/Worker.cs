@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -16,6 +17,19 @@ namespace Rebus.Bus
     {
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// Caching of dispatcher methods
+        /// </summary>
+        static readonly ConcurrentDictionary<Type, MethodInfo> DispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
+        
+        /// <summary>
+        /// Caching of polymorphic types to attempt to dispatch, given the type of an incoming message
+        /// </summary>
+        static readonly ConcurrentDictionary<Type, Type[]> TypesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
+
+        /// <summary>
+        /// Keeps count of worker thread IDs.
+        /// </summary>
         static int workerThreadCounter = 0;
 
         readonly Thread workerThread;
@@ -39,23 +53,22 @@ namespace Rebus.Bus
             this.storeSubscriptions = storeSubscriptions;
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
-            workerThread = new Thread(MainLoop);
-            workerThread.Name = GenerateNewWorkerThreadName();
+            workerThread = new Thread(MainLoop) {Name = GenerateNewWorkerThreadName()};
             workerThread.Start();
             Log.InfoFormat("Worker {0} created and inner thread started", WorkerThreadName);
         }
 
-        string WorkerThreadName
-        {
-            get { return workerThread.Name; }
-        }
-
-        string GenerateNewWorkerThreadName()
-        {
-            return string.Format("Rebus worker #{0}", Interlocked.Increment(ref workerThreadCounter));
-        }
-
+        /// <summary>
+        /// Event that will be raised whenever dispatching a given message has failed MAX number of times
+        /// (usually 5 or something like that).
+        /// </summary>
         public event Action<TransportMessage> MessageFailedMaxNumberOfTimes = delegate { };
+        
+        /// <summary>
+        /// Event that will be raised in the unlikely event that something outside of the usual
+        /// message dispatch goes wrong.
+        /// </summary>
+        public event Action<Worker, Exception> UnhandledException = delegate { }; 
 
         public void Start()
         {
@@ -119,7 +132,7 @@ namespace Rebus.Bus
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    UnhandledException(this, e);
                 }
             }
         }
@@ -129,15 +142,16 @@ namespace Rebus.Bus
             using (var transactionScope = new TransactionScope())
             {
                 var transportMessage = receiveMessages.ReceiveMessage();
-
+                
                 if (transportMessage == null) return;
 
                 var id = transportMessage.Id;
 
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
+                    Log.ErrorFormat("Handling message {0} has failed the maximum number of times", id);
                     MessageFailedMaxNumberOfTimes(transportMessage);
-                    errorTracker.SignOff(id);
+                    errorTracker.Forget(id);
                 }
                 else
                 {
@@ -149,19 +163,21 @@ namespace Rebus.Bus
                         {
                             foreach (var logicalMessage in message.Messages)
                             {
+                                Log.DebugFormat("Dispatching message {0}: {1}", id, logicalMessage.GetType());
                                 Dispatch(logicalMessage);
                             }
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception exception)
                     {
-                        errorTracker.TrackError(id, e);
+                        Log.Error(string.Format("Handling message {0} has failed", id), exception);
+                        errorTracker.Track(id, exception);
                         throw;
                     }
                 }
 
                 transactionScope.Complete();
-                errorTracker.SignOff(id);
+                errorTracker.Forget(id);
             }
         }
 
@@ -173,9 +189,7 @@ namespace Rebus.Bus
             {
                 foreach (var typeToDispatch in GetTypesToDispatch(messageType))
                 {
-                    GetType().GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
-                        .MakeGenericMethod(typeToDispatch)
-                        .Invoke(this, new[] { message });
+                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] { message });
                 }
             }
             catch (TargetInvocationException tae)
@@ -184,14 +198,39 @@ namespace Rebus.Bus
             }
         }
 
-        /// <summary>
-        /// TODO perf: cache types to dispatch - no need to dribble recursively every time
-        /// </summary>
+        MethodInfo GetDispatchMethod(Type typeToDispatch)
+        {
+            MethodInfo method;
+            if (DispatchMethodCache.TryGetValue(typeToDispatch, out method))
+            {
+                return method;
+            }
+
+            var newMethod = GetType()
+                .GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
+                .MakeGenericMethod(typeToDispatch);
+
+            DispatchMethodCache.TryAdd(typeToDispatch, newMethod);
+
+            return newMethod;
+        }
+
         Type[] GetTypesToDispatch(Type messageType)
         {
+            Type[] typesToDispatch;
+
+            if (TypesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
+            {
+                return typesToDispatch;
+            }
+
             var types = new HashSet<Type>();
             AddTypesFrom(messageType, types);
-            return types.ToArray();
+            var newArrayOfTypesToDispatch = types.ToArray();
+
+            TypesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
+
+            return newArrayOfTypesToDispatch;
         }
 
         void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
@@ -209,8 +248,19 @@ namespace Rebus.Bus
             }
         }
 
+        public string WorkerThreadName
+        {
+            get { return workerThread.Name; }
+        }
+
+        string GenerateNewWorkerThreadName()
+        {
+            return string.Format("Rebus worker #{0}", Interlocked.Increment(ref workerThreadCounter));
+        }
+
         /// <summary>
-        /// Private strongly typed dispatcher method
+        /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
+        /// for some strongly typed interaction inside of this method.
         /// </summary>
         void DispatchGeneric<T>(T message)
         {

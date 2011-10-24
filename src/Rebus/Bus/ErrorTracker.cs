@@ -12,10 +12,16 @@ namespace Rebus.Bus
     {
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
 
-        public bool MessageHasFailedMaximumNumberOfTimes(string id)
+        public void Track(string id, Exception exception)
         {
             var trackedMessage = GetOrAdd(id);
-            return trackedMessage.Errors >= 5;
+            trackedMessage.AddError(exception);
+        }
+
+        public void Forget(string id)
+        {
+            TrackedMessage temp;
+            trackedMessages.TryRemove(id, out temp);
         }
 
         public string GetErrorText(string id)
@@ -24,16 +30,10 @@ namespace Rebus.Bus
             return trackedMessage.GetErrorMessages();
         }
 
-        public void SignOff(string id)
-        {
-            TrackedMessage temp;
-            trackedMessages.TryRemove(id, out temp);
-        }
-
-        public void TrackError(string id, Exception exception)
+        public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
             var trackedMessage = GetOrAdd(id);
-            trackedMessage.AddError(exception);
+            return trackedMessage.Errors >= 5;
         }
 
         TrackedMessage GetOrAdd(string id)

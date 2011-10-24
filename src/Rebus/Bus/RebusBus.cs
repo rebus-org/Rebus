@@ -127,7 +127,13 @@ namespace Rebus.Bus
             var worker = new Worker(errorTracker, receiveMessages, activateHandlers, storeSubscriptions, serializeMessages);
             workers.Add(worker);
             worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
+            worker.UnhandledException += LogUnhandledException;
             worker.Start();
+        }
+
+        void LogUnhandledException(Worker worker, Exception exception)
+        {
+            Log.Error(string.Format("Unhandled exception in worker {0}. This is not good.", worker.WorkerThreadName), exception);
         }
 
         void HandleMessageFailedMaxNumberOfTimes(TransportMessage transportMessage)
