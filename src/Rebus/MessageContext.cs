@@ -52,8 +52,9 @@ Stacktrace of when the current message context was created:
         {
             if (current == null)
             {
-                throw new InvalidOperationException(
-                    "No message context available - the MessageContext instance will only be set during the handling of messages, and it is available only on the worker thread.");
+                throw new InvalidOperationException("No message context available - the MessageContext instance will"
+                                                    + " only be set during the handling of messages, and it"
+                                                    + " is available only on the worker thread.");
             }
 
             return current;

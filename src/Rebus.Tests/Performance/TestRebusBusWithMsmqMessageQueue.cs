@@ -15,7 +15,7 @@ namespace Rebus.Tests.Performance
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
 
-            const int numberOfMessages = 2000;
+            const int numberOfMessages = 5000;
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             

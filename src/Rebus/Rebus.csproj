@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.1.2.10\lib\2.0\log4net.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -48,6 +51,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="Bus\SubscriptionMessageHandler.cs" />
+    <Compile Include="Bus\Worker.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />

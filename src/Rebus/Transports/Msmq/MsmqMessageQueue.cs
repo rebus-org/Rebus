@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Messaging;
-using Rebus.Messages;
-using Message = Rebus.Messages.Message;
 
 namespace Rebus.Transports.Msmq
 {

@@ -5,7 +5,10 @@ using System.Collections.Generic;
 
 namespace Rebus.Bus
 {
-    public class ErrorTracker
+    /// <summary>
+    /// Class used by <see cref="RebusBus"/> to track errors between retries.
+    /// </summary>
+    class ErrorTracker
     {
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
 

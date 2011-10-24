@@ -16,11 +16,6 @@ namespace Rebus.Messages
         public Dictionary<string, string> Headers { get; set; }
         public object[] Messages { get; set; }
 
-        public void SetHeader(string key, string value)
-        {
-            Headers[key] = value;
-        }
-
         public string GetHeader(string key)
         {
             return Headers.ContainsKey(key)
