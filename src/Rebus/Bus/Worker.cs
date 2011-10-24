@@ -20,12 +20,12 @@ namespace Rebus.Bus
         /// <summary>
         /// Caching of dispatcher methods
         /// </summary>
-        static readonly ConcurrentDictionary<Type, MethodInfo> DispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
+        readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
         
         /// <summary>
         /// Caching of polymorphic types to attempt to dispatch, given the type of an incoming message
         /// </summary>
-        static readonly ConcurrentDictionary<Type, Type[]> TypesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
+        readonly ConcurrentDictionary<Type, Type[]> typesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
 
         /// <summary>
         /// Keeps count of worker thread IDs.
@@ -203,7 +203,7 @@ namespace Rebus.Bus
         MethodInfo GetDispatchMethod(Type typeToDispatch)
         {
             MethodInfo method;
-            if (DispatchMethodCache.TryGetValue(typeToDispatch, out method))
+            if (dispatchMethodCache.TryGetValue(typeToDispatch, out method))
             {
                 return method;
             }
@@ -212,7 +212,7 @@ namespace Rebus.Bus
                 .GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
                 .MakeGenericMethod(typeToDispatch);
 
-            DispatchMethodCache.TryAdd(typeToDispatch, newMethod);
+            dispatchMethodCache.TryAdd(typeToDispatch, newMethod);
 
             return newMethod;
         }
@@ -221,7 +221,7 @@ namespace Rebus.Bus
         {
             Type[] typesToDispatch;
 
-            if (TypesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
+            if (typesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
             {
                 return typesToDispatch;
             }
@@ -230,7 +230,7 @@ namespace Rebus.Bus
             AddTypesFrom(messageType, types);
             var newArrayOfTypesToDispatch = types.ToArray();
 
-            TypesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
+            typesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
 
             return newArrayOfTypesToDispatch;
         }

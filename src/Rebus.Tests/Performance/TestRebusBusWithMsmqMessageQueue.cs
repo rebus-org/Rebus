@@ -15,7 +15,7 @@ namespace Rebus.Tests.Performance
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
 
-            const int numberOfMessages = 2000;
+            const int numberOfMessages = 15000;
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
@@ -81,6 +81,11 @@ Receiving 5000 messages with 20 workers took 2,0 s - that's 2494 msg/sec
 Sending 15000 messages took 25,7 s - that's 583 msg/sec
 Receiving 15000 messages with 20 workers took 6,0 s - that's 2512 msg/sec
 
-         */
+Made cache dictionaries non-static (just instance members of Worker):
+Sending 15000 messages took 25,4 s - that's 590 msg/sec
+Receiving 15000 messages with 20 workers took 6,0 s - that's 2509 msg/sec
+
+         
+*/
     }
 }
