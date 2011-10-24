@@ -30,6 +30,40 @@ More info coming soon at http://mookid.dk/oncode/rebus
 
 One day, maybe I'll tweet something as well... [@mookid8000][2]
 
+How?
+====
+
+Pretty clunky at the moment, I'm sorry... haven't gotten into the configuration API story yet. Right now, this is how you get going with Rebus:
+
+First, decide how you want to `ISendMessages` and `IReceiveMessages` - Rebus has something that can do both: `MsmqMessageQueue` - therefore:
+
+    var msmq = new MsmqMessageQueue(@".\private$\service_input_queue");
+
+Then, decide how subscriptions are to be stored if the service is a publisher - right now, there's `InMemorySubscriptionStorage` and `SqlServerSubscriptionStorage` to choose from. Let's be serious about this:
+
+    var subscriptionStorage = new SqlServerSubscriptionStorage("data source=.;initial catalog=rebus_subscriptions;integrated security=sspi");
+
+Now, figure out how to go from `TMessage` to instances of something that implements `IHandleMessages<TMessage>`. This is where you'd probably insert your favorite IoC container. Let's pretend that I implemented `IActivateHandlers` in a `CastleWindsorHandlerActivator` (it's only two methods) - that would allow me to do this:
+
+	var container = GetWindsorContainerFromSomewhere();
+	var handlerActivator = new CastleWindsorHandlerActivator(container);
+
+Now, figure out how a given message type should be mapped to the name of the endpoint that owns that message type - you do that by implementing `IDetermineDestination` (it's one single method that maps from `Type` to `string`) - let's pretend I implemented that by looking up some endpoint mappings in the app.config of my current process:
+
+	var endpointMapper = new AppConfigBasedEndpointMapper();
+
+Lastly, figure out how to `ISerializeMessages` - e.g.
+
+	var serializer = new JsonMessageSerializer();
+
+and NOW we're ready to create the bus:
+
+	var bus = new RebusBus(handlerActivator, msmq, msmq, subscriptionStorage, endpointMapper, serializer).Start();
+
+If you've used NServiceBus, lots of things will immediately make sense with Rebus - everything about sending, publishing, subscribing, etc is the same.
+
+Well, that was a teaser. More stuff coming up some time in the future.
+
 License
 ====
 
