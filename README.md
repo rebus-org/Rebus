@@ -53,7 +53,7 @@ Now, figure out how a given message type should be mapped to the name of the end
 
 	var endpointMapper = new AppConfigBasedEndpointMapper();
 
-Lastly, figure out how to `ISerializeMessages` - e.g.
+Lastly, figure out how to `ISerializeMessages` - at the moment there's only `JsonMessageSerializer`:
 
 	var serializer = new JsonMessageSerializer();
 
