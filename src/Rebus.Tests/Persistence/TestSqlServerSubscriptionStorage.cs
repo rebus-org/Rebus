@@ -1,5 +1,7 @@
-﻿using NUnit.Framework;
+﻿using System.Transactions;
+using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
+using System.Linq;
 
 namespace Rebus.Tests.Persistence
 {
@@ -23,6 +25,24 @@ namespace Rebus.Tests.Persistence
         [TearDown]
         public void TearDown()
         {
+        }
+
+        [Test]
+        public void AddingSubscriptionEnlistsInAmbientTx()
+        {
+            using(var tx = new TransactionScope())
+            {
+                storage.Save(typeof(SomeType), "someEndpoint");
+
+                // don't complete tx!
+            }
+
+            var subscribers = storage.GetSubscribers(typeof(SomeType));
+            
+            if (subscribers.Any())
+            {
+                Assert.Fail("Apparently, there was a subscription for SomeType: {0}", subscribers.First());
+            }
         }
 
         [Test]
