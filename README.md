@@ -41,7 +41,8 @@ First, decide how you want to `ISendMessages` and `IReceiveMessages` - Rebus has
 
 Then, decide how subscriptions are to be stored if the service is a publisher - right now, there's `InMemorySubscriptionStorage` and `SqlServerSubscriptionStorage` to choose from. Let's be serious about this:
 
-    var subscriptionStorage = new SqlServerSubscriptionStorage("data source=.;initial catalog=rebus_subscriptions;integrated security=sspi");
+	var connectionString = "data source=.;initial catalog=rebus_subscriptions;integrated security=sspi";
+    var subscriptionStorage = new SqlServerSubscriptionStorage(connectionString);
 
 Now, figure out how to go from `TMessage` to instances of something that implements `IHandleMessages<TMessage>`. This is where you'd probably insert your favorite IoC container. Let's pretend that I implemented `IActivateHandlers` in a `CastleWindsorHandlerActivator` (it's only two methods) - that would allow me to do this:
 
