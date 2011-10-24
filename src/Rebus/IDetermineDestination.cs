@@ -3,7 +3,8 @@ using System;
 namespace Rebus
 {
     /// <summary>
-    /// Should be capable of looking up endpoints from message types.
+    /// Should be capable of looking up endpoints from message types - i.e.
+    /// answer the question: "Who owns messages of this type?"
     /// </summary>
     public interface IDetermineDestination
     {

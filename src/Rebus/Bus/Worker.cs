@@ -158,8 +158,10 @@ namespace Rebus.Bus
                     try
                     {
                         var message = serializeMessages.Deserialize(transportMessage);
-                            
-                        using (MessageContext.Enter(message.GetHeader(Headers.ReturnAddress)))
+
+                        var returnAddress = message.GetHeader(Headers.ReturnAddress);
+
+                        using (MessageContext.Enter(returnAddress))
                         {
                             foreach (var logicalMessage in message.Messages)
                             {

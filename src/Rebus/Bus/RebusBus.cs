@@ -24,7 +24,8 @@ namespace Rebus.Bus
             ISendMessages sendMessages,
             IReceiveMessages receiveMessages,
             IStoreSubscriptions storeSubscriptions,
-            IDetermineDestination determineDestination, ISerializeMessages serializeMessages)
+            IDetermineDestination determineDestination, 
+            ISerializeMessages serializeMessages)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -32,6 +33,7 @@ namespace Rebus.Bus
             this.storeSubscriptions = storeSubscriptions;
             this.determineDestination = determineDestination;
             this.serializeMessages = serializeMessages;
+            
             Log.Info("Rebus bus created");
         }
 
@@ -50,12 +52,9 @@ namespace Rebus.Bus
 
         public void Send<TMessage>(TMessage message)
         {
-            Send(GetDestinationEndpointFor(message.GetType()), message);
-        }
+            var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
-        string GetDestinationEndpointFor(Type messageType)
-        {
-            return determineDestination.GetEndpointFor(messageType);
+            Send(destinationEndpoint, message);
         }
 
         public void Send(string endpoint, object message)
@@ -73,7 +72,9 @@ namespace Rebus.Bus
 
         public void Publish<TEvent>(TEvent message)
         {
-            foreach (var subscriberInputQueue in storeSubscriptions.GetSubscribers(message.GetType()))
+            var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
+
+            foreach (var subscriberInputQueue in subscriberEndpoints)
             {
                 Send(subscriberInputQueue, message);
             }
@@ -94,20 +95,18 @@ namespace Rebus.Bus
 
         public void Subscribe<TMessage>()
         {
-            Subscribe<TMessage>(GetDestinationEndpointFor(typeof(TMessage)));
+            var destinationEndpoint = GetMessageOwnerEndpointFor(typeof(TMessage));
+
+            Subscribe<TMessage>(destinationEndpoint);
         }
 
         public void Subscribe<TMessage>(string publisherInputQueue)
         {
+            var message = new SubscriptionMessage {Type = typeof (TMessage).FullName};
+
             var messageToSend = new Message
                                     {
-                                        Messages = new object[]
-                                                       {
-                                                           new SubscriptionMessage
-                                                               {
-                                                                   Type = typeof (TMessage).FullName,
-                                                               }
-                                                       },
+                                        Messages = new object[] {message},
                                         Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                     };
 
@@ -120,6 +119,11 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
+        }
+
+        string GetMessageOwnerEndpointFor(Type messageType)
+        {
+            return determineDestination.GetEndpointFor(messageType);
         }
 
         void AddWorker()

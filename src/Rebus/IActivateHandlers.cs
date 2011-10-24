@@ -8,7 +8,15 @@ namespace Rebus
     /// </summary>
     public interface IActivateHandlers
     {
+        /// <summary>
+        /// Should get a sequence of handlers where each handler implements
+        /// the <see cref="IHandleMessages{TMessage}"/> interface.
+        /// </summary>
         IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
+        
+        /// <summary>
+        /// Is called after each handler has been invoked.
+        /// </summary>
         void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);
     }
 }

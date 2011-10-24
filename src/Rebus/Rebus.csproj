@@ -61,6 +61,7 @@
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="IStartableBus.cs" />
     <Compile Include="MessageContext.cs" />
+    <Compile Include="Messages\Headers.cs" />
     <Compile Include="Messages\IRawMessage.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
     <Compile Include="IReceiveMessages.cs" />
