@@ -106,7 +106,7 @@ namespace Rebus.Tests.Unit
 
             bus.Start();
 
-            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(1)))
+            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(50)))
             {
                 Assert.Fail("Did not receive messages withing timeout");
             }

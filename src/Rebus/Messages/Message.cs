@@ -25,14 +25,13 @@ namespace Rebus.Messages
         public object[] Messages { get; set; }
 
         /// <summary>
-        /// Gets the header with the specified key and throws if the given key is not present.
+        /// Gets the header with the specified key or null if the given key is not present.
         /// Lookup names of pre-defined keys via <see cref="Headers"/>.
         /// </summary>
         public string GetHeader(string key)
         {
             if (!Headers.ContainsKey(key))
-                throw new InvalidOperationException(string.Format(@"Message does not contain a header named '{0}' - dump:
-{1}", key, DumpMessageContents()));
+                return null;
             
             return Headers[key];
         }

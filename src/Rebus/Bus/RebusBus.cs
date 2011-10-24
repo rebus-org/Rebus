@@ -89,8 +89,10 @@ namespace Rebus.Bus
                                     };
 
             var transportMessage = serializeMessages.Serialize(messageToSend);
-            
-            sendMessages.Send(GetReturnAddress(), transportMessage);
+
+            var returnAddress = MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+
+            sendMessages.Send(returnAddress, transportMessage);
         }
 
         public void Subscribe<TMessage>()
@@ -143,11 +145,6 @@ namespace Rebus.Bus
         void HandleMessageFailedMaxNumberOfTimes(TransportMessage transportMessage)
         {
             sendMessages.Send(@".\private$\error", transportMessage);
-        }
-
-        string GetReturnAddress()
-        {
-            return MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
         }
     }
 }
