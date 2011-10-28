@@ -17,15 +17,11 @@ namespace Rebus.Bus
         readonly IDetermineDestination determineDestination;
         readonly IActivateHandlers activateHandlers;
         readonly ISerializeMessages serializeMessages;
+        readonly IStoreSagaData storeSagaData;
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
-        public RebusBus(IActivateHandlers activateHandlers,
-            ISendMessages sendMessages,
-            IReceiveMessages receiveMessages,
-            IStoreSubscriptions storeSubscriptions,
-            IDetermineDestination determineDestination, 
-            ISerializeMessages serializeMessages)
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IStoreSagaData storeSagaData)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -33,7 +29,8 @@ namespace Rebus.Bus
             this.storeSubscriptions = storeSubscriptions;
             this.determineDestination = determineDestination;
             this.serializeMessages = serializeMessages;
-            
+            this.storeSagaData = storeSagaData;
+
             Log.Info("Rebus bus created");
         }
 
@@ -130,7 +127,12 @@ namespace Rebus.Bus
 
         void AddWorker()
         {
-            var worker = new Worker(errorTracker, receiveMessages, activateHandlers, storeSubscriptions, serializeMessages);
+            var worker = new Worker(errorTracker,
+                                    receiveMessages,
+                                    activateHandlers,
+                                    storeSubscriptions,
+                                    serializeMessages,
+                                    storeSagaData);
             workers.Add(worker);
             worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
             worker.UnhandledException += LogUnhandledException;

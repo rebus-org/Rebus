@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
 using System.Linq;
 
-namespace Rebus.Tests.Persistence
+namespace Rebus.Tests.Persistence.SqlServer
 {
     [TestFixture]
     public class TestSqlServerSubscriptionStorage : DbFixtureBase

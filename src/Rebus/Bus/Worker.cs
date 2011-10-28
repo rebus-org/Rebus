@@ -30,31 +30,32 @@ namespace Rebus.Bus
         /// <summary>
         /// Keeps count of worker thread IDs.
         /// </summary>
-        static int workerThreadCounter = 0;
+        static int workerThreadCounter;
 
         readonly Thread workerThread;
+        readonly Dispatcher dispatcher;
         readonly ErrorTracker errorTracker;
         readonly IReceiveMessages receiveMessages;
-        readonly IActivateHandlers activateHandlers;
-        readonly IStoreSubscriptions storeSubscriptions;
         readonly ISerializeMessages serializeMessages;
 
         volatile bool shouldExit;
         volatile bool shouldWork;
 
-        public Worker(ErrorTracker errorTracker, 
-                      IReceiveMessages receiveMessages, 
-                      IActivateHandlers activateHandlers, 
-                      IStoreSubscriptions storeSubscriptions,
-                      ISerializeMessages serializeMessages)
+        public Worker(ErrorTracker errorTracker,
+            IReceiveMessages receiveMessages,
+            IActivateHandlers activateHandlers,
+            IStoreSubscriptions storeSubscriptions,
+            ISerializeMessages serializeMessages,
+            IStoreSagaData storeSagaData)
         {
             this.receiveMessages = receiveMessages;
-            this.activateHandlers = activateHandlers;
-            this.storeSubscriptions = storeSubscriptions;
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions);
+            
             workerThread = new Thread(MainLoop) {Name = GenerateNewWorkerThreadName()};
             workerThread.Start();
+            
             Log.InfoFormat("Worker {0} created and inner thread started", WorkerThreadName);
         }
 
@@ -106,23 +107,13 @@ namespace Rebus.Bus
             }
         }
 
-        IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
-        {
-            if (typeof(T) == typeof(SubscriptionMessage))
-            {
-                return new[] { (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions) };
-            }
-
-            return new IHandleMessages<T>[0];
-        }
-
         void MainLoop()
         {
             while (!shouldExit)
             {
                 if (!shouldWork)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(20);
                     continue;
                 }
 
@@ -143,7 +134,11 @@ namespace Rebus.Bus
             {
                 var transportMessage = receiveMessages.ReceiveMessage();
                 
-                if (transportMessage == null) return;
+                if (transportMessage == null)
+                {
+                    Thread.Sleep(20);
+                    return;
+                }
 
                 var id = transportMessage.Id;
 
@@ -261,33 +256,11 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
-        /// for some strongly typed interaction inside of this method.
+        /// for some strongly typed interaction from this point and on....
         /// </summary>
-        void DispatchGeneric<T>(T message)
+        internal void DispatchGeneric<T>(T message)
         {
-            IHandleMessages<T>[] handlers = null;
-
-            try
-            {
-                var handlerInstances = activateHandlers.GetHandlerInstancesFor<T>();
-
-                // if we didn't get anything, just carry on... might not be what we want, but let's just do that for now
-                if (handlerInstances == null) return;
-
-                handlers = handlerInstances.ToArray();
-
-                foreach (var handler in handlers.Concat(OwnHandlersFor<T>()))
-                {
-                    handler.Handle(message);
-                }
-            }
-            finally
-            {
-                if (handlers != null)
-                {
-                    activateHandlers.ReleaseHandlerInstances(handlers);
-                }
-            }
+            dispatcher.Dispatch(message);
         }
     }
 }

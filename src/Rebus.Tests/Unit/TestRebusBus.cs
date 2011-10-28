@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
+using Rebus.Tests.Integration;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Unit
@@ -16,6 +17,7 @@ namespace Rebus.Tests.Unit
         IDetermineDestination determineDestination;
         ISendMessages sendMessages;
         ISerializeMessages serializeMessages;
+        IStoreSagaData storeSagaData;
 
         protected override void DoSetUp()
         {
@@ -24,12 +26,14 @@ namespace Rebus.Tests.Unit
             determineDestination = Mock<IDetermineDestination>();
             sendMessages = Mock<ISendMessages>();
             serializeMessages = Mock<ISerializeMessages>();
+            storeSagaData = Mock<IStoreSagaData>();
             bus = new RebusBus(activateHandlers,
                                sendMessages,
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
                                determineDestination,
-                               serializeMessages);
+                               serializeMessages, 
+                               storeSagaData);
         }
 
         protected override void DoTearDown()

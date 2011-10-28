@@ -28,7 +28,12 @@ namespace Rebus.Tests
 
         public HandlerActivatorForTesting Handle<T>(Action<T> handlerMethod)
         {
-            handlers.Add(new HandlerMethodWrapper<T>(handlerMethod));
+            return UseHandler(new HandlerMethodWrapper<T>(handlerMethod));
+        }
+
+        public HandlerActivatorForTesting UseHandler(object handler)
+        {
+            handlers.Add(handler);
             return this;
         }
 

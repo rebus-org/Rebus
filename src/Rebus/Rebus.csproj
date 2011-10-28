@@ -50,24 +50,36 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\lib\Ponder\Ponder.cs">
+      <Link>Reflection\Ponder.cs</Link>
+    </Compile>
+    <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
     <Compile Include="Bus\SubscriptionMessageHandler.cs" />
     <Compile Include="Bus\Worker.cs" />
+    <Compile Include="Correlation.cs" />
+    <Compile Include="Correlator.cs" />
     <Compile Include="Extensions\IntExt.cs" />
+    <Compile Include="IAmInitiatedBy.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IActivateHandlers.cs" />
     <Compile Include="IDetermineDestination.cs" />
+    <Compile Include="ISaga.cs" />
+    <Compile Include="ISagaData.cs" />
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="IStartableBus.cs" />
+    <Compile Include="IStoreSagaData.cs" />
     <Compile Include="MessageContext.cs" />
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Messages\IRawMessage.cs" />
+    <Compile Include="Persistence\InMemory\InMemorySagaPersister.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
     <Compile Include="IReceiveMessages.cs" />
     <Compile Include="ISendMessages.cs" />
     <Compile Include="IStoreSubscriptions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
+    <Compile Include="Saga.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="TransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />

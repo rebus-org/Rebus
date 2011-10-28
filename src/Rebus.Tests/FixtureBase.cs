@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using Rhino.Mocks;
 
-namespace Rebus.Tests.Unit
+namespace Rebus.Tests
 {
     public class FixtureBase
     {

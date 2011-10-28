@@ -1,6 +1,6 @@
 using System.Data.SqlClient;
 
-namespace Rebus.Tests.Persistence
+namespace Rebus.Tests.Persistence.SqlServer
 {
     public class DbFixtureBase
     {

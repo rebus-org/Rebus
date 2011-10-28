@@ -14,17 +14,7 @@ namespace Rebus.Serialization.Json
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
 
-        static Encoding Encoding = Encoding.UTF8;
-
-        public string Serialize(object obj)
-        {
-            return JsonConvert.SerializeObject(obj, Formatting.Indented, Settings);
-        }
-
-        public object Deserialize(string str)
-        {
-            return JsonConvert.DeserializeObject(str, Settings);
-        }
+        static readonly Encoding Encoding = Encoding.UTF8;
 
         public TransportMessage Serialize(Message message)
         {

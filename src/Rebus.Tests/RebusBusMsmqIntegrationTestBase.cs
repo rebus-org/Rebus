@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
+using Rebus.Tests.Integration;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests
@@ -35,8 +36,9 @@ namespace Rebus.Tests
         {
             var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
             serializer = new JsonMessageSerializer();
-            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue, new InMemorySubscriptionStorage(), this,
-                                   serializer);
+            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
+                                   new InMemorySubscriptionStorage(), this,
+                                   serializer, new SagaDataPersisterForTesting());
             buses.Add(bus);
             return bus;
         }
