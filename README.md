@@ -24,7 +24,7 @@ I am a happy NServiceBus user, and I still am. It just puzzles me that
 
 I realize that NServiceBus is pretty cheap when you think of all the good things it can do for you, but to many people I think the license fee is an annoyance that will hinder them in introducing NServiceBus in all of their awesome projects - Which is a shame!
 
-Then why don't I just use MassTransit then? Well, I wanted to do that, but I had so much trouble figuring out the filosophy of the MassTransit project that I gave up learning how to use it. I don't like how it needs a central runtime service to manage subscriptions, and I had a hard time figuring out how to make it work. And then there's the option of using PGM over MSMQ, but it just didn't work how I wanted it to work. Long story short: Too hard to get started!
+Then why don't I just use MassTransit then? Well, I wanted to do that, but I had so much trouble figuring out the philosophy of the MassTransit project that I gave up learning how to use it. I don't like how it needs a central runtime service to manage subscriptions, and I had a hard time figuring out how to make it work. And then there's the option of using PGM over MSMQ, but it just didn't work how I wanted it to work. Long story short: Too hard to get started!
 
 More info coming soon at http://mookid.dk/oncode/rebus
 
