@@ -8,7 +8,7 @@ using Rebus.Persistence.InMemory;
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
-    public class TestSagas2 : FixtureBase
+    public class TestSagas : FixtureBase
     {
         Dispatcher dispatcher;
         SagaDataPersisterForTesting persister;

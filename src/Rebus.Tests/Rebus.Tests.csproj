@@ -61,7 +61,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
-    <Compile Include="Integration\TestSagas2.cs" />
+    <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
