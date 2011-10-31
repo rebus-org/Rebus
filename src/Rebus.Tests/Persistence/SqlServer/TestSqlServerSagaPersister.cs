@@ -239,6 +239,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         {
             public DbSagaIndex() : base("LocalSqlServer", "saga_index", "id")
             {
+                ValidatesPresenceOf("id");
                 ValidatesPresenceOf("saga_id");
                 ValidatesPresenceOf("key");
                 ValidatesPresenceOf("value");
