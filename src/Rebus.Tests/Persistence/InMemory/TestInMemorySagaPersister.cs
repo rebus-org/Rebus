@@ -22,7 +22,7 @@ namespace Rebus.Tests.Persistence.InMemory
             var someId = Guid.NewGuid();
             var someSagaData = new SomeSagaData{Id=someId};
 
-            persister.Save(someSagaData);
+            persister.Save(someSagaData, new[]{""});
             var sagaData = persister.Find("Id", someId.ToString());
 
             Assert.AreSame(someSagaData, sagaData);
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Persistence.InMemory
             persister.UseIndex(new[] {Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue)});
             var someSagaData = new SomeSagaData{AggregatedObject = new SomeAggregatedObject{SomeRandomValue = "whooHAAA!"}};
 
-            persister.Save(someSagaData);
+            persister.Save(someSagaData, new[] { "" });
             var sagaData = persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "whooHAAA!");
 
             Assert.AreSame(someSagaData, sagaData);
@@ -43,7 +43,8 @@ namespace Rebus.Tests.Persistence.InMemory
         [Test]
         public void GetsNullIfSagaCannotBeFound()
         {
-            persister.Save(new SomeSagaData { AggregatedObject = new SomeAggregatedObject { SomeRandomValue = "whooHAAA!" } });
+            var sagaData = new SomeSagaData {AggregatedObject = new SomeAggregatedObject {SomeRandomValue = "whooHAAA!"}};
+            persister.Save(sagaData, new[] {""});
 
             Assert.IsNull(persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "NO MATCH"));
             Assert.IsNull(persister.Find("Invalid.Path.To.Nothing", "whooHAAA!"));

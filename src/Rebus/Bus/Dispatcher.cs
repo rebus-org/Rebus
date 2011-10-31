@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Rebus.Messages;
 
 namespace Rebus.Bus
@@ -60,58 +61,49 @@ namespace Rebus.Bus
             if (handler is ISaga)
             {
                 var saga = (ISaga)handler;
-                saga.ConfigureHowToFindSaga();
 
                 var dataProperty = handler.GetType().GetProperty("Data");
-                ISagaData sagaData = GetSagaData(message, saga);
+                var sagaData = GetSagaData(message, saga);
 
                 if (sagaData == null)
                 {
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
                         sagaData = CreateSagaData(handler);
-
-                        dataProperty.SetValue(handler, sagaData, new object[0]);
-                        handler.Handle(message);
-                        if (!saga.Complete)
-                        {
-                            SaveSageData(sagaData);
-                        }
-                        else
-                        {
-                            DeleteSagaData(sagaData);
-                        }
+                        PerformSaveActions(message, handler, saga, dataProperty, sagaData);
                     }
                     return;
                 }
-
-                dataProperty.SetValue(handler, sagaData, new object[0]);
-                handler.Handle(message);
-                if (!saga.Complete)
-                {
-                    SaveSageData(sagaData);
-                }
-                else
-                {
-                    DeleteSagaData(sagaData);
-                }
-
+                PerformSaveActions(message, handler, saga, dataProperty, sagaData);
                 return;
             }
             
             handler.Handle(message);
         }
 
+        void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, ISaga saga, PropertyInfo dataProperty, ISagaData sagaData)
+        {
+            dataProperty.SetValue(handler, sagaData, new object[0]);
+            handler.Handle(message);
+            
+            if (!saga.Complete)
+            {
+                saga.ConfigureHowToFindSaga();
+                var sagaDataPropertyPathsToIndex = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
+                storeSagaData.Save(sagaData, sagaDataPropertyPathsToIndex);
+            }
+            else
+            {
+                storeSagaData.Delete(sagaData);
+            }
+        }
+
         ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
         {
             var dataProperty = handler.GetType().GetProperty("Data");
-
-            return (ISagaData) Activator.CreateInstance(dataProperty.PropertyType);
-        }
-
-        void SaveSageData(ISagaData sagaData)
-        {
-            storeSagaData.Save(sagaData);
+            var sagaData = (ISagaData) Activator.CreateInstance(dataProperty.PropertyType);
+            sagaData.Id = Guid.NewGuid();
+            return sagaData;
         }
 
         ISagaData GetSagaData<TMessage>(TMessage message, ISaga saga)
@@ -125,11 +117,6 @@ namespace Rebus.Bus
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
 
             return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? "").ToString());
-        }
-
-        void DeleteSagaData(ISagaData sagaData)
-        {
-            storeSagaData.Delete(sagaData);
         }
     }
 }

@@ -49,6 +49,7 @@
       <HintPath>..\packages\Shouldly.1.0.1.77\lib\35\Shouldly.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
@@ -60,6 +61,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\lib\Massive\Massive.cs">
+      <Link>Massive.cs</Link>
+    </Compile>
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
@@ -67,6 +71,7 @@
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Persistence\InMemory\TestInMemorySagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\DbFixtureBase.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="RebusBusMsmqIntegrationTestBase.cs" />
     <Compile Include="TestExtensions.cs" />
@@ -79,6 +84,7 @@
     <Compile Include="Unit\TestRebusBus.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

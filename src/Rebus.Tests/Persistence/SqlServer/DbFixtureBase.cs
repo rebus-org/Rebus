@@ -1,10 +1,46 @@
+using System.Configuration;
 using System.Data.SqlClient;
+using System.Linq;
+using NUnit.Framework;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
     public class DbFixtureBase
     {
-        protected const string ConnectionString = "data source=.;integrated security=sspi;initial catalog=rebus_test";
+        [SetUp]
+        public void SetUp()
+        {
+            DoSetUp();
+        }
+
+        protected virtual void DoSetUp()
+        {
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            DoTearDown();
+        }
+
+        protected virtual void DoTearDown()
+        {
+        }
+
+        protected static string ConnectionString
+        {
+            get
+            {
+                var connectionStringSettings = ConfigurationManager.ConnectionStrings
+                        .Cast<ConnectionStringSettings>()
+                        .FirstOrDefault();
+
+                Assert.IsNotNull(connectionStringSettings,
+                                 "There doesn't seem to be any connection strings in the app.config.");
+
+                return connectionStringSettings.ConnectionString;
+            }
+        }
 
         protected void DeleteRows(string tableName)
         {

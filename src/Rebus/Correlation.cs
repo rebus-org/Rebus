@@ -6,6 +6,8 @@ namespace Rebus
 {
     public abstract class Correlation
     {
+        internal abstract string SagaDataPropertyPath { get; }
+        internal abstract string MessagePropertyPath { get; }
     }
 
     public abstract class Correlation<TMessage> : Correlation
@@ -19,7 +21,7 @@ namespace Rebus
             messagePropertyPath = Reflect.Path(messageProperty);
         }
 
-        public string MessagePropertyPath
+        internal override string MessagePropertyPath
         {
             get { return messagePropertyPath; }
         }
@@ -30,6 +32,5 @@ namespace Rebus
         }
 
         internal abstract string FieldFromSagaData(object sagaData);
-        internal abstract string SagaDataPropertyPath { get; }
     }
 }

@@ -5,7 +5,7 @@
     /// </summary>
     public interface IStoreSagaData
     {
-        void Save(ISagaData sagaData);
+        void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex);
         void Delete(ISagaData sagaData);
         ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage);
     }

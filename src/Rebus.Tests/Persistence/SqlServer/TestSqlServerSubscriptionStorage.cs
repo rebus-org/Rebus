@@ -10,21 +10,10 @@ namespace Rebus.Tests.Persistence.SqlServer
     {
         SqlServerSubscriptionStorage storage;
 
-        [TestFixtureSetUp]
-        public void TestFixtureSetUp()
-        {
-        }
-
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
             storage = new SqlServerSubscriptionStorage(ConnectionString);
             DeleteRows("subscriptions");
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
         }
 
         [Test]
