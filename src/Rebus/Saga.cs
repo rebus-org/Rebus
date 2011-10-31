@@ -7,6 +7,7 @@ namespace Rebus
     public class Saga<TData> : ISaga<TData> where TData:ISagaData
     {
         internal ConcurrentDictionary<Type, Correlation> correlations = new ConcurrentDictionary<Type, Correlation>();
+        public bool Complete { get; private set; }
 
         public ConcurrentDictionary<Type, Correlation> Correlations
         {
@@ -23,5 +24,10 @@ namespace Rebus
         }
 
         public TData Data { get; set; }
+
+        protected void MarkAsComplete()
+        {
+            Complete = true;
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace Rebus
     public interface ISaga
     {
         ConcurrentDictionary<Type, Correlation> Correlations { get; }
+        bool Complete { get; }
         void ConfigureHowToFindSaga();
     }
 

@@ -52,12 +52,21 @@ namespace Rebus.Tests.Integration
 
             Assert.AreEqual(OrderState.Paid, persister.Cast<MySagaData>().Single(d => d.OrderPlacementId == 2).State);
 
+            dispatcher.Dispatch(new EvalutionCompleted {OrderNumber = 1000});
+            
+            Assert.AreEqual(1, persister.Count());
+            Assert.AreEqual(1001, persister.Cast<MySagaData>().Single().OrderNumber);
+
+            dispatcher.Dispatch(new EvalutionCompleted {OrderNumber = 1001});
+
+            Assert.AreEqual(0, persister.Count());
         }
 
         class MySaga : Saga<MySagaData>,
             IAmInitiatedBy<OrderPlaced>,
             IHandleMessages<OrderBilled>,
-            IHandleMessages<PaymentReceived>
+            IHandleMessages<PaymentReceived>,
+            IHandleMessages<EvalutionCompleted>
         {
             readonly Queue<int> orderNumbers;
 
@@ -71,6 +80,7 @@ namespace Rebus.Tests.Integration
                 Incoming<OrderPlaced>(m => m.OrderPlacementId).CorrelatesWith(d => d.OrderPlacementId);
                 Incoming<OrderBilled>(m => m.OrderNumber).CorrelatesWith(d => d.OrderNumber);
                 Incoming<PaymentReceived>(m => m.OrderNumber).CorrelatesWith(d => d.OrderNumber);
+                Incoming<EvalutionCompleted>(m => m.OrderNumber).CorrelatesWith(d => d.OrderNumber);
             }
 
             public void Handle(OrderPlaced message)
@@ -102,6 +112,11 @@ namespace Rebus.Tests.Integration
                 Assert.AreEqual(OrderState.Billed, Data.State);
 
                 Data.State = OrderState.Paid;
+            }
+
+            public void Handle(EvalutionCompleted message)
+            {
+                MarkAsComplete();
             }
         }
 
@@ -139,6 +154,11 @@ namespace Rebus.Tests.Integration
         }
 
         class PaymentReceived
+        {
+            public int OrderNumber { get; set; }
+        }
+
+        class EvalutionCompleted
         {
             public int OrderNumber { get; set; }
         }

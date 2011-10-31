@@ -63,43 +63,58 @@ namespace Rebus.Bus
                 saga.ConfigureHowToFindSaga();
 
                 var dataProperty = handler.GetType().GetProperty("Data");
-                ISagaData sagaData = GetSagaData(message, handler, saga);
+                ISagaData sagaData = GetSagaData(message, saga);
 
                 if (sagaData == null)
                 {
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
-                        sagaData = CreateSagaData(message, handler);
+                        sagaData = CreateSagaData(handler);
 
                         dataProperty.SetValue(handler, sagaData, new object[0]);
                         handler.Handle(message);
-
-                        SaveSageData(sagaData, handler);
+                        if (!saga.Complete)
+                        {
+                            SaveSageData(sagaData);
+                        }
+                        else
+                        {
+                            DeleteSagaData(sagaData);
+                        }
                     }
                     return;
                 }
 
                 dataProperty.SetValue(handler, sagaData, new object[0]);
                 handler.Handle(message);
+                if (!saga.Complete)
+                {
+                    SaveSageData(sagaData);
+                }
+                else
+                {
+                    DeleteSagaData(sagaData);
+                }
+
                 return;
             }
             
             handler.Handle(message);
         }
 
-        ISagaData CreateSagaData<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
+        ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
         {
             var dataProperty = handler.GetType().GetProperty("Data");
 
             return (ISagaData) Activator.CreateInstance(dataProperty.PropertyType);
         }
 
-        void SaveSageData<TMessage>(ISagaData sagaData, IHandleMessages<TMessage> handler)
+        void SaveSageData(ISagaData sagaData)
         {
             storeSagaData.Save(sagaData);
         }
 
-        ISagaData GetSagaData<TMessage>(TMessage message, IHandleMessages<TMessage> handler, ISaga saga)
+        ISagaData GetSagaData<TMessage>(TMessage message, ISaga saga)
         {
             var correlations = saga.Correlations;
 
@@ -110,6 +125,11 @@ namespace Rebus.Bus
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
 
             return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? "").ToString());
+        }
+
+        void DeleteSagaData(ISagaData sagaData)
+        {
+            storeSagaData.Delete(sagaData);
         }
     }
 }

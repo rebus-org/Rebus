@@ -16,6 +16,12 @@ namespace Rebus.Persistence.InMemory
             data[key] = sagaData;
         }
 
+        public void Delete(ISagaData sagaData)
+        {
+            ISagaData temp;
+            data.TryRemove(sagaData.Id, out temp);
+        }
+
         public virtual ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage)
         {
             foreach (var sagaData in data)
