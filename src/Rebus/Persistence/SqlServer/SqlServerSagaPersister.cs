@@ -72,8 +72,6 @@ namespace Rebus.Persistence.SqlServer
                         
                         var sql = string.Join(";" + Environment.NewLine, inserts);
                         
-                        Console.WriteLine(sql);
-                        
                         command.CommandText = sql;
                         command.ExecuteNonQuery();
                     }
