@@ -4,17 +4,25 @@ using System.Linq.Expressions;
 
 namespace Rebus
 {
-    public class Saga<TData> : ISaga<TData> where TData:ISagaData
+    public abstract class Saga
     {
-        internal ConcurrentDictionary<Type, Correlation> correlations = new ConcurrentDictionary<Type, Correlation>();
-        public bool Complete { get; private set; }
+        internal abstract ConcurrentDictionary<Type, Correlation> Correlations { get; set; }
+        internal abstract bool Complete { get; set; }
+        public abstract void ConfigureHowToFindSaga();
+    }
 
-        public ConcurrentDictionary<Type, Correlation> Correlations
+    public class Saga<TData> : Saga where TData : ISagaData
+    {
+        public Saga()
         {
-            get { return correlations; }
+            Correlations = new ConcurrentDictionary<Type, Correlation>();
         }
 
-        public virtual void ConfigureHowToFindSaga()
+        internal override ConcurrentDictionary<Type, Correlation> Correlations { get; set; }
+        
+        internal override bool Complete { get; set; }
+
+        public override void ConfigureHowToFindSaga()
         {
         }
 

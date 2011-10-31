@@ -65,7 +65,6 @@
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IActivateHandlers.cs" />
     <Compile Include="IDetermineDestination.cs" />
-    <Compile Include="ISaga.cs" />
     <Compile Include="ISagaData.cs" />
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="IStartableBus.cs" />

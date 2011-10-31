@@ -58,9 +58,9 @@ namespace Rebus.Bus
 
         void DispatchToHandlers<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
-            if (handler is ISaga)
+            if (handler is Saga)
             {
-                var saga = (ISaga)handler;
+                var saga = (Saga)handler;
 
                 var dataProperty = handler.GetType().GetProperty("Data");
                 var sagaData = GetSagaData(message, saga);
@@ -81,7 +81,7 @@ namespace Rebus.Bus
             handler.Handle(message);
         }
 
-        void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, ISaga saga, PropertyInfo dataProperty, ISagaData sagaData)
+        void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, Saga saga, PropertyInfo dataProperty, ISagaData sagaData)
         {
             dataProperty.SetValue(handler, sagaData, new object[0]);
             handler.Handle(message);
@@ -106,17 +106,17 @@ namespace Rebus.Bus
             return sagaData;
         }
 
-        ISagaData GetSagaData<TMessage>(TMessage message, ISaga saga)
+        ISagaData GetSagaData<TMessage>(TMessage message, Saga saga)
         {
             var correlations = saga.Correlations;
 
             if (!correlations.ContainsKey(typeof(TMessage))) return null;
 
-            var correlation = (Correlation<TMessage>)correlations[typeof(TMessage)];
-            var fieldFromMessage = correlation.MessageProperty(message);
+            var correlation = correlations[typeof(TMessage)];
+            var fieldFromMessage = correlation.FieldFromMessage(message);
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
 
-            return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? "").ToString());
+            return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? ""));
         }
     }
 }
