@@ -5,6 +5,7 @@ using System.Linq;
 using System.Transactions;
 using Massive;
 using NUnit.Framework;
+using Ponder;
 using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Tests.Persistence.SqlServer
@@ -128,6 +129,101 @@ namespace Rebus.Tests.Persistence.SqlServer
 }".Replace("{sagaDataId}", sagaDataId.ToString());
 
             Assert.AreEqual(expectedJson, sagaData.data);
+        }
+
+        [Test]
+        public void CanFindSagaDataByLookingItUpInTheIndex()
+        {
+            // arrange
+            var path1 = Reflect.Path<MySagaData>(d => d.SomeField);
+            var path2 = Reflect.Path<MySagaData>(d => d.AnotherField);
+            var path3 = Reflect.Path<MySagaData>(d => d.Embedded.ThisIsEmbedded);
+
+            var sagaDataId = Guid.NewGuid();
+
+            persister.Save(new MySagaData
+                               {
+                                   Id = sagaDataId,
+                                   SomeField = "some value",
+                                   AnotherField = "another field",
+                                   Embedded = new SomeEmbeddedThingie
+                                                  {
+                                                      ThisIsEmbedded = "bla bla",
+                                                      Thingies =
+                                                          {
+                                                              new SomeCollectedThing {No = 1},
+                                                              new SomeCollectedThing {No = 2},
+                                                              new SomeCollectedThing {No = 3},
+                                                          }
+                                                  }
+                               },
+                           new[] {path1, path2, path3});
+
+            // act
+            var sagaData1 = persister.Find(path1, "some value");
+            var sagaData2 = persister.Find(path2, "another field");
+            var sagaData3 = persister.Find(path3, "bla bla");
+
+            // assert
+            Assert.AreEqual(sagaDataId, sagaData1.Id);
+            Assert.AreEqual(sagaDataId, sagaData2.Id);
+            Assert.AreEqual(sagaDataId, sagaData3.Id);
+        }
+
+        [Test]
+        public void CanDeleteSagaData()
+        {
+            // arrange
+            var sagaDataId = Guid.NewGuid();
+
+            var sagaData = new MySagaData
+                               {
+                                   Id = sagaDataId,
+                                   SomeField = "some value",
+                                   AnotherField = "another field",
+                                   Embedded = new SomeEmbeddedThingie
+                                                  {
+                                                      ThisIsEmbedded = "bla bla",
+                                                      Thingies =
+                                                          {
+                                                              new SomeCollectedThing {No = 1},
+                                                              new SomeCollectedThing {No = 2},
+                                                              new SomeCollectedThing {No = 3},
+                                                          }
+                                                  }
+                               };
+
+            persister.Save(sagaData, new string[0]);
+
+            // act
+            persister.Delete(sagaData);
+
+            // assert
+            dynamic saga = new DbSaga();
+            int count = saga.Count(id: sagaDataId);
+
+            Assert.AreEqual(0, count);
+        }
+
+        [Test]
+        public void SavingSagaDataIsTransactional()
+        {
+            // arrange
+            var sagaDataId = Guid.NewGuid();
+            var sagaData = new MySagaData {Id = sagaDataId, SomeField = "some value"};
+
+            // act
+            using (var tx = new TransactionScope())
+            {
+                persister.Save(sagaData, new string[0]);
+                
+                // no complete!
+            }
+
+            // assert
+            dynamic saga = new DbSaga();
+            int count = saga.Count(id: sagaDataId);
+            Assert.AreEqual(0, count);
         }
 
         class DbSaga : DynamicModel
