@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,8 @@ namespace Rebus.Bus
 {
     public class Dispatcher
     {
+        readonly ConcurrentDictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new ConcurrentDictionary<Type, string[]>();
+
         readonly IStoreSagaData storeSagaData;
         readonly IActivateHandlers activateHandlers;
         readonly IStoreSubscriptions storeSubscriptions;
@@ -88,14 +91,34 @@ namespace Rebus.Bus
             
             if (!saga.Complete)
             {
-                saga.ConfigureHowToFindSaga();
-                var sagaDataPropertyPathsToIndex = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
+                var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
                 storeSagaData.Save(sagaData, sagaDataPropertyPathsToIndex);
             }
             else
             {
                 storeSagaData.Delete(sagaData);
             }
+        }
+
+        string[] GetSagaDataPropertyPathsToIndex(Saga saga)
+        {
+            string[] paths;
+            var sagaType = saga.GetType();
+            
+            if (fieldsToIndexForGivenSagaDataType.TryGetValue(sagaType, out paths))
+            {
+                // yay! GO!
+                return paths;
+            }
+
+            // sigh! we have to ask the saga to generate its correlations for us...
+            saga.ConfigureHowToFindSaga();
+            paths = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
+
+            // make sure they're there the next time
+            fieldsToIndexForGivenSagaDataType.TryAdd(sagaType, paths);
+
+            return paths;
         }
 
         ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)

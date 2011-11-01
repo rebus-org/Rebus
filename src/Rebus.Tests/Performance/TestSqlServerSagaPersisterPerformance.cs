@@ -21,8 +21,18 @@ namespace Rebus.Tests.Performance
             DeleteRows("saga_index");
         }
 
-        [TestCase(100)]
-        public void DoTheTest(int numberOfSagas)
+        /// <summary>
+        /// Initial:
+        ///     Saving/updating 100 sagas 10 times took 10,6 s - that's 94 ops/s
+        /// 
+        /// Combined delete index/insert into sagas:
+        ///     Saving/updating 100 sagas 10 times took 10,1 s - that's 99 ops/s
+        ///
+        /// 
+        /// </summary>
+        [TestCase(100, 10)]
+        [TestCase(1000, 2)]
+        public void DoTheTest(int numberOfSagas, int iterations)
         {
             var sagaDatas = Enumerable.Range(0, numberOfSagas)
                 .Select(i => new SomePieceOfFairlyComplexSagaData
@@ -57,8 +67,6 @@ namespace Rebus.Tests.Performance
                                  })
                 .ToList();
 
-            var iterations = 10;
-
             var pathsToIndex =
                 new[]
                     {
@@ -80,8 +88,7 @@ namespace Rebus.Tests.Performance
             }
 
             var elapsed = stopwatch.Elapsed;
-            Console.WriteLine(@"Saving/updating {0} sagas {1} times took {2:0.0} s
-That's {3:0} ops/s",
+            Console.WriteLine(@"Saving/updating {0} sagas {1} times took {2:0.0} s - that's {3:0} ops/s",
                               numberOfSagas,
                               iterations,
                               elapsed.TotalSeconds,

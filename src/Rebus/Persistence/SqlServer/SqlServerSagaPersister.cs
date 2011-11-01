@@ -24,18 +24,12 @@ namespace Rebus.Persistence.SqlServer
             {
                 connection.Open();
 
-                // first, delete all existing indexes
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = @"delete from saga_index where saga_id = @saga_id";
-                    command.Parameters.AddWithValue("saga_id", sagaData.Id);
-                    command.ExecuteNonQuery();
-                }
-
+                // first, delete all existing indexes for this saga, and then try to insert it
                 // next, update the saga
                 using(var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"insert into sagas (id, data) values (@id, @data)";
+                    command.CommandText = @"delete from saga_index where saga_id = @id;
+                                            insert into sagas (id, data) values (@id, @data)";
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
                     
@@ -58,7 +52,7 @@ namespace Rebus.Persistence.SqlServer
                     .Select(path => new
                                         {
                                             Key = path,
-                                            Value = (GetValue(sagaData, path) ?? "").ToString()
+                                            Value = (Reflect.Value(sagaData, path) ?? "").ToString()
                                         })
                     .Where(a => a.Value != null)
                     .ToList();
@@ -84,11 +78,6 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
             }
-        }
-
-        static object GetValue(ISagaData sagaData, string path)
-        {
-            return Reflect.Value(sagaData, path);
         }
 
         public void Delete(ISagaData sagaData)
