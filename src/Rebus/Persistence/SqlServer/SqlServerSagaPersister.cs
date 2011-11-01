@@ -58,7 +58,7 @@ namespace Rebus.Persistence.SqlServer
                     .Select(path => new
                                         {
                                             Key = path,
-                                            Value = (Reflect.Value(sagaData, path) ?? "").ToString()
+                                            Value = (GetValue(sagaData, path) ?? "").ToString()
                                         })
                     .Where(a => a.Value != null)
                     .ToList();
@@ -84,6 +84,11 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
             }
+        }
+
+        static object GetValue(ISagaData sagaData, string path)
+        {
+            return Reflect.Value(sagaData, path);
         }
 
         public void Delete(ISagaData sagaData)

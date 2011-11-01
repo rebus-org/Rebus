@@ -1,0 +1,157 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using NUnit.Framework;
+using Ponder;
+using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Persistence.SqlServer;
+
+namespace Rebus.Tests.Performance
+{
+    [TestFixture]
+    public class TestSqlServerSagaPersisterPerformance : DbFixtureBase
+    {
+        SqlServerSagaPersister persister;
+
+        protected override void DoSetUp()
+        {
+            persister = new SqlServerSagaPersister(ConnectionString);
+            DeleteRows("sagas");
+            DeleteRows("saga_index");
+        }
+
+        [TestCase(100)]
+        public void DoTheTest(int numberOfSagas)
+        {
+            var sagaDatas = Enumerable.Range(0, numberOfSagas)
+                .Select(i => new SomePieceOfFairlyComplexSagaData
+                                 {
+                                     Id = Guid.NewGuid(),
+                                     EmbeddedThings =
+                                         {
+                                             new SomeEmbeddedThing(),
+                                             new SomeEmbeddedThing(),
+                                             new SomeEmbeddedThing(),
+                                             new SomeEmbeddedThing(),
+                                             new SomeEmbeddedThing(),
+                                             new SomeEmbeddedThing(),
+                                         },
+                                     AnotherEmbeddedThing =
+                                         new AnotherEmbeddedThing
+                                             {
+                                                 Leafs =
+                                                     {
+                                                         new LeafThing(),
+                                                         new LeafThing(),
+                                                         new LeafThing(),
+                                                         new LeafThing(),
+                                                     }
+                                             },
+                                     OrdinaryField = Guid.NewGuid().ToString(),
+                                     YetAnotherEmbeddedThing = new YetAnotherEmbeddedThing
+                                                                   {
+                                                                       EvenDeeperEmbeddedThing =
+                                                                           new EvenDeeperEmbeddedThing()
+                                                                   }
+                                 })
+                .ToList();
+
+            var iterations = 10;
+
+            var pathsToIndex =
+                new[]
+                    {
+                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.Id),
+                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.OrdinaryField),
+                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.AnotherEmbeddedThing.EmbeddedValue),
+                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.YetAnotherEmbeddedThing.EvenDeeperEmbeddedThing.FinallySomeValue),
+                    };
+
+            Console.WriteLine("Running {0} iterations of saving/updating {1} sagas", iterations, numberOfSagas);
+            
+            var stopwatch  = Stopwatch.StartNew();
+            for(var counter = 0; counter < iterations; counter++)
+            {
+                foreach(var data in sagaDatas)
+                {
+                    persister.Save(data, pathsToIndex);
+                }
+            }
+
+            var elapsed = stopwatch.Elapsed;
+            Console.WriteLine(@"Saving/updating {0} sagas {1} times took {2:0.0} s
+That's {3:0} ops/s",
+                              numberOfSagas,
+                              iterations,
+                              elapsed.TotalSeconds,
+                              numberOfSagas*iterations/elapsed.TotalSeconds);
+        }
+
+        class SomePieceOfFairlyComplexSagaData : ISagaData
+        {
+            public SomePieceOfFairlyComplexSagaData()
+            {
+                EmbeddedThings = new List<SomeEmbeddedThing>();
+                OrdinaryField = Guid.NewGuid().ToString();
+            }
+
+            public Guid Id { get; set; }
+
+            public List<SomeEmbeddedThing> EmbeddedThings { get; set; }
+
+            public string OrdinaryField { get; set; }
+
+            public AnotherEmbeddedThing AnotherEmbeddedThing { get; set; }
+
+            public YetAnotherEmbeddedThing YetAnotherEmbeddedThing { get; set; }
+        }
+
+        class SomeEmbeddedThing
+        {
+            public SomeEmbeddedThing()
+            {
+                SomeValue = Guid.NewGuid().ToString();
+            }
+
+            public string SomeValue { get; set; }
+        }
+
+        class AnotherEmbeddedThing
+        {
+            public AnotherEmbeddedThing()
+            {
+                EmbeddedValue = Guid.NewGuid().ToString();
+                Leafs = new List<LeafThing>();
+            }
+            public List<LeafThing> Leafs { get; set; }
+
+            public string EmbeddedValue { get; set; }
+        }
+
+        class LeafThing
+        {
+            public LeafThing()
+            {
+                SomeValue = Guid.NewGuid().ToString();
+            }
+
+            public string SomeValue { get; set; }
+        }
+
+        class YetAnotherEmbeddedThing
+        {
+            public EvenDeeperEmbeddedThing EvenDeeperEmbeddedThing { get; set; }
+        }
+
+        class EvenDeeperEmbeddedThing
+        {
+            public EvenDeeperEmbeddedThing()
+            {
+                FinallySomeValue = Guid.NewGuid().ToString();
+            }
+
+            public string FinallySomeValue { get; set; }
+        }
+    }
+}

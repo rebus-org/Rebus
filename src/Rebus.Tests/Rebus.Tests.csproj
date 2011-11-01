@@ -69,6 +69,7 @@
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
+    <Compile Include="Performance\TestSqlServerSagaPersisterPerformance.cs" />
     <Compile Include="Persistence\InMemory\TestInMemorySagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\DbFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
