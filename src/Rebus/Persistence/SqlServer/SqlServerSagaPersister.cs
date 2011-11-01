@@ -20,31 +20,31 @@ namespace Rebus.Persistence.SqlServer
 
         public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            using(var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                // first, delete all existing indexes for this saga, and then try to insert it
-                // next, update the saga
-                using(var command = connection.CreateCommand())
+                // first, delete existing index
+                using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from saga_index where saga_id = @id;
-                                            insert into sagas (id, data) values (@id, @data)";
+                    command.CommandText = @"delete from saga_index where saga_id = @id;";
+                    command.Parameters.AddWithValue("id", sagaData.Id);
+                    command.ExecuteNonQuery();
+                }
+
+                // next, update the saga
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = @"update sagas set data = @data where id = @id";
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
-                    
-                    try
+
+                    var rows = command.ExecuteNonQuery();
+
+                    if (rows == 0)
                     {
+                        command.CommandText = @"insert into sagas (id, data) values (@id, @data)";
                         command.ExecuteNonQuery();
-                    }
-                    catch(SqlException e)
-                    {
-                        if (e.Number == 2627)
-                        {
-                            command.CommandText = @"update sagas set data = @data where id = @id";
-                            command.ExecuteNonQuery();
-                        }
-                        else throw;
                     }
                 }
 
@@ -70,9 +70,9 @@ namespace Rebus.Persistence.SqlServer
                                                             ('{0}', '{1}', '{2}', '{3}')",
                                                        Guid.NewGuid(), a.Key, a.Value,
                                                        sagaData.Id.ToString()));
-                        
+
                         var sql = string.Join(";" + Environment.NewLine, inserts);
-                        
+
                         command.CommandText = sql;
                         command.ExecuteNonQuery();
                     }
@@ -98,11 +98,11 @@ namespace Rebus.Persistence.SqlServer
 
         public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage)
         {
-            using(var connection = new SqlConnection(connectionString))
+            using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                using(var command = connection.CreateCommand())
+                using (var command = connection.CreateCommand())
                 {
                     command.CommandText = @"select s.data 
                                                 from sagas s 
@@ -112,7 +112,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                     command.Parameters.AddWithValue("value", fieldFromMessage);
 
-                    return (ISagaData) JsonConvert.DeserializeObject((string) command.ExecuteScalar(), Settings);
+                    return (ISagaData)JsonConvert.DeserializeObject((string)command.ExecuteScalar(), Settings);
                 }
             }
         }

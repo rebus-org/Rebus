@@ -24,11 +24,15 @@ namespace Rebus.Tests.Performance
         /// <summary>
         /// Initial:
         ///     Saving/updating 100 sagas 10 times took 10,6 s - that's 94 ops/s
+        ///     Saving/updating 1000 sagas 2 times took 10,6 s - that's 95 ops/s
         /// 
         /// Combined delete index/insert into sagas:
         ///     Saving/updating 100 sagas 10 times took 10,1 s - that's 99 ops/s
+        ///     Saving/updating 1000 sagas 2 times took 10,1 s - that's ? ops/s
         ///
-        /// 
+        /// Switched insert/update order, making update the most anticipated scenario and insert the least:
+        ///     Saving/updating 100 sagas 10 times took 9,0 s - that's 111 ops/s
+        ///     Saving/updating 1000 sagas 2 times took 22,3 s - that's 90 ops/s
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 2)]
