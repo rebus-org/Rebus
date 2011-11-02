@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Ponder;
 using Rebus.Persistence.InMemory;
+using Shouldly;
 
 namespace Rebus.Tests.Persistence.InMemory
 {
@@ -20,24 +21,24 @@ namespace Rebus.Tests.Persistence.InMemory
         {
             persister.UseIndex(new[] {"Id"});
             var someId = Guid.NewGuid();
-            var someSagaData = new SomeSagaData{Id=someId};
+            var mySagaData = new SomeSagaData{Id=someId};
 
-            persister.Save(someSagaData, new[]{""});
-            var sagaData = persister.Find("Id", someId.ToString());
+            persister.Save(mySagaData, new[]{""});
+            var storedSagaData = persister.Find("Id", someId.ToString());
 
-            Assert.AreSame(someSagaData, sagaData);
+            storedSagaData.ShouldBeSameAs(mySagaData);
         }
 
         [Test]
         public void CanSaveAndFindSagasByDeepPath()
         {
             persister.UseIndex(new[] {Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue)});
-            var someSagaData = new SomeSagaData{AggregatedObject = new SomeAggregatedObject{SomeRandomValue = "whooHAAA!"}};
+            var mySagaData = new SomeSagaData{AggregatedObject = new SomeAggregatedObject{SomeRandomValue = "whooHAAA!"}};
 
-            persister.Save(someSagaData, new[] { "" });
-            var sagaData = persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "whooHAAA!");
+            persister.Save(mySagaData, new[] { "" });
+            var storedSagaData = persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "whooHAAA!");
 
-            Assert.AreSame(someSagaData, sagaData);
+            storedSagaData.ShouldBeSameAs(mySagaData);
         }
 
         [Test]
@@ -46,8 +47,11 @@ namespace Rebus.Tests.Persistence.InMemory
             var sagaData = new SomeSagaData {AggregatedObject = new SomeAggregatedObject {SomeRandomValue = "whooHAAA!"}};
             persister.Save(sagaData, new[] {""});
 
-            Assert.IsNull(persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "NO MATCH"));
-            Assert.IsNull(persister.Find("Invalid.Path.To.Nothing", "whooHAAA!"));
+            persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue), "NO MATCH")
+                .ShouldBe(null);
+
+            persister.Find("Invalid.Path.To.Nothing", "whooHAAA!")
+                .ShouldBe(null);
         }
 
         class SomeSagaData : ISagaData

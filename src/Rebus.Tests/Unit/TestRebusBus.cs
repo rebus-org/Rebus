@@ -5,6 +5,7 @@ using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Tests.Integration;
 using Rhino.Mocks;
+using Shouldly;
 
 namespace Rebus.Tests.Unit
 {
@@ -115,8 +116,8 @@ namespace Rebus.Tests.Unit
                 Assert.Fail("Did not receive messages withing timeout");
             }
 
-            Assert.That(handler.FirstMessageHandled, Is.True);
-            Assert.That(handler.SecondMessageHandled, Is.True);
+            handler.FirstMessageHandled.ShouldBe(true);
+            handler.SecondMessageHandled.ShouldBe(true);
         }
 
         class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>

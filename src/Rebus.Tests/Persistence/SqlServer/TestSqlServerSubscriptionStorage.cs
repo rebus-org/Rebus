@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
 using System.Linq;
+using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
@@ -42,8 +43,9 @@ namespace Rebus.Tests.Persistence.SqlServer
             storage.Save(typeof(ThirdType), "thirdtype_subscriber");
 
             var subscribers = storage.GetSubscribers(typeof(SomeType));
-            Assert.AreEqual(1, subscribers.Length);
-            Assert.AreEqual("sometype_subscriber", subscribers[0]);
+         
+            subscribers.Length.ShouldBe(1);
+            subscribers[0].ShouldBe("sometype_subscriber");
         }
 
         [Test]
@@ -64,7 +66,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
             var subscribers = storage.GetSubscribers(typeof(ThirdType));
 
-            Assert.AreEqual(1, subscribers.Length);
+            subscribers.Length.ShouldBe(1);
         }
 
         class SomeType {}
