@@ -19,6 +19,7 @@ namespace Ponder
                 var propertyInfo = obj.GetType().GetProperty(dot);
                 if (propertyInfo == null) return null;
                 obj = propertyInfo.GetValue(obj, new object[0]);
+                if (obj == null) break;
             }
 
             return obj;
