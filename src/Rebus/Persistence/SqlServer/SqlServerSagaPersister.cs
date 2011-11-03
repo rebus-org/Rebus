@@ -96,7 +96,7 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
-        public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage)
+        public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType)
         {
             using (var connection = new SqlConnection(connectionString))
             {

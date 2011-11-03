@@ -33,6 +33,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MongoDB.Bson">
+      <HintPath>..\packages\mongocsharpdriver.1.3\lib\net35\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver">
+      <HintPath>..\packages\mongocsharpdriver.1.3\lib\net35\MongoDB.Driver.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -73,6 +79,8 @@
     <Compile Include="Performance\TestDispatcherIsolatedSagaPerformance.cs" />
     <Compile Include="Performance\TestSqlServerSagaPersisterPerformance.cs" />
     <Compile Include="Persistence\InMemory\TestInMemorySagaPersister.cs" />
+    <Compile Include="Persistence\MongoDb\MongoDbFixtureBase.cs" />
+    <Compile Include="Persistence\MongoDb\TestMongoDbSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\DbFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
@@ -91,6 +99,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.MongoDb\Rebus.MongoDb.csproj">
+      <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
+      <Name>Rebus.MongoDb</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
       <Name>Rebus</Name>

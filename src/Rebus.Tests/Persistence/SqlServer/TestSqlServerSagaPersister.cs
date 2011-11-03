@@ -13,6 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerSagaPersister : DbFixtureBase
     {
         SqlServerSagaPersister persister;
+        Type SagaDataTypeDoesntMatter;
 
         protected override void DoSetUp()
         {
@@ -159,9 +160,9 @@ namespace Rebus.Tests.Persistence.SqlServer
                            new[] {path1, path2, path3});
 
             // act
-            var sagaData1 = persister.Find(path1, "some value");
-            var sagaData2 = persister.Find(path2, "another field");
-            var sagaData3 = persister.Find(path3, "bla bla");
+            var sagaData1 = persister.Find(path1, "some value", SagaDataTypeDoesntMatter);
+            var sagaData2 = persister.Find(path2, "another field", SagaDataTypeDoesntMatter);
+            var sagaData3 = persister.Find(path3, "bla bla", SagaDataTypeDoesntMatter);
 
             // assert
             Assert.AreEqual(sagaDataId, sagaData1.Id);

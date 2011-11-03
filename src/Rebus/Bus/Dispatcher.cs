@@ -139,7 +139,8 @@ namespace Rebus.Bus
             var fieldFromMessage = correlation.FieldFromMessage(message);
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
 
-            return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? ""));
+            return storeSagaData.Find(sagaDataPropertyPath, (fieldFromMessage ?? ""),
+                                      saga.GetType().GetProperty("Data").PropertyType);
         }
     }
 }

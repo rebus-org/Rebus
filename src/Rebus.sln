@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\build.proj = ..\scripts\build.proj
 	EndProjectSection
@@ -14,16 +14,20 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Client", "Sample.Cli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Server", "Sample.Server\Sample.Server.csproj", "{A2480922-0223-4B3D-99F0-2523512D5913}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{08A7D597-5B08-4B2B-9DB1-8C0A11D82763}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{08A7D597-5B08-4B2B-9DB1-8C0A11D82763}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample.Server.Messages", "Sample.Server.Messages\Sample.Server.Messages.csproj", "{E27AC8E3-9588-4CCA-AC44-4CB671D41011}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Integration", "Integration", "{CDBB385F-F696-4B45-9E87-5A0A3C28F633}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{CDBB385F-F696-4B45-9E87-5A0A3C28F633}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{B09980FB-B791-44BA-94F9-7B8B6D9085BE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{B09980FB-B791-44BA-94F9-7B8B6D9085BE}"
 	ProjectSection(SolutionItems) = preProject
 		..\README.md = ..\README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MongoDb", "Rebus.MongoDb\Rebus.MongoDb.csproj", "{81686CC0-5387-4990-AF61-00CDAA972B81}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client-server", "client-server", "{DF9BC662-7AD8-4656-91D2-C568451FF7B6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -85,13 +89,25 @@ Global
 		{E27AC8E3-9588-4CCA-AC44-4CB671D41011}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{E27AC8E3-9588-4CCA-AC44-4CB671D41011}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{E27AC8E3-9588-4CCA-AC44-4CB671D41011}.Release|x86.ActiveCfg = Release|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{81686CC0-5387-4990-AF61-00CDAA972B81}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{A2480922-0223-4B3D-99F0-2523512D5913} = {08A7D597-5B08-4B2B-9DB1-8C0A11D82763}
-		{E0D1CCD6-08E1-4BF4-BBC5-B87EBE89DEE2} = {08A7D597-5B08-4B2B-9DB1-8C0A11D82763}
-		{E27AC8E3-9588-4CCA-AC44-4CB671D41011} = {08A7D597-5B08-4B2B-9DB1-8C0A11D82763}
+		{DF9BC662-7AD8-4656-91D2-C568451FF7B6} = {08A7D597-5B08-4B2B-9DB1-8C0A11D82763}
+		{81686CC0-5387-4990-AF61-00CDAA972B81} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{E0D1CCD6-08E1-4BF4-BBC5-B87EBE89DEE2} = {DF9BC662-7AD8-4656-91D2-C568451FF7B6}
+		{A2480922-0223-4B3D-99F0-2523512D5913} = {DF9BC662-7AD8-4656-91D2-C568451FF7B6}
+		{E27AC8E3-9588-4CCA-AC44-4CB671D41011} = {DF9BC662-7AD8-4656-91D2-C568451FF7B6}
 	EndGlobalSection
 EndGlobal
