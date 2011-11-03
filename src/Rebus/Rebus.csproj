@@ -60,6 +60,7 @@
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
     <Compile Include="Extensions\IntExt.cs" />
+    <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />

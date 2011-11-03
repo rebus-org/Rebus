@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace Rebus.Tests.Persistence.MongoDb
 {
-    public class MongoDbFixtureBase
+    public abstract class MongoDbFixtureBase
     {
         protected const string ConnectionString = "mongodb://localhost:27017/rebus_test";
         

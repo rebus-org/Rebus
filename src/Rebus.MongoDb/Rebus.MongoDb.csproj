@@ -47,7 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AmbientTxHack.cs" />
     <Compile Include="MongoDbSagaPersister.cs" />
+    <Compile Include="MongoDbSubscriptionStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

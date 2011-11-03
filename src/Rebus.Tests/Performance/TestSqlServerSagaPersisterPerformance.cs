@@ -4,7 +4,7 @@ using Rebus.Tests.Persistence.SqlServer;
 
 namespace Rebus.Tests.Performance
 {
-    [TestFixture, Category("mssql")]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class TestSqlServerSagaPersisterPerformance : DbFixtureBase
     {
         protected IStoreSagaData persister;

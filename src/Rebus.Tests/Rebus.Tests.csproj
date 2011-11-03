@@ -83,6 +83,7 @@
     <Compile Include="Persistence\InMemory\TestInMemorySagaPersister.cs" />
     <Compile Include="Persistence\MongoDb\MongoDbFixtureBase.cs" />
     <Compile Include="Persistence\MongoDb\TestMongoDbSagaPersister.cs" />
+    <Compile Include="Persistence\MongoDb\TestMongoDbSubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\DbFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />

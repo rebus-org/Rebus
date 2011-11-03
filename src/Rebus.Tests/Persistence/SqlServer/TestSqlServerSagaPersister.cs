@@ -9,7 +9,7 @@ using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture, Category("mssql")]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class TestSqlServerSagaPersister : DbFixtureBase
     {
         SqlServerSagaPersister persister;
