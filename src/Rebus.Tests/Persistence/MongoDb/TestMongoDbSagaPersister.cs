@@ -8,7 +8,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Persistence.MongoDb
 {
-    [TestFixture]
+    [TestFixture, Category("mongo")]
     public class TestMongoDbSagaPersister : MongoDbFixtureBase
     {
         MongoDbSagaPersister persister;

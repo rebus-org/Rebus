@@ -76,7 +76,9 @@
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
+    <Compile Include="Performance\SagaPersisterPerformanceFixtureBase.cs" />
     <Compile Include="Performance\TestDispatcherIsolatedSagaPerformance.cs" />
+    <Compile Include="Performance\TestMongoDbSagaPersisterPerformance.cs" />
     <Compile Include="Performance\TestSqlServerSagaPersisterPerformance.cs" />
     <Compile Include="Persistence\InMemory\TestInMemorySagaPersister.cs" />
     <Compile Include="Persistence\MongoDb\MongoDbFixtureBase.cs" />

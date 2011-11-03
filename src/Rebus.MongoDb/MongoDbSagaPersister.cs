@@ -14,6 +14,8 @@ namespace Rebus.MongoDb
     {
         readonly string collectionName;
         readonly MongoDatabase database;
+        
+        bool indexCreated;
 
         public MongoDbSagaPersister(string connectionString, string collectionName)
         {
@@ -25,20 +27,24 @@ namespace Rebus.MongoDb
         {
             var collection = database.GetCollection(collectionName);
 
+            if (!indexCreated)
+            {
+                foreach (var propertyToIndex in sagaDataPropertyPathsToIndex)
+                {
+                    collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex), IndexOptions.SetBackground(false));
+                }
+                indexCreated = true;
+            }
+
             // if an ambient TX is present, enlist the insert to be performed at commit time
             if (Transaction.Current != null)
             {
-                var hack = new AmbientTxHack(() => collection.Insert(sagaData));
+                var hack = new AmbientTxHack(() => collection.Save(sagaData, SafeMode.True));
                 Transaction.Current.EnlistVolatile(hack, EnlistmentOptions.None);
             }
             else
             {
-                collection.Insert(sagaData);
-            }
-
-            foreach(var propertyToIndex in sagaDataPropertyPathsToIndex)
-            {
-                collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex), IndexOptions.SetBackground(false));
+                collection.Save(sagaData, SafeMode.True);
             }
         }
 

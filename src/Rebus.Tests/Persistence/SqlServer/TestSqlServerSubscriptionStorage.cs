@@ -6,7 +6,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category("mssql")]
     public class TestSqlServerSubscriptionStorage : DbFixtureBase
     {
         SqlServerSubscriptionStorage storage;
