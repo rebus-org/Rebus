@@ -59,6 +59,8 @@
     <Compile Include="Bus\Worker.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\IAppConfigLoader.cs" />
+    <Compile Include="Configuration\StandardAppConfigLoader.cs" />
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
     <Compile Include="Extensions\IntExt.cs" />

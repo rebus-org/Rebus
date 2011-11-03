@@ -145,9 +145,4 @@ namespace Rebus.Configuration
             return !messages.Contains(",");
         }
     }
-
-    public interface IAppConfigLoader
-    {
-        string LoadIt();
-    }
 }

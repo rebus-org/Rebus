@@ -72,6 +72,7 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
