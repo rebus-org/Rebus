@@ -1,9 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using Rebus.Configuration;
-using Rebus.Extensions;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -19,6 +19,30 @@ namespace Rebus.Tests.Configuration
         {
             loader = Mock<IAppConfigLoader>();
             mapper = new DetermineDestinationFromNServiceBusEndpointMappings(loader);
+        }
+
+        [Test]
+        public void ErrorMessageInCaseOfMissingEndpointMappingIsAwesome()
+        {
+            StubConfig("<configuration></configuration>");
+
+            var exception = Assert.Throws<InvalidOperationException>(() => mapper.GetEndpointFor(typeof(DateTime)));
+
+            var errorMessage = exception.Message;
+
+            Console.WriteLine(errorMessage);
+
+            errorMessage.ShouldContain("System.DateTime");
+            errorMessage.ShouldContain("UnicastBusConfig");
+            errorMessage.ShouldContain("MessageEndpointMappings");
+        }
+
+        [Test]
+        public void ThrowsIfMappingCannotBeFound()
+        {
+            StubConfig("<configuration></configuration>");
+
+            Assert.Throws<InvalidOperationException>(() => mapper.GetEndpointFor(typeof (string)));
         }
 
         [TestCase(@"<configuration></configuration>")]
@@ -44,12 +68,6 @@ namespace Rebus.Tests.Configuration
         {
             // arrange
             StubConfig(appConfigText);
-            
-            // act
-            // assert
-            mapper.GetEndpointFor(typeof(InnerClass)).ShouldBe(null);
-            mapper.GetEndpointFor(typeof(OuterClass)).ShouldBe(null);
-            mapper.GetEndpointFor(typeof(string)).ShouldBe(null);
         }
 
         [Test]
@@ -62,7 +80,6 @@ namespace Rebus.Tests.Configuration
             // assert
             mapper.GetEndpointFor(typeof(InnerClass)).ShouldBe("this_is_just_some_endpoint");
             mapper.GetEndpointFor(typeof(OuterClass)).ShouldBe("this_is_just_some_endpoint");
-            mapper.GetEndpointFor(typeof(string)).ShouldBe(null);
         }
 
         [Test]
@@ -75,7 +92,6 @@ namespace Rebus.Tests.Configuration
             // assert
             mapper.GetEndpointFor(typeof(InnerClass)).ShouldBe("inner_class_endpoint");
             mapper.GetEndpointFor(typeof(OuterClass)).ShouldBe("outer_class_endpoint");
-            mapper.GetEndpointFor(typeof(string)).ShouldBe(null);
         }
 
         [Test]

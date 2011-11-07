@@ -44,7 +44,38 @@ namespace Rebus.Configuration
             if (endpoints.TryGetValue(messageType, out temp))
                 return temp;
 
-            return null;
+            var message = string.Format(@"No endpoint mapping configured for messages of type {0}.
+
+DetermineDestinationFromNServiceBusEndpointMappings offers the ability to specify endpoint mappings
+as they are specified with NServiceBus. Therefore, you should add to the application configuration
+file of your host process something like the following:
+
+  <configSections>
+    <section name=""UnicastBusConfig"" type=""NServiceBus.Config.UnicastBusConfig, NServiceBus.Core""/>
+    <!-- (....) -->
+  </configSections>
+
+  <UnicastBusConfig>
+    <MessageEndpointMappings>
+      <add Messages=""SomeEndpoint.NameOfMessageAssembly"" Endpoint=""some_endpoint""/>
+      <add Messages=""AnotherEndpoint.NameOfAnotherMessageAssembly.SomeSpecificMessage, AnotherEndpoint.NameOfAnotherMessageAssembly"" Endpoint=""another_endpoint""/>
+    </MessageEndpointMappings>
+  </UnicastBusConfig>
+
+which in human would read like ""all messages from the assembly SomeEndpoint.NameOfMessageAssembly
+are owned by the service receiving its messages from 'some_endpoint', and the message SomeSpecificMessage
+in the namespace AnotherEndpoint.NameOfAnotherMessageAssembly in the assembly
+AnotherEndpoint.NameOfAnotherMessageAssembly is owned by the service receiving its messages from
+'another_endpoint'.
+
+Note that you do not need to reference NServiceBus in order to do this - you can replace the section
+declaration pointing to NServiceBus.Core with this generic declaration:
+
+    <section name=""UnicastBusConfig"" type=""System.Configuration.NameValueSectionHandler""/>
+
+", messageType);
+
+            throw new InvalidOperationException(message);
         }
 
         protected virtual void Initialize()
