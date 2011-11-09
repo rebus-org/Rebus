@@ -7,5 +7,6 @@ namespace Rebus.Messages
     public class SubscriptionMessage
     {
         public string Type { get; set; }
+        public SubscribeAction Action { get; set; }
     }
 }

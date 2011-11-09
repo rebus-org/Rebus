@@ -1,0 +1,11 @@
+<Configuration>
+  <SettingsComponent>
+    <string>
+      <setting name="TeamCity.Toolbar.Shown">-TeamCity;</setting>
+    </string>
+    <integer />
+    <boolean>
+      <setting name="TeamCity.ServerChangesView.Visible">True</setting>
+    </boolean>
+  </SettingsComponent>
+</Configuration>

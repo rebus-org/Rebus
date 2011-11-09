@@ -18,11 +18,32 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         [Test]
+        public void SubscriptionsCanBeRemoved()
+        {
+            // arrange
+            storage.Store(typeof(SomeType), "first_endpoint");            
+            storage.Store(typeof(AnotherType), "first_endpoint");            
+            storage.Store(typeof(SomeType), "second_endpoint");            
+
+            // act
+            storage.Remove(typeof(SomeType), "first_endpoint");
+
+            // assert
+            var someTypeSubscribers = storage.GetSubscribers(typeof(SomeType));
+            someTypeSubscribers.Length.ShouldBe(1);
+            someTypeSubscribers[0].ShouldBe("second_endpoint");
+
+            var anotherTypeSubscribers = storage.GetSubscribers(typeof(AnotherType));
+            anotherTypeSubscribers.Length.ShouldBe(1);
+            anotherTypeSubscribers[0].ShouldBe("first_endpoint");
+        }
+
+        [Test]
         public void AddingSubscriptionEnlistsInAmbientTx()
         {
             using(var tx = new TransactionScope())
             {
-                storage.Save(typeof(SomeType), "someEndpoint");
+                storage.Store(typeof(SomeType), "someEndpoint");
 
                 // don't complete tx!
             }
@@ -38,9 +59,9 @@ namespace Rebus.Tests.Persistence.SqlServer
         [Test]
         public void CanSaveSubscriptions()
         {
-            storage.Save(typeof(SomeType), "sometype_subscriber");
-            storage.Save(typeof(AnotherType), "anothertype_subscriber");
-            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Store(typeof(SomeType), "sometype_subscriber");
+            storage.Store(typeof(AnotherType), "anothertype_subscriber");
+            storage.Store(typeof(ThirdType), "thirdtype_subscriber");
 
             var subscribers = storage.GetSubscribers(typeof(SomeType));
          
@@ -51,18 +72,18 @@ namespace Rebus.Tests.Persistence.SqlServer
         [Test]
         public void DoesNotThrowIfSameSubscriptionIsAddedMultipleTimes()
         {
-            storage.Save(typeof(SomeType), "sometype_subscriber");
-            storage.Save(typeof(SomeType), "sometype_subscriber");
-            storage.Save(typeof(SomeType), "sometype_subscriber");
+            storage.Store(typeof(SomeType), "sometype_subscriber");
+            storage.Store(typeof(SomeType), "sometype_subscriber");
+            storage.Store(typeof(SomeType), "sometype_subscriber");
         }
 
         [Test]
         public void AddingSubscriptionIsIdempotent()
         {
-            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
-            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
-            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
-            storage.Save(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Store(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Store(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Store(typeof(ThirdType), "thirdtype_subscriber");
+            storage.Store(typeof(ThirdType), "thirdtype_subscriber");
 
             var subscribers = storage.GetSubscribers(typeof(ThirdType));
 

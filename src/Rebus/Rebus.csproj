@@ -77,6 +77,7 @@
     <Compile Include="MessageContext.cs" />
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Messages\IRawMessage.cs" />
+    <Compile Include="Messages\SubscribeAction.cs" />
     <Compile Include="Persistence\InMemory\InMemorySagaPersister.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
     <Compile Include="IReceiveMessages.cs" />

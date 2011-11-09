@@ -18,25 +18,48 @@ namespace Rebus.MongoDb
             database = MongoDatabase.Create(connectionString);
         }
 
-        public void Save(Type messageType, string subscriberInputQueue)
+        public void Store(Type messageType, string subscriberInputQueue)
         {
             var collection = database.GetCollection(collectionName);
 
             if (Transaction.Current != null)
             {
-                var hack = new AmbientTxHack(() => DoUpdate(messageType, subscriberInputQueue, collection));
+                var hack = new AmbientTxHack(() => DoAdd(messageType, subscriberInputQueue, collection));
                 Transaction.Current.EnlistVolatile(hack, EnlistmentOptions.None);
             }
             else
             {
-                DoUpdate(messageType, subscriberInputQueue, collection);
+                DoAdd(messageType, subscriberInputQueue, collection);
             }
         }
 
-        SafeModeResult DoUpdate(Type messageType, string subscriberInputQueue, MongoCollection<BsonDocument> collection)
+        public void Remove(Type messageType, string subscriberInputQueue)
+        {
+            var collection = database.GetCollection(collectionName);
+
+            if (Transaction.Current != null)
+            {
+                var hack = new AmbientTxHack(() => DoRemove(messageType, subscriberInputQueue, collection));
+                Transaction.Current.EnlistVolatile(hack, EnlistmentOptions.None);
+            }
+            else
+            {
+                DoRemove(messageType, subscriberInputQueue, collection);
+            }
+        }
+
+        SafeModeResult DoAdd(Type messageType, string subscriberInputQueue, MongoCollection<BsonDocument> collection)
         {
             return collection.Update(Query.EQ("_id", messageType.FullName),
                                      Update.AddToSet("endpoints", subscriberInputQueue),
+                                     UpdateFlags.Upsert,
+                                     SafeMode.True);
+        }
+
+        SafeModeResult DoRemove(Type messageType, string subscriberInputQueue, MongoCollection<BsonDocument> collection)
+        {
+            return collection.Update(Query.EQ("_id", messageType.FullName),
+                                     Update.Pull("endpoints", subscriberInputQueue),
                                      UpdateFlags.Upsert,
                                      SafeMode.True);
         }

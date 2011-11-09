@@ -1,37 +1,49 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Linq;
 
 namespace Rebus.Persistence.InMemory
 {
     public class InMemorySubscriptionStorage : IStoreSubscriptions
     {
-        readonly ConcurrentDictionary<Type, ConcurrentBag<string>> subscribers = new ConcurrentDictionary<Type, ConcurrentBag<string>>();
+        readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<string, object>>();
 
-        public void Save(Type messageType, string subscriberInputQueue)
+        public void Store(Type messageType, string subscriberInputQueue)
         {
-            ConcurrentBag<string> subscribersForThisType;
+            ConcurrentDictionary<string, object> subscribersForThisType;
 
             if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
             {
-                lock(subscribers)
+                lock (subscribers)
                 {
                     if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
                     {
-                        subscribersForThisType  = new ConcurrentBag<string>();
+                        subscribersForThisType = new ConcurrentDictionary<string, object>();
                         subscribers[messageType] = subscribersForThisType;
                     }
                 }
             }
 
-            subscribersForThisType.Add(subscriberInputQueue);
+            subscribersForThisType.TryAdd(subscriberInputQueue, null);
+        }
+
+        public void Remove(Type messageType, string subscriberInputQueue)
+        {
+            ConcurrentDictionary<string, object> subscribersForThisType;
+
+            if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
+                return;
+
+            object temp;
+            subscribersForThisType.TryRemove(subscriberInputQueue, out temp);
         }
 
         public string[] GetSubscribers(Type messageType)
         {
-            ConcurrentBag<string> subscribersForThisType;
+            ConcurrentDictionary<string, object> subscribersForThisType;
 
             return subscribers.TryGetValue(messageType, out subscribersForThisType)
-                       ? subscribersForThisType.ToArray()
+                       ? subscribersForThisType.Keys.ToArray()
                        : new string[0];
         }
     }

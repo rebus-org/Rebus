@@ -26,7 +26,7 @@ namespace Rebus.Bus
 
             Log.InfoFormat("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);
 
-            storeSubscriptions.Save(messageType, subscriberInputQueue);
+            storeSubscriptions.Store(messageType, subscriberInputQueue);
         }
     }
 }

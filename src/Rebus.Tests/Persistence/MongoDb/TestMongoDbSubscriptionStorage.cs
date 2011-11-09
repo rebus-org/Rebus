@@ -15,13 +15,39 @@ namespace Rebus.Tests.Persistence.MongoDb
             storage = new MongoDbSubscriptionStorage(ConnectionString, "subscriptions");
         }
 
+        protected override void DoTearDown()
+        {
+            DropCollection("subscriptions");
+        }
+
+        [Test]
+        public void CanRemoveSubscriptionsAsWell()
+        {
+            // arrange
+            storage.Store(typeof(SomeMessageType), "some_sub");
+            storage.Store(typeof(SomeMessageType), "another_sub");
+            storage.Store(typeof(AnotherMessageType), "some_sub");
+
+            // act
+            storage.Remove(typeof(SomeMessageType), "some_sub");
+
+            // assert
+            var someMessageTypeSubscribers = storage.GetSubscribers(typeof(SomeMessageType));
+            someMessageTypeSubscribers.Length.ShouldBe(1);
+            someMessageTypeSubscribers[0].ShouldBe("another_sub");
+
+            var anotherMessageTypeSubscribers = storage.GetSubscribers(typeof(AnotherMessageType));
+            anotherMessageTypeSubscribers.Length.ShouldBe(1);
+            anotherMessageTypeSubscribers[0].ShouldBe("some_sub");
+        }
+
         [Test]
         public void StoresSubscriptionsLikeExpected()
         {
             // arrange
-            storage.Save(typeof(SomeMessageType), "some_sub");
-            storage.Save(typeof(SomeMessageType), "another_sub");
-            storage.Save(typeof(AnotherMessageType), "yet_another_sub");
+            storage.Store(typeof(SomeMessageType), "some_sub");
+            storage.Store(typeof(SomeMessageType), "another_sub");
+            storage.Store(typeof(AnotherMessageType), "yet_another_sub");
 
             // act
             var someSubscribers = storage.GetSubscribers(typeof (SomeMessageType));

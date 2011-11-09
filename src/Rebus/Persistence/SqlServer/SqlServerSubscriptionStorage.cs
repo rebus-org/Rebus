@@ -14,7 +14,7 @@ namespace Rebus.Persistence.SqlServer
             this.connectionString = connectionString;
         }
 
-        public void Save(Type messageType, string subscriberInputQueue)
+        public void Store(Type messageType, string subscriberInputQueue)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -43,6 +43,26 @@ namespace Rebus.Persistence.SqlServer
                             throw;
                         }
                     }
+                }
+            }
+        }
+
+        public void Remove(Type messageType, string subscriberInputQueue)
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = @"delete from subscriptions
+                                                where message_type = @message_type
+                                                and endpoint = @endpoint";
+
+                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+                    command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
+
+                    command.ExecuteNonQuery();
                 }
             }
         }

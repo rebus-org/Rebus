@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using MongoDB.Driver;
 using NUnit.Framework;
@@ -29,21 +30,21 @@ namespace Rebus.Tests.Persistence.MongoDb
         public void TearDown()
         {
             DoTearDown();
-
-            foreach(var collectionName in collectionsToDrop)
-            {
-                db.DropCollection(collectionName);
-            }
         }
 
         protected virtual void DoTearDown()
         {
         }
 
+        protected void DropCollection(string collectionName)
+        {
+            db.DropCollection(collectionName);
+        }
+
         protected MongoCollection<T> Collection<T>(string collectionName)
         {
             collectionsToDrop.Add(collectionName);
-            
+
             return db.GetCollection<T>(collectionName);
         }
     }
