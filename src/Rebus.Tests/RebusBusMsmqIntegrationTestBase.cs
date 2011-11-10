@@ -38,7 +38,8 @@ namespace Rebus.Tests
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    new InMemorySubscriptionStorage(), this,
-                                   serializer, new SagaDataPersisterForTesting());
+                                   serializer, new SagaDataPersisterForTesting(),
+                                   new TrivialPipelineInspector());
             buses.Add(bus);
             return bus;
         }

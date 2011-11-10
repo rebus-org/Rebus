@@ -30,8 +30,16 @@ namespace Sample.Client
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();
             var sagaPersister = new InMemorySagaPersister();
-            
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, inMemorySubscriptionStorage, program, jsonMessageSerializer, sagaPersister);
+            var inspectHandlerPipeline = new TrivialPipelineInspector();
+
+            var bus = new RebusBus(program,
+                                   msmqMessageQueue,
+                                   msmqMessageQueue,
+                                   inMemorySubscriptionStorage,
+                                   program,
+                                   jsonMessageSerializer,
+                                   sagaPersister,
+                                   inspectHandlerPipeline);
             
             bus.Start();
 

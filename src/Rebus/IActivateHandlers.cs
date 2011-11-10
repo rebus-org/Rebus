@@ -15,7 +15,13 @@ namespace Rebus
         IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
         
         /// <summary>
-        /// Is called after each handler has been invoked.
+        /// Is called after each handler has been invoked. Please note that this method
+        /// will be called for all handlers - i.e. if you add more handlers to the pipeline
+        /// in the Filter method of <see cref="IInspectHandlerPipeline"/>, this method will
+        /// be called for those additional handlers as well. This, in turn, allows you to
+        /// implement <see cref="IInspectHandlerPipeline"/>, supplying your implementation
+        /// of <see cref="IActivateHandlers"/> to that implementation, allowing any manually
+        /// pulled handler instances to be released in the right way.
         /// </summary>
         void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);
     }

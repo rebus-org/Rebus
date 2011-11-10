@@ -17,7 +17,7 @@ namespace Sample.Server
             {
                 Run();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }
@@ -30,11 +30,19 @@ namespace Sample.Server
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();
             var sagaPersister = new InMemorySagaPersister();
+            var inspectHandlerPipeline = new TrivialPipelineInspector();
 
-            var bus = new RebusBus(program, msmqMessageQueue, msmqMessageQueue, inMemorySubscriptionStorage, program, jsonMessageSerializer, sagaPersister);
-            
+            var bus = new RebusBus(program,
+                                   msmqMessageQueue,
+                                   msmqMessageQueue,
+                                   inMemorySubscriptionStorage,
+                                   program,
+                                   jsonMessageSerializer,
+                                   sagaPersister,
+                                   inspectHandlerPipeline);
+
             program.Bus = bus;
-            
+
             bus.Start();
 
             Console.WriteLine("Server listening...");
@@ -63,7 +71,7 @@ namespace Sample.Server
         }
 
         public RebusBus Bus { get; set; }
-        
+
         public string GetEndpointFor(Type messageType)
         {
             throw new NotImplementedException();

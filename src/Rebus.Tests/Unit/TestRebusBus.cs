@@ -19,6 +19,7 @@ namespace Rebus.Tests.Unit
         ISendMessages sendMessages;
         ISerializeMessages serializeMessages;
         IStoreSagaData storeSagaData;
+        IInspectHandlerPipeline inspectHandlerPipeline;
 
         protected override void DoSetUp()
         {
@@ -28,13 +29,15 @@ namespace Rebus.Tests.Unit
             sendMessages = Mock<ISendMessages>();
             serializeMessages = Mock<ISerializeMessages>();
             storeSagaData = Mock<IStoreSagaData>();
+            inspectHandlerPipeline = new TrivialPipelineInspector();
             bus = new RebusBus(activateHandlers,
                                sendMessages,
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
                                determineDestination,
-                               serializeMessages, 
-                               storeSagaData);
+                               serializeMessages,
+                               storeSagaData,
+                               inspectHandlerPipeline);
         }
 
         protected override void DoTearDown()
@@ -46,7 +49,7 @@ namespace Rebus.Tests.Unit
         public void SendsMessagesToTheRightDestination()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (PolymorphicMessage))).Return("woolala");
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
             var someTransportMessage = new TransportMessage();
@@ -70,8 +73,8 @@ namespace Rebus.Tests.Unit
             var someTransportMessage = new TransportMessage();
             serializeMessages
                 .Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
-                                                                 ((SubscriptionMessage) t.Messages[0]).Type ==
-                                                                 typeof (PolymorphicMessage).FullName)))
+                                                                 ((SubscriptionMessage)t.Messages[0]).Type ==
+                                                                 typeof(PolymorphicMessage).FullName)))
                 .Return(someTransportMessage);
 
             // act
@@ -84,7 +87,7 @@ namespace Rebus.Tests.Unit
         [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
-            var someTransportMessage = new TransportMessage{Id="some id"};
+            var someTransportMessage = new TransportMessage { Id = "some id" };
             receiveMessages.Stub(r => r.ReceiveMessage()).Return(someTransportMessage);
 
             serializeMessages.Stub(s => s.Deserialize(someTransportMessage))
@@ -99,19 +102,19 @@ namespace Rebus.Tests.Unit
             var manualResetEvent = new ManualResetEvent(false);
 
             var handler = new SomeHandler(manualResetEvent);
-            
+
             activateHandlers.Stub(f => f.GetHandlerInstancesFor<IFirstInterface>())
-                .Return(new[] {(IHandleMessages<IFirstInterface>) handler});
-            
+                .Return(new[] { (IHandleMessages<IFirstInterface>)handler });
+
             activateHandlers.Stub(f => f.GetHandlerInstancesFor<ISecondInterface>())
-                .Return(new[] {(IHandleMessages<ISecondInterface>) handler});
-            
+                .Return(new[] { (IHandleMessages<ISecondInterface>)handler });
+
             activateHandlers.Stub(f => f.GetHandlerInstancesFor<PolymorphicMessage>())
                 .Return(new IHandleMessages<PolymorphicMessage>[0]);
 
             bus.Start();
 
-            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(50)))
+            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(5)))
             {
                 Assert.Fail("Did not receive messages withing timeout");
             }
@@ -153,8 +156,8 @@ namespace Rebus.Tests.Unit
             }
         }
 
-        interface IFirstInterface {}
-        interface ISecondInterface {}
-        class PolymorphicMessage : IFirstInterface, ISecondInterface{}
+        interface IFirstInterface { }
+        interface ISecondInterface { }
+        class PolymorphicMessage : IFirstInterface, ISecondInterface { }
     }
 }

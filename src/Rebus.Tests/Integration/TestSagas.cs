@@ -18,7 +18,7 @@ namespace Rebus.Tests.Integration
         {
             persister = new SagaDataPersisterForTesting();
             activator = new HandlerActivatorForTesting();
-            dispatcher = new Dispatcher(persister, activator, new InMemorySubscriptionStorage());
+            dispatcher = new Dispatcher(persister, activator, new InMemorySubscriptionStorage(), new TrivialPipelineInspector());
         }
 
         [Test]

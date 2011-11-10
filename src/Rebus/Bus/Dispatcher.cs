@@ -14,17 +14,22 @@ namespace Rebus.Bus
         readonly IStoreSagaData storeSagaData;
         readonly IActivateHandlers activateHandlers;
         readonly IStoreSubscriptions storeSubscriptions;
+        readonly IInspectHandlerPipeline inspectHandlerPipeline;
 
-        public Dispatcher(IStoreSagaData storeSagaData, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions)
+        public Dispatcher(IStoreSagaData storeSagaData, 
+            IActivateHandlers activateHandlers, 
+            IStoreSubscriptions storeSubscriptions,
+            IInspectHandlerPipeline inspectHandlerPipeline)
         {
             this.storeSagaData = storeSagaData;
             this.activateHandlers = activateHandlers;
             this.storeSubscriptions = storeSubscriptions;
+            this.inspectHandlerPipeline = inspectHandlerPipeline;
         }
 
         public void Dispatch<TMessage>(TMessage message)
         {
-            IHandleMessages<TMessage>[] handlers = null;
+            IHandleMessages<TMessage>[] handlersToRelease = null;
 
             try
             {
@@ -33,18 +38,27 @@ namespace Rebus.Bus
                 // if we didn't get anything, just carry on... might not be what we want, but let's just do that for now
                 if (handlerInstances == null) return;
 
-                handlers = handlerInstances.ToArray();
+                // evaluate handler sequence and ensure that its "fixed in place"
+                handlersToRelease = handlerInstances.Concat(OwnHandlersFor<TMessage>()).ToArray();
 
-                foreach (var handler in handlers.Concat(OwnHandlersFor<TMessage>()))
+                // allow pipeline to be filtered
+                var handlersToExecute = inspectHandlerPipeline.Filter(message, handlersToRelease).ToList();
+
+                // keep track of all handlers pulled from the activator as well as any handlers
+                // that may have been added from the handler filter
+                handlersToRelease = handlersToRelease.Union(handlersToExecute).ToArray();
+
+                foreach (var handler in handlersToExecute)
                 {
-                    DispatchToHandlers(message, handler);
+                    DispatchToHandler(message, handler);
+                    if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers) break;
                 }
             }
             finally
             {
-                if (handlers != null)
+                if (handlersToRelease != null)
                 {
-                    activateHandlers.ReleaseHandlerInstances(handlers);
+                    activateHandlers.ReleaseHandlerInstances(handlersToRelease);
                 }
             }
         }
@@ -59,7 +73,7 @@ namespace Rebus.Bus
             return new IHandleMessages<T>[0];
         }
 
-        void DispatchToHandlers<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
+        void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
             if (handler is Saga)
             {

@@ -41,6 +41,8 @@ Stacktrace of when the current message context was created:
 
         MessageContext()
         {
+            DispatchMessageToHandlers = true;
+
 #if DEBUG
             StackTrace = Environment.StackTrace;
 #endif
@@ -59,6 +61,13 @@ Stacktrace of when the current message context was created:
 
             return current;
         }
+
+        public static bool HasCurrent
+        {
+            get { return current != null; }
+        }
+
+        internal bool DispatchMessageToHandlers { get; set; }
 
         public void Dispose()
         {

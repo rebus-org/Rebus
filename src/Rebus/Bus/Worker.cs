@@ -46,12 +46,13 @@ namespace Rebus.Bus
             IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,
             ISerializeMessages serializeMessages,
-            IStoreSagaData storeSagaData)
+            IStoreSagaData storeSagaData,
+            IInspectHandlerPipeline inspectHandlerPipeline)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline);
             
             workerThread = new Thread(MainLoop) {Name = GenerateNewWorkerThreadName()};
             workerThread.Start();

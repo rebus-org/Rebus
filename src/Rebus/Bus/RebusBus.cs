@@ -18,10 +18,18 @@ namespace Rebus.Bus
         readonly IActivateHandlers activateHandlers;
         readonly ISerializeMessages serializeMessages;
         readonly IStoreSagaData storeSagaData;
+        readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IStoreSagaData storeSagaData)
+        public RebusBus(IActivateHandlers activateHandlers, 
+            ISendMessages sendMessages, 
+            IReceiveMessages receiveMessages, 
+            IStoreSubscriptions storeSubscriptions, 
+            IDetermineDestination determineDestination, 
+            ISerializeMessages serializeMessages, 
+            IStoreSagaData storeSagaData,
+            IInspectHandlerPipeline inspectHandlerPipeline)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -30,6 +38,7 @@ namespace Rebus.Bus
             this.determineDestination = determineDestination;
             this.serializeMessages = serializeMessages;
             this.storeSagaData = storeSagaData;
+            this.inspectHandlerPipeline = inspectHandlerPipeline;
 
             Log.Info("Rebus bus created");
         }
@@ -132,7 +141,8 @@ namespace Rebus.Bus
                                     activateHandlers,
                                     storeSubscriptions,
                                     serializeMessages,
-                                    storeSagaData);
+                                    storeSagaData,
+                                    inspectHandlerPipeline);
             workers.Add(worker);
             worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
             worker.UnhandledException += LogUnhandledException;

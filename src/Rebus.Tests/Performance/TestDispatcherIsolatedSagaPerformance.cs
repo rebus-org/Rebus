@@ -21,7 +21,8 @@ namespace Rebus.Tests.Performance
             persister = new SagaDataPersisterForTesting();
             dispatcher = new Dispatcher(persister,
                                         activator,
-                                        new InMemorySubscriptionStorage());
+                                        new InMemorySubscriptionStorage(),
+                                        new TrivialPipelineInspector());
         }
 
         /// <summary>

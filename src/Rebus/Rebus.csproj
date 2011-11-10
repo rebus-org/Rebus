@@ -63,6 +63,7 @@
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
+    <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IActivateHandlers.cs" />
     <Compile Include="IDetermineDestination.cs" />
+    <Compile Include="IInspectHandlerPipeline.cs" />
     <Compile Include="ISagaData.cs" />
     <Compile Include="ISerializeMessages.cs" />
     <Compile Include="IStartableBus.cs" />
