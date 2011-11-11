@@ -22,7 +22,7 @@ namespace Rebus.Tests.Persistence.MongoDb
             DropCollection("sagas");
         }
 
-        [Test, Ignore("haven't found a solution for this yet!!")]
+        [Test, Ignore("haven't found a solution for this yet!!"), Category(TestCategories.ToDo)]
         public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
         {
             DropCollection("sagas");

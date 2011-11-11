@@ -12,6 +12,7 @@ namespace Rebus.Tests
         public const string Integration = "integration";
         public const string Mongo = "mongo";
         public const string MsSql = "mssql";
+        public const string ToDo = "todo";
 
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
         [TestCase(typeof(DbFixtureBase), MsSql)]
