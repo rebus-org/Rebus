@@ -82,6 +82,8 @@ namespace Rebus.Tests.Performance
 
             public Guid Id { get; set; }
 
+            public int Revision { get; set; }
+
             public List<SomeEmbeddedThing> EmbeddedThings { get; set; }
 
             public string OrdinaryField { get; set; }

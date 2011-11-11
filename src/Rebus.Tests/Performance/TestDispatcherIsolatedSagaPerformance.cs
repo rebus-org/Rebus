@@ -89,6 +89,8 @@ namespace Rebus.Tests.Performance
         {
             public Guid Id { get; set; }
 
+            public int Revision { get; set; }
+
             public string CorrelationId { get; set; }
 
             public int Counter { get; set; }

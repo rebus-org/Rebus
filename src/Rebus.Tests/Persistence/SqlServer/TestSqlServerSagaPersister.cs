@@ -249,6 +249,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         class MySagaData : ISagaData
         {
             public Guid Id { get; set; }
+            public int Revision { get; set; }
 
             public string SomeField { get; set; }
             public string AnotherField { get; set; }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Transactions;
 using MongoDB.Driver.Builders;
 using NUnit.Framework;
 using Rebus.MongoDb;
@@ -16,6 +15,112 @@ namespace Rebus.Tests.Persistence.MongoDb
         protected override void DoSetUp()
         {
             persister = new MongoDbSagaPersister(ConnectionString, "sagas");
+        }
+
+        protected override void DoTearDown()
+        {
+            DropCollection("sagas");
+        }
+
+        [Test, Ignore("haven't found a solution for this yet!!")]
+        public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
+        {
+            DropCollection("sagas");
+            TestWithType("Hello world!!!");
+
+            DropCollection("sagas");
+            TestWithType(23);
+            
+            DropCollection("sagas");
+            TestWithType(Guid.NewGuid());
+        }
+
+        void TestWithType<TProperty>(TProperty propertyValueToUse)
+        {
+            var propertyTypeToTest = typeof(TProperty);
+
+            try
+            {
+                // arrange
+                var sagaDataType = typeof(GenericSagaData<>).MakeGenericType(propertyTypeToTest);
+                var savedSagaData = (ISagaData)Activator.CreateInstance(sagaDataType);
+                var savedSagaDataId = Guid.NewGuid();
+                savedSagaData.Id = savedSagaDataId;
+                sagaDataType.GetProperty("Property").SetValue(savedSagaData, propertyValueToUse, new object[0]);
+                persister.Save(savedSagaData, new[] { "Property" });
+
+                // act
+                var foundSagaData = persister.Find("Property", propertyValueToUse.ToString(), sagaDataType);
+
+                // assert
+                foundSagaData.ShouldNotBe(null);
+                foundSagaData.Id.ShouldBe(savedSagaDataId);
+            }
+            catch (Exception exception)
+            {
+                Assert.Fail(@"Test failed for {0}: {1}
+
+{2}",
+                            propertyTypeToTest,
+                            propertyValueToUse,
+                            exception);
+            }
+        }
+
+        [Test, Ignore("wondering how to simulate this?")]
+        public void ThrowsIfTheSagaCannotBeSaved()
+        {
+            // arrange
+            Assert.Fail("come up with a test");
+
+            // act
+
+            // assert
+        }
+
+        [Test]
+        public void SagaDataHasProperMongolikePropertyNamesInDb()
+        {
+            // arrange
+            var id = Guid.NewGuid();
+            var currentRevision = 243;
+            var nextRevision = currentRevision + 1;
+            persister.Save(new SimpleSagaData { Id = id, Revision = currentRevision }, new string[0]);
+
+            // act
+            var mongoCollection = Collection<SimpleSagaData>("sagas");
+            
+            var simpleSagaDataById = mongoCollection.FindOne(Query.EQ("_id", id));
+
+            var simpleSagaDataByIdAndRevision = mongoCollection
+                .FindOne(Query.And(Query.EQ("_id", id),
+                                   Query.EQ("_rev", nextRevision)));
+
+            // assert
+            simpleSagaDataById.ShouldNotBe(null);
+            simpleSagaDataById.Id.ShouldBe(id);
+            
+            simpleSagaDataByIdAndRevision.ShouldNotBe(null);
+            simpleSagaDataByIdAndRevision.Id.ShouldBe(id);
+        }
+
+        [Test]
+        public void UsesOptimisticLockingAndDetectsRaceConditionsWhenUpdating()
+        {
+            // arrange
+            var indexBySomeString = new[] { "SomeString" };
+            var id = Guid.NewGuid();
+            var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
+            persister.Save(simpleSagaData, indexBySomeString);
+
+            // act
+            var sagaData1 = (SimpleSagaData)persister.Find("SomeString", "hello world!", typeof(SimpleSagaData));
+            var sagaData2 = (SimpleSagaData)persister.Find("SomeString", "hello world!", typeof(SimpleSagaData));
+
+            // assert
+            persister.Save(sagaData1, indexBySomeString);
+            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData2, indexBySomeString));
+            Console.WriteLine(exception);
         }
 
         [Test]
@@ -42,12 +147,7 @@ namespace Rebus.Tests.Persistence.MongoDb
                                        }
                     };
 
-            using (var tx = new TransactionScope())
-            {
-                persister.Save(complexPieceOfSagaData, new[] {"SomeField"});
-
-                tx.Complete();
-            }
+            persister.Save(complexPieceOfSagaData, new[] { "SomeField" });
 
             var mySagaData = Collection<MySagaData>("sagas").FindOne(Query.EQ("_id", sagaDataId));
 
@@ -56,46 +156,7 @@ namespace Rebus.Tests.Persistence.MongoDb
         }
 
         [Test]
-        public void SavingSagaDataIsTransactional()
-        {
-            // arrange
-            var sagaDataId = Guid.NewGuid();
-            var sagaData = new MySagaData { Id = sagaDataId, SomeField = "some value" };
-
-            // act
-            using (var tx = new TransactionScope())
-            {
-                persister.Save(sagaData, new string[0]);
-
-                // no complete!
-            }
-
-            // assert
-            Collection<MySagaData>("sagas").FindOne(Query.EQ("_id", sagaDataId)).ShouldBe(null);
-        }
-
-        [Test]
         public void CanDeleteSaga()
-        {
-            // arrange
-            var mySagaDataId = Guid.NewGuid();
-            var mySagaData = new MySagaData
-                                 {
-                                     Id = mySagaDataId,
-                                     SomeField="whoolala"
-                                 };
-
-            Collection<MySagaData>("sagas").Insert(mySagaData);
-
-            // act
-            persister.Delete(mySagaData);
-
-            // assert
-            Collection<MySagaData>("sagas").FindOne(Query.EQ("_id", mySagaDataId)).ShouldBe(null);
-        }
-
-        [Test]
-        public void DeleteIsTransactional()
         {
             // arrange
             var mySagaDataId = Guid.NewGuid();
@@ -108,15 +169,10 @@ namespace Rebus.Tests.Persistence.MongoDb
             Collection<MySagaData>("sagas").Insert(mySagaData);
 
             // act
-            using (var tx = new TransactionScope())
-            {
-                persister.Delete(mySagaData);
-            
-                // no complete!
-            }
+            persister.Delete(mySagaData);
 
             // assert
-            Collection<MySagaData>("sagas").FindOne(Query.EQ("_id", mySagaDataId)).ShouldNotBe(null);
+            Collection<MySagaData>("sagas").FindOne(Query.EQ("_id", mySagaDataId)).ShouldBe(null);
         }
 
         [Test]
@@ -132,9 +188,15 @@ namespace Rebus.Tests.Persistence.MongoDb
 
             // act
             var sagaDataType = typeof(MySagaData);
-            persister.Find("AnotherField", "non-existent value", sagaDataType).ShouldBe(null);
-            persister.Find("SomeFieldThatDoesNotExist", "doesn't matter", sagaDataType).ShouldBe(null);
-            ((MySagaData)persister.Find("AnotherField", "some field 2", sagaDataType)).SomeField.ShouldBe("2");
+            var dataViaNonexistentValue = persister.Find("AnotherField", "non-existent value", sagaDataType);
+            var dataViaNonexistentField = persister.Find("SomeFieldThatDoesNotExist", "doesn't matter", sagaDataType);
+            var mySagaData = ((MySagaData)persister.Find("AnotherField", "some field 2", sagaDataType));
+            
+            // assert
+            dataViaNonexistentField.ShouldBe(null);
+            dataViaNonexistentValue.ShouldBe(null);
+            mySagaData.ShouldNotBe(null);
+            mySagaData.SomeField.ShouldBe("2");
         }
 
         MySagaData SagaData(int someNumber, string textInSomeField)
@@ -150,6 +212,8 @@ namespace Rebus.Tests.Persistence.MongoDb
         class MySagaData : ISagaData
         {
             public Guid Id { get; set; }
+
+            public int Revision { get; set; }
 
             public string SomeField { get; set; }
             public string AnotherField { get; set; }
@@ -170,6 +234,20 @@ namespace Rebus.Tests.Persistence.MongoDb
         class SomeCollectedThing
         {
             public int No { get; set; }
+        }
+
+        class SimpleSagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string SomeString { get; set; }
+        }
+
+        class GenericSagaData<T> : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public T Property { get; set; }
         }
     }
 }

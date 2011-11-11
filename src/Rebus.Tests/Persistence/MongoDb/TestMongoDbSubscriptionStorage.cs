@@ -20,6 +20,28 @@ namespace Rebus.Tests.Persistence.MongoDb
             DropCollection("subscriptions");
         }
 
+        [Test, Ignore("wondering how to simulate this?")]
+        public void ThrowsIfSubscriptionCannotBeRemoved()
+        {
+            // arrange
+            Assert.Fail("come up with a test");
+
+            // act
+
+            // assert
+        }
+
+        [Test, Ignore("wondering how to simulate this?")]
+        public void ThrowsIfSubscriptionCannotBeAdded()
+        {
+            // arrange
+            Assert.Fail("come up with test");
+
+            // act
+
+            // assert
+        }
+
         [Test]
         public void CanRemoveSubscriptionsAsWell()
         {

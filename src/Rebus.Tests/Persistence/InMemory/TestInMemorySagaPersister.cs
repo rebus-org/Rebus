@@ -63,6 +63,8 @@ namespace Rebus.Tests.Persistence.InMemory
         {
             public Guid Id { get; set; }
 
+            public int Revision { get; set; }
+
             public SomeAggregatedObject AggregatedObject { get; set; }
         }
 

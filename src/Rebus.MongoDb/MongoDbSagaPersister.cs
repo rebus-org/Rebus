@@ -1,5 +1,7 @@
 ﻿using System;
-using System.Transactions;
+using System.Reflection;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 
@@ -16,11 +18,19 @@ namespace Rebus.MongoDb
         readonly MongoDatabase database;
         
         bool indexCreated;
+        SagaDataElementNameConvention elementNameConventions;
 
         public MongoDbSagaPersister(string connectionString, string collectionName)
         {
             this.collectionName = collectionName;
+            
             database = MongoDatabase.Create(connectionString);
+
+            elementNameConventions = new SagaDataElementNameConvention();
+            var conventionProfile = new ConventionProfile()
+                .SetElementNameConvention(elementNameConventions);
+
+            BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
 
         public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
@@ -36,40 +46,89 @@ namespace Rebus.MongoDb
                 indexCreated = true;
             }
 
-            // if an ambient TX is present, enlist the insert to be performed at commit time
-            if (Transaction.Current != null)
+            var criteria = Query.And(Query.EQ("_id", sagaData.Id),
+                                     Query.EQ("_rev", sagaData.Revision));
+
+            sagaData.Revision++;
+            var update = Update.Replace(sagaData);
+            SafeModeResult safeModeResult;
+            try
             {
-                var hack = new AmbientTxHack(() => collection.Save(sagaData, SafeMode.True));
-                Transaction.Current.EnlistVolatile(hack, EnlistmentOptions.None);
+                safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
+
             }
-            else
+            catch (MongoSafeModeException)
             {
-                collection.Save(sagaData, SafeMode.True);
+                // in case of race conditions, we get a duplicate key error because the upsert
+                // cannot proceed to insert a document with the same _id as an existing document
+                // ... therefore, we map the MongoSafeModeException to our own OptimisticLockingException
+                throw new OptimisticLockingException(sagaData);
             }
+
+            EnsureResultIsGood(safeModeResult,
+                               "save saga data of type {0} with _id {1} and _rev {2}",
+                               sagaData.GetType(),
+                               sagaData.Id,
+                               sagaData.Revision);
         }
 
         public void Delete(ISagaData sagaData)
         {
             var collection = database.GetCollection(collectionName);
 
-            if (Transaction.Current != null)
-            {
-                var hack = new AmbientTxHack(() => collection.Remove(Query.EQ("_id", sagaData.Id)));
-                Transaction.Current.EnlistVolatile(hack, EnlistmentOptions.None);
-            }
-            else
-            {
-                collection.Remove(Query.EQ("_id", sagaData.Id));
-            }
+            var query = Query.And(Query.EQ("_id", sagaData.Id),
+                                  Query.EQ("_rev", sagaData.Revision));
+
+            var safeModeResult = collection.Remove(query, SafeMode.True);
+
+            EnsureResultIsGood(safeModeResult,
+                               "delete saga data of type {0} with _id {1} and _rev {2}",
+                               sagaData.GetType(),
+                               sagaData.Id,
+                               sagaData.Revision);
         }
 
         public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType)
         {
             var collection = database.GetCollection(sagaDataType, collectionName);
 
-            var sagaData = collection.FindOneAs(sagaDataType, Query.EQ(sagaDataPropertyPath, fieldFromMessage));
+            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), fieldFromMessage);
+            
+            var sagaData = collection.FindOneAs(sagaDataType, query);
 
             return (ISagaData) sagaData;
+        }
+
+        public ISagaData FindMongo(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
+        {
+            var collection = database.GetCollection(sagaDataType, collectionName);
+
+            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), fieldFromMessage.ToString());
+
+            var sagaData = collection.FindOneAs(sagaDataType, query);
+
+            return (ISagaData) sagaData;
+        }
+
+        string MapSagaDataPropertyPath(string sagaDataPropertyPath, Type sagaDataType)
+        {
+            var propertyInfo = sagaDataType.GetProperty(sagaDataPropertyPath, BindingFlags.Public | BindingFlags.Instance);
+
+            if (propertyInfo == null)
+                return sagaDataPropertyPath;
+
+            return elementNameConventions.GetElementName(propertyInfo);
+        }
+
+        void EnsureResultIsGood(SafeModeResult safeModeResult, string message, params object[] objs)
+        {
+            if (!safeModeResult.Ok && safeModeResult.DocumentsAffected == 1)
+            {
+                var exceptionMessage = string.Format("Tried to {0}, but apparently the operation didn't succeed.",
+                                                     string.Format(message, objs));
+                
+                throw new MongoSafeModeException(exceptionMessage, safeModeResult);
+            }
         }
     }
 }

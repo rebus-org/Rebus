@@ -63,6 +63,7 @@
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
+    <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />

@@ -136,6 +136,7 @@ namespace Rebus.Tests.Integration
             }
 
             public Guid Id { get; set; }
+            public int Revision { get; set; }
             public int OrderPlacementId { get; set; }
             public int OrderNumber { get; set; }
             public string ProductName { get; set; }
