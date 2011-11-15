@@ -60,6 +60,7 @@
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
+    <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
