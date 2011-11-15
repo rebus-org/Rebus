@@ -4,6 +4,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
+using MongoDB.Bson;
 
 namespace Rebus.MongoDb
 {
@@ -14,11 +15,11 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbSagaPersister : IStoreSagaData
     {
+        readonly SagaDataElementNameConvention elementNameConventions;
         readonly string collectionName;
         readonly MongoDatabase database;
         
         bool indexCreated;
-        SagaDataElementNameConvention elementNameConventions;
 
         public MongoDbSagaPersister(string connectionString, string collectionName)
         {
@@ -88,26 +89,20 @@ namespace Rebus.MongoDb
                                sagaData.Revision);
         }
 
-        public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType)
+        public ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
         {
             var collection = database.GetCollection(sagaDataType, collectionName);
 
-            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), fieldFromMessage);
+            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), ToBsonValue(fieldFromMessage));
             
             var sagaData = collection.FindOneAs(sagaDataType, query);
 
             return (ISagaData) sagaData;
         }
 
-        public ISagaData FindMongo(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
+        static BsonValue ToBsonValue(object fieldFromMessage)
         {
-            var collection = database.GetCollection(sagaDataType, collectionName);
-
-            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), fieldFromMessage.ToString());
-
-            var sagaData = collection.FindOneAs(sagaDataType, query);
-
-            return (ISagaData) sagaData;
+            return BsonValue.Create(fieldFromMessage);
         }
 
         string MapSagaDataPropertyPath(string sagaDataPropertyPath, Type sagaDataType)

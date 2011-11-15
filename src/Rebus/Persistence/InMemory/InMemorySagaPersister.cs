@@ -22,13 +22,13 @@ namespace Rebus.Persistence.InMemory
             data.TryRemove(sagaData.Id, out temp);
         }
 
-        public virtual ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType)
+        public virtual ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
         {
             foreach (var sagaData in data)
             {
                 var valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString();
 
-                if (valueFromSagaData.Equals(fieldFromMessage))
+                if (valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()))
                 {
                     return sagaData.Value;
                 }

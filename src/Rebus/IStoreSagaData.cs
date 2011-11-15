@@ -9,6 +9,6 @@ namespace Rebus
     {
         void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex);
         void Delete(ISagaData sagaData);
-        ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType);
+        ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType);
     }
 }

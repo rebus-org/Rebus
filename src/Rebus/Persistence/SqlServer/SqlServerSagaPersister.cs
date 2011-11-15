@@ -96,7 +96,7 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
-        public ISagaData Find(string sagaDataPropertyPath, string fieldFromMessage, Type sagaDataType)
+        public ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -110,7 +110,7 @@ namespace Rebus.Persistence.SqlServer
                                                 where i.[key] = @key 
                                                     and i.value = @value";
                     command.Parameters.AddWithValue("key", sagaDataPropertyPath);
-                    command.Parameters.AddWithValue("value", fieldFromMessage);
+                    command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
 
                     return (ISagaData)JsonConvert.DeserializeObject((string)command.ExecuteScalar(), Settings);
                 }

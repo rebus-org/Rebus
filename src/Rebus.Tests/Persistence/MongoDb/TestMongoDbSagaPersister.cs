@@ -22,7 +22,7 @@ namespace Rebus.Tests.Persistence.MongoDb
             DropCollection("sagas");
         }
 
-        [Test, Ignore("haven't found a solution for this yet!!"), Category(TestCategories.ToDo)]
+        [Test]
         public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
         {
             DropCollection("sagas");
@@ -50,7 +50,7 @@ namespace Rebus.Tests.Persistence.MongoDb
                 persister.Save(savedSagaData, new[] { "Property" });
 
                 // act
-                var foundSagaData = persister.Find("Property", propertyValueToUse.ToString(), sagaDataType);
+                var foundSagaData = persister.Find("Property", propertyValueToUse, sagaDataType);
 
                 // assert
                 foundSagaData.ShouldNotBe(null);
