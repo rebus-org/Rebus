@@ -37,9 +37,8 @@ namespace Rebus.Tests
             var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
-                                   new InMemorySubscriptionStorage(), this,
-                                   serializer, new SagaDataPersisterForTesting(),
-                                   new TrivialPipelineInspector());
+                                   new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
+                                   this, serializer, new TrivialPipelineInspector());
             buses.Add(bus);
             return bus;
         }

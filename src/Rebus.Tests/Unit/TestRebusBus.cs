@@ -34,10 +34,8 @@ namespace Rebus.Tests.Unit
                                sendMessages,
                                receiveMessages,
                                Mock<IStoreSubscriptions>(),
-                               determineDestination,
-                               serializeMessages,
                                storeSagaData,
-                               inspectHandlerPipeline);
+                               determineDestination, serializeMessages, inspectHandlerPipeline);
         }
 
         protected override void DoTearDown()

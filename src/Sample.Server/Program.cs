@@ -36,9 +36,9 @@ namespace Sample.Server
                                    msmqMessageQueue,
                                    msmqMessageQueue,
                                    inMemorySubscriptionStorage,
-                                   program,
-                                   jsonMessageSerializer,
                                    sagaPersister,
+                                   program, 
+                                   jsonMessageSerializer, 
                                    inspectHandlerPipeline);
 
             program.Bus = bus;

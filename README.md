@@ -39,31 +39,36 @@ First, decide how you want to `ISendMessages` and `IReceiveMessages` - Rebus has
 
     var msmq = new MsmqMessageQueue(@".\private$\service_input_queue");
 
-Then, decide how subscriptions are to be stored if the service is a publisher - right now, there's `InMemorySubscriptionStorage` and `SqlServerSubscriptionStorage` to choose from. Let's be serious about this:
+Then, decide how subscriptions and sagas are to be stored - let's be serious about this:
 
 	var connectionString = "data source=.;initial catalog=rebus_subscriptions;integrated security=sspi";
     var subscriptionStorage = new SqlServerSubscriptionStorage(connectionString);
+	var sagaPersister = new SqlServerSagaPersister(connectionString);
 
 Now, figure out how to go from `TMessage` to instances of something that implements `IHandleMessages<TMessage>`. This is where you'd probably insert your favorite IoC container. Let's pretend that I implemented `IActivateHandlers` in a `CastleWindsorHandlerActivator` (it's only two methods) - that would allow me to do this:
 
 	var container = GetWindsorContainerFromSomewhere();
 	var handlerActivator = new CastleWindsorHandlerActivator(container);
 
-Now, figure out how a given message type should be mapped to the name of the endpoint that owns that message type - you do that by implementing `IDetermineDestination` (it's one single method that maps from `Type` to `string`) - let's pretend I implemented that by looking up some endpoint mappings in the app.config of my current process:
+Now, figure out how a given message type should be mapped to the name of the endpoint that owns that message type - you do that by implementing `IDetermineDestination` (it's one single method that maps from `Type` to `string`) - if I'm OK with specifying it with the NServiceBus syntax (i.e. the `<UnicastBusConfig>` element from an NServiceBus app.config), I can use `DetermineDestinationFromNServiceBusEndpointMappings`:
 
-	var endpointMapper = new AppConfigBasedEndpointMapper();
+	var endpointMapper = new DetermineDestinationFromNServiceBusEndpointMappings();
 
-Lastly, figure out how to `ISerializeMessages` - at the moment there's only `JsonMessageSerializer`:
+Now, figure out how to `ISerializeMessages` - at the moment there's only `JsonMessageSerializer`:
 
 	var serializer = new JsonMessageSerializer();
 
+Lastly, think about whether some types of handlers should be invoked first as each handler pipeline gets executed... if that is not the case, just use
+
+	var inspector = new TrivialPipelineInspector();
+
 and NOW we're ready to create the bus:
 
-	var bus = new RebusBus(handlerActivator, msmq, msmq, subscriptionStorage, endpointMapper, serializer).Start();
+	var bus = new RebusBus(handlerActivator, msmq, msmq, subscriptionStorage, sagaPersister, endpointMapper, serializer, inspector).Start();
 
 If you've used NServiceBus, lots of things will immediately make sense with Rebus - everything about sending, publishing, subscribing, etc is the same.
 
-Well, that was a teaser. More stuff coming up some time in the future.
+Well, that was a teaser. More stuff coming up some time in the future. I know that `RebusBus` has a pretty big constructor, but that's by design ;)
 
 License
 ====

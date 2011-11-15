@@ -22,14 +22,7 @@ namespace Rebus.Bus
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
-        public RebusBus(IActivateHandlers activateHandlers, 
-            ISendMessages sendMessages, 
-            IReceiveMessages receiveMessages, 
-            IStoreSubscriptions storeSubscriptions, 
-            IDetermineDestination determineDestination, 
-            ISerializeMessages serializeMessages, 
-            IStoreSagaData storeSagaData,
-            IInspectHandlerPipeline inspectHandlerPipeline)
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
