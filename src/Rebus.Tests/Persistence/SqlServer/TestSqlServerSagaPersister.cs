@@ -59,6 +59,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             var expectedJsonString = @"{
   ""$type"": ""Rebus.Tests.Persistence.SqlServer.TestSqlServerSagaPersister+MySagaData, Rebus.Tests"",
   ""Id"": ""{sagaDataId}"",
+  ""Revision"": 0,
   ""SomeField"": ""hello"",
   ""AnotherField"": ""world!"",
   ""Embedded"": {
@@ -123,6 +124,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             var expectedJson = @"{
   ""$type"": ""Rebus.Tests.Persistence.SqlServer.TestSqlServerSagaPersister+MySagaData, Rebus.Tests"",
   ""Id"": ""{sagaDataId}"",
+  ""Revision"": 0,
   ""SomeField"": null,
   ""AnotherField"": ""hello"",
   ""Embedded"": null
