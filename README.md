@@ -64,7 +64,11 @@ Lastly, think about whether some types of handlers should be invoked first as ea
 
 and NOW we're ready to create the bus:
 
-	var bus = new RebusBus(handlerActivator, msmq, msmq, subscriptionStorage, sagaPersister, endpointMapper, serializer, inspector).Start();
+	var bus = new RebusBus(handlerActivator, 
+						   msmq, msmq, 
+						   subscriptionStorage, sagaPersister, 
+						   endpointMapper, serializer, inspector)
+						.Start();
 
 If you've used NServiceBus, lots of things will immediately make sense with Rebus - everything about sending, publishing, subscribing, etc is the same.
 
