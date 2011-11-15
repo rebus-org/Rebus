@@ -13,7 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         protected override void DoSetUp()
         {
-            storage = new SqlServerSubscriptionStorage(ConnectionString);
+            storage = new SqlServerSubscriptionStorage(ConnectionString, "subscriptions");
             DeleteRows("subscriptions");
         }
 

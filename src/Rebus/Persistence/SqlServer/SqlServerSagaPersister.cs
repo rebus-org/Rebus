@@ -12,10 +12,24 @@ namespace Rebus.Persistence.SqlServer
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
         readonly string connectionString;
+        readonly string sagaIndexTableName;
+        readonly string sagaTableName;
 
-        public SqlServerSagaPersister(string connectionString)
+        public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
         {
             this.connectionString = connectionString;
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+        }
+
+        public string SagaIndexTableName
+        {
+            get { return sagaIndexTableName; }
+        }
+
+        public string SagaTableName
+        {
+            get { return sagaTableName; }
         }
 
         public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
@@ -27,7 +41,7 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from saga_index where saga_id = @id;";
+                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -35,7 +49,7 @@ namespace Rebus.Persistence.SqlServer
                 // next, update the saga
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"update sagas set data = @data where id = @id";
+                    command.CommandText = string.Format(@"update [{0}] set data = @data where id = @id", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
@@ -43,7 +57,7 @@ namespace Rebus.Persistence.SqlServer
 
                     if (rows == 0)
                     {
-                        command.CommandText = @"insert into sagas (id, data) values (@id, @data)";
+                        command.CommandText = string.Format(@"insert into [{0}] (id, data) values (@id, @data)", sagaTableName);
                         command.ExecuteNonQuery();
                     }
                 }
@@ -64,12 +78,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
-                            .Select(a => string.Format(@"insert into saga_index
+                            .Select(a => string.Format(
+                                @"                      insert into [{0}]
                                                             (id, [key], value, saga_id) 
                                                         values 
-                                                            ('{0}', '{1}', '{2}', '{3}')",
-                                                       Guid.NewGuid(), a.Key, a.Value,
-                                                       sagaData.Id.ToString()));
+                                                            ('{1}', '{2}', '{3}', '{4}')",
+                                sagaIndexTableName,
+                                Guid.NewGuid(), a.Key, a.Value,
+                                sagaData.Id.ToString()));
 
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 

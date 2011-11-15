@@ -11,7 +11,7 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
-            persister = new SqlServerSagaPersister(ConnectionString);
+            persister = new SqlServerSagaPersister(ConnectionString, "saga_index", "sagas");
             DeleteRows("sagas");
             DeleteRows("saga_index");
         }

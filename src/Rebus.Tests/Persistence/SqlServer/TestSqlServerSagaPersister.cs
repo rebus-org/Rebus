@@ -19,7 +19,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         {
             DeleteRows("sagas");
             DeleteRows("saga_index");
-            persister = new SqlServerSagaPersister(ConnectionString);
+            persister = new SqlServerSagaPersister(ConnectionString, "saga_index", "sagas");
         }
 
         [Test]

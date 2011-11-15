@@ -8,10 +8,17 @@ namespace Rebus.Persistence.SqlServer
     public class SqlServerSubscriptionStorage : IStoreSubscriptions
     {
         readonly string connectionString;
+        readonly string subscriptionsTableName;
 
-        public SqlServerSubscriptionStorage(string connectionString)
+        public SqlServerSubscriptionStorage(string connectionString, string subscriptionsTableName)
         {
             this.connectionString = connectionString;
+            this.subscriptionsTableName = subscriptionsTableName;
+        }
+
+        public string SubscriptionsTableName
+        {
+            get { return subscriptionsTableName; }
         }
 
         public void Store(Type messageType, string subscriberInputQueue)
@@ -22,9 +29,9 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"insert into subscriptions 
+                    command.CommandText = string.Format(@"insert into [{0}] 
                                                 (message_type, endpoint) 
-                                                values (@message_type, @endpoint)";
+                                                values (@message_type, @endpoint)", subscriptionsTableName);
 
                     command.Parameters.AddWithValue("message_type", messageType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
@@ -36,9 +43,7 @@ namespace Rebus.Persistence.SqlServer
                     catch (SqlException ex)
                     {
                         if (!ex.Errors.Cast<SqlError>()
-                                 .Any(
-                                     e =>
-                                     e.ToString().Contains("Violation of PRIMARY KEY constraint 'PK_subscriptions'")))
+                                 .Any(e => e.ToString().Contains("Violation of PRIMARY KEY constraint 'PK_subscriptions'")))
                         {
                             throw;
                         }
@@ -55,9 +60,9 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from subscriptions
+                    command.CommandText = string.Format(@"delete from [{0}]
                                                 where message_type = @message_type
-                                                and endpoint = @endpoint";
+                                                and endpoint = @endpoint", subscriptionsTableName);
 
                     command.Parameters.AddWithValue("message_type", messageType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
@@ -75,8 +80,8 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"select endpoint from subscriptions
-                                                where message_type = @message_type";
+                    command.CommandText = string.Format(@"select endpoint from [{0}]
+                                                where message_type = @message_type", subscriptionsTableName);
 
                     command.Parameters.AddWithValue("message_type", messageType.FullName);
 
