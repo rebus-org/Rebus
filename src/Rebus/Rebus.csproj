@@ -57,14 +57,19 @@
     <Compile Include="Bus\ErrorTracker.cs" />
     <Compile Include="Bus\SubscriptionMessageHandler.cs" />
     <Compile Include="Bus\Worker.cs" />
+    <Compile Include="Configuration\ConfigurationException.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
+    <Compile Include="Configuration\Configurers\EndpointMappingsConfigurer.cs" />
     <Compile Include="Configuration\Configurers\SagaConfigurer.cs" />
+    <Compile Include="Configuration\Configurers\SerializationConfigurer.cs" />
     <Compile Include="Configuration\Configurers\SubscriptionsConfigurer.cs" />
     <Compile Include="Configuration\Configurers\TransportConfigurer.cs" />
     <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\EndpointMappingsExtensions.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
+    <Compile Include="Configuration\ThrowingEndpointMapper.cs" />
     <Compile Include="Configure.cs" />
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
@@ -72,6 +77,7 @@
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
+    <Compile Include="Serialization\Json\JsonExtensions.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />

@@ -9,9 +9,14 @@ namespace Rebus.Configuration.Configurers
             this.containerAdapter = containerAdapter;
         }
 
-        public void Use<T>(T instance) where T : ISendMessages, IReceiveMessages
+        public void UseSender<T>(T instance) where T : ISendMessages
         {
-            containerAdapter.RegisterInstance(instance, typeof(ISendMessages), typeof(IReceiveMessages));
+            containerAdapter.RegisterInstance(instance, typeof(ISendMessages));
+        }
+
+        public void UseReceiver<T>(T instance) where T : IReceiveMessages
+        {
+            containerAdapter.RegisterInstance(instance, typeof(IReceiveMessages));
         }
     }
 }

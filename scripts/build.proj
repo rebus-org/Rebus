@@ -18,5 +18,4 @@
   <Target Name="copy_build_output">
     <Copy SourceFiles="@(BuildOutput)" DestinationFolder="$(BuildOutputFolder)" />
   </Target>
-
 </Project>

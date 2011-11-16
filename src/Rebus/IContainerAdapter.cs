@@ -8,5 +8,7 @@ namespace Rebus
     public interface IContainerAdapter : IActivateHandlers
     {
         void RegisterInstance(object instance, params Type[] serviceTypes);
+        bool HasImplementationOf(Type serviceType);
+        IStartableBus GetStartableBus();
     }
 }

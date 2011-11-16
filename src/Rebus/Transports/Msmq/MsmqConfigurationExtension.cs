@@ -16,7 +16,10 @@ namespace Rebus.Transports.Msmq
                  inputQueue = AssumeLocalQueue(inputQueue);
              }
 
-             configurer.Use(new MsmqMessageQueue(inputQueue));
+             var msmqMessageQueue = new MsmqMessageQueue(inputQueue);
+             
+             configurer.UseSender(msmqMessageQueue);
+             configurer.UseReceiver(msmqMessageQueue);
          }
 
         static string ParseQueueName(string inputQueue)

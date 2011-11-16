@@ -1,5 +1,4 @@
-﻿using System.Text;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using System.Linq;
@@ -14,8 +13,6 @@ namespace Rebus.Serialization.Json
     {
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
-
-        static readonly Encoding Encoding = Encoding.UTF8;
 
         public TransportMessageToSend Serialize(Message message)
         {
