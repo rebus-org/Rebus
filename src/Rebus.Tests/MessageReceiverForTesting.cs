@@ -8,7 +8,7 @@ namespace Rebus.Tests
     public class MessageReceiverForTesting : IReceiveMessages
     {
         readonly JsonMessageSerializer serializer;
-        readonly ConcurrentQueue<TransportMessage> messageQueue = new ConcurrentQueue<TransportMessage>();
+        readonly ConcurrentQueue<TransportMessageToSend> messageQueue = new ConcurrentQueue<TransportMessageToSend>();
         
         int idCounter;
 
@@ -17,13 +17,16 @@ namespace Rebus.Tests
             this.serializer = serializer;
         }
 
-        public TransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage()
         {
-            TransportMessage temp;
+            TransportMessageToSend temp;
             if (messageQueue.TryDequeue(out temp))
             {
-                temp.Id = NewMessageId();
-                return temp;
+                return new ReceivedTransportMessage
+                           {
+                               Id = NewMessageId(),
+                               Data = temp.Data
+                           };
             }
             return null;
         }

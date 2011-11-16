@@ -1,9 +1,6 @@
 using System;
 using System.Messaging;
-using System.Text;
-using System.Threading;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Integration
@@ -27,13 +24,13 @@ namespace Rebus.Tests.Integration
 
             messageQueueOfReceiver.Send("bla bla bla bla bla bla cannot be deserialized properly!!", MessageQueueTransactionType.Single);
 
-            var errorMessage = (TransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+            var errorMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
             
             // this is how the XML formatter serializes a single string:
             var expected = "<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>";
             
             // and this is the data we successfully moved to the error queue
-            var actual = Encoding.UTF8.GetString(errorMessage.Data);
+            var actual = errorMessage.Data;
             Assert.AreEqual(expected, actual);
         }
 
@@ -47,13 +44,13 @@ namespace Rebus.Tests.Integration
             var senderQueueName = PrivateQueueNamed("test.tx.sender");
             var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting());
 
-            var resetEvent = new ManualResetEvent(false);
             var receivedMessageCount = 0;
             var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
             CreateBus(receiverQueueName,
                       new HandlerActivatorForTesting()
                           .Handle<string>(str =>
                                               {
+                                                  Console.WriteLine("Delivery!");
                                                   if (str != "HELLO!") return;
 
                                                   receivedMessageCount++;
@@ -61,7 +58,6 @@ namespace Rebus.Tests.Integration
                                                   if (receivedMessageCount > 5)
                                                   {
                                                       retriedTooManyTimes = true;
-                                                      resetEvent.Set();
                                                   }
                                                   else
                                                   {
@@ -72,7 +68,7 @@ namespace Rebus.Tests.Integration
 
             senderBus.Send(receiverQueueName, "HELLO!");
 
-            var transportMessage = (TransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
+            var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(2)).Body;
             var errorMessage = serializer.Deserialize(transportMessage);
 
             Assert.IsFalse(retriedTooManyTimes, "Apparently, the message was delivered more than 5 times which is the default number of retries");

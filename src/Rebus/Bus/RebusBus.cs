@@ -147,9 +147,9 @@ namespace Rebus.Bus
             Log.Error(string.Format("Unhandled exception in worker {0}. This is not good.", worker.WorkerThreadName), exception);
         }
 
-        void HandleMessageFailedMaxNumberOfTimes(TransportMessage transportMessage)
+        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage)
         {
-            sendMessages.Send(@".\private$\error", transportMessage);
+            sendMessages.Send(@".\private$\error", new TransportMessageToSend {Data = transportMessage.Data});
         }
     }
 }

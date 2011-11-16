@@ -7,7 +7,7 @@ namespace Rebus
     /// </summary>
     public interface ISerializeMessages
     {
-        TransportMessage Serialize(Message message);
-        Message Deserialize(TransportMessage transportMessage);
+        TransportMessageToSend Serialize(Message message);
+        Message Deserialize(ReceivedTransportMessage transportMessage);
     }
 }

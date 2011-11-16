@@ -1,10 +1,16 @@
 using NUnit.Framework;
 using Rhino.Mocks;
+using log4net.Config;
 
 namespace Rebus.Tests
 {
-    public class FixtureBase
+    public abstract class FixtureBase
     {
+        static FixtureBase()
+        {
+            XmlConfigurator.Configure();
+        }
+
         [SetUp]
         public void SetUp()
         {

@@ -2,11 +2,17 @@ using System.Configuration;
 using System.Data.SqlClient;
 using System.Linq;
 using NUnit.Framework;
+using log4net.Config;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
     public class DbFixtureBase
     {
+        static DbFixtureBase()
+        {
+            XmlConfigurator.Configure();
+        }
+
         [SetUp]
         public void SetUp()
         {

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,17 +33,6 @@ namespace Rebus.Messages
                 return null;
             
             return Headers[key];
-        }
-
-        string DumpMessageContents()
-        {
-            var headers = string.Join(", ", Headers.Select(kvp => string.Format("{0} => {1}", kvp.Key, kvp.Value)));
-            var messageTypes = string.Join(", ", Messages.Select(m => m.GetType()));
-
-            return string.Format(@"Headers: {0}
-Contained message types: {1}",
-                                 headers,
-                                 messageTypes);
         }
 
         /// <summary>

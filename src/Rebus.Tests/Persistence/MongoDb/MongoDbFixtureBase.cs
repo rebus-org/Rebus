@@ -1,12 +1,17 @@
-using System;
 using System.Collections.Generic;
 using MongoDB.Driver;
 using NUnit.Framework;
+using log4net.Config;
 
 namespace Rebus.Tests.Persistence.MongoDb
 {
     public abstract class MongoDbFixtureBase
     {
+        static MongoDbFixtureBase()
+        {
+            XmlConfigurator.Configure();
+        }
+
         protected const string ConnectionString = "mongodb://localhost:27017/rebus_test";
         
         readonly HashSet<string> collectionsToDrop = new HashSet<string>();

@@ -9,7 +9,7 @@ namespace Rebus
         /// <summary>
         /// Attempt to receive the next available message. Should return null if no message is available.
         /// </summary>
-        TransportMessage ReceiveMessage();
+        ReceivedTransportMessage ReceiveMessage();
         
         /// <summary>
         /// Gets the name of this receiver's input queue.

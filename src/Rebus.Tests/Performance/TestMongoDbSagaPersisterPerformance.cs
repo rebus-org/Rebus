@@ -35,7 +35,7 @@ namespace Rebus.Tests.Performance
         [TestCase(1000, 2)]
         public void RunTest(int numberOfSagas, int iterations)
         {
-            SagaPersisterPerformanceFixtureBase.DoTheTest(persister, numberOfSagas, iterations);
+            SagaPersisterPerformanceTestHelper.DoTheTest(persister, numberOfSagas, iterations);
         }
     }
 }

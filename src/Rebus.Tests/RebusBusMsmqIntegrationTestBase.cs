@@ -7,6 +7,7 @@ using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Integration;
 using Rebus.Transports.Msmq;
+using log4net.Config;
 
 namespace Rebus.Tests
 {
@@ -14,8 +15,13 @@ namespace Rebus.Tests
     /// Test base class with helpers for running integration tests with
     /// <see cref="RebusBus"/> and <see cref="MsmqMessageQueue"/>.
     /// </summary>
-    public class RebusBusMsmqIntegrationTestBase : IDetermineDestination
+    public abstract class RebusBusMsmqIntegrationTestBase : IDetermineDestination
     {
+        static RebusBusMsmqIntegrationTestBase()
+        {
+            XmlConfigurator.Configure();
+        }
+
         List<RebusBus> buses;
         
         protected JsonMessageSerializer serializer;

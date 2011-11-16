@@ -6,7 +6,7 @@ using Ponder;
 
 namespace Rebus.Tests.Performance
 {
-    public static class SagaPersisterPerformanceFixtureBase
+    public static class SagaPersisterPerformanceTestHelper
     {
         public static void DoTheTest(IStoreSagaData persister, int numberOfSagas, int iterations)
         {

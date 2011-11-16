@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Concurrent;
+using System.Linq;
 using System.Messaging;
+using System.Text;
 
 namespace Rebus.Transports.Msmq
 {
@@ -9,7 +11,7 @@ namespace Rebus.Transports.Msmq
     /// enlist in ambient transaction during send and receive if one is present. Uses JSON serialization
     /// of objects in messages as default.
     /// </summary>
-    public class MsmqMessageQueue : ISendMessages, IReceiveMessages
+    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
@@ -24,7 +26,7 @@ namespace Rebus.Transports.Msmq
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
         }
 
-        public TransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage()
         {
             var transactionWrapper = new MsmqTransactionWrapper();
 
@@ -43,8 +45,7 @@ namespace Rebus.Transports.Msmq
                     transactionWrapper.Commit();
                     return null;
                 }
-                var transportMessage = (TransportMessage) body;
-                transportMessage.Id = message.Id;
+                var transportMessage = (ReceivedTransportMessage) body;
                 transactionWrapper.Commit();
                 return transportMessage;
             }
@@ -66,7 +67,7 @@ namespace Rebus.Transports.Msmq
             get { return inputQueuePath; }
         }
 
-        public void Send(string recipient, TransportMessage message)
+        public void Send(string recipient, TransportMessageToSend message)
         {
             MessageQueue outputQueue;
             if (!outputQueues.TryGetValue(recipient, out outputQueue))
@@ -82,8 +83,23 @@ namespace Rebus.Transports.Msmq
             }
 
             var transactionWrapper = GetOrCreateTransactionWrapper();
-            outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
+            outputQueue.Send(CreateMessage(message, outputQueue), transactionWrapper.MessageQueueTransaction);
             transactionWrapper.Commit();
+        }
+
+        static Message CreateMessage(TransportMessageToSend message, MessageQueue outputQueue)
+        {
+            var msmqMessage = new Message();
+            outputQueue.Formatter.Write(msmqMessage, message);
+
+            if (message.Headers == null) return msmqMessage;
+
+            if (message.Headers.ContainsKey("TimeToBeReceived"))
+            {
+                msmqMessage.TimeToBeReceived = TimeSpan.Parse(message.Headers["TimeToBeReceived"]);
+            }
+            
+            return msmqMessage;
         }
 
         static MsmqTransactionWrapper GetOrCreateTransactionWrapper()
@@ -125,6 +141,12 @@ namespace Rebus.Transports.Msmq
         {
             inputQueue.Purge();
             return this;
+        }
+
+        public void Dispose()
+        {
+            inputQueue.Dispose();
+            outputQueues.Values.ToList().ForEach(q => q.Dispose());
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Rebus.Bus
         /// Event that will be raised whenever dispatching a given message has failed MAX number of times
         /// (usually 5 or something like that).
         /// </summary>
-        public event Action<TransportMessage> MessageFailedMaxNumberOfTimes = delegate { };
+        public event Action<ReceivedTransportMessage> MessageFailedMaxNumberOfTimes = delegate { };
         
         /// <summary>
         /// Event that will be raised in the unlikely event that something outside of the usual
@@ -146,6 +146,7 @@ namespace Rebus.Bus
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
                     Log.ErrorFormat("Handling message {0} has failed the maximum number of times", id);
+                    Console.WriteLine("FAIL!");
                     MessageFailedMaxNumberOfTimes(transportMessage);
                     errorTracker.Forget(id);
                 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Messaging;
+using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Serialization.Json;
@@ -36,6 +38,29 @@ namespace Rebus.Tests.Msmq
         }
 
         [Test]
+        public void MessageExpirationWorks()
+        {
+            // arrange
+            var timeToBeReceived = 2.Seconds();
+            var timeToBeReceivedAsString = timeToBeReceived.ToString();
+            
+            senderQueue.Send(destinationQueuePath,
+                             serializer.Serialize(new Message
+                                                      {
+                                                          Messages = new object[] {"HELLO WORLD!"},
+                                                          Headers =
+                                                              new Dictionary<string, string>
+                                                                  {{"TimeToBeReceived", timeToBeReceivedAsString}},
+                                                      }));
+
+            // act
+            Thread.Sleep(timeToBeReceived + 1.Seconds());
+
+            // assert
+            Assert.Throws<MessageQueueException>(() => destinationQueue.Receive(0.1.Seconds()));
+        }
+
+        [Test]
         public void MessageIsSentWhenAmbientTransactionIsCommitted()
         {
             using (var tx = new TransactionScope())
@@ -55,7 +80,7 @@ namespace Rebus.Tests.Msmq
             var msmqMessage = Receive();
 
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
-            var transportMessage = (TransportMessage)msmqMessage.Body;
+            var transportMessage = (ReceivedTransportMessage)msmqMessage.Body;
             var message = serializer.Deserialize(transportMessage);
             Assert.AreEqual("W00t!", message.Messages[0]);
         }

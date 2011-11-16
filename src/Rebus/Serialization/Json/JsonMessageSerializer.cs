@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
+using System.Linq;
 
 namespace Rebus.Serialization.Json
 {
@@ -16,16 +17,20 @@ namespace Rebus.Serialization.Json
 
         static readonly Encoding Encoding = Encoding.UTF8;
 
-        public TransportMessage Serialize(Message message)
+        public TransportMessageToSend Serialize(Message message)
         {
             var messageAsString = JsonConvert.SerializeObject(message, Formatting.Indented, Settings);
             
-            return new TransportMessage {Data = Encoding.GetBytes(messageAsString)};
+            return new TransportMessageToSend
+                       {
+                           Data = messageAsString,
+                           Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
+                       };
         }
 
-        public Message Deserialize(TransportMessage transportMessage)
+        public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
-            var messageAsString = Encoding.GetString(transportMessage.Data);
+            var messageAsString = transportMessage.Data;
 
             return (Message) JsonConvert.DeserializeObject(messageAsString, Settings);
         }

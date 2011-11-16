@@ -50,7 +50,7 @@ namespace Rebus.Tests.Unit
             determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
-            var someTransportMessage = new TransportMessage();
+            var someTransportMessage = new TransportMessageToSend();
             serializeMessages.Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Messages[0] == theMessageThatWasSent)))
                 .Return(someTransportMessage);
 
@@ -68,7 +68,7 @@ namespace Rebus.Tests.Unit
             determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             receiveMessages.Stub(r => r.InputQueue).Return("my input queue");
 
-            var someTransportMessage = new TransportMessage();
+            var someTransportMessage = new TransportMessageToSend();
             serializeMessages
                 .Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
                                                                  ((SubscriptionMessage)t.Messages[0]).Type ==
@@ -85,7 +85,7 @@ namespace Rebus.Tests.Unit
         [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
-            var someTransportMessage = new TransportMessage { Id = "some id" };
+            var someTransportMessage = new ReceivedTransportMessage { Id = "some id" };
             receiveMessages.Stub(r => r.ReceiveMessage()).Return(someTransportMessage);
 
             serializeMessages.Stub(s => s.Deserialize(someTransportMessage))
