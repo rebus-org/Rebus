@@ -44,6 +44,12 @@ namespace Rebus.Configuration.Configurers
             return this;
         }
 
+        public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
+        {
+            configurePipelineInspector(new PipelineInspectorConfigurer(containerAdapter));
+            return this;
+        }
+
         public IStartableBus CreateBus()
         {
             FillOutMissingRegistrationsWithDefaults();

@@ -60,6 +60,7 @@
     <Compile Include="Configuration\ConfigurationException.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\Configurers\EndpointMappingsConfigurer.cs" />
+    <Compile Include="Configuration\Configurers\PipelineInspectorConfigurer.cs" />
     <Compile Include="Configuration\Configurers\SagaConfigurer.cs" />
     <Compile Include="Configuration\Configurers\SerializationConfigurer.cs" />
     <Compile Include="Configuration\Configurers\SubscriptionsConfigurer.cs" />

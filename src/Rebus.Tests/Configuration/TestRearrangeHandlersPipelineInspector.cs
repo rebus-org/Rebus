@@ -18,6 +18,35 @@ namespace Rebus.Tests.Configuration
             inspector = new RearrangeHandlersPipelineInspector();
         }
 
+        [Test]
+        public void ThrowsIfSameHandlerIsSpecifiedTwice()
+        {
+            // arrange
+            inspector.AddToOrder(typeof(FirstHandler));
+
+            // act
+
+            // assert
+            Assert.Throws<InvalidOperationException>(() => inspector.AddToOrder(typeof (FirstHandler)));
+        }
+
+        [Test]
+        public void WorksIncrementallyAsWell()
+        {
+            // arrange
+            inspector.AddToOrder(typeof(FirstHandler));
+            inspector.AddToOrder(typeof(SecondHandler));
+            inspector.AddToOrder(typeof(ThirdHandler));
+
+            // act
+            var order = inspector.GetOrder();
+
+            // assert
+            order[0].ShouldBe(typeof(FirstHandler));
+            order[1].ShouldBe(typeof(SecondHandler));
+            order[2].ShouldBe(typeof(ThirdHandler));
+        }
+
         /// <summary>
         /// Initial:
         ///     1000 iterations ordering 130:13 handlers took 0,14 s

@@ -16,6 +16,22 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
+        public void CanConfigureHandlerOrdering()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .SpecifyOrderOfHandlers(h => h.First<SomeType>().Then<AnotherType>());
+
+            var registration = adapter.Registrations.Single(r => r.Instance.GetType() == typeof(RearrangeHandlersPipelineInspector));
+
+            var inspector = (RearrangeHandlersPipelineInspector)registration.Instance;
+            var order = inspector.GetOrder();
+            order[0].ShouldBe(typeof(SomeType));
+            order[1].ShouldBe(typeof(AnotherType));
+        }
+
+        [Test]
         public void CanConfigureMsmqTransport()
         {
             var adapter = new TestContainerAdapter();
@@ -171,5 +187,12 @@ namespace Rebus.Tests.Configuration
                 get { return serviceTypes; }
             }
         }
+    }
+
+    public class SomeType
+    {
+    }
+    public class AnotherType
+    {
     }
 }

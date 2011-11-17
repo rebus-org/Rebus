@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Configuration.Configurers;
 
 namespace Rebus.Configuration
 {
@@ -65,15 +66,78 @@ the stacktrace:
             }
 
             stackTrace = Environment.StackTrace;
-            
+
             orders = handlerTypes
                 .Select((type, index) => new {Type = type, Index = index})
-                .ToDictionary(k => k.Type,
-                              v => v.Index);
+                .ToDictionary(k => k.Type, v => v.Index);
 
-            maxIndex = orders.Any()
-                           ? orders.Max(o => o.Value) + 1
-                           : 0;
+            SetMaxIndex();
+        }
+
+        void SetMaxIndex()
+        {
+            maxIndex = orders.Any() ? orders.Max(o => o.Value) + 1 : 0;
+        }
+
+        public Type[] GetOrder()
+        {
+            return orders.Keys.ToArray();
+        }
+
+        /// <summary>
+        /// Appends the given type to the order currently stored in the pipeline inspector.
+        /// This method allows this pipeline inspector to be built incrementally, which
+        /// was neede in order to support the fluent configuration API.
+        /// </summary>
+        public void AddToOrder(Type typeToAppendToOrder)
+        {
+            if (orders == null)
+            {
+                orders = new Dictionary<Type, int>();
+            }
+
+            if (orders.ContainsKey(typeToAppendToOrder))
+            {
+                throw new InvalidOperationException(string.Format(@"
+Attempted to add {0} to fixed order list of handlers.
+
+Each handler type can only be added once, because that is the only thing that makes
+sense, because what would it mean if one particular handler should be first AND last
+at the same time?", typeToAppendToOrder));
+            }
+
+            orders = orders
+                .Concat(new[] {new KeyValuePair<Type, int>(typeToAppendToOrder, maxIndex),})
+                .ToDictionary(k => k.Key, v => v.Value);
+
+            SetMaxIndex();
+        }
+    }
+
+    public static class RearrangeHandlersPipelineInspectorExtensions
+    {
+        public static FluentBuilder First<THandler>(this PipelineInspectorConfigurer configurer)
+        {
+            return new FluentBuilder(typeof(THandler), configurer);
+        }
+    }
+
+    public class FluentBuilder
+    {
+        readonly RearrangeHandlersPipelineInspector rearranger = new RearrangeHandlersPipelineInspector();
+        readonly PipelineInspectorConfigurer configurer;
+        
+        public FluentBuilder(Type first, PipelineInspectorConfigurer configurer)
+        {
+            rearranger = new RearrangeHandlersPipelineInspector();
+            rearranger.AddToOrder(first);
+            configurer.Use(rearranger);
+        }
+
+        public FluentBuilder Then<TMessage>()
+        {
+            rearranger.AddToOrder(typeof (TMessage));
+            return this;
         }
     }
 }
