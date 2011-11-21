@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
@@ -111,8 +109,67 @@ namespace Rebus.Tests.Configuration
             adapter.HasImplementationOf(typeof (ISerializeMessages)).ShouldBe(true);
         }
 
+        /// <summary>
+        /// Look ma! - an IoC container.... :)
+        /// </summary>
         class TestContainerAdapter : IContainerAdapter
         {
+            interface IResolver
+            {
+                object Get();
+            }
+            class InstanceResolver :IResolver
+            {
+                readonly object instance;
+                public InstanceResolver(object instance)
+                {
+                    this.instance = instance;
+                }
+
+                public object Get()
+                {
+                    return instance;
+                }
+            }
+            class RecursiveTypeMappingResolver : IResolver
+            {
+                readonly Type implementationType;
+                readonly IContainerAdapter container;
+                readonly bool singleton;
+                object cachedInstance;
+
+                public RecursiveTypeMappingResolver(Type implementationType, IContainerAdapter container, bool singleton)
+                {
+                    this.implementationType = implementationType;
+                    this.container = container;
+                    this.singleton = singleton;
+                }
+
+                public object Get()
+                {
+                    if (singleton && cachedInstance != null) return cachedInstance;
+
+                    try
+                    {
+                        var constructor = implementationType.GetConstructors().First();
+                        var parameters = constructor.GetParameters()
+                            .Select(p => container.GetType()
+                                             .GetMethod("Resolve")
+                                             .MakeGenericMethod(p.ParameterType).Invoke(container, new object[0]))
+                            .ToArray();
+
+                        cachedInstance = Activator.CreateInstance(implementationType, parameters);
+
+                        return cachedInstance;
+                    }
+                    catch(Exception e)
+                    {
+                        throw new ApplicationException(string.Format("Could not resolve {0}", implementationType), e);
+                    }
+                }
+            }
+
+            readonly Dictionary<Type, IResolver> resolvers = new Dictionary<Type,IResolver>(); 
             readonly List<Registration> registrations = new List<Registration>();
 
             public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
@@ -122,47 +179,50 @@ namespace Rebus.Tests.Configuration
 
             public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
             {
+                throw new NotImplementedException();
             }
 
             public void RegisterInstance(object instance, params Type[] serviceTypes)
             {
                 registrations.Add(new Registration(instance, serviceTypes));
-            }
-
-            public bool HasImplementationOf(Type serviceType)
-            {
-                return registrations.Any(r => r.ServiceTypes.Any(t => t == serviceType));
-            }
-
-            public IStartableBus GetStartableBus()
-            {
-                var constructorInfo = typeof (RebusBus).GetConstructors().First();
-                
-                var ctorParameters = constructorInfo.GetParameters()
-                    .Select(p => Resolve(p.ParameterType))
-                    .ToArray();
-                
-                var obj = constructorInfo.Invoke(BindingFlags.Public, null, ctorParameters, null);
-                
-                return (IStartableBus) obj;
-            }
-
-            object Resolve(Type typeToResolve)
-            {
-                var firstOrDefault = registrations
-                    .FirstOrDefault(r => r.ServiceTypes.Any(t => t == typeToResolve));
-
-                if (firstOrDefault == null)
+                foreach(var type in serviceTypes)
                 {
-                    throw new ConfigurationException("No type registered as an implementation of {0}", typeToResolve);
+                    resolvers.Add(type, new InstanceResolver(instance));
                 }
-
-                return firstOrDefault.Instance;
             }
 
             public List<Registration> Registrations
             {
                 get { return registrations; }
+            }
+
+            public void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)
+            {
+                foreach (var type in serviceTypes)
+                {
+                    resolvers.Add(type, new RecursiveTypeMappingResolver(implementationType,
+                                                                         this, lifestyle == Lifestyle.Singleton));
+                }
+            }
+
+            public bool HasImplementationOf(Type serviceType)
+            {
+                return resolvers.ContainsKey(serviceType);
+            }
+
+            public TService Resolve<TService>()
+            {
+                return (TService) resolvers[typeof (TService)].Get();
+            }
+
+            public TService[] ResolveAll<TService>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Release(object obj)
+            {
+                throw new NotImplementedException();
             }
         }
 
