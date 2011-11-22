@@ -33,9 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net">
-      <HintPath>..\packages\log4net.1.2.10\lib\2.0\log4net.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -56,6 +53,10 @@
     <Compile Include="AbstractContainerAdapter.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="Configuration\Configurers\LoggingConfigurer.cs" />
+    <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
+    <Compile Include="Logging\ConsoleLoggerFactory.cs" />
+    <Compile Include="Logging\ILog.cs" />
     <Compile Include="Bus\SubscriptionMessageHandler.cs" />
     <Compile Include="Bus\Worker.cs" />
     <Compile Include="Configuration\ConfigurationException.cs" />
@@ -76,9 +77,11 @@
     <Compile Include="Correlation.cs" />
     <Compile Include="Correlator.cs" />
     <Compile Include="IContainerAdapter.cs" />
+    <Compile Include="Logging\IRebusLoggerFactory.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
+    <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Serialization\Json\JsonExtensions.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
@@ -13,6 +14,17 @@ namespace Rebus.Tests.Configuration
     [TestFixture]
     public class TestConfigurationApi : FixtureBase
     {
+        [Test]
+        public void CanConfigureLogging()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.ConsoleLogger());
+
+            RebusLoggerFactory.Current.GetType().Name.ShouldBe("ConsoleLoggerFactory");
+        }
+
         [Test]
         public void CanConfigureHandlerOrdering()
         {

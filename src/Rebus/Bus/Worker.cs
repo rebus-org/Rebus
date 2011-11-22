@@ -5,8 +5,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
+using Rebus.Logging;
 using Rebus.Messages;
-using log4net;
 
 namespace Rebus.Bus
 {
@@ -15,7 +15,7 @@ namespace Rebus.Bus
     /// </summary>
     class Worker : IDisposable
     {
-        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Caching of dispatcher methods
@@ -57,7 +57,7 @@ namespace Rebus.Bus
             workerThread = new Thread(MainLoop) {Name = GenerateNewWorkerThreadName()};
             workerThread.Start();
             
-            Log.InfoFormat("Worker {0} created and inner thread started", WorkerThreadName);
+            Log.Info("Worker {0} created and inner thread started", WorkerThreadName);
         }
 
         /// <summary>
@@ -74,36 +74,36 @@ namespace Rebus.Bus
 
         public void Start()
         {
-            Log.InfoFormat("Starting worker thread {0}", WorkerThreadName);
+            Log.Info("Starting worker thread {0}", WorkerThreadName);
             shouldWork = true;
         }
 
         public void Pause()
         {
-            Log.InfoFormat("Pausing worker thread {0}", WorkerThreadName);
+            Log.Info("Pausing worker thread {0}", WorkerThreadName);
             shouldWork = false;
         }
 
         public void Stop()
         {
-            Log.InfoFormat("Stopping worker thread {0}", WorkerThreadName);
+            Log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;
         }
 
         public void Dispose()
         {
-            Log.InfoFormat("Disposing worker thread {0}", WorkerThreadName);
+            Log.Info("Disposing worker thread {0}", WorkerThreadName);
 
             if (shouldWork)
             {
-                Log.InfoFormat("Worker thread {0} is currently working", WorkerThreadName);
+                Log.Info("Worker thread {0} is currently working", WorkerThreadName);
                 Stop();
             }
 
             if (!workerThread.Join(TimeSpan.FromSeconds(30)))
             {
-                Log.InfoFormat("Worker thread {0} did not exit within 30 seconds - aborting!", WorkerThreadName);
+                Log.Info("Worker thread {0} did not exit within 30 seconds - aborting!", WorkerThreadName);
                 workerThread.Abort();
             }
         }
@@ -145,7 +145,7 @@ namespace Rebus.Bus
 
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
-                    Log.ErrorFormat("Handling message {0} has failed the maximum number of times", id);
+                    Log.Error("Handling message {0} has failed the maximum number of times", id);
                     Console.WriteLine("FAIL!");
                     MessageFailedMaxNumberOfTimes(transportMessage);
                     errorTracker.Forget(id);
@@ -161,7 +161,7 @@ namespace Rebus.Bus
                         {
                             foreach (var logicalMessage in message.Messages)
                             {
-                                Log.DebugFormat("Dispatching message {0}: {1}", id, logicalMessage.GetType());
+                                Log.Debug("Dispatching message {0}: {1}", id, logicalMessage.GetType());
                                 Dispatch(logicalMessage);
                             }
                         }

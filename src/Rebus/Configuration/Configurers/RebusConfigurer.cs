@@ -51,6 +51,12 @@ namespace Rebus.Configuration.Configurers
             return this;
         }
 
+        public RebusConfigurer Logging(Action<LoggingConfigurer> configureLogging)
+        {
+            configureLogging(new LoggingConfigurer());
+            return this;
+        }
+
         public IStartableBus CreateBus()
         {
             FillOutMissingRegistrationsWithDefaults();

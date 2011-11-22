@@ -1,7 +1,7 @@
 using System;
 using System.Reflection;
+using Rebus.Logging;
 using Rebus.Messages;
-using log4net;
 
 namespace Rebus.Bus
 {
@@ -10,7 +10,7 @@ namespace Rebus.Bus
     /// </summary>
     class SubscriptionMessageHandler : IHandleMessages<SubscriptionMessage>
     {
-        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         readonly IStoreSubscriptions storeSubscriptions;
 
@@ -24,7 +24,7 @@ namespace Rebus.Bus
             var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
             var messageType = Type.GetType(message.Type);
 
-            Log.InfoFormat("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);
+            Log.Info("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);
 
             storeSubscriptions.Store(messageType, subscriberInputQueue);
         }

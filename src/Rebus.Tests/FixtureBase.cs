@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using Rebus.Logging;
 using Rhino.Mocks;
 using log4net.Config;
 
@@ -14,6 +15,7 @@ namespace Rebus.Tests
         [SetUp]
         public void SetUp()
         {
+            RebusLoggerFactory.Reset();
             DoSetUp();
         }
 

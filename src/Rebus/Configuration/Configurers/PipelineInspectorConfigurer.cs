@@ -2,7 +2,7 @@
 {
     public class PipelineInspectorConfigurer
     {
-        IContainerAdapter containerAdapter;
+        readonly IContainerAdapter containerAdapter;
 
         public PipelineInspectorConfigurer(IContainerAdapter containerAdapter)
         {

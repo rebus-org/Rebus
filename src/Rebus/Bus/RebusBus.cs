@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Messages;
-using log4net;
 
 namespace Rebus.Bus
 {
     public class RebusBus : IStartableBus, IBus
     {
-        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
@@ -43,7 +43,7 @@ namespace Rebus.Bus
 
         public RebusBus Start(int numberOfWorkers)
         {
-            Log.InfoFormat("Initializing bus with {0} workers", numberOfWorkers);
+            Log.Info("Initializing bus with {0} workers", numberOfWorkers);
             numberOfWorkers.Times(AddWorker);
             Log.Info("Bus started");
             return this;
