@@ -77,6 +77,7 @@
     </Compile>
     <Compile Include="Configuration\TestConfigurationApi.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\TestDiscoveryConfigurer.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -14,6 +15,18 @@ namespace Rebus.Tests.Configuration
     [TestFixture]
     public class TestConfigurationApi : FixtureBase
     {
+        [Test]
+        public void CanConfigureDiscovery()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Discovery(d =>
+                               {
+                                   d.Handlers.LoadFrom(Assembly.GetExecutingAssembly());
+                               });
+        }
+
         [Test]
         public void CanConfigureLogging()
         {
@@ -181,7 +194,7 @@ namespace Rebus.Tests.Configuration
                 }
             }
 
-            readonly Dictionary<Type, IResolver> resolvers = new Dictionary<Type,IResolver>(); 
+            readonly Dictionary<Type, List<IResolver>> resolvers = new Dictionary<Type, List<IResolver>>();
             readonly List<Registration> registrations = new List<Registration>();
 
             public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
@@ -197,9 +210,10 @@ namespace Rebus.Tests.Configuration
             public void RegisterInstance(object instance, params Type[] serviceTypes)
             {
                 registrations.Add(new Registration(instance, serviceTypes));
+                
                 foreach(var type in serviceTypes)
                 {
-                    resolvers.Add(type, new InstanceResolver(instance));
+                    AddResolver(type, new InstanceResolver(instance));
                 }
             }
 
@@ -212,9 +226,17 @@ namespace Rebus.Tests.Configuration
             {
                 foreach (var type in serviceTypes)
                 {
-                    resolvers.Add(type, new RecursiveTypeMappingResolver(implementationType,
-                                                                         this, lifestyle == Lifestyle.Singleton));
+                    AddResolver(type, new RecursiveTypeMappingResolver(implementationType,
+                                                                                                      this, lifestyle == Lifestyle.Singleton));
                 }
+            }
+
+            void AddResolver(Type type, IResolver resolver)
+            {
+                if (!resolvers.ContainsKey(type))
+                    resolvers[type] = new List<IResolver>();
+
+                resolvers[type].Add(resolver);
             }
 
             public bool HasImplementationOf(Type serviceType)
@@ -224,7 +246,7 @@ namespace Rebus.Tests.Configuration
 
             public TService Resolve<TService>()
             {
-                return (TService) resolvers[typeof (TService)].Get();
+                return (TService) resolvers[typeof (TService)].First().Get();
             }
 
             public TService[] ResolveAll<TService>()

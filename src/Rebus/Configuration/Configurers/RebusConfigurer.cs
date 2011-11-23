@@ -7,7 +7,7 @@ namespace Rebus.Configuration.Configurers
 {
     public class RebusConfigurer
     {
-        readonly IContainerAdapter containerAdapter;
+        protected readonly IContainerAdapter containerAdapter;
 
         public RebusConfigurer(IContainerAdapter containerAdapter)
         {
@@ -51,9 +51,9 @@ namespace Rebus.Configuration.Configurers
             return this;
         }
 
-        public RebusConfigurer Logging(Action<LoggingConfigurer> configureLogging)
+        public RebusConfigurer Discovery(Action<DiscoveryConfigurer> configureDiscovery)
         {
-            configureLogging(new LoggingConfigurer());
+            configureDiscovery(new DiscoveryConfigurer(containerAdapter));
             return this;
         }
 

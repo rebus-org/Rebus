@@ -53,7 +53,9 @@
     <Compile Include="AbstractContainerAdapter.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="Configuration\Configurers\DiscoveryConfigurer.cs" />
     <Compile Include="Configuration\Configurers\LoggingConfigurer.cs" />
+    <Compile Include="Configuration\Configurers\RebusConfigurerWithLogging.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />
     <Compile Include="Logging\ILog.cs" />

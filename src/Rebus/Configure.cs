@@ -4,9 +4,9 @@ namespace Rebus
 {
     public class Configure
     {
-        public static RebusConfigurer With(IContainerAdapter containerAdapter)
+        public static RebusConfigurerWithLogging With(IContainerAdapter containerAdapter)
         {
-            return new RebusConfigurer(containerAdapter);
+            return new RebusConfigurerWithLogging(containerAdapter);
         }
     }
 }
