@@ -226,8 +226,7 @@ namespace Rebus.Tests.Configuration
             {
                 foreach (var type in serviceTypes)
                 {
-                    AddResolver(type, new RecursiveTypeMappingResolver(implementationType,
-                                                                                                      this, lifestyle == Lifestyle.Singleton));
+                    AddResolver(type, new RecursiveTypeMappingResolver(implementationType, this, lifestyle == Lifestyle.Singleton));
                 }
             }
 
