@@ -23,6 +23,6 @@ namespace Rebus
         /// of <see cref="IActivateHandlers"/> to that implementation, allowing any manually
         /// pulled handler instances to be released in the right way.
         /// </summary>
-        void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances);
+        void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances);
     }
 }

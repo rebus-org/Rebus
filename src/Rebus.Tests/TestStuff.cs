@@ -1,11 +1,41 @@
-﻿using System.Messaging;
+﻿using System;
+using System.Messaging;
 using NUnit.Framework;
+using Shouldly;
 
 namespace Rebus.Tests
 {
     [TestFixture]
     public class TestStuff
     {
+        [Test]
+        public void InvokeViaReflectionWorksLikeExpected()
+        {
+            var instance = new SomeClass();
+
+            typeof(SomeClass).GetMethod("Handle", new[] { typeof(string) }).Invoke(instance, new object[] { "yo!" });
+            typeof(SomeClass).GetMethod("Handle", new[] { typeof(object) }).Invoke(instance, new object[] { "yo!" });
+
+            instance.StringCalled.ShouldBe(true);
+            instance.ObjectCalled.ShouldBe(true);
+        }
+
+        class SomeClass : IHandleMessages<string>, IHandleMessages<object>
+        {
+            public bool StringCalled { get; set; }
+            public bool ObjectCalled { get; set; }
+
+            public void Handle(string message)
+            {
+                StringCalled = true;
+            }
+
+            public void Handle(object message)
+            {
+                ObjectCalled = true;
+            }
+        }
+
         [Test]
         public void StatementOfFunctionality()
         {

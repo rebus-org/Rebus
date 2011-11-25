@@ -3,14 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Rebus.Logging;
 using Rebus.Messages;
 
 namespace Rebus.Bus
 {
     public class Dispatcher
     {
-        readonly ConcurrentDictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new ConcurrentDictionary<Type, string[]>();
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        readonly ConcurrentDictionary<Type, Type[]> typesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
+        readonly ConcurrentDictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new ConcurrentDictionary<Type, string[]>();
         readonly IStoreSagaData storeSagaData;
         readonly IActivateHandlers activateHandlers;
         readonly IStoreSubscriptions storeSubscriptions;
@@ -29,29 +32,38 @@ namespace Rebus.Bus
 
         public void Dispatch<TMessage>(TMessage message)
         {
-            IHandleMessages<TMessage>[] handlersToRelease = null;
+            IHandleMessages[] handlersToRelease = null;
 
             try
             {
-                var handlerInstances = activateHandlers.GetHandlerInstancesFor<TMessage>();
+                var typesToDispatch = GetTypesToDispatch(typeof (TMessage));
+                var handlersFromActivator = typesToDispatch.SelectMany(type => GetHandlerInstancesFor(type));
+                var handlerInstances = handlersFromActivator.ToArray();
 
-                // if we didn't get anything, just carry on... might not be what we want, but let's just do that for now
-                if (handlerInstances == null) return;
-
-                // evaluate handler sequence and ensure that its "fixed in place"
-                handlersToRelease = handlerInstances.Concat(OwnHandlersFor<TMessage>()).ToArray();
+                // add own internal handlers
+                var handlerPipeline = handlerInstances.Concat(OwnHandlersFor<TMessage>()).ToList();
 
                 // allow pipeline to be filtered
-                var handlersToExecute = inspectHandlerPipeline.Filter(message, handlersToRelease).ToList();
+                var handlersToExecute = inspectHandlerPipeline.Filter(message, handlerPipeline).ToArray();
 
                 // keep track of all handlers pulled from the activator as well as any handlers
                 // that may have been added from the handler filter
-                handlersToRelease = handlersToRelease.Union(handlersToExecute).ToArray();
+                handlersToRelease = handlerInstances.Union(handlersToExecute).ToArray();
 
-                foreach (var handler in handlersToExecute)
+                foreach (var handler in handlersToExecute.Distinct())
                 {
-                    DispatchToHandler(message, handler);
-                    if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers) break;
+                    Log.Debug("Dispatching {0} to {1}", message, handler);
+
+                    var handlerType = handler.GetType();
+
+                    foreach(var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
+                    {
+                        GetType().GetMethod("DispatchToHandler", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(typeToDispatch)
+                            .Invoke(this, new object[] {message, handler});
+                        
+                        if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers) break;
+                    }
                 }
             }
             finally
@@ -63,14 +75,76 @@ namespace Rebus.Bus
             }
         }
 
+        static Type[] GetTypesToDispatchToThisHandler(Type[] typesToDispatch, Type handlerType)
+        {
+            var interfaces = handlerType.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                .Select(i => i.GetGenericArguments()[0])
+                .ToArray();
+
+            return interfaces.Intersect(typesToDispatch).ToArray();
+        }
+
+        IEnumerable<IHandleMessages> GetHandlerInstancesFor(Type messageType)
+        {
+            var activationMethod = GeHandlerActivatorMethod(messageType);
+            var handlerInstances = (IEnumerable<IHandleMessages>)activationMethod.Invoke(activateHandlers, new object[0]);
+            return handlerInstances;
+        }
+
+        class HandlerInstance
+        {
+            public HandlerInstance(Type typeToDispatch, IHandleMessages handler)
+            {
+                TypeToDispatch = typeToDispatch;
+                Handler = handler;
+            }
+
+            public Type TypeToDispatch { get; set; }
+            public IHandleMessages Handler { get; set; }
+        }
+
+        MethodInfo GeHandlerActivatorMethod(Type messageType)
+        {
+            var methodInfo = activateHandlers.GetType().GetMethod("GetHandlerInstancesFor");
+            var method = methodInfo.MakeGenericMethod(messageType);
+            return method;
+        }
+
         IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
         {
             if (typeof(T) == typeof(SubscriptionMessage))
             {
-                return new[] { (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions) };
+                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
             }
-
             return new IHandleMessages<T>[0];
+        }
+
+        Type[] GetTypesToDispatch(Type messageType)
+        {
+            Type[] typesToDispatch;
+            if (typesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
+            {
+                return typesToDispatch;
+            }
+            var types = new HashSet<Type>();
+            AddTypesFrom(messageType, types);
+            var newArrayOfTypesToDispatch = types.ToArray();
+            typesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
+            return newArrayOfTypesToDispatch;
+        }
+
+        void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
+        {
+            typeSet.Add(messageType);
+            foreach (var interfaceType in messageType.GetInterfaces())
+            {
+                typeSet.Add(interfaceType);
+            }
+            if (messageType.BaseType != null)
+            {
+                AddTypesFrom(messageType.BaseType, typeSet);
+            }
         }
 
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)

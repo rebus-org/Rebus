@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
@@ -13,7 +11,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Internal worker thread that continually attempts to receive messages and dispatch to handlers.
     /// </summary>
-    class Worker : IDisposable
+    public class Worker : IDisposable
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -108,6 +106,11 @@ namespace Rebus.Bus
             }
         }
 
+        public string WorkerThreadName
+        {
+            get { return workerThread.Name; }
+        }
+
         void MainLoop()
         {
             while (!shouldExit)
@@ -146,7 +149,6 @@ namespace Rebus.Bus
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
                     Log.Error("Handling message {0} has failed the maximum number of times", id);
-                    Console.WriteLine("FAIL!");
                     MessageFailedMaxNumberOfTimes(transportMessage);
                     errorTracker.Forget(id);
                 }
@@ -162,7 +164,9 @@ namespace Rebus.Bus
                             foreach (var logicalMessage in message.Messages)
                             {
                                 Log.Debug("Dispatching message {0}: {1}", id, logicalMessage.GetType());
-                                Dispatch(logicalMessage);
+
+                                GetDispatchMethod(logicalMessage.GetType())
+                                    .Invoke(this, new[] {logicalMessage});
                             }
                         }
                     }
@@ -176,23 +180,6 @@ namespace Rebus.Bus
 
                 transactionScope.Complete();
                 errorTracker.Forget(id);
-            }
-        }
-
-        void Dispatch(object message)
-        {
-            var messageType = message.GetType();
-
-            try
-            {
-                foreach (var typeToDispatch in GetTypesToDispatch(messageType))
-                {
-                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] { message });
-                }
-            }
-            catch (TargetInvocationException tae)
-            {
-                throw tae.InnerException;
             }
         }
 
@@ -213,49 +200,6 @@ namespace Rebus.Bus
             return newMethod;
         }
 
-        Type[] GetTypesToDispatch(Type messageType)
-        {
-            Type[] typesToDispatch;
-
-            if (typesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
-            {
-                return typesToDispatch;
-            }
-
-            var types = new HashSet<Type>();
-            AddTypesFrom(messageType, types);
-            var newArrayOfTypesToDispatch = types.ToArray();
-
-            typesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
-
-            return newArrayOfTypesToDispatch;
-        }
-
-        void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
-        {
-            typeSet.Add(messageType);
-
-            foreach (var interfaceType in messageType.GetInterfaces())
-            {
-                typeSet.Add(interfaceType);
-            }
-                
-            if (messageType.BaseType != null)
-            {
-                AddTypesFrom(messageType.BaseType, typeSet);
-            }
-        }
-
-        public string WorkerThreadName
-        {
-            get { return workerThread.Name; }
-        }
-
-        string GenerateNewWorkerThreadName()
-        {
-            return string.Format("Rebus worker #{0}", Interlocked.Increment(ref workerThreadCounter));
-        }
-
         /// <summary>
         /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
         /// for some strongly typed interaction from this point and on....
@@ -263,6 +207,11 @@ namespace Rebus.Bus
         internal void DispatchGeneric<T>(T message)
         {
             dispatcher.Dispatch(message);
+        }
+
+        string GenerateNewWorkerThreadName()
+        {
+            return string.Format("Rebus worker #{0}", Interlocked.Increment(ref workerThreadCounter));
         }
     }
 }

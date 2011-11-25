@@ -11,7 +11,7 @@ namespace Rebus.Tests
     {
         readonly List<object> handlers = new List<object>();
 
-        class HandlerMethodWrapper<T> : IHandleMessages<T>
+        public class HandlerMethodWrapper<T> : IHandleMessages<T>
         {
             readonly Action<T> action;
 
@@ -39,13 +39,15 @@ namespace Rebus.Tests
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            return handlers
-                .Where(h => h is IHandleMessages<T>)
+            var handlerInstances = handlers
+                .Where(h => h.GetType().GetInterfaces().Any(i => i == typeof(IHandleMessages<T>)))
                 .Cast<IHandleMessages<T>>()
                 .ToList();
+
+            return handlerInstances;
         }
 
-        public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
+        public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
         {
         }
     }

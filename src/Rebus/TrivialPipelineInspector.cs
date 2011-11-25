@@ -13,7 +13,7 @@ namespace Rebus
         /// <summary>
         /// Returns the unmodified sequence of handlers.
         /// </summary>
-        public IEnumerable<IHandleMessages<TMessage>> Filter<TMessage>(TMessage message, IEnumerable<IHandleMessages<TMessage>> handlers)
+        public IEnumerable<IHandleMessages> Filter(object message, IEnumerable<IHandleMessages> handlers)
         {
             return handlers;
         }

@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
+using Rebus.Serialization.Json;
 using Rebus.Tests.Integration;
 using Rhino.Mocks;
 using Shouldly;
@@ -13,22 +14,22 @@ namespace Rebus.Tests.Unit
     public class TestRebusBus : FixtureBase
     {
         RebusBus bus;
-        IReceiveMessages receiveMessages;
-        IActivateHandlers activateHandlers;
+        MessageReceiverForTesting receiveMessages;
+        HandlerActivatorForTesting activateHandlers;
         IDetermineDestination determineDestination;
         ISendMessages sendMessages;
-        ISerializeMessages serializeMessages;
+        JsonMessageSerializer serializeMessages;
         IStoreSagaData storeSagaData;
         IInspectHandlerPipeline inspectHandlerPipeline;
 
         protected override void DoSetUp()
         {
-            receiveMessages = Mock<IReceiveMessages>();
-            activateHandlers = Mock<IActivateHandlers>();
+            activateHandlers = new HandlerActivatorForTesting();
             determineDestination = Mock<IDetermineDestination>();
             sendMessages = Mock<ISendMessages>();
-            serializeMessages = Mock<ISerializeMessages>();
+            serializeMessages = new JsonMessageSerializer();
             storeSagaData = Mock<IStoreSagaData>();
+            receiveMessages = new MessageReceiverForTesting(serializeMessages);
             inspectHandlerPipeline = new TrivialPipelineInspector();
             bus = new RebusBus(activateHandlers,
                                sendMessages,
@@ -50,15 +51,11 @@ namespace Rebus.Tests.Unit
             determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
-            var someTransportMessage = new TransportMessageToSend();
-            serializeMessages.Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Messages[0] == theMessageThatWasSent)))
-                .Return(someTransportMessage);
-
             // act
             bus.Send(theMessageThatWasSent);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send("woolala", someTransportMessage));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"), Arg<TransportMessageToSend>.Is.Anything));
         }
 
         [Test]
@@ -66,55 +63,40 @@ namespace Rebus.Tests.Unit
         {
             // arrange
             determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
-            receiveMessages.Stub(r => r.InputQueue).Return("my input queue");
-
-            var someTransportMessage = new TransportMessageToSend();
-            serializeMessages
-                .Stub(s => s.Serialize(Arg<Message>.Matches(t => t.Headers[Headers.ReturnAddress] == "my input queue" &&
-                                                                 ((SubscriptionMessage)t.Messages[0]).Type ==
-                                                                 typeof(PolymorphicMessage).FullName)))
-                .Return(someTransportMessage);
+            receiveMessages.SetInputQueue("my input queue");
 
             // act
             bus.Subscribe<PolymorphicMessage>();
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send("woolala", someTransportMessage));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
+                                                     Arg<TransportMessageToSend>.Matches(
+                                                         m => m.Headers.ContainsKey(Headers.ReturnAddress)
+                                                              && m.Headers[Headers.ReturnAddress] == "my input queue")));
         }
 
         [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
-            var someTransportMessage = new ReceivedTransportMessage { Id = "some id" };
-            receiveMessages.Stub(r => r.ReceiveMessage()).Return(someTransportMessage);
-
-            serializeMessages.Stub(s => s.Deserialize(someTransportMessage))
-                .Return(new Message
-                            {
-                                Messages = new object[]
-                                               {
-                                                   new PolymorphicMessage()
-                                               }
-                            });
+            receiveMessages.Deliver(new Message
+                                        {
+                                            Messages = new object[]
+                                                           {
+                                                               new PolymorphicMessage()
+                                                           }
+                                        });
 
             var manualResetEvent = new ManualResetEvent(false);
 
             var handler = new SomeHandler(manualResetEvent);
 
-            activateHandlers.Stub(f => f.GetHandlerInstancesFor<IFirstInterface>())
-                .Return(new[] { (IHandleMessages<IFirstInterface>)handler });
-
-            activateHandlers.Stub(f => f.GetHandlerInstancesFor<ISecondInterface>())
-                .Return(new[] { (IHandleMessages<ISecondInterface>)handler });
-
-            activateHandlers.Stub(f => f.GetHandlerInstancesFor<PolymorphicMessage>())
-                .Return(new IHandleMessages<PolymorphicMessage>[0]);
+            activateHandlers.UseHandler(handler);
 
             bus.Start();
 
-            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(5)))
+            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(4)))
             {
-                Assert.Fail("Did not receive messages withing timeout");
+                Assert.Fail("Did not receive messages within timeout");
             }
 
             handler.FirstMessageHandled.ShouldBe(true);

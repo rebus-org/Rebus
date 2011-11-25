@@ -21,16 +21,19 @@ namespace Rebus.Configuration
         string stackTrace;
         int maxIndex;
 
-        public IEnumerable<IHandleMessages<TMessage>> Filter<TMessage>(TMessage message, IEnumerable<IHandleMessages<TMessage>> handlers)
+        public IEnumerable<IHandleMessages> Filter(object message, IEnumerable<IHandleMessages> handlers)
         {
             return handlers
                 .Select(handler =>
-                        new Tuple<IHandleMessages<TMessage>, int>(handler,
-                                                                  orders.ContainsKey(handler.GetType())
-                                                                      ? orders[handler.GetType()]
-                                                                      : maxIndex))
-                .OrderBy(a => a.Item2)
-                .Select(a => a.Item1)
+                        new
+                            {
+                                Handler = handler,
+                                Order = orders.ContainsKey(handler.GetType())
+                                            ? orders[handler.GetType()]
+                                            : maxIndex
+                            })
+                .OrderBy(a => a.Order)
+                .Select(a => a.Handler)
                 .ToList();
         }
 

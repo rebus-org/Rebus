@@ -17,10 +17,10 @@ namespace Rebus
         /// <summary>
         /// Filter the list of handlers before they get executed.
         /// </summary>
-        /// <typeparam name="TMessage">This is the type of message currently being handled.</typeparam>
         /// <param name="message">The message that is being handled.</param>
-        /// <param name="handlers">This is the sequence of handlers that the <see cref="IActivateHandlers"/> gave us.</param>
+        /// <param name="handlers">This is the sequence of handlers that the <see cref="IActivateHandlers"/> gave us,
+        /// including any internal handlers that may have been added by Rebus.</param>
         /// <returns>Your (possibly filtered/re-ordered/completely new) sequence of handlers that will actually end up being executed.</returns>
-        IEnumerable<IHandleMessages<TMessage>> Filter<TMessage>(TMessage message, IEnumerable<IHandleMessages<TMessage>> handlers);
+        IEnumerable<IHandleMessages> Filter(object message, IEnumerable<IHandleMessages> handlers);
     }
 }

@@ -4,7 +4,7 @@ using Rebus.Tests.Persistence.MongoDb;
 
 namespace Rebus.Tests.Performance
 {
-    [TestFixture, Category(TestCategories.Mongo)]
+    [TestFixture, Category(TestCategories.Mongo), Category(TestCategories.Performance)]
     public class TestMongoDbSagaPersisterPerformance : MongoDbFixtureBase
     {
         MongoDbSagaPersister persister;

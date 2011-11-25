@@ -1,18 +1,18 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using Rebus.Messages;
-using Rebus.Serialization.Json;
 
 namespace Rebus.Tests
 {
     public class MessageReceiverForTesting : IReceiveMessages
     {
-        readonly JsonMessageSerializer serializer;
+        readonly ISerializeMessages serializer;
         readonly ConcurrentQueue<TransportMessageToSend> messageQueue = new ConcurrentQueue<TransportMessageToSend>();
         
         int idCounter;
+        string inputQueue;
 
-        public MessageReceiverForTesting(JsonMessageSerializer serializer)
+        public MessageReceiverForTesting(ISerializeMessages serializer)
         {
             this.serializer = serializer;
         }
@@ -33,7 +33,7 @@ namespace Rebus.Tests
 
         public string InputQueue
         {
-            get { return "message_receiver_for_testing"; }
+            get { return inputQueue; }
         }
 
         public void Deliver(Message message)
@@ -44,6 +44,11 @@ namespace Rebus.Tests
         string NewMessageId()
         {
             return string.Format("Message#{0000}", Interlocked.Increment(ref idCounter));
+        }
+
+        public void SetInputQueue(string myInputQueue)
+        {
+            inputQueue = myInputQueue;
         }
     }
 }

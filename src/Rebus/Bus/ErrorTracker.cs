@@ -8,7 +8,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Class used by <see cref="RebusBus"/> to track errors between retries.
     /// </summary>
-    class ErrorTracker
+    public class ErrorTracker
     {
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
 

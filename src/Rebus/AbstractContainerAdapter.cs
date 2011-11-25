@@ -15,7 +15,7 @@ namespace Rebus
             return ResolveAll<IHandleMessages<T>>();
         }
 
-        public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
+        public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
         {
             Release(handlerInstances);
         }

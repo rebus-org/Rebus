@@ -3,12 +3,13 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Tests.Integration;
 
 namespace Rebus.Tests.Performance
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Performance)]
     public class TestDispatcherIsolatedSagaPerformance : FixtureBase
     {
         Dispatcher dispatcher;
@@ -17,6 +18,8 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+
             activator = new HandlerActivatorForTesting();
             persister = new SagaDataPersisterForTesting();
             dispatcher = new Dispatcher(persister,
@@ -32,9 +35,9 @@ namespace Rebus.Tests.Performance
         /// After caching of fields to index:
         ///     10000 iterations took 0,859 s - that's 11638,5 msg/s
         /// 
-        /// 
-        /// 
-        /// 
+        /// After implementing true polymorphic dispatch:
+        ///     10000 iterations took 1,638 s - that's 6104,6 msg/s
+        ///
         /// 
         /// </summary>
         [TestCase(1000)]

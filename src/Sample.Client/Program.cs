@@ -64,7 +64,7 @@ namespace Sample.Client
             return new IHandleMessages<T>[0];
         }
 
-        public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
+        public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
         {
         }
 

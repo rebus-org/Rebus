@@ -202,7 +202,7 @@ namespace Rebus.Tests.Configuration
                 throw new NotImplementedException();
             }
 
-            public void ReleaseHandlerInstances<T>(IEnumerable<IHandleMessages<T>> handlerInstances)
+            public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
             {
                 throw new NotImplementedException();
             }
