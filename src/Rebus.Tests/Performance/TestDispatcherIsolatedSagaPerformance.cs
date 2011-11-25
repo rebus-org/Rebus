@@ -38,6 +38,12 @@ namespace Rebus.Tests.Performance
         /// After implementing true polymorphic dispatch:
         ///     10000 iterations took 1,638 s - that's 6104,6 msg/s
         ///
+        /// After caching of dispatcher methods and activator methods:
+        ///     10000 iterations took 1,385 s - that's 7219,4 msg/s
+        /// 
+        /// Replaced concurrent dictionaries with ordinary ones:
+        ///     10000 iterations took 1,363 s - that's 7335,1 msg/s
+        /// 
         /// 
         /// </summary>
         [TestCase(1000)]

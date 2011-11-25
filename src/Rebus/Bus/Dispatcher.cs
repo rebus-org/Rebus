@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,8 +11,11 @@ namespace Rebus.Bus
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        readonly ConcurrentDictionary<Type, Type[]> typesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
-        readonly ConcurrentDictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new ConcurrentDictionary<Type, string[]>();
+        readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
+        readonly Dictionary<Type, MethodInfo> activatorMethods = new Dictionary<Type, MethodInfo>();
+        readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
+        readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
+        
         readonly IStoreSagaData storeSagaData;
         readonly IActivateHandlers activateHandlers;
         readonly IStoreSubscriptions storeSubscriptions;
@@ -37,7 +39,7 @@ namespace Rebus.Bus
             try
             {
                 var typesToDispatch = GetTypesToDispatch(typeof (TMessage));
-                var handlersFromActivator = typesToDispatch.SelectMany(type => GetHandlerInstancesFor(type));
+                var handlersFromActivator = typesToDispatch.SelectMany(GetHandlerInstances);
                 var handlerInstances = handlersFromActivator.ToArray();
 
                 // add own internal handlers
@@ -58,11 +60,12 @@ namespace Rebus.Bus
 
                     foreach(var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        GetType().GetMethod("DispatchToHandler", BindingFlags.NonPublic | BindingFlags.Instance)
-                            .MakeGenericMethod(typeToDispatch)
-                            .Invoke(this, new object[] {message, handler});
+                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
                         
-                        if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers) break;
+                        if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers)
+                        {
+                            break;
+                        }
                     }
                 }
             }
@@ -75,40 +78,58 @@ namespace Rebus.Bus
             }
         }
 
-        static Type[] GetTypesToDispatchToThisHandler(Type[] typesToDispatch, Type handlerType)
+        Type[] GetTypesToDispatch(Type messageType)
         {
-            var interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
-                .Select(i => i.GetGenericArguments()[0])
-                .ToArray();
-
-            return interfaces.Intersect(typesToDispatch).ToArray();
+            Type[] typesToDispatch;
+            if (typesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
+            {
+                return typesToDispatch;
+            }
+            
+            var types = new HashSet<Type>();
+            AddTypesFrom(messageType, types);
+            var newArrayOfTypesToDispatch = types.ToArray();
+            typesToDispatchCache[messageType] = newArrayOfTypesToDispatch;
+            
+            return newArrayOfTypesToDispatch;
         }
 
-        IEnumerable<IHandleMessages> GetHandlerInstancesFor(Type messageType)
+        IEnumerable<IHandleMessages> GetHandlerInstances(Type messageType)
         {
-            var activationMethod = GeHandlerActivatorMethod(messageType);
-            var handlerInstances = (IEnumerable<IHandleMessages>)activationMethod.Invoke(activateHandlers, new object[0]);
+            MethodInfo method;
+            if (!activatorMethods.TryGetValue(messageType, out method))
+            {
+                method = activateHandlers.GetType()
+                    .GetMethod("GetHandlerInstancesFor")
+                    .MakeGenericMethod(messageType);
+             
+                activatorMethods[messageType] = method;
+            }
+            var activationMethod = method;
+            var handlers = activationMethod.Invoke(activateHandlers, new object[0]);
+            var handlerInstances = (IEnumerable<IHandleMessages>) handlers;
             return handlerInstances;
         }
 
-        class HandlerInstance
+        MethodInfo GetDispatcherMethod(Type typeToDispatch)
         {
-            public HandlerInstance(Type typeToDispatch, IHandleMessages handler)
-            {
-                TypeToDispatch = typeToDispatch;
-                Handler = handler;
-            }
+            MethodInfo method;
+            if (dispatcherMethods.TryGetValue(typeToDispatch, out method)) return method;
 
-            public Type TypeToDispatch { get; set; }
-            public IHandleMessages Handler { get; set; }
+            method = GetType().GetMethod("DispatchToHandler", BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(typeToDispatch);
+
+            dispatcherMethods[typeToDispatch] = method;
+            return method;
         }
 
-        MethodInfo GeHandlerActivatorMethod(Type messageType)
+        IEnumerable<Type> GetTypesToDispatchToThisHandler(Type[] typesToDispatch, Type handlerType)
         {
-            var methodInfo = activateHandlers.GetType().GetMethod("GetHandlerInstancesFor");
-            var method = methodInfo.MakeGenericMethod(messageType);
-            return method;
+            var interfaces = handlerType.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                .Select(i => i.GetGenericArguments()[0]);
+
+            return interfaces.Intersect(typesToDispatch).ToArray();
         }
 
         IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
@@ -118,20 +139,6 @@ namespace Rebus.Bus
                 return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
             }
             return new IHandleMessages<T>[0];
-        }
-
-        Type[] GetTypesToDispatch(Type messageType)
-        {
-            Type[] typesToDispatch;
-            if (typesToDispatchCache.TryGetValue(messageType, out typesToDispatch))
-            {
-                return typesToDispatch;
-            }
-            var types = new HashSet<Type>();
-            AddTypesFrom(messageType, types);
-            var newArrayOfTypesToDispatch = types.ToArray();
-            typesToDispatchCache.TryAdd(messageType, newArrayOfTypesToDispatch);
-            return newArrayOfTypesToDispatch;
         }
 
         void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
@@ -147,6 +154,9 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Private dispatcher method that gets invoked only via reflection.
+        /// </summary>
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
             if (handler is Saga)
@@ -204,7 +214,7 @@ namespace Rebus.Bus
             paths = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
 
             // make sure they're there the next time
-            fieldsToIndexForGivenSagaDataType.TryAdd(sagaType, paths);
+            fieldsToIndexForGivenSagaDataType[sagaType] = paths;
 
             return paths;
         }
