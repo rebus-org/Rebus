@@ -8,7 +8,7 @@ In fact, its goal is to copy NServiceBus in almost every aspect, only deviating 
 * a simpler and more intuitive configuration story
 * not quite as many options
 * no doodleware
-* dependencies only on .NET 4 BCL and Log4net
+* dependencies only on .NET 4 BCL
 * much better error messages
 * a frictionless getting-up-and-running-experience
 
