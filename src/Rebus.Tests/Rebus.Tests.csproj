@@ -105,6 +105,7 @@
     <Compile Include="Integration\TestRebusBusWithMsmqMessageQueue.cs" />
     <Compile Include="FixtureBase.cs" />
     <Compile Include="TestStuff.cs" />
+    <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
     <Compile Include="Unit\TestWorker.cs" />
   </ItemGroup>
