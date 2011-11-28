@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Rebus;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
@@ -25,6 +26,8 @@ namespace Sample.Server
 
         static void Run()
         {
+            RebusLoggerFactory.Current = new TraceLoggerFactory();
+
             var program = new Program();
             var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server").PurgeInputQueue();
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();

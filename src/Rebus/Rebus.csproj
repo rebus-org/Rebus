@@ -82,6 +82,7 @@
     <Compile Include="IContainerAdapter.cs" />
     <Compile Include="Logging\IRebusLoggerFactory.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
+    <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />

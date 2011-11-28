@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Messaging;
 using NUnit.Framework;
 using Shouldly;
@@ -8,6 +9,21 @@ namespace Rebus.Tests
     [TestFixture]
     public class TestStuff
     {
+        [TestCase(1000)]
+        public void CompareTracePerformance(int iterations)
+        {
+            PrintTiming("Trace", () => iterations.Times(() => Trace.TraceInformation("HWLLO WRRLD!")));
+            PrintTiming("Console.WriteLine", () => iterations.Times(() => Console.WriteLine("HWLLO WRRLD!")));
+        }
+
+        void PrintTiming(string what, Action action)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            action();
+            var elapsed = stopwatch.Elapsed;
+            Console.WriteLine("{0} took {1:0.0} s", what, elapsed.TotalSeconds);
+        }
+
         [Test]
         public void InvokeViaReflectionWorksLikeExpected()
         {
