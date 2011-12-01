@@ -59,9 +59,12 @@
     <Compile Include="Configuration\Configurers\LoggingConfigurer.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurerWithLogging.cs" />
     <Compile Include="Configuration\DetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\FluentRearrangeHandlersPipelineInspectorBuilder.cs" />
     <Compile Include="Configuration\MappingElement.cs" />
     <Compile Include="Configuration\MappingsCollection.cs" />
+    <Compile Include="Configuration\RearrangeHandlersPipelineInspectorExtensions.cs" />
     <Compile Include="Configuration\RebusMappingsSection.cs" />
+    <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />
     <Compile Include="Logging\ILog.cs" />

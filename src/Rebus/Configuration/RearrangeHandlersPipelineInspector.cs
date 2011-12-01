@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Rebus.Configuration.Configurers;
 
 namespace Rebus.Configuration
 {
@@ -114,33 +113,6 @@ at the same time?", typeToAppendToOrder));
                 .ToDictionary(k => k.Key, v => v.Value);
 
             SetMaxIndex();
-        }
-    }
-
-    public static class RearrangeHandlersPipelineInspectorExtensions
-    {
-        public static FluentBuilder First<THandler>(this PipelineInspectorConfigurer configurer)
-        {
-            return new FluentBuilder(typeof(THandler), configurer);
-        }
-    }
-
-    public class FluentBuilder
-    {
-        readonly RearrangeHandlersPipelineInspector rearranger = new RearrangeHandlersPipelineInspector();
-        readonly PipelineInspectorConfigurer configurer;
-        
-        public FluentBuilder(Type first, PipelineInspectorConfigurer configurer)
-        {
-            rearranger = new RearrangeHandlersPipelineInspector();
-            rearranger.AddToOrder(first);
-            configurer.Use(rearranger);
-        }
-
-        public FluentBuilder Then<TMessage>()
-        {
-            rearranger.AddToOrder(typeof (TMessage));
-            return this;
         }
     }
 }

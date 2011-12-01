@@ -41,10 +41,4 @@ namespace Rebus
         /// </summary>
         void Release(object obj);
     }
-
-    public enum Lifestyle
-    {
-        Singleton,
-        Instance,
-    }
 }
