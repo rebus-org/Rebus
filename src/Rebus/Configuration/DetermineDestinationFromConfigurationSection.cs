@@ -7,6 +7,9 @@ using System.Linq;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configures endpoint mappings from a <see cref="RebusMappingsSection"/> configuration section.
+    /// </summary>
     public class DetermineDestinationFromConfigurationSection : IDetermineDestination
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
