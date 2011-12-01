@@ -2,6 +2,12 @@
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Endpoint mapper that is meant to be used as the default in cases where
+    /// an implementation of <see cref="IDetermineDestination"/> is not chosen.
+    /// It will throw every time it gets called, and it will do so with a nice
+    /// and friendly error message.
+    /// </summary>
     public class ThrowingEndpointMapper : IDetermineDestination
     {
         public string GetEndpointFor(Type messageType)

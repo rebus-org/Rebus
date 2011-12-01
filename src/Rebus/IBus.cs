@@ -11,10 +11,15 @@ namespace Rebus
     public interface IBus : IDisposable
     {
         /// <summary>
-        /// Sends the specified command message to the destination as specified by the currently
+        /// Sends the specified message to the destination as specified by the currently
         /// used implementation of <see cref="IDetermineDestination"/>.
         /// </summary>
         void Send<TCommand>(TCommand message);
+
+        /// <summary>
+        /// Sends the specified message to the specified destination.
+        /// </summary>
+        void Send<TMessage>(string endpoint, TMessage message);
 
         /// <summary>
         /// Sends a reply back to the sender of the message currently being handled. Can only
@@ -22,13 +27,19 @@ namespace Rebus
         /// during the handling of an incoming message.
         /// </summary>
         void Reply<TReply>(TReply message);
-        
+
         /// <summary>
-        /// Sends a subscription request to the destination as specified by the currently used
-        /// implementation of <see cref="IDetermineDestination"/>.
+        /// Sends a subscription request for <typeparamref name="TMessage"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
         /// </summary>
         void Subscribe<TMessage>();
-        
+
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TMessage"/> to the specified 
+        /// destination.
+        /// </summary>
+        void Subscribe<TMessage>(string publisherInputQueue);
+
         /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.
         /// The publisher should have some kind of <see cref="IStoreSubscriptions"/> implementation,

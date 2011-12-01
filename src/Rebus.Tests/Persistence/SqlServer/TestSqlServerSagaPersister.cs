@@ -13,7 +13,6 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerSagaPersister : DbFixtureBase
     {
         SqlServerSagaPersister persister;
-        Type SagaDataTypeDoesntMatter;
 
         protected override void DoSetUp()
         {
@@ -21,6 +20,11 @@ namespace Rebus.Tests.Persistence.SqlServer
             DeleteRows("saga_index");
             persister = new SqlServerSagaPersister(ConnectionString, "saga_index", "sagas");
         }
+
+        /// <summary>
+        /// This one is null because the type doesn't matter
+        /// </summary>
+        public Type SagaDataTypeDoesntMatter { get; set; }
 
         [Test]
         public void CanStoreSagaAsExpected()

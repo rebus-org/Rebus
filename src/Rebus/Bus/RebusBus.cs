@@ -56,14 +56,14 @@ namespace Rebus.Bus
             Send(destinationEndpoint, message);
         }
 
-        public void Send(string endpoint, object message)
+        public void Send<TMessage>(string endpoint, TMessage message)
         {
             var messageToSend = new Message
                                     {
-                                        Messages = new[] {message},
+                                        Messages = new object[] {message},
                                         Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                     };
-            
+
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
             sendMessages.Send(endpoint, transportMessage);

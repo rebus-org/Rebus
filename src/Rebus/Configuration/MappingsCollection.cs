@@ -15,7 +15,7 @@ namespace Rebus.Configuration
             return ((MappingElement) element).Messages;
         }
 
-        public IEnumerator<MappingElement> GetEnumerator()
+        public new IEnumerator<MappingElement> GetEnumerator()
         {
             for (var index = 0; index < Count; index++)
             {
