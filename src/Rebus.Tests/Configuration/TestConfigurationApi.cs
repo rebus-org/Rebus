@@ -21,6 +21,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             Configure.With(adapter)
+                .DetermineEndpoints(d => d.FromRebusMappingsSection())
                 .Discovery(d =>
                                {
                                    d.Handlers.LoadFrom(Assembly.GetExecutingAssembly());

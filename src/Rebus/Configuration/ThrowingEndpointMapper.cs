@@ -7,9 +7,9 @@ namespace Rebus.Configuration
         public string GetEndpointFor(Type messageType)
         {
             throw new ConfigurationException(@"
-You have configured Rebus to be able to SEND messages without configuring an endpoint mapping
-mechanism. This means that you take the responsibility of specifying where messages go, which
-in turn means that YOU MUST SPECIFY A DESTINATION EACH TIME YOU SEND OR SUBSCRIBE TO SOMETHING.
+Rebus is currently not configured with an endpoint mapping mechanism. This means that you take
+the responsibility of specifying where messages go, which in turn means that YOU MUST SPECIFY A
+DESTINATION EACH TIME YOU SEND OR SUBSCRIBE TO SOMETHING.
 
 To resolve this, please either configure an endpoint mapper, or resort only to the
 
@@ -28,11 +28,11 @@ by mapping each message type's assembly to an endpoint.
 You can achieve this by configuring the bus like so:
 
     var bus = Configure.With(someContainerAdapter)
-                .DetermineEndpoint(d => d.FromNServiceBusConfiguration())
+                .DetermineEndpoint(d => d.FromRebusMappingsSection())
                 (....)
                 .CreateBus()
 
-which allows you to use NServiceBus-style endpoint mappings in your application's app.config.
+which allows you to use Rebus-style endpoint mappings in your application's app.config/web.config.
 
 This is an example on how your app.config might look like if you're planning on sending and/or
 subscribing to messages from the MyService.Messages assembly owned by the service that has
@@ -40,15 +40,17 @@ my_service.inputQueue as its input queue:
 
     <?xml version=""1.0""?>
     <configuration>
-      <configSections>
-        <section name=""UnicastBusConfig"" type=""NServiceBus.Config.UnicastBusConfig, NServiceBus.Core""/>
-      </configSections>
+        <configSections>
+            <section name=""RebusMappings"" type=""Rebus.Configuration.RebusMappingsSection, Rebus"" />
+        </configSections>
   
-      <UnicastBusConfig>
-        <MessageEndpointMappings>
-          <add Messages=""MyService.Messages"" Endpoint=""my_service.inputQueue""/>
-        </MessageEndpointMappings>
-      </UnicastBusConfig>
+        <RebusMappings>
+            <Endpoints>
+                <add Messages=""MyService.Messages"" Endpoint=""my_service.inputQueue""/>
+            </Endpoints>
+        </RebusMappings>
+
+        <!-- (...) -->
     </configuration>
 ");
         }
