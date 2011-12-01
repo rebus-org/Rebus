@@ -76,6 +76,7 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Configuration\TestConfigurationApi.cs" />
+    <Compile Include="Configuration\TestDetermineDestinationFromConfigurationSection.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\TestDiscoveryConfigurer.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />

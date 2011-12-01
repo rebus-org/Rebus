@@ -37,6 +37,7 @@
       <HintPath>..\packages\Newtonsoft.Json.4.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Transactions" />
@@ -57,6 +58,10 @@
     <Compile Include="Configuration\Configurers\HandlerLoader.cs" />
     <Compile Include="Configuration\Configurers\LoggingConfigurer.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurerWithLogging.cs" />
+    <Compile Include="Configuration\DetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\MappingElement.cs" />
+    <Compile Include="Configuration\MappingsCollection.cs" />
+    <Compile Include="Configuration\RebusMappingsSection.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />
     <Compile Include="Logging\ILog.cs" />
