@@ -29,7 +29,7 @@ namespace Sample.Server
             RebusLoggerFactory.Current = new TraceLoggerFactory();
 
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server").PurgeInputQueue();
+            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server");
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();
             var sagaPersister = new InMemorySagaPersister();
