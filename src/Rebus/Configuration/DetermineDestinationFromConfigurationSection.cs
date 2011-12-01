@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Configuration;
 using System.Reflection;
 using Rebus.Logging;
+using System.Linq;
 
 namespace Rebus.Configuration
 {
@@ -61,7 +62,12 @@ That was a long error message - here is the caught exception:
 
         void PopulateMappings(RebusMappingsSection configurationSection)
         {
-            foreach (var element in configurationSection.MappingsCollection)
+            //ensure that all assembly mappings are processed first,
+            //so that explicit type mappings will take precendence
+            var mappingElements = configurationSection.MappingsCollection
+                .OrderBy(c => !c.IsAssemblyName);
+
+            foreach (var element in mappingElements)
             {
                 if (element.IsAssemblyName)
                 {
@@ -126,6 +132,12 @@ For this to work, Rebus needs access to an assembly with one of the following fi
         void Map(Type messageType, string endpoint)
         {
             Log.Info("    {0} -> {1}", messageType, endpoint);
+            
+            if (endpointMappings.ContainsKey(messageType))
+            {
+                Log.Warn("    ({0} -> {1} overridden by -> {2})", messageType, endpointMappings[messageType], endpoint);
+            }
+            
             endpointMappings[messageType] = endpoint;
         }
 
