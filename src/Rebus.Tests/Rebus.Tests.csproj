@@ -115,6 +115,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
+      <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
+      <Name>Rebus.Log4Net</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.MongoDb\Rebus.MongoDb.csproj">
       <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
       <Name>Rebus.MongoDb</Name>

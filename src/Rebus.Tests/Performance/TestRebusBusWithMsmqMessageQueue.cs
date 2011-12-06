@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Logging;
 
 namespace Rebus.Tests.Performance
 {
@@ -12,6 +13,8 @@ namespace Rebus.Tests.Performance
         [TestCase(20)]
         public void TestSendAndReceiveMessages(int numberOfWorkers)
         {
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
 

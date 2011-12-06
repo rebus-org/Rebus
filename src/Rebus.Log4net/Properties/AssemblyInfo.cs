@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Rebus")]
+[assembly: AssemblyTitle("Rebus.Log4net")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Rebus")]
+[assembly: AssemblyProduct("Rebus.Log4net")]
 [assembly: AssemblyCopyright("Copyright ©  2011")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("3ae1f6c6-dd0a-4aaa-9215-7d3868c77bb4")]
+[assembly: Guid("3240628d-d251-40ea-8314-37c31fbea3b2")]
 
 // Version information for an assembly consists of the following four values:
 //

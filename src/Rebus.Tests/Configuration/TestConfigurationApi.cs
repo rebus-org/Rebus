@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
@@ -29,14 +30,42 @@ namespace Rebus.Tests.Configuration
         }
 
         [Test]
+        public void CannotUseNullAsRebusLoggerFactory()
+        {
+            Assert.Throws<InvalidOperationException>(() => RebusLoggerFactory.Current = null);
+        }
+
+        [Test]
         public void CanConfigureLogging()
         {
             var adapter = new TestContainerAdapter();
 
             Configure.With(adapter)
-                .Logging(l => l.ConsoleLogger());
+                .Logging(l => l.Console());
 
-            RebusLoggerFactory.Current.GetType().Name.ShouldBe("ConsoleLoggerFactory");
+            RebusLoggerFactory.Current.ShouldBeTypeOf<ConsoleLoggerFactory>();
+        }
+
+        [Test]
+        public void CanConfigureLog4NetLogging()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.Log4Net());
+
+            RebusLoggerFactory.Current.ShouldBeTypeOf<Log4NetLoggerFactory>();
+        }
+
+        [Test]
+        public void CanConfigureColoredConsoleLogging()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.ColoredConsole());
+
+            RebusLoggerFactory.Current.ShouldBeTypeOf<ConsoleLoggerFactory>();
         }
 
         [Test]

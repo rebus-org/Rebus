@@ -65,6 +65,7 @@
     <Compile Include="Configuration\RearrangeHandlersPipelineInspectorExtensions.cs" />
     <Compile Include="Configuration\RebusMappingsSection.cs" />
     <Compile Include="Lifestyle.cs" />
+    <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />
     <Compile Include="Logging\ILog.cs" />
@@ -89,6 +90,7 @@
     <Compile Include="Correlator.cs" />
     <Compile Include="IContainerAdapter.cs" />
     <Compile Include="Logging\IRebusLoggerFactory.cs" />
+    <Compile Include="Logging\LoggingColors.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="OptimisticLockingException.cs" />
