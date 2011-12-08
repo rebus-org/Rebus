@@ -10,15 +10,15 @@ namespace Rebus.Tests.Performance
     [TestFixture]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
-        [TestCase(20)]
-        public void TestSendAndReceiveMessages(int numberOfWorkers)
+        [TestCase(15, 1000)]
+        [TestCase(15, 10000)]
+        [TestCase(15, 100000)]
+        public void TestSendAndReceiveMessages(int numberOfWorkers, int numberOfMessages)
         {
             RebusLoggerFactory.Current = new NullLoggerFactory();
 
             var senderQueueName = PrivateQueueNamed("perftest.sender");
             var recipientQueueName = PrivateQueueNamed("perftest.recipient");
-
-            const int numberOfMessages = 3000;
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
@@ -28,7 +28,7 @@ namespace Rebus.Tests.Performance
                                          new HandlerActivatorForTesting()
                                              .Handle<string>(str =>
                                                                  {
-                                                                     receivedMessagesCount++;
+                                                                     Interlocked.Increment(ref receivedMessagesCount);
                                                                      if (receivedMessagesCount == numberOfMessages)
                                                                      {
                                                                          manualResetEvent.Set();
@@ -47,7 +47,7 @@ namespace Rebus.Tests.Performance
             // receive
             stopwatch = Stopwatch.StartNew();
             recipientBus.Start(numberOfWorkers);
-            if (!manualResetEvent.WaitOne(TimeSpan.FromMinutes(1)))
+            if (!manualResetEvent.WaitOne(TimeSpan.FromMinutes(2)))
             {
                 Assert.Fail("Did not receive {0} msg within timeout - {1} msg received", numberOfMessages, receivedMessagesCount);    
             }

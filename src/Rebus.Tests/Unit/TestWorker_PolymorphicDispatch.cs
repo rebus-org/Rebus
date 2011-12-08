@@ -14,7 +14,7 @@ using Shouldly;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestWorker : FixtureBase
+    public class TestWorker_PolymorphicDispatch : FixtureBase
     {
         Worker worker;
         MessageReceiverForTesting receiveMessages;
@@ -37,7 +37,12 @@ namespace Rebus.Tests.Unit
                                 inspectHandlerPipeline);
         }
 
-        [Test, Ignore("TODO: make this pass by re-arranging the polymorphic stuff")]
+        protected override void DoTearDown()
+        {
+            worker.Dispose();
+        }
+
+        [Test]
         public void PolymorphicDispatchAndPipelineInspectorWorkTogetherLikeExpected()
         {
             // arrange

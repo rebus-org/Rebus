@@ -96,19 +96,23 @@ namespace Rebus.Bus
 
         IEnumerable<IHandleMessages> GetHandlerInstances(Type messageType)
         {
-            MethodInfo method;
-            if (!activatorMethods.TryGetValue(messageType, out method))
-            {
-                method = activateHandlers.GetType()
-                    .GetMethod("GetHandlerInstancesFor")
-                    .MakeGenericMethod(messageType);
-             
-                activatorMethods[messageType] = method;
-            }
-            var activationMethod = method;
+            var activationMethod = GetActivationMethod(messageType);
             var handlers = activationMethod.Invoke(activateHandlers, new object[0]);
-            var handlerInstances = (IEnumerable<IHandleMessages>) handlers;
+            var handlerInstances = (IEnumerable<IHandleMessages>) (handlers ?? new IHandleMessages[0]);
             return handlerInstances;
+        }
+
+        MethodInfo GetActivationMethod(Type messageType)
+        {
+            MethodInfo method;
+            if (activatorMethods.TryGetValue(messageType, out method)) return method;
+            
+            method = activateHandlers.GetType()
+                .GetMethod("GetHandlerInstancesFor")
+                .MakeGenericMethod(messageType);
+
+            activatorMethods[messageType] = method;
+            return method;
         }
 
         MethodInfo GetDispatcherMethod(Type typeToDispatch)
@@ -116,14 +120,15 @@ namespace Rebus.Bus
             MethodInfo method;
             if (dispatcherMethods.TryGetValue(typeToDispatch, out method)) return method;
 
-            method = GetType().GetMethod("DispatchToHandler", BindingFlags.NonPublic | BindingFlags.Instance)
+            method = GetType()
+                .GetMethod("DispatchToHandler", BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(typeToDispatch);
 
             dispatcherMethods[typeToDispatch] = method;
             return method;
         }
 
-        IEnumerable<Type> GetTypesToDispatchToThisHandler(Type[] typesToDispatch, Type handlerType)
+        IEnumerable<Type> GetTypesToDispatchToThisHandler(IEnumerable<Type> typesToDispatch, Type handlerType)
         {
             var interfaces = handlerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
@@ -157,6 +162,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Private dispatcher method that gets invoked only via reflection.
         /// </summary>
+        // ReSharper disable UnusedMember.Local
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
             if (handler is Saga)
@@ -181,6 +187,7 @@ namespace Rebus.Bus
             
             handler.Handle(message);
         }
+        // ReSharper restore UnusedMember.Local
 
         void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, Saga saga, PropertyInfo dataProperty, ISagaData sagaData)
         {

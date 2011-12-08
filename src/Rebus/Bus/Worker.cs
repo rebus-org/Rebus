@@ -163,16 +163,17 @@ namespace Rebus.Bus
                         {
                             foreach (var logicalMessage in message.Messages)
                             {
-                                Log.Debug("Dispatching message {0}: {1}", id, logicalMessage.GetType());
+                                var typeToDispatch = logicalMessage.GetType();
 
-                                GetDispatchMethod(logicalMessage.GetType())
-                                    .Invoke(this, new[] {logicalMessage});
+                                Log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+
+                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
                             }
                         }
                     }
                     catch (Exception exception)
                     {
-                        Log.Error(string.Format("Handling message {0} has failed", id), exception);
+                        Log.Error(exception, "Handling message {0} has failed", id);
                         errorTracker.Track(id, exception);
                         throw;
                     }
