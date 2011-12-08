@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
-using System.Text;
 
 namespace Rebus.Transports.Msmq
 {
@@ -19,6 +18,11 @@ namespace Rebus.Transports.Msmq
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
+
+        public static string PrivateQueue(string queueName)
+        {
+            return string.Format(@".\private$\{0}", queueName);
+        }
 
         public MsmqMessageQueue(string inputQueuePath)
         {
@@ -87,7 +91,19 @@ namespace Rebus.Transports.Msmq
             transactionWrapper.Commit();
         }
 
-        static Message CreateMessage(TransportMessageToSend message, MessageQueue outputQueue)
+        public MsmqMessageQueue PurgeInputQueue()
+        {
+            inputQueue.Purge();
+            return this;
+        }
+
+        public void Dispose()
+        {
+            inputQueue.Dispose();
+            outputQueues.Values.ToList().ForEach(q => q.Dispose());
+        }
+
+        Message CreateMessage(TransportMessageToSend message, MessageQueue outputQueue)
         {
             var msmqMessage = new Message();
             outputQueue.Formatter.Write(msmqMessage, message);
@@ -102,7 +118,7 @@ namespace Rebus.Transports.Msmq
             return msmqMessage;
         }
 
-        static MsmqTransactionWrapper GetOrCreateTransactionWrapper()
+        MsmqTransactionWrapper GetOrCreateTransactionWrapper()
         {
             if (currentTransaction != null)
                 return currentTransaction;
@@ -130,23 +146,6 @@ namespace Rebus.Transports.Msmq
             }
 
             return new MessageQueue(path);
-        }
-
-        public static string PrivateQueue(string queueName)
-        {
-            return string.Format(@".\private$\{0}", queueName);
-        }
-
-        public MsmqMessageQueue PurgeInputQueue()
-        {
-            inputQueue.Purge();
-            return this;
-        }
-
-        public void Dispose()
-        {
-            inputQueue.Dispose();
-            outputQueues.Values.ToList().ForEach(q => q.Dispose());
         }
     }
 }
