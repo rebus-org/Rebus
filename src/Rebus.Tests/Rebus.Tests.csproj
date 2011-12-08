@@ -109,7 +109,7 @@
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
     <Compile Include="Unit\TestWorker_PolymorphicDispatch.cs" />
-    <Compile Include="Unit\TestWorker_MessageContext.cs" />
+    <Compile Include="Unit\message_context.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

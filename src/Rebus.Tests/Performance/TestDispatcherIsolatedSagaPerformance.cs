@@ -44,6 +44,13 @@ namespace Rebus.Tests.Performance
         /// Replaced concurrent dictionaries with ordinary ones:
         ///     10000 iterations took 1,363 s - that's 7335,1 msg/s
         /// 
+        /// Refactored the way the dispatcher looks up stuff, and ensured that the
+        /// pipeline inspector got called only once. Still wondering about the 
+        /// following numbers, though:
+        ///     10000 iterations took 0,666 s - that's 15025,5 msg/s
+        /// 
+        /// Maybe I should be more scientific about it :) metrics like
+        /// these are just puzzling.
         /// 
         /// </summary>
         [TestCase(1000)]
