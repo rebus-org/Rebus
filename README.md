@@ -86,9 +86,9 @@ Well, that was a teaser. More stuff coming up some time in the future. I know th
 License
 ====
 
-Rebus is [Beer-ware][1].
+Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus however you see fit.
 
-[1]: http://en.wikipedia.org/wiki/Beerware
+[1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://twitter.com/#!/mookid8000
 [3]: http://nservicebus.com/
 [4]: http://masstransit-project.com/
