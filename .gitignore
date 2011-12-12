@@ -11,6 +11,8 @@ _ReSharper.*
 *.teamcity.user
 *.TeamCity.user
 *.resharper
+*.DotSettings.user
+*.dotsettings.user
 *.suo
 *.cache
 ~$*
