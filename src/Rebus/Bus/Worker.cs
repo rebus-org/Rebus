@@ -29,7 +29,7 @@ namespace Rebus.Bus
         /// Caching of dispatcher methods
         /// </summary>
         readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
-        
+
         /// <summary>
         /// Caching of polymorphic types to attempt to dispatch, given the type of an incoming message
         /// </summary>
@@ -61,10 +61,10 @@ namespace Rebus.Bus
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline);
-            
-            workerThread = new Thread(MainLoop) {Name = GenerateNewWorkerThreadName()};
+
+            workerThread = new Thread(MainLoop) { Name = GenerateNewWorkerThreadName() };
             workerThread.Start();
-            
+
             Log.Info("Worker {0} created and inner thread started", WorkerThreadName);
         }
 
@@ -72,13 +72,13 @@ namespace Rebus.Bus
         /// Event that will be raised whenever dispatching a given message has failed MAX number of times
         /// (usually 5 or something like that).
         /// </summary>
-        public event Action<ReceivedTransportMessage> MessageFailedMaxNumberOfTimes = delegate { };
-        
+        public event Action<ReceivedTransportMessage, string> MessageFailedMaxNumberOfTimes = delegate { };
+
         /// <summary>
         /// Event that will be raised in the unlikely event that something outside of the usual
         /// message dispatch goes wrong.
         /// </summary>
-        public event Action<Worker, Exception> UnhandledException = delegate { }; 
+        public event Action<Worker, Exception> UnhandledException = delegate { };
 
         public void Start()
         {
@@ -147,7 +147,7 @@ namespace Rebus.Bus
             using (var transactionScope = new TransactionScope())
             {
                 var transportMessage = receiveMessages.ReceiveMessage();
-                
+
                 if (transportMessage == null)
                 {
                     Thread.Sleep(20);
@@ -159,7 +159,7 @@ namespace Rebus.Bus
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
                     Log.Error("Handling message {0} has failed the maximum number of times", id);
-                    MessageFailedMaxNumberOfTimes(transportMessage);
+                    MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
                     errorTracker.Forget(id);
                 }
                 else
@@ -177,7 +177,14 @@ namespace Rebus.Bus
 
                                 Log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
+                                try
+                                {
+                                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
+                                }
+                                catch(TargetInvocationException tae)
+                                {
+                                    throw tae.InnerException;
+                                }
                             }
                         }
                     }

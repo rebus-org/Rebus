@@ -12,6 +12,7 @@ using System;
 using System.Messaging;
 using NUnit.Framework;
 using Rebus.Transports.Msmq;
+using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
@@ -82,7 +83,7 @@ namespace Rebus.Tests.Integration
             var errorMessage = serializer.Deserialize(transportMessage);
 
             Assert.IsFalse(retriedTooManyTimes, "Apparently, the message was delivered more than 5 times which is the default number of retries");
-            Assert.AreEqual("HELLO!", errorMessage.Messages[0]);
+            errorMessage.Messages[0].ShouldBe("HELLO!");
         }
 
         MessageQueue GetMessageQueue(string queueName)

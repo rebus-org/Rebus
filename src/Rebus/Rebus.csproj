@@ -98,6 +98,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Serialization\Json\JsonExtensions.cs" />
+    <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />
@@ -125,7 +126,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Saga.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
-    <Compile Include="TransportMessage.cs" />
+    <Compile Include="ReceivedTransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
     <Compile Include="Transports\Msmq\MsmqTransactionWrapper.cs" />
