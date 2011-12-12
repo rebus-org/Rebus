@@ -64,8 +64,8 @@ namespace Rebus.Tests.Performance
         /// 
         /// </summary>
         [TestCase(1000)]
-        [TestCase(10000)]
-        [TestCase(100000)]
+        [TestCase(10000, Ignore = true)]
+        [TestCase(100000, Ignore = true)]
         public void DispatchLotsOfMessagesToSaga(int iterations)
         {
             activator.UseHandler(new MessageCountingSaga());
