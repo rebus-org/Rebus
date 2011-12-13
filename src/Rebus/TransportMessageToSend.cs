@@ -23,5 +23,10 @@ namespace Rebus
         /// Data of whatever header and body information this message may contain.
         /// </summary>
         public string Data { get; set; }
+
+        /// <summary>
+        /// String label to use if the underlying message queue supports it
+        /// </summary>
+        public string Label { get; set; }
     }
 }

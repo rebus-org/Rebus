@@ -19,7 +19,5 @@ namespace Rebus.Logging
         void Warn(string message, params object[] objs);
         void Error(Exception exception, string message, params object[] objs);
         void Error(string message, params object[] objs);
-        void Fatal(Exception exception, string message, params object[] objs);
-        void Fatal(string message, params object[] objs);
     }
 }

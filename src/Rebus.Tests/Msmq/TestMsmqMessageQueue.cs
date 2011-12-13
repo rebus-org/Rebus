@@ -10,6 +10,7 @@
 // See the License for the specific language governing permissions and limitations under the License.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Messaging;
 using System.Threading;
 using System.Transactions;
@@ -17,6 +18,7 @@ using NUnit.Framework;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 using Message = Rebus.Messages.Message;
+using Shouldly;
 
 namespace Rebus.Tests.Msmq
 {
@@ -53,14 +55,13 @@ namespace Rebus.Tests.Msmq
             // arrange
             var timeToBeReceived = 2.Seconds();
             var timeToBeReceivedAsString = timeToBeReceived.ToString();
-            
+
             senderQueue.Send(destinationQueuePath,
                              serializer.Serialize(new Message
                                                       {
-                                                          Messages = new object[] {"HELLO WORLD!"},
+                                                          Messages = new object[] { "HELLO WORLD!" },
                                                           Headers =
-                                                              new Dictionary<string, string>
-                                                                  {{"TimeToBeReceived", timeToBeReceivedAsString}},
+                                                              new Dictionary<string, string> { { "TimeToBeReceived", timeToBeReceivedAsString } },
                                                       }));
 
             // act
@@ -81,7 +82,7 @@ namespace Rebus.Tests.Msmq
                                                               Messages = new object[]
                                                                              {
                                                                                  "W00t!"
-                                                                             }
+                                                                             },
                                                           }));
 
                 tx.Complete();
@@ -92,7 +93,36 @@ namespace Rebus.Tests.Msmq
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
             var transportMessage = (ReceivedTransportMessage)msmqMessage.Body;
             var message = serializer.Deserialize(transportMessage);
-            Assert.AreEqual("W00t!", message.Messages[0]);
+            message.Messages[0].ShouldBe("W00t!");
+        }
+
+        [Test]
+        public void HeadersAreTransferred()
+        {
+            var headers = new Dictionary<string, string>
+                              {
+                                  {"someRandomHeaderKey", "someRandomHeaderValue"},
+                              };
+
+            senderQueue.Send(destinationQueuePath,
+                             serializer.Serialize(new Message
+                                                      {
+                                                          Messages = new object[] {"W00t!"},
+                                                          Headers = headers
+                                                      }));
+            var msmqMessage = Receive();
+
+            Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
+            
+            var receivedTransportMessage = (ReceivedTransportMessage)msmqMessage.Body;
+            var message = serializer.Deserialize(receivedTransportMessage);
+
+            message.Headers.ShouldNotBe(null);
+            message.Headers.Count.ShouldBe(1);
+            
+            var firstHeader = message.Headers.First();
+            firstHeader.Key.ShouldBe("someRandomHeaderKey");
+            firstHeader.Value.ShouldBe("someRandomHeaderValue");
         }
 
         [Test]
@@ -126,7 +156,7 @@ namespace Rebus.Tests.Msmq
             {
                 return destinationQueue.Receive(TimeSpan.FromSeconds(5));
             }
-            catch(MessageQueueException)
+            catch (MessageQueueException)
             {
                 return null;
             }

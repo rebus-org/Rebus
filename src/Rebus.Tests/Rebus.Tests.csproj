@@ -81,10 +81,12 @@
     <Compile Include="Configuration\TestDiscoveryConfigurer.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
+    <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
+    <Compile Include="Msmq\TestDictionarySerializer.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Performance\SagaPersisterPerformanceTestHelper.cs" />
     <Compile Include="Performance\TestDispatcherIsolatedSagaPerformance.cs" />
@@ -136,6 +138,7 @@
     <Content Include="Configuration\AppConfigExamples\app.config.02.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Contracts\readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />

@@ -42,14 +42,6 @@ namespace Rebus.Logging
             public void Error(string message, params object[] objs)
             {
             }
-
-            public void Fatal(Exception exception, string message, params object[] objs)
-            {
-            }
-
-            public void Fatal(string message, params object[] objs)
-            {
-            }
         }
     }
 }

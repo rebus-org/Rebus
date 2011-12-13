@@ -53,16 +53,6 @@ namespace Rebus.Logging
             {
                 Trace.TraceError(type + ": " + message, objs);
             }
-
-            public void Fatal(Exception exception, string message, params object[] objs)
-            {
-                Trace.TraceError(type + ": " + string.Format(message, objs) + Environment.NewLine + exception);
-            }
-
-            public void Fatal(string message, params object[] objs)
-            {
-                Trace.TraceError(type + ": " + message, objs);
-            }
         }
     }
 }

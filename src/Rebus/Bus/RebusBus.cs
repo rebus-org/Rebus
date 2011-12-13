@@ -17,6 +17,9 @@ using Rebus.Messages;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implements <see cref="IBus"/> as Rebus would do it.
+    /// </summary>
     public class RebusBus : IStartableBus, IBus
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -159,7 +162,7 @@ namespace Rebus.Bus
 
         void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage, string errorDetail)
         {
-            var transportMessageToSend = new TransportMessageToSend {Data = transportMessage.Data};
+            var transportMessageToSend = transportMessage.ToForwardableMessage();
 
             sendMessages.Send(@".\private$\error", transportMessageToSend);
         }

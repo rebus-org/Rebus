@@ -99,6 +99,7 @@
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Serialization\Json\JsonExtensions.cs" />
     <Compile Include="TransportMessageToSend.cs" />
+    <Compile Include="Transports\Msmq\DictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />

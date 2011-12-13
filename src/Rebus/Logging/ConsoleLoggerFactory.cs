@@ -82,16 +82,6 @@ namespace Rebus.Logging
                 Log("ERROR", message, loggingColors.Error, objs);
             }
 
-            public void Fatal(Exception exception, string message, params object[] objs)
-            {
-                Log("FATAL", string.Format(message, objs) + Environment.NewLine + exception, loggingColors.Fatal);
-            }
-
-            public void Fatal(string message, params object[] objs)
-            {
-                Log("FATAL", message, loggingColors.Fatal, objs);
-            }
-
             void Log(string level, string message, ColorSetting colorSetting, params object[] objs)
             {
                 if (colored)

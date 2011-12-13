@@ -55,23 +55,5 @@ namespace Rebus.Log4Net
         {
             log.ErrorFormat(message, objs);
         }
-
-        public void Fatal(Exception exception, string message, params object[] objs)
-        {
-            try
-            {
-                log.Fatal(string.Format(message, objs), exception);
-            }
-            catch
-            {
-                log.WarnFormat("Could not render string with arguments: {0}", message);
-                log.Fatal(message, exception);
-            }
-        }
-
-        public void Fatal(string message, params object[] objs)
-        {
-            log.FatalFormat(message, objs);
-        }
     }
 }
