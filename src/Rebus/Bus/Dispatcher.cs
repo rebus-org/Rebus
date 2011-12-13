@@ -17,6 +17,9 @@ using Rebus.Messages;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implements stuff that must happen when handling one single message.
+    /// </summary>
     public class Dispatcher
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
@@ -90,7 +93,14 @@ namespace Rebus.Bus
             {
                 if (handlersToRelease != null)
                 {
-                    activateHandlers.ReleaseHandlerInstances(handlersToRelease);
+                    try
+                    {
+                        activateHandlers.ReleaseHandlerInstances(handlersToRelease);
+                    }
+                    catch(Exception e)
+                    {
+                        Log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
+                    }
                 }
             }
         }
