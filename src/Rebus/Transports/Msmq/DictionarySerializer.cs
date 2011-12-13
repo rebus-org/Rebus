@@ -12,6 +12,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace Rebus.Transports.Msmq
 {
@@ -24,6 +25,8 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class DictionarySerializer
     {
+        static readonly char[] InvalidChars = ",;{}".ToCharArray();
+
         public string Serialize(IDictionary<string, string> dictionary)
         {
             var builder = new StringBuilder();
@@ -67,7 +70,7 @@ namespace Rebus.Transports.Msmq
             var tokens = substring.Split(',');
             if (tokens.Length != 2)
             {
-                throw FormatException("Cannot deserialize {0} - string must consist of two comma-separated strings");
+                throw FormatException("Cannot deserialize {0} - string must consist of two comma-separated strings", substring);
             }
             return new KeyValuePair<string, string>(Unquote(tokens[0]), Unquote(tokens[1]));
         }
@@ -83,7 +86,23 @@ namespace Rebus.Transports.Msmq
 
         string KvpToString(KeyValuePair<string, string> kvp)
         {
-            return string.Format(@"{{""{0}"",""{1}""}}", kvp.Key, kvp.Value);
+            var key = kvp.Key;
+            var value = kvp.Value;
+            AssertContainsOnlyValidChars(key);
+            AssertContainsOnlyValidChars(value);
+            return string.Format(@"{{""{0}"",""{1}""}}", key, value);
+        }
+
+        void AssertContainsOnlyValidChars(string value)
+        {
+            var intersection = value.ToCharArray().Intersect(InvalidChars).ToArray();
+
+            if (intersection.Any())
+            {
+                throw FormatException(
+                    "Cannot use {0} as key or value because it contains the following invalid chars: {1}",
+                    value, string.Join(", ", intersection.Select(c => string.Format("'{0}'", c))));
+            }
         }
 
         FormatException FormatException(string message, params object[] objs)

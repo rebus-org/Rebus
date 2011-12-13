@@ -9,6 +9,7 @@
 // distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -78,6 +79,19 @@ namespace Rebus.Tests.Msmq
             list[0].Value.ShouldBe("w00t!");
             list[1].Value.ShouldBe("w00t!!!1");
             list[2].Value.ShouldBe("ZOMG!!");
+        }
+
+        [TestCase("value containing ,")]
+        [TestCase("value containing ;")]
+        [TestCase("value containing {")]
+        [TestCase("value containing }")]
+        public void ThrowsIfStringContainsInvalidValud(string str)
+        {
+            var dictionaryWithInvalidKey = new Dictionary<string, string> {{str, "some value"}};
+            var dictionaryWithInvalidValue = new Dictionary<string, string> {{str, "some value"}};
+            
+            Assert.Throws<FormatException>(() => serializer.Serialize(dictionaryWithInvalidKey), "Did not expect serialization of dictionary with invalid KEY to succeed");
+            Assert.Throws<FormatException>(() => serializer.Serialize(dictionaryWithInvalidValue), "Did not expect serialization of dictionary with invalid VALUE to succeed");
         }
     }
 }
