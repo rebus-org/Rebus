@@ -35,9 +35,9 @@ namespace Rebus.Tests.Contracts
                              };
         }
 
-        public List<Tuple<ISendMessages, IReceiveMessages>> Transports()
+        public IEnumerable<Tuple<ISendMessages, IReceiveMessages>> Transports
         {
-            return transports;
+            get { return transports; }
         }
 
         Tuple<ISendMessages, IReceiveMessages> MsmqTransports()
