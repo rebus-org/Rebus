@@ -72,6 +72,13 @@ namespace Rebus.Bus
             sendMessages.Send(endpoint, transportMessage);
         }
 
+        public void SendLocal<TCommand>(TCommand message)
+        {
+            var destinationEndpoint = receiveMessages.InputQueue;
+
+            Send(destinationEndpoint, message);
+        }
+
         public void Publish<TEvent>(TEvent message)
         {
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());

@@ -19,7 +19,12 @@ namespace Rebus
         /// <summary>
         /// Sends the specified message to the specified destination.
         /// </summary>
-        void Send<TMessage>(string endpoint, TMessage message);
+        void Send<TCommand>(string endpoint, TCommand message);
+
+        /// <summary>
+        /// Sends the specified message to the bus' own input queue.
+        /// </summary>
+        void SendLocal<TCommand>(TCommand message);
 
         /// <summary>
         /// Sends a reply back to the sender of the message currently being handled. Can only
@@ -29,16 +34,16 @@ namespace Rebus
         void Reply<TReply>(TReply message);
 
         /// <summary>
-        /// Sends a subscription request for <typeparamref name="TMessage"/> to the destination as
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
         /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
         /// </summary>
-        void Subscribe<TMessage>();
+        void Subscribe<TEvent>();
 
         /// <summary>
-        /// Sends a subscription request for <typeparamref name="TMessage"/> to the specified 
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
         /// destination.
         /// </summary>
-        void Subscribe<TMessage>(string publisherInputQueue);
+        void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.
