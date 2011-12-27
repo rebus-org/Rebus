@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Ponder
 {
-    public class Reflect
+    internal class Reflect
     {
         public static string Path<T>(Expression<Func<T, object>> expression)
         {
