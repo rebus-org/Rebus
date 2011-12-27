@@ -82,6 +82,7 @@
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
+    <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
@@ -125,6 +126,10 @@
     <ProjectReference Include="..\Rebus.MongoDb\Rebus.MongoDb.csproj">
       <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
       <Name>Rebus.MongoDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Newtonsoft.JsonNET\Rebus.Newtonsoft.JsonNET.csproj">
+      <Project>{C46F1156-0A2D-40D4-8EBC-744B2FDD777D}</Project>
+      <Name>Rebus.Newtonsoft.JsonNET</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>

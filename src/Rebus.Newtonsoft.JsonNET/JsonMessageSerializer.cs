@@ -3,7 +3,7 @@ using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using System.Linq;
 
-namespace Rebus.Serialization.Json
+namespace Rebus.Newtonsoft.JsonNET
 {
     /// <summary>
     /// Implementation of <see cref="InMemorySubscriptionStorage"/> that uses

@@ -1,6 +1,6 @@
 ﻿using Rebus.Configuration.Configurers;
 
-namespace Rebus.Serialization.Json
+namespace Rebus.Newtonsoft.JsonNET
 {
     public static class JsonExtensions
     {

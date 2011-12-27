@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +7,7 @@ namespace Rebus.Messages
     /// <summary>
     /// Message wrapper object that may contain a collection of headers and multiple logical messages.
     /// </summary>
+    [Serializable]
     public class Message
     {
         public Message()

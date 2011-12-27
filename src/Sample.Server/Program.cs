@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using Rebus;
 using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
-using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 using Sample.Server.Messages;
 

@@ -33,13 +33,15 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.4.0.3\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=4.0.5.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.4.0.5\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -97,7 +99,7 @@
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
-    <Compile Include="Serialization\Json\JsonExtensions.cs" />
+    <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Transports\Msmq\DictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
@@ -126,7 +128,6 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Saga.cs" />
-    <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="ReceivedTransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
@@ -139,7 +140,6 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

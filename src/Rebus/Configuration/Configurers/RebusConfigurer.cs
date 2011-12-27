@@ -1,7 +1,7 @@
 using System;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
-using Rebus.Serialization.Json;
+using Rebus.Serialization.Binary;
 
 namespace Rebus.Configuration.Configurers
 {
@@ -111,7 +111,7 @@ both.");
 
             if (!containerAdapter.HasImplementationOf(typeof(ISerializeMessages)))
             {
-                containerAdapter.RegisterInstance(new JsonMessageSerializer(), typeof (ISerializeMessages));
+                containerAdapter.RegisterInstance(new BinaryMessageSerializer(), typeof (ISerializeMessages));
             }
 
             if (!containerAdapter.HasImplementationOf(typeof(IInspectHandlerPipeline)))

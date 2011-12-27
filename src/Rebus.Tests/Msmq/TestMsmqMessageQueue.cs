@@ -5,7 +5,7 @@ using System.Messaging;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Serialization.Json;
+using Rebus.Newtonsoft.JsonNET;
 using Rebus.Transports.Msmq;
 using Message = Rebus.Messages.Message;
 using Shouldly;
