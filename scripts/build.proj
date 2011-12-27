@@ -5,6 +5,7 @@
     <RebusProjects Include="..\src\Rebus\*.csproj" />
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.Newtonsoft.JsonNET\*.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
