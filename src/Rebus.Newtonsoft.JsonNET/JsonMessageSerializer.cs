@@ -1,4 +1,7 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Globalization;
+using System.Threading;
+using Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using System.Linq;
@@ -14,22 +17,55 @@ namespace Rebus.Newtonsoft.JsonNET
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
 
+        static readonly CultureInfo SerializationCulture = CultureInfo.InvariantCulture;
+
         public TransportMessageToSend Serialize(Message message)
         {
-            var messageAsString = JsonConvert.SerializeObject(message, Formatting.Indented, Settings);
-            
-            return new TransportMessageToSend
-                       {
-                           Data = messageAsString,
-                           Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
-                       };
+            using (new CultureContext(SerializationCulture))
+            {
+                var messageAsString = JsonConvert.SerializeObject(message, Formatting.Indented, Settings);
+
+                return new TransportMessageToSend
+                           {
+                               Data = messageAsString,
+                               Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
+                           };
+            }
         }
 
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
-            var messageAsString = transportMessage.Data;
+            using (new CultureContext(SerializationCulture))
+            {
+                var messageAsString = transportMessage.Data;
 
-            return (Message) JsonConvert.DeserializeObject(messageAsString, Settings);
+                return (Message) JsonConvert.DeserializeObject(messageAsString, Settings);
+            }
+        }
+
+        class CultureContext : IDisposable
+        {
+            readonly CultureInfo currentCulture;
+            readonly CultureInfo currentUiCulture;
+
+            public CultureContext(CultureInfo cultureInfo)
+            {
+                var thread = Thread.CurrentThread;
+                
+                currentCulture = thread.CurrentCulture;
+                currentUiCulture = thread.CurrentUICulture;
+
+                thread.CurrentCulture = cultureInfo;
+                thread.CurrentUICulture = cultureInfo;
+            }
+
+            public void Dispose()
+            {
+                var thread = Thread.CurrentThread;
+                
+                thread.CurrentCulture = currentCulture;
+                thread.CurrentUICulture = currentUiCulture;
+            }
         }
     }
 }
