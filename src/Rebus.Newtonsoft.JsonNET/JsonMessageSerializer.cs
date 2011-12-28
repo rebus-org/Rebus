@@ -29,6 +29,7 @@ namespace Rebus.Newtonsoft.JsonNET
                            {
                                Data = messageAsString,
                                Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
+                               Label = message.GetLabel(),
                            };
             }
         }
