@@ -148,13 +148,19 @@ namespace Rebus.Bus
                                     inspectHandlerPipeline);
             workers.Add(worker);
             worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
-            worker.UnhandledException += LogUnhandledException;
+            worker.UserException += LogUserException;
+            worker.SystemException += LogSystemException;
             worker.Start();
         }
 
-        void LogUnhandledException(Worker worker, Exception exception)
+        void LogSystemException(Worker worker, Exception exception)
         {
-            Log.Error(exception, "Unhandled exception in {0}", worker.WorkerThreadName);
+            Log.Error(exception, "Unhandled system exception in {0}", worker.WorkerThreadName);
+        }
+
+        void LogUserException(Worker worker, Exception exception)
+        {
+            Log.Error(exception, "User exception in {0}", worker.WorkerThreadName);
         }
 
         void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage, string errorDetail)

@@ -114,6 +114,7 @@
     <Compile Include="TestStuff.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
+    <Compile Include="Unit\TestWorker_ErrorHandling.cs" />
     <Compile Include="Unit\TestWorker_PolymorphicDispatch.cs" />
     <Compile Include="Unit\TestWorker_MessageContext.cs" />
   </ItemGroup>

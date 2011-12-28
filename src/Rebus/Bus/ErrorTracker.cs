@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
+using Rebus.Logging;
 
 namespace Rebus.Bus
 {
@@ -10,15 +12,17 @@ namespace Rebus.Bus
     /// </summary>
     public class ErrorTracker
     {
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
 
-        public void Track(string id, Exception exception)
+        public void TrackDeliveryFail(string id, Exception exception)
         {
             var trackedMessage = GetOrAdd(id);
             trackedMessage.AddError(exception);
         }
 
-        public void Forget(string id)
+        public void StopTracking(string id)
         {
             TrackedMessage temp;
             trackedMessages.TryRemove(id, out temp);
@@ -33,7 +37,7 @@ namespace Rebus.Bus
         public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
             var trackedMessage = GetOrAdd(id);
-            return trackedMessage.Errors >= 5;
+            return trackedMessage.FailCount >= 5;
         }
 
         TrackedMessage GetOrAdd(string id)
@@ -42,14 +46,21 @@ namespace Rebus.Bus
             {
                 throw new ArgumentException(string.Format("Id of message to track is null! Cannot track message errors with a null id"));
             }
-            return trackedMessages.GetOrAdd(id, i => new TrackedMessage());
+            return trackedMessages.GetOrAdd(id, i => new TrackedMessage(id));
         }
 
         class TrackedMessage
         {
             readonly List<Exception> exceptions = new List<Exception>();
 
-            public int Errors
+            public TrackedMessage(string id)
+            {
+                Id = id;
+            }
+
+            public string Id { get; private set; }
+
+            public int FailCount
             {
                 get { return exceptions.Count; }
             }
@@ -57,6 +68,8 @@ namespace Rebus.Bus
             public void AddError(Exception exception)
             {
                 exceptions.Add(exception);
+
+                Log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
             }
 
             public string GetErrorMessages()

@@ -63,14 +63,7 @@ namespace Rebus.Bus
 
                     foreach(var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        try
-                        {
-                            GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
-                        }
-                        catch(TargetInvocationException tae)
-                        {
-                            throw tae.InnerException;
-                        }
+                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
 
                         if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers)
                         {

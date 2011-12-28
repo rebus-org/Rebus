@@ -16,19 +16,14 @@ namespace Rebus.Bus
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Caching of dispatcher methods
-        /// </summary>
-        readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
-
-        /// <summary>
-        /// Caching of polymorphic types to attempt to dispatch, given the type of an incoming message
-        /// </summary>
-        readonly ConcurrentDictionary<Type, Type[]> typesToDispatchCache = new ConcurrentDictionary<Type, Type[]>();
-
-        /// <summary>
         /// Keeps count of worker thread IDs.
         /// </summary>
         static int workerThreadCounter;
+
+        /// <summary>
+        /// Caching of dispatcher methods
+        /// </summary>
+        readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
 
         readonly Thread workerThread;
         readonly Dispatcher dispatcher;
@@ -65,10 +60,14 @@ namespace Rebus.Bus
         public event Action<ReceivedTransportMessage, string> MessageFailedMaxNumberOfTimes = delegate { };
 
         /// <summary>
-        /// Event that will be raised in the unlikely event that something outside of the usual
-        /// message dispatch goes wrong.
+        /// Event that will be raised each time message delivery fails.
         /// </summary>
-        public event Action<Worker, Exception> UnhandledException = delegate { };
+        public event Action<Worker, Exception> UserException = delegate { };
+
+        /// <summary>
+        /// Event that will be raised if an exception occurs outside of user code.
+        /// </summary>
+        public event Action<Worker, Exception> SystemException = delegate { };
 
         public void Start()
         {
@@ -127,7 +126,15 @@ namespace Rebus.Bus
                 }
                 catch (Exception e)
                 {
-                    UnhandledException(this, e);
+                    // if there's two levels of TargetInvocationExceptions, it's user code that threw...
+                    if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
+                    {
+                        UserException(this, e.InnerException.InnerException);
+                    }
+                    else
+                    {
+                        SystemException(this, e);
+                    }
                 }
             }
         }
@@ -150,7 +157,7 @@ namespace Rebus.Bus
                 {
                     Log.Error("Handling message {0} has failed the maximum number of times", id);
                     MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
-                    errorTracker.Forget(id);
+                    errorTracker.StopTracking(id);
                 }
                 else
                 {
@@ -167,27 +174,20 @@ namespace Rebus.Bus
 
                                 Log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                                try
-                                {
-                                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
-                                }
-                                catch(TargetInvocationException tae)
-                                {
-                                    throw tae.InnerException;
-                                }
+                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
                             }
                         }
                     }
                     catch (Exception exception)
                     {
                         Log.Error(exception, "Handling message {0} has failed", id);
-                        errorTracker.Track(id, exception);
+                        errorTracker.TrackDeliveryFail(id, exception);
                         throw;
                     }
                 }
 
                 transactionScope.Complete();
-                errorTracker.Forget(id);
+                errorTracker.StopTracking(id);
             }
         }
 

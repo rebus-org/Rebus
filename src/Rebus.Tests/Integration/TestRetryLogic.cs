@@ -28,11 +28,9 @@ namespace Rebus.Tests.Integration
             var errorMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
             
             // this is how the XML formatter serializes a single string:
-            var expected = "<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>";
-            
+
             // and this is the data we successfully moved to the error queue
-            var actual = errorMessage.Data;
-            Assert.AreEqual(expected, actual);
+            errorMessage.Data.ShouldBe("<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>");
         }
 
         [Test]
@@ -72,7 +70,7 @@ namespace Rebus.Tests.Integration
             var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(2)).Body;
             var errorMessage = serializer.Deserialize(transportMessage);
 
-            Assert.IsFalse(retriedTooManyTimes, "Apparently, the message was delivered more than 5 times which is the default number of retries");
+            retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
         }
 
