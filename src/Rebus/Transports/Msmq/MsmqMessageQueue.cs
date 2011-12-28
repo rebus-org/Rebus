@@ -178,6 +178,7 @@ namespace Rebus.Transports.Msmq
             messageReadPropertyFilter.Id = true;
             messageReadPropertyFilter.Body = true;
             messageReadPropertyFilter.Extension = true;
+            messageReadPropertyFilter.Label = true;
             messageQueue.MessageReadPropertyFilter = messageReadPropertyFilter;
             return messageQueue;
         }
