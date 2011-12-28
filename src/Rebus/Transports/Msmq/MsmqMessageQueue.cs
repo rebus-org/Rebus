@@ -60,6 +60,7 @@ namespace Rebus.Transports.Msmq
                 }
                 var transportMessage = (ReceivedTransportMessage) body;
                 transportMessage.Headers = dictionarySerializer.Deserialize(HeaderEcoding.GetString(message.Extension));
+                transportMessage.Label = message.Label;
                 transactionWrapper.Commit();
                 return transportMessage;
             }

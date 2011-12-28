@@ -16,11 +16,14 @@ namespace Rebus
 
         public IDictionary<string, string> Headers { get; set; }
 
+        public string Label { get; set; }
+
         public TransportMessageToSend ToForwardableMessage()
         {
             return new TransportMessageToSend
                        {
-                           Data = Data
+                           Label = Label,
+                           Data = Data,
                        };
         }
     }
