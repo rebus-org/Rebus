@@ -6,21 +6,28 @@
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Newtonsoft.JsonNET\*.csproj" />
+
+    <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
   </ItemGroup>
 
   <PropertyGroup>
     <BuildOutputFolder>..\deploy</BuildOutputFolder>
   </PropertyGroup>
 
-  <Target Name="build" DependsOnTargets="compile_projects;copy_build_output" />
+  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output" />
+
+  <Target Name="clean_output_folder">
+    <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>
+  </Target>
 
   <Target Name="compile_projects">
     <MSBuild Projects="@(RebusProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release">
-      <Output TaskParameter="TargetOutputs" ItemName="BuildOutput" />
+      <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
     </MSBuild>
   </Target>
 
   <Target Name="copy_build_output">
-    <Copy SourceFiles="@(BuildOutput)" DestinationFolder="$(BuildOutputFolder)" />
+    <Copy SourceFiles="@(AssembliesBuilt)" DestinationFolder="$(BuildOutputFolder)" />
+    <Copy SourceFiles="@(Docs)" DestinationFolder="$(BuildOutputFolder)" />
   </Target>
 </Project>
