@@ -34,7 +34,7 @@ by mapping each message type's assembly to an endpoint.
 You can achieve this by configuring the bus like so:
 
     var bus = Configure.With(someContainerAdapter)
-                .DetermineEndpoint(d => d.FromRebusMappingsSection())
+                .DetermineEndpoint(d => d.FromRebusConfigurationSection())
                 (....)
                 .CreateBus()
 
@@ -47,14 +47,14 @@ my_service.inputQueue as its input queue:
     <?xml version=""1.0""?>
     <configuration>
         <configSections>
-            <section name=""RebusMappings"" type=""Rebus.Configuration.RebusMappingsSection, Rebus"" />
+            <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         </configSections>
   
-        <RebusMappings>
+        <Rebus>
             <Endpoints>
                 <add Messages=""MyService.Messages"" Endpoint=""my_service.inputQueue""/>
             </Endpoints>
-        </RebusMappings>
+        </Rebus>
 
         <!-- (...) -->
     </configuration>

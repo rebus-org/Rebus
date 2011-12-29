@@ -8,7 +8,7 @@ using System.Linq;
 namespace Rebus.Configuration
 {
     /// <summary>
-    /// Configures endpoint mappings from a <see cref="RebusMappingsSection"/> configuration section.
+    /// Configures endpoint mappings from a <see cref="RebusConfigurationSection"/> configuration section.
     /// </summary>
     public class DetermineDestinationFromConfigurationSection : IDetermineDestination
     {
@@ -20,24 +20,15 @@ namespace Rebus.Configuration
         {
             try
             {
-                var section = ConfigurationManager.GetSection("Rebus");
+                var section = RebusConfigurationSection.LookItUp();
 
-                if (section == null || !(section is RebusMappingsSection))
-                {
-                    throw new ConfigurationErrorsException(@"Could not find configuration section named 'Rebus' (or else
-the configuration section was not of the Rebus.Configuration.RebusMappingsSection type?)
-
-Please make sure that the declaration at the top matches the XML element further down. And please note
-that it is NOT possible to rename this section, even though the declaration makes it seem like it.");
-                }
-
-                PopulateMappings((RebusMappingsSection) section);
+                PopulateMappings(section);
             }
             catch (ConfigurationErrorsException e)
             {
                 throw new ConfigurationException(
                     @"
-An error occurred when trying to parse out the configuration of the RebusMappingsSection:
+An error occurred when trying to parse out the configuration of the RebusConfigurationSection:
 
 {0}
 
@@ -47,11 +38,11 @@ For this way of configuring endpoint mappings to work, you need to supply a corr
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""Rebus"" type=""Rebus.Configuration.RebusMappingsSection, Rebus"" />
+        <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
--and then you need a <RebusMappings> element some place further down the app.config/web.config,
+-and then you need a <Rebus> element some place further down the app.config/web.config,
 like so:
 
     <Rebus InputQueue=""my.service.input.queue"">
@@ -78,7 +69,7 @@ Note also, that specifying the input queue name with the InputQueue attribute is
             }
         }
 
-        void PopulateMappings(RebusMappingsSection configurationSection)
+        void PopulateMappings(RebusConfigurationSection configurationSection)
         {
             //ensure that all assembly mappings are processed first,
             //so that explicit type mappings will take precendence

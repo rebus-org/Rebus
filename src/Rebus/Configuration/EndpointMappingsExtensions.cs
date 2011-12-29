@@ -15,7 +15,7 @@ namespace Rebus.Configuration
         /// <summary>
         /// Configures Rebus to expect endpoint mappings to be on Rebus form.
         /// </summary>
-        public static void FromRebusMappingsSection(this EndpointMappingsConfigurer configurer)
+        public static void FromRebusConfigurationSection(this EndpointMappingsConfigurer configurer)
         {
             configurer.Use(new DetermineDestinationFromConfigurationSection());
         }

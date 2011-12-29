@@ -44,7 +44,7 @@ namespace Rebus.Tests.Configuration
             // arrange
 
             // act
-            var section = (RebusMappingsSection)ConfigurationManager.GetSection("Rebus");
+            var section = (RebusConfigurationSection)ConfigurationManager.GetSection("Rebus");
 
             // assert
             section.InputQueue.ShouldBe("this.is.my.input.queue");

@@ -22,7 +22,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             Configure.With(adapter)
-                .DetermineEndpoints(d => d.FromRebusMappingsSection())
+                .DetermineEndpoints(d => d.FromRebusConfigurationSection())
                 .Discovery(d =>
                                {
                                    d.Handlers.LoadFrom(Assembly.GetExecutingAssembly());
@@ -100,6 +100,24 @@ namespace Rebus.Tests.Configuration
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
             msmqMessageQueue.InputQueue.ShouldBe(@".\private$\some_input_queue");
+        }
+        
+        [Test]
+        public void CanConfigureMsmqTransportFromRebusConfigurationSection()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
+
+            var registrations = adapter.Registrations
+                .Where(r => r.Instance.GetType() == typeof (MsmqMessageQueue))
+                .ToList();
+
+            registrations.Count.ShouldBe(2);
+
+            var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
+            msmqMessageQueue.InputQueue.ShouldBe(@".\private$\this.is.my.input.queue");
         }
 
         [Test]
