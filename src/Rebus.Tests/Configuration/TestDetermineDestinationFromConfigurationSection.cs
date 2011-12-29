@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Shouldly;
@@ -10,15 +11,11 @@ namespace Rebus.Tests.Configuration
     {
         DetermineDestinationFromConfigurationSection service;
 
-        protected override void DoSetUp()
-        {
-            service = new DetermineDestinationFromConfigurationSection();
-        }
-
         [Test]
         public void CanDetermineSomeRandomMapping()
         {
             // arrange
+            service = new DetermineDestinationFromConfigurationSection();
 
             // act
             var endpointForSomeMessageType = service.GetEndpointFor(typeof(SomeMessageType));
@@ -33,12 +30,24 @@ namespace Rebus.Tests.Configuration
         public void ThrowsWhenMappingCannotBeFound()
         {
             // arrange
-            
+            service = new DetermineDestinationFromConfigurationSection();
 
             // act
             // assert
             var exception = Assert.Throws<InvalidOperationException>(() => service.GetEndpointFor(typeof (string)));
             exception.Message.ShouldContain("System.String");
+        }
+
+        [Test]
+        public void CanDetermineNameOfInputQueue()
+        {
+            // arrange
+
+            // act
+            var section = (RebusMappingsSection)ConfigurationManager.GetSection("Rebus");
+
+            // assert
+            section.InputQueue.ShouldBe("this.is.my.input.queue");
         }
     }
 

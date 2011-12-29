@@ -20,30 +20,46 @@ namespace Rebus.Configuration
         {
             try
             {
-                PopulateMappings((RebusMappingsSection) ConfigurationManager.GetSection("RebusMappings"));
+                var section = ConfigurationManager.GetSection("Rebus");
+
+                if (section == null || !(section is RebusMappingsSection))
+                {
+                    throw new ConfigurationErrorsException(@"Could not find configuration section named 'Rebus' (or else
+the configuration section was not of the Rebus.Configuration.RebusMappingsSection type?)
+
+Please make sure that the declaration at the top matches the XML element further down. And please note
+that it is NOT possible to rename this section, even though the declaration makes it seem like it.");
+                }
+
+                PopulateMappings((RebusMappingsSection) section);
             }
             catch (ConfigurationErrorsException e)
             {
                 throw new ConfigurationException(
                     @"
-An error occurred when trying to parse out the configuration of the RebusMappingsSection.
+An error occurred when trying to parse out the configuration of the RebusMappingsSection:
+
+{0}
+
+-
+
 For this way of configuring endpoint mappings to work, you need to supply a correct configuration
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""RebusMappings"" type=""Rebus.Configuration.RebusMappingsSection, Rebus"" />
+        <section name=""Rebus"" type=""Rebus.Configuration.RebusMappingsSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
 -and then you need a <RebusMappings> element some place further down the app.config/web.config,
 like so:
 
-    <RebusMappings>
+    <Rebus>
         <Endpoints>
             <add Messages=""Name.Of.Assembly"" Endpoint=""message_owner_1""/>
             <add Messages=""Namespace.ClassName, Name.Of.Another.Assembly"" Endpoint=""message_owner_2""/>
         </Endpoints>
-    </RebusMappings>
+    </Rebus>
 
 This example shows how it's possible to map all types from an entire assembly to an endpoint. 
 
@@ -56,9 +72,7 @@ explicit mappings WILL OVERRIDE assembly mappings. So if you map an entire assem
 and you map one of the types from that assembly to another endpoint explicitly, the explicit mapping
 will be the one taking effect.
 
-That was a long error message - here is the caught exception:
-
-{0}",
+",
                     e);
             }
         }
