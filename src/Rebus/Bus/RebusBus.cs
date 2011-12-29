@@ -167,7 +167,7 @@ namespace Rebus.Bus
         {
             var transportMessageToSend = transportMessage.ToForwardableMessage();
 
-            sendMessages.Send(@".\private$\error", transportMessageToSend);
+            sendMessages.Send("error", transportMessageToSend);
         }
     }
 }

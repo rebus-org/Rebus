@@ -19,13 +19,15 @@ namespace Rebus.Tests.Msmq
         MessageQueue destinationQueue;
         string destinationQueuePath;
         JsonMessageSerializer serializer;
+        string destinationQueueName;
 
         [SetUp]
         public void SetUp()
         {
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("test.msmq.tx.sender"));
-            destinationQueuePath = MsmqMessageQueue.PrivateQueue("test.msmq.tx.destination");
+            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
+            destinationQueueName = "test.msmq.tx.destination";
+            destinationQueuePath = MsmqMessageQueue.PrivateQueue(destinationQueueName);
 
             if (!MessageQueue.Exists(destinationQueuePath))
                 MessageQueue.Create(destinationQueuePath, transactional: true);
@@ -46,7 +48,7 @@ namespace Rebus.Tests.Msmq
             var timeToBeReceived = 2.Seconds();
             var timeToBeReceivedAsString = timeToBeReceived.ToString();
 
-            senderQueue.Send(destinationQueuePath,
+            senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                                       {
                                                           Messages = new object[] { "HELLO WORLD!" },
@@ -66,7 +68,7 @@ namespace Rebus.Tests.Msmq
         {
             using (var tx = new TransactionScope())
             {
-                senderQueue.Send(destinationQueuePath,
+                senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
                                                           {
                                                               Messages = new object[]
@@ -94,7 +96,7 @@ namespace Rebus.Tests.Msmq
                                   {"someRandomHeaderKey", "someRandomHeaderValue"},
                               };
 
-            senderQueue.Send(destinationQueuePath,
+            senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                                       {
                                                           Messages = new object[] {"W00t!"},
@@ -120,7 +122,7 @@ namespace Rebus.Tests.Msmq
         {
             using (new TransactionScope())
             {
-                senderQueue.Send(destinationQueuePath,
+                senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
                                                           {
                                                               Messages = new object[]

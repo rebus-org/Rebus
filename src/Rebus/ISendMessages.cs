@@ -5,6 +5,10 @@ namespace Rebus
     /// </summary>
     public interface ISendMessages
     {
-        void Send(string recipient, TransportMessageToSend message);
+        /// <summary>
+        /// Sends the specified <see cref="TransportMessageToSend"/> to the endpoint
+        /// with the supplied queue name.
+        /// </summary>
+        void Send(string destinationQueueName, TransportMessageToSend message);
     }
 }

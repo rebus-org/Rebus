@@ -22,6 +22,7 @@ namespace Rebus.Transports.Msmq
         readonly DictionarySerializer dictionarySerializer = new DictionarySerializer();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
+        readonly string inputQueueName;
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
@@ -31,10 +32,11 @@ namespace Rebus.Transports.Msmq
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public MsmqMessageQueue(string inputQueuePath)
+        public MsmqMessageQueue(string inputQueueName)
         {
-            this.inputQueuePath = inputQueuePath;
+            inputQueuePath = GetPath(inputQueueName);
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
+            this.inputQueueName = inputQueueName;
         }
 
         public ReceivedTransportMessage ReceiveMessage()
@@ -79,20 +81,22 @@ namespace Rebus.Transports.Msmq
 
         public string InputQueue
         {
-            get { return inputQueuePath; }
+            get { return inputQueueName; }
         }
 
-        public void Send(string recipient, TransportMessageToSend message)
+        public void Send(string destinationQueueName, TransportMessageToSend message)
         {
+            var recipientPath = GetPath(destinationQueueName);
+
             MessageQueue outputQueue;
-            if (!outputQueues.TryGetValue(recipient, out outputQueue))
+            if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
             {
                 lock (outputQueues)
                 {
-                    if (!outputQueues.TryGetValue(recipient, out outputQueue))
+                    if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
                     {
-                        outputQueue = CreateMessageQueue(recipient, createIfNotExists: false);
-                        outputQueues[recipient] = outputQueue;
+                        outputQueue = CreateMessageQueue(recipientPath, createIfNotExists: false);
+                        outputQueues[recipientPath] = outputQueue;
                     }
                 }
             }
@@ -194,6 +198,36 @@ namespace Rebus.Transports.Msmq
             }
 
             return new MessageQueue(path);
+        }
+
+        static string GetPath(string inputQueue)
+        {
+            if (inputQueue.Contains("@"))
+            {
+                inputQueue = ParseQueueName(inputQueue);
+            }
+            else
+            {
+                inputQueue = AssumeLocalQueue(inputQueue);
+            }
+            return inputQueue;
+        }
+
+        static string ParseQueueName(string inputQueue)
+        {
+            var tokens = inputQueue.Split('@');
+
+            if (tokens.Length != 2)
+            {
+                throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", inputQueue));
+            }
+
+            return string.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
+        }
+
+        static string AssumeLocalQueue(string inputQueue)
+        {
+            return string.Format(@".\private$\{0}", inputQueue);
         }
     }
 }

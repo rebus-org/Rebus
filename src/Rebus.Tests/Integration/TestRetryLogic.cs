@@ -14,10 +14,11 @@ namespace Rebus.Tests.Integration
         {
             var errorQueue = GetMessageQueue("error");
 
-            var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
-            EnsureQueueExists(receiverQueueName);
+            var receiverQueueName = "test.tx.receiver";
+            var receiverQueuePath = PrivateQueueNamed(receiverQueueName);
+            EnsureQueueExists(receiverQueuePath);
 
-            var messageQueueOfReceiver = new MessageQueue(receiverQueueName);
+            var messageQueueOfReceiver = new MessageQueue(receiverQueuePath);
             messageQueueOfReceiver.Formatter = new XmlMessageFormatter();
             messageQueueOfReceiver.Purge();
 
@@ -40,11 +41,11 @@ namespace Rebus.Tests.Integration
             var errorQueue = GetMessageQueue("error");
 
             var retriedTooManyTimes = false;
-            var senderQueueName = PrivateQueueNamed("test.tx.sender");
+            var senderQueueName = "test.tx.sender";
             var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting());
 
             var receivedMessageCount = 0;
-            var receiverQueueName = PrivateQueueNamed("test.tx.receiver");
+            var receiverQueueName = "test.tx.receiver";
             CreateBus(receiverQueueName,
                       new HandlerActivatorForTesting()
                           .Handle<string>(str =>

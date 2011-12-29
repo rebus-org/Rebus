@@ -31,8 +31,8 @@ namespace Rebus.Tests.Contracts
 
         Tuple<ISendMessages, IReceiveMessages> MsmqTransports()
         {
-            var sender = new MsmqMessageQueue(@".\private$\test.contracts.sender").PurgeInputQueue();
-            var receiver = new MsmqMessageQueue(@".\private$\test.contracts.receiver").PurgeInputQueue();
+            var sender = new MsmqMessageQueue(@"test.contracts.sender").PurgeInputQueue();
+            var receiver = new MsmqMessageQueue(@"test.contracts.receiver").PurgeInputQueue();
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using Rebus.Configuration;
 using Rebus.Configuration.Configurers;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
@@ -27,6 +26,7 @@ namespace Rebus.Transports.Msmq
             try
             {
                 var section = RebusConfigurationSection.LookItUp();
+
                 DoIt(configurer, section.InputQueue);
             }
             catch(ConfigurationErrorsException e)
@@ -60,36 +60,10 @@ Note also, that specifying the input queue name with the InputQueue attribute is
 
         static void DoIt(TransportConfigurer configurer, string inputQueue)
         {
-            if (inputQueue.Contains("@"))
-            {
-                inputQueue = ParseQueueName(inputQueue);
-            }
-            else
-            {
-                inputQueue = AssumeLocalQueue(inputQueue);
-            }
-
             var msmqMessageQueue = new MsmqMessageQueue(inputQueue);
 
             configurer.UseSender(msmqMessageQueue);
             configurer.UseReceiver(msmqMessageQueue);
-        }
-
-        static string ParseQueueName(string inputQueue)
-        {
-            var tokens = inputQueue.Split('@');
-
-            if (tokens.Length != 2)
-            {
-                throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", inputQueue));
-            }
-
-            return string.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
-        }
-
-        static string AssumeLocalQueue(string inputQueue)
-        {
-            return string.Format(@".\private$\{0}", inputQueue);
         }
     }
 }

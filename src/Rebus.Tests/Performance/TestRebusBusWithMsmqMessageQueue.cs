@@ -17,8 +17,8 @@ namespace Rebus.Tests.Performance
         {
             RebusLoggerFactory.Current = new NullLoggerFactory();
 
-            var senderQueueName = PrivateQueueNamed("perftest.sender");
-            var recipientQueueName = PrivateQueueNamed("perftest.recipient");
+            var senderQueueName = "perftest.sender";
+            var recipientQueueName = "perftest.recipient";
 
             var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
             
