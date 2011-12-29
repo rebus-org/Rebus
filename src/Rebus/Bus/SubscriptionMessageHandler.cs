@@ -21,7 +21,7 @@ namespace Rebus.Bus
 
         public void Handle(SubscriptionMessage message)
         {
-            var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+            var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddress;
             var messageType = Type.GetType(message.Type);
 
             Log.Info("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);

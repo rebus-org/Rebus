@@ -1,19 +1,24 @@
 using System;
+using System.Collections.Generic;
 
 namespace Rebus
 {
     /// <summary>
     /// Holds information about the message currently being handled on this particular thread.
     /// </summary>
-    public class MessageContext : IDisposable
+    public class MessageContext : IDisposable, IMessageContext
     {
+        public static event Action<IMessageContext> Established = delegate { };
+        
+        public event Action<IMessageContext> Disposed = delegate { };
+
         [ThreadStatic] static MessageContext current;
 
 #if DEBUG
         public string StackTrace { get; set; }
 #endif
 
-        public static MessageContext Enter(string returnAddress)
+        internal static MessageContext Enter(string returnAddress)
         {
             if (current != null)
             {
@@ -24,7 +29,7 @@ namespace Rebus
 
 Stacktrace of when the current message context was created:
 {0}",
-                        GetCurrent().StackTrace));
+                        current.StackTrace));
 #else
                 throw new InvalidOperationException(
                     string.Format("Cannot establish new message context when one is already present"));
@@ -33,8 +38,10 @@ Stacktrace of when the current message context was created:
             }
             current = new MessageContext
                           {
-                              ReturnAddressOfCurrentTransportMessage = returnAddress
+                              ReturnAddress = returnAddress
                           };
+
+            Established(current);
 
             return current;
         }
@@ -42,15 +49,18 @@ Stacktrace of when the current message context was created:
         MessageContext()
         {
             DispatchMessageToHandlers = true;
+            Items = new Dictionary<string, object>();
 
 #if DEBUG
             StackTrace = Environment.StackTrace;
 #endif
         }
 
-        public string ReturnAddressOfCurrentTransportMessage { get; set; }
+        public IDictionary<string, object> Items { get; private set; }
 
-        public static MessageContext GetCurrent()
+        public string ReturnAddress { get; set; }
+
+        public static IMessageContext GetCurrent()
         {
             if (current == null)
             {
@@ -69,9 +79,16 @@ Stacktrace of when the current message context was created:
 
         internal bool DispatchMessageToHandlers { get; set; }
 
+        public void Abort()
+        {
+            DispatchMessageToHandlers = false;
+        }
+
         public void Dispose()
         {
             current = null;
+            
+            Disposed(this);
         }
     }
 }

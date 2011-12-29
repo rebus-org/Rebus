@@ -18,14 +18,14 @@ namespace Rebus.Bus
         readonly Dictionary<Type, MethodInfo> activatorMethods = new Dictionary<Type, MethodInfo>();
         readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
         readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
-        
+
         readonly IStoreSagaData storeSagaData;
         readonly IActivateHandlers activateHandlers;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
 
-        public Dispatcher(IStoreSagaData storeSagaData, 
-            IActivateHandlers activateHandlers, 
+        public Dispatcher(IStoreSagaData storeSagaData,
+            IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,
             IInspectHandlerPipeline inspectHandlerPipeline)
         {
@@ -41,7 +41,7 @@ namespace Rebus.Bus
 
             try
             {
-                var typesToDispatch = GetTypesToDispatch(typeof (TMessage));
+                var typesToDispatch = GetTypesToDispatch(typeof(TMessage));
                 var handlersFromActivator = typesToDispatch.SelectMany(GetHandlerInstances);
                 var handlerInstances = handlersFromActivator.ToArray();
 
@@ -61,11 +61,11 @@ namespace Rebus.Bus
 
                     var handlerType = handler.GetType();
 
-                    foreach(var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
+                    foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
+                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
 
-                        if (MessageContext.HasCurrent && !MessageContext.GetCurrent().DispatchMessageToHandlers)
+                        if (MessageContext.HasCurrent && !((MessageContext)MessageContext.GetCurrent()).DispatchMessageToHandlers)
                         {
                             break;
                         }
@@ -80,7 +80,7 @@ namespace Rebus.Bus
                     {
                         activateHandlers.ReleaseHandlerInstances(handlersToRelease);
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
                     }
@@ -95,12 +95,12 @@ namespace Rebus.Bus
             {
                 return typesToDispatch;
             }
-            
+
             var types = new HashSet<Type>();
             AddTypesFrom(messageType, types);
             var newArrayOfTypesToDispatch = types.ToArray();
             typesToDispatchCache[messageType] = newArrayOfTypesToDispatch;
-            
+
             return newArrayOfTypesToDispatch;
         }
 
@@ -108,7 +108,7 @@ namespace Rebus.Bus
         {
             var activationMethod = GetActivationMethod(messageType);
             var handlers = activationMethod.Invoke(activateHandlers, new object[0]);
-            var handlerInstances = (IEnumerable<IHandleMessages>) (handlers ?? new IHandleMessages[0]);
+            var handlerInstances = (IEnumerable<IHandleMessages>)(handlers ?? new IHandleMessages[0]);
             return handlerInstances;
         }
 
@@ -116,7 +116,7 @@ namespace Rebus.Bus
         {
             MethodInfo method;
             if (activatorMethods.TryGetValue(messageType, out method)) return method;
-            
+
             method = activateHandlers.GetType()
                 .GetMethod("GetHandlerInstancesFor")
                 .MakeGenericMethod(messageType);
@@ -141,7 +141,7 @@ namespace Rebus.Bus
         IEnumerable<Type> GetTypesToDispatchToThisHandler(IEnumerable<Type> typesToDispatch, Type handlerType)
         {
             var interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))
                 .Select(i => i.GetGenericArguments()[0]);
 
             return interfaces.Intersect(typesToDispatch).ToArray();
@@ -151,7 +151,7 @@ namespace Rebus.Bus
         {
             if (typeof(T) == typeof(SubscriptionMessage))
             {
-                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
+                return new[] { (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions) };
             }
             return new IHandleMessages<T>[0];
         }
@@ -194,7 +194,7 @@ namespace Rebus.Bus
                 PerformSaveActions(message, handler, saga, dataProperty, sagaData);
                 return;
             }
-            
+
             handler.Handle(message);
         }
         // ReSharper restore UnusedMember.Local
@@ -203,7 +203,7 @@ namespace Rebus.Bus
         {
             dataProperty.SetValue(handler, sagaData, new object[0]);
             handler.Handle(message);
-            
+
             if (!saga.Complete)
             {
                 var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
@@ -219,7 +219,7 @@ namespace Rebus.Bus
         {
             string[] paths;
             var sagaType = saga.GetType();
-            
+
             if (fieldsToIndexForGivenSagaDataType.TryGetValue(sagaType, out paths))
             {
                 // yay! GO!
@@ -239,7 +239,7 @@ namespace Rebus.Bus
         ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
         {
             var dataProperty = handler.GetType().GetProperty("Data");
-            var sagaData = (ISagaData) Activator.CreateInstance(dataProperty.PropertyType);
+            var sagaData = (ISagaData)Activator.CreateInstance(dataProperty.PropertyType);
             sagaData.Id = Guid.NewGuid();
             return sagaData;
         }

@@ -99,7 +99,7 @@ namespace Rebus.Bus
 
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            var returnAddress = MessageContext.GetCurrent().ReturnAddressOfCurrentTransportMessage;
+            var returnAddress = MessageContext.GetCurrent().ReturnAddress;
 
             sendMessages.Send(returnAddress, transportMessage);
         }

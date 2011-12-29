@@ -66,6 +66,7 @@
     <Compile Include="Configuration\MappingsCollection.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspectorExtensions.cs" />
     <Compile Include="Configuration\RebusMappingsSection.cs" />
+    <Compile Include="IMessageContext.cs" />
     <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
