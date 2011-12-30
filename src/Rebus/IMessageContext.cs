@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Rebus
@@ -23,5 +24,7 @@ namespace Rebus
         /// not cause the current transaction to be rolled back.
         /// </summary>
         void Abort();
+
+        event Action<IMessageContext> Disposed;
     }
 }
