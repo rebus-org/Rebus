@@ -77,6 +77,11 @@ Stacktrace of when the current message context was created:
             get { return current != null; }
         }
 
+        public static bool MessageDispatchAborted
+        {
+            get { return HasCurrent && !current.DispatchMessageToHandlers; }
+        }
+
         internal bool DispatchMessageToHandlers { get; set; }
 
         public void Abort()

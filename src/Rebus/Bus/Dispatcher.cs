@@ -55,19 +55,25 @@ namespace Rebus.Bus
                 // that may have been added from the handler filter
                 handlersToRelease = handlerInstances.Union(handlersToExecute).ToArray();
 
-                foreach (var handler in handlersToExecute.Distinct())
+                var distinctHandlersToExecute = handlersToExecute.Distinct().ToArray();
+
+                if (!distinctHandlersToExecute.Any())
                 {
-                    Log.Debug("Dispatching {0} to {1}", message, handler);
-
-                    var handlerType = handler.GetType();
-
-                    foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
+                    Log.Warn("The dispatcher could not find any handlers to execute with message of type {0}", typeof(TMessage));
+                }
+                else
+                {
+                    foreach (var handler in distinctHandlersToExecute)
                     {
-                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
+                        Log.Debug("Dispatching {0} to {1}", message, handler);
 
-                        if (MessageContext.HasCurrent && !((MessageContext)MessageContext.GetCurrent()).DispatchMessageToHandlers)
+                        var handlerType = handler.GetType();
+
+                        foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                         {
-                            break;
+                            GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
+
+                            if (MessageContext.MessageDispatchAborted) break;
                         }
                     }
                 }
