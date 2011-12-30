@@ -1,3 +1,4 @@
+using System;
 using System.Configuration;
 
 namespace Rebus.Configuration
@@ -6,6 +7,7 @@ namespace Rebus.Configuration
     {
         const string MappingsCollectionPropertyName = "Endpoints";
         const string InputQueueAttributeName = "InputQueue";
+        const string WorkersAttributeName = "Workers";
 
         [ConfigurationProperty(MappingsCollectionPropertyName)]
         public MappingsCollection MappingsCollection
@@ -21,6 +23,13 @@ namespace Rebus.Configuration
             set { this[InputQueueAttributeName] = value; }
         }
 
+        [ConfigurationProperty(WorkersAttributeName)]
+        public int? Workers
+        {
+            get { return (int?)this[WorkersAttributeName]; }
+            set { this[WorkersAttributeName] = value; }
+        }
+
         public static RebusConfigurationSection LookItUp()
         {
             var section = ConfigurationManager.GetSection("Rebus");
@@ -34,7 +43,20 @@ Please make sure that the declaration at the top matches the XML element further
 that it is NOT possible to rename this section, even though the declaration makes it seem like it.");
             }
 
-            return (RebusConfigurationSection) section;
+            return (RebusConfigurationSection)section;
+        }
+
+        public static TValue GetConfigurationValueOrDefault<TValue>(Func<RebusConfigurationSection, TValue> getConfigurationValue, TValue defaultValue)
+        {
+            var section = ConfigurationManager.GetSection("Rebus");
+            
+            if (!(section is RebusConfigurationSection)) return defaultValue;
+
+            var configurationValue = getConfigurationValue((RebusConfigurationSection) section);
+
+            if (configurationValue == null) return defaultValue;
+
+            return configurationValue;
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using Rebus.Configuration;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -27,6 +28,17 @@ namespace Rebus.Bus
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
+        /// <summary>
+        /// Constructs the bus with the specified ways of achieving its goals.
+        /// </summary>
+        /// <param name="activateHandlers">The bus will use this to construct handlers for received messages.</param>
+        /// <param name="sendMessages">Will be used to send transport messages when you send, publish, and reply.</param>
+        /// <param name="receiveMessages">Will be used to receive transport messages. If the bus is configured to run with multiple threads, this one should be reentrant.</param>
+        /// <param name="storeSubscriptions">Will be used to store subscription information. Is only relevant if the bus is a publisher, i.e. it publishes messages and other services assume they can subscribe to its messages.</param>
+        /// <param name="storeSagaData">Will be used to store saga data. Is only relevant if one or more handlers are derived from <see cref="Saga"/>.</param>
+        /// <param name="determineDestination">Will be used to resolve a destination in cases where the message destination is not explicitly specified as part of a send/subscribe operation.</param>
+        /// <param name="serializeMessages">Will be used to serialize and deserialize transport messages.</param>
+        /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
         {
             this.activateHandlers = activateHandlers;
@@ -43,7 +55,13 @@ namespace Rebus.Bus
 
         public IBus Start()
         {
-            return Start(1);
+            const int defaultNumberOfWorkers = 1;
+
+            var numberOfWorkers = RebusConfigurationSection
+                .GetConfigurationValueOrDefault(s => s.Workers, defaultNumberOfWorkers)
+                .GetValueOrDefault(defaultNumberOfWorkers);
+
+            return Start(numberOfWorkers);
         }
 
         public RebusBus Start(int numberOfWorkers)
@@ -104,7 +122,7 @@ namespace Rebus.Bus
 
         void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            var message = new SubscriptionMessage {Type = typeof (TMessage).FullName};
+            var message = new SubscriptionMessage { Type = typeof(TMessage).FullName };
 
             InternalSend(publisherInputQueue, message);
         }
@@ -118,8 +136,8 @@ namespace Rebus.Bus
         {
             var messageToSend = new Message
                                     {
-                                        Messages = new[] {message},
-                                        Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
+                                        Messages = new[] { message },
+                                        Headers = { { Headers.ReturnAddress, receiveMessages.InputQueue } }
                                     };
 
             MergeHeaders(messageToSend);
@@ -205,7 +223,7 @@ namespace Rebus.Bus
         public Dictionary<string, string> GetHeadersFor(object message)
         {
             Dictionary<string, string> temp;
-            
+
             return headers.TryRemove(message, out temp)
                        ? temp
                        : new Dictionary<string, string>();

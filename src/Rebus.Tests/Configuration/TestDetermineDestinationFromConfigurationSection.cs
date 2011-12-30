@@ -49,6 +49,19 @@ namespace Rebus.Tests.Configuration
             // assert
             section.InputQueue.ShouldBe("this.is.my.input.queue");
         }
+
+        [Test]
+        public void CanDetermineNumberOfWorkers()
+        {
+            // arrange
+            
+
+            // act
+            var section = (RebusConfigurationSection)ConfigurationManager.GetSection("Rebus");
+
+            // assert
+            section.Workers.ShouldBe(7);
+        }
     }
 
     class SomeMessageType
