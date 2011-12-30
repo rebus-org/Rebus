@@ -161,6 +161,8 @@ namespace Rebus.Bus
         {
             var transportMessageToSend = transportMessage.ToForwardableMessage();
 
+            Log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
+
             sendMessages.Send("error", transportMessageToSend);
         }
 
@@ -198,7 +200,7 @@ namespace Rebus.Bus
 
         void LogUserException(Worker worker, Exception exception)
         {
-            Log.Error(exception, "User exception in {0}", worker.WorkerThreadName);
+            Log.Warn(exception, "User exception in {0}", worker.WorkerThreadName);
         }
     }
 
