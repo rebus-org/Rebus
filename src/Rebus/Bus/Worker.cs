@@ -181,7 +181,7 @@ namespace Rebus.Bus
                     }
                     catch (Exception exception)
                     {
-                        Log.Error(exception, "Handling message {0} ({1}) has failed", label, id);
+                        Log.Debug("Handling message {0} ({1}) has failed", label, id);
                         errorTracker.TrackDeliveryFail(id, exception);
                         throw;
                     }
