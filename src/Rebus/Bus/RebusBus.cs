@@ -200,7 +200,7 @@ namespace Rebus.Bus
 
         void LogUserException(Worker worker, Exception exception)
         {
-            Log.Warn(exception, "User exception in {0}", worker.WorkerThreadName);
+            Log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
         }
     }
 
