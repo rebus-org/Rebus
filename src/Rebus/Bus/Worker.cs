@@ -152,6 +152,7 @@ namespace Rebus.Bus
                 }
 
                 var id = transportMessage.Id;
+                var label = transportMessage.Label;
 
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
@@ -180,7 +181,7 @@ namespace Rebus.Bus
                     }
                     catch (Exception exception)
                     {
-                        Log.Error(exception, "Handling message {0} has failed", id);
+                        Log.Error(exception, "Handling message {0} ({1}) has failed", label, id);
                         errorTracker.TrackDeliveryFail(id, exception);
                         throw;
                     }
