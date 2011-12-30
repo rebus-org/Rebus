@@ -25,6 +25,6 @@ namespace Rebus
         /// </summary>
         void Abort();
 
-        event Action<IMessageContext> Disposed;
+        event Action Disposed;
     }
 }

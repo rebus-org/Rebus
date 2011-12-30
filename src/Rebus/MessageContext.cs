@@ -10,7 +10,7 @@ namespace Rebus
     {
         public static event Action<IMessageContext> Established = delegate { };
         
-        public event Action<IMessageContext> Disposed = delegate { };
+        public event Action Disposed = delegate { };
 
         [ThreadStatic] static MessageContext current;
 
@@ -88,7 +88,7 @@ Stacktrace of when the current message context was created:
         {
             current = null;
             
-            Disposed(this);
+            Disposed();
         }
     }
 }
