@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using System.Linq;
 
 namespace Rebus.Bus
 {
@@ -52,31 +54,23 @@ namespace Rebus.Bus
             return this;
         }
 
-        public void Send<TMessage>(TMessage message)
+        public void Send<TCommand>(TCommand message)
         {
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
-            Send(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, message);
         }
 
-        public void Send<TMessage>(string endpoint, TMessage message)
+        public void Send<TCommand>(string endpoint, TCommand message)
         {
-            var messageToSend = new Message
-                                    {
-                                        Messages = new object[] {message},
-                                        Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
-                                    };
-
-            var transportMessage = serializeMessages.Serialize(messageToSend);
-
-            sendMessages.Send(endpoint, transportMessage);
+            InternalSend(endpoint, message);
         }
 
         public void SendLocal<TCommand>(TCommand message)
         {
             var destinationEndpoint = receiveMessages.InputQueue;
 
-            Send(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, message);
         }
 
         public void Publish<TEvent>(TEvent message)
@@ -85,45 +79,71 @@ namespace Rebus.Bus
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
-                Send(subscriberInputQueue, message);
+                InternalSend(subscriberInputQueue, message);
             }
         }
 
-        public void Reply<TReply>(TReply message)
+        public void Reply<TResponse>(TResponse message)
         {
-            var messageToSend = new Message
-                                    {
-                                        Messages = new object[] {message},
-                                        Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
-                                    };
-
-            var transportMessage = serializeMessages.Serialize(messageToSend);
-
             var returnAddress = MessageContext.GetCurrent().ReturnAddress;
 
-            sendMessages.Send(returnAddress, transportMessage);
+            InternalSend(returnAddress, message);
         }
 
         public void Subscribe<TMessage>()
         {
-            var destinationEndpoint = GetMessageOwnerEndpointFor(typeof(TMessage));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TMessage));
 
-            Subscribe<TMessage>(destinationEndpoint);
+            InternalSubscribe<TMessage>(publisherInputQueue);
         }
 
         public void Subscribe<TMessage>(string publisherInputQueue)
         {
+            InternalSubscribe<TMessage>(publisherInputQueue);
+        }
+
+        void InternalSubscribe<TMessage>(string publisherInputQueue)
+        {
             var message = new SubscriptionMessage {Type = typeof (TMessage).FullName};
 
+            InternalSend(publisherInputQueue, message);
+        }
+
+        /// <summary>
+        /// Core send method. This should be the only place where calls to the bus'
+        /// <see cref="ISendMessages"/> instance gets called, except for when moving
+        /// messages to the error queue.
+        /// </summary>
+        void InternalSend(string endpoint, object message)
+        {
             var messageToSend = new Message
                                     {
-                                        Messages = new object[] {message},
+                                        Messages = new[] {message},
                                         Headers = {{Headers.ReturnAddress, receiveMessages.InputQueue}}
                                     };
 
+            MergeHeaders(messageToSend);
+
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            sendMessages.Send(publisherInputQueue, transportMessage);
+            sendMessages.Send(endpoint, transportMessage);
+        }
+
+        void MergeHeaders(Message messageToSend)
+        {
+            // well - ATM I cannot think of any better way,... we just merge any headers present with those associated with the message
+            var allHeaders = messageToSend.Messages
+                .Select(msg => HeaderContext.Current.GetHeadersFor(msg))
+                .Aggregate(messageToSend.Headers, (d1, d2) => d1.Concat(d2).ToDictionary(k => k.Key, k => k.Value));
+
+            messageToSend.Headers = allHeaders;
+        }
+
+        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage, string errorDetail)
+        {
+            var transportMessageToSend = transportMessage.ToForwardableMessage();
+
+            sendMessages.Send("error", transportMessageToSend);
         }
 
         public void Dispose()
@@ -162,12 +182,42 @@ namespace Rebus.Bus
         {
             Log.Error(exception, "User exception in {0}", worker.WorkerThreadName);
         }
+    }
 
-        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage, string errorDetail)
+    internal class HeaderContext
+    {
+        static HeaderContext()
         {
-            var transportMessageToSend = transportMessage.ToForwardableMessage();
+            Current = new HeaderContext();
+        }
 
-            sendMessages.Send("error", transportMessageToSend);
+        public static HeaderContext Current { get; set; }
+
+        readonly ConcurrentDictionary<object, Dictionary<string, string>> headers = new ConcurrentDictionary<object, Dictionary<string, string>>();
+
+        public void AttachHeader(object message, string key, string value)
+        {
+            var headerDictionary = headers.GetOrAdd(message, msg => new Dictionary<string, string>());
+
+            headerDictionary.Add(key, value);
+        }
+
+        public Dictionary<string, string> GetHeadersFor(object message)
+        {
+            Dictionary<string, string> temp;
+            
+            return headers.TryRemove(message, out temp)
+                       ? temp
+                       : new Dictionary<string, string>();
+        }
+    }
+
+    public static class MessageExtensions
+    {
+        public static TMessage AttachHeader<TMessage>(this TMessage message, string key, string value)
+        {
+            HeaderContext.Current.AttachHeader(message, key, value);
+            return message;
         }
     }
 }

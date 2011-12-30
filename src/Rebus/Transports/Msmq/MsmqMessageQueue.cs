@@ -5,6 +5,8 @@ using System.Messaging;
 using System.Reflection;
 using System.Text;
 using Rebus.Logging;
+using Rebus.Messages;
+using Message = System.Messaging.Message;
 
 namespace Rebus.Transports.Msmq
 {
@@ -146,9 +148,9 @@ namespace Rebus.Transports.Msmq
         {
             msmqMessage.Extension = HeaderEcoding.GetBytes(dictionarySerializer.Serialize(message.Headers));
 
-            if (message.Headers.ContainsKey("TimeToBeReceived"))
+            if (message.Headers.ContainsKey(Headers.TimeToBeReceived))
             {
-                msmqMessage.TimeToBeReceived = TimeSpan.Parse(message.Headers["TimeToBeReceived"]);
+                msmqMessage.TimeToBeReceived = TimeSpan.Parse(message.Headers[Headers.TimeToBeReceived]);
             }
         }
 

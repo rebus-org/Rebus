@@ -44,6 +44,23 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
+        public void AttachesHeadersFromMessageToOutgoingMessage()
+        {
+            // arrange
+            var someRandomMessage = new SomeRandomMessage();
+            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+
+            // act
+            bus.Send("hardcoded.endpoint.to.skip.lookup", someRandomMessage);
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("hardcoded.endpoint.to.skip.lookup"),
+                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.TimeToBeReceived))));
+        }
+
+        class SomeRandomMessage {}
+
+        [Test]
         public void SendsMessagesToTheRightDestination()
         {
             // arrange

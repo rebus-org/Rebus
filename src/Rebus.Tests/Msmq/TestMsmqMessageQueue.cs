@@ -5,6 +5,7 @@ using System.Messaging;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Messages;
 using Rebus.Newtonsoft.JsonNET;
 using Rebus.Transports.Msmq;
 using Message = Rebus.Messages.Message;
@@ -52,8 +53,7 @@ namespace Rebus.Tests.Msmq
                              serializer.Serialize(new Message
                                                       {
                                                           Messages = new object[] { "HELLO WORLD!" },
-                                                          Headers =
-                                                              new Dictionary<string, string> { { "TimeToBeReceived", timeToBeReceivedAsString } },
+                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceivedAsString } },
                                                       }));
 
             // act

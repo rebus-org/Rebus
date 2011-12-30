@@ -52,9 +52,12 @@ namespace Rebus.Tests.Performance
         /// Maybe I should be more scientific about it :) metrics like
         /// these are just puzzling.
         /// 
+        /// Added the outgoing headers to messages:
+        ///     10000 iterations took 0,717 s - that's 13946,5 msg/s
+        /// 
         /// </summary>
         [TestCase(1000)]
-        [TestCase(10000, Ignore = true)]
+        [TestCase(10000)]
         [TestCase(100000, Ignore = true)]
         public void DispatchLotsOfMessagesToSaga(int iterations)
         {

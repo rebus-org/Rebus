@@ -31,7 +31,7 @@ namespace Rebus
         /// be called when a <see cref="MessageContext"/> has been established, which happens
         /// during the handling of an incoming message.
         /// </summary>
-        void Reply<TReply>(TReply message);
+        void Reply<TResponse>(TResponse message);
 
         /// <summary>
         /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
