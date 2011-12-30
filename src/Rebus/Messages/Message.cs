@@ -46,7 +46,7 @@ namespace Rebus.Messages
             if (Messages == null || Messages.Length == 0)
                 return "Empty Message";
 
-            return string.Join(" + ", Messages.Select(m => m.GetType().Name));
+            return string.Join(" + ", Messages.Select(m => m.ToString()));
         }
     }
 }
