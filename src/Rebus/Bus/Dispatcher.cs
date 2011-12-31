@@ -38,9 +38,13 @@ namespace Rebus.Bus
         public void Dispatch<TMessage>(TMessage message)
         {
             IHandleMessages[] handlersToRelease = null;
+            IMessageModule[] messageModules = null;
 
             try
             {
+                messageModules = activateHandlers.GetMessageModules().ToArray();
+                Array.ForEach(messageModules, m => m.Before());
+
                 var typesToDispatch = GetTypesToDispatch(typeof(TMessage));
                 var handlersFromActivator = typesToDispatch.SelectMany(GetHandlerInstances);
                 var handlerInstances = handlersFromActivator.ToArray();
@@ -71,12 +75,20 @@ namespace Rebus.Bus
 
                         foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                         {
-                            GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
+                            GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
 
                             if (MessageContext.MessageDispatchAborted) break;
                         }
                     }
                 }
+            }
+            catch (Exception exception)
+            {
+                if (messageModules != null)
+                {
+                    Array.ForEach(messageModules, m => m.OnError(exception));
+                }
+                throw;
             }
             finally
             {
@@ -84,12 +96,17 @@ namespace Rebus.Bus
                 {
                     try
                     {
-                        activateHandlers.ReleaseHandlerInstances(handlersToRelease);
+                        activateHandlers.Release(handlersToRelease);
                     }
                     catch (Exception e)
                     {
                         Log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
                     }
+                }
+
+                if (messageModules != null)
+                {
+                    Array.ForEach(messageModules, m => m.After());
                 }
             }
         }

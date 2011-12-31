@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Rebus;
 using Rebus.Bus;
@@ -62,7 +63,12 @@ namespace Sample.Server
             return new IHandleMessages<T>[0];
         }
 
-        public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
+        public IEnumerable<IMessageModule> GetMessageModules()
+        {
+            return new IMessageModule[0];
+        }
+
+        public void Release(IEnumerable handlerInstances)
         {
         }
 

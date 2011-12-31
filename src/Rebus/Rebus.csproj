@@ -70,6 +70,7 @@
     <Compile Include="Configuration\RearrangeHandlersPipelineInspectorExtensions.cs" />
     <Compile Include="Configuration\RebusConfigurationSection.cs" />
     <Compile Include="IMessageContext.cs" />
+    <Compile Include="IMessageModule.cs" />
     <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />

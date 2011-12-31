@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
@@ -250,7 +251,12 @@ namespace Rebus.Tests.Configuration
                 throw new NotImplementedException();
             }
 
-            public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
+            public IEnumerable<IMessageModule> GetMessageModules()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Release(IEnumerable handlerInstances)
             {
                 throw new NotImplementedException();
             }

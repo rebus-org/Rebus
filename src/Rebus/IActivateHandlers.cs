@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Rebus
@@ -13,7 +14,13 @@ namespace Rebus
         /// the <see cref="IHandleMessages{TMessage}"/> interface.
         /// </summary>
         IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
-        
+
+        /// <summary>
+        /// Should be a sequence of message modules.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<IMessageModule> GetMessageModules(); 
+
         /// <summary>
         /// Is called after each handler has been invoked. Please note that this method
         /// will be called for all handlers - i.e. if you add more handlers to the pipeline
@@ -22,7 +29,8 @@ namespace Rebus
         /// implement <see cref="IInspectHandlerPipeline"/>, supplying your implementation
         /// of <see cref="IActivateHandlers"/> to that implementation, allowing any manually
         /// pulled handler instances to be released in the right way.
+        /// Will also be called for any message modules that get pulled.
         /// </summary>
-        void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances);
+        void Release(IEnumerable handlerInstances);
     }
 }

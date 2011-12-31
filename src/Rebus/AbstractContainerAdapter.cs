@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Rebus
@@ -15,9 +16,14 @@ namespace Rebus
             return ResolveAll<IHandleMessages<T>>();
         }
 
-        public void ReleaseHandlerInstances(IEnumerable<IHandleMessages> handlerInstances)
+        public IEnumerable<IMessageModule> GetMessageModules()
         {
-            Release(handlerInstances);
+            return ResolveAll<IMessageModule>();
+        }
+
+        public void Release(IEnumerable handlerInstances)
+        {
+            Release((object)handlerInstances);
         }
 
         public abstract void RegisterInstance(object instance, params Type[] serviceTypes);

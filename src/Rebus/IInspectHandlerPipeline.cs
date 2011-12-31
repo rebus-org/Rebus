@@ -8,7 +8,7 @@ namespace Rebus
     /// executed before anything else, 2) inspecting the incoming message and cherry-picking handlers 
     /// depending on the contents of the message.
     /// 
-    /// Note that all handlers will be released - i.e. the ReleaseHandlerInstances of <see cref="IActivateHandlers"/>
+    /// Note that all handlers will be released - i.e. the Release of <see cref="IActivateHandlers"/>
     /// will be called for the union of handlers returned from the GetHandlerInstancesFor method and
     /// any additional handlers that you may have added to return from the Filter method.
     /// </summary>
