@@ -107,6 +107,15 @@ namespace Rebus.Bus
                 if (messageModules != null)
                 {
                     Array.ForEach(messageModules, m => m.After());
+
+                    try
+                    {
+                        activateHandlers.Release(messageModules);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "An error occurred while attempting to release message modules: {0}", string.Join(", ", messageModules.Select(h => h.GetType())));
+                    }
                 }
             }
         }
