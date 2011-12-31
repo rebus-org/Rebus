@@ -42,7 +42,7 @@ namespace Rebus.Bus
 
             try
             {
-                messageModules = activateHandlers.GetMessageModules().ToArray();
+                messageModules = (activateHandlers.GetMessageModules() ?? new IMessageModule[0]).ToArray();
                 Array.ForEach(messageModules, m => m.Before());
 
                 var typesToDispatch = GetTypesToDispatch(typeof(TMessage));
