@@ -80,11 +80,10 @@ namespace Rebus.Persistence.SqlServer
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
-                                                            (id, [key], value, saga_id) 
+                                                            ([key], value, saga_id) 
                                                         values 
-                                                            ('{1}', '{2}', '{3}', '{4}')",
-                                sagaIndexTableName,
-                                Guid.NewGuid(), a.Key, a.Value,
+                                                            ('{1}', '{2}', '{3}')",
+                                sagaIndexTableName, a.Key, a.Value,
                                 sagaData.Id.ToString()));
 
                         var sql = string.Join(";" + Environment.NewLine, inserts);
