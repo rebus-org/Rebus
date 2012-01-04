@@ -25,7 +25,7 @@ namespace Rebus.Configuration.Configurers
         {
             Log.Debug("Loading handlers");
 
-            var assembliesToScan = new[] { assemblyToScan }.Concat(additionalAssemblies);
+            var assembliesToScan = new[] { assemblyToScan }.Union(additionalAssemblies);
 
             foreach(var assembly in assembliesToScan)
             {

@@ -30,7 +30,21 @@ namespace Rebus.Tests.Configuration
             // assert
             containerAdapter.AssertWasCalled(c => c.Register(typeof (ThisClassNameIsPrettyRecognizable),
                                                              Lifestyle.Instance,
-                                                             typeof (IHandleMessages<string>)));
+                                                             typeof (IHandleMessages<string>)), options => options.Repeat.Once());
+        }
+
+        [Test]
+        public void SameAssemblyIsOnlyLoadedOnce()
+        {
+            // arrange
+
+            // act
+            configurer.Handlers.LoadFrom(Assembly.GetExecutingAssembly(), Assembly.GetExecutingAssembly());
+            
+            // assert
+            containerAdapter.AssertWasCalled(c => c.Register(typeof(ThisClassNameIsPrettyRecognizable),
+                                                             Lifestyle.Instance,
+                                                             typeof(IHandleMessages<string>)), options => options.Repeat.Once());
         }
 
         [Test]
