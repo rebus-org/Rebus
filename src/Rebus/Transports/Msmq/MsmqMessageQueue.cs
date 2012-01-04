@@ -4,6 +4,7 @@ using System.Linq;
 using System.Messaging;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using Rebus.Logging;
 using Rebus.Messages;
 using Message = System.Messaging.Message;
@@ -196,7 +197,10 @@ namespace Rebus.Transports.Msmq
             if (!queueExists && createIfNotExists)
             {
                 Log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
-                return MessageQueue.Create(path, true);
+                var messageQueue = MessageQueue.Create(path, true);
+                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
+                messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);
+                return messageQueue;
             }
 
             return new MessageQueue(path);

@@ -27,7 +27,7 @@ namespace Rebus.Tests.Integration
             messageQueueOfReceiver.Send("bla bla bla bla bla bla cannot be deserialized properly!!", MessageQueueTransactionType.Single);
 
             var errorMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(5)).Body;
-            
+
             // this is how the XML formatter serializes a single string:
 
             // and this is the data we successfully moved to the error queue

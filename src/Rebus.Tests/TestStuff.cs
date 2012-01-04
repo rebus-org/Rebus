@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Messaging;
+using System.Threading;
 using NUnit.Framework;
 using Shouldly;
 
@@ -56,6 +57,7 @@ namespace Rebus.Tests
         public void StatementOfFunctionality()
         {
             var messageQueue = GetOrCreate("test.headers");
+            messageQueue.Purge();
 
             var tx = new MessageQueueTransaction();
             tx.Begin();
@@ -72,7 +74,9 @@ namespace Rebus.Tests
                 return new MessageQueue(path);
             }
 
-            return MessageQueue.Create(path, true);
+            var messageQueue = MessageQueue.Create(path, true);
+            messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
+            return messageQueue;
         }
     }
 }

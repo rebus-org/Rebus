@@ -31,7 +31,10 @@ namespace Rebus.Tests.Msmq
             destinationQueuePath = MsmqMessageQueue.PrivateQueue(destinationQueueName);
 
             if (!MessageQueue.Exists(destinationQueuePath))
-                MessageQueue.Create(destinationQueuePath, transactional: true);
+            {
+                var messageQueue = MessageQueue.Create(destinationQueuePath, transactional: true);
+                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
+            }
 
             destinationQueue = new MessageQueue(destinationQueuePath)
                                    {

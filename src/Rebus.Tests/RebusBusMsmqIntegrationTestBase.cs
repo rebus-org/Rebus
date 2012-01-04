@@ -63,7 +63,7 @@ namespace Rebus.Tests
         {
             if (!MessageQueue.Exists(errorQueueName))
             {
-                MessageQueue.Create(errorQueueName);
+                MessageQueue.Create(errorQueueName, transactional: true);
             }
         }
     }
