@@ -60,7 +60,7 @@ namespace Rebus.Tests.Configuration
             var section = (RebusConfigurationSection)ConfigurationManager.GetSection("Rebus");
 
             // assert
-            section.Workers.ShouldBe(7);
+            section.Workers.ShouldBe(5);
         }
     }
 

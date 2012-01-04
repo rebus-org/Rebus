@@ -68,7 +68,7 @@ namespace Rebus.Tests.Integration
 
             senderBus.Send(receiverQueueName, "HELLO!");
 
-            var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(2)).Body;
+            var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(3)).Body;
             var errorMessage = serializer.Deserialize(transportMessage);
 
             retriedTooManyTimes.ShouldBe(false);
