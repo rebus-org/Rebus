@@ -46,6 +46,26 @@ namespace Rebus.Tests.Msmq
         }
 
         [Test]
+        public void ThrowsIfExistingQueueIsNotTransactional()
+        {
+            // arrange
+            var queueName = "test.some.random.queue";
+            var queuePath = MsmqMessageQueue.PrivateQueue(queueName);
+
+            if (MessageQueue.Exists(queuePath))
+            {
+                MessageQueue.Delete(queuePath);
+            }
+
+            MessageQueue.Create(queuePath, transactional: false);
+
+            // act
+            Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
+
+            // assert
+        }
+
+        [Test]
         public void MessageExpirationWorks()
         {
             // arrange

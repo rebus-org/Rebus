@@ -203,7 +203,19 @@ namespace Rebus.Transports.Msmq
                 return messageQueue;
             }
 
-            return new MessageQueue(path);
+            var queue = new MessageQueue(path);
+
+            if (!queue.Transactional)
+            {
+                var message = string.Format(@"The queue {0} is NOT transactional!
+
+Everything around Rebus is built with the assumption that queues are transactional,
+so Rebus will malfunction if queues aren't transactional. Therefore, ensure that
+any existing queues are transactional, or let Rebus create its queues automatically.", path);
+                throw new InvalidOperationException(message);
+            }
+
+            return queue;
         }
 
         static string GetPath(string inputQueue)
