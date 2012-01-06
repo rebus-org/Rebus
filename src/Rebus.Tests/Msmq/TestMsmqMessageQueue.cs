@@ -60,9 +60,10 @@ namespace Rebus.Tests.Msmq
             MessageQueue.Create(queuePath, transactional: false);
 
             // act
-            Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
+            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
 
             // assert
+            invalidOperationException.Message.ShouldContain(queueName);
         }
 
         [Test]

@@ -210,8 +210,10 @@ namespace Rebus.Transports.Msmq
                 var message = string.Format(@"The queue {0} is NOT transactional!
 
 Everything around Rebus is built with the assumption that queues are transactional,
-so Rebus will malfunction if queues aren't transactional. Therefore, ensure that
-any existing queues are transactional, or let Rebus create its queues automatically.", path);
+so Rebus will malfunction if queues aren't transactional. 
+
+To remedy this, ensure that any existing queues are transactional, or let Rebus 
+create its queues automatically.", path);
                 throw new InvalidOperationException(message);
             }
 
