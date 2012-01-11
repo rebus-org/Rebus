@@ -21,7 +21,7 @@ namespace Rebus.Tests.Integration
                           .Handle<string>(str =>
                                               {
                                                   if (str != "HELLO!") return;
-                                                  
+
                                                   receivedMessageCount++;
 
                                                   // throw the first two times the message is delivered
@@ -44,12 +44,12 @@ namespace Rebus.Tests.Integration
         public void CanSendAndReceiveMessagesLikeExpected()
         {
             const string recipientQueueName = "test.recipient";
-            
+
             var recipientWasCalled = false;
 
             var manualResetEvent = new ManualResetEvent(false);
 
-            var senderBus = (RebusBus)CreateBus("test.sender", new HandlerActivatorForTesting()).Start();
+            var senderBus = (RebusBus) CreateBus("test.sender", new HandlerActivatorForTesting()).Start();
 
             CreateBus(recipientQueueName, new HandlerActivatorForTesting()
                                               .Handle<string>(str =>
@@ -110,7 +110,7 @@ namespace Rebus.Tests.Integration
                                             firstSubscriberResetEvent.Set();
                                         }
                                     });
-            var firstSubscriberBus = (RebusBus)CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
+            var firstSubscriberBus = (RebusBus) CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
             firstSubscriberBus.Subscribe<string>(publisherInputQueue);
 
             var secondSubscriberInputQueue = "test.subscriber2";
@@ -122,7 +122,7 @@ namespace Rebus.Tests.Integration
                                             secondSubscriberResetEvent.Set();
                                         }
                                     });
-            var secondSubscriberBus = (RebusBus)CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
+            var secondSubscriberBus = (RebusBus) CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
             secondSubscriberBus.Subscribe<string>(publisherInputQueue);
 
             // allow the publisher to receive the subscriptions....
@@ -140,5 +140,6 @@ namespace Rebus.Tests.Integration
                 Assert.Fail("Second subscriber did not receive the event");
             }
         }
+
     }
 }

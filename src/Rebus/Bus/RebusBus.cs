@@ -122,7 +122,7 @@ namespace Rebus.Bus
 
         void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            var message = new SubscriptionMessage { Type = typeof(TMessage).FullName };
+            var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
 
             InternalSend(publisherInputQueue, message);
         }
