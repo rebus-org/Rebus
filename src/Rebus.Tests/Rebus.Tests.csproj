@@ -87,6 +87,7 @@
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
+    <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
@@ -149,6 +150,7 @@
     </Content>
     <Content Include="Contracts\readme.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
