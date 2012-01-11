@@ -9,6 +9,7 @@ These are the goals - Rebus should have:
 * a few well-selected options
 * no doodleware
 * dependency only on .NET 4 BCL
+* integration with external dependencies via small and dedicated projects
 * the best error messages
 * a frictionless getting-up-and-running-experience
 
@@ -43,13 +44,13 @@ Pretty clunky at the moment, I'm sorry... haven't gotten into the configuration 
 
 First, decide how you want to `ISendMessages` and `IReceiveMessages` - Rebus has something that can do both: `MsmqMessageQueue` - therefore:
 
-    var msmq = new MsmqMessageQueue(MsmqMessageQueue.PrivateQueue("service_input_queue"));
+    var msmq = new MsmqMessageQueue("service_input_queue");
 
 Then, decide how subscriptions and sagas are to be stored - let's be serious about this:
 
 	var connectionString = "data source=.;initial catalog=rebus_subscriptions;integrated security=sspi";
-    var subscriptionStorage = new SqlServerSubscriptionStorage(connectionString);
-	var sagaPersister = new SqlServerSagaPersister(connectionString);
+    var subscriptionStorage = new SqlServerSubscriptionStorage(connectionString, "subscriptions");
+	var sagaPersister = new SqlServerSagaPersister(connectionString, "saga_index", "sagas");
 
 Now, figure out how to go from `TMessage` to instances of something that implements `IHandleMessages<TMessage>`. This is where you'd probably insert your favorite IoC container. Let's pretend that I implemented `IActivateHandlers` in a `CastleWindsorHandlerActivator` (it's only two methods) - that would allow me to do this:
 
@@ -60,7 +61,7 @@ Now, figure out how a given message type should be mapped to the name of the end
 
 	var endpointMapper = new DetermineDestinationFromNServiceBusEndpointMappings();
 
-Now, figure out how to `ISerializeMessages` - at the moment there's only `JsonMessageSerializer`:
+Now, figure out how to `ISerializeMessages` - at the moment there's `BinaryMessageSerializer` and `JsonMessageSerializer`:
 
 	var serializer = new JsonMessageSerializer();
 
