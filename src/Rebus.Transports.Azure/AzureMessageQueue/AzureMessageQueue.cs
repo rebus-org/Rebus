@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Messaging;
 using System.Reflection;
 using System.Text;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Serialization;
 using Rebus.Transports.Msmq;
 
-namespace Rebus.Transports.AzureMessageQueue
+namespace Rebus.Transports.Azure.AzureMessageQueue
 {
     public class AzureMessageQueue : ISendMessages, IReceiveMessages
     {
@@ -30,7 +29,7 @@ namespace Rebus.Transports.AzureMessageQueue
             cloudQueueClient = this.cloudStorageAccount.CreateCloudQueueClient();
             inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
 
-            if(shouldClearQueueInputQueue)
+            if (inputQueue.Exists() && shouldClearQueueInputQueue)
                 inputQueue.Clear();
             _dictionarySerializer = new DictionarySerializer();
         }

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Serialization;
 using Message = System.Messaging.Message;
 
 namespace Rebus.Transports.Msmq

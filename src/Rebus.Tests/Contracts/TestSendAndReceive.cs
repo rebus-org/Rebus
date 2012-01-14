@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.WindowsAzure;
 using NUnit.Framework;
-using Rebus.Transports.AzureMessageQueue;
+using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -22,8 +22,8 @@ namespace Rebus.Tests.Contracts
         {
             transports = new List<Tuple<ISendMessages, IReceiveMessages>>
                              {
-                                 MsmqTransports(),
-                                 //AzureQueueTransports()
+                                 //MsmqTransports(),
+                                 AzureQueueTransports()
                              };
         }
 
