@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Microsoft.WindowsAzure;
 using NUnit.Framework;
+using Rebus.Transports.AzureMessageQueue;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -21,6 +23,7 @@ namespace Rebus.Tests.Contracts
             transports = new List<Tuple<ISendMessages, IReceiveMessages>>
                              {
                                  MsmqTransports(),
+                                 //AzureQueueTransports()
                              };
         }
 
@@ -33,6 +36,14 @@ namespace Rebus.Tests.Contracts
         {
             var sender = new MsmqMessageQueue(@"test.contracts.sender").PurgeInputQueue();
             var receiver = new MsmqMessageQueue(@"test.contracts.receiver").PurgeInputQueue();
+            return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
+        }
+
+        Tuple<ISendMessages, IReceiveMessages> AzureQueueTransports()
+        {
+            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", true);
+            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", true);
+
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
@@ -95,12 +106,12 @@ and
     {1}
 ", sender, receiver);
 
-            sender.Send(receiver.InputQueue, new TransportMessageToSend {Data = "wooolalalala"});
+            sender.Send(receiver.InputQueue, new TransportMessageToSend { Data = "wooolalalala" });
 
             Thread.Sleep(MaximumExpectedQueueLatency);
 
             var receivedTransportMessage = receiver.ReceiveMessage();
-            
+
             receivedTransportMessage.Data.ShouldBe("wooolalalala");
         }
     }
