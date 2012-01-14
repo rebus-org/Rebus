@@ -6,7 +6,7 @@ namespace Rebus.Configuration
     public class RebusConfigurationSection : ConfigurationSection
     {
         const string MappingsCollectionPropertyName = "Endpoints";
-        const string InputQueueAttributeName = "InputQueue";
+        const string InputQueueAttributeName = "inputQueueName";
         const string WorkersAttributeName = "Workers";
 
         [ConfigurationProperty(MappingsCollectionPropertyName)]

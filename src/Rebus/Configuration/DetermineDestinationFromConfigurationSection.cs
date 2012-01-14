@@ -45,7 +45,7 @@ section declaration in the <configSections> element of your app.config/web.confi
 -and then you need a <Rebus> element some place further down the app.config/web.config,
 like so:
 
-    <Rebus InputQueue=""my.service.input.queue"">
+    <Rebus inputQueueName=""my.service.input.queue"">
         <Endpoints>
             <add Messages=""Name.Of.Assembly"" Endpoint=""message_owner_1""/>
             <add Messages=""Namespace.ClassName, Name.Of.Another.Assembly"" Endpoint=""message_owner_2""/>
@@ -63,7 +63,7 @@ explicit mappings WILL OVERRIDE assembly mappings. So if you map an entire assem
 and you map one of the types from that assembly to another endpoint explicitly, the explicit mapping
 will be the one taking effect.
 
-Note also, that specifying the input queue name with the InputQueue attribute is optional.
+Note also, that specifying the input queue name with the inputQueueName attribute is optional.
 ",
                     e);
             }
