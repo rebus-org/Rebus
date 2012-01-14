@@ -52,6 +52,7 @@ namespace Rebus.Transports.AzureMessageQueue
                 }
             }
             
+            
             message.Headers = message.Headers ?? new Dictionary<string, string>();
 
             var headers = _dictionarySerializer.Serialize(message.Headers);
@@ -78,11 +79,11 @@ namespace Rebus.Transports.AzureMessageQueue
 
         public ReceivedTransportMessage ReceiveMessage()
         {
-            var message = inputQueue.GetMessage(TimeSpan.FromSeconds(2));
+            var message = inputQueue.GetMessage(TimeSpan.FromSeconds(5));
 
             if (message == null) 
             {
-                Log.Warn("Received NULL message - how weird is that?");
+                //Log.Warn("Received NULL message - how weird is that?");
                 return null;
             }
 
