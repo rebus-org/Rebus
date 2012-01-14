@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.WindowsAzure;
 using Rebus;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
+using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
 using Sample.Server.Messages;
 
@@ -13,6 +15,9 @@ namespace Sample.Client
 {
     class Program : IActivateHandlers, IHandleMessages<Pong>, IDetermineDestination
     {
+        private const string clientQueue = "sample-client";
+        private const string serverQueue = "sample-server";
+
         static void Main()
         {
             try
@@ -30,15 +35,16 @@ namespace Sample.Client
             RebusLoggerFactory.Current = new TraceLoggerFactory();
 
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.client").PurgeInputQueue();
+            var messageQueue = new MsmqMessageQueue(clientQueue).PurgeInputQueue();
+            //var messageQueue = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, clientQueue, true);
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();
             var sagaPersister = new InMemorySagaPersister();
             var inspectHandlerPipeline = new TrivialPipelineInspector();
 
             var bus = new RebusBus(program,
-                                   msmqMessageQueue,
-                                   msmqMessageQueue,
+                                   messageQueue,
+                                   messageQueue,
                                    inMemorySubscriptionStorage,
                                    sagaPersister,
                                    program, jsonMessageSerializer, inspectHandlerPipeline);
@@ -86,7 +92,7 @@ namespace Sample.Client
         {
             if (messageType == typeof(Ping))
             {
-                return @".\private$\sample.server";
+                return serverQueue;
             }
 
             throw new ArgumentException(string.Format("Has no routing information for {0}", messageType));
