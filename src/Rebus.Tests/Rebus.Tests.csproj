@@ -37,6 +37,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.1.2.10\lib\2.0\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsAzure.Storage.1.6\lib\net35-full\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
+    </Reference>
     <Reference Include="MongoDB.Bson">
       <HintPath>..\packages\mongocsharpdriver.1.3\lib\net35\MongoDB.Bson.dll</HintPath>
     </Reference>
@@ -66,6 +69,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Configuration.Install" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
@@ -91,7 +95,7 @@
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
-    <Compile Include="Msmq\TestDictionarySerializer.cs" />
+    <Compile Include="Serialization\TestDictionarySerializer.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Performance\SagaPersisterPerformanceTestHelper.cs" />
     <Compile Include="Performance\TestDispatcherIsolatedSagaPerformance.cs" />
@@ -135,6 +139,10 @@
     <ProjectReference Include="..\Rebus.Newtonsoft.JsonNET\Rebus.Newtonsoft.JsonNET.csproj">
       <Project>{C46F1156-0A2D-40D4-8EBC-744B2FDD777D}</Project>
       <Name>Rebus.Newtonsoft.JsonNET</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Transports.Azure\Rebus.Transports.Azure.csproj">
+      <Project>{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}</Project>
+      <Name>Rebus.Transports.Azure</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
