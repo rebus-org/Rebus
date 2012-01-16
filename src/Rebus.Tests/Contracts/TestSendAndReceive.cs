@@ -22,8 +22,8 @@ namespace Rebus.Tests.Contracts
         {
             transports = new List<Tuple<ISendMessages, IReceiveMessages>>
                              {
-                                 //MsmqTransports(),
-                                 AzureQueueTransports()
+                                 MsmqTransports(),
+                                 //AzureQueueTransports()
                              };
         }
 
