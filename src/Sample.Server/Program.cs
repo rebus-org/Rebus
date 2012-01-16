@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Microsoft.WindowsAzure;
 using Rebus;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
+using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
 using Sample.Server.Messages;
 
@@ -13,6 +15,7 @@ namespace Sample.Server
 {
     class Program : IActivateHandlers, IHandleMessages<Ping>, IDetermineDestination
     {
+        private const string serverQueue = "sample-server";
         static void Main()
         {
             try
@@ -30,15 +33,16 @@ namespace Sample.Server
             RebusLoggerFactory.Current = new TraceLoggerFactory();
 
             var program = new Program();
-            var msmqMessageQueue = new MsmqMessageQueue(@".\private$\sample.server");
+            var messageQueue = new MsmqMessageQueue(serverQueue);
+            //var messageQueue = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, serverQueue, true);
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();
             var sagaPersister = new InMemorySagaPersister();
             var inspectHandlerPipeline = new TrivialPipelineInspector();
 
             var bus = new RebusBus(program,
-                                   msmqMessageQueue,
-                                   msmqMessageQueue,
+                                   messageQueue,
+                                   messageQueue,
                                    inMemorySubscriptionStorage,
                                    sagaPersister,
                                    program, 
