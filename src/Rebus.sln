@@ -37,6 +37,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Newtonsoft.JsonNET", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Azure", "Rebus.Transports.Azure\Rebus.Transports.Azure.csproj", "{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{35C585ED-8CB0-48D1-83FC-375548298233}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Timeout", "Rebus.Timeout\Rebus.Timeout.csproj", "{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -137,6 +141,16 @@ Global
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|x86.ActiveCfg = Release|Any CPU
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|x86.ActiveCfg = Debug|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|x86.Build.0 = Debug|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|Any CPU.ActiveCfg = Release|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|Mixed Platforms.Build.0 = Release|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|x86.ActiveCfg = Release|x86
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -150,5 +164,6 @@ Global
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{C46F1156-0A2D-40D4-8EBC-744B2FDD777D} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 	EndGlobalSection
 EndGlobal
