@@ -100,6 +100,7 @@
     <Compile Include="Logging\LoggingColors.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
+    <Compile Include="Messages\RequestTimeoutMessage.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />

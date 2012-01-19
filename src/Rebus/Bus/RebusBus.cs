@@ -193,6 +193,20 @@ namespace Rebus.Bus
             worker.Start();
         }
 
+        void RemoveWorker()
+        {
+            if (workers.Count == 0) return;
+            var workerToRemove = workers.Last();
+            
+            workers.Remove(workerToRemove);
+            
+            workerToRemove.Stop();
+            workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
+            workerToRemove.UserException -= LogUserException;
+            workerToRemove.SystemException -= LogSystemException;
+            workerToRemove.Dispose();
+        }
+
         void LogSystemException(Worker worker, Exception exception)
         {
             Log.Error(exception, "Unhandled system exception in {0}", worker.WorkerThreadName);
@@ -201,6 +215,18 @@ namespace Rebus.Bus
         void LogUserException(Worker worker, Exception exception)
         {
             Log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
+        }
+
+        public void SetNumberOfWorkers(int newNumberOfWorkers)
+        {
+            while(workers.Count < newNumberOfWorkers)
+            {
+                AddWorker();
+            }
+            while (workers.Count > newNumberOfWorkers)
+            {
+                RemoveWorker();
+            }
         }
     }
 

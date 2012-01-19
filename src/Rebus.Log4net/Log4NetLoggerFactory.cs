@@ -5,7 +5,7 @@ using ILog = Rebus.Logging.ILog;
 
 namespace Rebus.Log4Net
 {
-    class Log4NetLoggerFactory : IRebusLoggerFactory
+    public class Log4NetLoggerFactory : IRebusLoggerFactory
     {
         public ILog GetLogger(Type type)
         {
