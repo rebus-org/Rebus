@@ -18,6 +18,8 @@ namespace Rebus.Timeout
     public class TimeoutService : IHandleMessages<RequestTimeoutMessage>, IActivateHandlers
     {
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        const string InputQueueName = "rebus.timeout";
         
         readonly IBus bus;
         readonly object listLock = new object();
@@ -27,7 +29,7 @@ namespace Rebus.Timeout
 
         public TimeoutService()
         {
-            var msmqMessageQueue = new MsmqMessageQueue("rebus.timeout");
+            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
 
             RebusLoggerFactory.Current = new Log4NetLoggerFactory();
             rebusBus = new RebusBus(this, msmqMessageQueue, msmqMessageQueue, null, null, null, new JsonMessageSerializer(), new TrivialPipelineInspector());
@@ -37,11 +39,21 @@ namespace Rebus.Timeout
             timer.Elapsed += CheckCallbacks;
         }
 
+        public string InputQueue
+        {
+            get { return InputQueueName; }
+        }
+
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             if (typeof(T) == typeof(RequestTimeoutMessage))
             {
                 return new[] {(IHandleMessages<T>) this};
+            }
+
+            if (typeof(T) == typeof(object))
+            {
+                return new IHandleMessages<T>[0];
             }
 
             throw new InvalidOperationException(string.Format("Someone took the chance and sent a message of type {0} to me.", typeof(T)));
@@ -85,7 +97,7 @@ namespace Rebus.Timeout
                                          TimeToReturn = DateTime.UtcNow + message.Timeout,
                                      };
 
-         //       timeouts.Add(newTimeout);
+                timeouts.Add(newTimeout);
 
                 Log.InfoFormat("Added new timeout: {0}", newTimeout);
             }

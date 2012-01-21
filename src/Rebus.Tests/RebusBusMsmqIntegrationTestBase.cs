@@ -30,12 +30,29 @@ namespace Rebus.Tests
         public void SetUp()
         {
             buses = new List<RebusBus>();
+
+            DoSetUp();
+        }
+
+        protected virtual void DoSetUp()
+        {
         }
 
         [TearDown]
         public void TearDown()
         {
-            buses.ForEach(b => b.Dispose());
+            try
+            {
+                DoTearDown();
+            }
+            finally
+            {
+                buses.ForEach(b => b.Dispose());
+            }
+        }
+
+        protected virtual void DoTearDown()
+        {
         }
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers)
@@ -54,7 +71,7 @@ namespace Rebus.Tests
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public string GetEndpointFor(Type messageType)
+        public virtual string GetEndpointFor(Type messageType)
         {
             throw new AssertionException(string.Format("Cannot route {0}", messageType));
         }
