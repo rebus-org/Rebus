@@ -59,7 +59,7 @@ namespace Rebus.Timeout
         public void Start()
         {
             Log.Info("Starting bus");
-            rebusBus.Start();
+            rebusBus.Start(1);
             Log.Info("Starting inner timer");
             timer.Start();
         }
@@ -85,7 +85,7 @@ namespace Rebus.Timeout
                                          TimeToReturn = DateTime.UtcNow + message.Timeout,
                                      };
 
-                timeouts.Add(newTimeout);
+         //       timeouts.Add(newTimeout);
 
                 Log.InfoFormat("Added new timeout: {0}", newTimeout);
             }
