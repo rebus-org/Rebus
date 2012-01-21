@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -30,13 +31,14 @@ namespace Rebus.Tests.Integration
         [Test]
         public void WillCallBackAfterTimeHasElapsed()
         {
-            client.Send(new RequestTimeoutMessage {CorrelationId = "correlator", Timeout = 2.Seconds()});
+            var justSomeCorrelationId = Guid.NewGuid().ToString();
+            client.Send(new TimeoutRequest {CorrelationId = justSomeCorrelationId, Timeout = 2.Seconds()});
             var timeoutExpired = false;
 
             handlerActivator
-                .Handle<TimeoutExpiredMessage>(m =>
+                .Handle<TimeoutReply>(m =>
                                                    {
-                                                       if (m.CorrelationId == "correlator")
+                                                       if (m.CorrelationId == justSomeCorrelationId)
                                                        {
                                                            timeoutExpired = true;
                                                        }
@@ -49,7 +51,7 @@ namespace Rebus.Tests.Integration
 
         public override string GetEndpointFor(System.Type messageType)
         {
-            if (messageType == typeof(RequestTimeoutMessage))
+            if (messageType == typeof(TimeoutRequest))
             {
                 return timeoutService.InputQueue;
             }

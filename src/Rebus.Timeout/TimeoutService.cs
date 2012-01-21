@@ -15,7 +15,7 @@ using ILog = log4net.ILog;
 
 namespace Rebus.Timeout
 {
-    public class TimeoutService : IHandleMessages<RequestTimeoutMessage>, IActivateHandlers
+    public class TimeoutService : IHandleMessages<TimeoutRequest>, IActivateHandlers
     {
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -46,7 +46,7 @@ namespace Rebus.Timeout
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            if (typeof(T) == typeof(RequestTimeoutMessage))
+            if (typeof(T) == typeof(TimeoutRequest))
             {
                 return new[] {(IHandleMessages<T>) this};
             }
@@ -84,7 +84,7 @@ namespace Rebus.Timeout
             rebusBus.Dispose();
         }
 
-        public void Handle(RequestTimeoutMessage message)
+        public void Handle(TimeoutRequest message)
         {
             var currentMessageContext = MessageContext.GetCurrent();
 
@@ -114,7 +114,7 @@ namespace Rebus.Timeout
                     Log.InfoFormat("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
                     bus.Send(timeout.ReplyTo,
-                             new TimeoutExpiredMessage
+                             new TimeoutReply
                                  {
                                      CorrelationId = timeout.CorrelationId,
                                      DueTime = timeout.TimeToReturn

@@ -100,7 +100,9 @@
     <Compile Include="Logging\LoggingColors.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
-    <Compile Include="Messages\RequestTimeoutMessage.cs" />
+    <Compile Include="Messages\IRebusControlMessage.cs" />
+    <Compile Include="Messages\TimeoutRequest.cs" />
+    <Compile Include="Messages\TimeoutReply.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
@@ -124,8 +126,6 @@
     <Compile Include="IStoreSagaData.cs" />
     <Compile Include="MessageContext.cs" />
     <Compile Include="Messages\Headers.cs" />
-    <Compile Include="Messages\IRawMessage.cs" />
-    <Compile Include="Messages\SubscribeAction.cs" />
     <Compile Include="Persistence\InMemory\InMemorySagaPersister.cs" />
     <Compile Include="Persistence\InMemory\InMemorySubscriptionStorage.cs" />
     <Compile Include="IReceiveMessages.cs" />
