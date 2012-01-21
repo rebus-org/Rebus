@@ -26,6 +26,7 @@ namespace Rebus.Timeout
         readonly List<Timeout> timeouts = new List<Timeout>();
         readonly Timer timer = new Timer();
         readonly RebusBus rebusBus;
+        static readonly Type[] IgnoredMessageTypes = new[]{typeof(object), typeof(IRebusControlMessage)};
 
         public TimeoutService()
         {
@@ -51,7 +52,7 @@ namespace Rebus.Timeout
                 return new[] {(IHandleMessages<T>) this};
             }
 
-            if (typeof(T) == typeof(object))
+            if (IgnoredMessageTypes.Contains(typeof(T)))
             {
                 return new IHandleMessages<T>[0];
             }

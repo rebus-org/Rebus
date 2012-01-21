@@ -37,19 +37,19 @@ namespace Rebus.Tests.Integration
 
             handlerActivator
                 .Handle<TimeoutReply>(m =>
-                                                   {
-                                                       if (m.CorrelationId == justSomeCorrelationId)
-                                                       {
-                                                           timeoutExpired = true;
-                                                       }
-                                                   });
+                                          {
+                                              if (m.CorrelationId == justSomeCorrelationId)
+                                              {
+                                                  timeoutExpired = true;
+                                              }
+                                          });
 
             Thread.Sleep(2.5.Seconds());
 
             timeoutExpired.ShouldBe(true);
         }
 
-        public override string GetEndpointFor(System.Type messageType)
+        public override string GetEndpointFor(Type messageType)
         {
             if (messageType == typeof(TimeoutRequest))
             {
