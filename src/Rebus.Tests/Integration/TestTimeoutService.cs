@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Timeout;
+using Rebus.Timeout.Persistence;
 using Shouldly;
 
 namespace Rebus.Tests.Integration

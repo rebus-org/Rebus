@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Rebus.Timeout
+namespace Rebus.Timeout.Persistence
 {
     public class InMemoryTimeoutStorage : IStoreTimeouts
     {

@@ -1,4 +1,5 @@
-﻿using Topshelf;
+﻿using Rebus.Timeout.Persistence;
+using Topshelf;
 using log4net.Config;
 
 namespace Rebus.Timeout

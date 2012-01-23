@@ -96,6 +96,7 @@
     <Compile Include="Integration\TestTimeoutService.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
     <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Performance\SagaPersisterPerformanceTestHelper.cs" />

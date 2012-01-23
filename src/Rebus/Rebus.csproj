@@ -108,6 +108,8 @@
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
+    <Compile Include="Time.cs" />
+    <Compile Include="TimeMachine.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />

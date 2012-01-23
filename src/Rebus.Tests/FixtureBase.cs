@@ -15,6 +15,8 @@ namespace Rebus.Tests
         [SetUp]
         public void SetUp()
         {
+            TimeMachine.Reset();
+
             RebusLoggerFactory.Reset();
             DoSetUp();
         }

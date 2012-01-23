@@ -21,6 +21,8 @@ namespace Rebus.Tests.Persistence.MongoDb
         [SetUp]
         public void SetUp()
         {
+            TimeMachine.Reset();
+
             DoSetUp();
 
             db = MongoDatabase.Create(ConnectionString);

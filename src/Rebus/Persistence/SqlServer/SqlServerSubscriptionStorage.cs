@@ -43,7 +43,7 @@ namespace Rebus.Persistence.SqlServer
                     catch (SqlException ex)
                     {
                         if (!ex.Errors.Cast<SqlError>()
-                                 .Any(e => e.ToString().Contains("Violation of PRIMARY KEY constraint 'PK_subscriptions'")))
+                                 .Any(e => e.ToString().Contains("Violation of PRIMARY KEY constraint")))
                         {
                             throw;
                         }

@@ -54,10 +54,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InMemoryTimeoutStorage.cs" />
+    <Compile Include="Persistence\InMemoryTimeoutStorage.cs" />
     <Compile Include="IStoreTimeouts.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SqlServerTimeoutStorage.cs" />
     <Compile Include="Timeout.cs" />
     <Compile Include="TimeoutService.cs" />
   </ItemGroup>

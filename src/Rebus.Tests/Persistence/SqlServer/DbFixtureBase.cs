@@ -16,6 +16,8 @@ namespace Rebus.Tests.Persistence.SqlServer
         [SetUp]
         public void SetUp()
         {
+            TimeMachine.Reset();
+
             DoSetUp();
         }
 
