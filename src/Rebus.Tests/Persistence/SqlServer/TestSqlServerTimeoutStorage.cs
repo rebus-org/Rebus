@@ -6,7 +6,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class TestSqlServerTimeoutStorage : DbFixtureBase
     {
         SqlServerTimeoutStorage storage;
@@ -14,6 +14,16 @@ namespace Rebus.Tests.Persistence.SqlServer
         protected override void DoSetUp()
         {
             storage = new SqlServerTimeoutStorage(ConnectionString, "timeouts");
+        }
+
+        [Test]
+        public void DoesNotComplainWhenTheSameTimeoutIsAddedMultipleTimes()
+        {
+            var justSomeTime = new DateTime(2010, 1, 1, 10, 30, 0, DateTimeKind.Utc);
+
+            storage.Add(new Timeout.Timeout{CorrelationId="blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime});
+            storage.Add(new Timeout.Timeout{CorrelationId="blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime});
+            storage.Add(new Timeout.Timeout{CorrelationId="blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime});
         }
 
         [Test]

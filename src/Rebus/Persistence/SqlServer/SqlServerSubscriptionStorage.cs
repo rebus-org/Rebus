@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace Rebus.Persistence.SqlServer
 {
     public class SqlServerSubscriptionStorage : IStoreSubscriptions
     {
+        const int PrimaryKeyViolationNumber = 2627;
         readonly string connectionString;
         readonly string subscriptionsTableName;
 
@@ -42,11 +42,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                     catch (SqlException ex)
                     {
-                        if (!ex.Errors.Cast<SqlError>()
-                                 .Any(e => e.ToString().Contains("Violation of PRIMARY KEY constraint")))
-                        {
-                            throw;
-                        }
+                        if (ex.Number != PrimaryKeyViolationNumber) throw;
                     }
                 }
             }
@@ -90,7 +86,7 @@ namespace Rebus.Persistence.SqlServer
                     {
                         while (reader.Read())
                         {
-                            endpoints.Add((string) reader["endpoint"]);
+                            endpoints.Add((string)reader["endpoint"]);
                         }
                     }
                     return endpoints.ToArray();

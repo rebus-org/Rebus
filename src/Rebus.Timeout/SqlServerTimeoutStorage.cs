@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 
 namespace Rebus.Timeout
 {
     public class SqlServerTimeoutStorage : IStoreTimeouts
     {
+        const int PrimaryKeyViolationNumber = 2627;
         readonly string connectionString;
         readonly string timeoutsTableName;
 
@@ -45,13 +45,7 @@ namespace Rebus.Timeout
                     }
                     catch (SqlException ex)
                     {
-                        if (!ex.Errors.Cast<SqlError>()
-                                 .Any(
-                                     e =>
-                                     e.ToString().Contains("Violation of PRIMARY KEY constraint")))
-                        {
-                            throw;
-                        }
+                        if (ex.Number != PrimaryKeyViolationNumber) throw;
                     }
                 }
             }
