@@ -16,7 +16,7 @@ namespace Rebus.Tests.Integration
 
         protected override void DoSetUp()
         {
-            timeoutService = new TimeoutService();
+            timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
             timeoutService.Start();
 
             handlerActivator = new HandlerActivatorForTesting();

@@ -19,11 +19,9 @@ namespace Rebus.Timeout
                              s.SetInstanceName("default");
                              s.SetServiceName("rebus_timeout_service");
 
-                             const int numberOfWorkers = 1;
-
                              s.Service<TimeoutService>(c =>
                                                            {
-                                                               c.ConstructUsing(() => new TimeoutService());
+                                                               c.ConstructUsing(() => new TimeoutService(new InMemoryTimeoutStorage()));
                                                                c.WhenStarted(t => t.Start());
                                                                c.WhenStopped(t => t.Stop());
                                                            });

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Timers;
+using System.Transactions;
 using Rebus.Bus;
 using Rebus.Log4Net;
 using Rebus.Logging;
@@ -17,19 +18,19 @@ namespace Rebus.Timeout
 {
     public class TimeoutService : IHandleMessages<TimeoutRequest>, IActivateHandlers
     {
+        readonly IStoreTimeouts storeTimeouts;
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         const string InputQueueName = "rebus.timeout";
         
         readonly IBus bus;
-        readonly object listLock = new object();
-        readonly List<Timeout> timeouts = new List<Timeout>();
         readonly Timer timer = new Timer();
         readonly RebusBus rebusBus;
         static readonly Type[] IgnoredMessageTypes = new[]{typeof(object), typeof(IRebusControlMessage)};
 
-        public TimeoutService()
+        public TimeoutService(IStoreTimeouts storeTimeouts)
         {
+            this.storeTimeouts = storeTimeouts;
             var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
 
             RebusLoggerFactory.Current = new Log4NetLoggerFactory();
@@ -89,26 +90,23 @@ namespace Rebus.Timeout
         {
             var currentMessageContext = MessageContext.GetCurrent();
 
-            lock (listLock)
-            {
-                var newTimeout = new Timeout
-                                     {
-                                         CorrelationId = message.CorrelationId,
-                                         ReplyTo = currentMessageContext.ReturnAddress,
-                                         TimeToReturn = DateTime.UtcNow + message.Timeout,
-                                     };
+            var newTimeout = new Timeout
+                                 {
+                                     CorrelationId = message.CorrelationId,
+                                     ReplyTo = currentMessageContext.ReturnAddress,
+                                     TimeToReturn = DateTime.UtcNow + message.Timeout,
+                                 };
 
-                timeouts.Add(newTimeout);
+            storeTimeouts.Add(newTimeout);
 
-                Log.InfoFormat("Added new timeout: {0}", newTimeout);
-            }
+            Log.InfoFormat("Added new timeout: {0}", newTimeout);
         }
 
         void CheckCallbacks(object sender, ElapsedEventArgs e)
         {
-            lock(listLock)
+            using (var tx = new TransactionScope())
             {
-                var dueTimeouts = timeouts.ToList().Where(t => t.TimeToReturn >= DateTime.UtcNow);
+                var dueTimeouts = storeTimeouts.RemoveDueTimeouts();
 
                 foreach (var timeout in dueTimeouts)
                 {
@@ -120,9 +118,9 @@ namespace Rebus.Timeout
                                      CorrelationId = timeout.CorrelationId,
                                      DueTime = timeout.TimeToReturn
                                  });
-
-                    timeouts.Remove(timeout);
                 }
+
+                tx.Complete();
             }
         }
     }
