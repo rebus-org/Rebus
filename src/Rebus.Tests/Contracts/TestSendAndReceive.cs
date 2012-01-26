@@ -6,6 +6,7 @@ using Microsoft.WindowsAzure;
 using NUnit.Framework;
 using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
+using Rebus.Transports.Rabbit;
 using Shouldly;
 
 namespace Rebus.Tests.Contracts
@@ -22,9 +23,17 @@ namespace Rebus.Tests.Contracts
         {
             transports = new List<Tuple<ISendMessages, IReceiveMessages>>
                              {
-                                 MsmqTransports(),
-                                 //AzureQueueTransports()
+                                 //MsmqTransports(),
+                                 //AzureQueueTransports(),
+                                 RabbitMqTransports(),
                              };
+        }
+
+        Tuple<ISendMessages, IReceiveMessages> RabbitMqTransports()
+        {
+            var sender = new RabbitMqMessageQueue("tests.contracts.sender");
+            var receiver = new RabbitMqMessageQueue("tests.contracts.receiver");
+            return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
         public IEnumerable<Tuple<ISendMessages, IReceiveMessages>> Transports

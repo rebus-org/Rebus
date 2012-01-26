@@ -150,6 +150,10 @@
       <Project>{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}</Project>
       <Name>Rebus.Transports.Azure</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.Transports.Rabbit\Rebus.Transports.Rabbit.csproj">
+      <Project>{5836C347-90FC-4628-B4A1-16926B6CA781}</Project>
+      <Name>Rebus.Transports.Rabbit</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
       <Name>Rebus</Name>
