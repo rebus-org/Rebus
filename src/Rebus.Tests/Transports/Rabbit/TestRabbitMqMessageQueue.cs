@@ -14,7 +14,7 @@ namespace Rebus.Tests.Transports.Rabbit
     {
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 10)]
+        //[TestCase(10000, 10)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             var sender = new RabbitMqMessageQueue(ConnectionString, "test.rabbit.sender");
