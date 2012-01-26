@@ -96,9 +96,10 @@
     <Compile Include="Integration\TestTimeoutService.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
+    <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
-    <Compile Include="Msmq\TestMsmqMessageQueue.cs" />
+    <Compile Include="Transports\Msmq\TestMsmqMessageQueue.cs" />
     <Compile Include="Performance\SagaPersisterPerformanceTestHelper.cs" />
     <Compile Include="Performance\TestDispatcherIsolatedSagaPerformance.cs" />
     <Compile Include="Performance\TestMongoDbSagaPersisterPerformance.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Integration\TestRebusBusWithMsmqMessageQueue.cs" />
     <Compile Include="FixtureBase.cs" />
     <Compile Include="TestStuff.cs" />
+    <Compile Include="Transports\Rabbit\TestRabbitMqMessageQueue.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
     <Compile Include="Unit\TestWorker_ErrorHandling.cs" />

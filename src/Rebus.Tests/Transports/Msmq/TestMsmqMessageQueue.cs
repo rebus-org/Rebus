@@ -8,10 +8,10 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Newtonsoft.JsonNET;
 using Rebus.Transports.Msmq;
-using Message = Rebus.Messages.Message;
 using Shouldly;
+using Message = Rebus.Messages.Message;
 
-namespace Rebus.Tests.Msmq
+namespace Rebus.Tests.Transports.Msmq
 {
     [TestFixture]
     public class TestMsmqMessageQueue

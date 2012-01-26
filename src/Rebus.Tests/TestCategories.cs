@@ -3,12 +3,14 @@ using System.Linq;
 using NUnit.Framework;
 using Rebus.Tests.Persistence.MongoDb;
 using Rebus.Tests.Persistence.SqlServer;
+using Rebus.Tests.Transports.Rabbit;
 
 namespace Rebus.Tests
 {
     [TestFixture]
     public class TestCategories
     {
+        public const string Rabbit = "rabbit";
         public const string Integration = "integration";
         public const string Mongo = "mongo";
         public const string MsSql = "mssql";
@@ -17,6 +19,7 @@ namespace Rebus.Tests
 
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
         [TestCase(typeof(DbFixtureBase), MsSql)]
+        [TestCase(typeof(RabbitMqFixtureBase), Rabbit)]
         public void AssertCategoriesIfPossible(Type fixtureBaseType, string expectedCategoryName)
         {
             GetType().Assembly.GetTypes()

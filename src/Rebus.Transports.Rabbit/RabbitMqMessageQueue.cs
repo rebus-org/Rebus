@@ -25,6 +25,14 @@ namespace Rebus.Transports.Rabbit
             EnsureQueueCreated();
         }
 
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName)
+        {
+            this.inputQueueName = inputQueueName;
+
+            OpenConnection(connectionString);
+            EnsureQueueCreated();
+        }
+
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
             using(var model = connection.CreateModel())
@@ -115,6 +123,12 @@ namespace Rebus.Transports.Rabbit
                               Port = AmqpTcpEndpoint.UseDefaultPort
                           };
 
+            connection = fac.CreateConnection();
+        }
+
+        void OpenConnection(string connectionString)
+        {
+            var fac = new ConnectionFactory {Uri = connectionString};
             connection = fac.CreateConnection();
         }
 
