@@ -23,7 +23,7 @@ namespace Rebus.Tests.Contracts
         {
             transports = new List<Tuple<ISendMessages, IReceiveMessages>>
                              {
-                                 //MsmqTransports(),
+                                 MsmqTransports(),
                                  //AzureQueueTransports(),
                                  RabbitMqTransports(),
                              };
