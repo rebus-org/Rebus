@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Transactions;
@@ -22,8 +21,8 @@ namespace Rebus.Tests.Integration
         [TestCase(100, 10)]
         [TestCase(1000, 5)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 5)]
-        [TestCase(10000, 10)]
+        [TestCase(10000, 5, Ignore = true)]
+        [TestCase(10000, 10, Ignore = true)]
         public void CanSendAndReceiveMessages(int messageCount, int numberOfWorkers)
         {
             const string senderQueueName = "test.rabbit.sender";
