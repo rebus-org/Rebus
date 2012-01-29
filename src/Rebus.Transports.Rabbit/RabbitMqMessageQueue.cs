@@ -5,6 +5,7 @@ using System.Text;
 using System.Transactions;
 using RabbitMQ.Client;
 using System.Linq;
+using Rebus.Messages;
 
 namespace Rebus.Transports.Rabbit
 {
@@ -12,9 +13,9 @@ namespace Rebus.Transports.Rabbit
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
-        
+
         readonly string inputQueueName;
-        
+
         IConnection connection;
 
         public RabbitMqMessageQueue(string inputQueueName)
@@ -35,40 +36,52 @@ namespace Rebus.Transports.Rabbit
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            using(var model = connection.CreateModel())
+            using (var model = connection.CreateModel())
             {
                 model.BasicPublish(ExchangeName, destinationQueueName,
-                                   GetHeaders(model, message),
+                                   GetHeaders(message, model.CreateBasicProperties()),
                                    GetBody(message));
             }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
         {
-            using (var model = connection.CreateModel())
-            {
-                var result = model.BasicGet(inputQueueName, false);
+            var model = connection.CreateModel();
 
-                using (new AmbientTxHack(() => model.BasicAck(result.DeliveryTag, false)))
-                {
-                    return new ReceivedTransportMessage
-                               {
-                                   Headers = GetHeaders(result.BasicProperties.Headers),
-                                   Data = Encoding.GetString(result.Body)
-                               };
-                }
-            }
+            var result = model.BasicGet(inputQueueName, false);
+            if (result == null) return null;
+
+            var tx = new AmbientTxHack(() => model.BasicAck(result.DeliveryTag, false), model);
+
+            var headers = GetHeaders(result.BasicProperties.Headers);
+
+            var receivedTransportMessage = new ReceivedTransportMessage
+                                               {
+                                                   Id = result.BasicProperties.MessageId,
+                                                   Headers = headers,
+                                                   Data = Encoding.GetString(result.Body),
+                                               };
+            tx.Commit();
+
+            return receivedTransportMessage;
         }
 
-        class AmbientTxHack : IEnlistmentNotification, IDisposable
+        class AmbientTxHack : IEnlistmentNotification
         {
             readonly Action commitAction;
+            readonly IModel model;
             readonly bool isEnlisted;
 
-            public AmbientTxHack(Action commitAction)
+            public AmbientTxHack(Action commitAction, IModel model)
             {
                 this.commitAction = commitAction;
-                isEnlisted = Transaction.Current != null;
+                this.model = model;
+
+                if (Transaction.Current != null)
+                {
+                    isEnlisted = true;
+                    Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
+                }
             }
 
             public void Prepare(PreparingEnlistment preparingEnlistment)
@@ -81,12 +94,14 @@ namespace Rebus.Transports.Rabbit
             {
                 AssertEnlisted();
                 commitAction();
+                DisposeModel();
                 enlistment.Done();
             }
 
             public void Rollback(Enlistment enlistment)
             {
                 AssertEnlisted();
+                DisposeModel();
                 enlistment.Done();
             }
 
@@ -96,20 +111,24 @@ namespace Rebus.Transports.Rabbit
                 enlistment.Done();
             }
 
-            public void Dispose()
-            {
-                if (!isEnlisted)
-                {
-                    commitAction();
-                }
-            }
-
             void AssertEnlisted()
             {
                 if (!isEnlisted)
                 {
                     throw new InvalidOperationException("Cannot call ambient TX stuff on non-enlisted TX hack");
                 }
+            }
+
+            public void Commit()
+            {
+                if (isEnlisted) return;
+                commitAction();
+                DisposeModel();
+            }
+
+            void DisposeModel()
+            {
+                model.Dispose();
             }
         }
 
@@ -128,16 +147,23 @@ namespace Rebus.Transports.Rabbit
 
         void OpenConnection(string connectionString)
         {
-            var fac = new ConnectionFactory {Uri = connectionString};
+            var fac = new ConnectionFactory { Uri = connectionString };
             connection = fac.CreateConnection();
         }
 
-        IBasicProperties GetHeaders(IModel model, TransportMessageToSend message)
+        IBasicProperties GetHeaders(TransportMessageToSend message, IBasicProperties props)
         {
-            var props = model.CreateBasicProperties();
-            props.Headers = message.Headers != null
-                                ? message.Headers.ToDictionary(e => e.Key, e => Encoding.GetBytes(e.Value))
+            var headers = message.Headers != null
+                              ? message.Headers.ToDictionary(e => e.Key, e => Encoding.GetBytes(e.Value))
+                              : new Dictionary<string, byte[]>();
+
+            props.ReplyTo = message.Headers != null && message.Headers.ContainsKey(Headers.ReturnAddress)
+                                ? message.Headers[Headers.ReturnAddress]
                                 : null;
+
+            props.MessageId = Guid.NewGuid().ToString();
+            props.Headers = headers;
+
             return props;
         }
 
@@ -146,7 +172,7 @@ namespace Rebus.Transports.Rabbit
             return Encoding.GetBytes(message.Data);
         }
 
-        static IDictionary<string,string> GetHeaders(IDictionary result)
+        static IDictionary<string, string> GetHeaders(IDictionary result)
         {
             return result.Cast<DictionaryEntry>()
                 .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
@@ -170,11 +196,6 @@ namespace Rebus.Transports.Rabbit
             }
         }
 
-        string BuildRoutingKey(TransportMessageToSend message)
-        {
-            return "what is it?";
-        }
-
         public string InputQueue
         {
             get { return inputQueueName; }
@@ -184,6 +205,16 @@ namespace Rebus.Transports.Rabbit
         {
             connection.Close();
             connection.Dispose();
+        }
+
+        public RabbitMqMessageQueue PurgeInputQueue()
+        {
+            using(var model = connection.CreateModel())
+            {
+                model.QueuePurge(inputQueueName);
+            }
+
+            return this;
         }
     }
 }

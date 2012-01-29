@@ -67,7 +67,7 @@ namespace Rebus.Bus
         public RebusBus Start(int numberOfWorkers)
         {
             Log.Info("Initializing bus with {0} workers", numberOfWorkers);
-            numberOfWorkers.Times(AddWorker);
+            SetNumberOfWorkers(numberOfWorkers);
             Log.Info("Bus started");
             return this;
         }

@@ -1,7 +1,15 @@
 namespace Rebus.Messages
 {
+    /// <summary>
+    /// Contains keys of headers with special meaning in Rebus.
+    /// </summary>
     public class Headers
     {
+        /// <summary>
+        /// Key of header that contains the unique ID of the message.
+        /// </summary>
+        public const string MessageId = "messageId";
+
         /// <summary>
         /// Key of header that specifies the return address of a message.
         /// </summary>
