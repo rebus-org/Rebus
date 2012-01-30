@@ -13,7 +13,7 @@ using Rebus.Transports.Msmq;
 
 namespace Rebus.Transports.Azure.AzureMessageQueue
 {
-    public class AzureMessageQueue : ISendMessages, IReceiveMessages
+    public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         private readonly CloudStorageAccount cloudStorageAccount;
@@ -23,15 +23,14 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
         private readonly CloudQueue inputQueue;
         private readonly DictionarySerializer _dictionarySerializer;
 
-        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName, bool shouldClearQueueInputQueue = false)
+        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName)
         {
             this.cloudStorageAccount = cloudStorageAccount;
             this.inputQueueName = inputQueueName;
             cloudQueueClient = this.cloudStorageAccount.CreateCloudQueueClient();
             inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
 
-            if (inputQueue.Exists() && shouldClearQueueInputQueue)
-                inputQueue.Clear();
+            
             _dictionarySerializer = new DictionarySerializer();
         }
 
@@ -79,24 +78,24 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
         public ReceivedTransportMessage ReceiveMessage()
         {
-            using (var transaction = new TransactionScope())
+            var azureMessageQueueTransactionSimulator = new AzureMessageQueueTransactionSimulator(inputQueue);
+            try
             {
-                var message = inputQueue.GetMessage();
+                var message = azureMessageQueueTransactionSimulator.RetrieveCloudQueueMessage = inputQueue.GetMessage();
 
                 if (message == null)
                 {
                     //No message receieved
-                    transaction.Complete();
+                    azureMessageQueueTransactionSimulator.Commit();
                     return null;
                 }
 
-                var azureMessageQueueTransactionSimulator = new AzureMessageQueueTransactionSimulator(inputQueue, message);
                 var rawData = message.AsBytes;
 
                 if (rawData == null)
                 {
                     Log.Warn("Received message with NULL data - how weird is that?");
-                    transaction.Complete();
+                    azureMessageQueueTransactionSimulator.Commit();
                     return null;
                 }
 
@@ -108,14 +107,22 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
                 var messageData = allData.Substring(dataSplitIndex + Environment.NewLine.Length);
 
-                transaction.Complete();
+                var receivedTransportMessage = new ReceivedTransportMessage()
+                                                   {
+                                                       Data = messageData,
+                                                       Id = message.Id,
+                                                       Headers = headers
+                                                   };
 
-                return new ReceivedTransportMessage()
-                           {
-                               Data = messageData,
-                               Id = message.Id,
-                               Headers = headers
-                           };
+                azureMessageQueueTransactionSimulator.Commit();
+
+                return receivedTransportMessage;
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "An error occurred while receiving message from {0}", inputQueueName);
+                azureMessageQueueTransactionSimulator.Abort();
+                return null;
             }
         }
 
@@ -123,5 +130,19 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
         {
             get { return inputQueueName; }
         }
+
+        #region Implementation of IHavePurgableInputQueue<AzureMessageQueue>
+
+        public AzureMessageQueue PurgeInputQueue()
+        {
+            Log.Warn("Purging {0}", inputQueueName);
+
+            if (inputQueue.Exists())
+                inputQueue.Clear();
+
+            return this;
+        }
+
+        #endregion
     }
 }

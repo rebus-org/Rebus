@@ -10,13 +10,12 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
     internal class AzureMessageQueueTransactionSimulator : IEnlistmentNotification
     {
         private readonly CloudQueue _inputQueue;
-        private readonly CloudQueueMessage _retrieveCloudQueueMessage;
+        public CloudQueueMessage RetrieveCloudQueueMessage { get; set; }
         private readonly bool _enlistedInAmbientTx;
-        public AzureMessageQueueTransactionSimulator(CloudQueue inputQueue, CloudQueueMessage retrieveCloudQueueMessage)
+        public AzureMessageQueueTransactionSimulator(CloudQueue inputQueue)
         {
             _inputQueue = inputQueue;
-            _retrieveCloudQueueMessage = retrieveCloudQueueMessage;
-            
+
             if (Transaction.Current != null)
             {
                 _enlistedInAmbientTx = true;
@@ -31,8 +30,20 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
         public void Commit(Enlistment enlistment)
         {
-            _inputQueue.DeleteMessage(_retrieveCloudQueueMessage);
+            DoCommit();
             enlistment.Done();
+        }
+
+        private void DoCommit()
+        {
+            if(RetrieveCloudQueueMessage != null)
+                _inputQueue.DeleteMessage(RetrieveCloudQueueMessage);
+        }
+
+        public void Commit()
+        {
+            if(_enlistedInAmbientTx) return;
+            DoCommit();
         }
 
         public void Rollback(Enlistment enlistment)
@@ -40,10 +51,22 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
             RollbackMessage(enlistment);
         }
 
+        public void Abort()
+        {
+            if(_enlistedInAmbientTx) return;
+            DoRollback();
+        }
+
         private void RollbackMessage(Enlistment enlistment)
         {
-            _inputQueue.UpdateMessage(_retrieveCloudQueueMessage, TimeSpan.FromSeconds(0), MessageUpdateFields.Visibility);
+            DoRollback();
             enlistment.Done();
+        }
+
+        private void DoRollback()
+        {
+            if(RetrieveCloudQueueMessage != null)
+                _inputQueue.UpdateMessage(RetrieveCloudQueueMessage, TimeSpan.FromSeconds(0), MessageUpdateFields.Visibility);
         }
 
         public void InDoubt(Enlistment enlistment)
