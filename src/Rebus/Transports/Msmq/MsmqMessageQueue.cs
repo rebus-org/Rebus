@@ -17,7 +17,7 @@ namespace Rebus.Transports.Msmq
     /// enlist in ambient transaction during send and receive if one is present. Uses JSON serialization
     /// of objects in messages as default.
     /// </summary>
-    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
+    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable, IHavePurgableInputQueue<MsmqMessageQueue>
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         static readonly Encoding HeaderEcoding = Encoding.UTF7;
