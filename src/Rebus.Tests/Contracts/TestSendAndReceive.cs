@@ -50,8 +50,8 @@ namespace Rebus.Tests.Contracts
 
         Tuple<ISendMessages, IReceiveMessages> AzureQueueTransports()
         {
-            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", true);
-            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", true);
+            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue").PurgeInputQueue();
+            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue").PurgeInputQueue();
 
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
