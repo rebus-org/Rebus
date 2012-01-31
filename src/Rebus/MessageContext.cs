@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
+using Rebus.Logging;
 
 namespace Rebus
 {
@@ -8,6 +10,8 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IDisposable, IMessageContext
     {
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public static event Action<IMessageContext> Established = delegate { };
         
         public event Action Disposed = delegate { };
@@ -86,6 +90,7 @@ Stacktrace of when the current message context was created:
 
         public void Abort()
         {
+            Log.Debug("Abort was called - will stop dispatching message to handlers");
             DispatchMessageToHandlers = false;
         }
 

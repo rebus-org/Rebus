@@ -79,6 +79,8 @@ namespace Rebus.Bus
 
                             if (MessageContext.MessageDispatchAborted) break;
                         }
+                    
+                        if (MessageContext.MessageDispatchAborted) break;
                     }
                 }
             }

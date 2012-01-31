@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Messaging;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
 using Rebus.Tests.Integration;
@@ -25,6 +26,7 @@ namespace Rebus.Tests
         List<RebusBus> buses;
         
         protected JsonMessageSerializer serializer;
+        protected RearrangeHandlersPipelineInspector pipelineInspector = new RearrangeHandlersPipelineInspector();
 
         [SetUp]
         public void SetUp()
@@ -61,7 +63,7 @@ namespace Rebus.Tests
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
-                                   this, serializer, new TrivialPipelineInspector());
+                                   this, serializer, pipelineInspector);
             buses.Add(bus);
             return bus;
         }
