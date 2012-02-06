@@ -16,11 +16,6 @@ namespace Rebus.Bus
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
-        /// Keeps count of worker thread IDs.
-        /// </summary>
-        static int workerThreadCounter;
-
-        /// <summary>
         /// Caching of dispatcher methods
         /// </summary>
         readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
@@ -40,14 +35,15 @@ namespace Rebus.Bus
             IStoreSubscriptions storeSubscriptions,
             ISerializeMessages serializeMessages,
             IStoreSagaData storeSagaData,
-            IInspectHandlerPipeline inspectHandlerPipeline)
+            IInspectHandlerPipeline inspectHandlerPipeline, 
+            string workerThreadName)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline);
 
-            workerThread = new Thread(MainLoop) { Name = GenerateNewWorkerThreadName() };
+            workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
 
             Log.Info("Worker {0} created and inner thread started", WorkerThreadName);
@@ -216,11 +212,6 @@ namespace Rebus.Bus
         internal void DispatchGeneric<T>(T message)
         {
             dispatcher.Dispatch(message);
-        }
-
-        string GenerateNewWorkerThreadName()
-        {
-            return string.Format("Rebus worker #{0}", Interlocked.Increment(ref workerThreadCounter));
         }
     }
 }

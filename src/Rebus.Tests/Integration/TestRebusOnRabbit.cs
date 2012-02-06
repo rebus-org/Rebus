@@ -14,15 +14,15 @@ namespace Rebus.Tests.Integration
     {
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new NullLoggerFactory();
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Info};
         }
 
         [TestCase(100, 5)]
         [TestCase(100, 10)]
-        [TestCase(1000, 5)]
-        [TestCase(1000, 10)]
-        [TestCase(10000, 5, Ignore = true)]
-        [TestCase(10000, 10, Ignore = true)]
+        //[TestCase(1000, 5)]
+        //[TestCase(1000, 10)]
+        //[TestCase(10000, 5)]
+        //[TestCase(10000, 10)]
         public void CanSendAndReceiveMessages(int messageCount, int numberOfWorkers)
         {
             const string senderQueueName = "test.rabbit.sender";
@@ -39,7 +39,7 @@ namespace Rebus.Tests.Integration
                                          .Handle<string>(str =>
                                                              {
                                                                  receivedMessages.Add(str);
-
+                                                                 
                                                                  if (receivedMessages.Count == messageCount)
                                                                  {
                                                                      resetEvent.Set();

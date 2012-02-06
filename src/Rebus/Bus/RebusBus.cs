@@ -2,8 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
 using Rebus.Configuration;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
@@ -28,6 +28,9 @@ namespace Rebus.Bus
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
 
+        static int rebusIdCounter;
+        readonly int rebusId;
+
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
         /// </summary>
@@ -49,6 +52,8 @@ namespace Rebus.Bus
             this.serializeMessages = serializeMessages;
             this.storeSagaData = storeSagaData;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
+
+            rebusId = Interlocked.Increment(ref rebusIdCounter);
 
             Log.Info("Rebus bus created");
         }
@@ -179,32 +184,45 @@ namespace Rebus.Bus
 
         void AddWorker()
         {
-            var worker = new Worker(errorTracker,
-                                    receiveMessages,
-                                    activateHandlers,
-                                    storeSubscriptions,
-                                    serializeMessages,
-                                    storeSagaData,
-                                    inspectHandlerPipeline);
-            workers.Add(worker);
-            worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
-            worker.UserException += LogUserException;
-            worker.SystemException += LogSystemException;
-            worker.Start();
+            lock (workers)
+            {
+                var worker = new Worker(errorTracker,
+                                        receiveMessages,
+                                        activateHandlers,
+                                        storeSubscriptions,
+                                        serializeMessages,
+                                        storeSagaData,
+                                        inspectHandlerPipeline,
+                                        string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1));
+                workers.Add(worker);
+                worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
+                worker.UserException += LogUserException;
+                worker.SystemException += LogSystemException;
+                worker.Start();
+            }
         }
 
         void RemoveWorker()
         {
-            if (workers.Count == 0) return;
-            var workerToRemove = workers.Last();
-            
-            workers.Remove(workerToRemove);
-            
-            workerToRemove.Stop();
-            workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
-            workerToRemove.UserException -= LogUserException;
-            workerToRemove.SystemException -= LogSystemException;
-            workerToRemove.Dispose();
+            lock (workers)
+            {
+                if (workers.Count == 0) return;
+                var workerToRemove = workers.Last();
+
+                workers.Remove(workerToRemove);
+
+                try
+                {
+                    workerToRemove.Stop();
+                }
+                finally
+                {
+                    workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
+                    workerToRemove.UserException -= LogUserException;
+                    workerToRemove.SystemException -= LogSystemException;
+                    workerToRemove.Dispose();
+                }
+            }
         }
 
         void LogSystemException(Worker worker, Exception exception)
@@ -219,14 +237,8 @@ namespace Rebus.Bus
 
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
-            while(workers.Count < newNumberOfWorkers)
-            {
-                AddWorker();
-            }
-            while (workers.Count > newNumberOfWorkers)
-            {
-                RemoveWorker();
-            }
+            while(workers.Count < newNumberOfWorkers) AddWorker();
+            while (workers.Count > newNumberOfWorkers) RemoveWorker();
         }
     }
 

@@ -28,7 +28,7 @@ namespace Rebus.Tests.Unit
                                 new InMemorySubscriptionStorage(),
                                 new JsonMessageSerializer(),
                                 new InMemorySagaPersister(),
-                                new TrivialPipelineInspector());
+                                new TrivialPipelineInspector(), "Just some test worker");
         }
 
         [Test]

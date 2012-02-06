@@ -4,13 +4,14 @@ using System.Threading;
 
 namespace Rebus.Logging
 {
-    class ConsoleLoggerFactory : IRebusLoggerFactory
+    internal class ConsoleLoggerFactory : IRebusLoggerFactory
     {
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
 
         readonly bool colored;
 
         LoggingColors colors = new LoggingColors();
+        LogLevel minLevel = LogLevel.Debug;
 
         public ConsoleLoggerFactory(bool colored)
         {
@@ -23,12 +24,22 @@ namespace Rebus.Logging
             set { colors = value; }
         }
 
+        public LogLevel MinLevel
+        {
+            get { return minLevel; }
+            set
+            {
+                minLevel = value;
+                Loggers.Clear();
+            }
+        }
+
         public ILog GetLogger(Type type)
         {
             ILog logger;
             if (!Loggers.TryGetValue(type, out logger))
             {
-                logger = new ConsoleLogger(type, colored, colors);
+                logger = new ConsoleLogger(type, colored, colors, minLevel);
                 Loggers.TryAdd(type, logger);
             }
             return logger;
@@ -36,43 +47,49 @@ namespace Rebus.Logging
 
         class ConsoleLogger : ILog
         {
-            readonly Type type;
             readonly bool colored;
             readonly LoggingColors loggingColors;
+            readonly LogLevel minLevel;
+            readonly Type type;
 
-            public ConsoleLogger(Type type, bool colored, LoggingColors loggingColors)
+            public ConsoleLogger(Type type, bool colored, LoggingColors loggingColors, LogLevel minLevel)
             {
                 this.type = type;
                 this.colored = colored;
                 this.loggingColors = loggingColors;
+                this.minLevel = minLevel;
             }
+
+            #region ILog Members
 
             public void Debug(string message, params object[] objs)
             {
-                Log("DEBUG", message, loggingColors.Debug, objs);
+                Log(LogLevel.Debug, message, loggingColors.Debug, objs);
             }
 
             public void Info(string message, params object[] objs)
             {
-                Log("INFO", message, loggingColors.Info, objs);
+                Log(LogLevel.Info, message, loggingColors.Info, objs);
             }
 
             public void Warn(string message, params object[] objs)
             {
-                Log("WARN", message, loggingColors.Warn, objs);
+                Log(LogLevel.Warn, message, loggingColors.Warn, objs);
             }
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Log("ERROR", string.Format(message, objs) + Environment.NewLine + exception, loggingColors.Error);
+                Log(LogLevel.Error, string.Format(message, objs) + Environment.NewLine + exception, loggingColors.Error);
             }
 
             public void Error(string message, params object[] objs)
             {
-                Log("ERROR", message, loggingColors.Error, objs);
+                Log(LogLevel.Error, message, loggingColors.Error, objs);
             }
 
-            void Log(string level, string message, ColorSetting colorSetting, params object[] objs)
+            #endregion
+
+            void Log(LogLevel level, string message, ColorSetting colorSetting, params object[] objs)
             {
                 if (colored)
                 {
@@ -87,13 +104,34 @@ namespace Rebus.Logging
                 }
             }
 
-            void Write(string level, string message, object[] objs)
+            string LevelString(LogLevel level)
             {
+                switch(level)
+                {
+                    case LogLevel.Debug:
+                        return "DEBUG";
+                    case LogLevel.Info:
+                        return "INFO";
+                    case LogLevel.Warn:
+                        return "WARN";
+                    case LogLevel.Error:
+                        return "ERROR";
+                    default:
+                        throw new ArgumentOutOfRangeException("level");
+                }
+            }
+
+            void Write(LogLevel level, string message, object[] objs)
+            {
+                if (level < minLevel) return;
+
+                var levelString = LevelString(level);
+
                 try
                 {
                     Console.WriteLine("{0} {1} ({2}): {3}",
                                       type.FullName,
-                                      level,
+                                      levelString,
                                       Thread.CurrentThread.Name,
                                       string.Format(message, objs));
                 }
@@ -103,7 +141,7 @@ namespace Rebus.Logging
 
                     Console.WriteLine("{0} {1} ({2}): {3}",
                                       type.FullName,
-                                      level,
+                                      levelString,
                                       Thread.CurrentThread.Name,
                                       message);
                 }

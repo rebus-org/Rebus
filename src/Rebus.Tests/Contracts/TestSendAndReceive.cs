@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using Microsoft.WindowsAzure;
 using NUnit.Framework;
+using Rebus.Tests.Transports.Rabbit;
 using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
 using Rebus.Transports.Rabbit;
@@ -31,8 +32,8 @@ namespace Rebus.Tests.Contracts
 
         Tuple<ISendMessages, IReceiveMessages> RabbitMqTransports()
         {
-            var sender = new RabbitMqMessageQueue("tests.contracts.sender");
-            var receiver = new RabbitMqMessageQueue("tests.contracts.receiver");
+            var sender = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString,"tests.contracts.sender");
+            var receiver = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.receiver");
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 

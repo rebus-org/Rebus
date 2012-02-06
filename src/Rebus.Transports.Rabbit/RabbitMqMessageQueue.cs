@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using RabbitMQ.Client;
-using System.Linq;
+using RabbitMQ.Client.Events;
+using RabbitMQ.Client.MessagePatterns;
+using Rebus.Logging;
 using Rebus.Messages;
 
 namespace Rebus.Transports.Rabbit
@@ -12,96 +16,131 @@ namespace Rebus.Transports.Rabbit
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
+        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        readonly IConnection connection;
 
         readonly string inputQueueName;
-
-        IConnection connection;
-
-        public RabbitMqMessageQueue(string inputQueueName)
-        {
-            this.inputQueueName = inputQueueName;
-
-            OpenConnection();
-            EnsureQueueCreated();
-        }
+        readonly IModel model;
+        readonly object modelLock = new object();
+        readonly Subscription subscription;
+        readonly object subscriptionLock = new object();
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
             this.inputQueueName = inputQueueName;
 
-            OpenConnection(connectionString);
-            EnsureQueueCreated();
+            Log.Info("Opening Rabbit connection");
+            connection = new ConnectionFactory {Uri = connectionString}.CreateConnection();
+            
+            Log.Debug("Creating model");
+            model = connection.CreateModel();
+
+            Log.Info("Initializing exchange and input queue");
+            var tempModel = connection.CreateModel();
+
+            Log.Debug("Ensuring that exchange exists with the name {0}", ExchangeName);
+            tempModel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+
+            Log.Debug("Declaring queue {0}", this.inputQueueName);
+            tempModel.QueueDeclare(this.inputQueueName, true, false, false, new Hashtable());
+            
+            Log.Debug("Binding {0} to {1} (routing key: {2})", this.inputQueueName, ExchangeName, this.inputQueueName);
+            tempModel.QueueBind(this.inputQueueName, ExchangeName, this.inputQueueName);
+
+            Log.Debug("Opening subscription");
+            subscription = new Subscription(model, inputQueueName);
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        void WithModel(Action<IModel> handleModel)
         {
-            using (var model = connection.CreateModel())
+            lock(modelLock)
             {
-                model.BasicPublish(ExchangeName, destinationQueueName,
-                                   GetHeaders(message, model),
-                                   GetBody(message));
+                handleModel(model);
+            }
+        }
+
+        void WithSubscription(Action<Subscription> handleSubscription)
+        {
+            lock(subscriptionLock)
+            {
+                handleSubscription(subscription);
             }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
         {
-            var model = connection.CreateModel();
-
-            var result = model.BasicGet(inputQueueName, false);
-            if (result == null) return null;
-
-            using (new AmbientTxHack(() => model.BasicAck(result.DeliveryTag, false),
-                                     () => { },
-                                     model))
+            BasicDeliverEventArgs ea = null;
+            var gotMessage = false;
+            
+            WithSubscription(sub => gotMessage = sub.Next(200, out ea));
+            
+            if (gotMessage)
             {
-
-                var headers = GetHeaders(result.BasicProperties.Headers);
-
-                var receivedTransportMessage = new ReceivedTransportMessage
-                                                   {
-                                                       Id = result.BasicProperties.MessageId,
-                                                       Headers = headers,
-                                                       Data = Encoding.GetString(result.Body),
-                                                   };
-                return receivedTransportMessage;
-            }
-        }
-
-        void OpenConnection()
-        {
-            var fac = new ConnectionFactory
-                          {
-                              UserName = "guest",
-                              Password = "guest",
-                              HostName = "localhost",
-                              Port = AmqpTcpEndpoint.UseDefaultPort
-                          };
-
-            connection = fac.CreateConnection();
-        }
-
-        void OpenConnection(string connectionString)
-        {
-            var fac = new ConnectionFactory { Uri = connectionString };
-            connection = fac.CreateConnection();
-        }
-
-        IBasicProperties GetHeaders(TransportMessageToSend message, IModel model)
-        {
-            var props = model.CreateBasicProperties();
-
-            if (message.Headers != null)
-            {
-                props.Headers = message.Headers.ToDictionary(e => e.Key, e => Encoding.GetBytes(e.Value));
-
-                if (message.Headers.ContainsKey(Headers.ReturnAddress))
+                using (new AmbientTxHack(() => WithSubscription(sub => sub.Ack(ea)),
+                                         () => {},
+                                         null))
                 {
-                    props.ReplyTo = message.Headers[Headers.ReturnAddress];
+                    return new ReceivedTransportMessage
+                               {
+                                   Id = ea.BasicProperties.MessageId,
+                                   Headers = GetHeaders(ea.BasicProperties.Headers),
+                                   Data = Encoding.GetString(ea.Body),
+                               };
                 }
             }
 
-            props.MessageId = Guid.NewGuid().ToString();
+            return null;
+        }
 
+        public string InputQueue
+        {
+            get { return inputQueueName; }
+        }
+
+        public void Send(string destinationQueueName, TransportMessageToSend message)
+        {
+            WithModel(m => m.BasicPublish(ExchangeName, destinationQueueName,
+                                          GetHeaders(message),
+                                          GetBody(message)));
+        }
+
+        public RabbitMqMessageQueue PurgeInputQueue()
+        {
+            WithModel(m => m.QueuePurge(inputQueueName));
+
+            return this;
+        }
+
+        public void Dispose()
+        {
+            subscription.Close();
+            model.Close();
+            model.Dispose();
+            connection.Close();
+            connection.Dispose();
+        }
+
+        IBasicProperties GetHeaders(TransportMessageToSend message)
+        {
+            IBasicProperties props = null;
+            WithModel(m =>
+                          {
+                              props = m.CreateBasicProperties();
+
+                              if (message.Headers != null)
+                              {
+                                  props.Headers = message.Headers.ToDictionary(e => e.Key,
+                                                                               e => Encoding.GetBytes(e.Value));
+
+                                  if (message.Headers.ContainsKey(Headers.ReturnAddress))
+                                  {
+                                      props.ReplyTo = message.Headers[Headers.ReturnAddress];
+                                  }
+                              }
+
+                              props.MessageId = Guid.NewGuid().ToString();
+                          });
             return props;
         }
 
@@ -110,51 +149,12 @@ namespace Rebus.Transports.Rabbit
             return Encoding.GetBytes(message.Data);
         }
 
-        static IDictionary<string, string> GetHeaders(IDictionary result)
+        IDictionary<string, string> GetHeaders(IDictionary result)
         {
             if (result == null) return new Dictionary<string, string>();
 
             return result.Cast<DictionaryEntry>()
-                .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
-        }
-
-        void EnsureQueueCreated()
-        {
-            var fac = new ConnectionFactory();
-            fac.UserName = "guest";
-            fac.Password = "guest";
-            fac.HostName = "localhost";
-            fac.Port = AmqpTcpEndpoint.UseDefaultPort;
-
-            connection = fac.CreateConnection();
-
-            using (var model = connection.CreateModel())
-            {
-                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-                model.QueueDeclare(inputQueueName, true, false, false, new Hashtable());
-                model.QueueBind(inputQueueName, ExchangeName, inputQueueName);
-            }
-        }
-
-        public string InputQueue
-        {
-            get { return inputQueueName; }
-        }
-
-        public void Dispose()
-        {
-            connection.Close();
-            connection.Dispose();
-        }
-
-        public RabbitMqMessageQueue PurgeInputQueue()
-        {
-            using (var model = connection.CreateModel())
-            {
-                model.QueuePurge(inputQueueName);
-            }
-
-            return this;
+                .ToDictionary(e => (string) e.Key, e => Encoding.GetString((byte[]) e.Value));
         }
     }
 }

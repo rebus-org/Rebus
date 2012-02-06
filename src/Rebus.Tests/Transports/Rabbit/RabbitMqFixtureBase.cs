@@ -11,7 +11,7 @@ namespace Rebus.Tests.Transports.Rabbit
 {
     public abstract class RabbitMqFixtureBase : IDetermineDestination
     {
-        protected const string ConnectionString = "amqp://guest:guest@localhost";
+        public const string ConnectionString = "amqp://guest:guest@localhost";
 
         List<RebusBus> buses;
 
