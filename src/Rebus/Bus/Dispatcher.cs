@@ -38,13 +38,9 @@ namespace Rebus.Bus
         public void Dispatch<TMessage>(TMessage message)
         {
             IHandleMessages[] handlersToRelease = null;
-            IMessageModule[] messageModules = null;
 
             try
             {
-                messageModules = (activateHandlers.GetMessageModules() ?? new IMessageModule[0]).ToArray();
-                Array.ForEach(messageModules, m => m.Before());
-
                 var typesToDispatch = GetTypesToDispatch(typeof(TMessage));
                 var handlersFromActivator = typesToDispatch.SelectMany(GetHandlerInstances);
                 var handlerInstances = handlersFromActivator.ToArray();
@@ -84,14 +80,6 @@ namespace Rebus.Bus
                     }
                 }
             }
-            catch (Exception exception)
-            {
-                if (messageModules != null)
-                {
-                    Array.ForEach(messageModules, m => m.OnError(exception));
-                }
-                throw;
-            }
             finally
             {
                 if (handlersToRelease != null)
@@ -103,20 +91,6 @@ namespace Rebus.Bus
                     catch (Exception e)
                     {
                         Log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
-                    }
-                }
-
-                if (messageModules != null)
-                {
-                    Array.ForEach(messageModules, m => m.After());
-
-                    try
-                    {
-                        activateHandlers.Release(messageModules);
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, "An error occurred while attempting to release message modules: {0}", string.Join(", ", messageModules.Select(h => h.GetType())));
                     }
                 }
             }
@@ -209,10 +183,10 @@ namespace Rebus.Bus
         // ReSharper disable UnusedMember.Local
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
-            if (handler is Saga)
+            var saga = handler as Saga;
+            
+            if (saga != null)
             {
-                var saga = (Saga)handler;
-
                 var dataProperty = handler.GetType().GetProperty("Data");
                 var sagaData = GetSagaData(message, saga);
 

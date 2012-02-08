@@ -61,11 +61,6 @@ namespace Rebus.Timeout
             throw new InvalidOperationException(string.Format("Someone took the chance and sent a message of type {0} to me.", typeof(T)));
         }
 
-        public IEnumerable<IMessageModule> GetMessageModules()
-        {
-            return new IMessageModule[0];
-        }
-
         public void Release(IEnumerable handlerInstances)
         {
         }

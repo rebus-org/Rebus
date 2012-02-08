@@ -48,11 +48,6 @@ namespace Rebus.Tests
             return handlerInstances;
         }
 
-        public IEnumerable<IMessageModule> GetMessageModules()
-        {
-            return new IMessageModule[0];
-        }
-
         public void Release(IEnumerable handlerInstances)
         {
         }

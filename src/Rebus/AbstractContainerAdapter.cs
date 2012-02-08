@@ -16,11 +16,6 @@ namespace Rebus
             return ResolveAll<IHandleMessages<T>>();
         }
 
-        public IEnumerable<IMessageModule> GetMessageModules()
-        {
-            return ResolveAll<IMessageModule>();
-        }
-
         public void Release(IEnumerable handlerInstances)
         {
             Release((object)handlerInstances);

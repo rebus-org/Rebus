@@ -74,11 +74,6 @@ namespace Sample.Client
             return new IHandleMessages<T>[0];
         }
 
-        public IEnumerable<IMessageModule> GetMessageModules()
-        {
-            return new IMessageModule[0];
-        }
-
         public void Release(IEnumerable handlerInstances)
         {
         }

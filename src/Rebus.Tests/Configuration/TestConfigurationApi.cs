@@ -251,11 +251,6 @@ namespace Rebus.Tests.Configuration
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<IMessageModule> GetMessageModules()
-            {
-                throw new NotImplementedException();
-            }
-
             public void Release(IEnumerable handlerInstances)
             {
                 throw new NotImplementedException();
