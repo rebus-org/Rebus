@@ -23,7 +23,7 @@ namespace Rebus.Tests
             XmlConfigurator.Configure();
         }
 
-        List<RebusBus> buses;
+        List<IDisposable> toDispose;
         
         protected JsonMessageSerializer serializer;
         protected RearrangeHandlersPipelineInspector pipelineInspector = new RearrangeHandlersPipelineInspector();
@@ -31,7 +31,7 @@ namespace Rebus.Tests
         [SetUp]
         public void SetUp()
         {
-            buses = new List<RebusBus>();
+            toDispose = new List<IDisposable>();
 
             DoSetUp();
         }
@@ -49,7 +49,7 @@ namespace Rebus.Tests
             }
             finally
             {
-                buses.ForEach(b => b.Dispose());
+                toDispose.ForEach(b => b.Dispose());
             }
         }
 
@@ -64,7 +64,9 @@ namespace Rebus.Tests
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
                                    this, serializer, pipelineInspector);
-            buses.Add(bus);
+            toDispose.Add(bus);
+            toDispose.Add(messageQueue);
+
             return bus;
         }
 
