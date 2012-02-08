@@ -114,9 +114,15 @@ namespace Rebus.Transports.Rabbit
 
         public void Dispose()
         {
+            Log.Info("Disposing Rabbit");
+            Log.Debug("Closing subscription");
             subscription.Close();
+
+            Log.Debug("Disposing model");
             model.Close();
             model.Dispose();
+
+            Log.Debug("Disposing connection");
             connection.Close();
             connection.Dispose();
         }

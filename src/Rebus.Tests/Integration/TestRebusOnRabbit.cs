@@ -14,13 +14,14 @@ namespace Rebus.Tests.Integration
     {
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Info};
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
         }
 
+        [TestCase(1, 1)]
         [TestCase(100, 5)]
         [TestCase(100, 10)]
-        //[TestCase(1000, 5)]
-        //[TestCase(1000, 10)]
+        [TestCase(1000, 5)]
+        [TestCase(1000, 10)]
         //[TestCase(10000, 5)]
         //[TestCase(10000, 10)]
         public void CanSendAndReceiveMessages(int messageCount, int numberOfWorkers)
@@ -32,7 +33,7 @@ namespace Rebus.Tests.Integration
 
             var resetEvent = new ManualResetEvent(false);
             
-            var sender = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
+            var sender = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start(1);
 
             var receiver = CreateBus(receiverQueueName,
                                      new HandlerActivatorForTesting()
@@ -62,7 +63,8 @@ namespace Rebus.Tests.Integration
             stopwatch = Stopwatch.StartNew();
             receiver.Start(numberOfWorkers);
 
-            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.01)))
+            var accountForLatency = TimeSpan.FromSeconds(1);
+            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.01) + accountForLatency))
             {
                 Assert.Fail("Didn't receive all messages within timeout");
             }

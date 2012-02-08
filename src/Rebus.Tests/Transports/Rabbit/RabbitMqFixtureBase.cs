@@ -13,7 +13,7 @@ namespace Rebus.Tests.Transports.Rabbit
     {
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
-        List<RebusBus> buses;
+        List<IDisposable> toDispose;
 
         static RabbitMqFixtureBase()
         {
@@ -23,7 +23,7 @@ namespace Rebus.Tests.Transports.Rabbit
         [SetUp]
         public void SetUp()
         {
-            buses = new List<RebusBus>();
+            toDispose = new List<IDisposable>();
             DoSetUp();
         }
 
@@ -34,7 +34,7 @@ namespace Rebus.Tests.Transports.Rabbit
         [TearDown]
         public void TearDown()
         {
-            buses.ForEach(b => b.Dispose());
+            toDispose.ForEach(b => b.Dispose());
             DoTearDown();
         }
 
@@ -50,7 +50,8 @@ namespace Rebus.Tests.Transports.Rabbit
                                    new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector());
 
-            buses.Add(bus);
+            toDispose.Add(bus);
+            toDispose.Add(rabbitMqMessageQueue);
 
             return bus;
         }

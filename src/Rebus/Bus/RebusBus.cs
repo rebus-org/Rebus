@@ -237,7 +237,7 @@ namespace Rebus.Bus
 
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
-            while(workers.Count < newNumberOfWorkers) AddWorker();
+            while (workers.Count < newNumberOfWorkers) AddWorker();
             while (workers.Count > newNumberOfWorkers) RemoveWorker();
         }
     }
