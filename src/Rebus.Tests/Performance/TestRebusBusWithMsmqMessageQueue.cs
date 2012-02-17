@@ -11,8 +11,8 @@ namespace Rebus.Tests.Performance
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
         [TestCase(15, 1000)]
-        [TestCase(15, 10000, Ignore = true)]
-        [TestCase(15, 100000, Ignore = true)]
+        [TestCase(15, 10000, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(15, 100000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void TestSendAndReceiveMessages(int numberOfWorkers, int numberOfMessages)
         {
             RebusLoggerFactory.Current = new NullLoggerFactory();

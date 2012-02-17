@@ -13,8 +13,8 @@ namespace Rebus.Tests.Transports.Rabbit
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
         [TestCase(100, 10)]
-        [TestCase(1000, 10, Ignore = true)]
-        [TestCase(10000, 10, Ignore = true)]
+        [TestCase(1000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             var sender = new RabbitMqMessageQueue(ConnectionString, "test.rabbit.sender").PurgeInputQueue();
