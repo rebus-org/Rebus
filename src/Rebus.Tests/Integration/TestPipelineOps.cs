@@ -8,7 +8,7 @@ namespace Rebus.Tests.Integration
     public class TestPipelineOps : RebusBusMsmqIntegrationTestBase
     {
         [Test]
-        public void StatementOfSomething()
+        public void AbortingMessageHandlingReallyAbortsMessageHandling()
         {
             const string senderInputQueueName = "test.integration.pipeline.sender";
             const string receiverInputQueueName = "test.integration.pipeline.receiver";

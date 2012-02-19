@@ -29,8 +29,9 @@ namespace Rebus.Tests.Performance
         ///     Saving/updating 100 sagas 10 times took 9,0 s - that's 111 ops/s
         ///     Saving/updating 1000 sagas 2 times took 22,3 s - that's 90 ops/s
         /// </summary>
-        [TestCase(100, 10)]
-        [TestCase(1000, 2)]
+        [TestCase(10, 3)]
+        [TestCase(100, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(1000, 2, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void RunTest(int numberOfSagas, int iterations)
         {
             SagaPersisterPerformanceTestHelper.DoTheTest(persister, numberOfSagas, iterations);

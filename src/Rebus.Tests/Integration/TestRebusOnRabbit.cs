@@ -18,12 +18,11 @@ namespace Rebus.Tests.Integration
         }
 
         [TestCase(1, 1)]
-        [TestCase(100, 5)]
-        [TestCase(100, 10)]
-        [TestCase(1000, 5)]
-        [TestCase(1000, 10)]
-        //[TestCase(10000, 5)]
-        //[TestCase(10000, 10)]
+        [TestCase(100, 3)]
+        [TestCase(10000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(100000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(100000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int messageCount, int numberOfWorkers)
         {
             const string senderQueueName = "test.rabbit.sender";

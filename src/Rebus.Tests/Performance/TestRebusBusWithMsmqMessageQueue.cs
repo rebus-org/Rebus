@@ -47,7 +47,7 @@ namespace Rebus.Tests.Performance
             // receive
             stopwatch = Stopwatch.StartNew();
             recipientBus.Start(numberOfWorkers);
-            if (!manualResetEvent.WaitOne(TimeSpan.FromMinutes(2)))
+            if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(numberOfMessages * 0.01 + 5)))
             {
                 Assert.Fail("Did not receive {0} msg within timeout - {1} msg received", numberOfMessages, receivedMessagesCount);    
             }

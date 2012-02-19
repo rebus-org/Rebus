@@ -20,6 +20,9 @@ namespace Rebus.Tests.Contracts
         {
             CheckSerializationOfSimpleComplexType(serializerType);
             CheckSerializationOfComplexTypesWithInheritance(serializerType);
+
+            if (TestCategories.IgnoreLongRunningTests) return;
+
             CheckPerformance(serializerType);
         }
 
