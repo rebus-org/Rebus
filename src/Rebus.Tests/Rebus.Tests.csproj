@@ -94,6 +94,7 @@
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestDynamicDispatch.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
+    <Compile Include="Integration\TestRebusEvents.cs" />
     <Compile Include="Integration\TestRebusOnRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="Integration\TestTimeoutService.cs" />

@@ -26,6 +26,12 @@ namespace Rebus.Bus
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
 
+        public event Action BeforeMessage = delegate { }; 
+        
+        public event Action<Exception> AfterMessage = delegate { };
+
+        public event Action PoisonMessage = delegate { }; 
+
         volatile bool shouldExit;
         volatile bool shouldWork;
 
@@ -147,6 +153,8 @@ namespace Rebus.Bus
                     return;
                 }
 
+                BeforeMessage();
+
                 var id = transportMessage.Id;
                 var label = transportMessage.Label;
 
@@ -155,6 +163,7 @@ namespace Rebus.Bus
                     Log.Error("Handling message {0} has failed the maximum number of times", id);
                     MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
                     errorTracker.StopTracking(id);
+                    PoisonMessage();
                 }
                 else
                 {
@@ -179,12 +188,14 @@ namespace Rebus.Bus
                     {
                         Log.Debug("Handling message {0} ({1}) has failed", label, id);
                         errorTracker.TrackDeliveryFail(id, exception);
+                        AfterMessage(exception);
                         throw;
                     }
                 }
 
                 transactionScope.Complete();
                 errorTracker.StopTracking(id);
+                AfterMessage(null);
             }
         }
 

@@ -17,6 +17,12 @@ namespace Rebus.Bus
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        public event Action BeforeMessage = delegate { };
+
+        public event Action<Exception> AfterMessage = delegate { };
+
+        public event Action PoisonMessage = delegate { };
+
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
         readonly IStoreSubscriptions storeSubscriptions;
@@ -198,8 +204,26 @@ namespace Rebus.Bus
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
                 worker.SystemException += LogSystemException;
+                worker.BeforeMessage += RaiseBeforeMessage;
+                worker.AfterMessage += RaiseAfterMessage;
+                worker.PoisonMessage += RaisePosionMessage;
                 worker.Start();
             }
+        }
+
+        void RaiseBeforeMessage()
+        {
+            BeforeMessage();
+        }
+
+        void RaiseAfterMessage(Exception exception)
+        {
+            AfterMessage(exception);
+        }
+
+        void RaisePosionMessage()
+        {
+            PoisonMessage();
         }
 
         void RemoveWorker()
