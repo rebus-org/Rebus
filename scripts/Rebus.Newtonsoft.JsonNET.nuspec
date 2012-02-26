@@ -9,7 +9,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Provided JSON serialization capabilities to Rebus</description>
+    <description>Provides JSON serialization capabilities to Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus json</tags>
 

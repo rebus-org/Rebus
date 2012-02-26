@@ -9,7 +9,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Rebus is a lean service bus implementation, similar in nature to NServiceBus, MassTransit, Rhino Service Bus etc.</description>
+    <description>Provides the ability for Rebus to log with Log4Net</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus log4net</tags>
 
