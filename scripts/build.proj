@@ -6,15 +6,20 @@
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Newtonsoft.JsonNET\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
 
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
   </ItemGroup>
 
   <PropertyGroup>
-    <BuildOutputFolder>..\deploy</BuildOutputFolder>
+    <ToolsFolder>..\tools</ToolsFolder>
+    <ScriptsFolder>..\scripts</ScriptsFolder>
+    <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
+
+    <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
   </PropertyGroup>
 
-  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output" />
+  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;createNugetPackage" />
 
   <Target Name="clean_output_folder">
     <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>
@@ -29,5 +34,12 @@
   <Target Name="copy_build_output">
     <Copy SourceFiles="@(AssembliesBuilt)" DestinationFolder="$(BuildOutputFolder)" />
     <Copy SourceFiles="@(Docs)" DestinationFolder="$(BuildOutputFolder)" />
+  </Target>
+
+  <Target Name="createNugetPackage">
+    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.nuspec -OutputDirectory $(BuildOutputFolder)"/>
+    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Newtonsoft.JsonNET.nuspec -OutputDirectory $(BuildOutputFolder)"/>
+    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Log4Net.nuspec -OutputDirectory $(BuildOutputFolder)"/>
+    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Castle.Windsor.nuspec -OutputDirectory $(BuildOutputFolder)"/>
   </Target>
 </Project>

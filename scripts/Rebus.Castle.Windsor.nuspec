@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Rebus.Castle.Windsor</id>
+    <version>0.9.1-alpha</version>
+    <title>Rebus.Castle.Windsor</title>
+    <authors>Mogens Heller Grabe</authors>
+    <owners>Mogens Heller Grabe</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Rebus is a lean service bus implementation, similar in nature to NServiceBus, MassTransit, Rhino Service Bus etc.</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus castle windsor</tags>
+
+    <dependencies>
+      <dependency id="Rebus" version="0.9.1-alpha" />
+      <dependency id="Castle.Core" version="3.0.0.4001" />
+      <dependency id="Castle.Windsor" version="3.0.0.4001" />
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src="..\deploy\**\Rebus.Castle.Windsor.dll" target="lib"/>
+  </files>
+</package>

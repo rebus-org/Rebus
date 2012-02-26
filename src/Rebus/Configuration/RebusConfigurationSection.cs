@@ -30,6 +30,15 @@ namespace Rebus.Configuration
             set { this[WorkersAttributeName] = value; }
         }
 
+        public const string ExampleSnippetForErrorMessages = @"
+    <Rebus InputQueue=""my.service.input.queue"" Workers=""10"">
+        <Endpoints>
+            <add Messages=""Name.Of.Assembly"" Endpoint=""message_owner_1""/>
+            <add Messages=""Namespace.ClassName, Name.Of.Another.Assembly"" Endpoint=""message_owner_2""/>
+        </Endpoints>
+    </Rebus>
+";
+
         public static RebusConfigurationSection LookItUp()
         {
             var section = ConfigurationManager.GetSection("Rebus");

@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Rebus.Log4Net</id>
+    <version>0.9.1-alpha</version>
+    <title>Rebus.Log4Net</title>
+    <authors>Mogens Heller Grabe</authors>
+    <owners>Mogens Heller Grabe</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Rebus is a lean service bus implementation, similar in nature to NServiceBus, MassTransit, Rhino Service Bus etc.</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus log4net</tags>
+
+    <dependencies>
+      <dependency id="Rebus" version="0.9.1-alpha" />
+      <dependency id="log4net" version="2.0.0" />
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src="..\deploy\**\Rebus.Log4Net.dll" target="lib"/>
+    <file src="..\deploy\**\Rebus.Log4Net.xml" target="lib"/>
+  </files>
+</package>

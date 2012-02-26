@@ -45,12 +45,7 @@ section declaration in the <configSections> element of your app.config/web.confi
 -and then you need a <Rebus> element some place further down the app.config/web.config,
 like so:
 
-    <Rebus InputQueue=""my.service.input.queue"">
-        <Endpoints>
-            <add Messages=""Name.Of.Assembly"" Endpoint=""message_owner_1""/>
-            <add Messages=""Namespace.ClassName, Name.Of.Another.Assembly"" Endpoint=""message_owner_2""/>
-        </Endpoints>
-    </Rebus>
+{1}
 
 This example shows how it's possible to map all types from an entire assembly to an endpoint. 
 
@@ -65,7 +60,7 @@ will be the one taking effect.
 
 Note also, that specifying the input queue name with the InputQueue attribute is optional.
 ",
-                    e);
+                    e, RebusConfigurationSection.ExampleSnippetForErrorMessages);
             }
         }
 

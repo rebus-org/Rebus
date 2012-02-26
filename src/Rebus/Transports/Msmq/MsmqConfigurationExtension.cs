@@ -53,8 +53,12 @@ like so:
     <Rebus InputQueue=""my.service.input.queue"" />
 
 Note also, that specifying the input queue name with the InputQueue attribute is optional.
+
+A more full example configuration snippet can be seen here:
+
+{1}
 ",
-                    e);
+                    e, RebusConfigurationSection.ExampleSnippetForErrorMessages);
             }
         }
 
