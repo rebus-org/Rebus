@@ -2,6 +2,7 @@ using System;
 using NUnit.Framework;
 using Rebus.Timeout;
 using System.Linq;
+using Rebus.Timeout.Persistence;
 using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
