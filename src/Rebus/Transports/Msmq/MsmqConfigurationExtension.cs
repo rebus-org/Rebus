@@ -27,7 +27,14 @@ namespace Rebus.Transports.Msmq
             {
                 var section = RebusConfigurationSection.LookItUp();
 
-                DoIt(configurer, section.InputQueue);
+                var inputQueueName = section.InputQueue;
+
+                if (string.IsNullOrEmpty(inputQueueName))
+                {
+                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the InputQueue attribute?");
+                } 
+
+                DoIt(configurer, inputQueueName);
             }
             catch(ConfigurationErrorsException e)
             {
@@ -62,9 +69,14 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static void DoIt(TransportConfigurer configurer, string inputQueue)
+        static void DoIt(TransportConfigurer configurer, string inputQueueName)
         {
-            var msmqMessageQueue = new MsmqMessageQueue(inputQueue);
+            if (string.IsNullOrEmpty(inputQueueName))
+            {
+                throw new ConfigurationErrorsException("You need to specify an input queue.");
+            }
+
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
 
             configurer.UseSender(msmqMessageQueue);
             configurer.UseReceiver(msmqMessageQueue);
