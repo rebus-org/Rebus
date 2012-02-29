@@ -87,6 +87,7 @@
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\TestDiscoveryConfigurer.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
+    <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />

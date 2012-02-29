@@ -9,7 +9,7 @@ namespace Rebus.Transports.Encrypted
 
         readonly ISendMessages innerSendMessages;
         readonly IReceiveMessages innerReceiveMessages;
-        
+
         readonly ICryptoTransform encryptor;
         readonly ICryptoTransform decryptor;
 
@@ -31,7 +31,7 @@ namespace Rebus.Transports.Encrypted
                                              {
                                                  Headers = message.Headers,
                                                  Label = message.Label,
-                                                 Body = Encrypt( message.Body),   
+                                                 Body = Encrypt(message.Body),
                                              };
 
             innerSendMessages.Send(destinationQueueName, transportMessageToSend);

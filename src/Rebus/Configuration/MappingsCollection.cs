@@ -12,14 +12,14 @@ namespace Rebus.Configuration
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            return ((MappingElement) element).Messages;
+            return ((MappingElement)element).Messages;
         }
 
         public new IEnumerator<MappingElement> GetEnumerator()
         {
             for (var index = 0; index < Count; index++)
             {
-                yield return (MappingElement) BaseGet(index);
+                yield return (MappingElement)BaseGet(index);
             }
         }
     }

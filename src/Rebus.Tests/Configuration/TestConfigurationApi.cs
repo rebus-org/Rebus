@@ -9,6 +9,7 @@ using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
+using Rebus.Transports.Encrypted;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
@@ -182,6 +183,18 @@ namespace Rebus.Tests.Configuration
             adapter.HasImplementationOf(typeof (IStoreSagaData)).ShouldBe(true);
             adapter.HasImplementationOf(typeof (IInspectHandlerPipeline)).ShouldBe(true);
             adapter.HasImplementationOf(typeof (ISerializeMessages)).ShouldBe(true);
+        }
+
+        [Test]
+        public void CanConfigureEncryptedMsmqTransport()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Transport(t => t.UseEncryptedMsmqAndGetConfigurationFromAppConfig());
+
+            adapter.Resolve<ISendMessages>().ShouldBeTypeOf<EncryptionFilter>();
+            adapter.Resolve<IReceiveMessages>().ShouldBeTypeOf<EncryptionFilter>();
         }
 
         /// <summary>

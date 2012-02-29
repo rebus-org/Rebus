@@ -6,8 +6,16 @@ namespace Rebus.Configuration
     public class RebusConfigurationSection : ConfigurationSection
     {
         const string MappingsCollectionPropertyName = "Endpoints";
+        const string RijndaelCollectionPropertyName = "Rijndael";
         const string InputQueueAttributeName = "InputQueue";
         const string WorkersAttributeName = "Workers";
+
+        [ConfigurationProperty(RijndaelCollectionPropertyName)]
+        public RijndaelSection RijndaelSection
+        {
+            get { return (RijndaelSection)this[RijndaelCollectionPropertyName]; }
+            set { this[RijndaelCollectionPropertyName] = value; }
+        }
 
         [ConfigurationProperty(MappingsCollectionPropertyName)]
         public MappingsCollection MappingsCollection
@@ -58,10 +66,10 @@ that it is NOT possible to rename this section, even though the declaration make
         public static TValue GetConfigurationValueOrDefault<TValue>(Func<RebusConfigurationSection, TValue> getConfigurationValue, TValue defaultValue)
         {
             var section = ConfigurationManager.GetSection("Rebus");
-            
+
             if (!(section is RebusConfigurationSection)) return defaultValue;
 
-            var configurationValue = getConfigurationValue((RebusConfigurationSection) section);
+            var configurationValue = getConfigurationValue((RebusConfigurationSection)section);
 
             if (configurationValue == null) return defaultValue;
 
