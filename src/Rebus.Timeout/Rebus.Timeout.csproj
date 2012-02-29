@@ -72,10 +72,6 @@
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
       <Name>Rebus.Log4Net</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus.Newtonsoft.JsonNET\Rebus.Newtonsoft.JsonNET.csproj">
-      <Project>{C46F1156-0A2D-40D4-8EBC-744B2FDD777D}</Project>
-      <Name>Rebus.Newtonsoft.JsonNET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
       <Name>Rebus</Name>

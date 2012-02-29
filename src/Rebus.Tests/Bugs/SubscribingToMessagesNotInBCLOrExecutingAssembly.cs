@@ -1,10 +1,10 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
 using Rebus.Tests.Integration;
 using Rebus.Transports.Msmq;
+using JsonMessageSerializer = Rebus.Serialization.Json.JsonMessageSerializer;
 
 namespace Rebus.Tests.Bugs
 {

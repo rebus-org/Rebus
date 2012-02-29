@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using Microsoft.WindowsAzure;
 using Rebus;
 using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
-using Rebus.Transports.Azure.AzureMessageQueue;
+using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 using Sample.Server.Messages;
 

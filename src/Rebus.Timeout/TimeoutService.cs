@@ -8,7 +8,7 @@ using Rebus.Bus;
 using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Newtonsoft.JsonNET;
+using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 using log4net;
 using System.Linq;

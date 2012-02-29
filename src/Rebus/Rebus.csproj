@@ -107,6 +107,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
+    <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="TimeMachine.cs" />
     <Compile Include="TransportMessageToSend.cs" />

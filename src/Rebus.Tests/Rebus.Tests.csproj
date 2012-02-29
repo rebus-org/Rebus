@@ -144,10 +144,6 @@
       <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
       <Name>Rebus.MongoDb</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus.Newtonsoft.JsonNET\Rebus.Newtonsoft.JsonNET.csproj">
-      <Project>{C46F1156-0A2D-40D4-8EBC-744B2FDD777D}</Project>
-      <Name>Rebus.Newtonsoft.JsonNET</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rebus.Timeout\Rebus.Timeout.csproj">
       <Project>{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}</Project>
       <Name>Rebus.Timeout</Name>

@@ -1,3 +1,5 @@
+using Rebus.Serialization.Json;
+
 namespace Rebus.Configuration.Configurers
 {
     public class SerializationConfigurer
@@ -12,6 +14,14 @@ namespace Rebus.Configuration.Configurers
         public void Use<T>(T instance) where T : ISerializeMessages
         {
             containerAdapter.RegisterInstance(instance, typeof(ISerializeMessages));
+        }
+    }
+
+    public static class SerializationConfigurationExtensions
+    {
+        public static void UseJsonSerializer(this SerializationConfigurer configurer)
+        {
+            configurer.Use(new JsonMessageSerializer());
         }
     }
 }

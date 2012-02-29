@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
+using Rebus.Serialization.Json;
 using Rebus.Transports.Rabbit;
 using log4net.Config;
 

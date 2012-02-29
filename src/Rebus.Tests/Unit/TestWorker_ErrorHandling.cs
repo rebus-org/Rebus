@@ -4,8 +4,8 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Newtonsoft.JsonNET;
 using Rebus.Persistence.InMemory;
+using Rebus.Serialization.Json;
 using Shouldly;
 
 namespace Rebus.Tests.Unit

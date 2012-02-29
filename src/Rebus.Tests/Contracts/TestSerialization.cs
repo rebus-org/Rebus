@@ -5,8 +5,8 @@ using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using Rebus.Messages;
-using Rebus.Newtonsoft.JsonNET;
 using Rebus.Serialization.Binary;
+using Rebus.Serialization.Json;
 using Shouldly;
 
 namespace Rebus.Tests.Contracts

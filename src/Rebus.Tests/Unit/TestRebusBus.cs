@@ -3,7 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Newtonsoft.JsonNET;
+using Rebus.Serialization.Json;
 using Rhino.Mocks;
 using Shouldly;
 

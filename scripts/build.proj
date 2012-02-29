@@ -5,7 +5,6 @@
     <RebusProjects Include="..\src\Rebus\*.csproj" />
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.Newtonsoft.JsonNET\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
 
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
@@ -17,9 +16,10 @@
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
 
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
+    <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
   </PropertyGroup>
 
-  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;createNugetPackage" />
+  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge;createNugetPackage" />
 
   <Target Name="clean_output_folder">
     <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>
@@ -36,6 +36,11 @@
     <Copy SourceFiles="@(Docs)" DestinationFolder="$(BuildOutputFolder)" />
   </Target>
 
+  <Target Name="merge">
+    <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4"/>
+  </Target>
+  
   <Target Name="createNugetPackage">
     <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.nuspec -OutputDirectory $(BuildOutputFolder)"/>
     <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Newtonsoft.JsonNET.nuspec -OutputDirectory $(BuildOutputFolder)"/>
