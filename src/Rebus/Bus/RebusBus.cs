@@ -168,11 +168,13 @@ namespace Rebus.Bus
             messageToSend.Headers = allHeaders;
         }
 
-        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage transportMessage, string errorDetail)
+        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage receivedTransportMessage, string errorDetail)
         {
-            var transportMessageToSend = transportMessage.ToForwardableMessage();
+            var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
 
             Log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
+
+            transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueue;
 
             sendMessages.Send("error", transportMessageToSend);
         }

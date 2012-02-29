@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Messaging;
+using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 using Shouldly;
@@ -38,7 +40,8 @@ namespace Rebus.Tests.Transports.Msmq
 
             destinationQueue = new MessageQueue(destinationQueuePath)
                                    {
-                                       Formatter = new RebusTransportMessageFormatter()
+                                       Formatter = new RebusTransportMessageFormatter(),
+                                       MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
                                    };
 
             senderQueue.PurgeInputQueue();
@@ -131,6 +134,7 @@ namespace Rebus.Tests.Transports.Msmq
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
             
             var receivedTransportMessage = (ReceivedTransportMessage)msmqMessage.Body;
+            receivedTransportMessage.Headers = new DictionarySerializer().Deserialize(Encoding.UTF7.GetString(msmqMessage.Extension));
             var message = serializer.Deserialize(receivedTransportMessage);
 
             message.Headers.ShouldNotBe(null);

@@ -2,6 +2,9 @@ using System;
 using System.IO;
 using System.Messaging;
 using System.Text;
+using Rebus.Messages;
+using Rebus.Serialization;
+using Message = System.Messaging.Message;
 
 namespace Rebus.Transports.Msmq
 {
@@ -11,6 +14,18 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class RebusTransportMessageFormatter : IMessageFormatter
     {
+        public static readonly Encoding HeaderEcoding = Encoding.UTF7;
+
+        public static MessagePropertyFilter PropertyFilter = new MessagePropertyFilter
+                                                                 {
+                                                                     Id = true,
+                                                                     Body = true,
+                                                                     Extension = true,
+                                                                     Label = true,
+                                                                 };
+
+        static readonly DictionarySerializer DictionarySerializer = new DictionarySerializer();
+
         public object Clone()
         {
             return this;
@@ -30,6 +45,14 @@ namespace Rebus.Transports.Msmq
                                                           obj.GetType()));
             }
             message.BodyStream = new MemoryStream(transportMessage.Body);
+            message.Extension = HeaderEcoding.GetBytes(DictionarySerializer.Serialize(transportMessage.Headers));
+            message.Label = transportMessage.Label ?? "???";
+
+            if (transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived))
+            {
+                var timeToBeReceivedStr = transportMessage.Headers[Headers.TimeToBeReceived];
+                message.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+            }
         }
 
         public object Read(Message message)
@@ -42,6 +65,8 @@ namespace Rebus.Transports.Msmq
                            {
                                Id = message.Id,
                                Body = reader.ReadBytes((int) stream.Length),
+                               Label = message.Label,
+                               Headers = DictionarySerializer.Deserialize(HeaderEcoding.GetString(message.Extension))
                            };
             }
         }

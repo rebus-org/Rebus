@@ -2,6 +2,8 @@ using System;
 using System.Messaging;
 using System.Text;
 using NUnit.Framework;
+using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -10,6 +12,12 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestRetryLogic : RebusBusMsmqIntegrationTestBase
     {
+        protected override void DoSetUp()
+        {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
+            base.DoSetUp();
+        }
+
         [Test]
         public void CanMoveUnserializableMessageToErrorQueue()
         {
@@ -23,7 +31,7 @@ namespace Rebus.Tests.Integration
             messageQueueOfReceiver.Formatter = new XmlMessageFormatter();
             messageQueueOfReceiver.Purge();
 
-            CreateBus(receiverQueueName, new HandlerActivatorForTesting()).Start();
+            CreateBus(receiverQueueName, new HandlerActivatorForTesting()).Start(1);
 
             messageQueueOfReceiver.Send("bla bla bla bla bla bla cannot be deserialized properly!!", MessageQueueTransactionType.Single);
 
@@ -65,7 +73,7 @@ namespace Rebus.Tests.Integration
                                                       throw new Exception("oh noes!");
                                                   }
                                               }))
-                .Start();
+                .Start(1);
 
             senderBus.Send(receiverQueueName, "HELLO!");
 
@@ -74,16 +82,21 @@ namespace Rebus.Tests.Integration
 
             retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
+
+            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(receiverQueueName);
         }
 
         MessageQueue GetMessageQueue(string queueName)
         {
-            var errorQueueName = PrivateQueueNamed(queueName);
-            EnsureQueueExists(errorQueueName);
-            var errorQueue = new MessageQueue(errorQueueName);
-            errorQueue.Formatter = new RebusTransportMessageFormatter();
-            errorQueue.Purge();
-            return errorQueue;
+            var queuePath = PrivateQueueNamed(queueName);
+            EnsureQueueExists(queuePath);
+            var queue = new MessageQueue(queuePath)
+                            {
+                                MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
+                                Formatter = new RebusTransportMessageFormatter(),
+                            };
+            queue.Purge();
+            return queue;
         }
     }
 }

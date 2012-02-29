@@ -3,12 +3,9 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using Rebus.Logging;
-using Rebus.Messages;
 using Rebus.Serialization;
-using Message = System.Messaging.Message;
 
 namespace Rebus.Transports.Msmq
 {
@@ -20,7 +17,6 @@ namespace Rebus.Transports.Msmq
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable, IHavePurgableInputQueue<MsmqMessageQueue>
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        static readonly Encoding HeaderEcoding = Encoding.UTF7;
 
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly DictionarySerializer dictionarySerializer = new DictionarySerializer();
@@ -65,8 +61,6 @@ namespace Rebus.Transports.Msmq
                     return null;
                 }
                 var transportMessage = (ReceivedTransportMessage) body;
-                transportMessage.Headers = dictionarySerializer.Deserialize(HeaderEcoding.GetString(message.Extension));
-                transportMessage.Label = message.Label;
                 transactionWrapper.Commit();
                 return transportMessage;
             }
@@ -106,9 +100,8 @@ namespace Rebus.Transports.Msmq
             }
 
             var transactionWrapper = GetOrCreateTransactionWrapper();
-            var msmqMessage = CreateMessage(message, outputQueue);
             
-            outputQueue.Send(msmqMessage, transactionWrapper.MessageQueueTransaction);
+            outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
             
             transactionWrapper.Commit();
         }
@@ -130,39 +123,6 @@ namespace Rebus.Transports.Msmq
         public override string ToString()
         {
             return string.Format("MsmqMessageQueue: {0}", inputQueuePath);
-        }
-
-        Message CreateMessage(TransportMessageToSend message, MessageQueue outputQueue)
-        {
-            var msmqMessage = new Message();
-            outputQueue.Formatter.Write(msmqMessage, message);
-
-            SetLabel(message, msmqMessage);
-
-            if (message.Headers == null) return msmqMessage;
-
-            SetHeaders(message, msmqMessage);
-
-            return msmqMessage;
-        }
-
-        void SetHeaders(TransportMessageToSend message, Message msmqMessage)
-        {
-            msmqMessage.Extension = HeaderEcoding.GetBytes(dictionarySerializer.Serialize(message.Headers));
-
-            if (message.Headers.ContainsKey(Headers.TimeToBeReceived))
-            {
-                msmqMessage.TimeToBeReceived = TimeSpan.Parse(message.Headers[Headers.TimeToBeReceived]);
-            }
-        }
-
-        void SetLabel(TransportMessageToSend message, Message msmqMessage)
-        {
-            var label = message.Label;
-            if (!string.IsNullOrWhiteSpace(label))
-            {
-                msmqMessage.Label = label;
-            }
         }
 
         MsmqTransactionWrapper GetOrCreateTransactionWrapper()

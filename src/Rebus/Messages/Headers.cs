@@ -8,22 +8,28 @@ namespace Rebus.Messages
         /// <summary>
         /// Key of header that contains the unique ID of the message.
         /// </summary>
-        public const string MessageId = "messageId";
+        public const string MessageId = "rebus-msg-i";
 
         /// <summary>
         /// Key of header that specifies the return address of a message.
         /// </summary>
-        public const string ReturnAddress = "returnAddress";
+        public const string ReturnAddress = "rebus-return-address";
 
         /// <summary>
         /// Key of header that contains an error message that stems from someone having experienced bad things trying to handle this message.
         /// </summary>
-        public const string ErrorMessage = "errorMessage";
+        public const string ErrorMessage = "rebus-error-message";
 
         /// <summary>
         /// Key of header that specifies the maximum time a sent/published message is valid. This can/should be used by the infrastructure
         /// to allow messages to expire when they are no longer relevant.
         /// </summary>
-        public const string TimeToBeReceived = "timeToBeReceived";
+        public const string TimeToBeReceived = "rebus-time-to-be-received";
+
+        /// <summary>
+        /// Key of source queue name - is attached to poison messages when they are moved to the error queue, allowing
+        /// someone to re-deliver the message when the receiver is ready to retry.
+        /// </summary>
+        public const string SourceQueue = "rebus-source-queue";
     }
 }

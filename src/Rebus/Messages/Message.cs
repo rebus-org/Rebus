@@ -18,7 +18,7 @@ namespace Rebus.Messages
         /// <summary>
         /// Headers of this message. May include metadata like e.g. the address of the sender.
         /// </summary>
-        public Dictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; }
 
         /// <summary>
         /// Collection of logical messages that are contained within this transport message.

@@ -4,6 +4,11 @@ namespace Rebus
 {
     public class TransportMessageToSend
     {
+        public TransportMessageToSend()
+        {
+            Headers = new Dictionary<string, string>();
+        }
+
         /// <summary>
         /// Message headers. Pre-defined header keys can be found in <see cref="Messages.Headers"/>.
         /// </summary>

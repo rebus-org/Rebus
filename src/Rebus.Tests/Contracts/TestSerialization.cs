@@ -165,7 +165,11 @@ namespace Rebus.Tests.Contracts
                                                   }
                                });
 
-            var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+            var message = instance.Deserialize(new ReceivedTransportMessage
+                                                   {
+                                                       Body = transportMessageToSend.Body,
+                                                       Headers = transportMessageToSend.Headers,
+                                                   });
 
             message.Headers.Count.ShouldBe(2);
             message.Messages.Length.ShouldBe(2);

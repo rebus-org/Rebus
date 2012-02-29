@@ -11,7 +11,7 @@ namespace Rebus.Serialization.Json
     public class JsonMessageSerializer : ISerializeMessages
     {
         static readonly JsonSerializerSettings Settings =
-            new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
+            new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
         static readonly CultureInfo SerializationCulture = CultureInfo.InvariantCulture;
 
@@ -21,7 +21,7 @@ namespace Rebus.Serialization.Json
         {
             using (new CultureContext(SerializationCulture))
             {
-                var messageAsString = JsonConvert.SerializeObject(message, Formatting.Indented, Settings);
+                var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, Settings);
 
                 return new TransportMessageToSend
                            {
@@ -36,9 +36,13 @@ namespace Rebus.Serialization.Json
         {
             using (new CultureContext(SerializationCulture))
             {
-                var messageAsString = transportMessage.Body;
+                var messages = (object[])JsonConvert.DeserializeObject(Encoding.GetString(transportMessage.Body), Settings);
 
-                return (Message)JsonConvert.DeserializeObject(Encoding.GetString(messageAsString), Settings);
+                return new Message
+                           {
+                               Headers = transportMessage.Headers.ToDictionary(k => k.Key, v => v.Value),
+                               Messages = messages
+                           };
             }
         }
 
@@ -50,7 +54,7 @@ namespace Rebus.Serialization.Json
             public CultureContext(CultureInfo cultureInfo)
             {
                 var thread = Thread.CurrentThread;
-                
+
                 currentCulture = thread.CurrentCulture;
                 currentUiCulture = thread.CurrentUICulture;
 
@@ -61,7 +65,7 @@ namespace Rebus.Serialization.Json
             public void Dispose()
             {
                 var thread = Thread.CurrentThread;
-                
+
                 thread.CurrentCulture = currentCulture;
                 thread.CurrentUICulture = currentUiCulture;
             }

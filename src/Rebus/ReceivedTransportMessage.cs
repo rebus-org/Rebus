@@ -1,9 +1,15 @@
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus
 {
     public class ReceivedTransportMessage
     {
+        public ReceivedTransportMessage()
+        {
+            Headers = new Dictionary<string, string>();
+        }
+
         /// <summary>
         /// Id given to this message, most likely by the queue infrastructure.
         /// It is important that the message can be uniquely identified - otherwise
@@ -31,12 +37,16 @@ namespace Rebus
         /// </summary>
         public TransportMessageToSend ToForwardableMessage()
         {
-            return new TransportMessageToSend
-                       {
-                           Label = Label,
-                           Body = Body,
-                           Headers = Headers,
-                       };
+            var transportMessageToSend = new TransportMessageToSend
+                                             {
+                                                 Label = Label,
+                                                 Body = Body,
+                                             };
+            if (Headers != null)
+            {
+                transportMessageToSend.Headers = Headers.ToDictionary(k => k.Key, v => v.Value);
+            }
+            return transportMessageToSend;
         }
     }
 }
