@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Rebus.Newtonsoft.JsonNET</id>
-    <version>0.9.1-alpha</version>
+    <version>1.0.0-alpha</version>
     <title>Rebus.Newtonsoft.JsonNET</title>
     <authors>Mogens Heller Grabe</authors>
     <owners>Mogens Heller Grabe</owners>
@@ -14,7 +14,7 @@
     <tags>rebus json</tags>
 
     <dependencies>
-      <dependency id="Rebus" version="0.9.1-alpha" />
+      <dependency id="Rebus" version="1.0.0-alpha" />
       <dependency id="Newtonsoft.Json" version="4.0.5" />
     </dependencies>
   </metadata>
