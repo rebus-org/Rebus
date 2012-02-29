@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Dynamic;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Logging;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
@@ -8,7 +10,13 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(TestCategories.Integration)]
     public class TestDynamicDispatch : RebusBusMsmqIntegrationTestBase
     {
-        [Test, Ignore("not sure if this one should pass... ?")]
+        protected override void DoSetUp()
+        {
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+            base.DoSetUp();
+        }
+
+        [Test, Ignore("This is silly")]
         public void HandlerWithDynamicGetAllCalls()
         {
             const string receiverInputQueueName = "test.dynamic.receiver";
@@ -18,14 +26,15 @@ namespace Rebus.Tests.Integration
             CreateBus(receiverInputQueueName, new HandlerActivatorForTesting()
                                                   .UseHandler(dynamicHandler)).Start(1);
 
-            sender.Send(receiverInputQueueName, new JustSomeMessage{Greeting = "Hello world!"});
+            var justSomeMessage = new JustSomeMessage {Greeting = "Hello world!"};
+            sender.Send(receiverInputQueueName, justSomeMessage);
 
-            Thread.Sleep(500);
+            Thread.Sleep(2000);
 
             dynamicHandler.GotIt.ShouldBe(true);
         }
 
-        class JustSomeMessage
+        public class JustSomeMessage
         {
             public string Greeting { get; set; }
         }
@@ -37,10 +46,6 @@ namespace Rebus.Tests.Integration
 
         public void Handle(dynamic message)
         {
-            Console.WriteLine(message.GetType());
-
-            Console.WriteLine(string.Join(Environment.NewLine, message.GetType().GetType()));
-
             if (message.Greeting == "Hello world!")
             {
                 GotIt = true;
