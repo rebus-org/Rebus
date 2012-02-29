@@ -112,6 +112,7 @@
     <Compile Include="TimeMachine.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionFilter.cs" />
     <Compile Include="Transports\IHavePurgableInputQueue.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
