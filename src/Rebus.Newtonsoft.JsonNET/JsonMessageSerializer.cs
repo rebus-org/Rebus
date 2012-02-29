@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Rebus.Messages;
@@ -19,6 +20,8 @@ namespace Rebus.Newtonsoft.JsonNET
 
         static readonly CultureInfo SerializationCulture = CultureInfo.InvariantCulture;
 
+        static readonly Encoding Encoding = Encoding.UTF7;
+
         public TransportMessageToSend Serialize(Message message)
         {
             using (new CultureContext(SerializationCulture))
@@ -27,7 +30,7 @@ namespace Rebus.Newtonsoft.JsonNET
 
                 return new TransportMessageToSend
                            {
-                               Data = messageAsString,
+                               Body = Encoding.GetBytes(messageAsString),
                                Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
                                Label = message.GetLabel(),
                            };
@@ -38,9 +41,9 @@ namespace Rebus.Newtonsoft.JsonNET
         {
             using (new CultureContext(SerializationCulture))
             {
-                var messageAsString = transportMessage.Data;
+                var messageAsString = transportMessage.Body;
 
-                return (Message) JsonConvert.DeserializeObject(messageAsString, Settings);
+                return (Message)JsonConvert.DeserializeObject(Encoding.GetString(messageAsString), Settings);
             }
         }
 

@@ -26,7 +26,7 @@ namespace Rebus.Tests
             var receivedTransportMessage = new ReceivedTransportMessage
                                                {
                                                    Id = NewMessageId(),
-                                                   Data = transportMessageToSend.Data,
+                                                   Body = transportMessageToSend.Body,
                                                    Label = transportMessageToSend.Label,
                                                };
 

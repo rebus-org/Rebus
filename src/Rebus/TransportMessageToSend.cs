@@ -5,17 +5,17 @@ namespace Rebus
     public class TransportMessageToSend
     {
         /// <summary>
-        /// Copy of the message headers
+        /// Message headers. Pre-defined header keys can be found in <see cref="Messages.Headers"/>.
         /// </summary>
-        public Dictionary<string, string> Headers { get; set; }
+        public IDictionary<string, string> Headers { get; set; }
 
         /// <summary>
-        /// Data of whatever header and body information this message may contain.
+        /// Message body. Should not contain any header information.
         /// </summary>
-        public string Data { get; set; }
+        public byte[] Body { get; set; }
 
         /// <summary>
-        /// String label to use if the underlying message queue supports it
+        /// String label to use if the underlying message queue supports it.
         /// </summary>
         public string Label { get; set; }
     }

@@ -3,25 +3,26 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using System.Transactions;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization;
-using Rebus.Transports.Msmq;
 
 namespace Rebus.Transports.Azure.AzureMessageQueue
 {
     public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
     {
         static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        private readonly CloudStorageAccount cloudStorageAccount;
-        private readonly string inputQueueName;
-        private readonly CloudQueueClient cloudQueueClient;
+
+        static readonly Encoding Encoding = Encoding.UTF7;
+
+        readonly CloudStorageAccount cloudStorageAccount;
+        readonly string inputQueueName;
+        readonly CloudQueueClient cloudQueueClient;
         readonly ConcurrentDictionary<string, CloudQueue> outputQueues = new ConcurrentDictionary<string, CloudQueue>();
-        private readonly CloudQueue inputQueue;
-        private readonly DictionarySerializer _dictionarySerializer;
+        readonly CloudQueue inputQueue;
+        readonly DictionarySerializer dictionarySerializer;
 
         public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName)
         {
@@ -31,7 +32,7 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
             inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
 
             
-            _dictionarySerializer = new DictionarySerializer();
+            dictionarySerializer = new DictionarySerializer();
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
@@ -54,9 +55,9 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
             message.Headers = message.Headers ?? new Dictionary<string, string>();
 
-            var headers = _dictionarySerializer.Serialize(message.Headers);
+            var headers = dictionarySerializer.Serialize(message.Headers);
 
-            var cloudMessage = new CloudQueueMessage(Encoding.UTF7.GetBytes(headers + Environment.NewLine + message.Data));
+            var cloudMessage = new CloudQueueMessage(Encoding.GetBytes(headers + Environment.NewLine + Encoding.GetString(message.Body)));
 
             var timeToLive = GetTimeToLive(message);
 
@@ -99,17 +100,17 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
                     return null;
                 }
 
-                var allData = Encoding.UTF7.GetString(rawData);
+                var allData = Encoding.GetString(rawData);
                 var dataSplitIndex = allData.IndexOf(Environment.NewLine, StringComparison.Ordinal);
 
                 var headerData = allData.Substring(0, dataSplitIndex);
-                var headers = _dictionarySerializer.Deserialize(headerData);
+                var headers = dictionarySerializer.Deserialize(headerData);
 
                 var messageData = allData.Substring(dataSplitIndex + Environment.NewLine.Length);
 
-                var receivedTransportMessage = new ReceivedTransportMessage()
+                var receivedTransportMessage = new ReceivedTransportMessage
                                                    {
-                                                       Data = messageData,
+                                                       Body = Encoding.GetBytes(messageData),
                                                        Id = message.Id,
                                                        Headers = headers
                                                    };

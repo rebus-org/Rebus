@@ -42,7 +42,7 @@ namespace Rebus.Tests.Contracts
             count.Times(() =>
                             {
                                 var transportMessageToSend = instance.Serialize(new Message { Messages = new object[] { site } });
-                                var message = instance.Deserialize(new ReceivedTransportMessage { Data = transportMessageToSend.Data });
+                                var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
                                 var deserializedSite = (Site)message.Messages[0];
                                 deserializedSite.LocalUnits.Length.ShouldBe(site.LocalUnits.Length);
                             });
@@ -100,7 +100,7 @@ namespace Rebus.Tests.Contracts
                                                }
                              };
             var transportMessageToSend = instance.Serialize(new Message {Messages = new object[] {person}});
-            var message = instance.Deserialize(new ReceivedTransportMessage { Data = transportMessageToSend.Data });
+            var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
             var deserializedPerson = (Person) message.Messages[0];
 
             deserializedPerson.Address.ShouldBeTypeOf<ForeignAddress>();
@@ -165,7 +165,7 @@ namespace Rebus.Tests.Contracts
                                                   }
                                });
 
-            var message = instance.Deserialize(new ReceivedTransportMessage { Data = transportMessageToSend.Data });
+            var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
 
             message.Headers.Count.ShouldBe(2);
             message.Messages.Length.ShouldBe(2);

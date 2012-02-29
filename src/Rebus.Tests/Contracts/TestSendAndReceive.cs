@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.WindowsAzure;
 using NUnit.Framework;
@@ -74,9 +75,11 @@ and
     {1}
 ", sender, receiver);
 
+            var encoding = Encoding.UTF7;
+
             sender.Send(receiver.InputQueue, new TransportMessageToSend
                                                  {
-                                                     Data = "this is some data",
+                                                     Body = encoding.GetBytes("this is some data"),
                                                      Headers = new Dictionary<string, string>
                                                                    {
                                                                        {"key1", "value1"},
@@ -88,7 +91,7 @@ and
 
             var receivedTransportMessage = receiver.ReceiveMessage();
 
-            receivedTransportMessage.Data.ShouldBe("this is some data");
+            encoding.GetString(receivedTransportMessage.Body).ShouldBe("this is some data");
             var headers = receivedTransportMessage.Headers;
             headers.ShouldNotBe(null);
             headers.Count.ShouldBe(2);
@@ -116,13 +119,14 @@ and
     {1}
 ", sender, receiver);
 
-            sender.Send(receiver.InputQueue, new TransportMessageToSend { Data = "wooolalalala" });
+            var encoding = Encoding.UTF7;
+            sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") });
 
             Thread.Sleep(MaximumExpectedQueueLatency);
 
             var receivedTransportMessage = receiver.ReceiveMessage();
 
-            receivedTransportMessage.Data.ShouldBe("wooolalalala");
+            encoding.GetString(receivedTransportMessage.Body).ShouldBe("wooolalalala");
         }
     }
 }

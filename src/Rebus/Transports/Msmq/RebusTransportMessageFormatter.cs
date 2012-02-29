@@ -29,19 +29,19 @@ namespace Rebus.Transports.Msmq
                 throw new ArgumentException(string.Format("Object to serialize is not a TransportMessage - it's a {0}",
                                                           obj.GetType()));
             }
-            message.BodyStream = new MemoryStream(Encoding.UTF7.GetBytes(transportMessage.Data));
+            message.BodyStream = new MemoryStream(transportMessage.Body);
         }
 
         public object Read(Message message)
         {
             var stream = message.BodyStream;
 
-            using (var reader = new StreamReader(stream, Encoding.UTF7))
+            using (var reader = new BinaryReader(stream))
             {
                 return new ReceivedTransportMessage
                            {
                                Id = message.Id,
-                               Data = reader.ReadToEnd()
+                               Body = reader.ReadBytes((int) stream.Length),
                            };
             }
         }

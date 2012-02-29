@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -28,7 +29,7 @@ namespace Rebus.Tests.Transports.Rabbit
             var messageCount = count*consumers;
 
             Console.WriteLine("Sending {0} messages", messageCount);
-            messageCount.Times(() => sender.Send(consumerInputQueue, new TransportMessageToSend { Data = "w00t!" }));
+            messageCount.Times(() => sender.Send(consumerInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t!") }));
 
             Console.WriteLine("Receiving {0} messages", messageCount);
             long receivedMessageCount = 0;
@@ -40,7 +41,7 @@ namespace Rebus.Tests.Transports.Rabbit
                                               {
                                                   var receivedTransportMessage = competingConsumers[i].ReceiveMessage();
                                                   if (receivedTransportMessage == null) return;
-                                                  receivedTransportMessage.Data.ShouldBe("w00t!");
+                                                  Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("w00t!");
                                                   Interlocked.Increment(ref receivedMessageCount);
                                               }));
 

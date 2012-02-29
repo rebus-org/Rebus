@@ -1,5 +1,6 @@
 using System;
 using System.Messaging;
+using System.Text;
 using NUnit.Framework;
 using Rebus.Transports.Msmq;
 using Shouldly;
@@ -31,7 +32,7 @@ namespace Rebus.Tests.Integration
             // this is how the XML formatter serializes a single string:
 
             // and this is the data we successfully moved to the error queue
-            errorMessage.Data.ShouldBe("<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>");
+            Encoding.UTF7.GetString(errorMessage.Body).ShouldBe("<?xml version=\"1.0\"?>\r\n<string>bla bla bla bla bla bla cannot be deserialized properly!!</string>");
         }
 
         [Test]

@@ -85,7 +85,7 @@ namespace Rebus.Transports.Rabbit
                                {
                                    Id = ea.BasicProperties.MessageId,
                                    Headers = GetHeaders(ea.BasicProperties.Headers),
-                                   Data = Encoding.GetString(ea.Body),
+                                   Body = ea.Body,
                                };
                 }
             }
@@ -152,7 +152,7 @@ namespace Rebus.Transports.Rabbit
 
         byte[] GetBody(TransportMessageToSend message)
         {
-            return Encoding.GetBytes(message.Data);
+            return message.Body;
         }
 
         IDictionary<string, string> GetHeaders(IDictionary result)

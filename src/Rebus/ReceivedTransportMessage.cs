@@ -6,24 +6,36 @@ namespace Rebus
     {
         /// <summary>
         /// Id given to this message, most likely by the queue infrastructure.
+        /// It is important that the message can be uniquely identified - otherwise
+        /// message retry will not be able to recognize the message between retries.
         /// </summary>
         public string Id { get; set; }
 
         /// <summary>
-        /// Data of whatever header and body information this message may contain.
+        /// Message headers. Pre-defined header keys can be found in <see cref="Messages.Headers"/>.
         /// </summary>
-        public string Data { get; set; }
-
         public IDictionary<string, string> Headers { get; set; }
 
+        /// <summary>
+        /// Message body. Should not contain any header information.
+        /// </summary>
+        public byte[] Body { get; set; }
+
+        /// <summary>
+        /// String label used if the underlying message queue supports it.
+        /// </summary>
         public string Label { get; set; }
 
+        /// <summary>
+        /// Converts this message into a forwardable <see cref="TransportMessageToSend"/>.
+        /// </summary>
         public TransportMessageToSend ToForwardableMessage()
         {
             return new TransportMessageToSend
                        {
                            Label = Label,
-                           Data = Data,
+                           Body = Body,
+                           Headers = Headers,
                        };
         }
     }

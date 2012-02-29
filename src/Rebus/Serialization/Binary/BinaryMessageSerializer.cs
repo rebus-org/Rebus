@@ -20,14 +20,14 @@ namespace Rebus.Serialization.Binary
                            {
                                Label = message.GetLabel(),
                                Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
-                               Data = Convert.ToBase64String(memoryStream.ToArray()),
+                               Body = memoryStream.ToArray(),
                            };
             }
         }
 
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
-            using (var memoryStream = new MemoryStream(Convert.FromBase64String(transportMessage.Data)))
+            using (var memoryStream = new MemoryStream(transportMessage.Body))
             {
                 var formatter = new BinaryFormatter();
                 var message = (Message) formatter.Deserialize(memoryStream);
