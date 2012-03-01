@@ -49,6 +49,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Rabbit", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Castle.Windsor", "Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj", "{2178D256-94D6-4443-B23B-53F723184441}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.StructureMap", "Rebus.StructureMap\Rebus.StructureMap.csproj", "{D5263804-AD2A-40E3-B656-5132255883A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -169,6 +171,16 @@ Global
 		{2178D256-94D6-4443-B23B-53F723184441}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{2178D256-94D6-4443-B23B-53F723184441}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{2178D256-94D6-4443-B23B-53F723184441}.Release|x86.ActiveCfg = Release|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +195,7 @@ Global
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{5836C347-90FC-4628-B4A1-16926B6CA781} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{2178D256-94D6-4443-B23B-53F723184441} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{D5263804-AD2A-40E3-B656-5132255883A8} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 	EndGlobalSection
 EndGlobal
