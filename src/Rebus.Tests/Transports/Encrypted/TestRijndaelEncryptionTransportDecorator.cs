@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
+using Rebus.Messages;
 using Rebus.Transports.Encrypted;
 using Shouldly;
 using System.Linq;
@@ -9,12 +10,12 @@ using System.Linq;
 namespace Rebus.Tests.Transports.Encrypted
 {
     [TestFixture]
-    public class TestEncryptionFilter : FixtureBase
+    public class TestRijndaelEncryptionTransportDecorator : FixtureBase
     {
         const string InitializationVectorBase64 = "OLYKdaDyETlu7NbDMC45dA==";
         const string KeyBase64 = "oA/ZUnFsR9w1qEatOByBSXc4woCuTxmR99tAuQ56Qko=";
 
-        EncryptionFilter filter;
+        RijndaelEncryptionTransportDecorator transport;
         Sender sender;
         Receiver receiver;
 
@@ -22,7 +23,34 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             sender = new Sender();
             receiver = new Receiver();
-            filter = new EncryptionFilter(sender, receiver, InitializationVectorBase64, KeyBase64);
+            transport = new RijndaelEncryptionTransportDecorator(sender, receiver, InitializationVectorBase64, KeyBase64);
+        }
+
+        [Test]
+        public void AddsHeaderToEncryptedMessage()
+        {
+            // arrange
+            var transportMessageToSend = new TransportMessageToSend { Body = new byte[] { 123, 125 } };
+
+            // act
+            transport.Send("somewhere", transportMessageToSend);
+
+            // assert
+            sender.SentMessage.Headers.ShouldContainKey(Headers.Encrypted);
+        }
+
+        [Test]
+        public void DoesntDecryptIfEncrypedHeaderIsNotPresent()
+        {
+            // arrange
+            var messageWithoutEncryptedHeader = new ReceivedTransportMessage { Body = new byte[] { 128 } };
+            receiver.MessageToReceive = messageWithoutEncryptedHeader;
+
+            // act
+            var receivedTransportMessage = transport.ReceiveMessage();
+
+            // assert
+            receivedTransportMessage.Body.ShouldBe(new byte[] { 128 });
         }
 
         [Test]
@@ -31,13 +59,13 @@ namespace Rebus.Tests.Transports.Encrypted
             // arrange
             var transportMessageToSend = new TransportMessageToSend
                                              {
-                                                 Headers = new Dictionary<string, string> {{"test", "blah!"}},
+                                                 Headers = new Dictionary<string, string> { { "test", "blah!" } },
                                                  Label = "label",
                                                  Body = Encoding.UTF7.GetBytes("Hello world!"),
                                              };
 
             // act
-            filter.Send("test", transportMessageToSend);
+            transport.Send("test", transportMessageToSend);
 
             // assert
             var sentMessage = sender.SentMessage;
@@ -59,17 +87,17 @@ namespace Rebus.Tests.Transports.Encrypted
                                                    236, 57, 161, 207, 128, 130, 72, 246, 159, 144, 29, 130, 179, 87, 32,
                                                    189, 225
                                                };
-            
+
             receiver.SetUpReceive(new ReceivedTransportMessage
                                       {
                                           Id = "id",
-                                          Headers = new Dictionary<string, string> {{"test", "blah!"}},
+                                          Headers = new Dictionary<string, string> { { "test", "blah!" } },
                                           Label = "label",
                                           Body = encryptedHelloWorldBytes,
                                       });
-            
+
             // act
-            var receivedTransportMessage = filter.ReceiveMessage();
+            var receivedTransportMessage = transport.ReceiveMessage();
 
             // assert
             receivedTransportMessage.Id.ShouldBe("id");
@@ -92,7 +120,7 @@ namespace Rebus.Tests.Transports.Encrypted
                                  Body = Guid.NewGuid().ToByteArray(),
                              };
 
-            filter.Send("test", toSend);
+            transport.Send("test", toSend);
 
             var sentMessage = sender.SentMessage;
             var receivedTransportMessage = new ReceivedTransportMessage
@@ -105,7 +133,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             receiver.SetUpReceive(receivedTransportMessage);
 
-            var receivedMessage = filter.ReceiveMessage();
+            var receivedMessage = transport.ReceiveMessage();
 
             receivedMessage.Label.ShouldBe(toSend.Label);
             receivedMessage.Headers.ShouldBe(toSend.Headers);

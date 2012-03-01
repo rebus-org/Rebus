@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Security.Cryptography;
+using Rebus.Extensions;
+using Rebus.Messages;
 
 namespace Rebus.Transports.Encrypted
 {
-    public class EncryptionFilter : ISendMessages, IReceiveMessages
+    public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages
     {
         static readonly RijndaelManaged Rijndael = new RijndaelManaged();
 
@@ -13,7 +15,7 @@ namespace Rebus.Transports.Encrypted
         readonly ICryptoTransform encryptor;
         readonly ICryptoTransform decryptor;
 
-        public EncryptionFilter(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string ivBase64, string keyBase64)
+        public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string ivBase64, string keyBase64)
         {
             this.innerSendMessages = innerSendMessages;
             this.innerReceiveMessages = innerReceiveMessages;
@@ -29,10 +31,12 @@ namespace Rebus.Transports.Encrypted
         {
             var transportMessageToSend = new TransportMessageToSend
                                              {
-                                                 Headers = message.Headers,
+                                                 Headers = message.Headers.Clone(),
                                                  Label = message.Label,
                                                  Body = Encrypt(message.Body),
                                              };
+
+            transportMessageToSend.Headers[Headers.Encrypted] = null;
 
             innerSendMessages.Send(destinationQueueName, transportMessageToSend);
         }
@@ -41,12 +45,16 @@ namespace Rebus.Transports.Encrypted
         {
             var receivedTransportMessage = innerReceiveMessages.ReceiveMessage();
 
+            var body = receivedTransportMessage.Headers.ContainsKey(Headers.Encrypted)
+                           ? Decrypt(receivedTransportMessage.Body)
+                           : receivedTransportMessage.Body;
+
             return new ReceivedTransportMessage
                        {
                            Id = receivedTransportMessage.Id,
                            Headers = receivedTransportMessage.Headers,
                            Label = receivedTransportMessage.Label,
-                           Body = Decrypt(receivedTransportMessage.Body),
+                           Body = body,
                        };
         }
 

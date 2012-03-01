@@ -6,6 +6,11 @@ namespace Rebus.Messages
     public class Headers
     {
         /// <summary>
+        /// Specifies that the contents of the message has been encrypted.
+        /// </summary>
+        public const string Encrypted = "rebus-encrypted";
+
+        /// <summary>
         /// Key of header that contains the unique ID of the message.
         /// </summary>
         public const string MessageId = "rebus-msg-i";

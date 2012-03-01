@@ -193,8 +193,8 @@ namespace Rebus.Tests.Configuration
             Configure.With(adapter)
                 .Transport(t => t.UseEncryptedMsmqAndGetConfigurationFromAppConfig());
 
-            adapter.Resolve<ISendMessages>().ShouldBeTypeOf<EncryptionFilter>();
-            adapter.Resolve<IReceiveMessages>().ShouldBeTypeOf<EncryptionFilter>();
+            adapter.Resolve<ISendMessages>().ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+            adapter.Resolve<IReceiveMessages>().ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
         }
 
         /// <summary>

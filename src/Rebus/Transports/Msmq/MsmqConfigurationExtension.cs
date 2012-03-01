@@ -163,7 +163,7 @@ A more full example configuration snippet can be seen here:
             }
 
             var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
-            var encryptionFilter = new EncryptionFilter(msmqMessageQueue, msmqMessageQueue, iv, key);
+            var encryptionFilter = new RijndaelEncryptionTransportDecorator(msmqMessageQueue, msmqMessageQueue, iv, key);
 
             configurer.UseSender(encryptionFilter);
             configurer.UseReceiver(encryptionFilter);
