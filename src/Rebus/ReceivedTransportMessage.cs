@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus
 {
@@ -44,7 +45,7 @@ namespace Rebus
                                              };
             if (Headers != null)
             {
-                transportMessageToSend.Headers = Headers.ToDictionary(k => k.Key, v => v.Value);
+                transportMessageToSend.Headers = Headers.Clone();
             }
             return transportMessageToSend;
         }

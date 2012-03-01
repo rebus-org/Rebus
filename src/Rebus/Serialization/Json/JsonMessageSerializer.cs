@@ -5,6 +5,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Rebus.Messages;
 using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus.Serialization.Json
 {
@@ -26,7 +27,7 @@ namespace Rebus.Serialization.Json
                 return new TransportMessageToSend
                            {
                                Body = Encoding.GetBytes(messageAsString),
-                               Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
+                               Headers = message.Headers.Clone(),
                                Label = message.GetLabel(),
                            };
             }
@@ -40,7 +41,7 @@ namespace Rebus.Serialization.Json
 
                 return new Message
                            {
-                               Headers = transportMessage.Headers.ToDictionary(k => k.Key, v => v.Value),
+                               Headers = transportMessage.Headers.Clone(),
                                Messages = messages
                            };
             }

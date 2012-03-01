@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using Rebus.Messages;
-using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus.Serialization.Binary
 {
@@ -18,7 +18,7 @@ namespace Rebus.Serialization.Binary
                 return new TransportMessageToSend
                            {
                                Label = message.GetLabel(),
-                               Headers = message.Headers.ToDictionary(k => k.Key, v => v.Value),
+                               Headers = message.Headers.Clone(),
                                Body = memoryStream.ToArray(),
                            };
             }
