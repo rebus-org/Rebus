@@ -6,6 +6,7 @@ using Rebus.Messages;
 using Rebus.Transports.Encrypted;
 using Shouldly;
 using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus.Tests.Transports.Encrypted
 {
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             // assert
             var sentMessage = sender.SentMessage;
-            sentMessage.Headers.Count.ShouldBe(1);
+            sentMessage.Headers.Count.ShouldBe(2);
             sentMessage.Headers["test"].ShouldBe("blah!");
             sentMessage.Label.ShouldBe("label");
             sentMessage.Body.ShouldNotBe(Encoding.UTF7.GetBytes("Hello world!"));
@@ -91,7 +92,11 @@ namespace Rebus.Tests.Transports.Encrypted
             receiver.SetUpReceive(new ReceivedTransportMessage
                                       {
                                           Id = "id",
-                                          Headers = new Dictionary<string, string> { { "test", "blah!" } },
+                                          Headers = new Dictionary<string, string>
+                                                        {
+                                                            { "test", "blah!" },
+                                                            { Headers.Encrypted, null}
+                                                        },
                                           Label = "label",
                                           Body = encryptedHelloWorldBytes,
                                       });
@@ -102,7 +107,7 @@ namespace Rebus.Tests.Transports.Encrypted
             // assert
             receivedTransportMessage.Id.ShouldBe("id");
             receivedTransportMessage.Label.ShouldBe("label");
-            receivedTransportMessage.Headers.Count.ShouldBe(1);
+            receivedTransportMessage.Headers.Count.ShouldBe(2);
             receivedTransportMessage.Headers["test"].ShouldBe("blah!");
             Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("Hello world!");
         }
@@ -136,7 +141,9 @@ namespace Rebus.Tests.Transports.Encrypted
             var receivedMessage = transport.ReceiveMessage();
 
             receivedMessage.Label.ShouldBe(toSend.Label);
-            receivedMessage.Headers.ShouldBe(toSend.Headers);
+            var expectedHeaders = toSend.Headers.Clone();
+            expectedHeaders[Headers.Encrypted] = null;
+            receivedMessage.Headers.ShouldBe(expectedHeaders);
             receivedMessage.Body.ShouldBe(toSend.Body);
         }
 
