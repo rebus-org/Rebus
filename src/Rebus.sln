@@ -10,7 +10,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B
 		..\scripts\Rebus.Castle.Windsor.nuspec = ..\scripts\Rebus.Castle.Windsor.nuspec
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
-		..\scripts\Rebus.Newtonsoft.JsonNET.nuspec = ..\scripts\Rebus.Newtonsoft.JsonNET.nuspec
 		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
 	EndProjectSection
 EndProject

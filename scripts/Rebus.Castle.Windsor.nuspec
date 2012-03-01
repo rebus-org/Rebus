@@ -9,9 +9,9 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Provides a Rebus container adapter for Rebus</description>
+    <description>Provides a Castle Windsor container adapter for Rebus</description>
     <copyright>Copyright 2012</copyright>
-    <tags>rebus castle windsor</tags>
+    <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
 
     <dependencies>
       <dependency id="Rebus" version="1.0.0-alpha" />
