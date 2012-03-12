@@ -51,6 +51,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Castle.Windsor", "Reb
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.StructureMap", "Rebus.StructureMap\Rebus.StructureMap.csproj", "{D5263804-AD2A-40E3-B656-5132255883A8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835FA7-6BCF-4A99-B4EC-D9BA8A91A4CA}"
+	ProjectSection(SolutionItems) = preProject
+		..\scripts\Rebus.Castle.Windsor.nuspec = ..\scripts\Rebus.Castle.Windsor.nuspec
+		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
+		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
+		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
+		..\scripts\Rebus.StructureMap.nuspec = ..\scripts\Rebus.StructureMap.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -186,6 +195,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{9A835FA7-6BCF-4A99-B4EC-D9BA8A91A4CA} = {37452F2B-E43B-4A39-9956-E3FB17DA2042}
 		{DF9BC662-7AD8-4656-91D2-C568451FF7B6} = {08A7D597-5B08-4B2B-9DB1-8C0A11D82763}
 		{E0D1CCD6-08E1-4BF4-BBC5-B87EBE89DEE2} = {DF9BC662-7AD8-4656-91D2-C568451FF7B6}
 		{E27AC8E3-9588-4CCA-AC44-4CB671D41011} = {DF9BC662-7AD8-4656-91D2-C568451FF7B6}
