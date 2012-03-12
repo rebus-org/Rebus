@@ -6,6 +6,7 @@
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
 
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
   </ItemGroup>
@@ -57,5 +58,6 @@
     <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Log4Net.nuspec -OutputDirectory $(BuildOutputFolder)"/>
     <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Castle.Windsor.nuspec -OutputDirectory $(BuildOutputFolder)"/>
     <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.MongoDb.nuspec -OutputDirectory $(BuildOutputFolder)"/>
+    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.StructureMap.nuspec -OutputDirectory $(BuildOutputFolder)"/>
   </Target>
 </Project>
