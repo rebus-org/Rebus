@@ -57,5 +57,24 @@ here it is:
             var deserializedDictionary = serializer.Deserialize(str);
             deserializedDictionary.ShouldBe(dictionaryWithExceptionMessages);
         }
+
+        [Test]
+        public void SerializedHeadersAreHumanReadable()
+        {
+            var dictionary = new Dictionary<string, string>
+                                 {
+                                     {"some-key", "some-value"},
+                                     {"another-key", "another-value"},
+                                 };
+
+            var str = serializer.Serialize(dictionary);
+
+            Console.WriteLine(str);
+
+            str.ShouldContain("some-key");
+            str.ShouldContain("another-key");
+            str.ShouldContain("some-value");
+            str.ShouldContain("another-value");
+        }
     }
 }
