@@ -1,33 +1,47 @@
+using System;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Persistence.InMemory;
-using Rebus.Tests.Integration;
-using Rebus.Transports.Msmq;
-using JsonMessageSerializer = Rebus.Serialization.Json.JsonMessageSerializer;
+using Shouldly;
 
 namespace Rebus.Tests.Bugs
 {
     public class SubscribingToMessagesNotInBCLOrExecutingAssembly : RebusBusMsmqIntegrationTestBase
     {
+        const string PublisherInputQueueName = "test.publisher";
+        const string SubscriberInputQueueName = "test.subscriber";
+
         [Test]
         public void SubscriptionWorks()
         {
-            var inputQueueName = "test.subscriber";
-            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
-            serializer = new JsonMessageSerializer();
-
+            // arrange
             var subscriptionStorage = new InMemorySubscriptionStorage();
-            var bus = new RebusBus(new HandlerActivatorForTesting(), messageQueue, messageQueue,
-                                   subscriptionStorage, new SagaDataPersisterForTesting(),
-                                   this, serializer, new TrivialPipelineInspector());
-
-            bus.Start();
-            bus.Subscribe<TheMessage>("test.subscriber");
+            
+            // publisher
+            CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage, new InMemorySagaPersister()).Start(1);
+            
+            // subscriber
+            var subscriber = CreateBus(SubscriberInputQueueName, new HandlerActivatorForTesting()).Start(1);
+            
+            // act
+            subscriber.Subscribe<TheMessage>();
 
             Thread.Sleep(500);
 
-            Assert.AreEqual("test.subscriber", subscriptionStorage.GetSubscribers(typeof(TheMessage))[0]);
+            // assert
+            var subscribers = subscriptionStorage.GetSubscribers(typeof (TheMessage));
+            subscribers.Length.ShouldBe(1);
+            subscribers[0].ShouldBe(SubscriberInputQueueName);
+        }
+
+        public override string GetEndpointFor(Type messageType)
+        {
+            if (messageType == typeof(TheMessage))
+            {
+                return PublisherInputQueueName;
+            }
+
+            return base.GetEndpointFor(messageType);
         }
         
         public class TheMessage
