@@ -84,6 +84,7 @@ namespace Rebus.Tests.Integration
             errorMessage.Messages[0].ShouldBe("HELLO!");
 
             errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(receiverQueueName);
+            errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: oh noes!");
         }
 
         MessageQueue GetMessageQueue(string queueName)

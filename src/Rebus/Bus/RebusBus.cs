@@ -175,8 +175,23 @@ namespace Rebus.Bus
             Log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
 
             transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueue;
+            transportMessageToSend.Headers[Headers.ErrorMessage] = errorDetail;
 
-            sendMessages.Send("error", transportMessageToSend);
+            try
+            {
+                sendMessages.Send("error", transportMessageToSend);
+            }
+            catch(Exception e)
+            {
+                Log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
+
+                // what to do? we need to throw again, or the message will not be rolled back and will thus be lost
+                // - but we want to avoid thrashing, so we just log the badness and relax a little bit - that's
+                // probably the best we can do
+                Thread.Sleep(300);
+
+                throw;
+            }
         }
 
         public void Dispose()
