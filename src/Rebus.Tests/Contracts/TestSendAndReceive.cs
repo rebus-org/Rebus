@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts
                              {
                                  MsmqTransports(),
                                  //AzureQueueTransports(),
-                                 RabbitMqTransports(),
+                                 //RabbitMqTransports(),
                              };
         }
 
