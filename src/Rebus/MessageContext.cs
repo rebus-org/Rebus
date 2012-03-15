@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Rebus.Logging;
 
 namespace Rebus
@@ -10,11 +9,11 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IDisposable, IMessageContext
     {
-        static ILog Log;
+        static ILog log;
 
         static MessageContext()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         public static event Action<IMessageContext> Established = delegate { };
@@ -95,7 +94,7 @@ Stacktrace of when the current message context was created:
 
         public void Abort()
         {
-            Log.Debug("Abort was called - will stop dispatching message to handlers");
+            log.Debug("Abort was called - will stop dispatching message to handlers");
             DispatchMessageToHandlers = false;
         }
 

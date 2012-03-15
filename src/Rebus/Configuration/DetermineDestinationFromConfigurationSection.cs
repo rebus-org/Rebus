@@ -12,11 +12,11 @@ namespace Rebus.Configuration
     /// </summary>
     public class DetermineDestinationFromConfigurationSection : IDetermineDestination
     {
-        static ILog Log;
+        static ILog log;
 
         static DetermineDestinationFromConfigurationSection()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
@@ -82,7 +82,7 @@ Note also, that specifying the input queue name with the InputQueue attribute is
                 {
                     var assemblyName = element.Messages;
 
-                    Log.Info("Mapping assembly: {0}", assemblyName);
+                    log.Info("Mapping assembly: {0}", assemblyName);
 
                     var assembly = LoadAssembly(assemblyName);
 
@@ -95,7 +95,7 @@ Note also, that specifying the input queue name with the InputQueue attribute is
                 {
                     var typeName = element.Messages;
 
-                    Log.Info("Mapping type: {0}", typeName);
+                    log.Info("Mapping type: {0}", typeName);
 
                     var messageType = Type.GetType(typeName);
 
@@ -140,11 +140,11 @@ For this to work, Rebus needs access to an assembly with one of the following fi
 
         void Map(Type messageType, string endpoint)
         {
-            Log.Info("    {0} -> {1}", messageType, endpoint);
+            log.Info("    {0} -> {1}", messageType, endpoint);
             
             if (endpointMappings.ContainsKey(messageType))
             {
-                Log.Warn("    ({0} -> {1} overridden by -> {2})", messageType, endpointMappings[messageType], endpoint);
+                log.Warn("    ({0} -> {1} overridden by -> {2})", messageType, endpointMappings[messageType], endpoint);
             }
             
             endpointMappings[messageType] = endpoint;

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
@@ -13,11 +12,11 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 {
     public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
     {
-        static ILog Log;
+        static ILog log;
 
         static AzureMessageQueue()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         static readonly Encoding Encoding = Encoding.UTF7;
@@ -100,7 +99,7 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
                 if (rawData == null)
                 {
-                    Log.Warn("Received message with NULL data - how weird is that?");
+                    log.Warn("Received message with NULL data - how weird is that?");
                     azureMessageQueueTransactionSimulator.Commit();
                     return null;
                 }
@@ -126,7 +125,7 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
             }
             catch (Exception e)
             {
-                Log.Error(e, "An error occurred while receiving message from {0}", inputQueueName);
+                log.Error(e, "An error occurred while receiving message from {0}", inputQueueName);
                 azureMessageQueueTransactionSimulator.Abort();
                 return null;
             }
@@ -141,7 +140,7 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
         public AzureMessageQueue PurgeInputQueue()
         {
-            Log.Warn("Purging {0}", inputQueueName);
+            log.Warn("Purging {0}", inputQueueName);
 
             if (inputQueue.Exists())
                 inputQueue.Clear();

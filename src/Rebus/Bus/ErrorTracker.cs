@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using Rebus.Logging;
 
 namespace Rebus.Bus
@@ -12,11 +11,11 @@ namespace Rebus.Bus
     /// </summary>
     public class ErrorTracker
     {
-        static ILog Log;
+        static ILog log;
 
         static ErrorTracker()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
@@ -74,7 +73,7 @@ namespace Rebus.Bus
             {
                 exceptions.Add(exception);
 
-                Log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
+                log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
             }
 
             public string GetErrorMessages()

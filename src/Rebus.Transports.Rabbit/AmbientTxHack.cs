@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Transactions;
 using Rebus.Logging;
 
@@ -7,11 +6,11 @@ namespace Rebus.Transports.Rabbit
 {
     class AmbientTxHack : IEnlistmentNotification, IDisposable
     {
-        static ILog Log;
+        static ILog log;
 
         static AmbientTxHack()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly Action commitAction;
@@ -27,7 +26,7 @@ namespace Rebus.Transports.Rabbit
 
             if (Transaction.Current != null)
             {
-                Log.Debug("Enlisting AmbientTxHack in ambient TX");
+                log.Debug("Enlisting AmbientTxHack in ambient TX");
 
                 isEnlisted = true;
                 Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
@@ -38,14 +37,14 @@ namespace Rebus.Transports.Rabbit
         {
             AssertEnlisted();
             preparingEnlistment.Prepared();
-            Log.Debug("Prepared!");
+            log.Debug("Prepared!");
         }
 
         public void Commit(Enlistment enlistment)
         {
             AssertEnlisted();
 
-            Log.Debug("Committing!");
+            log.Debug("Committing!");
             commitAction();
             DisposeStuff();
 
@@ -56,7 +55,7 @@ namespace Rebus.Transports.Rabbit
         {
             AssertEnlisted();
 
-            Log.Debug("Rolling back!");
+            log.Debug("Rolling back!");
             rollbackAction();
             DisposeStuff();
             
@@ -67,7 +66,7 @@ namespace Rebus.Transports.Rabbit
         {
             AssertEnlisted();
             
-            Log.Warn("AmbientTxHack in doubt...");
+            log.Warn("AmbientTxHack in doubt...");
             DisposeStuff();
 
             enlistment.Done();
@@ -93,7 +92,7 @@ namespace Rebus.Transports.Rabbit
         {
             if (isEnlisted) return;
 
-            Log.Debug("Committing!");
+            log.Debug("Committing!");
             commitAction();
             DisposeStuff();
         }

@@ -2,10 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
-using System.Reflection;
 using System.Threading;
 using Rebus.Logging;
-using Rebus.Serialization;
 
 namespace Rebus.Transports.Msmq
 {
@@ -16,15 +14,14 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable, IHavePurgableInputQueue<MsmqMessageQueue>
     {
-        static ILog Log;
+        static ILog log;
 
         static MsmqMessageQueue()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
-        readonly DictionarySerializer dictionarySerializer = new DictionarySerializer();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
@@ -54,14 +51,14 @@ namespace Rebus.Transports.Msmq
                 var message = inputQueue.Receive(TimeSpan.FromSeconds(2), transactionWrapper.MessageQueueTransaction);
                 if (message == null)
                 {
-                    Log.Warn("Received NULL message - how weird is that?");
+                    log.Warn("Received NULL message - how weird is that?");
                     transactionWrapper.Commit();
                     return null;
                 }
                 var body = message.Body;
                 if (body == null)
                 {
-                    Log.Warn("Received message with NULL body - how weird is that?");
+                    log.Warn("Received message with NULL body - how weird is that?");
                     transactionWrapper.Commit();
                     return null;
                 }
@@ -76,7 +73,7 @@ namespace Rebus.Transports.Msmq
             }
             catch (Exception e)
             {
-                Log.Error(e, "An error occurred while receiving message from {0}", inputQueuePath);
+                log.Error(e, "An error occurred while receiving message from {0}", inputQueuePath);
                 transactionWrapper.Abort();
                 return null;
             }
@@ -113,14 +110,14 @@ namespace Rebus.Transports.Msmq
 
         public MsmqMessageQueue PurgeInputQueue()
         {
-            Log.Warn("Purging {0}", inputQueuePath);
+            log.Warn("Purging {0}", inputQueuePath);
             inputQueue.Purge();
             return this;
         }
 
         public void Dispose()
         {
-            Log.Info("Disposing message queues");
+            log.Info("Disposing message queues");
             inputQueue.Dispose();
             outputQueues.Values.ToList().ForEach(q => q.Dispose());
         }
@@ -162,7 +159,7 @@ namespace Rebus.Transports.Msmq
 
             if (!queueExists && createIfNotExists)
             {
-                Log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
+                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
                 var messageQueue = MessageQueue.Create(path, true);
                 messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
                 messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);

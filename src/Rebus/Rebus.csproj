@@ -71,6 +71,7 @@
     <Compile Include="Extensions\DictExt.cs" />
     <Compile Include="IMessageContext.cs" />
     <Compile Include="Lifestyle.cs" />
+    <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />

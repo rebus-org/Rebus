@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Rebus.Logging
 {
-    internal class ConsoleLoggerFactory : IRebusLoggerFactory
+    internal class ConsoleLoggerFactory : AbstractRebusLoggerFactory
     {
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
 
@@ -34,7 +34,7 @@ namespace Rebus.Logging
             }
         }
 
-        public ILog GetLogger(Type type)
+        protected override ILog GetLogger(Type type)
         {
             ILog logger;
             if (!Loggers.TryGetValue(type, out logger))

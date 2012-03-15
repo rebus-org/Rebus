@@ -12,11 +12,11 @@ namespace Rebus.Bus
     /// </summary>
     public class Dispatcher
     {
-        static ILog Log;
+        static ILog log;
 
         static Dispatcher()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
@@ -64,13 +64,13 @@ namespace Rebus.Bus
 
                 if (!distinctHandlersToExecute.Any())
                 {
-                    Log.Warn("The dispatcher could not find any handlers to execute with message of type {0}", typeof(TMessage));
+                    log.Warn("The dispatcher could not find any handlers to execute with message of type {0}", typeof(TMessage));
                 }
                 else
                 {
                     foreach (var handler in distinctHandlersToExecute)
                     {
-                        Log.Debug("Dispatching {0} to {1}", message, handler);
+                        log.Debug("Dispatching {0} to {1}", message, handler);
 
                         var handlerType = handler.GetType();
 
@@ -95,7 +95,7 @@ namespace Rebus.Bus
                     }
                     catch (Exception e)
                     {
-                        Log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
+                        log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
                     }
                 }
             }
@@ -202,7 +202,7 @@ namespace Rebus.Bus
                     }
                     else
                     {
-                        Log.Warn("No saga data was found for {0}", handler);
+                        log.Warn("No saga data was found for {0}", handler);
                         return;
                     }
                 }

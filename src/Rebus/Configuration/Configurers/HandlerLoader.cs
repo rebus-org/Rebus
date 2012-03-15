@@ -7,11 +7,11 @@ namespace Rebus.Configuration.Configurers
 {
     public class HandlerLoader
     {
-        static ILog Log;
+        static ILog log;
 
         static HandlerLoader()
         {
-            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly IContainerAdapter containerAdapter;
@@ -28,13 +28,13 @@ namespace Rebus.Configuration.Configurers
 
         public HandlerLoader LoadFrom(Predicate<Type> shouldRegisterType, Assembly assemblyToScan, params Assembly[] additionalAssemblies)
         {
-            Log.Debug("Loading handlers");
+            log.Debug("Loading handlers");
 
             var assembliesToScan = new[] { assemblyToScan }.Union(additionalAssemblies);
 
             foreach(var assembly in assembliesToScan)
             {
-                Log.Debug("Scanning {0}", assembly);
+                log.Debug("Scanning {0}", assembly);
 
                 RegisterHandlersFrom(assembly, shouldRegisterType);
             }
@@ -61,7 +61,7 @@ namespace Rebus.Configuration.Configurers
 
             foreach(var handler in messageHandlers)
             {
-                Log.Debug("Registering handler {0} -> {1}", handler.Implementation, handler.Service);
+                log.Debug("Registering handler {0} -> {1}", handler.Implementation, handler.Service);
 
                 containerAdapter.Register(handler.Implementation, Lifestyle.Instance, handler.Service);
             }
