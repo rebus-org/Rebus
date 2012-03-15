@@ -60,6 +60,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.StructureMap.nuspec = ..\scripts\Rebus.StructureMap.nuspec
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.RavenDb", "Rebus.RavenDb\Rebus.RavenDb.csproj", "{A56478ED-F8B1-4300-9C6C-87322E565252}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -190,6 +192,16 @@ Global
 		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{D5263804-AD2A-40E3-B656-5132255883A8}.Release|x86.ActiveCfg = Release|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A56478ED-F8B1-4300-9C6C-87322E565252}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -206,6 +218,7 @@ Global
 		{5836C347-90FC-4628-B4A1-16926B6CA781} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{2178D256-94D6-4443-B23B-53F723184441} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{D5263804-AD2A-40E3-B656-5132255883A8} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{A56478ED-F8B1-4300-9C6C-87322E565252} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 	EndGlobalSection
 EndGlobal
