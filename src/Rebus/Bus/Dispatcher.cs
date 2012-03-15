@@ -184,11 +184,9 @@ namespace Rebus.Bus
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
             var saga = handler as Saga;
-            
             if (saga != null)
             {
                 saga.ConfigureHowToFindSaga();
-                var dataProperty = handler.GetType().GetProperty("Data");
                 var sagaData = GetSagaData(message, saga);
 
                 if (sagaData == null)
@@ -196,11 +194,17 @@ namespace Rebus.Bus
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
                         sagaData = CreateSagaData(handler);
-                        PerformSaveActions(message, handler, saga, dataProperty, sagaData);
                     }
-                    return;
+                    else
+                    {
+                        Log.Warn("No saga data was found for {0}", handler);
+                        return;
+                    }
                 }
-                PerformSaveActions(message, handler, saga, dataProperty, sagaData);
+
+                handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
+                handler.Handle(message);
+                PerformSaveActions(saga, sagaData);
                 return;
             }
 
@@ -208,11 +212,8 @@ namespace Rebus.Bus
         }
         // ReSharper restore UnusedMember.Local
 
-        void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, Saga saga, PropertyInfo dataProperty, ISagaData sagaData)
+        void PerformSaveActions(Saga saga, ISagaData sagaData)
         {
-            dataProperty.SetValue(handler, sagaData, new object[0]);
-            handler.Handle(message);
-
             if (!saga.Complete)
             {
                 var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
