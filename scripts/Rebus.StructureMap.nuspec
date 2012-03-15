@@ -13,7 +13,7 @@
     <copyright>Copyright 2012</copyright>
     <tags>rebus structuremap</tags>
     <dependencies>
-      <dependency id="Rebus" version="0.10.2-alpha" />
+      <dependency id="Rebus" version="0.0.1" />
       <dependency id="structuremap" version="2.6.3" />
     </dependencies>
   </metadata>

@@ -17,6 +17,7 @@
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
 
     <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
+    <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
 
   </ItemGroup>
 
@@ -69,11 +70,13 @@
 
     <!-- Revert NuSpec versions. Version doesn't need to be committed to repo. -->
     <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(DefaultNuSpecVersion)" />
+    <XmlPoke XmlInputPath="%(DependantNuSpecFiles.FullPath)" Query="//dependency[@id='Rebus']/@version" Value="$(DefaultNuSpecVersion)" />
   </Target>
 
   <Target Name="updateNuspecVersions" Condition="'$(Version)' != ''">
     <Message Text="Updating NuSpec version..."/>
     <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(Version)" />
+    <XmlPoke XmlInputPath="%(DependantNuSpecFiles.FullPath)" Query="//dependency[@id='Rebus']/@version" Value="$(Version)" />
   </Target>
 
   <Target Name="pushNugetPackages" DependsOnTargets="createNugetPackage" Condition="'$(Version)' != ''">

@@ -13,7 +13,7 @@
     <copyright>Copyright 2012</copyright>
     <tags>rebus log4net</tags>
     <dependencies>
-      <dependency id="Rebus" version="0.10.2-alpha" />
+      <dependency id="Rebus" version="0.0.1" />
       <dependency id="log4net" version="2.0.0" />
     </dependencies>
   </metadata>

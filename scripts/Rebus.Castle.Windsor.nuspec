@@ -13,7 +13,7 @@
     <copyright>Copyright 2012</copyright>
     <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
     <dependencies>
-      <dependency id="Rebus" version="0.10.2-alpha" />
+      <dependency id="Rebus" version="0.0.1" />
       <dependency id="Castle.Core" version="3.0.0.4001" />
       <dependency id="Castle.Windsor" version="3.0.0.4001" />
     </dependencies>
