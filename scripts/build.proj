@@ -21,7 +21,6 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <Version>0.10.1-alpha</Version>
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
@@ -30,7 +29,7 @@
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
   </PropertyGroup>
 
-  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge;createNugetPackage" />
+  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge" />
 
   <Target Name="clean_output_folder">
     <Message Text="Removing old output folder"/>
@@ -61,14 +60,24 @@
     <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4 /internalize"/>
   </Target>
   
-  <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions">
+  <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
     <Message Text="NuGet packing..."/>
     
     <Exec Command="$(NuGet) pack %(NuSpecFiles.FullPath) -OutputDirectory $(BuildOutputFolder)"/>
   </Target>
 
-  <Target Name="updateNuspecVersions">
+  <Target Name="updateNuspecVersions" Condition="'$(Version)' != ''">
     <Message Text="Updating NuSpec version..."/>
     <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(Version)" />
   </Target>
+
+  <Target Name="pushNugetPackages" DependsOnTargets="createNugetPackage" Condition="'$(Version)' != ''">
+    <ItemGroup>
+      <NuGetPackages Include="$(BuildOutputFolder)\*.nupkg" />
+    </ItemGroup>
+
+    <Message Text="Pushing NuGet packages..." />
+    <Exec Command="$(NuGet) push %(NuGetPackages.FullPath)" />
+  </Target>
+  
 </Project>
