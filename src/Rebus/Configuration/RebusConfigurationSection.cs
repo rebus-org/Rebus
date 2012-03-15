@@ -9,6 +9,7 @@ namespace Rebus.Configuration
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";
         const string WorkersAttributeName = "workers";
+        const string configSectionName = "rebus";
 
         [ConfigurationProperty(RijndaelCollectionPropertyName)]
         public RijndaelSection RijndaelSection
@@ -49,7 +50,7 @@ namespace Rebus.Configuration
 
         public static RebusConfigurationSection LookItUp()
         {
-            var section = ConfigurationManager.GetSection("rebus");
+            var section = ConfigurationManager.GetSection(configSectionName);
 
             if (section == null || !(section is RebusConfigurationSection))
             {
@@ -65,7 +66,7 @@ that it is NOT possible to rename this section, even though the declaration make
 
         public static TValue GetConfigurationValueOrDefault<TValue>(Func<RebusConfigurationSection, TValue> getConfigurationValue, TValue defaultValue)
         {
-            var section = ConfigurationManager.GetSection("rebus");
+            var section = ConfigurationManager.GetSection(configSectionName);
 
             if (!(section is RebusConfigurationSection)) return defaultValue;
 
