@@ -47,14 +47,14 @@ my_service.inputQueue as its input queue:
     <?xml version=""1.0""?>
     <configuration>
         <configSections>
-            <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
+            <section name=""rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         </configSections>
   
-        <Rebus>
-            <Endpoints>
-                <add Messages=""MyService.Messages"" Endpoint=""my_service.inputQueue""/>
-            </Endpoints>
-        </Rebus>
+        <rebus>
+            <endpoints>
+                <add messages=""MyService.Messages"" endpoint=""my_service.inputQueue""/>
+            </endpoints>
+        </rebus>
 
         <!-- (...) -->
     </configuration>
