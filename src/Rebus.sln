@@ -52,6 +52,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
 		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
+		..\scripts\Rebus.RavenDb.nuspec = ..\scripts\Rebus.RavenDb.nuspec
 		..\scripts\Rebus.StructureMap.nuspec = ..\scripts\Rebus.StructureMap.nuspec
 	EndProjectSection
 EndProject

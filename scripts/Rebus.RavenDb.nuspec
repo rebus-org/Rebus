@@ -1,26 +1,27 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Rebus.Castle.Windsor</id>
+    <id>Rebus.RavenDb</id>
     <version>0.10.2-alpha</version>
-    <title>Rebus.Castle.Windsor</title>
+    <title>Rebus.RavenDb</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Provides a Castle Windsor container adapter for Rebus</description>
+    <description>Provides RavenDb saga persister and subscription storage</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
 
     <dependencies>
       <dependency id="Rebus" version="0.10.2-alpha" />
-      <dependency id="Castle.Core" version="3.0.0.4001" />
-      <dependency id="Castle.Windsor" version="3.0.0.4001" />
+      <dependency id="Newtonsoft.Json" version="4.0.8" />
+      <dependency id="NLog" version="2.0.0.2000" />
+      <dependency id="RavenDB-Client" version="1.0.701" />
     </dependencies>
   </metadata>
 
   <files>
-    <file src="..\deploy\**\Rebus.Castle.Windsor.dll" target="lib"/>
+    <file src="..\deploy\**\Rebus.RavenDb.dll" target="lib"/>
   </files>
 </package>
