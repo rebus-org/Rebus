@@ -4,8 +4,8 @@ namespace Rebus.Configuration
 {
     public class MappingElement : ConfigurationElement
     {
-        const string MessagesPropertyName = "Messages";
-        const string EndpointPropertyName = "Endpoint";
+        const string MessagesPropertyName = "messages";
+        const string EndpointPropertyName = "endpoint";
 
         [ConfigurationProperty(MessagesPropertyName)]
         public string Messages
