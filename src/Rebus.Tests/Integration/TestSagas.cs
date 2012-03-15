@@ -27,7 +27,7 @@ namespace Rebus.Tests.Integration
             var orderNumbers = new Queue<int>();
             orderNumbers.Enqueue(1000);
             orderNumbers.Enqueue(1001);
-            activator.UseHandler(new MySaga(orderNumbers));
+            activator.UseHandler(() => new MySaga(orderNumbers));
 
             dispatcher.Dispatch(new OrderPlaced { OrderPlacementId = 2, ProductName = "beer" });
             dispatcher.Dispatch(new OrderPlaced { OrderPlacementId = 3, ProductName = "nuts" });
