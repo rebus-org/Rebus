@@ -22,11 +22,10 @@ namespace Rebus.RavenDb
 
         public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            var etag = GetEtag(sagaData);
             try
             {
                 store.DatabaseCommands.Put(Key(sagaData),
-                                           etag,
+                                           GetEtag(sagaData),
                                            RavenJObject.FromObject(sagaData),
                                            new RavenJObject
                                            {
@@ -64,7 +63,7 @@ namespace Rebus.RavenDb
                 result = store.DatabaseCommands.Query("dynamic/" + collectionName,
                                                       new IndexQuery
                                                       {
-                                                          Query = sagaDataPropertyPath + ":\"" + fieldFromMessage + "\""
+                                                          Query = string.Format("{0}:\"{1}\"", sagaDataPropertyPath, fieldFromMessage)
                                                       },
                                                       new string[0]);
             } while (result.IsStale);

@@ -40,17 +40,17 @@ namespace Rebus.RavenDb
         {
             using (var session = store.OpenSession())
             {
-                var subscription = session.Load<RebusSubscriptions>(Key(messageType));
+                var subscription = session.Load<RebusSubscription>(Key(messageType));
                 return subscription == null ? new string[0] : subscription.Endpoints.ToArray();
             }
         }
 
-        RebusSubscriptions EnsureSubscription(IDocumentSession session, Type messageType)
+        RebusSubscription EnsureSubscription(IDocumentSession session, Type messageType)
         {
-            var subscription = session.Load<RebusSubscriptions>(Key(messageType));
+            var subscription = session.Load<RebusSubscription>(Key(messageType));
             if (subscription == null)
             {
-                var newSubscription = new RebusSubscriptions
+                var newSubscription = new RebusSubscription
                 {
                     Id = Key(messageType)
                 };
@@ -66,9 +66,9 @@ namespace Rebus.RavenDb
             return string.Format("{0}/{1}", collection, messageType.FullName);
         }
 
-        class RebusSubscriptions
+        class RebusSubscription
         {
-            public RebusSubscriptions()
+            public RebusSubscription()
             {
                 Endpoints = new List<string>();
             }
