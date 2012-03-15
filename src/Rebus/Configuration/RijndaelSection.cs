@@ -4,8 +4,8 @@ namespace Rebus.Configuration
 {
     public class RijndaelSection : ConfigurationElement
     {
-        const string IvAttributeName = "Iv";
-        const string KeyAttributeName = "Key";
+        const string IvAttributeName = "iv";
+        const string KeyAttributeName = "key";
 
         [ConfigurationProperty(IvAttributeName)]
         public string Iv

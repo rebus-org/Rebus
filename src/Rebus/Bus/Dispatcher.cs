@@ -189,10 +189,9 @@ namespace Rebus.Bus
         void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
         {
             var saga = handler as Saga;
-            
             if (saga != null)
             {
-                var dataProperty = handler.GetType().GetProperty("Data");
+                saga.ConfigureHowToFindSaga();
                 var sagaData = GetSagaData(message, saga);
 
                 if (sagaData == null)
@@ -200,11 +199,17 @@ namespace Rebus.Bus
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
                         sagaData = CreateSagaData(handler);
-                        PerformSaveActions(message, handler, saga, dataProperty, sagaData);
                     }
-                    return;
+                    else
+                    {
+                        Log.Warn("No saga data was found for {0}", handler);
+                        return;
+                    }
                 }
-                PerformSaveActions(message, handler, saga, dataProperty, sagaData);
+
+                handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
+                handler.Handle(message);
+                PerformSaveActions(saga, sagaData);
                 return;
             }
 
@@ -212,11 +217,8 @@ namespace Rebus.Bus
         }
         // ReSharper restore UnusedMember.Local
 
-        void PerformSaveActions<TMessage>(TMessage message, IHandleMessages<TMessage> handler, Saga saga, PropertyInfo dataProperty, ISagaData sagaData)
+        void PerformSaveActions(Saga saga, ISagaData sagaData)
         {
-            dataProperty.SetValue(handler, sagaData, new object[0]);
-            handler.Handle(message);
-
             if (!saga.Complete)
             {
                 var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
@@ -239,8 +241,6 @@ namespace Rebus.Bus
                 return paths;
             }
 
-            // sigh! we have to ask the saga to generate its correlations for us...
-            saga.ConfigureHowToFindSaga();
             paths = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
 
             // make sure they're there the next time
