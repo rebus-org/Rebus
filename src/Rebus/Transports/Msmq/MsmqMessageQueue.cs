@@ -16,7 +16,12 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable, IHavePurgableInputQueue<MsmqMessageQueue>
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static MsmqMessageQueue()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly DictionarySerializer dictionarySerializer = new DictionarySerializer();

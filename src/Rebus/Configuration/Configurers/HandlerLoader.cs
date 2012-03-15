@@ -7,7 +7,12 @@ namespace Rebus.Configuration.Configurers
 {
     public class HandlerLoader
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static HandlerLoader()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         readonly IContainerAdapter containerAdapter;
 

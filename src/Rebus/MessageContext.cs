@@ -10,7 +10,12 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IDisposable, IMessageContext
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static MessageContext()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         public static event Action<IMessageContext> Established = delegate { };
         

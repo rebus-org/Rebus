@@ -10,7 +10,12 @@ namespace Rebus.Bus
     /// </summary>
     class SubscriptionMessageHandler : IHandleMessages<SubscriptionMessage>
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static SubscriptionMessageHandler()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         readonly IStoreSubscriptions storeSubscriptions;
 

@@ -12,7 +12,12 @@ namespace Rebus.Configuration
     /// </summary>
     public class DetermineDestinationFromConfigurationSection : IDetermineDestination
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static DetermineDestinationFromConfigurationSection()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 

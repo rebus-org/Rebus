@@ -14,9 +14,15 @@ namespace Rebus.Transports.Rabbit
 {
     public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
+        static ILog Log;
+
+        static RabbitMqMessageQueue()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
+
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         readonly IConnection connection;
 

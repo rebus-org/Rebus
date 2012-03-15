@@ -13,7 +13,12 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 {
     public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static AzureMessageQueue()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         static readonly Encoding Encoding = Encoding.UTF7;
 

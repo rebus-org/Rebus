@@ -99,6 +99,7 @@
     <Compile Include="Integration\TestRebusOnRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="Integration\TestTimeoutService.cs" />
+    <Compile Include="Logging\TestRebusLoggerFactory.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />

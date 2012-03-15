@@ -7,7 +7,12 @@ namespace Rebus.Transports.Rabbit
 {
     class AmbientTxHack : IEnlistmentNotification, IDisposable
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static AmbientTxHack()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         readonly Action commitAction;
         readonly Action rollbackAction;

@@ -15,7 +15,12 @@ namespace Rebus.Bus
     /// </summary>
     public class RebusBus : IStartableBus, IBus
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static RebusBus()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         public event Action BeforeMessage = delegate { };
 

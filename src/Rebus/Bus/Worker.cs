@@ -13,7 +13,12 @@ namespace Rebus.Bus
     /// </summary>
     public class Worker : IDisposable
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog Log;
+
+        static Worker()
+        {
+            RebusLoggerFactory.Changed += f => Log = f.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        }
 
         /// <summary>
         /// Caching of dispatcher methods
