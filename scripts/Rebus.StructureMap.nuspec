@@ -2,10 +2,10 @@
 <package >
   <metadata>
     <id>Rebus.StructureMap</id>
-    <version>1.0.0-alpha</version>
+    <version>0.10.0-alpha</version>
     <title>Rebus.StructureMap</title>
-    <authors>Rasmus Kromann-Larsen</authors>
-    <owners>Rasmus Kromann-Larsen</owners>
+    <authors>rasmuskl</authors>
+    <owners>rasmuskl</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
