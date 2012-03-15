@@ -31,7 +31,7 @@
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
   </PropertyGroup>
 
-  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge" />
+  <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge;createNugetPackage" />
 
   <Target Name="clean_output_folder">
     <Message Text="Removing old output folder"/>
