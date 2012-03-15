@@ -11,7 +11,7 @@ namespace Rebus.RavenDb
     public class RavenDbSagaPersister : IStoreSagaData
     {
         readonly string collectionName;
-        readonly Dictionary<ISagaData, Guid> etags = new Dictionary<ISagaData, Guid>();
+        readonly Dictionary<Guid, Guid> etags = new Dictionary<Guid, Guid>();
         readonly IDocumentStore store;
 
         public RavenDbSagaPersister(IDocumentStore store, string collectionName)
@@ -43,7 +43,7 @@ namespace Rebus.RavenDb
         {
             Guid? etag = null;
             Guid existingEtag;
-            if (etags.TryGetValue(sagaData, out existingEtag))
+            if (etags.TryGetValue(sagaData.Id, out existingEtag))
             {
                 etag = existingEtag;
             }
@@ -53,7 +53,7 @@ namespace Rebus.RavenDb
         public void Delete(ISagaData sagaData)
         {
             store.DatabaseCommands.Delete(Key(sagaData), GetEtag(sagaData));
-            etags.Remove(sagaData);
+            etags.Remove(sagaData.Id);
         }
 
         public ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
@@ -75,7 +75,7 @@ namespace Rebus.RavenDb
 
             var sagaData = (ISagaData) store.Conventions.CreateSerializer().Deserialize(new RavenJTokenReader(ravenJObject), sagaDataType);
             if (sagaData != null)
-                etags[sagaData] = ravenJObject["@metadata"].Value<Guid>("@etag");
+                etags[sagaData.Id] = ravenJObject["@metadata"].Value<Guid>("@etag");
 
             return sagaData;
         }
