@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<package >
+<package>
   <metadata>
     <id>Rebus.Castle.Windsor</id>
-    <version>0.10.2-alpha</version>
+    <version>0.0.1</version>
     <title>Rebus.Castle.Windsor</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
@@ -12,15 +12,13 @@
     <description>Provides a Castle Windsor container adapter for Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
-
     <dependencies>
-      <dependency id="Rebus" version="0.10.2-alpha" />
+      <dependency id="Rebus" version="0.0.1" />
       <dependency id="Castle.Core" version="3.0.0.4001" />
       <dependency id="Castle.Windsor" version="3.0.0.4001" />
     </dependencies>
   </metadata>
-
   <files>
-    <file src="..\deploy\**\Rebus.Castle.Windsor.dll" target="lib"/>
+    <file src="..\deploy\**\Rebus.Castle.Windsor.dll" target="lib" />
   </files>
 </package>
