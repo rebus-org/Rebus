@@ -43,11 +43,11 @@ For this way of configuring endpoint mappings to work, you need to supply a corr
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
+        <section name=""rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
--and then you need a <Rebus> element some place further down the app.config/web.config,
+-and then you need a <rebus> element some place further down the app.config/web.config,
 like so:
 
 {1}
