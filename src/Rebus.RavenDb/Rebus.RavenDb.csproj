@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AsyncCtpLibrary">
-      <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\AsyncCtpLibrary.dll</HintPath>
+      <HintPath>..\packages\RavenDB-Client.1.0.701\lib\net40\AsyncCtpLibrary.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
@@ -46,19 +46,16 @@
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Abstractions">
-      <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\Raven.Abstractions.dll</HintPath>
+      <HintPath>..\packages\RavenDB-Client.1.0.701\lib\net40\Raven.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Client.Debug">
-      <HintPath>..\packages\RavenDB.1.0.701\lib\net40\Raven.Client.Debug.dll</HintPath>
+      <HintPath>..\packages\RavenDB-Client.1.0.701\lib\net40\Raven.Client.Debug.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Client.Lightweight">
-      <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\Raven.Client.Lightweight.dll</HintPath>
+      <HintPath>..\packages\RavenDB-Client.1.0.701\lib\net40\Raven.Client.Lightweight.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Client.MvcIntegration">
-      <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\Raven.Client.MvcIntegration.dll</HintPath>
-    </Reference>
-    <Reference Include="Shouldly">
-      <HintPath>..\packages\Shouldly.1.1.1.0\lib\35\Shouldly.dll</HintPath>
+      <HintPath>..\packages\RavenDB-Client.1.0.701\lib\net40\Raven.Client.MvcIntegration.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -75,7 +72,9 @@
     <Compile Include="RavenDbSubscriptionStorage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
