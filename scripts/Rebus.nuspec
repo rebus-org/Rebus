@@ -16,6 +16,6 @@
 
   <files>
     <file src="..\deploy\**\Rebus.dll" target="lib"/>
-    <!--<file src="..\deploy\**\Rebus.xml" target="lib"/>-->
+    <file src="..\deploy\**\Rebus.xml" target="lib"/>
   </files>
 </package>

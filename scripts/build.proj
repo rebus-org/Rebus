@@ -9,6 +9,7 @@
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
     <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
 
+    <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
   </ItemGroup>
 

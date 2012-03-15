@@ -11,7 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Provides RavenDb saga persister and subscription storage</description>
     <copyright>Copyright 2012</copyright>
-    <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
+    <tags>rebus ravendb</tags>
 
     <dependencies>
       <dependency id="Rebus" version="0.10.2-alpha" />
