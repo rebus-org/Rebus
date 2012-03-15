@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Rebus.StructureMap</id>
-    <version>0.10.0-alpha</version>
+    <version>0.10.1-alpha</version>
     <title>Rebus.StructureMap</title>
     <authors>rasmuskl</authors>
     <owners>rasmuskl</owners>
@@ -14,7 +14,7 @@
     <tags>rebus structuremap</tags>
 
     <dependencies>
-      <dependency id="Rebus" version="1.0.0-alpha" />
+      <dependency id="Rebus" version="0.10.1-alpha" />
       <dependency id="structuremap" version="2.6.3" />
     </dependencies>
   </metadata>
