@@ -40,12 +40,12 @@ namespace Rebus.Configuration
         }
 
         public const string ExampleSnippetForErrorMessages = @"
-    <Rebus InputQueue=""my.service.input.queue"" Workers=""10"">
-        <Endpoints>
-            <add Messages=""Name.Of.Assembly"" Endpoint=""message_owner_1""/>
-            <add Messages=""Namespace.ClassName, Name.Of.Another.Assembly"" Endpoint=""message_owner_2""/>
-        </Endpoints>
-    </Rebus>
+    <rebus inputQueue=""my.service.input.queue"" workers=""10"">
+        <endpoints>
+            <add messages=""Name.Of.Assembly"" endpoint=""message_owner_1""/>
+            <add messages=""Namespace.ClassName, Name.Of.Another.Assembly"" endpoint=""message_owner_2""/>
+        </endpoints>
+    </rebus>
 ";
 
         public static RebusConfigurationSection LookItUp()
@@ -54,7 +54,7 @@ namespace Rebus.Configuration
 
             if (section == null || !(section is RebusConfigurationSection))
             {
-                throw new ConfigurationErrorsException(@"Could not find configuration section named 'Rebus' (or else
+                throw new ConfigurationErrorsException(@"Could not find configuration section named 'rebus' (or else
 the configuration section was not of the Rebus.Configuration.RebusConfigurationSection type?)
 
 Please make sure that the declaration at the top matches the XML element further down. And please note
