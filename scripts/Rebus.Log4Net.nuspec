@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<package >
+<package>
   <metadata>
     <id>Rebus.Log4Net</id>
-    <version>0.10.2-alpha</version>
+    <version>0.0.1</version>
     <title>Rebus.Log4Net</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
@@ -12,15 +12,13 @@
     <description>Provides the ability for Rebus to log with Log4Net</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus log4net</tags>
-
     <dependencies>
       <dependency id="Rebus" version="0.10.2-alpha" />
       <dependency id="log4net" version="2.0.0" />
     </dependencies>
   </metadata>
-
   <files>
-    <file src="..\deploy\**\Rebus.Log4Net.dll" target="lib"/>
-    <file src="..\deploy\**\Rebus.Log4Net.xml" target="lib"/>
+    <file src="..\deploy\**\Rebus.Log4Net.dll" target="lib" />
+    <file src="..\deploy\**\Rebus.Log4Net.xml" target="lib" />
   </files>
 </package>

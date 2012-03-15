@@ -24,7 +24,7 @@
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
-
+    <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
   </PropertyGroup>
@@ -64,6 +64,9 @@
     <Message Text="NuGet packing..."/>
     
     <Exec Command="$(NuGet) pack %(NuSpecFiles.FullPath) -OutputDirectory $(BuildOutputFolder)"/>
+
+    <!-- Revert NuSpec versions. Version doesn't need to be committed to repo. -->
+    <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(DefaultNuSpecVersion)" />
   </Target>
 
   <Target Name="updateNuspecVersions" Condition="'$(Version)' != ''">

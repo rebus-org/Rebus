@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<package >
+<package>
   <metadata>
     <id>Rebus.StructureMap</id>
-    <version>0.10.2-alpha</version>
+    <version>0.0.1</version>
     <title>Rebus.StructureMap</title>
     <authors>rasmuskl</authors>
     <owners>rasmuskl</owners>
@@ -12,14 +12,12 @@
     <description>Provides a Rebus container adapter for StructureMap.</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus structuremap</tags>
-
     <dependencies>
       <dependency id="Rebus" version="0.10.2-alpha" />
       <dependency id="structuremap" version="2.6.3" />
     </dependencies>
   </metadata>
-
   <files>
-    <file src="..\deploy\**\Rebus.StructureMap.dll" target="lib"/>
+    <file src="..\deploy\**\Rebus.StructureMap.dll" target="lib" />
   </files>
 </package>
