@@ -24,6 +24,8 @@
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
+    <!-- Should be provided from command-line / CI environment -->
+    <Version></Version> 
     <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
