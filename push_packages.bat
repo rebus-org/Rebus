@@ -1,10 +1,16 @@
 @echo off
-if [%1] == [] goto NO_VERSION
 
-%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe scripts\build.proj /v:m /t:build;pushNugetPackages /p:Version=%1
-goto DONE
+set /P VERSION=Enter version: 
 
-:NO_VERSION
-echo Syntax: push_packages ^<version^>
+echo Verify version: %VERSION%
+
+set /P PROMPT=Y/y to confirm version: 
+
+if [%PROMPT%] == [Y] goto :GO
+if [%PROMPT%] == [y] goto :GO
+goto :DONE
+
+:GO
+%WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe scripts\build.proj /v:m /t:build;pushNugetPackages /p:Version=%VERSION%
 
 :DONE
