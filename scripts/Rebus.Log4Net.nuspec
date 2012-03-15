@@ -2,10 +2,10 @@
 <package >
   <metadata>
     <id>Rebus.Log4Net</id>
-    <version>1.0.0-alpha</version>
+    <version>0.10.0-alpha</version>
     <title>Rebus.Log4Net</title>
-    <authors>Mogens Heller Grabe</authors>
-    <owners>Mogens Heller Grabe</owners>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
