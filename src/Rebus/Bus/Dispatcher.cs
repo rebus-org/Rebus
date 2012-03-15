@@ -187,6 +187,7 @@ namespace Rebus.Bus
             
             if (saga != null)
             {
+                saga.ConfigureHowToFindSaga();
                 var dataProperty = handler.GetType().GetProperty("Data");
                 var sagaData = GetSagaData(message, saga);
 
@@ -234,8 +235,6 @@ namespace Rebus.Bus
                 return paths;
             }
 
-            // sigh! we have to ask the saga to generate its correlations for us...
-            saga.ConfigureHowToFindSaga();
             paths = saga.Correlations.Values.Select(v => v.SagaDataPropertyPath).ToArray();
 
             // make sure they're there the next time
