@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<package >
+<package>
   <metadata>
     <id>Rebus</id>
-    <version>0.10.0-alpha</version>
+    <version>0.0.1</version>
     <title>Rebus</title>
     <authors>mookid8000</authors>
     <owners>mookid8000,rasmuskl</owners>
@@ -13,9 +13,8 @@
     <copyright>Copyright 2012</copyright>
     <tags>servicebus msmq cqrs publish subscribe reliable asynchronous</tags>
   </metadata>
-
   <files>
-    <file src="..\deploy\**\Rebus.dll" target="lib"/>
-    <!--<file src="..\deploy\**\Rebus.xml" target="lib"/>-->
+    <file src="..\deploy\**\Rebus.dll" target="lib" />
+    <file src="..\deploy\**\Rebus.xml" target="lib" />
   </files>
 </package>

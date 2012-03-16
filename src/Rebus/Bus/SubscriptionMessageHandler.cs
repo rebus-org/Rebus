@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using Rebus.Logging;
 using Rebus.Messages;
 
@@ -10,7 +9,12 @@ namespace Rebus.Bus
     /// </summary>
     class SubscriptionMessageHandler : IHandleMessages<SubscriptionMessage>
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog log;
+
+        static SubscriptionMessageHandler()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
 
         readonly IStoreSubscriptions storeSubscriptions;
 
@@ -24,7 +28,7 @@ namespace Rebus.Bus
             var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddress;
             var messageType = Type.GetType(message.Type);
 
-            Log.Info("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);
+            log.Info("Saving: {0} subscribed to {1}", subscriberInputQueue, messageType);
 
             storeSubscriptions.Store(messageType, subscriberInputQueue);
         }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -15,7 +14,12 @@ namespace Rebus.Bus
     /// </summary>
     public class RebusBus : IStartableBus, IBus
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog log;
+
+        static RebusBus()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
 
         public event Action BeforeMessage = delegate { };
 
@@ -61,7 +65,7 @@ namespace Rebus.Bus
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
-            Log.Info("Rebus bus created");
+            log.Info("Rebus bus created");
         }
 
         public IBus Start()
@@ -77,9 +81,9 @@ namespace Rebus.Bus
 
         public RebusBus Start(int numberOfWorkers)
         {
-            Log.Info("Initializing bus with {0} workers", numberOfWorkers);
+            log.Info("Initializing bus with {0} workers", numberOfWorkers);
             SetNumberOfWorkers(numberOfWorkers);
-            Log.Info("Bus started");
+            log.Info("Bus started");
             return this;
         }
 
@@ -172,7 +176,7 @@ namespace Rebus.Bus
         {
             var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
 
-            Log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
+            log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
 
             transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueue;
             transportMessageToSend.Headers[Headers.ErrorMessage] = errorDetail;
@@ -183,7 +187,7 @@ namespace Rebus.Bus
             }
             catch(Exception e)
             {
-                Log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
+                log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
 
                 // what to do? we need to throw again, or the message will not be rolled back and will thus be lost
                 // - but we want to avoid thrashing, so we just log the badness and relax a little bit - that's
@@ -268,12 +272,12 @@ namespace Rebus.Bus
 
         void LogSystemException(Worker worker, Exception exception)
         {
-            Log.Error(exception, "Unhandled system exception in {0}", worker.WorkerThreadName);
+            log.Error(exception, "Unhandled system exception in {0}", worker.WorkerThreadName);
         }
 
         void LogUserException(Worker worker, Exception exception)
         {
-            Log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
+            log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
         }
 
         public void SetNumberOfWorkers(int newNumberOfWorkers)

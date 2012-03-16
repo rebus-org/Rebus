@@ -1,4 +1,8 @@
 ﻿<Project DefaultTargets="build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Microsoft.Build.Tasks.XmlPoke"
+             AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+  
   <ItemGroup>
     <AllProjects Include="..\src\**\*.csproj" />
     
@@ -7,15 +11,23 @@
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
 
+    <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
+
+    <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
+    <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
+
   </ItemGroup>
 
   <PropertyGroup>
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
-
+    <!-- Should be provided from command-line / CI environment -->
+    <Version></Version> 
+    <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
   </PropertyGroup>
@@ -51,13 +63,29 @@
     <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4 /internalize"/>
   </Target>
   
-  <Target Name="createNugetPackage">
+  <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
     <Message Text="NuGet packing..."/>
     
-    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.nuspec -OutputDirectory $(BuildOutputFolder)"/>
-    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Log4Net.nuspec -OutputDirectory $(BuildOutputFolder)"/>
-    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.Castle.Windsor.nuspec -OutputDirectory $(BuildOutputFolder)"/>
-    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.MongoDb.nuspec -OutputDirectory $(BuildOutputFolder)"/>
-    <Exec Command="$(NuGet) pack $(ScriptsFolder)\Rebus.StructureMap.nuspec -OutputDirectory $(BuildOutputFolder)"/>
+    <Exec Command="$(NuGet) pack %(NuSpecFiles.FullPath) -OutputDirectory $(BuildOutputFolder)"/>
+
+    <!-- Revert NuSpec versions. Version doesn't need to be committed to repo. -->
+    <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(DefaultNuSpecVersion)" />
+    <XmlPoke XmlInputPath="%(DependantNuSpecFiles.FullPath)" Query="//dependency[@id='Rebus']/@version" Value="$(DefaultNuSpecVersion)" />
   </Target>
+
+  <Target Name="updateNuspecVersions" Condition="'$(Version)' != ''">
+    <Message Text="Updating NuSpec version..."/>
+    <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(Version)" />
+    <XmlPoke XmlInputPath="%(DependantNuSpecFiles.FullPath)" Query="//dependency[@id='Rebus']/@version" Value="$(Version)" />
+  </Target>
+
+  <Target Name="pushNugetPackages" DependsOnTargets="createNugetPackage" Condition="'$(Version)' != ''">
+    <ItemGroup>
+      <NuGetPackages Include="$(BuildOutputFolder)\*.nupkg" />
+    </ItemGroup>
+
+    <Message Text="Pushing NuGet packages..." />
+    <Exec Command="$(NuGet) push %(NuGetPackages.FullPath)" />
+  </Target>
+  
 </Project>

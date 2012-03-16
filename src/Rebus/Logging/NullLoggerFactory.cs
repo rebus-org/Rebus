@@ -2,11 +2,11 @@
 
 namespace Rebus.Logging
 {
-    public class NullLoggerFactory : IRebusLoggerFactory
+    public class NullLoggerFactory : AbstractRebusLoggerFactory
     {
         static readonly NullLogger Logger = new NullLogger();
 
-        public ILog GetLogger(Type type)
+        protected override ILog GetLogger(Type type)
         {
             return Logger;
         }

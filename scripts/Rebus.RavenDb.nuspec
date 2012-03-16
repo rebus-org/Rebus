@@ -1,24 +1,25 @@
 <?xml version="1.0"?>
 <package>
   <metadata>
-    <id>Rebus.MongoDb</id>
+    <id>Rebus.RavenDb</id>
     <version>0.0.1</version>
-    <title>Rebus.MongoDb</title>
+    <title>Rebus.RavenDb</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Provides MongoDB saga persister and subscription storage</description>
+    <description>Provides RavenDb saga persister and subscription storage</description>
     <copyright>Copyright 2012</copyright>
-    <tags>rebus mongodb</tags>
+    <tags>rebus ravendb</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="mongocsharpdriver" version="1.3" />
+      <dependency id="Newtonsoft.Json" version="4.0.8" />
+      <dependency id="NLog" version="2.0.0.2000" />
+      <dependency id="RavenDB-Client" version="1.0.701" />
     </dependencies>
   </metadata>
   <files>
-    <file src="..\deploy\**\Rebus.MongoDb.dll" target="lib" />
-    <file src="..\deploy\**\Rebus.MongoDb.xml" target="lib" />
+    <file src="..\deploy\**\Rebus.RavenDb.dll" target="lib" />
   </files>
 </package>

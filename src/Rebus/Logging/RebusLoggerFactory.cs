@@ -1,9 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace Rebus.Logging
 {
     public class RebusLoggerFactory
     {
+        static readonly List<Action<IRebusLoggerFactory>> changedHandlers = new List<Action<IRebusLoggerFactory>>();
+
+        public static event Action<IRebusLoggerFactory> Changed
+        {
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            add
+            {
+                changedHandlers.Add(value);
+                value(Current);
+            }
+            [MethodImpl(MethodImplOptions.Synchronized)]
+            remove { changedHandlers.Remove(value); }
+        }
+
         static readonly IRebusLoggerFactory Default = new ConsoleLoggerFactory(colored: true);
         static IRebusLoggerFactory current = Default;
 
@@ -27,18 +44,22 @@ Alternatively, if you're using the configuration API, you can disable logging li
 "));
                 }
 
+                if (value == current) return;
+
                 current = value;
+
+                changedHandlers.ToList().ForEach(h => h(value));
             }
         }
 
-        public static ILog GetLogger(Type type)
-        {
-            return Current.GetLogger(type);
-        }
+        //public static ILog GetLogger(Type type)
+        //{
+        //    return Current.GetLogger(type);
+        //}
 
         public static void Reset()
         {
-            current = Default;
+            Current = Default;
         }
     }
 }

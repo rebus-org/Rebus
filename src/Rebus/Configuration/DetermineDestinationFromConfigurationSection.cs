@@ -12,7 +12,12 @@ namespace Rebus.Configuration
     /// </summary>
     public class DetermineDestinationFromConfigurationSection : IDetermineDestination
     {
-        static readonly ILog Log = RebusLoggerFactory.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ILog log;
+
+        static DetermineDestinationFromConfigurationSection()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 
@@ -38,11 +43,11 @@ For this way of configuring endpoint mappings to work, you need to supply a corr
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
+        <section name=""rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
--and then you need a <Rebus> element some place further down the app.config/web.config,
+-and then you need a <rebus> element some place further down the app.config/web.config,
 like so:
 
 {1}
@@ -77,7 +82,7 @@ Note also, that specifying the input queue name with the InputQueue attribute is
                 {
                     var assemblyName = element.Messages;
 
-                    Log.Info("Mapping assembly: {0}", assemblyName);
+                    log.Info("Mapping assembly: {0}", assemblyName);
 
                     var assembly = LoadAssembly(assemblyName);
 
@@ -90,7 +95,7 @@ Note also, that specifying the input queue name with the InputQueue attribute is
                 {
                     var typeName = element.Messages;
 
-                    Log.Info("Mapping type: {0}", typeName);
+                    log.Info("Mapping type: {0}", typeName);
 
                     var messageType = Type.GetType(typeName);
 
@@ -135,11 +140,11 @@ For this to work, Rebus needs access to an assembly with one of the following fi
 
         void Map(Type messageType, string endpoint)
         {
-            Log.Info("    {0} -> {1}", messageType, endpoint);
+            log.Info("    {0} -> {1}", messageType, endpoint);
             
             if (endpointMappings.ContainsKey(messageType))
             {
-                Log.Warn("    ({0} -> {1} overridden by -> {2})", messageType, endpointMappings[messageType], endpoint);
+                log.Warn("    ({0} -> {1} overridden by -> {2})", messageType, endpointMappings[messageType], endpoint);
             }
             
             endpointMappings[messageType] = endpoint;
