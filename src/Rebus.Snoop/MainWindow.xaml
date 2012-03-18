@@ -47,37 +47,36 @@
             </ListView.View>
         </ListView>
 
-        <ListView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="1" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
+        <ListView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Message header" DisplayMemberBinding="{Binding MessageHeader}"/>
+                    <GridViewColumn Header="Label" DisplayMemberBinding="{Binding Label}"/>
+                    <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time}"/>
+                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}"/>
                 </GridView>
             </ListView.View>
         </ListView>
 
-        <GroupBox Grid.Column="1" Grid.Row="1" Grid.RowSpan="2" Margin="1" Header="Info">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="3" Margin="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <GroupBox Header="Headers" Grid.Row="0">
+                <ListView ItemsSource="{Binding Machines/Queues/Messages/Headers}">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Key" DisplayMemberBinding="{Binding Key}"/>
+                            <GridViewColumn Header="Value" DisplayMemberBinding="{Binding Value}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </GroupBox>
 
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Size"/>
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Machines/Queues/Messages/Bytes, Converter={StaticResource ByteSizeConverter}}"/>
-            </Grid>
-        </GroupBox>
-
-        <TextBlock Grid.Column="2" Grid.Row="0" Grid.RowSpan="3" Margin="1">
-            contents
-        </TextBlock>
+            <GroupBox Header="Body" Grid.Row="1">
+                
+            </GroupBox>
+        </Grid>
     </Grid>
 </Window>

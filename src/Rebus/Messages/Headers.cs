@@ -13,7 +13,7 @@ namespace Rebus.Messages
         /// <summary>
         /// Key of header that contains the unique ID of the message.
         /// </summary>
-        public const string MessageId = "rebus-msg-i";
+        public const string MessageId = "rebus-msg-id";
 
         /// <summary>
         /// Key of header that specifies the return address of a message.
