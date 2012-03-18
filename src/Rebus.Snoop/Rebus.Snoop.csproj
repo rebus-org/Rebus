@@ -69,6 +69,7 @@
     </ApplicationDefinition>
     <Compile Include="Converters\ByteSizeConverter.cs" />
     <Compile Include="Converters\MessageTimeConverter.cs" />
+    <Compile Include="Events\NotificationEvent.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />
     <Compile Include="ViewModel\Models\Queue.cs" />

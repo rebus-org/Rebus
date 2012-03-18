@@ -11,6 +11,7 @@ namespace Rebus.Snoop.ViewModel
     public class MachinesViewModel : ViewModel
     {
         readonly ObservableCollection<Machine> machines = new ObservableCollection<Machine>();
+        readonly ObservableCollection<string> notifications = new ObservableCollection<string>();
 
         public MachinesViewModel()
         {
@@ -83,6 +84,9 @@ namespace Rebus.Snoop.ViewModel
                                          }
                                  });
                 machines.Add(new Machine {MachineName = "yet_another_machine"});
+
+                notifications.Add("4 queues loaded from some_machine");
+                notifications.Add("5 queues loaded from another_machine");
             }
 
             CreateCommands();
@@ -91,6 +95,12 @@ namespace Rebus.Snoop.ViewModel
 
         void RegisterListeners()
         {
+            Messenger.Default.Register(this, (NotificationEvent n) => AddNotification(n));
+        }
+
+        void AddNotification(NotificationEvent n)
+        {
+            notifications.Add(n.Text);
         }
 
         public ObservableCollection<Machine> Machines
@@ -101,6 +111,13 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<string> AddMachineCommand { get; set; }
 
         public RelayCommand<Machine> RemoveMachineCommand { get; set; }
+
+        public ObservableCollection<string> Notifications
+        {
+            get {
+                return notifications;
+            }
+        }
 
         void CreateCommands()
         {
