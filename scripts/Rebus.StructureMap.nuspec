@@ -5,7 +5,7 @@
     <version>0.0.1</version>
     <title>Rebus.StructureMap</title>
     <authors>rasmuskl</authors>
-    <owners>rasmuskl</owners>
+    <owners>rasmuskl,mookid8000</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
