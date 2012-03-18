@@ -12,8 +12,6 @@
   See http://www.galasoft.ch/mvvm
 */
 
-using GalaSoft.MvvmLight;
-
 namespace Rebus.Snoop.ViewModel
 {
     /// <summary>

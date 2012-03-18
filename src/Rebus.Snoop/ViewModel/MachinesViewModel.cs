@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
-using System.Windows;
-using GalaSoft.MvvmLight.Command;
 using System.Linq;
+using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
+using Rebus.Snoop.Events;
+using Rebus.Snoop.ViewModel.Models;
 
 namespace Rebus.Snoop.ViewModel
 {
@@ -15,7 +17,7 @@ namespace Rebus.Snoop.ViewModel
             {
                 machines.Add(new Machine
                                  {
-                                     MachineName = "\\some_machine",
+                                     MachineName = "some_machine",
                                      Queues =
                                          {
                                              new Queue
@@ -40,7 +42,7 @@ namespace Rebus.Snoop.ViewModel
 
                 machines.Add(new Machine
                                  {
-                                     MachineName = "\\another_machine",
+                                     MachineName = "another_machine",
                                      Queues =
                                          {
                                              new Queue
@@ -74,16 +76,15 @@ namespace Rebus.Snoop.ViewModel
                                                  },
                                          }
                                  });
-                machines.Add(new Machine {MachineName = "\\yet_another_machine"});
+                machines.Add(new Machine {MachineName = "yet_another_machine"});
             }
 
             CreateCommands();
+            RegisterListeners();
         }
 
-        void CreateCommands()
+        void RegisterListeners()
         {
-            AddMachineCommand = new RelayCommand(() => MessageBox.Show("woohoo!"));
-            RemoveMachineCommand = new RelayCommand<Machine>(m => Machines.Remove(m));
         }
 
         public ObservableCollection<Machine> Machines
@@ -91,62 +92,30 @@ namespace Rebus.Snoop.ViewModel
             get { return machines; }
         }
 
-        public RelayCommand AddMachineCommand { get; set; }
+        public RelayCommand<string> AddMachineCommand { get; set; }
+
         public RelayCommand<Machine> RemoveMachineCommand { get; set; }
-    }
 
-    public class Machine : ViewModel
-    {
-        readonly ObservableCollection<Queue> queues = new ObservableCollection<Queue>();
-        string machineName;
-
-        public string MachineName
+        void CreateCommands()
         {
-            get { return machineName; }
-            set { SetValue("MachineName", value); }
+            AddMachineCommand = new RelayCommand<string>(AddNewMachine);
+            RemoveMachineCommand = new RelayCommand<Machine>(RemoveMachine);
         }
 
-        public ObservableCollection<Queue> Queues
+        void AddNewMachine(string newMachineName)
         {
-            get { return queues; }
-        }
-    }
+            if (string.IsNullOrEmpty(newMachineName)) return;
+            if (Machines.Any(m => m.MachineName == newMachineName)) return;
 
-    public class Queue : ViewModel
-    {
-        readonly ObservableCollection<Message> messages = new ObservableCollection<Message>();
-        string queueName;
+            var newMachine = new Machine {MachineName = newMachineName};
+            Machines.Add(newMachine);
 
-        public string QueueName
-        {
-            get { return queueName; }
-            set { SetValue("QueueName", value); }
+            Messenger.Default.Send(new MachineAdded(newMachine));
         }
 
-        public ObservableCollection<Message> Messages
+        void RemoveMachine(Machine machine)
         {
-            get { return messages; }
+            Machines.Remove(machine);
         }
-    }
-
-    public class Message : ViewModel
-    {
-        string messageHeader;
-
-        public string MessageHeader
-        {
-            get { return messageHeader; }
-            set { SetValue("MessageHeader", value); }
-        }
-
-        int bytes;
-
-        public int Bytes
-        {
-            get { return bytes; }
-            set { SetValue("Bytes", value); }
-        }
-
-        
     }
 }
