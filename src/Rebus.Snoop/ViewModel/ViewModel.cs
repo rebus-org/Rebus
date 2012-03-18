@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 using GalaSoft.MvvmLight;
 
-namespace Rebus.Snoop.Machines
+namespace Rebus.Snoop.ViewModel
 {
     public abstract class ViewModel : ViewModelBase
     {

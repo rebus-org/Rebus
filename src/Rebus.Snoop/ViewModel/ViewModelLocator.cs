@@ -13,7 +13,6 @@
 */
 
 using GalaSoft.MvvmLight;
-using Rebus.Snoop.Machines;
 
 namespace Rebus.Snoop.ViewModel
 {

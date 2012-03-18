@@ -1,7 +1,9 @@
 ﻿<Window x:Class="Rebus.Snoop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:Controls="clr-namespace:Rebus.Snoop.Controls"
-        xmlns:Converters="clr-namespace:Rebus.Snoop.Converters" Title="MainWindow" Height="584" Width="728"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+        xmlns:Converters="clr-namespace:Rebus.Snoop.Converters" 
+        xmlns:ViewModel="clr-namespace:Rebus.Snoop.ViewModel"
+        Title="MainWindow" Height="584" Width="728"
         DataContext="{Binding Source={StaticResource Locator}, Path=MachinesViewModel}">
     <Grid>
         <Grid.Resources>
@@ -33,8 +35,8 @@
                 </ListView.View>
             </ListView>
             <StackPanel Grid.Row="1" Orientation="Horizontal">
-                <Button Content="Add" Margin="2" Command="Commands.AddMachine"/>
-                <Button Content="Remove" Margin="2"/>
+                <Button Content="Add" Margin="2" Command="{Binding AddMachineCommand}"/>
+                <Button Content="Remove" Margin="2" Command="{Binding RemoveMachineCommand}" CommandParameter="{Binding Machines/}"/>
             </StackPanel>
         </Grid>
 
