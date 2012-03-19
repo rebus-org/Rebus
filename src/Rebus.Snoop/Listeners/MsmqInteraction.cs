@@ -28,12 +28,15 @@ namespace Rebus.Snoop.Listeners
                 .StartNew(() =>
                               {
                                   var messageQueue = new MessageQueue(queue.QueuePath);
-                                  messageQueue.MessageReadPropertyFilter = new MessagePropertyFilter
-                                                                               {
-                                                                                   Label = true,
-                                                                                   ArrivedTime = true,
-                                                                                   Extension=true,
-                                                                               };
+                                  messageQueue.MessageReadPropertyFilter =
+                                      new MessagePropertyFilter
+                                          {
+                                              Label = true,
+                                              ArrivedTime = true,
+                                              Extension = true,
+                                              Body = true,
+                                          };
+
                                   var list = new List<Message>();
 
                                   using (var enumerator = messageQueue.GetMessageEnumerator2())
@@ -46,7 +49,8 @@ namespace Rebus.Snoop.Listeners
                                                            Label = message.Label,
                                                            Time = message.ArrivedTime,
                                                            Headers = TryDeserializeHeaders(message),
-                                                           Bytes = 0
+                                                           Bytes = TryDetermineMessageSize(message),
+                                                           Body = TryDecodeBody(message),
                                                        });
                                       }
                                   }
@@ -67,6 +71,16 @@ namespace Rebus.Snoop.Listeners
                                                                    t.Exception);
                                   }, UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+        }
+
+        int TryDetermineMessageSize(System.Messaging.Message message)
+        {
+            return 123;
+        }
+
+        string TryDecodeBody(System.Messaging.Message message)
+        {
+            return "n/a";
         }
 
         Dictionary<string, string> TryDeserializeHeaders(System.Messaging.Message message)

@@ -33,8 +33,7 @@
                       Controls:GridViewSort.AutoSort="True">
                 <ListView.Resources>
                     <DataTemplate x:Key="ReloadTemplate">
-                        <Button Command="{Binding ReloadQueuesCommand}"
-                                CommandParameter="{Binding}">R</Button>
+                        <Controls:ReloadButton Command="{Binding ReloadQueuesCommand}" CommandParameter="{Binding}"/>
                     </DataTemplate>
                 </ListView.Resources>
                 <ListView.View>
@@ -61,7 +60,7 @@
                   Controls:GridViewSort.AutoSort="True">
             <ListView.Resources>
                 <DataTemplate x:Key="ReloadTemplate">
-                    <Button Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}">R</Button>
+                    <Controls:ReloadButton Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}"/>
                 </DataTemplate>
             </ListView.Resources>
             <ListView.View>
@@ -73,12 +72,13 @@
             </ListView.View>
         </ListView>
 
-        <ListView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
+        <ListView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
+                  Controls:GridViewSort.AutoSort="True">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Label" DisplayMemberBinding="{Binding Label}"/>
-                    <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Time}"/>
-                    <GridViewColumn Header="Size" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}"/>
+                    <GridViewColumn Header="Label" Width="380" DisplayMemberBinding="{Binding Label}" Controls:GridViewSort.PropertyName="Label"/>
+                    <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" Controls:GridViewSort.PropertyName="Time"/>
+                    <GridViewColumn Header="Size" Width="80" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}" Controls:GridViewSort.PropertyName="Bytes"/>
                 </GridView>
             </ListView.View>
         </ListView>
@@ -93,15 +93,17 @@
                 <ListView ItemsSource="{Binding Machines/Queues/Messages/Headers}">
                     <ListView.View>
                         <GridView>
-                            <GridViewColumn Header="Key" DisplayMemberBinding="{Binding Key}"/>
-                            <GridViewColumn Header="Value" DisplayMemberBinding="{Binding Value}"/>
+                            <GridViewColumn Header="Key" Width="120" DisplayMemberBinding="{Binding Key}"/>
+                            <GridViewColumn Header="Value" Width="170" DisplayMemberBinding="{Binding Value}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>
             </GroupBox>
 
             <GroupBox Header="Body" Grid.Row="1">
-                
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <TextBox Text="{Binding Machines/Queues/Messages/Body}"/>
+                </ScrollViewer>
             </GroupBox>
         </Grid>
         
