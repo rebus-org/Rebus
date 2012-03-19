@@ -5,10 +5,10 @@ namespace Rebus.Snoop.ViewModel.Models
 {
     public class Message : ViewModel
     {
+        readonly Dictionary<string, string> headers = new Dictionary<string, string>();
         int bytes;
         string label;
         DateTime time;
-        Dictionary<string,string> headers = new Dictionary<string, string>();
 
         public Dictionary<string,string> Headers
         {

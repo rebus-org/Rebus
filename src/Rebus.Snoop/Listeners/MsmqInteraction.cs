@@ -1,8 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Messaging;
+using System.Text;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Messaging;
+using Newtonsoft.Json;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
 using Message = Rebus.Snoop.ViewModel.Models.Message;
@@ -25,6 +28,12 @@ namespace Rebus.Snoop.Listeners
                 .StartNew(() =>
                               {
                                   var messageQueue = new MessageQueue(queue.QueuePath);
+                                  messageQueue.MessageReadPropertyFilter = new MessagePropertyFilter
+                                                                               {
+                                                                                   Label = true,
+                                                                                   ArrivedTime = true,
+                                                                                   Extension=true,
+                                                                               };
                                   var list = new List<Message>();
 
                                   using (var enumerator = messageQueue.GetMessageEnumerator2())
@@ -32,7 +41,13 @@ namespace Rebus.Snoop.Listeners
                                       while (enumerator.MoveNext())
                                       {
                                           var message = enumerator.Current;
-                                          list.Add(new Message {Label = message.Label});
+                                          list.Add(new Message
+                                                       {
+                                                           Label = message.Label,
+                                                           Time = message.ArrivedTime,
+                                                           Headers = TryDeserializeHeaders(message),
+                                                           Bytes = 0
+                                                       });
                                       }
                                   }
 
@@ -52,6 +67,20 @@ namespace Rebus.Snoop.Listeners
                                                                    t.Exception);
                                   }, UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+        }
+
+        Dictionary<string, string> TryDeserializeHeaders(System.Messaging.Message message)
+        {
+            try
+            {
+                var headersAsJsonString = Encoding.UTF7.GetString(message.Extension);
+                var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersAsJsonString);
+                return headers ?? new Dictionary<string, string>();
+            }
+            catch
+            {
+                return new Dictionary<string, string>();
+            }
         }
 
         void LoadQueues(Machine machine)
