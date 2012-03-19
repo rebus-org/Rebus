@@ -12,10 +12,12 @@ namespace Rebus.Snoop.Controls
 
         public ReloadButton()
         {
-            image = new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Rebus.Snoop;component/Images/refresh.ico")) };
-            image.Height = image.Width = 14;
+            image = new Image { Source = new BitmapImage(new Uri("pack://application:,,,/Rebus.Snoop;component/Images/reload.ico")) };
+            image.Height = image.Width = 16;
             Content = image;
 
+            Background = null;
+            BorderThickness = new Thickness(0);
             Margin = new Thickness(0);
             Padding = new Thickness(0);
         }
