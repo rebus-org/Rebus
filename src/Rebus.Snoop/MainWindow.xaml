@@ -29,9 +29,16 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <ListView Grid.Row="0" ItemsSource="{Binding Machines, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
+                <ListView.Resources>
+                    <DataTemplate x:Key="ReloadTemplate">
+                        <Button Command="{Binding ReloadQueuesCommand}"
+                                CommandParameter="{Binding}">R</Button>
+                    </DataTemplate>
+                </ListView.Resources>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Machine name" Width="200" DisplayMemberBinding="{Binding MachineName}"/>
+                        <GridViewColumn Header="Machine name" Width="180" DisplayMemberBinding="{Binding MachineName}"/>
+                        <GridViewColumn Width="Auto" CellTemplate="{StaticResource ReloadTemplate}"/>
                     </GridView>
                 </ListView.View>
             </ListView>
@@ -51,7 +58,7 @@
         <ListView Grid.Column="1" Grid.Row="0" Margin="1" ItemsSource="{Binding Machines/Queues, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Queue name" Width="200" DisplayMemberBinding="{Binding QueueName}"/>
+                    <GridViewColumn Header="Queue name" Width="190" DisplayMemberBinding="{Binding QueueName}"/>
                 </GridView>
             </ListView.View>
         </ListView>

@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
+using Rebus.Snoop.Events;
 
 namespace Rebus.Snoop.ViewModel.Models
 {
@@ -9,6 +12,11 @@ namespace Rebus.Snoop.ViewModel.Models
         readonly ObservableCollection<Queue> queues = new ObservableCollection<Queue>();
         string machineName;
         bool success;
+
+        public Machine()
+        {
+            ReloadQueuesCommand = new RelayCommand<Machine>(m => Messenger.Default.Send(new ReloadQueuesRequested(m)));
+        }
 
         public string MachineName
         {
@@ -36,5 +44,7 @@ namespace Rebus.Snoop.ViewModel.Models
                 Queues.Add(queue);
             }
         }
+
+        public RelayCommand<Machine> ReloadQueuesCommand { get; set; }
     }
 }

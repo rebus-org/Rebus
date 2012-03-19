@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
+using GalaSoft.MvvmLight.Threading;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
 
@@ -15,7 +17,7 @@ namespace Rebus.Snoop.ViewModel
 
         public MachinesViewModel()
         {
-            //if (IsInDesignMode)
+            if (IsInDesignMode)
             {
                 machines.Add(new Machine
                                  {
@@ -88,6 +90,10 @@ namespace Rebus.Snoop.ViewModel
                 notifications.Add("4 queues loaded from some_machine");
                 notifications.Add("5 queues loaded from another_machine");
             }
+            else
+            {
+                AddNewMachine("localhost");
+            }
 
             CreateCommands();
             RegisterListeners();
@@ -111,6 +117,8 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<string> AddMachineCommand { get; set; }
 
         public RelayCommand<Machine> RemoveMachineCommand { get; set; }
+
+        public RelayCommand<Machine> ReloadQueuesCommand { get; set; }
 
         public ObservableCollection<string> Notifications
         {
