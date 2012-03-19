@@ -85,7 +85,7 @@ namespace Rebus.Snoop.ViewModel
                                                  },
                                          }
                                  });
-                machines.Add(new Machine {MachineName = "yet_another_machine"});
+                machines.Add(new Machine { MachineName = "yet_another_machine" });
 
                 notifications.Add("4 queues loaded from some_machine");
                 notifications.Add("5 queues loaded from another_machine");
@@ -118,13 +118,9 @@ namespace Rebus.Snoop.ViewModel
 
         public RelayCommand<Machine> RemoveMachineCommand { get; set; }
 
-        public RelayCommand<Machine> ReloadQueuesCommand { get; set; }
-
         public ObservableCollection<string> Notifications
         {
-            get {
-                return notifications;
-            }
+            get { return notifications; }
         }
 
         void CreateCommands()
@@ -138,7 +134,7 @@ namespace Rebus.Snoop.ViewModel
             if (string.IsNullOrEmpty(newMachineName)) return;
             if (Machines.Any(m => m.MachineName == newMachineName)) return;
 
-            var newMachine = new Machine {MachineName = newMachineName};
+            var newMachine = new Machine { MachineName = newMachineName };
             Machines.Add(newMachine);
 
             Messenger.Default.Send(new MachineAdded(newMachine));

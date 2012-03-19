@@ -56,9 +56,16 @@
         </Grid>
 
         <ListView Grid.Column="1" Grid.Row="0" Margin="1" ItemsSource="{Binding Machines/Queues, Mode=OneWay}" IsSynchronizedWithCurrentItem="True">
+            <ListView.Resources>
+                <DataTemplate x:Key="ReloadTemplate">
+                    <Button Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}">R</Button>
+                </DataTemplate>
+            </ListView.Resources>
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="Queue name" Width="190" DisplayMemberBinding="{Binding QueueName}"/>
+                    <GridViewColumn Header="Queue name" Width="160" DisplayMemberBinding="{Binding QueueName}"/>
+                    <GridViewColumn Header="#" Width="20" DisplayMemberBinding="{Binding MessageCount}"/>
+                    <GridViewColumn Width="Auto" CellTemplate="{StaticResource ReloadTemplate}"/>
                 </GridView>
             </ListView.View>
         </ListView>
