@@ -6,7 +6,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Persistence.MongoDb
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Mongo)]
     public class TestMongoDbTimeoutStorage : MongoDbFixtureBase
     {
         const string TimeoutsCollectionName = "timeouts";
