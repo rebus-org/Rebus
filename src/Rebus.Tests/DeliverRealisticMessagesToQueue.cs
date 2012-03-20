@@ -11,7 +11,7 @@ namespace Rebus.Tests
             const string inputQueueNameA = "a.someQueue";
             const string inputQueueNameB = "b.someQueue";
 
-            var a = CreateBus(inputQueueNameA, new HandlerActivatorForTesting());
+            var a = CreateBus(inputQueueNameA, new HandlerActivatorForTesting());   
             var b = CreateBus(inputQueueNameB, new HandlerActivatorForTesting());
 
             25.Times(() => b.Send(inputQueueNameA, new DoSomething {SomeInteger = 23, WhatToDo = "Hello there!"}));

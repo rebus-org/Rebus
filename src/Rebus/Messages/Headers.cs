@@ -36,5 +36,8 @@ namespace Rebus.Messages
         /// someone to re-deliver the message when the receiver is ready to retry.
         /// </summary>
         public const string SourceQueue = "rebus-source-queue";
+
+        public const string ContentType = "rebus-content-type";
+        public const string Encoding = "rebus-encoding";
     }
 }

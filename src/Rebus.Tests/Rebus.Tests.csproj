@@ -155,6 +155,7 @@
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSubscriptionStorage.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSagaPersister.cs" />
+    <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />

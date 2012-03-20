@@ -1,10 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
+using Rebus.Messages;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
 using Message = Rebus.Snoop.ViewModel.Models.Message;
@@ -42,14 +45,7 @@ namespace Rebus.Snoop.Listeners
                                       while (enumerator.MoveNext())
                                       {
                                           var message = enumerator.Current;
-                                          list.Add(new Message
-                                                       {
-                                                           Label = message.Label,
-                                                           Time = message.ArrivedTime,
-                                                           Headers = TryDeserializeHeaders(message),
-                                                           Bytes = TryDetermineMessageSize(message),
-                                                           Body = TryDecodeBody(message),
-                                                       });
+                                          list.Add(GenerateMessage(message));
                                       }
                                   }
 
@@ -63,7 +59,7 @@ namespace Rebus.Snoop.Listeners
                                           return new NotificationEvent("{0} messages loaded from {1}", t.Result.Count,
                                                                        queue.QueueName);
                                       }
-                                      
+
                                       return new NotificationEvent("Could not load messages from {0}: {1}",
                                                                    queue.QueueName,
                                                                    t.Exception);
@@ -71,14 +67,55 @@ namespace Rebus.Snoop.Listeners
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
         }
 
-        int TryDetermineMessageSize(System.Messaging.Message message)
+        Message GenerateMessage(System.Messaging.Message message)
         {
-            return 123;
+            try
+            {
+                var headers = TryDeserializeHeaders(message);
+
+                return new Message
+                           {
+                               Label = message.Label,
+                               Time = message.ArrivedTime,
+                               Headers = headers,
+                               Bytes = TryDetermineMessageSize(message),
+                               Body = TryDecodeBody(message, headers),
+                           };
+            }
+            catch (Exception e)
+            {
+                return new Message { Body = "Message could not be properly decoded." };
+            }
         }
 
-        string TryDecodeBody(System.Messaging.Message message)
+        int TryDetermineMessageSize(System.Messaging.Message message)
         {
-            return "n/a";
+            try
+            {
+                return (int) message.BodyStream.Length;
+            }
+            catch(Exception e)
+            {
+                return -1;
+            }
+        }
+
+        string TryDecodeBody(System.Messaging.Message message, Dictionary<string, string> headers)
+        {
+            if (headers.ContainsKey(Headers.Encoding))
+            {
+                var encoding = headers[Headers.Encoding];
+                var encoder = Encoding.GetEncoding(encoding);
+
+                using (var reader = new BinaryReader(message.BodyStream))
+                {
+                    var bytes = reader.ReadBytes((int)message.BodyStream.Length);
+                    var str = encoder.GetString(bytes);
+                    return str;
+                }
+            }
+            
+            return "(message encoding not specified)";
         }
 
         Dictionary<string, string> TryDeserializeHeaders(System.Messaging.Message message)

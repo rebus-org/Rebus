@@ -103,7 +103,7 @@
 
             <GroupBox Header="Body" Grid.Row="1">
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-                    <TextBox Text="{Binding Machines/Queues/Messages/Body}"/>
+                    <TextBox Text="{Binding Machines/Queues/Messages/Body}" FontFamily="Courier New"/>
                 </ScrollViewer>
             </GroupBox>
         </Grid>

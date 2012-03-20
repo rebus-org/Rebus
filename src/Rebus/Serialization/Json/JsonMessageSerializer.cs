@@ -23,10 +23,14 @@ namespace Rebus.Serialization.Json
             {
                 var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, Settings);
 
+                var headers = message.Headers.Clone();
+                headers[Headers.ContentType] = "text/json";
+                headers[Headers.Encoding] = Encoding.WebName;
+
                 return new TransportMessageToSend
                            {
                                Body = Encoding.GetBytes(messageAsString),
-                               Headers = message.Headers.Clone(),
+                               Headers = headers,
                                Label = message.GetLabel(),
                            };
             }

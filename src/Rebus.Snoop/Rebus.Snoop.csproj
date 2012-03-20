@@ -72,6 +72,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="..\Rebus\Messages\Headers.cs">
+      <Link>Link\Headers.cs</Link>
+    </Compile>
     <Compile Include="Controls\GridViewSort.cs" />
     <Compile Include="Controls\ReloadButton.cs" />
     <Compile Include="Converters\ByteSizeConverter.cs" />
