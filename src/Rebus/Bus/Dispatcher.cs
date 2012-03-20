@@ -29,6 +29,11 @@ namespace Rebus.Bus
         readonly IStoreSubscriptions storeSubscriptions;
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
 
+        /// <summary>
+        /// Constructs the dispatcher with the specified instances to store and retrieve saga data,
+        /// create message handlers, store and retrieve subscriptions, and to inspect and
+        /// possibly rearrange the handler pipeline.
+        /// </summary>
         public Dispatcher(IStoreSagaData storeSagaData,
             IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,
@@ -40,6 +45,10 @@ namespace Rebus.Bus
             this.inspectHandlerPipeline = inspectHandlerPipeline;
         }
 
+        /// <summary>
+        /// Main entry point of the dispatcher. Dispatches the given message, doing handler
+        /// lookup etc. Any exceptions thrown will bubble up.
+        /// </summary>
         public void Dispatch<TMessage>(TMessage message)
         {
             IHandleMessages[] handlersToRelease = null;
