@@ -32,8 +32,8 @@
     <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
+    <Zip>$(ToolsFolder)\7zip\7za.exe</Zip>
     <SnoopOutputFolder>$(BuildOutputFolder)\Snoop</SnoopOutputFolder>
-    
     <SnoopProjectOutputFolder>..\src\Rebus.Snoop\bin\Release</SnoopProjectOutputFolder>
   </PropertyGroup>
 
@@ -95,7 +95,7 @@
   
   
   
-  <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;merge_snoop" />
+  <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;merge_snoop;zip_snoop" />
 
   <Target Name="clean_snoop_output_folder">
     <Message Text="Removing old output folder"/>
@@ -110,9 +110,12 @@
 
   <Target Name="merge_snoop">
     <Message Text="Merge all the things into Snoop"/>
-    <Message Text="SnoopOutputFolder: $(SnoopOutputFolder)"/>
-    <Message Text="SnoopProjectOutputFolder: $(SnoopProjectOutputFolder)"/>
     <Copy SourceFiles="$(SnoopProjectOutputFolder)\Rebus.Snoop.exe" DestinationFolder="$(SnoopOutputFolder)"/>
     <Exec Command="$(IlMerge) /out:$(SnoopOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Newtonsoft.Json.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.WPF4.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.Extras.WPF4.dll /targetplatform:v4 /internalize"/>
+    <Delete Files="$(SnoopOutputFolder)\Rebus.Snoop.pdb"/>
+  </Target>
+
+  <Target Name="zip_snoop">
+    <Exec Command="$(Zip) a $(SnoopOutputFolder)\Rebus.Snoop.zip $(SnoopOutputFolder)\Rebus.Snoop.exe -tZip -mx=9" />
   </Target>
 </Project>
