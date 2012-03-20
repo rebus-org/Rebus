@@ -63,9 +63,9 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueue; }
         }
 
-        public string ErrorQueueName
+        public string ErrorQueue
         {
-            get { return innerReceiveMessages.ErrorQueueName; }
+            get { return innerReceiveMessages.ErrorQueue; }
         }
 
         byte[] Encrypt(byte[] bytes)

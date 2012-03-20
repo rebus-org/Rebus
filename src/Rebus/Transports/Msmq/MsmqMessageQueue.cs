@@ -26,7 +26,7 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
-        readonly string errorQueueName;
+        readonly string errorQueue;
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
@@ -36,18 +36,18 @@ namespace Rebus.Transports.Msmq
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public MsmqMessageQueue(string inputQueueName, string errorQueueName)
+        public MsmqMessageQueue(string inputQueueName, string errorQueue)
         {
             inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
-            EnsureMessageQueueExists(MsmqUtil.GetPath(errorQueueName), createIfNotExists: true);
+            EnsureMessageQueueExists(MsmqUtil.GetPath(errorQueue), createIfNotExists: true);
             this.inputQueueName = inputQueueName;
-            this.errorQueueName = errorQueueName;
+            this.errorQueue = errorQueue;
         }
 
-        public string ErrorQueueName
+        public string ErrorQueue
         {
-            get { return errorQueueName; }
+            get { return errorQueue; }
         }
 
         public ReceivedTransportMessage ReceiveMessage()

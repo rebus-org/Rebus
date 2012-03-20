@@ -179,7 +179,7 @@ namespace Rebus.Tests.Transports.Encrypted
                 get { throw new NotImplementedException(); }
             }
 
-            public string ErrorQueueName
+            public string ErrorQueue
             {
                 get { throw new NotImplementedException(); }
             }

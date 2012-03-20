@@ -26,16 +26,16 @@ namespace Rebus.Transports.Rabbit
         readonly IConnection connection;
 
         readonly string inputQueueName;
-        readonly string errorQueueName;
+        readonly string errorQueue;
         readonly IModel model;
         readonly object modelLock = new object();
         readonly Subscription subscription;
         readonly object subscriptionLock = new object();
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName, string errorQueueName)
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName, string errorQueue)
         {
             this.inputQueueName = inputQueueName;
-            this.errorQueueName = errorQueueName;
+            this.errorQueue = errorQueue;
 
             log.Info("Opening Rabbit connection");
             connection = new ConnectionFactory {Uri = connectionString}.CreateConnection();
@@ -50,7 +50,7 @@ namespace Rebus.Transports.Rabbit
             tempModel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
 
             CreateLogicalQueue(tempModel, this.inputQueueName);
-            CreateLogicalQueue(tempModel, this.errorQueueName);
+            CreateLogicalQueue(tempModel, this.errorQueue);
 
             log.Debug("Opening subscription");
             subscription = new Subscription(model, inputQueueName);
@@ -65,9 +65,9 @@ namespace Rebus.Transports.Rabbit
             tempModel.QueueBind(queueName, ExchangeName, queueName);
         }
 
-        public string ErrorQueueName
+        public string ErrorQueue
         {
-            get { return errorQueueName; }
+            get { return errorQueue; }
         }
 
         void WithModel(Action<IModel> handleModel)

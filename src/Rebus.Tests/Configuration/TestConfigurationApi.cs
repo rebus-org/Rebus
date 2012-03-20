@@ -103,7 +103,7 @@ namespace Rebus.Tests.Configuration
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
             msmqMessageQueue.InputQueue.ShouldBe(@"some_input_queue");
-            msmqMessageQueue.ErrorQueueName.ShouldBe(@"some_error_queue");
+            msmqMessageQueue.ErrorQueue.ShouldBe(@"some_error_queue");
         }
         
         [Test]

@@ -22,6 +22,6 @@ namespace Rebus
         /// Gets the name of this receiver's error queue - i.e. this is where messages should be
         /// moved if it is decided that a message is poisonous.
         /// </summary>
-        string ErrorQueueName { get; }
+        string ErrorQueue { get; }
     }
 }

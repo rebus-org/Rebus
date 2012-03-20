@@ -93,7 +93,7 @@ namespace Rebus.Tests
             get { return inputQueue; }
         }
 
-        public string ErrorQueueName
+        public string ErrorQueue
         {
             get { return inputQueue + ".error"; }
         }
