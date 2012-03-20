@@ -73,18 +73,18 @@ namespace Rebus.Tests.Transports.Msmq
         public void MessageExpirationWorks()
         {
             // arrange
-            var timeToBeReceived = 2.Seconds();
-            var timeToBeReceivedAsString = timeToBeReceived.ToString();
+            var timeToBeReceived = 2.Seconds()
+                .ToString();
 
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                                       {
                                                           Messages = new object[] { "HELLO WORLD!" },
-                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceivedAsString } },
+                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceived } },
                                                       }));
 
             // act
-            Thread.Sleep(timeToBeReceived + 1.Seconds());
+            Thread.Sleep(2.Seconds() + 1.Seconds());
 
             // assert
             Assert.Throws<MessageQueueException>(() => destinationQueue.Receive(0.1.Seconds()));

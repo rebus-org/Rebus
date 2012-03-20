@@ -21,9 +21,7 @@ namespace Rebus.Snoop
             if (e.AddedItems.Count != 1) return;
             
             var queue = e.AddedItems[0] as Queue;
-
             if (queue == null) return;
-
             if (queue.Initialized) return;
 
             Messenger.Default.Send(new ReloadMessagesRequested(queue));
