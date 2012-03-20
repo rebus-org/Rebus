@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Shared;
@@ -71,7 +72,7 @@ namespace Rebus.Transports.Msmq
                     transactionWrapper.Commit();
                     return null;
                 }
-                var transportMessage = (ReceivedTransportMessage) body;
+                var transportMessage = (ReceivedTransportMessage)body;
                 transactionWrapper.Commit();
                 return transportMessage;
             }
@@ -111,9 +112,9 @@ namespace Rebus.Transports.Msmq
             }
 
             var transactionWrapper = GetOrCreateTransactionWrapper();
-            
+
             outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
-            
+
             transactionWrapper.Commit();
         }
 
@@ -191,12 +192,22 @@ create its queues automatically.", path);
             {
                 log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
-                using (var messageQueue = MessageQueue.Create(path, true))
+                try
                 {
-                    messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                                                MessageQueueAccessRights.FullControl);
-                 
-                    messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);
+                    using (var messageQueue = MessageQueue.Create(path, true))
+                    {
+                        var administratorAccountName = new WindowsPlatform().GetAdministratorAccountName();
+
+                        messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                                                    MessageQueueAccessRights.GenericWrite);
+
+
+                        messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
+                    }
+                }
+                catch
+                {
+                    MessageQueue.Delete(path);
                 }
             }
         }

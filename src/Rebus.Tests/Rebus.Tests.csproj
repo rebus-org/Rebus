@@ -157,6 +157,7 @@
     <Compile Include="Persistence\RavenDb\TestRavenDbSagaPersister.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Msmq\TestWindowsPlatform.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
