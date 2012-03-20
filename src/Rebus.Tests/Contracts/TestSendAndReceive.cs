@@ -33,8 +33,8 @@ namespace Rebus.Tests.Contracts
 
         Tuple<ISendMessages, IReceiveMessages> RabbitMqTransports()
         {
-            var sender = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString,"tests.contracts.sender");
-            var receiver = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.receiver");
+            var sender = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.sender", "tests.contracts.sender.error");
+            var receiver = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.receiver", "tests.contracts.receiver.error");
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
@@ -45,15 +45,15 @@ namespace Rebus.Tests.Contracts
 
         Tuple<ISendMessages, IReceiveMessages> MsmqTransports()
         {
-            var sender = new MsmqMessageQueue(@"test.contracts.sender").PurgeInputQueue();
-            var receiver = new MsmqMessageQueue(@"test.contracts.receiver").PurgeInputQueue();
+            var sender = new MsmqMessageQueue(@"test.contracts.sender", "error").PurgeInputQueue();
+            var receiver = new MsmqMessageQueue(@"test.contracts.receiver", "error").PurgeInputQueue();
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
         Tuple<ISendMessages, IReceiveMessages> AzureQueueTransports()
         {
-            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue").PurgeInputQueue();
-            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue").PurgeInputQueue();
+            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", "testqueue.error").PurgeInputQueue();
+            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", "testqueue.error").PurgeInputQueue();
 
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }

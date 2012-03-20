@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
-using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Shared;
 
@@ -24,15 +23,17 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
 
         readonly CloudStorageAccount cloudStorageAccount;
         readonly string inputQueueName;
+        readonly string errorQueueName;
         readonly CloudQueueClient cloudQueueClient;
         readonly ConcurrentDictionary<string, CloudQueue> outputQueues = new ConcurrentDictionary<string, CloudQueue>();
         readonly CloudQueue inputQueue;
         readonly DictionarySerializer dictionarySerializer;
 
-        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName)
+        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName, string errorQueueName)
         {
             this.cloudStorageAccount = cloudStorageAccount;
             this.inputQueueName = inputQueueName;
+            this.errorQueueName = errorQueueName;
             cloudQueueClient = this.cloudStorageAccount.CreateCloudQueueClient();
             inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
 
@@ -135,6 +136,11 @@ namespace Rebus.Transports.Azure.AzureMessageQueue
         public string InputQueue
         {
             get { return inputQueueName; }
+        }
+
+        public string ErrorQueueName
+        {
+            get { return errorQueueName; }
         }
 
         #region Implementation of IHavePurgableInputQueue<AzureMessageQueue>

@@ -31,7 +31,7 @@ namespace Rebus.Timeout
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
             this.storeTimeouts = storeTimeouts;
-            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName, InputQueue + ".error");
 
             RebusLoggerFactory.Current = new Log4NetLoggerFactory();
             rebusBus = new RebusBus(this, msmqMessageQueue, msmqMessageQueue, null, null, null, new JsonMessageSerializer(), new TrivialPipelineInspector());

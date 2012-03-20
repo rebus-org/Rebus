@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -29,7 +28,7 @@ namespace Rebus.Tests.Transports.Msmq
         public void SetUp()
         {
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
+            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender", "error");
             destinationQueueName = "test.msmq.tx.destination";
             destinationQueuePath = MsmqMessageQueue.PrivateQueue(destinationQueueName);
 
@@ -64,7 +63,7 @@ namespace Rebus.Tests.Transports.Msmq
             MessageQueue.Create(queuePath, transactional: false);
 
             // act
-            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
+            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName, "error"));
 
             // assert
             invalidOperationException.Message.ShouldContain(queueName);
@@ -139,11 +138,7 @@ namespace Rebus.Tests.Transports.Msmq
             var message = serializer.Deserialize(receivedTransportMessage);
 
             message.Headers.ShouldNotBe(null);
-            message.Headers.Count.ShouldBe(1);
-            
-            var firstHeader = message.Headers.First();
-            firstHeader.Key.ShouldBe("someRandomHeaderKey");
-            firstHeader.Value.ShouldBe("someRandomHeaderValue");
+            message.Headers.ShouldContainKeyAndValue("someRandomHeaderKey", "someRandomHeaderValue");
         }
 
         [Test]

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Security.Cryptography;
 using Rebus.Extensions;
-using Rebus.Messages;
 using Rebus.Shared;
 
 namespace Rebus.Transports.Encrypted
@@ -62,6 +61,11 @@ namespace Rebus.Transports.Encrypted
         public string InputQueue
         {
             get { return innerReceiveMessages.InputQueue; }
+        }
+
+        public string ErrorQueueName
+        {
+            get { return innerReceiveMessages.ErrorQueueName; }
         }
 
         byte[] Encrypt(byte[] bytes)

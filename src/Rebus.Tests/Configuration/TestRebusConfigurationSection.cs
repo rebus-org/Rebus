@@ -13,6 +13,7 @@ namespace Rebus.Tests.Configuration
             var section = RebusConfigurationSection.LookItUp();
 
             section.InputQueue.ShouldBe("this.is.my.input.queue");
+            section.ErrorQueue.ShouldBe("this.is.my.error.queue");
             section.Workers.ShouldBe(5);
 
             var rijndaelSection = section.RijndaelSection;

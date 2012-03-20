@@ -31,7 +31,7 @@ namespace Sample.Server
             RebusLoggerFactory.Current = new TraceLoggerFactory();
 
             var program = new Program();
-            var messageQueue = new MsmqMessageQueue(serverQueue);
+            var messageQueue = new MsmqMessageQueue(serverQueue, "error");
             //var messageQueue = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, serverQueue, true);
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();

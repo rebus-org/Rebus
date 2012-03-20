@@ -61,12 +61,13 @@ namespace Rebus.Tests
         {
             return CreateBus(inputQueueName, activateHandlers,
                              new InMemorySubscriptionStorage(),
-                             new SagaDataPersisterForTesting());
+                             new SagaDataPersisterForTesting(),
+                             "error");
         }
 
-        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData)
+        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, string errorQueueName)
         {
-            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
+            var messageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName).PurgeInputQueue();
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    storeSubscriptions, storeSagaData,

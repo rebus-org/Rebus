@@ -26,6 +26,7 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
+        readonly string errorQueueName;
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
@@ -35,11 +36,18 @@ namespace Rebus.Transports.Msmq
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public MsmqMessageQueue(string inputQueueName)
+        public MsmqMessageQueue(string inputQueueName, string errorQueueName)
         {
             inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
+            EnsureMessageQueueExists(MsmqUtil.GetPath(errorQueueName), createIfNotExists: true);
             this.inputQueueName = inputQueueName;
+            this.errorQueueName = errorQueueName;
+        }
+
+        public string ErrorQueueName
+        {
+            get { return errorQueueName; }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
@@ -156,16 +164,7 @@ namespace Rebus.Transports.Msmq
 
         MessageQueue GetMessageQueue(string path, bool createIfNotExists)
         {
-            var queueExists = MessageQueue.Exists(path);
-
-            if (!queueExists && createIfNotExists)
-            {
-                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
-                var messageQueue = MessageQueue.Create(path, true);
-                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
-                messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);
-                return messageQueue;
-            }
+            EnsureMessageQueueExists(path, createIfNotExists);
 
             var queue = new MessageQueue(path);
 
@@ -182,6 +181,24 @@ create its queues automatically.", path);
             }
 
             return queue;
+        }
+
+        static void EnsureMessageQueueExists(string path, bool createIfNotExists)
+        {
+            var queueExists = MessageQueue.Exists(path);
+
+            if (!queueExists && createIfNotExists)
+            {
+                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
+
+                using (var messageQueue = MessageQueue.Create(path, true))
+                {
+                    messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                                                MessageQueueAccessRights.FullControl);
+                 
+                    messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);
+                }
+            }
         }
     }
 }

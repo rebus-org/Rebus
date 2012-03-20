@@ -18,12 +18,12 @@ namespace Rebus.Tests.Transports.Rabbit
         [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
-            var sender = new RabbitMqMessageQueue(ConnectionString, "test.rabbit.sender").PurgeInputQueue();
+            var sender = new RabbitMqMessageQueue(ConnectionString, "test.rabbit.sender", "test.rabbit.sender.error").PurgeInputQueue();
             
             const string consumerInputQueue = "test.rabbit.receiver";
 
             var competingConsumers = Enumerable.Range(0, consumers)
-                .Select(i => new RabbitMqMessageQueue(ConnectionString, consumerInputQueue).PurgeInputQueue())
+                .Select(i => new RabbitMqMessageQueue(ConnectionString, consumerInputQueue, consumerInputQueue + ".error").PurgeInputQueue())
                 .ToArray();
 
             var messageCount = count*consumers;

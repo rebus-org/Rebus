@@ -8,9 +8,9 @@ namespace Rebus.Transports.Msmq
 {
     public static class MsmqConfigurationExtension
     {
-        public static void UseEncryptedMsmq(this TransportConfigurer configurer, string inputQueue, string ivBase64, string keyBase64)
+        public static void UseEncryptedMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue, string ivBase64, string keyBase64)
         {
-            DoItEncrypted(configurer, inputQueue, ivBase64, keyBase64);
+            DoItEncrypted(configurer, inputQueue, ivBase64, keyBase64, errorQueue);
         }
 
         public static void UseEncryptedMsmqAndGetConfigurationFromAppConfig(this TransportConfigurer configurer)
@@ -23,27 +23,34 @@ namespace Rebus.Transports.Msmq
 
                 if (string.IsNullOrEmpty(inputQueueName))
                 {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the InputQueue attribute?");
+                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
+                }
+
+                var errorQueueName = section.ErrorQueue;
+
+                if (string.IsNullOrEmpty(errorQueueName))
+                {
+                    throw new ConfigurationErrorsException("Could not get error queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
                 }
 
                 var rijndael = section.RijndaelSection;
 
                 if (rijndael == null)
                 {
-                    throw new ConfigurationErrorsException("Could not find encryption settings in Rebus configuration section. Did you forget the Rijndael element?");
+                    throw new ConfigurationErrorsException("Could not find encryption settings in Rebus configuration section. Did you forget the 'rijndael' element?");
                 }
 
                 if (string.IsNullOrEmpty(rijndael.Iv))
                 {
-                    throw new ConfigurationErrorsException("Could not find initialization vector settings in Rijndael element - did you forget the Iv attribute?");
+                    throw new ConfigurationErrorsException("Could not find initialization vector settings in Rijndael element - did you forget the 'iv' attribute?");
                 }
                 
                 if (string.IsNullOrEmpty(rijndael.Key))
                 {
-                    throw new ConfigurationErrorsException("Could not find key settings in Rijndael element - did you forget the Key attribute?");
+                    throw new ConfigurationErrorsException("Could not find key settings in Rijndael element - did you forget the 'key' attribute?");
                 }
 
-                DoItEncrypted(configurer, inputQueueName, rijndael.Iv, rijndael.Key);
+                DoItEncrypted(configurer, inputQueueName, rijndael.Iv, rijndael.Key, errorQueueName);
             }
             catch (ConfigurationErrorsException e)
             {
@@ -84,9 +91,9 @@ A more full example configuration snippet can be seen here:
         /// Specifies that you want to use MSMQ to both send and receive messages. The input
         /// queue will be automatically created if it doesn't exist.
         /// </summary>
-        public static void UseMsmq(this TransportConfigurer configurer, string inputQueue)
+        public static void UseMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue)
         {
-            DoIt(configurer, inputQueue);
+            DoIt(configurer, inputQueue, errorQueue);
         }
 
         /// <summary>
@@ -104,10 +111,17 @@ A more full example configuration snippet can be seen here:
 
                 if (string.IsNullOrEmpty(inputQueueName))
                 {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the InputQueue attribute?");
+                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
                 } 
 
-                DoIt(configurer, inputQueueName);
+                var errorQueueName = section.ErrorQueue;
+
+                if (string.IsNullOrEmpty(errorQueueName))
+                {
+                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
+                } 
+
+                DoIt(configurer, inputQueueName, errorQueueName);
             }
             catch(ConfigurationErrorsException e)
             {
@@ -142,27 +156,27 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static void DoIt(TransportConfigurer configurer, string inputQueueName)
+        static void DoIt(TransportConfigurer configurer, string inputQueueName, string errorQueueName)
         {
             if (string.IsNullOrEmpty(inputQueueName))
             {
                 throw new ConfigurationErrorsException("You need to specify an input queue.");
             }
 
-            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName);
 
             configurer.UseSender(msmqMessageQueue);
             configurer.UseReceiver(msmqMessageQueue);
         }
 
-        static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string iv, string key)
+        static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string iv, string key, string errorQueueName)
         {
             if (string.IsNullOrEmpty(inputQueueName))
             {
                 throw new ConfigurationErrorsException("You need to specify an input queue.");
             }
 
-            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName);
             var encryptionFilter = new RijndaelEncryptionTransportDecorator(msmqMessageQueue, msmqMessageQueue, iv, key);
 
             configurer.UseSender(encryptionFilter);

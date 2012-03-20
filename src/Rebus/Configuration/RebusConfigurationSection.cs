@@ -8,6 +8,7 @@ namespace Rebus.Configuration
         const string MappingsCollectionPropertyName = "endpoints";
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";
+        const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
         const string configSectionName = "rebus";
 
@@ -30,6 +31,13 @@ namespace Rebus.Configuration
         {
             get { return (string)this[InputQueueAttributeName]; }
             set { this[InputQueueAttributeName] = value; }
+        }
+
+        [ConfigurationProperty(ErrorQueueAttributeName)]
+        public string ErrorQueue
+        {
+            get { return (string)this[ErrorQueueAttributeName]; }
+            set { this[ErrorQueueAttributeName] = value; }
         }
 
         [ConfigurationProperty(WorkersAttributeName)]

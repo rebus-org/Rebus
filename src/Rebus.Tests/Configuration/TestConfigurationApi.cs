@@ -93,7 +93,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             Configure.With(adapter)
-                .Transport(t => t.UseMsmq("some_input_queue"));
+                .Transport(t => t.UseMsmq("some_input_queue", "some_error_queue"));
 
             var registrations = adapter.Registrations
                 .Where(r => r.Instance.GetType() == typeof (MsmqMessageQueue))
@@ -103,6 +103,7 @@ namespace Rebus.Tests.Configuration
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
             msmqMessageQueue.InputQueue.ShouldBe(@"some_input_queue");
+            msmqMessageQueue.ErrorQueueName.ShouldBe(@"some_error_queue");
         }
         
         [Test]
@@ -174,7 +175,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             Configure.With(adapter)
-                .Transport(t => t.UseMsmq("some_input_queue_name"))
+                .Transport(t => t.UseMsmq("some_input_queue_name", "some_error_queue"))
                 .DetermineEndpoints(d => d.FromNServiceBusConfiguration())
                 .CreateBus();
 
