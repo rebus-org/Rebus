@@ -11,6 +11,7 @@
 
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -72,7 +73,7 @@
             </ListView.View>
         </ListView>
 
-        <ListView Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
+        <ListView Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
                   Controls:GridViewSort.AutoSort="True">
             <ListView.View>
                 <GridView>
@@ -83,7 +84,7 @@
             </ListView.View>
         </ListView>
 
-        <Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="3" Margin="1">
+        <Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="4" Margin="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
@@ -106,13 +107,16 @@
                 </ScrollViewer>
             </GroupBox>
         </Grid>
-        
-        <GridSplitter Grid.Column="2" Grid.RowSpan="3" Height="Auto" Width="5" ResizeDirection="Columns"
+
+        <GridSplitter Grid.Row="1" Grid.ColumnSpan="2" Height="5" Width="Auto" ResizeDirection="Rows"
                       Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <GridSplitter Grid.Row="3" Grid.ColumnSpan="4" Height="5" Width="Auto" ResizeDirection="Rows"
+        <GridSplitter Grid.Column="2" Grid.RowSpan="4" Height="Auto" Width="5" ResizeDirection="Columns"
                       Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <ListBox Grid.Row="4" Grid.ColumnSpan="4" ItemsSource="{Binding Notifications}"/>
+        <GridSplitter Grid.Row="4" Grid.ColumnSpan="4" Height="5" Width="Auto" ResizeDirection="Rows"
+                      Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+        <ListBox Grid.Row="5" Grid.ColumnSpan="4" ItemsSource="{Binding Notifications}"/>
     </Grid>
 </Window>
