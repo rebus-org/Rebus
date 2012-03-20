@@ -1,4 +1,7 @@
 using NUnit.Framework;
+using Rebus.Bus;
+using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Tests
 {
@@ -14,7 +17,21 @@ namespace Rebus.Tests
             var a = CreateBus(inputQueueNameA, new HandlerActivatorForTesting());   
             var b = CreateBus(inputQueueNameB, new HandlerActivatorForTesting());
 
-            25.Times(() => b.Send(inputQueueNameA, new DoSomething {SomeInteger = 23, WhatToDo = "Hello there!"}));
+            var attach = false;
+            25.Times(() =>
+                         {
+                             var message = new DoSomething {SomeInteger = 23, WhatToDo = "Hello there!"};
+                             if (attach)
+                             {
+                                 message.AttachHeader(Headers.SourceQueue, inputQueueNameB);
+                                 attach = false;
+                             }
+                             else
+                             {
+                                 attach = true;
+                             }
+                             b.Send(inputQueueNameA, message);
+                         });
         }
 
         public class DoSomething

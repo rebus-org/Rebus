@@ -4,6 +4,7 @@ using System.Linq;
 using System.Messaging;
 using System.Threading;
 using Rebus.Logging;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Msmq
 {
@@ -36,7 +37,7 @@ namespace Rebus.Transports.Msmq
 
         public MsmqMessageQueue(string inputQueueName)
         {
-            inputQueuePath = GetPath(inputQueueName);
+            inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
             this.inputQueueName = inputQueueName;
         }
@@ -86,7 +87,7 @@ namespace Rebus.Transports.Msmq
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            var recipientPath = GetPath(destinationQueueName);
+            var recipientPath = MsmqUtil.GetPath(destinationQueueName);
 
             MessageQueue outputQueue;
             if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
@@ -181,36 +182,6 @@ create its queues automatically.", path);
             }
 
             return queue;
-        }
-
-        static string GetPath(string inputQueue)
-        {
-            if (inputQueue.Contains("@"))
-            {
-                inputQueue = ParseQueueName(inputQueue);
-            }
-            else
-            {
-                inputQueue = AssumeLocalQueue(inputQueue);
-            }
-            return inputQueue;
-        }
-
-        static string ParseQueueName(string inputQueue)
-        {
-            var tokens = inputQueue.Split('@');
-
-            if (tokens.Length != 2)
-            {
-                throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", inputQueue));
-            }
-
-            return string.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
-        }
-
-        static string AssumeLocalQueue(string inputQueue)
-        {
-            return string.Format(@".\private$\{0}", inputQueue);
         }
     }
 }

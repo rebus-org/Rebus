@@ -11,7 +11,7 @@ namespace Rebus.Snoop.ViewModel.Models
     public class Queue : ViewModel
     {
         readonly ObservableCollection<Message> messages = new ObservableCollection<Message>();
-        uint messageCount;
+        int messageCount;
         string queueName;
         string queuePath;
         bool initialized;
@@ -32,7 +32,7 @@ namespace Rebus.Snoop.ViewModel.Models
         {
             QueueName = queue.QueueName;
             QueuePath = queue.Path;
-            MessageCount = queue.GetCount();
+            MessageCount = (int)queue.GetCount();
         }
 
         public string QueueName
@@ -47,7 +47,7 @@ namespace Rebus.Snoop.ViewModel.Models
             set { SetValue("QueuePath", value); }
         }
 
-        public uint MessageCount
+        public int MessageCount
         {
             get { return messageCount; }
             set { SetValue("MessageCount", value); }
@@ -68,6 +68,7 @@ namespace Rebus.Snoop.ViewModel.Models
             {
                 messages.Add(message);
             }
+            MessageCount = result.Count;
         }
     }
 }

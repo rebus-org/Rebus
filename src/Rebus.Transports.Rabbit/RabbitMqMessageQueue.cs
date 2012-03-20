@@ -8,6 +8,7 @@ using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Rabbit
 {

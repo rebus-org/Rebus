@@ -5,6 +5,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Extensions;
+using Rebus.Shared;
 
 namespace Rebus.Serialization.Json
 {

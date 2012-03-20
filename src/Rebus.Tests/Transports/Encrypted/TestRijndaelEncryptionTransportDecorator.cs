@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using Shouldly;
 using System.Linq;

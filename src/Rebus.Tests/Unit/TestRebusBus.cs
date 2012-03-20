@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rhino.Mocks;
 using Shouldly;
 

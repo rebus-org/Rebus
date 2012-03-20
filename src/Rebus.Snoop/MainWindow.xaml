@@ -73,17 +73,32 @@
             </ListView.View>
         </ListView>
 
-        <ListView Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
-                  Controls:GridViewSort.AutoSort="True">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Label" Width="380" DisplayMemberBinding="{Binding Label}" Controls:GridViewSort.PropertyName="Label"/>
-                    <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" Controls:GridViewSort.PropertyName="Time"/>
-                    <GridViewColumn Header="Size" Width="80" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}" Controls:GridViewSort.PropertyName="Bytes"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
-
+        <Grid Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" Grid.RowSpan="2" Margin="1" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            
+            <StackPanel Grid.Row="0" Orientation="Horizontal">
+                <Button Padding="2" Margin="2" Command="{Binding ReturnToSourceQueuesCommand}"
+                        CommandParameter="{Binding ElementName=MessagesList, Path=SelectedItems}"
+                        IsEnabled="{Binding CanMoveMessagesToSourceQueue}">
+                    Return to source queue
+                </Button>
+            </StackPanel>
+            
+            <ListView Grid.Row="1" x:Name="MessagesList" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
+                      Controls:GridViewSort.AutoSort="True" SelectionChanged="SelectedMessageChanged">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Label" Width="380" DisplayMemberBinding="{Binding Label}" Controls:GridViewSort.PropertyName="Label"/>
+                        <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" Controls:GridViewSort.PropertyName="Time"/>
+                        <GridViewColumn Header="Size" Width="80" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}" Controls:GridViewSort.PropertyName="Bytes"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
+        
         <Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="4" Margin="1">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>

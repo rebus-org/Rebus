@@ -8,7 +8,9 @@ namespace Rebus.Snoop.ViewModel.Models
         readonly Dictionary<string, string> headers = new Dictionary<string, string>();
         string body;
         int bytes;
+        string id;
         string label;
+        string queuePath;
         DateTime time;
 
         public string Body
@@ -39,6 +41,18 @@ namespace Rebus.Snoop.ViewModel.Models
         {
             get { return time; }
             set { SetValue("Time", value); }
+        }
+
+        public string Id
+        {
+            get { return id; }
+            set { SetValue("Id", value); }
+        }
+
+        public string QueuePath
+        {
+            get { return queuePath; }
+            set { SetValue("QueuePath", value); }
         }
     }
 }

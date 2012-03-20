@@ -6,6 +6,7 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
+using Rebus.Shared;
 
 namespace Rebus.Bus
 {

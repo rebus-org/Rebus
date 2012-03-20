@@ -5,9 +5,10 @@ using System.Linq;
 using System.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
-using Rebus.Messages;
+using Rebus.Shared;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
 using Message = Rebus.Snoop.ViewModel.Models.Message;
@@ -21,6 +22,79 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (MachineAdded newMachineCreated) => LoadQueues(newMachineCreated.Machine));
             Messenger.Default.Register(this, (ReloadQueuesRequested request) => LoadQueues(request.Machine));
             Messenger.Default.Register(this, (ReloadMessagesRequested request) => LoadMessages(request.Queue));
+            Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
+        }
+
+        void MoveMessagesToSourceQueues(List<Message> messagesToMove)
+        {
+            Task.Factory
+                .StartNew(() =>
+                              {
+                                  var canBeMoved = messagesToMove
+                                      .Where(m => m.Headers.ContainsKey(Headers.SourceQueue));
+
+                                  var result = new
+                                                   {
+                                                       Moved = new List<Message>(),
+                                                       Failed = new List<Tuple<Message, string>>(),
+                                                   };
+
+                                  foreach (var message in canBeMoved)
+                                  {
+                                      try
+                                      {
+                                          MoveMessage(message);
+                                          result.Moved.Add(message);
+                                      }
+                                      catch (Exception e)
+                                      {
+                                          result.Failed.Add(new Tuple<Message, string>(message, e.ToString()));
+                                      }
+                                  }
+
+                                  return result;
+                              })
+                .ContinueWith(t =>
+                                  {
+                                      var result = t.Result;
+
+                                      if (result.Failed.Any())
+                                      {
+                                          return new NotificationEvent("{0} messages moved - {1} move operations failed",
+                                                                       result.Moved.Count, result.Failed.Count);
+                                      }
+                                      
+                                      return new NotificationEvent("{0} messages moved", result.Moved.Count);
+                                  })
+                .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+        }
+
+        void MoveMessage(Message message)
+        {
+            using(var transaction = new MessageQueueTransaction())
+            {
+                transaction.Begin();
+                try
+                {
+                    var sourceQueue = new MessageQueue(message.QueuePath);
+                    var destinationQueue = new MessageQueue(ToMessageQueuePath(message));
+
+                    var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);
+                    destinationQueue.Send(msmqMessage, transaction);
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Abort();
+                    throw;
+                }
+            }
+        }
+
+        static string ToMessageQueuePath(Message message)
+        {
+            return MsmqUtil.GetPath(message.Headers[Headers.SourceQueue]);
         }
 
         void LoadMessages(Queue queue)
@@ -36,6 +110,7 @@ namespace Rebus.Snoop.Listeners
                                               ArrivedTime = true,
                                               Extension = true,
                                               Body = true,
+                                              Id = true,
                                           };
 
                                   var list = new List<Message>();
@@ -45,18 +120,21 @@ namespace Rebus.Snoop.Listeners
                                       while (enumerator.MoveNext())
                                       {
                                           var message = enumerator.Current;
-                                          list.Add(GenerateMessage(message));
+                                          list.Add(GenerateMessage(message, queue.QueuePath));
                                       }
                                   }
 
-                                  return list;
+                                  return new {Messages = list};
                               })
                 .ContinueWith(t =>
                                   {
                                       if (!t.IsFaulted)
                                       {
-                                          queue.SetMessages(t.Result);
-                                          return new NotificationEvent("{0} messages loaded from {1}", t.Result.Count,
+                                          var result = t.Result;
+
+                                          queue.SetMessages(result.Messages);
+                                          
+                                          return new NotificationEvent("{0} messages loaded from {1}", result.Messages.Count,
                                                                        queue.QueueName);
                                       }
 
@@ -67,7 +145,7 @@ namespace Rebus.Snoop.Listeners
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
         }
 
-        Message GenerateMessage(System.Messaging.Message message)
+        Message GenerateMessage(System.Messaging.Message message, string queuePath)
         {
             try
             {
@@ -80,11 +158,18 @@ namespace Rebus.Snoop.Listeners
                                Headers = headers,
                                Bytes = TryDetermineMessageSize(message),
                                Body = TryDecodeBody(message, headers),
+                               Id = message.Id,
+                               QueuePath = queuePath,
                            };
             }
             catch (Exception e)
             {
-                return new Message { Body = "Message could not be properly decoded." };
+                return new Message
+                           {
+                               Body = string.Format(@"Message could not be properly decoded: 
+
+{0}", e)
+                           };
             }
         }
 
@@ -92,9 +177,9 @@ namespace Rebus.Snoop.Listeners
         {
             try
             {
-                return (int) message.BodyStream.Length;
+                return (int)message.BodyStream.Length;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 return -1;
             }
@@ -114,7 +199,7 @@ namespace Rebus.Snoop.Listeners
                     return str;
                 }
             }
-            
+
             return "(message encoding not specified)";
         }
 

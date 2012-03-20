@@ -7,6 +7,7 @@ using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Azure.AzureMessageQueue
 {

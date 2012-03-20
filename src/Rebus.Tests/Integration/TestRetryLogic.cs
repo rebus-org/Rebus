@@ -4,6 +4,7 @@ using System.Text;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 

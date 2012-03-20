@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Extensions;
+using Rebus.Shared;
 
 namespace Rebus
 {
@@ -19,7 +20,7 @@ namespace Rebus
         public string Id { get; set; }
 
         /// <summary>
-        /// Message headers. Pre-defined header keys can be found in <see cref="Messages.Headers"/>.
+        /// Message headers. Pre-defined header keys can be found in <see cref="Shared.Headers"/>.
         /// </summary>
         public IDictionary<string, string> Headers { get; set; }
 

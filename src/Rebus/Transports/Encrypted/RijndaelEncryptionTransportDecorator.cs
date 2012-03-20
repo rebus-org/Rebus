@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Encrypted
 {

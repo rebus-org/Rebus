@@ -9,6 +9,7 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using Message = Rebus.Messages.Message;

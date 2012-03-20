@@ -72,8 +72,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="..\Rebus\Messages\Headers.cs">
-      <Link>Link\Headers.cs</Link>
+    <Compile Include="..\Rebus\Shared\Headers.cs">
+      <Link>Links\Headers.cs</Link>
+    </Compile>
+    <Compile Include="..\Rebus\Shared\MsmqUtil.cs">
+      <Link>Links\MsmqUtil.cs</Link>
     </Compile>
     <Compile Include="Controls\GridViewSort.cs" />
     <Compile Include="Controls\ReloadButton.cs" />
@@ -82,12 +85,14 @@
     <Compile Include="Events\NotificationEvent.cs" />
     <Compile Include="Events\ReloadMessagesRequested.cs" />
     <Compile Include="Events\ReloadQueuesRequested.cs" />
+    <Compile Include="Events\MessageSelectionWasMade.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />
     <Compile Include="ViewModel\Models\Queue.cs" />
     <Compile Include="Events\MachineAdded.cs" />
     <Compile Include="Listeners\MsmqInteraction.cs" />
+    <Compile Include="Events\MoveMessagesToSourceQueueRequested.cs" />
     <Compile Include="ViewModel\ViewModel.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\ViewModelLocator.cs" />

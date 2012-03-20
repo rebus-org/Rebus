@@ -5,6 +5,7 @@ using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Bus
 {

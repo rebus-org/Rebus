@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Shouldly;
 
 namespace Rebus.Tests.Serialization.Json

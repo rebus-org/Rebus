@@ -1,4 +1,4 @@
-namespace Rebus.Messages
+namespace Rebus.Shared
 {
     /// <summary>
     /// Contains keys of headers with special meaning in Rebus.

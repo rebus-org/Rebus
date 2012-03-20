@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
+using System.Linq;
 
 namespace Rebus.Snoop
 {
@@ -25,6 +26,11 @@ namespace Rebus.Snoop
             if (queue.Initialized) return;
 
             Messenger.Default.Send(new ReloadMessagesRequested(queue));
+        }
+
+        void SelectedMessageChanged(object sender, SelectionChangedEventArgs e)
+        {
+            Messenger.Default.Send(new MessageSelectionWasMade(e.AddedItems.OfType<Message>()));
         }
     }
 }
