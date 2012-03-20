@@ -33,16 +33,22 @@ namespace Rebus.Tests.Integration
         public void WillCallBackAfterTimeHasElapsed()
         {
             var justSomeCorrelationId = Guid.NewGuid().ToString();
-            client.Send(new TimeoutRequest {CorrelationId = justSomeCorrelationId, Timeout = 2.Seconds()});
+            var justSomeSubCorrelationId = Guid.NewGuid().ToString();
+            client.Send(new TimeoutRequest
+                            {
+                                CorrelationId = justSomeCorrelationId, 
+                                CustomData = justSomeSubCorrelationId,
+                                Timeout = 2.Seconds()
+                            });
             var timeoutExpired = false;
 
             handlerActivator
                 .Handle<TimeoutReply>(m =>
                                           {
-                                              if (m.CorrelationId == justSomeCorrelationId)
-                                              {
-                                                  timeoutExpired = true;
-                                              }
+                                              Assert.AreEqual(justSomeCorrelationId, m.CorrelationId, "Correlation ID was wrong");
+                                              Assert.AreEqual(justSomeSubCorrelationId, m.CustomData, "Custom data was wrong");
+
+                                              timeoutExpired = true;
                                           });
 
             Thread.Sleep(2.5.Seconds());

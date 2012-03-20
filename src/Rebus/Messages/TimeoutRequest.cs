@@ -19,5 +19,11 @@ namespace Rebus.Messages
         /// return with the <see cref="TimeoutReply"/>.
         /// </summary>
         public string CorrelationId { get; set; }
+
+        /// <summary>
+        /// Allows for additional data to be passed along with the timeout. If you really really want,
+        /// you COULD use this field to pass a serialized object.
+        /// </summary>
+        public string CustomData { get; set; }
     }
 }

@@ -90,6 +90,7 @@ namespace Rebus.Timeout
                                      CorrelationId = message.CorrelationId,
                                      ReplyTo = currentMessageContext.ReturnAddress,
                                      TimeToReturn = DateTime.UtcNow + message.Timeout,
+                                     CustomData = message.CustomData,
                                  };
 
             storeTimeouts.Add(newTimeout);
@@ -111,7 +112,8 @@ namespace Rebus.Timeout
                              new TimeoutReply
                                  {
                                      CorrelationId = timeout.CorrelationId,
-                                     DueTime = timeout.TimeToReturn
+                                     DueTime = timeout.TimeToReturn,
+                                     CustomData = timeout.CustomData,
                                  });
                 }
 

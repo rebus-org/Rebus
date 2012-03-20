@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace Rebus.Timeout.Persistence
 {
@@ -29,16 +30,30 @@ namespace Rebus.Timeout.Persistence
 
                 using (var command = connection.CreateCommand())
                 {
+                    var parameters = new List<Tuple<string, object>>();
+                    parameters.Add(new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn));
+                    parameters.Add(new Tuple<string, object>("correlation_id", newTimeout.CorrelationId));
+                    parameters.Add(new Tuple<string, object>("reply_to", newTimeout.ReplyTo));
+
+                    if (newTimeout.CustomData!= null)
+                    {
+                        parameters.Add(new Tuple<string, object>("custom_data", newTimeout.CustomData));
+                    }
+
+                    // generate sql with necessary columns including matching sql parameter names
                     command.CommandText =
                         string.Format(
-                            @"insert into [{0}] (time_to_return, correlation_id, reply_to)
-                                        values (@time_to_return, @correlation_id, @reply_to)",
-                            timeoutsTableName);
+                            @"insert into [{0}] ({1}) values ({2})",
+                            timeoutsTableName,
+                            string.Join(", ", parameters.Select(c => c.Item1)),
+                            string.Join(", ", parameters.Select(c => "@" + c.Item1)));
 
-                    command.Parameters.AddWithValue("time_to_return", newTimeout.TimeToReturn);
-                    command.Parameters.AddWithValue("correlation_id", newTimeout.CorrelationId);
-                    command.Parameters.AddWithValue("reply_to", newTimeout.ReplyTo);
-
+                    // set parameters
+                    foreach(var parameter in parameters)
+                    {
+                        command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
+                    }
+                    
                     try
                     {
                         command.ExecuteNonQuery();
@@ -63,7 +78,7 @@ namespace Rebus.Timeout.Persistence
                 {
                     command.CommandText =
                         string.Format(
-                            @"select time_to_return, correlation_id, reply_to from [{0}] where time_to_return <= @current_time",
+                            @"select time_to_return, correlation_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
                             timeoutsTableName);
 
                     command.Parameters.AddWithValue("current_time", Time.Now());
@@ -72,11 +87,17 @@ namespace Rebus.Timeout.Persistence
                     {
                         while (reader.Read())
                         {
+                            var correlationId = (string) reader["correlation_id"];
+                            var replyTo = (string) reader["reply_to"];
+                            var timeToReturn = (DateTime) reader["time_to_return"];
+                            var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
+
                             dueTimeouts.Add(new Timeout
                                                 {
-                                                    CorrelationId = (string)reader["correlation_id"],
-                                                    ReplyTo = (string)reader["reply_to"],
-                                                    TimeToReturn = (DateTime)reader["time_to_return"]
+                                                    CorrelationId = correlationId,
+                                                    ReplyTo = replyTo,
+                                                    TimeToReturn = timeToReturn,
+                                                    CustomData = customData,
                                                 });
                         }
                     }

@@ -2,10 +2,10 @@
 
   <UsingTask TaskName="Microsoft.Build.Tasks.XmlPoke"
              AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-  
+
   <ItemGroup>
     <AllProjects Include="..\src\**\*.csproj" />
-    
+
     <RebusProjects Include="..\src\Rebus\*.csproj" />
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
@@ -19,6 +19,8 @@
     <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
     <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
 
+    <SnoopProjects Include="..\src\Rebus.Snoop\*.csproj"/>
+
   </ItemGroup>
 
   <PropertyGroup>
@@ -26,7 +28,7 @@
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
     <!-- Should be provided from command-line / CI environment -->
-    <Version></Version> 
+    <Version></Version>
     <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
@@ -36,13 +38,13 @@
 
   <Target Name="clean_output_folder">
     <Message Text="Removing old output folder"/>
-    
+
     <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>
   </Target>
 
   <Target Name="compile_projects">
     <Message Text="Building everything"/>
-    
+
     <MSBuild Projects="@(RebusProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release">
       <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
     </MSBuild>
@@ -50,22 +52,22 @@
 
   <Target Name="copy_build_output">
     <Message Text="Copying build output to deploy folder"/>
-    
+
     <Copy SourceFiles="@(AssembliesBuilt)" DestinationFolder="$(BuildOutputFolder)" />
     <Copy SourceFiles="@(Docs)" DestinationFolder="$(BuildOutputFolder)" />
   </Target>
 
   <Target Name="merge">
     <Message Text="Merge Newtonsoft.Json.NET into Rebus"/>
-    
+
     <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
     <!-- should probably use variables instead of hardcoded DLL paths here ... -->
     <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4 /internalize"/>
   </Target>
-  
+
   <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
     <Message Text="NuGet packing..."/>
-    
+
     <Exec Command="$(NuGet) pack %(NuSpecFiles.FullPath) -OutputDirectory $(BuildOutputFolder)"/>
 
     <!-- Revert NuSpec versions. Version doesn't need to be committed to repo. -->
@@ -87,5 +89,22 @@
     <Message Text="Pushing NuGet packages..." />
     <Exec Command="$(NuGet) push %(NuGetPackages.FullPath)" />
   </Target>
+
   
+  
+  
+  <Target Name="build_snoop" DependsOnTargets="compile_snoop;copy_snoop_build_output" />
+
+  <Target Name="compile_snoop">
+    <MSBuild Projects="@(SnoopProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release">
+      <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="copy_snoop_build_output">
+    <Message Text="Copying build output to deploy folder"/>
+
+    <Copy SourceFiles="@(AssembliesBuilt)" DestinationFolder="$(BuildOutputFolder)" />
+  </Target>
+
 </Project>

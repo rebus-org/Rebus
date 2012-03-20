@@ -7,6 +7,7 @@ namespace Rebus.Timeout
         public string ReplyTo { get; set; }
         public string CorrelationId { get; set; }
         public DateTime TimeToReturn { get; set; }
+        public string CustomData { get; set; }
 
         public override string ToString()
         {
