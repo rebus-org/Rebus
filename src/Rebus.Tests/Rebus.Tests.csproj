@@ -153,6 +153,7 @@
     <Compile Include="Logging\TestRebusLoggerFactory.cs" />
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
+    <Compile Include="Persistence\MongoDb\TestMongoDbTimeoutStorage.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSubscriptionStorage.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSagaPersister.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />

@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="MongoDbSagaPersister.cs" />
     <Compile Include="MongoDbSubscriptionStorage.cs" />
+    <Compile Include="MongoDbTimeoutStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SagaDataElementNameConvention.cs" />
   </ItemGroup>

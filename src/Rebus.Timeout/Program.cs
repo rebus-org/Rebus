@@ -1,4 +1,4 @@
-﻿using Rebus.Timeout.Persistence;
+﻿using Rebus.Persistence.InMemory;
 using Topshelf;
 using log4net.Config;
 

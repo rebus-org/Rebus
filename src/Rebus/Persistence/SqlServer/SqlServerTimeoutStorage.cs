@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using Rebus.Timeout;
 
-namespace Rebus.Timeout.Persistence
+namespace Rebus.Persistence.SqlServer
 {
     public class SqlServerTimeoutStorage : IStoreTimeouts
     {
@@ -22,7 +23,7 @@ namespace Rebus.Timeout.Persistence
             get { return timeoutsTableName; }
         }
 
-        public void Add(Timeout newTimeout)
+        public void Add(Timeout.Timeout newTimeout)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -30,10 +31,13 @@ namespace Rebus.Timeout.Persistence
 
                 using (var command = connection.CreateCommand())
                 {
-                    var parameters = new List<Tuple<string, object>>();
-                    parameters.Add(new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn));
-                    parameters.Add(new Tuple<string, object>("correlation_id", newTimeout.CorrelationId));
-                    parameters.Add(new Tuple<string, object>("reply_to", newTimeout.ReplyTo));
+                    var parameters =
+                        new List<Tuple<string, object>>
+                            {
+                                new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn),
+                                new Tuple<string, object>("correlation_id", newTimeout.CorrelationId),
+                                new Tuple<string, object>("reply_to", newTimeout.ReplyTo)
+                            };
 
                     if (newTimeout.CustomData!= null)
                     {
@@ -66,13 +70,13 @@ namespace Rebus.Timeout.Persistence
             }
         }
 
-        public IEnumerable<Timeout> RemoveDueTimeouts()
+        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
         {
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                var dueTimeouts = new List<Timeout>();
+                var dueTimeouts = new List<Timeout.Timeout>();
 
                 using (var command = connection.CreateCommand())
                 {
@@ -92,7 +96,7 @@ namespace Rebus.Timeout.Persistence
                             var timeToReturn = (DateTime) reader["time_to_return"];
                             var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            dueTimeouts.Add(new Timeout
+                            dueTimeouts.Add(new Timeout.Timeout
                                                 {
                                                     CorrelationId = correlationId,
                                                     ReplyTo = replyTo,
@@ -110,7 +114,7 @@ namespace Rebus.Timeout.Persistence
             }
         }
 
-        void DeleteTimeout(Timeout timeout, SqlConnection connection)
+        void DeleteTimeout(Timeout.Timeout timeout, SqlConnection connection)
         {
             using (var command = connection.CreateCommand())
             {

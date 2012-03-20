@@ -106,12 +106,16 @@
     <Compile Include="Messages\TimeoutReply.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
+    <Compile Include="Persistence\InMemory\InMemoryTimeoutStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="TimeMachine.cs" />
+    <Compile Include="Timeout\IStoreTimeouts.cs" />
+    <Compile Include="Timeout\Timeout.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionTransportDecorator.cs" />

@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Timeout;
 
-namespace Rebus.Timeout.Persistence
+namespace Rebus.Persistence.InMemory
 {
     public class InMemoryTimeoutStorage : IStoreTimeouts
     {
         readonly object listLock = new object();
-        readonly List<Timeout> timeouts = new List<Timeout>();
+        readonly List<Timeout.Timeout> timeouts = new List<Timeout.Timeout>();
 
-        public void Add(Timeout newTimeout)
+        public void Add(Timeout.Timeout newTimeout)
         {
             lock (listLock)
             {
@@ -17,7 +18,7 @@ namespace Rebus.Timeout.Persistence
             }
         }
 
-        public IEnumerable<Timeout> RemoveDueTimeouts()
+        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
         {
             lock (listLock)
             {

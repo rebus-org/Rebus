@@ -2,8 +2,8 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Persistence.InMemory;
 using Rebus.Timeout;
-using Rebus.Timeout.Persistence;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
