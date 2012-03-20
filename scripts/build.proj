@@ -32,13 +32,15 @@
     <DefaultNuSpecVersion>0.0.1</DefaultNuSpecVersion>
     <NuGet>$(ToolsFolder)\NuGet\NuGet.exe</NuGet>
     <IlMerge>$(ToolsFolder)\IlMerge\IlMerge.exe</IlMerge>
+    <SnoopOutputFolder>$(BuildOutputFolder)\Snoop</SnoopOutputFolder>
+    
+    <SnoopProjectOutputFolder>..\src\Rebus.Snoop\bin\Release</SnoopProjectOutputFolder>
   </PropertyGroup>
 
   <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge;createNugetPackage" />
 
   <Target Name="clean_output_folder">
     <Message Text="Removing old output folder"/>
-
     <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>
   </Target>
 
@@ -93,18 +95,24 @@
   
   
   
-  <Target Name="build_snoop" DependsOnTargets="compile_snoop;copy_snoop_build_output" />
+  <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;merge_snoop" />
 
+  <Target Name="clean_snoop_output_folder">
+    <Message Text="Removing old output folder"/>
+    <RemoveDir Directories="$(SnoopOutputFolder)" ContinueOnError="true"/>
+  </Target>
+  
   <Target Name="compile_snoop">
     <MSBuild Projects="@(SnoopProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release">
       <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
     </MSBuild>
   </Target>
 
-  <Target Name="copy_snoop_build_output">
-    <Message Text="Copying build output to deploy folder"/>
-
-    <Copy SourceFiles="@(AssembliesBuilt)" DestinationFolder="$(BuildOutputFolder)" />
+  <Target Name="merge_snoop">
+    <Message Text="Merge all the things into Snoop"/>
+    <Message Text="SnoopOutputFolder: $(SnoopOutputFolder)"/>
+    <Message Text="SnoopProjectOutputFolder: $(SnoopProjectOutputFolder)"/>
+    <Copy SourceFiles="$(SnoopProjectOutputFolder)\Rebus.Snoop.exe" DestinationFolder="$(SnoopOutputFolder)"/>
+    <Exec Command="$(IlMerge) /out:$(SnoopOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Newtonsoft.Json.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.WPF4.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.Extras.WPF4.dll /targetplatform:v4 /internalize"/>
   </Target>
-
 </Project>
