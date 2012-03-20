@@ -60,15 +60,15 @@ namespace Rebus.Snoop.ViewModel.Models
 
         public RelayCommand<Queue> ReloadMessagesCommand { get; set; }
 
-        public void SetMessages(List<Message> result)
+        public void SetMessages(List<Message> messages)
         {
-            Initialized = true;
-            messages.Clear();
-            foreach (Message message in result)
+            Messages.Clear();
+            foreach (var message in messages)
             {
-                messages.Add(message);
+                Messages.Add(message);
             }
-            MessageCount = result.Count;
+            MessageCount = messages.Count;
+            Initialized = true;
         }
     }
 }

@@ -76,8 +76,11 @@ namespace Rebus.Snoop.Listeners
                 transaction.Begin();
                 try
                 {
-                    var sourceQueue = new MessageQueue(message.QueuePath);
-                    var destinationQueue = new MessageQueue(ToMessageQueuePath(message));
+                    var sourceQueuePath = message.QueuePath;
+                    var destinationQueuePath = ToMessageQueuePath(message.Headers[Headers.SourceQueue]);
+
+                    var sourceQueue = new MessageQueue(sourceQueuePath) {MessageReadPropertyFilter = DefaultFilter()};
+                    var destinationQueue = new MessageQueue(destinationQueuePath);
 
                     var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);
                     destinationQueue.Send(msmqMessage, transaction);
@@ -92,9 +95,9 @@ namespace Rebus.Snoop.Listeners
             }
         }
 
-        static string ToMessageQueuePath(Message message)
+        static string ToMessageQueuePath(string inputQueue)
         {
-            return MsmqUtil.GetPath(message.Headers[Headers.SourceQueue]);
+            return MsmqUtil.GetPath(inputQueue);
         }
 
         void LoadMessages(Queue queue)
@@ -103,15 +106,7 @@ namespace Rebus.Snoop.Listeners
                 .StartNew(() =>
                               {
                                   var messageQueue = new MessageQueue(queue.QueuePath);
-                                  messageQueue.MessageReadPropertyFilter =
-                                      new MessagePropertyFilter
-                                          {
-                                              Label = true,
-                                              ArrivedTime = true,
-                                              Extension = true,
-                                              Body = true,
-                                              Id = true,
-                                          };
+                                  messageQueue.MessageReadPropertyFilter = DefaultFilter();
 
                                   var list = new List<Message>();
 
@@ -143,6 +138,18 @@ namespace Rebus.Snoop.Listeners
                                                                    t.Exception);
                                   }, UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+        }
+
+        static MessagePropertyFilter DefaultFilter()
+        {
+            return new MessagePropertyFilter
+                       {
+                           Label = true,
+                           ArrivedTime = true,
+                           Extension = true,
+                           Body = true,
+                           Id = true,
+                       };
         }
 
         Message GenerateMessage(System.Messaging.Message message, string queuePath)
