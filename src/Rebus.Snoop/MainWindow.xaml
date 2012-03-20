@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
         xmlns:Converters="clr-namespace:Rebus.Snoop.Converters" 
         Title="Rebus Snoop" DataContext="{Binding Source={StaticResource Locator}, Path=MachinesViewModel}" mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:Controls="clr-namespace:Rebus.Snoop.Controls" Height="811" Width="1016">
+        xmlns:Controls="clr-namespace:Rebus.Snoop.Controls" Height="832" Width="1205">
     <Grid>
         <Grid.Resources>
             <Converters:ByteSizeConverter x:Key="ByteSizeConverter"/>
@@ -19,10 +19,10 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+            <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="3*"/>
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0" Grid.Row="0" Margin="1">
