@@ -63,7 +63,7 @@ namespace Rebus.Snoop.Listeners
                                           return new NotificationEvent("{0} messages moved - {1} move operations failed",
                                                                        result.Moved.Count, result.Failed.Count);
                                       }
-                                      
+
                                       return new NotificationEvent("{0} messages moved", result.Moved.Count);
                                   })
                 .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
@@ -71,14 +71,14 @@ namespace Rebus.Snoop.Listeners
 
         void MoveMessage(Message message)
         {
+            var sourceQueuePath = message.QueuePath;
+            var destinationQueuePath = ToMessageQueuePath(message.Headers[Headers.SourceQueue]);
+
             using(var transaction = new MessageQueueTransaction())
             {
                 transaction.Begin();
                 try
                 {
-                    var sourceQueuePath = message.QueuePath;
-                    var destinationQueuePath = ToMessageQueuePath(message.Headers[Headers.SourceQueue]);
-
                     var sourceQueue = new MessageQueue(sourceQueuePath) {MessageReadPropertyFilter = DefaultFilter()};
                     var destinationQueue = new MessageQueue(destinationQueuePath);
 
@@ -93,6 +93,8 @@ namespace Rebus.Snoop.Listeners
                     throw;
                 }
             }
+
+            Messenger.Default.Send(new MessageMoved(message, sourceQueuePath, destinationQueuePath));
         }
 
         static string ToMessageQueuePath(string inputQueue)
@@ -119,7 +121,7 @@ namespace Rebus.Snoop.Listeners
                                       }
                                   }
 
-                                  return new {Messages = list};
+                                  return new { Messages = list };
                               })
                 .ContinueWith(t =>
                                   {
@@ -128,7 +130,7 @@ namespace Rebus.Snoop.Listeners
                                           var result = t.Result;
 
                                           queue.SetMessages(result.Messages);
-                                          
+
                                           return new NotificationEvent("{0} messages loaded from {1}", result.Messages.Count,
                                                                        queue.QueueName);
                                       }

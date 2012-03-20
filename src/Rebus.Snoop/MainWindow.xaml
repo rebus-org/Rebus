@@ -103,6 +103,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
             <GroupBox Header="Headers" Grid.Row="0">
@@ -120,6 +121,32 @@
                 <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                     <TextBox Text="{Binding Machines/Queues/Messages/Body}" FontFamily="Courier New"/>
                 </ScrollViewer>
+            </GroupBox>
+            
+            <GroupBox Header="Info" Grid.Row="2">
+                <GroupBox.Resources>
+                    <Style x:Key="TextBoxStyle" TargetType="{x:Type TextBox}">
+                        <Setter Property="Margin" Value="3"/>
+                        <Setter Property="Padding" Value="3"/>
+                        <Setter Property="IsReadOnly" Value="True"/>
+                    </Style>
+                    <Style x:Key="TextBlockStyle" TargetType="{x:Type TextBlock}">
+                        <Setter Property="Margin" Value="6"/>
+                    </Style>
+                </GroupBox.Resources>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Id" Style="{StaticResource TextBlockStyle}"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding Machines/Queues/Messages/Id}" Style="{StaticResource TextBoxStyle}"/>
+                </Grid>
             </GroupBox>
         </Grid>
 

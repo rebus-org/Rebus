@@ -86,6 +86,7 @@
     <Compile Include="Events\ReloadMessagesRequested.cs" />
     <Compile Include="Events\ReloadQueuesRequested.cs" />
     <Compile Include="Events\MessageSelectionWasMade.cs" />
+    <Compile Include="Events\MessageMoved.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />

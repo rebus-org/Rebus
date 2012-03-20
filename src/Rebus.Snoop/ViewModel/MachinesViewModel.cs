@@ -35,6 +35,7 @@ namespace Rebus.Snoop.ViewModel
                                                          {
                                                              new Message
                                                                  {
+                                                                     Id="74839473829-43278493",
                                                                      Label = "msg1",
                                                                      Bytes = 1235,
                                                                      Time = new DateTime(2012, 03, 19, 12, 30, 45),
@@ -59,6 +60,7 @@ namespace Rebus.Snoop.ViewModel
                                                                  },
                                                              new Message
                                                                  {
+                                                                     Id="74839473829-43278673",
                                                                      Label = "msg2",
                                                                      Bytes = 12355,
                                                                      Time = new DateTime(2012, 02, 15, 12, 30, 45),
@@ -66,6 +68,7 @@ namespace Rebus.Snoop.ViewModel
                                                                  },
                                                              new Message
                                                                  {
+                                                                     Id="74839473829-43274323",
                                                                      Label = "msg3",
                                                                      Bytes = 123553456,
                                                                      Time = new DateTime(2012, 03, 19, 13, 30, 45),
