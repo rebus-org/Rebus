@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Controls;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Snoop.Events;
@@ -28,9 +29,13 @@ namespace Rebus.Snoop
             Messenger.Default.Send(new ReloadMessagesRequested(queue));
         }
 
+        readonly List<Message> selectedMessages = new List<Message>();
+
         void SelectedMessageChanged(object sender, SelectionChangedEventArgs e)
         {
-            Messenger.Default.Send(new MessageSelectionWasMade(e.AddedItems.OfType<Message>()));
+            selectedMessages.AddRange(e.AddedItems.OfType<Message>());
+            e.RemovedItems.OfType<Message>().ToList().ForEach(m => selectedMessages.Remove(m));
+            Messenger.Default.Send(new MessageSelectionWasMade(selectedMessages));
         }
     }
 }
