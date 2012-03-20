@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Messaging;
@@ -9,7 +8,6 @@ using Newtonsoft.Json;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
 using Message = Rebus.Snoop.ViewModel.Models.Message;
-using Rebus.Snoop.Msmq;
 
 namespace Rebus.Snoop.Listeners
 {

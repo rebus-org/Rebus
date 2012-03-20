@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Rebus.Messages;
-using System.Linq;
 using Rebus.Extensions;
 
 namespace Rebus.Serialization.Json

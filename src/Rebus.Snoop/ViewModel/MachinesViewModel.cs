@@ -21,31 +21,6 @@ namespace Rebus.Snoop.ViewModel
             {
                 machines.Add(new Machine
                                  {
-                                     MachineName = "some_machine",
-                                     Queues =
-                                         {
-                                             new Queue
-                                                 {
-                                                     QueueName = "someService.input",
-                                                     Messages =
-                                                         {
-                                                             new Message {Label = "msg1", Bytes = 123556},
-                                                             new Message {Label = "msg2", Bytes = 48374977},
-                                                             new Message {Label = "msg3", Bytes = 345}
-                                                         }
-                                                 },
-                                             new Queue
-                                                 {
-                                                     QueueName = "someService.error",
-                                                     Messages = {new Message {Label = "some.error.msg"},}
-                                                 },
-                                             new Queue {QueueName = "anotherService.input"},
-                                             new Queue {QueueName = "anotherService.error"},
-                                         }
-                                 });
-
-                machines.Add(new Machine
-                                 {
                                      MachineName = "another_machine",
                                      Queues =
                                          {
@@ -57,7 +32,15 @@ namespace Rebus.Snoop.ViewModel
                                                              new Message {Label = "msg1", Bytes = 1235, Time=new DateTime(2012, 03, 19, 12, 30, 45),
                                                              Headers={{"rebus-content-type", "text/json"},
                                                              {"rebus-msg-id", "343982043-439204382048"},
-                                                             {"rebus-return-address", "./private$/some_other_queue"}}},
+                                                             {"rebus-return-address", "./private$/some_other_queue"}},
+                                                             Body=@"{
+    ""someProperty"": ""someValue"",
+    ""anotherProperty"": {
+        ""embedded1"": 1,
+        ""embedded2"": 2,
+        ""embedded3"": 4,
+    }
+}"},
                                                              new Message {Label = "msg2", Bytes = 12355, Time=new DateTime(2012, 02, 15, 12, 30, 45),
                                                              Headers={{"rebus-content-type", "text/xml"}}},
                                                              new Message {Label = "msg3", Bytes = 123553456, Time=new DateTime(2012, 03, 19, 13, 30, 45),
@@ -85,6 +68,31 @@ namespace Rebus.Snoop.ViewModel
                                                  },
                                          }
                                  });
+       machines.Add(new Machine
+                                 {
+                                     MachineName = "some_machine",
+                                     Queues =
+                                         {
+                                             new Queue
+                                                 {
+                                                     QueueName = "someService.input",
+                                                     Messages =
+                                                         {
+                                                             new Message {Label = "msg1", Bytes = 123556},
+                                                             new Message {Label = "msg2", Bytes = 48374977},
+                                                             new Message {Label = "msg3", Bytes = 345}
+                                                         }
+                                                 },
+                                             new Queue
+                                                 {
+                                                     QueueName = "someService.error",
+                                                     Messages = {new Message {Label = "some.error.msg"},}
+                                                 },
+                                             new Queue {QueueName = "anotherService.input"},
+                                             new Queue {QueueName = "anotherService.error"},
+                                         }
+                                 });
+
                 machines.Add(new Machine { MachineName = "yet_another_machine" });
 
                 notifications.Add("4 queues loaded from some_machine");

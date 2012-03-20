@@ -14,10 +14,17 @@ namespace Rebus.Snoop.ViewModel.Models
         uint messageCount;
         string queueName;
         string queuePath;
+        bool initialized;
 
         public Queue()
         {
             ReloadMessagesCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new ReloadMessagesRequested(q)));
+        }
+
+        public bool Initialized
+        {
+            get { return initialized; }
+            private set { SetValue("Initialized", value); }
         }
 
         public Queue(MessageQueue queue)
@@ -55,6 +62,7 @@ namespace Rebus.Snoop.ViewModel.Models
 
         public void SetMessages(List<Message> result)
         {
+            Initialized = true;
             messages.Clear();
             foreach (Message message in result)
             {

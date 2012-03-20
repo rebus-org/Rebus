@@ -58,7 +58,7 @@
         </Grid>
 
         <ListView Grid.Column="1" Grid.Row="0" Margin="1" ItemsSource="{Binding Machines/Queues, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
-                  Controls:GridViewSort.AutoSort="True">
+                  Controls:GridViewSort.AutoSort="True" SelectionChanged="SelectedQueueChanged">
             <ListView.Resources>
                 <DataTemplate x:Key="ReloadTemplate">
                     <Controls:ReloadButton Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}"/>
