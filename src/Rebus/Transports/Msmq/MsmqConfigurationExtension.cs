@@ -66,18 +66,18 @@ For this way of configuring input queue to work, you need to supply a correct co
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
+        <section name=""rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
--and then you need a <Rebus> element some place further down the app.config/web.config,
+-and then you need a <rebus> element some place further down the app.config/web.config,
 like so:
 
-    <Rebus InputQueue=""my.service.input.queue"">
-        <Rijndael Iv=""initialization vector here"" Key=""key here""/>
-    </Rebus>
+    <rebus InputQueue=""my.service.input.queue"">
+        <rijndael iv=""initialization vector here"" key=""key here""/>
+    </rebus>
 
-Note also, that specifying the input queue name with the InputQueue attribute is optional.
+Note also, that specifying the input queue name with the 'inputQueue' attribute is optional.
 
 A more full example configuration snippet can be seen here:
 
@@ -137,16 +137,16 @@ For this way of configuring input queue to work, you need to supply a correct co
 section declaration in the <configSections> element of your app.config/web.config - like so:
 
     <configSections>
-        <section name=""Rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
+        <section name=""rebus"" type=""Rebus.Configuration.RebusConfigurationSection, Rebus"" />
         <!-- other stuff in here as well -->
     </configSections>
 
--and then you need a <Rebus> element some place further down the app.config/web.config,
+-and then you need a <rebus> element some place further down the app.config/web.config,
 like so:
 
-    <Rebus InputQueue=""my.service.input.queue"" />
+    <rebus inputQueue=""my.service.input.queue"" errorQueue=""my.service.error.queue"" />
 
-Note also, that specifying the input queue name with the InputQueue attribute is optional.
+Note also, that specifying the input queue name with the 'inputQueue' attribute is optional.
 
 A more full example configuration snippet can be seen here:
 

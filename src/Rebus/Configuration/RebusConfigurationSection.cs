@@ -48,7 +48,9 @@ namespace Rebus.Configuration
         }
 
         public const string ExampleSnippetForErrorMessages = @"
-    <rebus inputQueue=""my.service.input.queue"" workers=""10"">
+
+    <rebus inputQueue=""this.is.my.input.queue"" errorQueue=""this.is.my.error.queue"" workers=""5"">
+        <rijndael iv=""OLYKdaDyETlu7NbDMC45dA=="" key=""oA/ZUnFsR9w1qEatOByBSXc4woCuTxmR99tAuQ56Qko=""/>
         <endpoints>
             <add messages=""Name.Of.Assembly"" endpoint=""message_owner_1""/>
             <add messages=""Namespace.ClassName, Name.Of.Another.Assembly"" endpoint=""message_owner_2""/>
