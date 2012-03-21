@@ -2,16 +2,22 @@
 {
     public class NotificationEvent
     {
-        readonly string text;
-
-        public NotificationEvent(string message, params  object[] objs)
+        NotificationEvent(string message, params  object[] objs)
         {
-            text = string.Format(message, objs);
+            Text = string.Format(message, objs);
         }
 
-        public string Text
+        public string Text { get; private set; }
+        public string Details { get; private set; }
+
+        public static NotificationEvent Success(string message, params object[] objs)
         {
-            get { return text; }
+            return new NotificationEvent(message, objs);
+        }
+
+        public static NotificationEvent Fail(string details, string message, params object[]objs)
+        {
+            return new NotificationEvent(message, objs) {Details = details};
         }
     }
 }

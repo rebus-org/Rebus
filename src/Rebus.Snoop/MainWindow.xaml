@@ -167,6 +167,7 @@
         <GridSplitter Grid.Row="4" Grid.ColumnSpan="4" Height="5" Width="Auto" ResizeDirection="Rows"
                       Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
-        <ListBox Grid.Row="5" Grid.ColumnSpan="4" ItemsSource="{Binding Notifications}"/>
+        <ListBox Grid.Row="5" Grid.ColumnSpan="4" ItemsSource="{Binding Notifications}" DisplayMemberPath="Headline"
+                 MouseDoubleClick="LogLineDoubleClicked"/>
     </Grid>
 </Window>

@@ -92,6 +92,7 @@
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />
+    <Compile Include="ViewModel\Models\Notification.cs" />
     <Compile Include="ViewModel\Models\Queue.cs" />
     <Compile Include="Events\MachineAdded.cs" />
     <Compile Include="Listeners\MsmqInteraction.cs" />

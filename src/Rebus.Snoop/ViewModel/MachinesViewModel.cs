@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Shared;
@@ -15,7 +14,7 @@ namespace Rebus.Snoop.ViewModel
     public class MachinesViewModel : ViewModel
     {
         readonly ObservableCollection<Machine> machines = new ObservableCollection<Machine>();
-        readonly ObservableCollection<string> notifications = new ObservableCollection<string>();
+        readonly ObservableCollection<Notification> notifications = new ObservableCollection<Notification>();
 
         bool canMoveMessagesToSourceQueue;
 
@@ -137,8 +136,8 @@ namespace Rebus.Snoop.ViewModel
 
                 machines.Add(new Machine {MachineName = "yet_another_machine"});
 
-                notifications.Add("4 queues loaded from some_machine");
-                notifications.Add("5 queues loaded from another_machine");
+                notifications.Add(new Notification("4 queues loaded from some_machine"));
+                notifications.Add(new Notification("5 queues loaded from another_machine"));
             }
             else
             {
@@ -166,7 +165,7 @@ namespace Rebus.Snoop.ViewModel
 
         public RelayCommand<IEnumerable> ReturnToSourceQueuesCommand { get; set; }
 
-        public ObservableCollection<string> Notifications
+        public ObservableCollection<Notification> Notifications
         {
             get { return notifications; }
         }
@@ -231,7 +230,7 @@ namespace Rebus.Snoop.ViewModel
 
         void AddNotification(NotificationEvent n)
         {
-            notifications.Add(n.Text);
+            notifications.Add(new Notification(n.Text, n.Details));
         }
 
         void CreateCommands()

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
@@ -36,6 +37,16 @@ namespace Rebus.Snoop
             selectedMessages.AddRange(e.AddedItems.OfType<Message>());
             e.RemovedItems.OfType<Message>().ToList().ForEach(m => selectedMessages.Remove(m));
             Messenger.Default.Send(new MessageSelectionWasMade(selectedMessages));
+        }
+
+        void LogLineDoubleClicked(object sender, MouseButtonEventArgs e)
+        {
+            var listBox = (ListBox) sender;
+            var selectedNotification = (Notification) listBox.SelectedItem;
+
+            if (string.IsNullOrEmpty(selectedNotification.FullText)) return;
+            
+            MessageBox.Show(selectedNotification.FullText);
         }
     }
 }

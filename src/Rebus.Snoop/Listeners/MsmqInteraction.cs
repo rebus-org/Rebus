@@ -59,11 +59,12 @@ namespace Rebus.Snoop.Listeners
 
                                       if (result.Failed.Any())
                                       {
-                                          return new NotificationEvent("{0} messages moved - {1} move operations failed",
-                                                                       result.Moved.Count, result.Failed.Count);
+                                          var details = string.Join(Environment.NewLine, result.Failed.Select(f => string.Format("Id {0}: {1}", f.Item1.Id, f.Item2)));
+
+                                          return NotificationEvent.Fail(details, "{0} messages moved - {1} move operations failed", result.Moved.Count, result.Failed.Count);
                                       }
 
-                                      return new NotificationEvent("{0} messages moved", result.Moved.Count);
+                                      return NotificationEvent.Success("{0} messages moved", result.Moved.Count);
                                   })
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
@@ -73,12 +74,12 @@ namespace Rebus.Snoop.Listeners
             var sourceQueuePath = message.QueuePath;
             var destinationQueuePath = ToMessageQueuePath(message.Headers[Headers.SourceQueue]);
 
-            using(var transaction = new MessageQueueTransaction())
+            using (var transaction = new MessageQueueTransaction())
             {
                 transaction.Begin();
                 try
                 {
-                    var sourceQueue = new MessageQueue(sourceQueuePath) {MessageReadPropertyFilter = DefaultFilter()};
+                    var sourceQueue = new MessageQueue(sourceQueuePath) { MessageReadPropertyFilter = DefaultFilter() };
                     var destinationQueue = new MessageQueue(destinationQueuePath);
 
                     var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);
@@ -130,13 +131,15 @@ namespace Rebus.Snoop.Listeners
 
                                           queue.SetMessages(result.Messages);
 
-                                          return new NotificationEvent("{0} messages loaded from {1}", result.Messages.Count,
-                                                                       queue.QueueName);
+                                          return NotificationEvent.Success("{0} messages loaded from {1}",
+                                                                           result.Messages.Count,
+                                                                           queue.QueueName);
                                       }
 
-                                      return new NotificationEvent("Could not load messages from {0}: {1}",
-                                                                   queue.QueueName,
-                                                                   t.Exception);
+                                      var details = t.Exception.ToString();
+                                      return NotificationEvent.Fail(details, "Could not load messages from {0}: {1}",
+                                                                    queue.QueueName,
+                                                                    t.Exception);
                                   }, Context.UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
@@ -243,12 +246,13 @@ namespace Rebus.Snoop.Listeners
 
                                           machine.SetQueues(queues);
 
-                                          return new NotificationEvent("{0} queues loaded from {1}",
+                                          return NotificationEvent.Success("{0} queues loaded from {1}",
                                                                        t.Result.Length,
                                                                        machine.MachineName);
                                       }
 
-                                      return new NotificationEvent("Could not load queues from {0}: {1}",
+                                      var details = t.Exception.ToString();
+                                      return NotificationEvent.Fail(details, "Could not load queues from {0}: {1}",
                                                                    machine.MachineName, t.Exception.Message);
                                   }, Context.UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
