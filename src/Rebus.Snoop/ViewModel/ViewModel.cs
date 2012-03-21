@@ -6,7 +6,7 @@ namespace Rebus.Snoop.ViewModel
 {
     public abstract class ViewModel : ViewModelBase
     {
-        protected void SetValue(string propertyName, object value)
+        protected void SetValue(string propertyName, object value, params string[] affectedProperties)
         {
             if (string.IsNullOrEmpty(propertyName))
             {
@@ -37,6 +37,11 @@ namespace Rebus.Snoop.ViewModel
             fieldInfo.SetValue(this, value);
 
             RaisePropertyChanged(propertyName, oldValue, value, true);
+
+            foreach(var affectedPropertyName in affectedProperties)
+            {
+                RaisePropertyChanged(affectedPropertyName);
+            }
         }    
     }
 }

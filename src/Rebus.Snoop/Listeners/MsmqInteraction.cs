@@ -5,7 +5,6 @@ using System.Linq;
 using System.Messaging;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
 using Rebus.Shared;
@@ -25,7 +24,7 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
         }
 
-        void MoveMessagesToSourceQueues(List<Message> messagesToMove)
+        void MoveMessagesToSourceQueues(IEnumerable<Message> messagesToMove)
         {
             Task.Factory
                 .StartNew(() =>
@@ -66,7 +65,7 @@ namespace Rebus.Snoop.Listeners
 
                                       return new NotificationEvent("{0} messages moved", result.Moved.Count);
                                   })
-                .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+                .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
 
         void MoveMessage(Message message)
@@ -138,8 +137,8 @@ namespace Rebus.Snoop.Listeners
                                       return new NotificationEvent("Could not load messages from {0}: {1}",
                                                                    queue.QueueName,
                                                                    t.Exception);
-                                  }, UiThread)
-                .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
+                                  }, Context.UiThread)
+                .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
 
         static MessagePropertyFilter DefaultFilter()
@@ -251,13 +250,8 @@ namespace Rebus.Snoop.Listeners
 
                                       return new NotificationEvent("Could not load queues from {0}: {1}",
                                                                    machine.MachineName, t.Exception.Message);
-                                  }, UiThread)
-                .ContinueWith(t => Messenger.Default.Send(t.Result), UiThread);
-        }
-
-        static TaskScheduler UiThread
-        {
-            get { return TaskScheduler.FromCurrentSynchronizationContext(); }
+                                  }, Context.UiThread)
+                .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
     }
 }

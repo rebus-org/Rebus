@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Shared;
@@ -43,10 +43,8 @@ namespace Rebus.Snoop.ViewModel
                                                                          {
                                                                              {"rebus-content-type", "text/json"},
                                                                              {"rebus-msg-id", "343982043-439204382048"},
-                                                                             {
-                                                                                 "rebus-return-address",
-                                                                                 "./private$/some_other_queue"
-                                                                                 }
+                                                                             {"rebus-return-address","./private$/some_other_queue"},
+                                                                             {"rebus-error-message",string.Join(Environment.NewLine, Enumerable.Repeat(new string('*', 250), 20))},
                                                                          },
                                                                      Body =
                                                                          @"{
@@ -177,6 +175,52 @@ namespace Rebus.Snoop.ViewModel
         {
             Messenger.Default.Register(this, (NotificationEvent n) => AddNotification(n));
             Messenger.Default.Register(this, (MessageSelectionWasMade n) => HandleMessageSelectionWasMade(n));
+            Messenger.Default.Register(this, (MessageMoved m) => HandleMessageMoved(m));
+        }
+
+        void HandleMessageMoved(MessageMoved messageMoved)
+        {
+            // BAH! just ignore for now!
+            //Task.Factory
+            //    .StartNew(() =>
+            //                  {
+            //                      // attempt to update view models to avoid the need to refresh everything
+            //                      var theMessage = messageMoved.MessageThatWasMoved;
+            //                      var sourceQueuePath = messageMoved.SourceQueuePath;
+            //                      var destinationQueuePath = messageMoved.DestinationQueuePath;
+
+            //                      var allQueues = Machines.SelectMany(m => m.Queues).ToArray();
+
+            //                      // update involved queues if they have been loaded
+            //                      var sourceQueue = allQueues.FirstOrDefault(q => q.QueuePath == sourceQueuePath);
+
+            //                      var destinationQueue =
+            //                          allQueues.FirstOrDefault(q => q.QueuePath == destinationQueuePath);
+
+            //                      var result = new
+            //                                       {
+            //                                           SourceQueue = sourceQueue,
+            //                                           DestinationQueue = destinationQueue,
+            //                                           TheMessage = theMessage,
+            //                                       };
+
+            //                      return result;
+            //                  })
+            //    .ContinueWith(a =>
+            //                      {
+            //                          var result = a.Result;
+                                      
+            //                          if (result.SourceQueue != null)
+            //                          {
+            //                              result.SourceQueue.Remove(result.TheMessage);
+            //                          }
+
+            //                          if (result.DestinationQueue != null)
+            //                          {
+            //                              result.DestinationQueue.Add(result.TheMessage);
+            //                          }
+            //                      },
+            //                  Context.UiThread);
         }
 
         void HandleMessageSelectionWasMade(MessageSelectionWasMade messageSelectionWasMade)
@@ -199,7 +243,7 @@ namespace Rebus.Snoop.ViewModel
 
         void ReturnToSourceQueues(IEnumerable messages)
         {
-            List<Message> messagesToMove = messages.OfType<Message>().ToList();
+            var messagesToMove = messages.OfType<Message>().ToList();
 
             Messenger.Default.Send(new MoveMessagesToSourceQueueRequested(messagesToMove));
         }

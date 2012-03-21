@@ -7,6 +7,7 @@
     <Grid>
         <Grid.Resources>
             <Converters:ByteSizeConverter x:Key="ByteSizeConverter"/>
+            <Converters:NullVisibilityConverter HideIfNull="True" x:Key="HideIfNull"/>
         </Grid.Resources>
 
         <Grid.RowDefinitions>
@@ -104,10 +105,11 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             
             <GroupBox Header="Headers" Grid.Row="0">
-                <ListView ItemsSource="{Binding Machines/Queues/Messages/Headers}">
+                <ListView ItemsSource="{Binding Machines/Queues/Messages/HeadersExceptError}">
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Key" Width="120" DisplayMemberBinding="{Binding Key}"/>
@@ -122,8 +124,14 @@
                     <TextBox Text="{Binding Machines/Queues/Messages/Body}" FontFamily="Courier New"/>
                 </ScrollViewer>
             </GroupBox>
+
+            <GroupBox Header="Error details" Grid.Row="2" MaxHeight="200" Visibility="{Binding Machines/Queues/Messages/ErrorDetails, Mode=OneWay, Converter={StaticResource HideIfNull}}">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                    <TextBox Text="{Binding Machines/Queues/Messages/ErrorDetails, Mode=OneWay}" IsReadOnly="True"/>
+                </ScrollViewer>
+            </GroupBox>
             
-            <GroupBox Header="Info" Grid.Row="2">
+            <GroupBox Header="Info" Grid.Row="3">
                 <GroupBox.Resources>
                     <Style x:Key="TextBoxStyle" TargetType="{x:Type TextBox}">
                         <Setter Property="Margin" Value="3"/>

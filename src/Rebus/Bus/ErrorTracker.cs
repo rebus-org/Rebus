@@ -77,7 +77,7 @@ namespace Rebus.Bus
 
         class TrackedMessage
         {
-            readonly List<Exception> exceptions = new List<Exception>();
+            readonly List<Timed<Exception>> exceptions = new List<Timed<Exception>>();
 
             public TrackedMessage(string id)
             {
@@ -93,14 +93,20 @@ namespace Rebus.Bus
 
             public void AddError(Exception exception)
             {
-                exceptions.Add(exception);
+                exceptions.Add(exception.AtThisInstant());
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
             }
 
             public string GetErrorMessages()
             {
-                return string.Join(Environment.NewLine, exceptions.Select(e => e.ToString()));
+                return string.Join(Environment.NewLine + Environment.NewLine, exceptions.Select(FormatTimedException));
+            }
+
+            static string FormatTimedException(Timed<Exception> e)
+            {
+                return string.Format(@"{0}:
+{1}", e.Time, e.Value);
             }
         }
     }

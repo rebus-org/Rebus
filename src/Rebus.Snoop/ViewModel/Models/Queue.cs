@@ -70,5 +70,18 @@ namespace Rebus.Snoop.ViewModel.Models
             MessageCount = messages.Count;
             Initialized = true;
         }
+
+        public void Remove(Message message)
+        {
+            Messages.Remove(message);
+            MessageCount = messages.Count;
+        }
+
+        public void Add(Message message)
+        {
+            Messages.Add(message);
+            MessageCount = messages.Count;
+            message.QueuePath = QueuePath;
+        }
     }
 }

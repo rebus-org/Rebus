@@ -113,6 +113,7 @@
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Time.cs" />
+    <Compile Include="Timed.cs" />
     <Compile Include="TimeMachine.cs" />
     <Compile Include="Timeout\IStoreTimeouts.cs" />
     <Compile Include="Timeout\Timeout.cs" />

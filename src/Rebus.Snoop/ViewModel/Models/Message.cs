@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus.Snoop.ViewModel.Models
 {
@@ -22,8 +23,13 @@ namespace Rebus.Snoop.ViewModel.Models
         public Dictionary<string, string> Headers
         {
             get { return headers; }
-            set { SetValue("Headers", value); }
+            set { SetValue("Headers", value, "HeadersExceptError", "ErrorDetails"); }
         }
+
+        public IEnumerable<KeyValuePair<string, string>> HeadersExceptError
+        {
+            get { return Headers.Where(h => h.Key != Shared.Headers.ErrorMessage).ToArray(); }
+        } 
 
         public string Label
         {
@@ -53,6 +59,16 @@ namespace Rebus.Snoop.ViewModel.Models
         {
             get { return queuePath; }
             set { SetValue("QueuePath", value); }
+        }
+
+        public string ErrorDetails
+        {
+            get
+            {
+                return Headers.ContainsKey(Shared.Headers.ErrorMessage)
+                           ? Headers[Shared.Headers.ErrorMessage]
+                           : null;
+            }
         }
     }
 }

@@ -82,11 +82,13 @@
     <Compile Include="Controls\ReloadButton.cs" />
     <Compile Include="Converters\ByteSizeConverter.cs" />
     <Compile Include="Converters\MessageTimeConverter.cs" />
+    <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Events\NotificationEvent.cs" />
     <Compile Include="Events\ReloadMessagesRequested.cs" />
     <Compile Include="Events\ReloadQueuesRequested.cs" />
     <Compile Include="Events\MessageSelectionWasMade.cs" />
     <Compile Include="Events\MessageMoved.cs" />
+    <Compile Include="Context.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />

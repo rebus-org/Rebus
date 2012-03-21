@@ -1,20 +1,33 @@
 using System;
+using System.Messaging;
 
 namespace Rebus.Shared
 {
     static internal class MsmqUtil
     {
-        public static string GetPath(string inputQueue)
+        public static void PurgeQueue(string queueName)
         {
-            if (inputQueue.Contains("@"))
+            var path = GetPath(queueName);
+            
+            if (!MessageQueue.Exists(path)) return;
+
+            using(var messageQueue = new MessageQueue(path))
             {
-                inputQueue = ParseQueueName(inputQueue);
+                messageQueue.Purge();
+            }
+        }
+
+        public static string GetPath(string queueName)
+        {
+            if (queueName.Contains("@"))
+            {
+                queueName = ParseQueueName(queueName);
             }
             else
             {
-                inputQueue = AssumeLocalQueue(inputQueue);
+                queueName = AssumeLocalQueue(queueName);
             }
-            return inputQueue;
+            return queueName;
         }
 
         static string ParseQueueName(string inputQueue)
@@ -26,12 +39,12 @@ namespace Rebus.Shared
                 throw new ArgumentException(String.Format("The specified MSMQ input queue is invalid!: {0}", inputQueue));
             }
 
-            return String.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
+            return string.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
         }
 
         static string AssumeLocalQueue(string inputQueue)
         {
-            return String.Format(@".\private$\{0}", inputQueue);
+            return string.Format(@".\private$\{0}", inputQueue);
         }
     }
 }

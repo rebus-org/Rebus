@@ -1,4 +1,3 @@
-using System;
 using GalaSoft.MvvmLight;
 using Rebus.Snoop.Listeners;
 
