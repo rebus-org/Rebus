@@ -197,7 +197,7 @@ namespace Rebus.Bus
 
             try
             {
-                sendMessages.Send("error", transportMessageToSend);
+                sendMessages.Send(receiveMessages.ErrorQueue, transportMessageToSend);
             }
             catch(Exception e)
             {
