@@ -89,15 +89,15 @@ namespace Rebus.MongoDb
                                sagaData.Revision);
         }
 
-        public ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
+        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
         {
-            var collection = database.GetCollection(sagaDataType, collectionName);
+            var collection = database.GetCollection(typeof(T), collectionName);
 
-            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, sagaDataType), ToBsonValue(fieldFromMessage));
-            
-            var sagaData = collection.FindOneAs(sagaDataType, query);
+            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), ToBsonValue(fieldFromMessage));
 
-            return (ISagaData) sagaData;
+            var sagaData = collection.FindOneAs(typeof(T), query);
+
+            return (T) sagaData;
         }
 
         static BsonValue ToBsonValue(object fieldFromMessage)

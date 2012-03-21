@@ -22,7 +22,7 @@ namespace Rebus.Persistence.InMemory
             data.TryRemove(sagaData.Id, out temp);
         }
 
-        public virtual ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
+        public virtual T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
         {
             foreach (var sagaData in data)
             {
@@ -30,10 +30,10 @@ namespace Rebus.Persistence.InMemory
 
                 if (valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()))
                 {
-                    return sagaData.Value;
+                    return (T) sagaData.Value;
                 }
             }
-            return null;
+            return default(T);
         }
 
         public void UseIndex(string[] sagaDataPathsToIndex)

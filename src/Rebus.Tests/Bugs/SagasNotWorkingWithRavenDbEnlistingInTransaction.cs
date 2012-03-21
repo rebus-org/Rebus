@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using NUnit.Framework;
+using Raven.Client.Document;
 using Raven.Client.Embedded;
 using Rebus.Persistence.InMemory;
 using Rebus.RavenDb;
@@ -15,22 +16,23 @@ namespace Rebus.Tests.Bugs
         [Test]
         public void ShouldWork()
         {
-            var store = new EmbeddableDocumentStore
+            var store = new EmbeddableDocumentStore()
                             {
-                                RunInMemory = true
+                                RunInMemory = true//Url = "http://localhost:8080"
                             };
 
             store.Initialize();
 
             var activator = new HandlerActivatorForTesting();
             var checker = new CheckCallsMade();
-            var bus = CreateBus(Queue, activator, new InMemorySubscriptionStorage(), new RavenDbSagaPersister(store, "Sagas")).Start(1);
+            var bus = CreateBus(Queue, activator, new InMemorySubscriptionStorage(), new RavenDbSagaPersister(store)).Start(1);
             activator.UseHandler(() => new TheSaga(bus, checker));
             bus.Send(new TheFirstMessage());
 
-            Thread.Sleep(15000);
+            Thread.Sleep(50000);
             Assert.IsTrue(checker.First, "First should be called");
             Assert.IsTrue(checker.Second, "Second should be called");
+            Assert.IsTrue(checker.Third, "Third should be called");
         }
 
         public override string GetEndpointFor(Type messageType)
@@ -47,9 +49,15 @@ namespace Rebus.Tests.Bugs
             public Guid CorrelationId { get; set; }
         }
 
+        public class TheThirdMessage
+        {
+            public Guid CorrelationId { get; set; }
+        }
+
         public class TheSaga : Saga<TheSaga.SomeSagaData>,
                                IAmInitiatedBy<TheFirstMessage>,
-                               IHandleMessages<TheSecondMessage>
+                               IHandleMessages<TheSecondMessage>,
+                               IHandleMessages<TheThirdMessage>
         {
             private readonly IBus bus;
             private readonly CheckCallsMade checker;
@@ -63,6 +71,7 @@ namespace Rebus.Tests.Bugs
             public override void ConfigureHowToFindSaga()
             {
                 Incoming<TheSecondMessage>(x => x.CorrelationId).CorrelatesWith(x => x.Id);
+                Incoming<TheThirdMessage>(x => x.CorrelationId).CorrelatesWith(x => x.Id);
             }
 
             public class SomeSagaData : ISagaData
@@ -74,6 +83,7 @@ namespace Rebus.Tests.Bugs
 
                 public Guid Id { get; set; }
                 public int Revision { get; set; }
+                public string SomeOtherField { get; set; }
             }
 
             public void Handle(TheFirstMessage message)
@@ -81,13 +91,23 @@ namespace Rebus.Tests.Bugs
                 checker.First = true;
                 bus.SendLocal(new TheSecondMessage
                                   {
-                                      CorrelationId = Data.Id
+                                      CorrelationId = Data.Id,
                                   });
             }
 
             public void Handle(TheSecondMessage message)
             {
                 checker.Second = true;
+                Data.SomeOtherField = "Asger";
+                bus.SendLocal(new TheThirdMessage
+                {
+                    CorrelationId = Data.Id,
+                });
+            }
+
+            public void Handle(TheThirdMessage message)
+            {
+                checker.Third = true;
             }
         }
     }
