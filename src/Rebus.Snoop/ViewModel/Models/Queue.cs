@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Messaging;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
@@ -8,6 +9,7 @@ using Rebus.Snoop.Msmq;
 
 namespace Rebus.Snoop.ViewModel.Models
 {
+    [DebuggerDisplay("{QueuePath}")]
     public class Queue : ViewModel
     {
         readonly ObservableCollection<Message> messages = new ObservableCollection<Message>();
@@ -80,7 +82,10 @@ namespace Rebus.Snoop.ViewModel.Models
         public void Add(Message message)
         {
             Messages.Add(message);
-            MessageCount = messages.Count;
+            
+            // in case the queue hasn't been initialized, we need to just increment this number
+            MessageCount++;
+
             message.QueuePath = QueuePath;
         }
     }

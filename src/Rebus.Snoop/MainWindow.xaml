@@ -168,6 +168,6 @@
                       Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
 
         <ListBox Grid.Row="5" Grid.ColumnSpan="4" ItemsSource="{Binding Notifications}" DisplayMemberPath="Headline"
-                 MouseDoubleClick="LogLineDoubleClicked"/>
+                 MouseDoubleClick="LogLineDoubleClicked" x:Name="NotificationsListBox"/>
     </Grid>
 </Window>

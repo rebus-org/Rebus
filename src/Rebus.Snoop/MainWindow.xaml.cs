@@ -16,7 +16,15 @@ namespace Rebus.Snoop
     {
         public MainWindow()
         {
+            Context.Init();
             InitializeComponent();
+            Messenger.Default.Register(this, (NotificationAdded n) => HandleNotificationAdded(n));
+        }
+
+        void HandleNotificationAdded(NotificationAdded notificationAdded)
+        {
+            if (NotificationsListBox.Items.Count == 0) return;
+            NotificationsListBox.ScrollIntoView(NotificationsListBox.Items[NotificationsListBox.Items.Count-1]);
         }
 
         void SelectedQueueChanged(object sender, SelectionChangedEventArgs e)

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Shared;
@@ -179,47 +180,47 @@ namespace Rebus.Snoop.ViewModel
 
         void HandleMessageMoved(MessageMoved messageMoved)
         {
-            // BAH! just ignore for now!
-            //Task.Factory
-            //    .StartNew(() =>
-            //                  {
-            //                      // attempt to update view models to avoid the need to refresh everything
-            //                      var theMessage = messageMoved.MessageThatWasMoved;
-            //                      var sourceQueuePath = messageMoved.SourceQueuePath;
-            //                      var destinationQueuePath = messageMoved.DestinationQueuePath;
+             //BAH! just ignore for now!
+            Task.Factory
+                .StartNew(() =>
+                              {
+                                  // attempt to update view models to avoid the need to refresh everything
+                                  var theMessage = messageMoved.MessageThatWasMoved;
+                                  var sourceQueuePath = messageMoved.SourceQueuePath;
+                                  var destinationQueuePath = messageMoved.DestinationQueuePath;
 
-            //                      var allQueues = Machines.SelectMany(m => m.Queues).ToArray();
+                                  var allQueues = Machines.SelectMany(m => m.Queues).ToArray();
 
-            //                      // update involved queues if they have been loaded
-            //                      var sourceQueue = allQueues.FirstOrDefault(q => q.QueuePath == sourceQueuePath);
+                                  // update involved queues if they have been loaded
+                                  var sourceQueue = allQueues.FirstOrDefault(q => q.QueuePath.Equals(sourceQueuePath, StringComparison.InvariantCultureIgnoreCase));
+                                  var destinationQueue = allQueues.FirstOrDefault(q => q.QueuePath.Equals(destinationQueuePath, StringComparison.InvariantCultureIgnoreCase));
 
-            //                      var destinationQueue =
-            //                          allQueues.FirstOrDefault(q => q.QueuePath == destinationQueuePath);
+                                  var result = new
+                                                   {
+                                                       SourceQueue = sourceQueue,
+                                                       SourceQueuePath = sourceQueuePath,
+                                                       DestinationQueue = destinationQueue,
+                                                       DestinationQueuePath = destinationQueuePath,
+                                                       TheMessage = theMessage,
+                                                   };
 
-            //                      var result = new
-            //                                       {
-            //                                           SourceQueue = sourceQueue,
-            //                                           DestinationQueue = destinationQueue,
-            //                                           TheMessage = theMessage,
-            //                                       };
+                                  return result;
+                              })
+                .ContinueWith(a =>
+                                  {
+                                      var result = a.Result;
 
-            //                      return result;
-            //                  })
-            //    .ContinueWith(a =>
-            //                      {
-            //                          var result = a.Result;
-                                      
-            //                          if (result.SourceQueue != null)
-            //                          {
-            //                              result.SourceQueue.Remove(result.TheMessage);
-            //                          }
+                                      if (result.SourceQueue != null)
+                                      {
+                                          result.SourceQueue.Remove(result.TheMessage);
+                                      }
 
-            //                          if (result.DestinationQueue != null)
-            //                          {
-            //                              result.DestinationQueue.Add(result.TheMessage);
-            //                          }
-            //                      },
-            //                  Context.UiThread);
+                                      if (result.DestinationQueue != null)
+                                      {
+                                          result.DestinationQueue.Add(result.TheMessage);
+                                      }
+                                  },
+                              Context.UiThread);
         }
 
         void HandleMessageSelectionWasMade(MessageSelectionWasMade messageSelectionWasMade)
@@ -230,7 +231,9 @@ namespace Rebus.Snoop.ViewModel
 
         void AddNotification(NotificationEvent n)
         {
-            notifications.Add(new Notification(n.Text, n.Details));
+            var notification = new Notification(n.Text, n.Details);
+            notifications.Add(notification);
+            Messenger.Default.Send(new NotificationAdded(notification));
         }
 
         void CreateCommands()

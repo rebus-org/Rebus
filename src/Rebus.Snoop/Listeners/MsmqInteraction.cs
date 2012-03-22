@@ -72,7 +72,7 @@ namespace Rebus.Snoop.Listeners
         void MoveMessage(Message message)
         {
             var sourceQueuePath = message.QueuePath;
-            var destinationQueuePath = ToMessageQueuePath(message.Headers[Headers.SourceQueue]);
+            var destinationQueuePath = MsmqUtil.GetFullPath(message.Headers[Headers.SourceQueue]);
 
             using (var transaction = new MessageQueueTransaction())
             {
@@ -95,11 +95,6 @@ namespace Rebus.Snoop.Listeners
             }
 
             Messenger.Default.Send(new MessageMoved(message, sourceQueuePath, destinationQueuePath));
-        }
-
-        static string ToMessageQueuePath(string inputQueue)
-        {
-            return MsmqUtil.GetPath(inputQueue);
         }
 
         void LoadMessages(Queue queue)
