@@ -1,4 +1,5 @@
 using System;
+using System.Linq.Expressions;
 using System.Reflection;
 using GalaSoft.MvvmLight;
 
@@ -6,8 +7,10 @@ namespace Rebus.Snoop.ViewModel
 {
     public abstract class ViewModel : ViewModelBase
     {
-        protected void SetValue(string propertyName, object value, params string[] affectedProperties)
+        protected void SetValue<T>(Expression<Func<T>> propertyExpression, object value, params string[] affectedProperties)
         {
+            var propertyName = ExtractPropertyName(propertyExpression);
+
             if (string.IsNullOrEmpty(propertyName))
             {
                 throw new ArgumentException("You need to specify the name of a property.", "propertyName");
@@ -42,6 +45,23 @@ namespace Rebus.Snoop.ViewModel
             {
                 RaisePropertyChanged(affectedPropertyName);
             }
-        }    
+        }
+
+        protected static string ExtractPropertyName<T>(Expression<Func<T>> propertyExpression)
+        {
+            if (propertyExpression == null)
+                throw new ArgumentNullException("propertyExpression");
+            var memberExpression = propertyExpression.Body as MemberExpression;
+            if (memberExpression == null)
+                throw new ArgumentException("Expression was not a MemberExpression", "propertyExpression");
+            var propertyInfo = memberExpression.Member as PropertyInfo;
+            if (propertyInfo == null)
+                throw new ArgumentException("Expression was not a PropertyInfo", "propertyExpression");
+            if (propertyInfo.GetGetMethod(true).IsStatic)
+                throw new ArgumentException("The property can not be static", "propertyExpression");
+            
+            
+            return memberExpression.Member.Name;
+        }
     }
 }

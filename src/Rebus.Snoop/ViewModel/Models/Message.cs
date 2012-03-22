@@ -17,13 +17,13 @@ namespace Rebus.Snoop.ViewModel.Models
         public string Body
         {
             get { return body; }
-            set { SetValue("Body", value); }
+            set { SetValue(() => Body, value); }
         }
 
         public Dictionary<string, string> Headers
         {
             get { return headers; }
-            set { SetValue("Headers", value, "HeadersExceptError", "ErrorDetails"); }
+            set { SetValue(() => Headers, value, ExtractPropertyName(() => HeadersExceptError), ExtractPropertyName(() => ErrorDetails)); }
         }
 
         public IEnumerable<KeyValuePair<string, string>> HeadersExceptError
@@ -34,31 +34,31 @@ namespace Rebus.Snoop.ViewModel.Models
         public string Label
         {
             get { return label; }
-            set { SetValue("Label", value); }
+            set { SetValue(() => Label, value); }
         }
 
         public int Bytes
         {
             get { return bytes; }
-            set { SetValue("Bytes", value); }
+            set { SetValue(() => Bytes, value); }
         }
 
         public DateTime Time
         {
             get { return time; }
-            set { SetValue("Time", value); }
+            set { SetValue(() => Time, value); }
         }
 
         public string Id
         {
             get { return id; }
-            set { SetValue("Id", value); }
+            set { SetValue(() => Id, value); }
         }
 
         public string QueuePath
         {
             get { return queuePath; }
-            set { SetValue("QueuePath", value); }
+            set { SetValue(() => QueuePath, value); }
         }
 
         public string ErrorDetails
