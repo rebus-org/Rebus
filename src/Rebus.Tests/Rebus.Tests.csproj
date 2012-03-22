@@ -135,6 +135,7 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
+    <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromConfigurationSection.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />

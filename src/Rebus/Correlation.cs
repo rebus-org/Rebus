@@ -5,6 +5,6 @@ namespace Rebus
         internal abstract string SagaDataPropertyPath { get; }
         internal abstract string MessagePropertyPath { get; }
 
-        public abstract string FieldFromMessage<TMessage>(TMessage message);
+        public abstract object FieldFromMessage(object message);
     }
 }

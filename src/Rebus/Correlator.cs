@@ -4,7 +4,7 @@ using Ponder;
 
 namespace Rebus
 {
-    public class Correlator<TData, TMessage> : Correlation where TData : ISagaData
+    public class Correlator<TData, TMessage> : Correlation where TData : ISagaData where TMessage : class
     {
         readonly Delegate messageProperty;
         readonly Saga<TData> saga;
@@ -28,18 +28,19 @@ namespace Rebus
             get { return messagePropertyPath; }
         }
 
-        public override string FieldFromMessage<TMessage2>(TMessage2 message)
+        public override object FieldFromMessage(object message)
         {
-            if (typeof(TMessage) != typeof(TMessage2))
+            var typedMessage = message as TMessage;
+            if (typedMessage == null)
             {
                 throw new InvalidOperationException(
                     string.Format("Cannot extract {0} field from message of type {1} with func that takes a {2}",
-                                  messagePropertyPath, typeof (TMessage2), typeof (TMessage)));
+                                  messagePropertyPath, message.GetType(), typeof (TMessage)));
             }
 
-            var property = (Func<TMessage2, object>)messageProperty;
+            var property = (Func<TMessage, object>)messageProperty;
 
-            return (property(message) ?? "").ToString();
+            return property(typedMessage);
         }
 
         public void CorrelatesWith(Expression<Func<TData,object>> sagaDataProperty)
