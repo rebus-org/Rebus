@@ -73,10 +73,34 @@ namespace Rebus.Tests.Persistence.RavenDb
             persister.Save(simpleSagaData, indexBySomeString);
 
             var sagaData1 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
-            var sagaData2 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            sagaData1.Revision++;
 
-            persister.Save(sagaData1, indexBySomeString);
-            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData2, indexBySomeString));
+            var persister2 = new RavenDbSagaPersister(store);
+            var sagaData2 = persister2.Find<SimpleSagaData>("SomeString", "hello world!");
+            sagaData2.Revision++;
+            persister2.Save(sagaData2, indexBySomeString);
+
+            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
+            Console.WriteLine(exception);
+        }
+
+        [Test]
+        public void UsesOptimisticLockingAndDetectsRaceConditionsWhenUpdating2()
+        {
+            var indexBySomeString = new[] { "Id" };
+            var id = Guid.NewGuid();
+            var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
+            persister.Save(simpleSagaData, indexBySomeString);
+
+            var sagaData1 = persister.Find<SimpleSagaData>("Id", id);
+            sagaData1.Revision++;
+
+            var persister2 = new RavenDbSagaPersister(store);
+            var sagaData2 = persister2.Find<SimpleSagaData>("Id", id);
+            sagaData2.Revision++;
+            persister2.Save(sagaData2, indexBySomeString);
+
+            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
             Console.WriteLine(exception);
         }
 
