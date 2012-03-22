@@ -24,7 +24,7 @@ namespace Rebus.Snoop.ViewModel.Models
         public bool Initialized
         {
             get { return initialized; }
-            private set { SetValue("Initialized", value); }
+            private set { SetValue(() => Initialized, value); }
         }
 
         public Queue(MessageQueue queue)
@@ -38,19 +38,19 @@ namespace Rebus.Snoop.ViewModel.Models
         public string QueueName
         {
             get { return queueName; }
-            set { SetValue("QueueName", value); }
+            set { SetValue(() => QueueName, value); }
         }
 
         public string QueuePath
         {
             get { return queuePath; }
-            set { SetValue("QueuePath", value); }
+            set { SetValue(() => QueuePath, value); }
         }
 
         public int MessageCount
         {
             get { return messageCount; }
-            set { SetValue("MessageCount", value); }
+            set { SetValue(() => MessageCount, value); }
         }
 
         public ObservableCollection<Message> Messages
