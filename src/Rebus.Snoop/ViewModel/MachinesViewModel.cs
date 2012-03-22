@@ -151,7 +151,7 @@ namespace Rebus.Snoop.ViewModel
         public bool CanMoveMessagesToSourceQueue
         {
             get { return canMoveMessagesToSourceQueue; }
-            set { SetValue("CanMoveMessagesToSourceQueue", value); }
+            set { SetValue( () => CanMoveMessagesToSourceQueue, value); }
         }
 
         public ObservableCollection<Machine> Machines
