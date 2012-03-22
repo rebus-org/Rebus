@@ -67,6 +67,21 @@ namespace Rebus.Tests.Persistence.MongoDb
             }
         }
 
+        [Test]
+        public void PersisterCanFindSagaById()
+        {
+            var savedSagaData = new MySagaData();
+            var savedSagaDataId = Guid.NewGuid();
+            savedSagaData.Id = savedSagaDataId;
+            persister.Save(savedSagaData, new string[0]);
+
+            var foundSagaData = persister.Find<MySagaData>("Id", savedSagaDataId);
+
+            foundSagaData.ShouldNotBe(null);
+            foundSagaData.Id.ShouldBe(savedSagaDataId);
+        }
+
+
         [Test, Ignore("wondering how to simulate this?")]
         public void ThrowsIfTheSagaCannotBeSaved()
         {

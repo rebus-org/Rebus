@@ -93,11 +93,13 @@ namespace Rebus.MongoDb
         {
             var collection = database.GetCollection(typeof(T), collectionName);
 
+            if (sagaDataPropertyPath == "Id")
+                return collection.FindOneByIdAs<T>(ToBsonValue(fieldFromMessage));
+
             var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), ToBsonValue(fieldFromMessage));
 
-            var sagaData = collection.FindOneAs(typeof(T), query);
-
-            return (T) sagaData;
+            var sagaData = collection.FindOneAs<T>(query);
+            return sagaData;
         }
 
         static BsonValue ToBsonValue(object fieldFromMessage)
