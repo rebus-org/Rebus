@@ -21,7 +21,7 @@ namespace Rebus.Snoop.ViewModel.Models
         public string MachineName
         {
             get { return machineName; }
-            set { SetValue("MachineName", value); }
+            set { SetValue(() => MachineName, value); }
         }
 
         public ObservableCollection<Queue> Queues
@@ -32,7 +32,7 @@ namespace Rebus.Snoop.ViewModel.Models
         public bool Success
         {
             get { return success; }
-            set { SetValue("Success", value); }
+            set { SetValue( () => Success, value); }
         }
        
         public void SetQueues(IEnumerable<Queue> newQueues)
