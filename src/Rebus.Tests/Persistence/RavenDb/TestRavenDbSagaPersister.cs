@@ -4,17 +4,18 @@ using NUnit.Framework;
 using Raven.Client.Embedded;
 using Rebus.RavenDb;
 using Shouldly;
+using Rhino.Mocks;
 
 namespace Rebus.Tests.Persistence.RavenDb
 {
     [TestFixture]
-    public class TestRavenDbSagaPersister
+    public class TestRavenDbSagaPersister : FixtureBase
     {
         RavenDbSagaPersister persister;
         EmbeddableDocumentStore store;
+        MessageContext messageContext;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
             store = new EmbeddableDocumentStore
             {
@@ -22,13 +23,20 @@ namespace Rebus.Tests.Persistence.RavenDb
             };
             store.Initialize();
 
-            persister = new RavenDbSagaPersister(store, "Sagas");
+            persister = new RavenDbSagaPersister(store);
+            messageContext = MessageContext.Enter("none");
         }
 
-        [Theory]
-        public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes([Values("Hello world!!!", 23)] object data)
+        protected override void DoTearDown()
         {
-            TestWithType(data);
+            messageContext.Dispose();
+        }
+
+        [Test]
+        public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
+        {
+            TestWithType("Hello worlds!!");
+            TestWithType(23);
         }
 
         void TestWithType<TProperty>(TProperty propertyValueToUse)
@@ -42,7 +50,21 @@ namespace Rebus.Tests.Persistence.RavenDb
             sagaDataType.GetProperty("Property").SetValue(savedSagaData, propertyValueToUse, new object[0]);
             persister.Save(savedSagaData, new[] { "Property" });
 
-            var foundSagaData = persister.Find("Property", propertyValueToUse, sagaDataType);
+            var foundSagaData = persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse);
+
+            foundSagaData.ShouldNotBe(null);
+            foundSagaData.Id.ShouldBe(savedSagaDataId);
+        }
+
+        [Test]
+        public void PersisterCanFindSagaById()
+        {
+            var savedSagaData = new MySagaData();
+            var savedSagaDataId = Guid.NewGuid();
+            savedSagaData.Id = savedSagaDataId;
+            persister.Save(savedSagaData, null);
+
+            var foundSagaData = persister.Find<MySagaData>("Id", savedSagaDataId);
 
             foundSagaData.ShouldNotBe(null);
             foundSagaData.Id.ShouldBe(savedSagaDataId);
@@ -56,11 +78,52 @@ namespace Rebus.Tests.Persistence.RavenDb
             var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
             persister.Save(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = (SimpleSagaData) persister.Find("SomeString", "hello world!", typeof (SimpleSagaData));
-            var sagaData2 = (SimpleSagaData) persister.Find("SomeString", "hello world!", typeof (SimpleSagaData));
+            var sagaData1 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            sagaData1.Revision++;
 
-            persister.Save(sagaData1, indexBySomeString);
-            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData2, indexBySomeString));
+            EnterAFakeMessageContext();
+            
+            var sagaData2 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            sagaData2.Revision++;
+            persister.Save(sagaData2, indexBySomeString);
+
+            ReturnToOriginalMessageContext();
+
+            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
+            Console.WriteLine(exception);
+        }
+
+        void ReturnToOriginalMessageContext()
+        {
+            persister.CurrentMessageContext = messageContext;
+        }
+
+        void EnterAFakeMessageContext()
+        {
+            var fakeConcurrentMessageContext = Mock<IMessageContext>();
+            var otherItems = new Dictionary<string, object>();
+            fakeConcurrentMessageContext.Stub(x => x.Items).Return(otherItems);
+            persister.CurrentMessageContext = fakeConcurrentMessageContext;
+        }
+
+        [Test]
+        public void UsesOptimisticLockingAndDetectsRaceConditionsWhenUpdating2()
+        {
+            var indexBySomeString = new[] { "Id" };
+            var id = Guid.NewGuid();
+            var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
+            persister.Save(simpleSagaData, indexBySomeString);
+
+            var sagaData1 = persister.Find<SimpleSagaData>("Id", id);
+            sagaData1.Revision++;
+
+            EnterAFakeMessageContext();
+            var sagaData2 = persister.Find<SimpleSagaData>("Id", id);
+            sagaData2.Revision++;
+            persister.Save(sagaData2, indexBySomeString);
+            ReturnToOriginalMessageContext();
+
+            var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
             Console.WriteLine(exception);
         }
 
@@ -92,7 +155,7 @@ namespace Rebus.Tests.Persistence.RavenDb
 
             using (var session = store.OpenSession())
             {
-                var sagaData = session.Load<MySagaData>("Sagas/" + sagaDataId);
+                var sagaData = session.Load<MySagaData>(sagaDataId);
                 sagaData.ShouldNotBe(null);
                 sagaData.SomeField.ShouldBe("hello");
                 sagaData.AnotherField.ShouldBe("world!");
@@ -115,7 +178,7 @@ namespace Rebus.Tests.Persistence.RavenDb
 
             using (var session = store.OpenSession())
             {
-                var loadedSagaData = session.Load<SimpleSagaData>("Sagas/" + mySagaDataId);
+                var loadedSagaData = session.Load<SimpleSagaData>(mySagaDataId);
                 loadedSagaData.ShouldBe(null);
             }
         }
@@ -127,16 +190,16 @@ namespace Rebus.Tests.Persistence.RavenDb
             persister.Save(SagaData(2, "some field 2"), new[] { "AnotherField" });
             persister.Save(SagaData(3, "some field 3"), new[] { "AnotherField" });
 
-            var sagaDataType = typeof (MySagaData);
-            var dataViaNonexistentValue = persister.Find("AnotherField", "non-existent value", sagaDataType);
-            var dataViaNonexistentField = persister.Find("SomeFieldThatDoesNotExist", "doesn't matter", sagaDataType);
-            var mySagaData = ((MySagaData) persister.Find("AnotherField", "some field 2", sagaDataType));
+            var dataViaNonexistentValue = persister.Find<MySagaData>("AnotherField", "non-existent value");
+            var dataViaNonexistentField = persister.Find<MySagaData>("SomeFieldThatDoesNotExist", "doesn't matter");
+            var mySagaData = persister.Find<MySagaData>("AnotherField", "some field 2");
 
             dataViaNonexistentField.ShouldBe(null);
             dataViaNonexistentValue.ShouldBe(null);
             mySagaData.ShouldNotBe(null);
             mySagaData.SomeField.ShouldBe("2");
         }
+
 
         MySagaData SagaData(int someNumber, string textInSomeField)
         {

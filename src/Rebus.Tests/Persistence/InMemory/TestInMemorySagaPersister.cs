@@ -26,7 +26,7 @@ namespace Rebus.Tests.Persistence.InMemory
 
             persister.Save(mySagaData, new[]{""});
             SagaDataTypeDoesntMatter = null;
-            var storedSagaData = persister.Find("Id", someId.ToString(), SagaDataTypeDoesntMatter);
+            var storedSagaData = persister.Find<SomeSagaData>("Id", someId.ToString());
 
             storedSagaData.ShouldBeSameAs(mySagaData);
         }
@@ -38,9 +38,8 @@ namespace Rebus.Tests.Persistence.InMemory
             var mySagaData = new SomeSagaData{AggregatedObject = new SomeAggregatedObject{SomeRandomValue = "whooHAAA!"}};
 
             persister.Save(mySagaData, new[] { "" });
-            var storedSagaData = persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue),
-                                                "whooHAAA!",
-                                                SagaDataTypeDoesntMatter);
+            var storedSagaData = persister.Find<SomeSagaData>(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue),
+                                                "whooHAAA!");
 
             storedSagaData.ShouldBeSameAs(mySagaData);
         }
@@ -51,12 +50,11 @@ namespace Rebus.Tests.Persistence.InMemory
             var sagaData = new SomeSagaData {AggregatedObject = new SomeAggregatedObject {SomeRandomValue = "whooHAAA!"}};
             persister.Save(sagaData, new[] {""});
 
-            persister.Find(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue),
-                           "NO MATCH",
-                           SagaDataTypeDoesntMatter)
+            persister.Find<SomeSagaData>(Reflect.Path<SomeSagaData>(d => d.AggregatedObject.SomeRandomValue),
+                           "NO MATCH")
                 .ShouldBe(null);
 
-            persister.Find("Invalid.Path.To.Nothing", "whooHAAA!", SagaDataTypeDoesntMatter).ShouldBe(null);
+            persister.Find<SomeSagaData>("Invalid.Path.To.Nothing", "whooHAAA!").ShouldBe(null);
         }
 
         class SomeSagaData : ISagaData

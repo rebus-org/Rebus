@@ -1,36 +1,28 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using Raven.Abstractions.Data;
 using Raven.Abstractions.Exceptions;
 using Raven.Client;
-using Raven.Json.Linq;
 
 namespace Rebus.RavenDb
 {
     public class RavenDbSagaPersister : IStoreSagaData
     {
-        readonly string collectionName;
-        readonly Dictionary<Guid, Guid> etags = new Dictionary<Guid, Guid>();
+        const string SessionKey = "RavenDbSagaPersisterSessionKey";
         readonly IDocumentStore store;
+        IMessageContext currentMessageContext;
 
-        public RavenDbSagaPersister(IDocumentStore store, string collectionName)
+        public RavenDbSagaPersister(IDocumentStore store)
         {
             this.store = store;
-            this.collectionName = collectionName;
         }
 
         public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
+            var session = GetSession();
             try
             {
-                store.DatabaseCommands.Put(Key(sagaData),
-                                           GetEtag(sagaData),
-                                           RavenJObject.FromObject(sagaData),
-                                           new RavenJObject
-                                           {
-                                               { "Raven-Entity-Name", collectionName }
-                                           });
+                session.Store(sagaData);
+                session.SaveChanges();
             }
             catch (ConcurrencyException)
             {
@@ -38,50 +30,54 @@ namespace Rebus.RavenDb
             }
         }
 
-        Guid? GetEtag(ISagaData sagaData)
-        {
-            Guid? etag = null;
-            Guid existingEtag;
-            if (etags.TryGetValue(sagaData.Id, out existingEtag))
-            {
-                etag = existingEtag;
-            }
-            return etag;
-        }
-
         public void Delete(ISagaData sagaData)
         {
-            store.DatabaseCommands.Delete(Key(sagaData), GetEtag(sagaData));
-            etags.Remove(sagaData.Id);
+            var session = GetSession();
+            session.Delete(sagaData);
+            session.SaveChanges();
         }
 
-        public ISagaData Find(string sagaDataPropertyPath, object fieldFromMessage, Type sagaDataType)
+        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
         {
-            QueryResult result;
-            do
+            var session = GetSession();
+
+            if (sagaDataPropertyPath == "Id")
+                return session.Load<T>(store.Conventions.GetTypeTagName(typeof (T)) + "/" + fieldFromMessage);
+
+            return session.Advanced.LuceneQuery<T>()
+                .WaitForNonStaleResults()
+                .WhereEquals(sagaDataPropertyPath, fieldFromMessage)
+                .SingleOrDefault();
+        }
+
+        internal IMessageContext CurrentMessageContext
+        {
+            get
             {
-                result = store.DatabaseCommands.Query("dynamic/" + collectionName,
-                                                      new IndexQuery
-                                                      {
-                                                          Query = string.Format("{0}:\"{1}\"", sagaDataPropertyPath, fieldFromMessage)
-                                                      },
-                                                      new string[0]);
-            } while (result.IsStale);
-
-            var ravenJObject = result.Results.SingleOrDefault();
-            if (ravenJObject == null)
-                return null;
-
-            var sagaData = (ISagaData) store.Conventions.CreateSerializer().Deserialize(new RavenJTokenReader(ravenJObject), sagaDataType);
-            if (sagaData != null)
-                etags[sagaData.Id] = ravenJObject["@metadata"].Value<Guid>("@etag");
-
-            return sagaData;
+                if (currentMessageContext == null && !MessageContext.HasCurrent)
+                    throw new InvalidOperationException("RavenDbSagaPersister can not be used outside of message context");
+                
+                return currentMessageContext ?? MessageContext.GetCurrent();
+            }
+            set { currentMessageContext = value; }
         }
 
-        string Key(ISagaData sagaData)
+        IDocumentSession GetSession()
         {
-            return string.Format("{0}/{1}", collectionName, sagaData.Id);
+            var messageContext = CurrentMessageContext;
+
+            object currentSession;
+            if (messageContext.Items.TryGetValue(SessionKey, out currentSession))
+            {
+                return (IDocumentSession) currentSession;
+            }
+
+            var session = store.OpenSession();
+            session.Advanced.UseOptimisticConcurrency = true;
+            session.Advanced.AllowNonAuthoritativeInformation = false;
+            messageContext.Disposed += session.Dispose;
+            messageContext.Items.Add(SessionKey, session);
+            return session;
         }
     }
 }

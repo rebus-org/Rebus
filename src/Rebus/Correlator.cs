@@ -4,18 +4,16 @@ using Ponder;
 
 namespace Rebus
 {
-    public class Correlator<TData, TMessage> : Correlation where TData : ISagaData
+    public class Correlator<TData, TMessage> : Correlation where TData : ISagaData where TMessage : class
     {
-        readonly Delegate messageProperty;
+        readonly Func<TMessage, object> messageProperty;
         readonly Saga<TData> saga;
-        readonly string messagePropertyPath;
         string sagaDataPropertyPath;
 
-        public Correlator(Expression<Func<TMessage, object>> messageProperty, Saga<TData> saga) 
+        public Correlator(Func<TMessage, object> messageProperty, Saga<TData> saga) 
         {
-            this.messageProperty = messageProperty.Compile();
+            this.messageProperty = messageProperty;
             this.saga = saga;
-            messagePropertyPath = Reflect.Path(messageProperty);
         }
 
         internal override string SagaDataPropertyPath
@@ -23,23 +21,16 @@ namespace Rebus
             get { return sagaDataPropertyPath; }
         }
 
-        internal override string MessagePropertyPath
+        public override object FieldFromMessage(object message)
         {
-            get { return messagePropertyPath; }
-        }
-
-        public override string FieldFromMessage<TMessage2>(TMessage2 message)
-        {
-            if (typeof(TMessage) != typeof(TMessage2))
+            var typedMessage = message as TMessage;
+            if (typedMessage == null)
             {
                 throw new InvalidOperationException(
-                    string.Format("Cannot extract {0} field from message of type {1} with func that takes a {2}",
-                                  messagePropertyPath, typeof (TMessage2), typeof (TMessage)));
+                    string.Format("Message was {0}, but {1} was expected", message.GetType(), typeof (TMessage)));
             }
 
-            var property = (Func<TMessage2, object>)messageProperty;
-
-            return (property(message) ?? "").ToString();
+            return messageProperty(typedMessage);
         }
 
         public void CorrelatesWith(Expression<Func<TData,object>> sagaDataProperty)

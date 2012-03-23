@@ -25,5 +25,11 @@ namespace Rebus.Messages
         /// you COULD use this field to pass a serialized object.
         /// </summary>
         public string CustomData { get; set; }
+        
+        /// <summary>
+        /// Allows for specifying the ID for the saga requesting the timeout.
+        /// The ID will be returned with the <see cref="TimeoutReply"/>.
+        /// </summary>
+        public Guid SagaId { get; set; }       
     }
 }

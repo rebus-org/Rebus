@@ -50,7 +50,7 @@ namespace Rebus.Tests.Persistence.MongoDb
                 persister.Save(savedSagaData, new[] { "Property" });
 
                 // act
-                var foundSagaData = persister.Find("Property", propertyValueToUse, sagaDataType);
+                var foundSagaData = persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse);
 
                 // assert
                 foundSagaData.ShouldNotBe(null);
@@ -66,6 +66,21 @@ namespace Rebus.Tests.Persistence.MongoDb
                             exception);
             }
         }
+
+        [Test]
+        public void PersisterCanFindSagaById()
+        {
+            var savedSagaData = new MySagaData();
+            var savedSagaDataId = Guid.NewGuid();
+            savedSagaData.Id = savedSagaDataId;
+            persister.Save(savedSagaData, new string[0]);
+
+            var foundSagaData = persister.Find<MySagaData>("Id", savedSagaDataId);
+
+            foundSagaData.ShouldNotBe(null);
+            foundSagaData.Id.ShouldBe(savedSagaDataId);
+        }
+
 
         [Test, Ignore("wondering how to simulate this?")]
         public void ThrowsIfTheSagaCannotBeSaved()
@@ -114,8 +129,8 @@ namespace Rebus.Tests.Persistence.MongoDb
             persister.Save(simpleSagaData, indexBySomeString);
 
             // act
-            var sagaData1 = (SimpleSagaData)persister.Find("SomeString", "hello world!", typeof(SimpleSagaData));
-            var sagaData2 = (SimpleSagaData)persister.Find("SomeString", "hello world!", typeof(SimpleSagaData));
+            var sagaData1 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            var sagaData2 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
 
             // assert
             persister.Save(sagaData1, indexBySomeString);
@@ -187,10 +202,9 @@ namespace Rebus.Tests.Persistence.MongoDb
                                                             });
 
             // act
-            var sagaDataType = typeof(MySagaData);
-            var dataViaNonexistentValue = persister.Find("AnotherField", "non-existent value", sagaDataType);
-            var dataViaNonexistentField = persister.Find("SomeFieldThatDoesNotExist", "doesn't matter", sagaDataType);
-            var mySagaData = ((MySagaData)persister.Find("AnotherField", "some field 2", sagaDataType));
+            var dataViaNonexistentValue = persister.Find<MySagaData>("AnotherField", "non-existent value");
+            var dataViaNonexistentField = persister.Find<MySagaData>("SomeFieldThatDoesNotExist", "doesn't matter");
+            var mySagaData = persister.Find<MySagaData>("AnotherField", "some field 2");
             
             // assert
             dataViaNonexistentField.ShouldBe(null);
