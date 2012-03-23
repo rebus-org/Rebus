@@ -4,17 +4,18 @@ using NUnit.Framework;
 using Raven.Client.Embedded;
 using Rebus.RavenDb;
 using Shouldly;
+using Rhino.Mocks;
 
 namespace Rebus.Tests.Persistence.RavenDb
 {
     [TestFixture]
-    public class TestRavenDbSagaPersister
+    public class TestRavenDbSagaPersister : FixtureBase
     {
         RavenDbSagaPersister persister;
         EmbeddableDocumentStore store;
+        MessageContext messageContext;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
             store = new EmbeddableDocumentStore
             {
@@ -23,6 +24,12 @@ namespace Rebus.Tests.Persistence.RavenDb
             store.Initialize();
 
             persister = new RavenDbSagaPersister(store);
+            messageContext = MessageContext.Enter("none");
+        }
+
+        protected override void DoTearDown()
+        {
+            messageContext.Dispose();
         }
 
         [Test]
@@ -63,7 +70,6 @@ namespace Rebus.Tests.Persistence.RavenDb
             foundSagaData.Id.ShouldBe(savedSagaDataId);
         }
 
-
         [Test]
         public void UsesOptimisticLockingAndDetectsRaceConditionsWhenUpdating()
         {
@@ -75,13 +81,29 @@ namespace Rebus.Tests.Persistence.RavenDb
             var sagaData1 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
             sagaData1.Revision++;
 
-            var persister2 = new RavenDbSagaPersister(store);
-            var sagaData2 = persister2.Find<SimpleSagaData>("SomeString", "hello world!");
+            EnterAFakeMessageContext();
+            
+            var sagaData2 = persister.Find<SimpleSagaData>("SomeString", "hello world!");
             sagaData2.Revision++;
-            persister2.Save(sagaData2, indexBySomeString);
+            persister.Save(sagaData2, indexBySomeString);
+
+            ReturnToOriginalMessageContext();
 
             var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
             Console.WriteLine(exception);
+        }
+
+        void ReturnToOriginalMessageContext()
+        {
+            persister.CurrentMessageContext = messageContext;
+        }
+
+        void EnterAFakeMessageContext()
+        {
+            var fakeConcurrentMessageContext = Mock<IMessageContext>();
+            var otherItems = new Dictionary<string, object>();
+            fakeConcurrentMessageContext.Stub(x => x.Items).Return(otherItems);
+            persister.CurrentMessageContext = fakeConcurrentMessageContext;
         }
 
         [Test]
@@ -95,10 +117,11 @@ namespace Rebus.Tests.Persistence.RavenDb
             var sagaData1 = persister.Find<SimpleSagaData>("Id", id);
             sagaData1.Revision++;
 
-            var persister2 = new RavenDbSagaPersister(store);
-            var sagaData2 = persister2.Find<SimpleSagaData>("Id", id);
+            EnterAFakeMessageContext();
+            var sagaData2 = persister.Find<SimpleSagaData>("Id", id);
             sagaData2.Revision++;
-            persister2.Save(sagaData2, indexBySomeString);
+            persister.Save(sagaData2, indexBySomeString);
+            ReturnToOriginalMessageContext();
 
             var exception = Assert.Throws<OptimisticLockingException>(() => persister.Save(sagaData1, indexBySomeString));
             Console.WriteLine(exception);
