@@ -93,6 +93,11 @@ namespace Rebus.Tests
             get { return inputQueue; }
         }
 
+        public string ErrorQueue
+        {
+            get { return inputQueue + ".error"; }
+        }
+
         string NewMessageId()
         {
             return string.Format("Message#{0000}", Interlocked.Increment(ref idCounter));

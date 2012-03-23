@@ -8,6 +8,7 @@ namespace Rebus.Configuration
         const string MappingsCollectionPropertyName = "endpoints";
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";
+        const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
         const string configSectionName = "rebus";
 
@@ -32,6 +33,13 @@ namespace Rebus.Configuration
             set { this[InputQueueAttributeName] = value; }
         }
 
+        [ConfigurationProperty(ErrorQueueAttributeName)]
+        public string ErrorQueue
+        {
+            get { return (string)this[ErrorQueueAttributeName]; }
+            set { this[ErrorQueueAttributeName] = value; }
+        }
+
         [ConfigurationProperty(WorkersAttributeName)]
         public int? Workers
         {
@@ -40,7 +48,9 @@ namespace Rebus.Configuration
         }
 
         public const string ExampleSnippetForErrorMessages = @"
-    <rebus inputQueue=""my.service.input.queue"" workers=""10"">
+
+    <rebus inputQueue=""this.is.my.input.queue"" errorQueue=""this.is.my.error.queue"" workers=""5"">
+        <rijndael iv=""OLYKdaDyETlu7NbDMC45dA=="" key=""oA/ZUnFsR9w1qEatOByBSXc4woCuTxmR99tAuQ56Qko=""/>
         <endpoints>
             <add messages=""Name.Of.Assembly"" endpoint=""message_owner_1""/>
             <add messages=""Namespace.ClassName, Name.Of.Another.Assembly"" endpoint=""message_owner_2""/>

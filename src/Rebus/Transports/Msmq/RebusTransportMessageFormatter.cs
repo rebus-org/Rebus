@@ -4,6 +4,7 @@ using System.Messaging;
 using System.Text;
 using Rebus.Messages;
 using Rebus.Serialization;
+using Rebus.Shared;
 using Message = System.Messaging.Message;
 
 namespace Rebus.Transports.Msmq

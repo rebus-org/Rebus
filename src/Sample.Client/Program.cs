@@ -33,7 +33,7 @@ namespace Sample.Client
             RebusLoggerFactory.Current = new TraceLoggerFactory();
 
             var program = new Program();
-            var messageQueue = new MsmqMessageQueue(clientQueue).PurgeInputQueue();
+            var messageQueue = new MsmqMessageQueue(clientQueue, "error").PurgeInputQueue();
             //var messageQueue = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, clientQueue, true);
             var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
             var jsonMessageSerializer = new JsonMessageSerializer();

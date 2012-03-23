@@ -22,5 +22,12 @@ namespace Rebus.Messages
         /// The saga ID as specified in the <see cref="TimeoutRequest"/>.
         /// </summary>
         public Guid SagaId { get; set; }
+
+        /// <summary>
+        /// The custom data as specified in the <see cref="TimeoutRequest"/>.
+        /// </summary>
+        public string CustomData { get; set; }
+
+
     }
 }

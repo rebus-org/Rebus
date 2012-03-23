@@ -1,4 +1,4 @@
-namespace Rebus.Messages
+namespace Rebus.Shared
 {
     /// <summary>
     /// Contains keys of headers with special meaning in Rebus.
@@ -13,7 +13,7 @@ namespace Rebus.Messages
         /// <summary>
         /// Key of header that contains the unique ID of the message.
         /// </summary>
-        public const string MessageId = "rebus-msg-i";
+        public const string MessageId = "rebus-msg-id";
 
         /// <summary>
         /// Key of header that specifies the return address of a message.
@@ -36,5 +36,8 @@ namespace Rebus.Messages
         /// someone to re-deliver the message when the receiver is ready to retry.
         /// </summary>
         public const string SourceQueue = "rebus-source-queue";
+
+        public const string ContentType = "rebus-content-type";
+        public const string Encoding = "rebus-encoding";
     }
 }

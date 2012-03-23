@@ -5,7 +5,7 @@
     <version>0.0.1</version>
     <title>Rebus.MongoDb</title>
     <authors>mookid8000</authors>
-    <owners>mookid8000</owners>
+    <owners>mookid8000,rasmuskl</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

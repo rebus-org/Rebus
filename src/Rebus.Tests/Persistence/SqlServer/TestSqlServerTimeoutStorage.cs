@@ -1,8 +1,7 @@
 using System;
 using NUnit.Framework;
-using Rebus.Timeout;
 using System.Linq;
-using Rebus.Timeout.Persistence;
+using Rebus.Persistence.SqlServer;
 using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
@@ -38,14 +37,18 @@ namespace Rebus.Tests.Persistence.SqlServer
                             {
                                 CorrelationId = "first",
                                 ReplyTo = "somebody",
-                                TimeToReturn = justSomeUtcTimeStamp
+                                TimeToReturn = justSomeUtcTimeStamp,
+                                CustomData = null,
                             });
+
+            var thirtytwoKilobytesOfDollarSigns = new string('$', 32768);
 
             storage.Add(new Timeout.Timeout
                             {
                                 CorrelationId = "second",
                                 ReplyTo = "somebody",
-                                TimeToReturn = justAnotherUtcTimeStamp
+                                TimeToReturn = justAnotherUtcTimeStamp,
+                                CustomData = thirtytwoKilobytesOfDollarSigns,
                             });
 
             TimeMachine.FixTo(justSomeUtcTimeStamp.AddSeconds(-1));
@@ -72,6 +75,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             secondTimeout.CorrelationId.ShouldBe("second");
             secondTimeout.ReplyTo.ShouldBe("somebody");
             secondTimeout.TimeToReturn.ShouldBe(justAnotherUtcTimeStamp);
+            secondTimeout.CustomData.ShouldBe(thirtytwoKilobytesOfDollarSigns);
         }
     }
 }

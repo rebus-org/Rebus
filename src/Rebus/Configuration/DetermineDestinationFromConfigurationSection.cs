@@ -54,16 +54,15 @@ like so:
 
 This example shows how it's possible to map all types from an entire assembly to an endpoint. 
 
-This is the preferred way of mapping message types, because it is a sign that you have structure your code
+This is the preferred way of mapping message types, because it is a sign that you have structured your code
 in a nice 1-message-assembly-to-1-endpoint kind of way, which requires the least amount of configuration
 and maintenance on your part.
 
-You CAN, however, map a single type at a time (which is shown with the second mapping above), and these
-explicit mappings WILL OVERRIDE assembly mappings. So if you map an entire assembly to an endpoint,
-and you map one of the types from that assembly to another endpoint explicitly, the explicit mapping
-will be the one taking effect.
+You CAN, however, map a single type at a time, and these explicit mappings WILL OVERRIDE assembly
+mappings. So if you map an entire assembly to an endpoint, and you map one of the types from that
+assembly to another endpoint explicitly, the explicit mapping will be the one taking effect.
 
-Note also, that specifying the input queue name with the InputQueue attribute is optional.
+Note also, that specifying the input queue name with the 'inputQueue' attribute is optional.
 ",
                     e, RebusConfigurationSection.ExampleSnippetForErrorMessages);
             }

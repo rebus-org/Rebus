@@ -145,6 +145,7 @@
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
+    <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestDynamicDispatch.cs" />
@@ -157,10 +158,13 @@
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Bugs\SagasNotWorkingWithRavenDbEnlistingInTransaction.cs" />
+    <Compile Include="Persistence\MongoDb\TestMongoDbTimeoutStorage.cs" />
     <Compile Include="Bugs\CheckCallsMade.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSubscriptionStorage.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSagaPersister.cs" />
+    <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Msmq\TestWindowsPlatform.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />

@@ -18,7 +18,7 @@ namespace Rebus.Tests.Bugs
             var subscriptionStorage = new InMemorySubscriptionStorage();
             
             // publisher
-            CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage, new InMemorySagaPersister()).Start(1);
+            CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage, new InMemorySagaPersister(), "error").Start(1);
             
             // subscriber
             var subscriber = CreateBus(SubscriberInputQueueName, new HandlerActivatorForTesting()).Start(1);

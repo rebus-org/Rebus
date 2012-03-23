@@ -171,7 +171,9 @@ namespace Rebus.Tests.Contracts
                                                        Headers = transportMessageToSend.Headers,
                                                    });
 
-            message.Headers.Count.ShouldBe(2);
+            message.Headers.ShouldContainKeyAndValue("some_key", "some_value");
+            message.Headers.ShouldContainKeyAndValue("another_key", "another_value");
+            
             message.Messages.Length.ShouldBe(2);
             message.Messages[0].ShouldBe("primitive string message");
             message.Messages[1].ShouldBeTypeOf<ComplexObject>();

@@ -31,7 +31,7 @@ namespace Rebus.Timeout
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
             this.storeTimeouts = storeTimeouts;
-            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName, InputQueue + ".error");
 
             RebusLoggerFactory.Current = new Log4NetLoggerFactory();
             rebusBus = new RebusBus(this, msmqMessageQueue, msmqMessageQueue, null, null, null, new JsonMessageSerializer(), new TrivialPipelineInspector());
@@ -91,6 +91,7 @@ namespace Rebus.Timeout
                                      CorrelationId = message.CorrelationId,
                                      ReplyTo = currentMessageContext.ReturnAddress,
                                      TimeToReturn = DateTime.UtcNow + message.Timeout,
+                                     CustomData = message.CustomData,
                                  };
 
             storeTimeouts.Add(newTimeout);
@@ -113,7 +114,8 @@ namespace Rebus.Timeout
                                  {
                                      SagaId = timeout.SagaId,
                                      CorrelationId = timeout.CorrelationId,
-                                     DueTime = timeout.TimeToReturn
+                                     DueTime = timeout.TimeToReturn,
+                                     CustomData = timeout.CustomData,
                                  });
                 }
 

@@ -7,7 +7,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
 using Rebus.Logging;
-using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Rabbit
 {
@@ -26,14 +26,16 @@ namespace Rebus.Transports.Rabbit
         readonly IConnection connection;
 
         readonly string inputQueueName;
+        readonly string errorQueue;
         readonly IModel model;
         readonly object modelLock = new object();
         readonly Subscription subscription;
         readonly object subscriptionLock = new object();
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName)
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName, string errorQueue)
         {
             this.inputQueueName = inputQueueName;
+            this.errorQueue = errorQueue;
 
             log.Info("Opening Rabbit connection");
             connection = new ConnectionFactory {Uri = connectionString}.CreateConnection();
@@ -47,14 +49,25 @@ namespace Rebus.Transports.Rabbit
             log.Debug("Ensuring that exchange exists with the name {0}", ExchangeName);
             tempModel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
 
-            log.Debug("Declaring queue {0}", this.inputQueueName);
-            tempModel.QueueDeclare(this.inputQueueName, true, false, false, new Hashtable());
-            
-            log.Debug("Binding {0} to {1} (routing key: {2})", this.inputQueueName, ExchangeName, this.inputQueueName);
-            tempModel.QueueBind(this.inputQueueName, ExchangeName, this.inputQueueName);
+            CreateLogicalQueue(tempModel, this.inputQueueName);
+            CreateLogicalQueue(tempModel, this.errorQueue);
 
             log.Debug("Opening subscription");
             subscription = new Subscription(model, inputQueueName);
+        }
+
+        void CreateLogicalQueue(IModel tempModel, string queueName)
+        {
+            log.Debug("Declaring queue {0}", queueName);
+            tempModel.QueueDeclare(queueName, true, false, false, new Hashtable());
+
+            log.Debug("Binding {0} to {1} (routing key: {2})", queueName, ExchangeName, queueName);
+            tempModel.QueueBind(queueName, ExchangeName, queueName);
+        }
+
+        public string ErrorQueue
+        {
+            get { return errorQueue; }
         }
 
         void WithModel(Action<IModel> handleModel)

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Rebus.Shared;
 
 namespace Rebus
 {
@@ -10,7 +11,7 @@ namespace Rebus
         }
 
         /// <summary>
-        /// Message headers. Pre-defined header keys can be found in <see cref="Messages.Headers"/>.
+        /// Message headers. Pre-defined header keys can be found in <see cref="Shared.Headers"/>.
         /// </summary>
         public IDictionary<string, string> Headers { get; set; }
 

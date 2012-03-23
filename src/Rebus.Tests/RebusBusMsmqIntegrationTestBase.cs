@@ -6,6 +6,7 @@ using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Tests.Integration;
 using Rebus.Transports.Msmq;
 using log4net.Config;
@@ -61,12 +62,14 @@ namespace Rebus.Tests
         {
             return CreateBus(inputQueueName, activateHandlers,
                              new InMemorySubscriptionStorage(),
-                             new SagaDataPersisterForTesting());
+                             new SagaDataPersisterForTesting(),
+                             "error");
         }
 
-        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData)
+        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, string errorQueueName)
         {
-            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
+            var messageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName).PurgeInputQueue();
+            MsmqUtil.PurgeQueue(errorQueueName);
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    storeSubscriptions, storeSagaData,

@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using Message = Rebus.Messages.Message;
@@ -28,7 +28,7 @@ namespace Rebus.Tests.Transports.Msmq
         public void SetUp()
         {
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
+            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender", "error");
             destinationQueueName = "test.msmq.tx.destination";
             destinationQueuePath = MsmqMessageQueue.PrivateQueue(destinationQueueName);
 
@@ -63,7 +63,7 @@ namespace Rebus.Tests.Transports.Msmq
             MessageQueue.Create(queuePath, transactional: false);
 
             // act
-            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
+            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName, "error"));
 
             // assert
             invalidOperationException.Message.ShouldContain(queueName);
@@ -73,18 +73,18 @@ namespace Rebus.Tests.Transports.Msmq
         public void MessageExpirationWorks()
         {
             // arrange
-            var timeToBeReceived = 2.Seconds();
-            var timeToBeReceivedAsString = timeToBeReceived.ToString();
+            var timeToBeReceived = 2.Seconds()
+                .ToString();
 
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                                       {
                                                           Messages = new object[] { "HELLO WORLD!" },
-                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceivedAsString } },
+                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceived } },
                                                       }));
 
             // act
-            Thread.Sleep(timeToBeReceived + 1.Seconds());
+            Thread.Sleep(2.Seconds() + 1.Seconds());
 
             // assert
             Assert.Throws<MessageQueueException>(() => destinationQueue.Receive(0.1.Seconds()));
@@ -138,11 +138,7 @@ namespace Rebus.Tests.Transports.Msmq
             var message = serializer.Deserialize(receivedTransportMessage);
 
             message.Headers.ShouldNotBe(null);
-            message.Headers.Count.ShouldBe(1);
-            
-            var firstHeader = message.Headers.First();
-            firstHeader.Key.ShouldBe("someRandomHeaderKey");
-            firstHeader.Value.ShouldBe("someRandomHeaderValue");
+            message.Headers.ShouldContainKeyAndValue("someRandomHeaderKey", "someRandomHeaderValue");
         }
 
         [Test]

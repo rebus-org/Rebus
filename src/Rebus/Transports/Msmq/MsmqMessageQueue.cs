@@ -2,8 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Rebus.Logging;
+using Rebus.Shared;
 
 namespace Rebus.Transports.Msmq
 {
@@ -25,6 +27,7 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
+        readonly string errorQueue;
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
@@ -34,11 +37,18 @@ namespace Rebus.Transports.Msmq
             return string.Format(@".\private$\{0}", queueName);
         }
 
-        public MsmqMessageQueue(string inputQueueName)
+        public MsmqMessageQueue(string inputQueueName, string errorQueue)
         {
-            inputQueuePath = GetPath(inputQueueName);
+            inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
+            EnsureMessageQueueExists(MsmqUtil.GetPath(errorQueue), createIfNotExists: true);
             this.inputQueueName = inputQueueName;
+            this.errorQueue = errorQueue;
+        }
+
+        public string ErrorQueue
+        {
+            get { return errorQueue; }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
@@ -62,7 +72,7 @@ namespace Rebus.Transports.Msmq
                     transactionWrapper.Commit();
                     return null;
                 }
-                var transportMessage = (ReceivedTransportMessage) body;
+                var transportMessage = (ReceivedTransportMessage)body;
                 transactionWrapper.Commit();
                 return transportMessage;
             }
@@ -86,7 +96,7 @@ namespace Rebus.Transports.Msmq
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            var recipientPath = GetPath(destinationQueueName);
+            var recipientPath = MsmqUtil.GetPath(destinationQueueName);
 
             MessageQueue outputQueue;
             if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
@@ -102,9 +112,9 @@ namespace Rebus.Transports.Msmq
             }
 
             var transactionWrapper = GetOrCreateTransactionWrapper();
-            
+
             outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
-            
+
             transactionWrapper.Commit();
         }
 
@@ -155,16 +165,7 @@ namespace Rebus.Transports.Msmq
 
         MessageQueue GetMessageQueue(string path, bool createIfNotExists)
         {
-            var queueExists = MessageQueue.Exists(path);
-
-            if (!queueExists && createIfNotExists)
-            {
-                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
-                var messageQueue = MessageQueue.Create(path, true);
-                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
-                messageQueue.SetPermissions("Everyone", MessageQueueAccessRights.GenericWrite);
-                return messageQueue;
-            }
+            EnsureMessageQueueExists(path, createIfNotExists);
 
             var queue = new MessageQueue(path);
 
@@ -183,34 +184,32 @@ create its queues automatically.", path);
             return queue;
         }
 
-        static string GetPath(string inputQueue)
+        static void EnsureMessageQueueExists(string path, bool createIfNotExists)
         {
-            if (inputQueue.Contains("@"))
+            var queueExists = MessageQueue.Exists(path);
+
+            if (!queueExists && createIfNotExists)
             {
-                inputQueue = ParseQueueName(inputQueue);
+                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
+
+                try
+                {
+                    using (var messageQueue = MessageQueue.Create(path, true))
+                    {
+                        var administratorAccountName = new WindowsPlatform().GetAdministratorAccountName();
+
+                        messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                                                    MessageQueueAccessRights.GenericWrite);
+
+
+                        messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
+                    }
+                }
+                catch
+                {
+                    MessageQueue.Delete(path);
+                }
             }
-            else
-            {
-                inputQueue = AssumeLocalQueue(inputQueue);
-            }
-            return inputQueue;
-        }
-
-        static string ParseQueueName(string inputQueue)
-        {
-            var tokens = inputQueue.Split('@');
-
-            if (tokens.Length != 2)
-            {
-                throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", inputQueue));
-            }
-
-            return string.Format(@"{0}\private$\{1}", tokens[0], tokens[1]);
-        }
-
-        static string AssumeLocalQueue(string inputQueue)
-        {
-            return string.Format(@".\private$\{0}", inputQueue);
         }
     }
 }

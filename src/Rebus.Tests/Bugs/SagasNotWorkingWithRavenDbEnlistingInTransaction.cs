@@ -25,7 +25,7 @@ namespace Rebus.Tests.Bugs
 
             var activator = new HandlerActivatorForTesting();
             var checker = new CheckCallsMade();
-            var bus = CreateBus(Queue, activator, new InMemorySubscriptionStorage(), new RavenDbSagaPersister(store)).Start(1);
+            var bus = CreateBus(Queue, activator, new InMemorySubscriptionStorage(), new RavenDbSagaPersister(store), "errors").Start(1);
             activator.UseHandler(() => new TheSaga(bus, checker));
             bus.Send(new TheFirstMessage());
 

@@ -2,8 +2,11 @@ using System;
 using System.Messaging;
 using System.Text;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -47,7 +50,6 @@ namespace Rebus.Tests.Integration
         public void CanMoveMessageToErrorQueue()
         {
             // arrange
-            var errorQueue = GetMessageQueue("error");
 
             var retriedTooManyTimes = false;
             var senderQueueName = "test.tx.sender";
@@ -55,24 +57,30 @@ namespace Rebus.Tests.Integration
 
             var receivedMessageCount = 0;
             var receiverQueueName = "test.tx.receiver";
-            CreateBus(receiverQueueName,
-                      new HandlerActivatorForTesting()
-                          .Handle<string>(str =>
-                                              {
-                                                  Console.WriteLine("Delivery!");
-                                                  if (str != "HELLO!") return;
+            var receiverErrorQueueName = receiverQueueName + ".error";
 
-                                                  receivedMessageCount++;
+            var errorQueue = GetMessageQueue(receiverErrorQueueName);
 
-                                                  if (receivedMessageCount > 5)
-                                                  {
-                                                      retriedTooManyTimes = true;
-                                                  }
-                                                  else
-                                                  {
-                                                      throw new Exception("oh noes!");
-                                                  }
-                                              }))
+            CreateBus(receiverQueueName, new HandlerActivatorForTesting()
+                                             .Handle<string>(str =>
+                                                                 {
+                                                                     Console.WriteLine("Delivery!");
+                                                                     if (str != "HELLO!") return;
+
+                                                                     receivedMessageCount++;
+
+                                                                     if (receivedMessageCount > 5)
+                                                                     {
+                                                                         retriedTooManyTimes = true;
+                                                                     }
+                                                                     else
+                                                                     {
+                                                                         throw new Exception("oh noes!");
+                                                                     }
+                                                                 }),
+                      new InMemorySubscriptionStorage(),
+                      new SagaDataPersisterForTesting(),
+                      receiverErrorQueueName)
                 .Start(1);
 
             senderBus.Send(receiverQueueName, "HELLO!");

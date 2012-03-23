@@ -5,6 +5,7 @@ using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Bus
 {
@@ -31,11 +32,11 @@ namespace Rebus.Bus
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
 
-        public event Action BeforeMessage = delegate { }; 
+        internal event Action BeforeMessage = delegate { };
         
-        public event Action<Exception> AfterMessage = delegate { };
-
-        public event Action PoisonMessage = delegate { }; 
+        internal event Action<Exception> AfterMessage = delegate { };
+        
+        internal event Action PoisonMessage = delegate { }; 
 
         volatile bool shouldExit;
         volatile bool shouldWork;

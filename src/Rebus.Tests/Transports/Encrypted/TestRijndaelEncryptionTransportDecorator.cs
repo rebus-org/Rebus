@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using Shouldly;
 using System.Linq;
@@ -175,7 +176,12 @@ namespace Rebus.Tests.Transports.Encrypted
 
             public string InputQueue
             {
-                get { throw new System.NotImplementedException(); }
+                get { throw new NotImplementedException(); }
+            }
+
+            public string ErrorQueue
+            {
+                get { throw new NotImplementedException(); }
             }
         }
     }
