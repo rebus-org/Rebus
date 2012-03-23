@@ -18,7 +18,7 @@ namespace Rebus
             Correlations = new ConcurrentDictionary<Type, Correlation>();
         }
 
-        protected Correlator<TData, TMessage> Incoming<TMessage>(Expression<Func<TMessage, object>> messageProperty)
+        protected Correlator<TData, TMessage> Incoming<TMessage>(Func<TMessage, object> messageProperty) where TMessage : class
         {
             return new Correlator<TData, TMessage>(messageProperty, this);
         }

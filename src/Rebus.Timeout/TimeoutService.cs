@@ -87,6 +87,7 @@ namespace Rebus.Timeout
 
             var newTimeout = new Timeout
                                  {
+                                     SagaId = message.SagaId,
                                      CorrelationId = message.CorrelationId,
                                      ReplyTo = currentMessageContext.ReturnAddress,
                                      TimeToReturn = DateTime.UtcNow + message.Timeout,
@@ -111,6 +112,7 @@ namespace Rebus.Timeout
                     bus.Send(timeout.ReplyTo,
                              new TimeoutReply
                                  {
+                                     SagaId = timeout.SagaId,
                                      CorrelationId = timeout.CorrelationId,
                                      DueTime = timeout.TimeToReturn,
                                      CustomData = timeout.CustomData,

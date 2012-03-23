@@ -19,8 +19,15 @@ namespace Rebus.Messages
         public string CorrelationId { get; set; }
 
         /// <summary>
+        /// The saga ID as specified in the <see cref="TimeoutRequest"/>.
+        /// </summary>
+        public Guid SagaId { get; set; }
+
+        /// <summary>
         /// The custom data as specified in the <see cref="TimeoutRequest"/>.
         /// </summary>
         public string CustomData { get; set; }
+
+
     }
 }
