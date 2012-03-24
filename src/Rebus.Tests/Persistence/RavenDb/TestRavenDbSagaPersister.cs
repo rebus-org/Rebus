@@ -95,7 +95,7 @@ namespace Rebus.Tests.Persistence.RavenDb
 
         void ReturnToOriginalMessageContext()
         {
-            persister.CurrentMessageContext = messageContext;
+            FakeMessageContext.Establish(messageContext);
         }
 
         void EnterAFakeMessageContext()
@@ -103,7 +103,7 @@ namespace Rebus.Tests.Persistence.RavenDb
             var fakeConcurrentMessageContext = Mock<IMessageContext>();
             var otherItems = new Dictionary<string, object>();
             fakeConcurrentMessageContext.Stub(x => x.Items).Return(otherItems);
-            persister.CurrentMessageContext = fakeConcurrentMessageContext;
+            FakeMessageContext.Establish(fakeConcurrentMessageContext);
         }
 
         [Test]

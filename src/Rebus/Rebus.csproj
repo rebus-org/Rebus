@@ -88,6 +88,7 @@
     <Compile Include="Configuration\RebusConfigurationSection.cs" />
     <Compile Include="Configuration\RijndaelSection.cs" />
     <Compile Include="Extensions\DictExt.cs" />
+    <Compile Include="FakeMessageContext.cs" />
     <Compile Include="IMessageContext.cs" />
     <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />

@@ -9,7 +9,6 @@ namespace Rebus.RavenDb
     {
         const string SessionKey = "RavenDbSagaPersisterSessionKey";
         readonly IDocumentStore store;
-        IMessageContext currentMessageContext;
 
         public RavenDbSagaPersister(IDocumentStore store)
         {
@@ -24,9 +23,9 @@ namespace Rebus.RavenDb
                 session.Store(sagaData);
                 session.SaveChanges();
             }
-            catch (ConcurrencyException)
+            catch (ConcurrencyException concurrencyException)
             {
-                throw new OptimisticLockingException(sagaData);
+                throw new OptimisticLockingException(sagaData, concurrencyException);
             }
         }
 
@@ -50,16 +49,21 @@ namespace Rebus.RavenDb
                 .SingleOrDefault();
         }
 
-        internal IMessageContext CurrentMessageContext
+        IMessageContext CurrentMessageContext
         {
             get
             {
-                if (currentMessageContext == null && !MessageContext.HasCurrent)
-                    throw new InvalidOperationException("RavenDbSagaPersister can not be used outside of message context");
-                
-                return currentMessageContext ?? MessageContext.GetCurrent();
+                try
+                {
+                    return MessageContext.GetCurrent();
+                }
+                catch(Exception exception)
+                {
+                    throw new InvalidOperationException(
+                        "RavenDbSagaPersister can not be used outside of message context",
+                        exception);
+                }
             }
-            set { currentMessageContext = value; }
         }
 
         IDocumentSession GetSession()

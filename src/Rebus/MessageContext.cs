@@ -20,7 +20,7 @@ namespace Rebus
         
         public event Action Disposed = delegate { };
 
-        [ThreadStatic] static MessageContext current;
+        [ThreadStatic] static internal IMessageContext current;
 
 #if DEBUG
         public string StackTrace { get; set; }
@@ -44,14 +44,17 @@ Stacktrace of when the current message context was created:
 #endif
 
             }
-            current = new MessageContext
-                          {
-                              ReturnAddress = returnAddress
-                          };
+            var messageContext =
+                new MessageContext
+                    {
+                        ReturnAddress = returnAddress
+                    };
+
+            current = messageContext;
 
             Established(current);
 
-            return current;
+            return messageContext;
         }
 
         MessageContext()
@@ -87,7 +90,7 @@ Stacktrace of when the current message context was created:
 
         public static bool MessageDispatchAborted
         {
-            get { return HasCurrent && !current.DispatchMessageToHandlers; }
+            get { return HasCurrent && !((MessageContext)current).DispatchMessageToHandlers; }
         }
 
         internal bool DispatchMessageToHandlers { get; set; }
