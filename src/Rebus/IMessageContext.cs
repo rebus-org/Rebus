@@ -26,5 +26,9 @@ namespace Rebus
         void Abort();
 
         event Action Disposed;
+
+#if DEBUG
+        string StackTrace { get; set; }
+#endif
     }
 }
