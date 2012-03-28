@@ -1,20 +1,46 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
 using Shouldly;
+using System.Linq;
 
 namespace Rebus.Tests
 {
     [TestFixture]
     public class TestStuff
     {
-        [TestCase(1000)]
-        public void CompareTracePerformance(int iterations)
+        [Test]
+        public void HmmHowDoDictionaerieueseseWork()
         {
-            PrintTiming("Trace", () => iterations.Times(() => Trace.TraceInformation("HWLLO WRRLD!")));
-            PrintTiming("Console.WriteLine", () => iterations.Times(() => Console.WriteLine("HWLLO WRRLD!")));
+            // arrange
+            var enumerableOfKeyValuePairs =
+                new[]
+                    {
+                        new KeyValuePair<string, string>("key1", "someValue"),
+                        new KeyValuePair<string, string>("key1", "anotherValue")
+                    };
+
+            // act
+            // assert
+            Assert.Throws<ArgumentException>(() => enumerableOfKeyValuePairs.ToDictionary(v => v.Key, v => v.Value));
+        }
+
+        [TestCase(1000, "Trace")]
+        [TestCase(1000, "Console.WriteLine")]
+        public void CompareTracePerformance(int iterations, string whatToTest)
+        {
+            switch (whatToTest.ToLower())
+            {
+                case "trace":
+                    PrintTiming("Trace", () => iterations.Times(() => Trace.TraceInformation("HWLLO WRRLD!")));
+                    break;
+                case "console.writeline":
+                    PrintTiming("Console.WriteLine", () => iterations.Times(() => Console.WriteLine("HWLLO WRRLD!")));
+                    break;
+            }
         }
 
         void PrintTiming(string what, Action action)

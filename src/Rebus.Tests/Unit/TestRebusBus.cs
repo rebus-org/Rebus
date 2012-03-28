@@ -45,6 +45,59 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
+        public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncluded()
+        {
+            // arrange
+            var anotherRandomMessage = new SomeRandomMessage();
+            var someRandomMessage = new SomeRandomMessage();
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            
+            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+            anotherRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:10");
+
+            // act
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
+
+            // assert
+            //invalidOperationException.Message.ShouldContain("00:00:05");
+            //invalidOperationException.Message.ShouldContain("00:00:10");
+        }
+
+        [Test]
+        public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncludedAlsoWhenFirstMessageIsSetToBeReliable()
+        {
+            // arrange
+            var someRandomMessage = new SomeRandomMessage();
+            var anotherRandomMessage = new SomeRandomMessage();
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            
+            anotherRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+
+            // act
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
+
+            // assert
+            //invalidOperationException.Message.ShouldContain("00:00:05");
+        }
+
+        [Test]
+        public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncludedAlsoWhenSecondMessageIsSetToBeReliable()
+        {
+            // arrange
+            var anotherRandomMessage = new SomeRandomMessage();
+            var someRandomMessage = new SomeRandomMessage();
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            
+            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+
+            // act
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
+
+            // assert
+            //invalidOperationException.Message.ShouldContain("00:00:05");
+        }
+
+        [Test]
         public void AttachesHeadersFromMessageToOutgoingMessage()
         {
             // arrange
@@ -73,6 +126,26 @@ namespace Rebus.Tests.Unit
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"), Arg<TransportMessageToSend>.Is.Anything));
+        }
+
+        [Test]
+        public void SendsMessagesToTheRightDestinationAlsoWhenSendingBatch()
+        {
+            // arrange
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("polymorphic message endpoint");
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("some random message endpoint");
+            var firstMessage = new PolymorphicMessage();
+            var secondMessage = new SomeRandomMessage();
+
+            // act
+            bus.SendBatch(firstMessage, secondMessage);
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("polymorphic message endpoint"),
+                                                     Arg<TransportMessageToSend>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("some random message endpoint"),
+                                                     Arg<TransportMessageToSend>.Is.Anything));
         }
 
         [Test]

@@ -7,6 +7,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
 using Rebus.Shared;
+using Rebus.Extensions;
 
 namespace Rebus.Bus
 {
@@ -105,19 +106,47 @@ namespace Rebus.Bus
         {
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
-            InternalSend(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, new List<object> { message });
+        }
+
+        public void SendBatch(params object[] messages)
+        {
+            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
+
+            foreach (var batch in groupedByEndpoints)
+            {
+                InternalSend(batch.Value.Item1, batch.Value.Item2);
+            }
+        }
+
+        IDictionary<Type, Tuple<string, List<object>>> GetMessagesGroupedByEndpoints(object[] messages)
+        {
+            var dictionary = new Dictionary<Type, Tuple<string, List<object>>>();
+
+            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
+            foreach (var message in messages)
+            {
+                var messageType = message.GetType();
+
+                if (!dictionary.ContainsKey(messageType))
+                    dictionary[messageType] = new Tuple<string, List<object>>(GetMessageOwnerEndpointFor(messageType), new List<object>());
+
+                dictionary[messageType].Item2.Add(message);
+            }
+
+            return dictionary;
         }
 
         public void Send<TCommand>(string endpoint, TCommand message)
         {
-            InternalSend(endpoint, message);
+            InternalSend(endpoint, new List<object> { message });
         }
 
         public void SendLocal<TCommand>(TCommand message)
         {
             var destinationEndpoint = receiveMessages.InputQueue;
 
-            InternalSend(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, new List<object> { message });
         }
 
         public void Publish<TEvent>(TEvent message)
@@ -126,7 +155,7 @@ namespace Rebus.Bus
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
-                InternalSend(subscriberInputQueue, message);
+                InternalSend(subscriberInputQueue, new List<object> { message });
             }
         }
 
@@ -134,7 +163,7 @@ namespace Rebus.Bus
         {
             var returnAddress = MessageContext.GetCurrent().ReturnAddress;
 
-            InternalSend(returnAddress, message);
+            InternalSend(returnAddress, new List<object> { message });
         }
 
         public void Subscribe<TMessage>()
@@ -153,19 +182,20 @@ namespace Rebus.Bus
         {
             var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
 
-            InternalSend(publisherInputQueue, message);
+            InternalSend(publisherInputQueue, new List<object> { message });
         }
 
         /// <summary>
         /// Core send method. This should be the only place where calls to the bus'
         /// <see cref="ISendMessages"/> instance gets called, except for when moving
-        /// messages to the error queue.
+        /// messages to the error queue. This method will bundle the specified batch
+        /// of messages inside one single transport message, which it will send.
         /// </summary>
-        void InternalSend(string endpoint, object message)
+        void InternalSend(string endpoint, List<object> messages)
         {
             var messageToSend = new Message
                                     {
-                                        Messages = new[] { message },
+                                        Messages = messages.ToArray(),
                                         Headers = { { Headers.ReturnAddress, receiveMessages.InputQueue } }
                                     };
 
@@ -178,12 +208,87 @@ namespace Rebus.Bus
 
         void MergeHeaders(Message messageToSend)
         {
-            // well - ATM I cannot think of any better way,... we just merge any headers present with those associated with the message
-            var allHeaders = messageToSend.Messages
-                .Select(msg => HeaderContext.Current.GetHeadersFor(msg))
-                .Aggregate(messageToSend.Headers, (d1, d2) => d1.Concat(d2).ToDictionary(k => k.Key, k => k.Value));
+            var transportMessageHeaders = messageToSend.Headers.Clone();
 
-            messageToSend.Headers = allHeaders;
+            var messages = messageToSend.Messages
+                .Select(m => new Tuple<object, Dictionary<string, string>>(m, HeaderContext.Current.GetHeadersFor(m)))
+                .ToList();
+
+            AssertTimeToBeReceivedIsNotInconsistent(messages);
+
+            // stupid trivial merge of all headers - will not detect inconsistensies at this point,
+            // and duplicated headers will be overwritten, so it's pretty important that silly
+            // stuff has been prevented
+            foreach(var header in messages.SelectMany(m => m.Item2))
+            {
+                transportMessageHeaders[header.Key] = header.Value;
+            }
+            
+            messageToSend.Headers = transportMessageHeaders;
+
+            return;
+
+            // well - ATM I cannot think of any better way,... we just merge any headers present with those associated with the message
+            var accumulatedHeaders = messageToSend.Headers;
+            foreach (object msg in messageToSend.Messages)
+            {
+                var headersFromThisMessage = HeaderContext.Current.GetHeadersFor(msg);
+                if (accumulatedHeaders.ContainsKey(Headers.TimeToBeReceived))
+                {
+                    var timeToBeReceivedFromPreviousMessages = accumulatedHeaders[Headers.TimeToBeReceived];
+                    if (headersFromThisMessage.ContainsKey(Headers.TimeToBeReceived))
+                    {
+                        // previous message(s) and current message have the header - ensure that they're equal
+                        var timeToBeReceivedFromNewMessage = headersFromThisMessage[Headers.TimeToBeReceived];
+
+                        if (timeToBeReceivedFromPreviousMessages != timeToBeReceivedFromNewMessage)
+                        {
+                            throw new InconsistentTimeToBeReceivedException(
+                                "In this case, the values {0} and {1} caused the inconsistency.",
+                                timeToBeReceivedFromPreviousMessages,
+                                timeToBeReceivedFromNewMessage);
+                        }
+                    }
+                    else
+                    {
+                        // previous message(s) have the header, current message does not!
+                        throw new InconsistentTimeToBeReceivedException(
+                            @"In this case, the value {0} was specified in one or more messages and then the message {1}
+came along requiring to be reliably delivered.",
+                            timeToBeReceivedFromPreviousMessages,
+                            msg);
+                    }
+                }
+                else if (headersFromThisMessage.ContainsKey(Headers.TimeToBeReceived))
+                {
+                    // previous message(s) did not have the header, current message did!
+                    throw new InconsistentTimeToBeReceivedException(
+                        @"In this case, one or more messages were requiring reliable delivery, and then {0}
+came along with a header value of {1}.",
+                        msg,
+                        headersFromThisMessage[Headers.TimeToBeReceived]);
+                }
+                accumulatedHeaders = accumulatedHeaders.Concat(headersFromThisMessage).ToDictionary(k => k.Key, k => k.Value);
+            }
+            messageToSend.Headers = accumulatedHeaders;
+        }
+
+        static void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        {
+            if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
+            {
+                // assert all messages have the header
+                if (!(messages.All(m => m.Item2.ContainsKey(Headers.TimeToBeReceived))))
+                {
+                    throw new InconsistentTimeToBeReceivedException("boo");
+                }
+
+                // assert all values are the same
+                if (messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct().Count() > 1)
+                {
+                    throw new InconsistentTimeToBeReceivedException("boooo!");
+                }
+            }
         }
 
         void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage receivedTransportMessage, string errorDetail)
@@ -199,7 +304,7 @@ namespace Rebus.Bus
             {
                 sendMessages.Send(receiveMessages.ErrorQueue, transportMessageToSend);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
 
@@ -323,9 +428,11 @@ namespace Rebus.Bus
         {
             Dictionary<string, string> temp;
 
-            return headers.TryRemove(message, out temp)
-                       ? temp
-                       : new Dictionary<string, string>();
+            var headersForThisMessage = headers.TryRemove(message, out temp)
+                                            ? temp
+                                            : new Dictionary<string, string>();
+
+            return headersForThisMessage;
         }
     }
 
