@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using Rebus.Logging;
 
 namespace Rebus.Bus
@@ -13,12 +14,63 @@ namespace Rebus.Bus
     {
         static ILog log;
 
+
         static ErrorTracker()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+
+        }
+
+        /// <summary>
+        /// Default constructor which sets the timeoutSpan to 1 day
+        /// </summary>
+        public ErrorTracker()
+        {
+            StartTimeoutTracker(TimeSpan.FromDays(1), TimeSpan.FromMinutes(5));
+        }
+
+        private void StartTimeoutTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval)
+        {
+            this.timeoutSpan = timeoutSpan;
+            new Timer(TimeoutTracker, null, TimeSpan.Zero, timeoutCheckInterval);
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="timeoutSpan">How long messages will be supervised by the ErrorTracker</param>
+        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval)
+        {
+            StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
         }
 
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
+        readonly ConcurrentQueue<Timed<string>> timedoutMessages = new ConcurrentQueue<Timed<string>>();
+        TimeSpan timeoutSpan;
+
+
+        private void TimeoutTracker(object state)
+        {
+            CheckForMessageTimeout();
+        }
+
+        internal void CheckForMessageTimeout()
+        {
+            Timed<string> id;
+            bool couldRetrieve = timedoutMessages.TryPeek(out id);
+
+            while (couldRetrieve && id.Time <= Time.Now())
+            {
+                if (timedoutMessages.TryDequeue(out id))
+                {
+                    TrackedMessage trackedMessage;
+                    if (trackedMessages.TryRemove(id.Value, out trackedMessage))
+                        log.Error("Handling message {0} has failed due to timeout at {1}", id.Value, Time.Now());
+                }
+
+                couldRetrieve = timedoutMessages.TryPeek(out id);
+            }
+        }
 
         /// <summary>
         /// Increments the fail count for this particular message, and starts tracking
@@ -72,6 +124,10 @@ namespace Rebus.Bus
             {
                 throw new ArgumentException(string.Format("Id of message to track is null! Cannot track message errors with a null id"));
             }
+
+            if (!trackedMessages.ContainsKey(id))
+                timedoutMessages.Enqueue(id.At(Time.Now().Add(timeoutSpan)));
+
             return trackedMessages.GetOrAdd(id, i => new TrackedMessage(id));
         }
 
