@@ -22,7 +22,7 @@ namespace Rebus.Persistence.InMemory
         {
             lock (listLock)
             {
-                var timeoutsToRemove = timeouts.Where(t => t.TimeToReturn >= DateTime.UtcNow).ToList();
+                var timeoutsToRemove = timeouts.Where(t => Time.Now() >= t.TimeToReturn).ToList();
 
                 timeoutsToRemove.ForEach(t => timeouts.Remove(t));
 
