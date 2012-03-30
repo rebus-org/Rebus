@@ -56,6 +56,22 @@ namespace Rebus.Tests.Integration
             timeoutExpired.ShouldBe(true);
         }
 
+        [Test]
+        public void WillNotCallBackBeforeTimeHasElapsed()
+        {
+            var timeoutExpired = false;
+            client.Send(new TimeoutRequest
+                            {
+                                Timeout = 2.Seconds()
+                            });
+
+            handlerActivator.Handle<TimeoutReply>(m => { timeoutExpired = true; });
+
+            Thread.Sleep(0.5.Seconds());
+
+            timeoutExpired.ShouldBe(false);
+        }
+
         public override string GetEndpointFor(Type messageType)
         {
             if (messageType == typeof(TimeoutRequest))
