@@ -32,6 +32,9 @@ namespace Rebus.RavenDb
         public void Delete(ISagaData sagaData)
         {
             var session = GetSession();
+            if (!session.Advanced.IsLoaded(sagaData.Id.ToString()))
+                return;
+
             session.Delete(sagaData);
             session.SaveChanges();
         }
