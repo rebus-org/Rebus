@@ -21,6 +21,7 @@ namespace Rebus.Tests.Unit
         JsonMessageSerializer serializeMessages;
         IStoreSagaData storeSagaData;
         IInspectHandlerPipeline inspectHandlerPipeline;
+        IStoreSubscriptions storeSubscriptions;
 
         protected override void DoSetUp()
         {
@@ -31,10 +32,11 @@ namespace Rebus.Tests.Unit
             storeSagaData = Mock<IStoreSagaData>();
             receiveMessages = new MessageReceiverForTesting(serializeMessages);
             inspectHandlerPipeline = new TrivialPipelineInspector();
+            storeSubscriptions = Mock<IStoreSubscriptions>();
             bus = new RebusBus(activateHandlers,
                                sendMessages,
                                receiveMessages,
-                               Mock<IStoreSubscriptions>(),
+                               storeSubscriptions,
                                storeSagaData,
                                determineDestination, serializeMessages, inspectHandlerPipeline);
         }
@@ -43,6 +45,68 @@ namespace Rebus.Tests.Unit
         {
             bus.Dispose();
         }
+
+        [Test, Description(@"Tests that headers associated with a message don't get deleted after the first time that
+message is sent - because it shouldn't be prohibited to have a single message instance
+and send it multiple times.
+
+Or should it?")]
+        public void WillHappilyAttachTheSameHeaderTwice()
+        {
+            // arrange
+            var someRandomMessage = new SomeRandomMessage();
+
+            someRandomMessage.AttachHeader("some-key", "some-value");
+
+            // act
+            bus.Send("somewhere", someRandomMessage);
+            bus.Send("somewhereElse", someRandomMessage);
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhereElse"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
+        }
+
+        [Test]
+        public void CanPublishBatchOfMessages()
+        {
+            // arrange
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (FirstMessage))).Return(new[] {"first-sub1", "first-sub2"});
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (SecondMessage))).Return(new[] {"second-sub1", "second-sub2"});
+
+            // act
+            var firstMessage1 = new FirstMessage();
+            var firstMessage2 = new FirstMessage();
+            var secondMessage1 = new SecondMessage();
+            var secondMessage2 = new SecondMessage();
+
+            firstMessage1.AttachHeader("firstMessage1", "foo");
+            firstMessage2.AttachHeader("firstMessage2", "foo");
+            secondMessage1.AttachHeader("secondMessage1", "foo");
+            secondMessage2.AttachHeader("secondMessage2", "foo");
+
+            bus.PublishBatch(new object[]
+                                 {
+                                     firstMessage1, secondMessage1,
+                                     firstMessage2, secondMessage2
+                                 });
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub1"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
+            
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub2"), 
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
+            
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub1"), 
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
+            
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub2"), 
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
+        }
+
+        class FirstMessage{}
+        class SecondMessage{}
 
         [Test]
         public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncluded()

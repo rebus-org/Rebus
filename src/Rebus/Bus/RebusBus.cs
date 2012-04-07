@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -21,6 +22,7 @@ namespace Rebus.Bus
         static RebusBus()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+            HeaderContext.Initialize();
         }
 
         /// <summary>
@@ -109,34 +111,6 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
-        public void SendBatch(params object[] messages)
-        {
-            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
-
-            foreach (var batch in groupedByEndpoints)
-            {
-                InternalSend(batch.Value.Item1, batch.Value.Item2);
-            }
-        }
-
-        IDictionary<Type, Tuple<string, List<object>>> GetMessagesGroupedByEndpoints(object[] messages)
-        {
-            var dictionary = new Dictionary<Type, Tuple<string, List<object>>>();
-
-            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
-            foreach (var message in messages)
-            {
-                var messageType = message.GetType();
-
-                if (!dictionary.ContainsKey(messageType))
-                    dictionary[messageType] = new Tuple<string, List<object>>(GetMessageOwnerEndpointFor(messageType), new List<object>());
-
-                dictionary[messageType].Item2.Add(message);
-            }
-
-            return dictionary;
-        }
-
         public void Send<TCommand>(string endpoint, TCommand message)
         {
             InternalSend(endpoint, new List<object> { message });
@@ -149,6 +123,16 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
+        internal void SendBatch(params object[] messages)
+        {
+            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
+
+            foreach (var batch in groupedByEndpoints)
+            {
+                InternalSend(batch.Value.Item1, batch.Value.Item2);
+            }
+        }
+
         public void Publish<TEvent>(TEvent message)
         {
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
@@ -156,6 +140,19 @@ namespace Rebus.Bus
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
                 InternalSend(subscriberInputQueue, new List<object> { message });
+            }
+        }
+
+        internal void PublishBatch(object[] messages)
+        {
+            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
+
+            foreach (var batch in groupedByEndpoints)
+            {
+                foreach (var endpoint in batch.Value.Item1)
+                {
+                    InternalSend(endpoint, batch.Value.Item2);
+                }
             }
         }
 
@@ -199,14 +196,51 @@ namespace Rebus.Bus
                                         Headers = { { Headers.ReturnAddress, receiveMessages.InputQueue } }
                                     };
 
-            MergeHeaders(messageToSend);
+            messageToSend.Headers = MergeHeaders(messageToSend);
 
+            log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), endpoint);
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
             sendMessages.Send(endpoint, transportMessage);
         }
 
-        void MergeHeaders(Message messageToSend)
+        IEnumerable<KeyValuePair<Type, Tuple<List<string>, List<object>>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
+        {
+            var dictionary = new Dictionary<Type, Tuple<List<string>, List<object>>>();
+
+            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
+            foreach (var message in messages)
+            {
+                var messageType = message.GetType();
+
+                if (!dictionary.ContainsKey(messageType))
+                    dictionary[messageType] = new Tuple<List<string>, List<object>>(storeSubscriptions.GetSubscribers(messageType).ToList(), new List<object>());
+
+                dictionary[messageType].Item2.Add(message);
+            }
+
+            return dictionary;
+        }
+
+        IEnumerable<KeyValuePair<Type, Tuple<string, List<object>>>> GetMessagesGroupedByEndpoints(object[] messages)
+        {
+            var dictionary = new Dictionary<Type, Tuple<string, List<object>>>();
+
+            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
+            foreach (var message in messages)
+            {
+                var messageType = message.GetType();
+
+                if (!dictionary.ContainsKey(messageType))
+                    dictionary[messageType] = new Tuple<string, List<object>>(GetMessageOwnerEndpointFor(messageType), new List<object>());
+
+                dictionary[messageType].Item2.Add(message);
+            }
+
+            return dictionary;
+        }
+
+        IDictionary<string, string> MergeHeaders(Message messageToSend)
         {
             var transportMessageHeaders = messageToSend.Headers.Clone();
 
@@ -219,58 +253,12 @@ namespace Rebus.Bus
             // stupid trivial merge of all headers - will not detect inconsistensies at this point,
             // and duplicated headers will be overwritten, so it's pretty important that silly
             // stuff has been prevented
-            foreach(var header in messages.SelectMany(m => m.Item2))
+            foreach (var header in messages.SelectMany(m => m.Item2))
             {
                 transportMessageHeaders[header.Key] = header.Value;
             }
-            
-            messageToSend.Headers = transportMessageHeaders;
 
-            return;
-
-            // well - ATM I cannot think of any better way,... we just merge any headers present with those associated with the message
-            var accumulatedHeaders = messageToSend.Headers;
-            foreach (object msg in messageToSend.Messages)
-            {
-                var headersFromThisMessage = HeaderContext.Current.GetHeadersFor(msg);
-                if (accumulatedHeaders.ContainsKey(Headers.TimeToBeReceived))
-                {
-                    var timeToBeReceivedFromPreviousMessages = accumulatedHeaders[Headers.TimeToBeReceived];
-                    if (headersFromThisMessage.ContainsKey(Headers.TimeToBeReceived))
-                    {
-                        // previous message(s) and current message have the header - ensure that they're equal
-                        var timeToBeReceivedFromNewMessage = headersFromThisMessage[Headers.TimeToBeReceived];
-
-                        if (timeToBeReceivedFromPreviousMessages != timeToBeReceivedFromNewMessage)
-                        {
-                            throw new InconsistentTimeToBeReceivedException(
-                                "In this case, the values {0} and {1} caused the inconsistency.",
-                                timeToBeReceivedFromPreviousMessages,
-                                timeToBeReceivedFromNewMessage);
-                        }
-                    }
-                    else
-                    {
-                        // previous message(s) have the header, current message does not!
-                        throw new InconsistentTimeToBeReceivedException(
-                            @"In this case, the value {0} was specified in one or more messages and then the message {1}
-came along requiring to be reliably delivered.",
-                            timeToBeReceivedFromPreviousMessages,
-                            msg);
-                    }
-                }
-                else if (headersFromThisMessage.ContainsKey(Headers.TimeToBeReceived))
-                {
-                    // previous message(s) did not have the header, current message did!
-                    throw new InconsistentTimeToBeReceivedException(
-                        @"In this case, one or more messages were requiring reliable delivery, and then {0}
-came along with a header value of {1}.",
-                        msg,
-                        headersFromThisMessage[Headers.TimeToBeReceived]);
-                }
-                accumulatedHeaders = accumulatedHeaders.Concat(headersFromThisMessage).ToDictionary(k => k.Key, k => k.Value);
-            }
-            messageToSend.Headers = accumulatedHeaders;
+            return transportMessageHeaders;
         }
 
         static void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
@@ -413,13 +401,25 @@ came along with a header value of {1}.",
             Current = new HeaderContext();
         }
 
+        public static void Initialize()
+        {
+            Current.CleanupTimer.Start();
+        }
+
         public static HeaderContext Current { get; set; }
 
-        readonly ConcurrentDictionary<object, Dictionary<string, string>> headers = new ConcurrentDictionary<object, Dictionary<string, string>>();
+        internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
+        internal readonly System.Timers.Timer CleanupTimer;
+
+        public HeaderContext()
+        {
+            CleanupTimer = new System.Timers.Timer {Interval = 1000};
+            CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
+        }
 
         public void AttachHeader(object message, string key, string value)
         {
-            var headerDictionary = headers.GetOrAdd(message, msg => new Dictionary<string, string>());
+            var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
 
             headerDictionary.Add(key, value);
         }
@@ -428,11 +428,63 @@ came along with a header value of {1}.",
         {
             Dictionary<string, string> temp;
 
-            var headersForThisMessage = headers.TryRemove(message, out temp)
+            var headersForThisMessage = Headers.TryGetValue(message, out temp)
                                             ? temp
                                             : new Dictionary<string, string>();
 
             return headersForThisMessage;
+        }
+
+        public void Tick()
+        {
+            Headers.RemoveDeadReferences();
+        }
+    }
+
+    public static class HeaderContextExtensions
+    {
+        public static Dictionary<string,string> GetOrAdd(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, Func<Dictionary<string, string>> factory)
+        {
+            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+            if (entry == null)
+            {
+                lock(contexts)
+                {
+                    entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+
+                    if (entry == null)
+                    {
+                        entry = new Tuple<WeakReference, Dictionary<string, string>>(new WeakReference(key), factory());
+                        contexts.Add(entry);
+                    }
+                }
+            }
+            return entry.Item2;
+        }
+
+        public static void RemoveDeadReferences(this List<Tuple<WeakReference, Dictionary<string, string>>> contexts)
+        {
+            if (contexts.Any(c => !c.Item1.IsAlive))
+            {
+                lock (contexts)
+                {
+                    contexts.RemoveAll(c => !c.Item1.IsAlive);
+                }
+            }
+        }
+
+        public static bool TryGetValue(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, out Dictionary<string, string> dictionery)
+        {
+            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+
+            if (entry == null)
+            {
+                dictionery = new Dictionary<string, string>();
+                return false;
+            }
+            
+            dictionery = entry.Item2;
+            return true;
         }
     }
 

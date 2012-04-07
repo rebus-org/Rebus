@@ -13,6 +13,23 @@ namespace Rebus.Tests
     public class TestStuff
     {
         [Test]
+        public void CheckWeakReferenceEquality()
+        {
+            // arrange
+            var justSomeObject = new object();
+            var anotherObject = new object();
+
+            // act
+            var weakReference1 = new WeakReference(justSomeObject);
+            var weakReference2 = new WeakReference(justSomeObject);
+            var weakReference3 = new WeakReference(anotherObject);
+
+            // assert
+            weakReference1.ShouldNotBe(weakReference2);
+            weakReference1.ShouldNotBe(weakReference3);
+        }
+
+        [Test]
         public void HmmHowDoDictionaerieueseseWork()
         {
             // arrange
