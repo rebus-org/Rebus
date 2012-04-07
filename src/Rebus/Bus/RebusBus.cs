@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using Rebus.Configuration;
@@ -22,7 +20,6 @@ namespace Rebus.Bus
         static RebusBus()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-            HeaderContext.Initialize();
         }
 
         /// <summary>
@@ -71,6 +68,8 @@ namespace Rebus.Bus
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
         {
+            HeaderContext.Initialize();
+
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
@@ -309,6 +308,8 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
+
+            HeaderContext.Destroy();
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
@@ -401,14 +402,32 @@ namespace Rebus.Bus
             Current = new HeaderContext();
         }
 
+        static int initCounter = 0;
+
         public static void Initialize()
         {
-            Current.CleanupTimer.Start();
+            var shouldInitTimer = Interlocked.Increment(ref initCounter) == 1;
+            
+            if (shouldInitTimer)
+            {
+                Current.CleanupTimer.Start();
+            }
+        }
+
+        public static void Destroy()
+        {
+            var shouldStopTimer = Interlocked.Decrement(ref initCounter) == 0;
+
+            if (shouldStopTimer)
+            {
+                Current.CleanupTimer.Start();
+            }
         }
 
         public static HeaderContext Current { get; set; }
 
         internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
+
         internal readonly System.Timers.Timer CleanupTimer;
 
         public HeaderContext()
