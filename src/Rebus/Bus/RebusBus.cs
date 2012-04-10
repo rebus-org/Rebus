@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Rebus.Configuration;
@@ -128,7 +129,7 @@ namespace Rebus.Bus
 
             foreach (var batch in groupedByEndpoints)
             {
-                InternalSend(batch.Value.Item1, batch.Value.Item2);
+                InternalSend(batch.Key, batch.Value);
             }
         }
 
@@ -142,16 +143,13 @@ namespace Rebus.Bus
             }
         }
 
-        internal void PublishBatch(object[] messages)
+        internal void PublishBatch(params object[] messages)
         {
             var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
 
             foreach (var batch in groupedByEndpoints)
             {
-                foreach (var endpoint in batch.Value.Item1)
-                {
-                    InternalSend(endpoint, batch.Value.Item2);
-                }
+                InternalSend(batch.Key, batch.Value);
             }
         }
 
@@ -189,13 +187,13 @@ namespace Rebus.Bus
         /// </summary>
         void InternalSend(string endpoint, List<object> messages)
         {
-            var messageToSend = new Message
-                                    {
-                                        Messages = messages.ToArray(),
-                                        Headers = { { Headers.ReturnAddress, receiveMessages.InputQueue } }
-                                    };
-
-            messageToSend.Headers = MergeHeaders(messageToSend);
+            var messageToSend = new Message{Messages = messages.ToArray(),};
+            var headers = MergeHeaders(messageToSend);
+            if (!headers.ContainsKey(Headers.ReturnAddress))
+            {
+                headers[Headers.ReturnAddress] = receiveMessages.InputQueue;
+            }
+            messageToSend.Headers = headers;
 
             log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), endpoint);
             var transportMessage = serializeMessages.Serialize(messageToSend);
@@ -203,40 +201,47 @@ namespace Rebus.Bus
             sendMessages.Send(endpoint, transportMessage);
         }
 
-        IEnumerable<KeyValuePair<Type, Tuple<List<string>, List<object>>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
+        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
         {
-            var dictionary = new Dictionary<Type, Tuple<List<string>, List<object>>>();
+            var dict = new Dictionary<string, List<object>>();
+            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
+                .Select(t => new KeyValuePair<Type, string[]>(t, storeSubscriptions.GetSubscribers(t) ?? new string[0]))
+                .ToDictionary(d => d.Key, d => d.Value);
 
-            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
             foreach (var message in messages)
             {
-                var messageType = message.GetType();
-
-                if (!dictionary.ContainsKey(messageType))
-                    dictionary[messageType] = new Tuple<List<string>, List<object>>(storeSubscriptions.GetSubscribers(messageType).ToList(), new List<object>());
-
-                dictionary[messageType].Item2.Add(message);
+                var endpoints = endpointsByType[message.GetType()];
+                foreach (var endpoint in endpoints)
+                {
+                    if (!dict.ContainsKey(endpoint))
+                    {
+                        dict[endpoint] = new List<object>();
+                    }
+                    dict[endpoint].Add(message);
+                }
             }
 
-            return dictionary;
+            return dict;
         }
 
-        IEnumerable<KeyValuePair<Type, Tuple<string, List<object>>>> GetMessagesGroupedByEndpoints(object[] messages)
+        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedByEndpoints(object[] messages)
         {
-            var dictionary = new Dictionary<Type, Tuple<string, List<object>>>();
+            var dict = new Dictionary<string, List<object>>();
+            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
+                .Select(t => new KeyValuePair<Type, string>(t, determineDestination.GetEndpointFor(t) ?? ""))
+                .ToDictionary(d => d.Key, d => d.Value);
 
-            // we do this in a very imperative and controlled manner in order to be sure that messages are ordered as expected
             foreach (var message in messages)
             {
-                var messageType = message.GetType();
-
-                if (!dictionary.ContainsKey(messageType))
-                    dictionary[messageType] = new Tuple<string, List<object>>(GetMessageOwnerEndpointFor(messageType), new List<object>());
-
-                dictionary[messageType].Item2.Add(message);
+                var endpoint = endpointsByType[message.GetType()];
+                if (!dict.ContainsKey(endpoint))
+                {
+                    dict[endpoint] = new List<object>();
+                }
+                dict[endpoint].Add(message);
             }
 
-            return dictionary;
+            return dict;
         }
 
         IDictionary<string, string> MergeHeaders(Message messageToSend)
@@ -248,6 +253,7 @@ namespace Rebus.Bus
                 .ToList();
 
             AssertTimeToBeReceivedIsNotInconsistent(messages);
+            AssertReturnAddressIsNotInconsistent(messages);
 
             // stupid trivial merge of all headers - will not detect inconsistensies at this point,
             // and duplicated headers will be overwritten, so it's pretty important that silly
@@ -260,6 +266,18 @@ namespace Rebus.Bus
             return transportMessageHeaders;
         }
 
+        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        {
+            if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
+            {
+                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct();
+                if (returnAddresses.Count() > 1)
+                {
+                    throw new InconsistentReturnAddressException("These return addresses were specified: {0}", string.Join(", ", returnAddresses));
+                }
+            }
+        }
+
         static void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
@@ -267,13 +285,14 @@ namespace Rebus.Bus
                 // assert all messages have the header
                 if (!(messages.All(m => m.Item2.ContainsKey(Headers.TimeToBeReceived))))
                 {
-                    throw new InconsistentTimeToBeReceivedException("boo");
+                    throw new InconsistentTimeToBeReceivedException("Not all messages in the batch had an attached time to be received header!");
                 }
 
                 // assert all values are the same
-                if (messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct().Count() > 1)
+                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct();
+                if (timesToBeReceived.Count() > 1)
                 {
-                    throw new InconsistentTimeToBeReceivedException("boooo!");
+                    throw new InconsistentTimeToBeReceivedException("These times to be received were specified: {0}", string.Join(", ", timesToBeReceived));
                 }
             }
         }

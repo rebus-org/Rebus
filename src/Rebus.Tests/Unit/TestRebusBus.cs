@@ -2,6 +2,7 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -46,6 +47,86 @@ namespace Rebus.Tests.Unit
             bus.Dispose();
         }
 
+        [Test, Description(@"Tests that multiple message types will be properly batched if they are owned by the same endpoint. This
+is just because there was a bug some time when the grouping of the messages was wrong.")]
+        public void WillHappilyIncludeMessagesOfDifferentTypeInSameTransportMessageAlsoWhenPublishing()
+        {
+            // arrange
+            var someSubscriberEndpoint = "some-subscriber";
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(FirstMessage))).Return(new[] { someSubscriberEndpoint });
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(SecondMessage))).Return(new[] { someSubscriberEndpoint });
+
+            // act
+            var firstMessage = new FirstMessage();
+            var secondMessage = new SecondMessage();
+
+            bus.PublishBatch(firstMessage, secondMessage);
+
+            // assert
+            
+            // check that the endpoint is right
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someSubscriberEndpoint),
+                                                     Arg<TransportMessageToSend>.Is.Anything),
+                                         o => o.Repeat.Once());
+        }
+
+
+        [Test, Description(@"Tests that multiple message types will be properly batched if they are owned by the same endpoint. This
+is just because there was a bug some time when the grouping of the messages was wrong.")]
+        public void WillHappilyIncludeMessagesOfDifferentTypeInSameTransportMessage()
+        {
+            // arrange
+            var firstMessage = new FirstMessage();
+            var secondMessage = new SecondMessage();
+            var thirdMessage = new SomeRandomMessage();
+
+            var someEndpoint = "some-endpoint";
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (FirstMessage))).Return(someEndpoint);
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (SecondMessage))).Return(someEndpoint);
+            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return(someEndpoint);
+
+            // act
+            bus.SendBatch(firstMessage, secondMessage, thirdMessage);
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint), Arg<TransportMessageToSend>.Is.Anything),
+                                                            o => o.Repeat.Once());
+        }
+
+        [Test]
+        public void DoesNotThrowIfReturnAddressIsSpecifiedMultipleTimesInConsistentManner()
+        {
+            // arrange
+            var someMessage = new FirstMessage();
+            var anotherMessage = new SecondMessage();
+
+            someMessage.AttachHeader(Headers.ReturnAddress, "same-endpoint");
+            anotherMessage.AttachHeader(Headers.ReturnAddress, "same-endpoint");
+
+            // act
+            // assert
+            Assert.DoesNotThrow(() => bus.SendBatch(someMessage, anotherMessage));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
+                                                     Arg<TransportMessageToSend>.Matches(
+                                                         t => true)));
+        }
+
+        [Test]
+        public void ThrowsIfReturnAddressIsInconsistentlySpecified()
+        {
+            // arrange
+            var someMessage = new FirstMessage();
+            var anotherMessage = new SecondMessage();
+
+            someMessage.AttachHeader(Headers.ReturnAddress, "some-endpoint");
+            anotherMessage.AttachHeader(Headers.ReturnAddress, "another-endpoint");
+
+            // act
+            // assert
+            Assert.Throws<InconsistentReturnAddressException>(() => bus.SendBatch(someMessage, anotherMessage));
+        }
+
         [Test, Description(@"Tests that headers associated with a message don't get deleted after the first time that
 message is sent - because it shouldn't be prohibited to have a single message instance
 and send it multiple times.
@@ -85,11 +166,7 @@ Or should it?")]
             secondMessage1.AttachHeader("secondMessage1", "foo");
             secondMessage2.AttachHeader("secondMessage2", "foo");
 
-            bus.PublishBatch(new object[]
-                                 {
-                                     firstMessage1, secondMessage1,
-                                     firstMessage2, secondMessage2
-                                 });
+            bus.PublishBatch(firstMessage1, secondMessage1, firstMessage2, secondMessage2);
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub1"),
