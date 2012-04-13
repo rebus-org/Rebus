@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Rebus.Configuration;
@@ -7,6 +7,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
 using Rebus.Shared;
+using Rebus.Extensions;
 
 namespace Rebus.Bus
 {
@@ -68,6 +69,8 @@ namespace Rebus.Bus
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
         {
+            HeaderContext.Initialize();
+
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
@@ -105,19 +108,29 @@ namespace Rebus.Bus
         {
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
-            InternalSend(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, new List<object> { message });
         }
 
         public void Send<TCommand>(string endpoint, TCommand message)
         {
-            InternalSend(endpoint, message);
+            InternalSend(endpoint, new List<object> { message });
         }
 
         public void SendLocal<TCommand>(TCommand message)
         {
             var destinationEndpoint = receiveMessages.InputQueue;
 
-            InternalSend(destinationEndpoint, message);
+            InternalSend(destinationEndpoint, new List<object> { message });
+        }
+
+        internal void SendBatch(params object[] messages)
+        {
+            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
+
+            foreach (var batch in groupedByEndpoints)
+            {
+                InternalSend(batch.Key, batch.Value);
+            }
         }
 
         public void Publish<TEvent>(TEvent message)
@@ -126,7 +139,17 @@ namespace Rebus.Bus
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
-                InternalSend(subscriberInputQueue, message);
+                InternalSend(subscriberInputQueue, new List<object> { message });
+            }
+        }
+
+        internal void PublishBatch(params object[] messages)
+        {
+            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
+
+            foreach (var batch in groupedByEndpoints)
+            {
+                InternalSend(batch.Key, batch.Value);
             }
         }
 
@@ -134,7 +157,7 @@ namespace Rebus.Bus
         {
             var returnAddress = MessageContext.GetCurrent().ReturnAddress;
 
-            InternalSend(returnAddress, message);
+            InternalSend(returnAddress, new List<object> { message });
         }
 
         public void Subscribe<TMessage>()
@@ -153,37 +176,125 @@ namespace Rebus.Bus
         {
             var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
 
-            InternalSend(publisherInputQueue, message);
+            InternalSend(publisherInputQueue, new List<object> { message });
         }
 
         /// <summary>
         /// Core send method. This should be the only place where calls to the bus'
         /// <see cref="ISendMessages"/> instance gets called, except for when moving
-        /// messages to the error queue.
+        /// messages to the error queue. This method will bundle the specified batch
+        /// of messages inside one single transport message, which it will send.
         /// </summary>
-        void InternalSend(string endpoint, object message)
+        void InternalSend(string endpoint, List<object> messages)
         {
-            var messageToSend = new Message
-                                    {
-                                        Messages = new[] { message },
-                                        Headers = { { Headers.ReturnAddress, receiveMessages.InputQueue } }
-                                    };
+            var messageToSend = new Message{Messages = messages.ToArray(),};
+            var headers = MergeHeaders(messageToSend);
+            if (!headers.ContainsKey(Headers.ReturnAddress))
+            {
+                headers[Headers.ReturnAddress] = receiveMessages.InputQueue;
+            }
+            messageToSend.Headers = headers;
 
-            MergeHeaders(messageToSend);
-
+            log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), endpoint);
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
             sendMessages.Send(endpoint, transportMessage);
         }
 
-        void MergeHeaders(Message messageToSend)
+        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
         {
-            // well - ATM I cannot think of any better way,... we just merge any headers present with those associated with the message
-            var allHeaders = messageToSend.Messages
-                .Select(msg => HeaderContext.Current.GetHeadersFor(msg))
-                .Aggregate(messageToSend.Headers, (d1, d2) => d1.Concat(d2).ToDictionary(k => k.Key, k => k.Value));
+            var dict = new Dictionary<string, List<object>>();
+            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
+                .Select(t => new KeyValuePair<Type, string[]>(t, storeSubscriptions.GetSubscribers(t) ?? new string[0]))
+                .ToDictionary(d => d.Key, d => d.Value);
 
-            messageToSend.Headers = allHeaders;
+            foreach (var message in messages)
+            {
+                var endpoints = endpointsByType[message.GetType()];
+                foreach (var endpoint in endpoints)
+                {
+                    if (!dict.ContainsKey(endpoint))
+                    {
+                        dict[endpoint] = new List<object>();
+                    }
+                    dict[endpoint].Add(message);
+                }
+            }
+
+            return dict;
+        }
+
+        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedByEndpoints(object[] messages)
+        {
+            var dict = new Dictionary<string, List<object>>();
+            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
+                .Select(t => new KeyValuePair<Type, string>(t, determineDestination.GetEndpointFor(t) ?? ""))
+                .ToDictionary(d => d.Key, d => d.Value);
+
+            foreach (var message in messages)
+            {
+                var endpoint = endpointsByType[message.GetType()];
+                if (!dict.ContainsKey(endpoint))
+                {
+                    dict[endpoint] = new List<object>();
+                }
+                dict[endpoint].Add(message);
+            }
+
+            return dict;
+        }
+
+        IDictionary<string, string> MergeHeaders(Message messageToSend)
+        {
+            var transportMessageHeaders = messageToSend.Headers.Clone();
+
+            var messages = messageToSend.Messages
+                .Select(m => new Tuple<object, Dictionary<string, string>>(m, HeaderContext.Current.GetHeadersFor(m)))
+                .ToList();
+
+            AssertTimeToBeReceivedIsNotInconsistent(messages);
+            AssertReturnAddressIsNotInconsistent(messages);
+
+            // stupid trivial merge of all headers - will not detect inconsistensies at this point,
+            // and duplicated headers will be overwritten, so it's pretty important that silly
+            // stuff has been prevented
+            foreach (var header in messages.SelectMany(m => m.Item2))
+            {
+                transportMessageHeaders[header.Key] = header.Value;
+            }
+
+            return transportMessageHeaders;
+        }
+
+        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        {
+            if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
+            {
+                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct();
+                if (returnAddresses.Count() > 1)
+                {
+                    throw new InconsistentReturnAddressException("These return addresses were specified: {0}", string.Join(", ", returnAddresses));
+                }
+            }
+        }
+
+        static void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        {
+            if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
+            {
+                // assert all messages have the header
+                if (!(messages.All(m => m.Item2.ContainsKey(Headers.TimeToBeReceived))))
+                {
+                    throw new InconsistentTimeToBeReceivedException("Not all messages in the batch had an attached time to be received header!");
+                }
+
+                // assert all values are the same
+                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct();
+                if (timesToBeReceived.Count() > 1)
+                {
+                    throw new InconsistentTimeToBeReceivedException("These times to be received were specified: {0}", string.Join(", ", timesToBeReceived));
+                }
+            }
         }
 
         void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage receivedTransportMessage, string errorDetail)
@@ -199,7 +310,7 @@ namespace Rebus.Bus
             {
                 sendMessages.Send(receiveMessages.ErrorQueue, transportMessageToSend);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
 
@@ -216,6 +327,8 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
+
+            HeaderContext.Destroy();
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
@@ -308,13 +421,43 @@ namespace Rebus.Bus
             Current = new HeaderContext();
         }
 
+        static int initCounter = 0;
+
+        public static void Initialize()
+        {
+            var shouldInitTimer = Interlocked.Increment(ref initCounter) == 1;
+            
+            if (shouldInitTimer)
+            {
+                Current.CleanupTimer.Start();
+            }
+        }
+
+        public static void Destroy()
+        {
+            var shouldStopTimer = Interlocked.Decrement(ref initCounter) == 0;
+
+            if (shouldStopTimer)
+            {
+                Current.CleanupTimer.Start();
+            }
+        }
+
         public static HeaderContext Current { get; set; }
 
-        readonly ConcurrentDictionary<object, Dictionary<string, string>> headers = new ConcurrentDictionary<object, Dictionary<string, string>>();
+        internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
+
+        internal readonly System.Timers.Timer CleanupTimer;
+
+        public HeaderContext()
+        {
+            CleanupTimer = new System.Timers.Timer {Interval = 1000};
+            CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
+        }
 
         public void AttachHeader(object message, string key, string value)
         {
-            var headerDictionary = headers.GetOrAdd(message, msg => new Dictionary<string, string>());
+            var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
 
             headerDictionary.Add(key, value);
         }
@@ -323,9 +466,63 @@ namespace Rebus.Bus
         {
             Dictionary<string, string> temp;
 
-            return headers.TryRemove(message, out temp)
-                       ? temp
-                       : new Dictionary<string, string>();
+            var headersForThisMessage = Headers.TryGetValue(message, out temp)
+                                            ? temp
+                                            : new Dictionary<string, string>();
+
+            return headersForThisMessage;
+        }
+
+        public void Tick()
+        {
+            Headers.RemoveDeadReferences();
+        }
+    }
+
+    public static class HeaderContextExtensions
+    {
+        public static Dictionary<string,string> GetOrAdd(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, Func<Dictionary<string, string>> factory)
+        {
+            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+            if (entry == null)
+            {
+                lock(contexts)
+                {
+                    entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+
+                    if (entry == null)
+                    {
+                        entry = new Tuple<WeakReference, Dictionary<string, string>>(new WeakReference(key), factory());
+                        contexts.Add(entry);
+                    }
+                }
+            }
+            return entry.Item2;
+        }
+
+        public static void RemoveDeadReferences(this List<Tuple<WeakReference, Dictionary<string, string>>> contexts)
+        {
+            if (contexts.Any(c => !c.Item1.IsAlive))
+            {
+                lock (contexts)
+                {
+                    contexts.RemoveAll(c => !c.Item1.IsAlive);
+                }
+            }
+        }
+
+        public static bool TryGetValue(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, out Dictionary<string, string> dictionery)
+        {
+            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
+
+            if (entry == null)
+            {
+                dictionery = new Dictionary<string, string>();
+                return false;
+            }
+            
+            dictionery = entry.Item2;
+            return true;
         }
     }
 
