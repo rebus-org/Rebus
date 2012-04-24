@@ -21,7 +21,8 @@ namespace Rebus.Tests.Unit
             dispatcher = new Dispatcher(new InMemorySagaPersister(),
                                         activator,
                                         new InMemorySubscriptionStorage(),
-                                        pipelineInspector);
+                                        pipelineInspector,
+                                        Mock<IHandleDeferredMessage>());
         }
 
         [Test]

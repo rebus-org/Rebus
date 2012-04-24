@@ -19,6 +19,7 @@ namespace Rebus.Bus
         private readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
         private readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
         private readonly IInspectHandlerPipeline inspectHandlerPipeline;
+        readonly IHandleDeferredMessage handleDeferredMessage;
 
         private readonly IStoreSagaData storeSagaData;
         private readonly IStoreSubscriptions storeSubscriptions;
@@ -37,12 +38,14 @@ namespace Rebus.Bus
         public Dispatcher(IStoreSagaData storeSagaData,
                           IActivateHandlers activateHandlers,
                           IStoreSubscriptions storeSubscriptions,
-                          IInspectHandlerPipeline inspectHandlerPipeline)
+                          IInspectHandlerPipeline inspectHandlerPipeline,
+                          IHandleDeferredMessage handleDeferredMessage)
         {
             this.storeSagaData = storeSagaData;
             this.activateHandlers = activateHandlers;
             this.storeSubscriptions = storeSubscriptions;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
+            this.handleDeferredMessage = handleDeferredMessage;
         }
 
         /// <summary>
@@ -174,6 +177,10 @@ namespace Rebus.Bus
             if (typeof (T) == typeof (SubscriptionMessage))
             {
                 return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
+            }
+            if (typeof(T) == typeof(TimeoutReply))
+            {
+                return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
             }
             return new IHandleMessages<T>[0];
         }

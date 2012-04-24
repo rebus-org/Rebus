@@ -34,7 +34,8 @@ namespace Rebus.Tests.Unit
                                 new InMemorySubscriptionStorage(),
                                 serializer, 
                                 new SagaDataPersisterForTesting(),
-                                inspectHandlerPipeline, "Just some test worker");
+                                inspectHandlerPipeline, "Just some test worker",
+                                Mock<IHandleDeferredMessage>());
         }
 
         protected override void DoTearDown()

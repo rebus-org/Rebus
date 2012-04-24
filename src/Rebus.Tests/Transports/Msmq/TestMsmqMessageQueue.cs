@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Messaging;
 using System.Text;
 using System.Threading;
@@ -46,6 +46,32 @@ namespace Rebus.Tests.Transports.Msmq
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
+        }
+
+        /// <summary>
+        /// Before refactoring:
+        ///     Sending 10000 messages took 7 s - that's 1427 msg/s
+        ///
+        /// After refactoring:
+        ///     Sending 10000 messages took 29 s - that's 340 msg/s
+        /// </summary>
+        [TestCase(10000)]
+        public void CheckSendPerformance(int count)
+        {
+            var queue = new MsmqMessageQueue("test.msmq.performance", "error").PurgeInputQueue();
+            var transportMessageToSend = new TransportMessageToSend
+                                             {
+                                                 Headers = new Dictionary<string, string>(),
+                                                 Body = new byte[1024],
+                                                 Label = "this is just a label"
+                                             };
+
+            var stopwatch = Stopwatch.StartNew();
+            count.Times(() => queue.Send("test.msmq.performance", transportMessageToSend));
+            var totalSeconds = stopwatch.Elapsed.TotalSeconds;
+
+            Console.WriteLine("Sending {0} messages took {1:0} s - that's {2:0} msg/s",
+                              count, totalSeconds, count/totalSeconds);
         }
 
         [Test]

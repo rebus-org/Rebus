@@ -24,5 +24,11 @@ namespace Rebus.Tests
         {
             return TimeSpan.FromSeconds(seconds);
         }
+
+        [DebuggerStepThrough]
+        public static TimeSpan ElapsedSince(this DateTime someTime, DateTime somePastTime)
+        {
+            return someTime - somePastTime;
+        }
     }
 }
