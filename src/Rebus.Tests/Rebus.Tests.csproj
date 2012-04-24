@@ -164,6 +164,7 @@
     <Compile Include="Persistence\RavenDb\TestRavenDbSubscriptionStorage.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSagaPersister.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbTimeoutStorage.cs" />
+    <Compile Include="Persistence\RavenDb\TestSagaPersisters.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
     <Compile Include="Transports\Msmq\TestWindowsPlatform.cs" />
