@@ -12,6 +12,7 @@
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
     <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.Timeout\*.csproj"/>
 
     <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
@@ -20,7 +21,6 @@
     <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
 
     <SnoopProjects Include="..\src\Rebus.Snoop\*.csproj"/>
-
   </ItemGroup>
 
   <PropertyGroup>
