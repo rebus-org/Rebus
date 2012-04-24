@@ -82,5 +82,32 @@ namespace Rebus.Tests.Persistence.MongoDb
             secondTimeout.TimeToReturn.ShouldBe(justAnotherUtcTimeStamp);
             secondTimeout.CustomData.ShouldBe(thirtytwoKilobytesOfDollarSigns);
         }
+
+        [Test]
+        public void CanRemoveMultipleTimeoutsAtOnce()
+        {
+            var justSomeUtcTimeStamp = new DateTime(2010, 3, 10, 12, 30, 15, DateTimeKind.Utc);
+
+            storage.Add(new Timeout.Timeout
+            {
+                CorrelationId = "first",
+                ReplyTo = "somebody",
+                TimeToReturn = justSomeUtcTimeStamp,
+                CustomData = null,
+            });
+
+            storage.Add(new Timeout.Timeout
+            {
+                CorrelationId = "second",
+                ReplyTo = "somebody",
+                TimeToReturn = justSomeUtcTimeStamp,
+                CustomData = null,
+            });
+
+            TimeMachine.FixTo(justSomeUtcTimeStamp.AddSeconds(1));
+
+            var dueTimeoutsAfterFirstTimeout = storage.RemoveDueTimeouts();
+            dueTimeoutsAfterFirstTimeout.Count().ShouldBe(2);
+        }
     }
 }
