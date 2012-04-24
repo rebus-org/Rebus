@@ -36,7 +36,7 @@ namespace Rebus.Bus
         
         internal event Action<Exception> AfterMessage = delegate { };
         
-        internal event Action PoisonMessage = delegate { }; 
+        internal event Action PoisonMessage = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -47,13 +47,14 @@ namespace Rebus.Bus
             IStoreSubscriptions storeSubscriptions,
             ISerializeMessages serializeMessages,
             IStoreSagaData storeSagaData,
-            IInspectHandlerPipeline inspectHandlerPipeline, 
-            string workerThreadName)
+            IInspectHandlerPipeline inspectHandlerPipeline,
+            string workerThreadName,
+            IHandleDeferredMessage handleDeferredMessage)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();

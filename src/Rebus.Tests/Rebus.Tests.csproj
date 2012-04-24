@@ -149,6 +149,7 @@
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestDynamicDispatch.cs" />
+    <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
     <Compile Include="Integration\TestRebusEvents.cs" />
     <Compile Include="Integration\TestRebusOnRabbit.cs" />

@@ -23,7 +23,8 @@ namespace Rebus.Tests.Bugs
             dispatcher = new Dispatcher(sagaPersister,
                                         activator,
                                         new InMemorySubscriptionStorage(),
-                                        pipelineInspector);
+                                        pipelineInspector,
+                                        Mock<IHandleDeferredMessage>());
         }
 
         [Test]

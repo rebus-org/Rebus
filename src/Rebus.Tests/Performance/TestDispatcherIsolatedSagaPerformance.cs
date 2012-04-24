@@ -25,7 +25,8 @@ namespace Rebus.Tests.Performance
             dispatcher = new Dispatcher(persister,
                                         activator,
                                         new InMemorySubscriptionStorage(),
-                                        new TrivialPipelineInspector());
+                                        new TrivialPipelineInspector(),
+                                        Mock<IHandleDeferredMessage>());
         }
 
         /// <summary>

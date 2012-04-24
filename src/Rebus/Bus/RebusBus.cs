@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using Rebus.Configuration;
@@ -347,7 +346,8 @@ namespace Rebus.Bus
                                         serializeMessages,
                                         storeSagaData,
                                         inspectHandlerPipeline,
-                                        string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1));
+                                        string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
+                                        new DeferredMessageReDispatcher(this));
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -411,6 +411,38 @@ namespace Rebus.Bus
         {
             while (workers.Count < newNumberOfWorkers) AddWorker();
             while (workers.Count > newNumberOfWorkers) RemoveWorker();
+        }
+
+        public void Defer(TimeSpan delay, object message)
+        {
+            var customData = TimeoutReplyHandler.Serialize(message);
+
+            var messages = new List<object>
+                               {
+                                   new TimeoutRequest
+                                       {
+                                           Timeout = delay,
+                                           CustomData = customData,
+                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
+                                       }
+                               };
+
+            InternalSend("rebus.timeout", messages);
+        }
+    }
+
+    internal class DeferredMessageReDispatcher: IHandleDeferredMessage
+    {
+        readonly IBus bus;
+
+        public DeferredMessageReDispatcher(IBus bus)
+        {
+            this.bus = bus;
+        }
+
+        public void Dispatch(object deferredMessage)
+        {
+            bus.SendLocal(deferredMessage);
         }
     }
 
