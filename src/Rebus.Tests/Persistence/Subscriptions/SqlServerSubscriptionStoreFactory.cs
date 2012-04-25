@@ -1,37 +1,24 @@
-using System.Configuration;
 using System.Data.SqlClient;
-using System.Linq;
-using NUnit.Framework;
+using Rebus.Persistence.SqlServer;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.SqlServer
+namespace Rebus.Tests.Persistence.Subscriptions
 {
-    public class DbFixtureBase
+    public class SqlServerSubscriptionStoreFactory : ISubscriptionStoreFactory
     {
-        static DbFixtureBase()
+        static SqlServerSubscriptionStoreFactory()
         {
             XmlConfigurator.Configure();
         }
 
-        [SetUp]
-        public void SetUp()
-        {
-            TimeMachine.Reset();
-            DoSetUp();
-        }
-
-        protected virtual void DoSetUp()
+        public void Dispose()
         {
         }
 
-        [TearDown]
-        public void TearDown()
+        public IStoreSubscriptions CreateStore()
         {
-            DoTearDown();
-        }
-
-        protected virtual void DoTearDown()
-        {
+            DeleteRows("subscriptions");
+            return new SqlServerSubscriptionStorage(SqlServerC.ConnectionString, "subscriptions");
         }
 
         protected void DeleteRows(string tableName)

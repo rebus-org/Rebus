@@ -1,45 +1,28 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Rebus.Extensions;
-using Rebus.MongoDb;
 using Shouldly;
 
-namespace Rebus.Tests.Persistence.MongoDb
+namespace Rebus.Tests.Persistence.Subscriptions
 {
-    [TestFixture, Category(TestCategories.Mongo)]
-    public class TestMongoDbSubscriptionStorage : MongoDbFixtureBase
+    [TestFixture(typeof(InMemorySubscriptionStoreFactory))]
+    [TestFixture(typeof(SqlServerSubscriptionStoreFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(RavenDbSubscriptionStoreFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(MongoDbSubscriptionStoreFactory), Category = TestCategories.Mongo)]
+    public class TestSubscriptionStorage<TFactory> : FixtureBase where TFactory : ISubscriptionStoreFactory
     {
-        MongoDbSubscriptionStorage storage;
+        TFactory factory;
+        IStoreSubscriptions storage;
 
         protected override void DoSetUp()
         {
-            storage = new MongoDbSubscriptionStorage(ConnectionString, "subscriptions");
+            factory = Activator.CreateInstance<TFactory>();
+            storage = factory.CreateStore();
         }
 
         protected override void DoTearDown()
         {
-            DropCollection("subscriptions");
-        }
-
-        [Test, Ignore("wondering how to simulate this?")]
-        public void ThrowsIfSubscriptionCannotBeRemoved()
-        {
-            // arrange
-            Assert.Fail("come up with a test");
-
-            // act
-
-            // assert
-        }
-
-        [Test, Ignore("wondering how to simulate this?")]
-        public void ThrowsIfSubscriptionCannotBeAdded()
-        {
-            // arrange
-            Assert.Fail("come up with test");
-
-            // act
-
-            // assert
+            factory.Dispose();
         }
 
         [Test]
@@ -72,15 +55,15 @@ namespace Rebus.Tests.Persistence.MongoDb
             storage.Store(typeof(AnotherMessageType), "yet_another_sub");
 
             // act
-            var someSubscribers = storage.GetSubscribers(typeof (SomeMessageType));
-            var anotherSubscribers = storage.GetSubscribers(typeof (AnotherMessageType));
+            var someSubscribers = storage.GetSubscribers(typeof(SomeMessageType));
+            var anotherSubscribers = storage.GetSubscribers(typeof(AnotherMessageType));
 
             // assert
-            someSubscribers.ShouldContain(e => e.In(new[]{"some_sub", "another_sub"}));
-            anotherSubscribers.ShouldContain(e => e.In(new[]{"yet_another_sub"}));
+            someSubscribers.ShouldContain(e => e.In(new[] { "some_sub", "another_sub" }));
+            anotherSubscribers.ShouldContain(e => e.In(new[] { "yet_another_sub" }));
         }
-
-        class SomeMessageType {}
-        class AnotherMessageType {}
     }
+    
+    class SomeMessageType { }
+    class AnotherMessageType { }
 }

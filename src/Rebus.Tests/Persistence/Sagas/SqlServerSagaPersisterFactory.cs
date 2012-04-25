@@ -1,36 +1,24 @@
-using System.Configuration;
 using System.Data.SqlClient;
-using System.Linq;
-using NUnit.Framework;
+using Rebus.Persistence.SqlServer;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.SqlServer
+namespace Rebus.Tests.Persistence.Sagas
 {
-    public class DbFixtureBase
+    public class SqlServerSagaPersisterFactory : ISagaPersisterFactory
     {
-        static DbFixtureBase()
+        static SqlServerSagaPersisterFactory()
         {
             XmlConfigurator.Configure();
         }
 
-        [SetUp]
-        public void SetUp()
+        public IStoreSagaData CreatePersister()
         {
-            TimeMachine.Reset();
-            DoSetUp();
+            DeleteRows("sagas");
+            DeleteRows("saga_index");
+            return new SqlServerSagaPersister(SqlServerC.ConnectionString, "saga_index", "sagas");
         }
 
-        protected virtual void DoSetUp()
-        {
-        }
-
-        [TearDown]
-        public void TearDown()
-        {
-            DoTearDown();
-        }
-
-        protected virtual void DoTearDown()
+        public void Dispose()
         {
         }
 

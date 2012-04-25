@@ -14,7 +14,7 @@ namespace Rebus.Tests.Persistence.MongoDb
 
         protected override void DoSetUp()
         {
-            storage = new MongoDbTimeoutStorage(ConnectionString, TimeoutsCollectionName);
+            storage = new MongoDbTimeoutStorage(SqlServerC.ConnectionString, TimeoutsCollectionName);
         }
 
         protected override void DoTearDown()

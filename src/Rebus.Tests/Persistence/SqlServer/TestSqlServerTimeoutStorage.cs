@@ -13,7 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         protected override void DoSetUp()
         {
-            storage = new SqlServerTimeoutStorage(ConnectionString, "timeouts");
+            storage = new SqlServerTimeoutStorage(SqlServerC.ConnectionString, "timeouts");
             DeleteRows("timeouts");
         }
 

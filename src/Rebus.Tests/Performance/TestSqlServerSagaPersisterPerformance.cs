@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Persistence;
 using Rebus.Tests.Persistence.SqlServer;
 
 namespace Rebus.Tests.Performance
@@ -11,7 +12,7 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
-            persister = new SqlServerSagaPersister(ConnectionString, "saga_index", "sagas");
+            persister = new SqlServerSagaPersister(SqlServerC.ConnectionString, "saga_index", "sagas");
             DeleteRows("sagas");
             DeleteRows("saga_index");
         }

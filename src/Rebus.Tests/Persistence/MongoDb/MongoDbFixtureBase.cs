@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using MongoDB.Driver;
 using NUnit.Framework;
 using log4net.Config;
@@ -12,10 +11,6 @@ namespace Rebus.Tests.Persistence.MongoDb
             XmlConfigurator.Configure();
         }
 
-        protected const string ConnectionString = "mongodb://localhost:27017/rebus_test";
-        
-        readonly HashSet<string> collectionsToDrop = new HashSet<string>();
-
         MongoDatabase db;
 
         [SetUp]
@@ -25,8 +20,7 @@ namespace Rebus.Tests.Persistence.MongoDb
 
             DoSetUp();
 
-            db = MongoDatabase.Create(ConnectionString);
-            collectionsToDrop.Clear();
+            db = MongoDatabase.Create(MongoDbC.ConnectionString);
         }
 
         protected virtual void DoSetUp()
@@ -50,8 +44,6 @@ namespace Rebus.Tests.Persistence.MongoDb
 
         protected MongoCollection<T> Collection<T>(string collectionName)
         {
-            collectionsToDrop.Add(collectionName);
-
             return db.GetCollection<T>(collectionName);
         }
     }
