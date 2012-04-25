@@ -9,30 +9,50 @@ using Shouldly;
 
 namespace Rebus.Tests.Persistence.RavenDb
 {
-    public class Factory
+    public class RavenDbSagaPersisterFactory : IPersisterFactory
     {
-        
+        EmbeddableDocumentStore store;
+
+        public IStoreSagaData CreatePersister()
+        {
+            store = new EmbeddableDocumentStore
+            {
+                RunInMemory = true
+            };
+            store.Initialize();
+
+            return new RavenDbSagaPersister(store);            
+        }
+
+        public void Dispose()
+        {
+            store.Dispose();
+        }
     }
 
-    [TestFixture()]
-    public class TestSagaPersisters : FixtureBase
+    [TestFixture(typeof(RavenDbSagaPersisterFactory))]
+    public class TestSagaPersisters<TFactory> : FixtureBase where TFactory : IPersisterFactory
     {
-        static List<IDisposable> disposables = new List<IDisposable>(); 
         MessageContext messageContext;
+        TFactory factory;
+        IStoreSagaData persister;
+
+        public TestSagaPersisters()
+        {
+            
+        }
 
         protected override void DoSetUp()
         {
+            factory = Activator.CreateInstance<TFactory>();
+            persister = factory.CreatePersister();
             messageContext = MessageContext.Enter("none");
         }
 
         protected override void DoTearDown()
         {
+            factory.Dispose();
             messageContext.Dispose();
-        }
-
-        public void TestFixtureTearDown()
-        {
-            
         }
 
         //[Test]
@@ -59,29 +79,8 @@ namespace Rebus.Tests.Persistence.RavenDb
         //    foundSagaData.Id.ShouldBe(savedSagaDataId);
         //}
 
-        static RavenDbSagaPersister Something()
-        {
-            var store = new EmbeddableDocumentStore
-                        {
-                            RunInMemory = true
-                        };
-            store.Initialize();
-            disposables.Add(store);
-
-            return new RavenDbSagaPersister(store);            
-        }
-
-        static IEnumerable<TestCaseData> Persisters
-        {
-            get
-            {
-                yield return new TestCaseData(Something());
-                yield return new TestCaseData(Something());
-            }
-        }
-
-        [Test, TestCaseSource("Persisters")]
-        public void PersisterCanFindSagaById(IStoreSagaData persister)
+        [Test]
+        public void PersisterCanFindSagaById()
         {
             var savedSagaData = new MySagaData();
             var savedSagaDataId = Guid.NewGuid();
@@ -274,5 +273,10 @@ namespace Rebus.Tests.Persistence.RavenDb
             public string ThisIsEmbedded { get; set; }
             public List<SomeCollectedThing> Thingies { get; set; }
         }
+    }
+
+    public interface IPersisterFactory : IDisposable
+    {
+        IStoreSagaData CreatePersister();
     }
 }
