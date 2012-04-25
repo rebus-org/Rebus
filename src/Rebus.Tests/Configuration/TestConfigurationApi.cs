@@ -96,7 +96,7 @@ namespace Rebus.Tests.Configuration
                 .Transport(t => t.UseMsmq("some_input_queue", "some_error_queue"));
 
             var registrations = adapter.Registrations
-                .Where(r => r.Instance.GetType() == typeof (MsmqMessageQueue))
+                .Where(r => r.Instance.GetType() == typeof(MsmqMessageQueue))
                 .ToList();
 
             registrations.Count.ShouldBe(2);
@@ -105,7 +105,7 @@ namespace Rebus.Tests.Configuration
             msmqMessageQueue.InputQueue.ShouldBe(@"some_input_queue");
             msmqMessageQueue.ErrorQueue.ShouldBe(@"some_error_queue");
         }
-        
+
         [Test]
         public void CanConfigureMsmqTransportFromRebusConfigurationSection()
         {
@@ -115,7 +115,7 @@ namespace Rebus.Tests.Configuration
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
             var registrations = adapter.Registrations
-                .Where(r => r.Instance.GetType() == typeof (MsmqMessageQueue))
+                .Where(r => r.Instance.GetType() == typeof(MsmqMessageQueue))
                 .ToList();
 
             registrations.Count.ShouldBe(2);
@@ -136,12 +136,12 @@ namespace Rebus.Tests.Configuration
                 .Subscriptions(s => s.StoreInSqlServer(connectionstring, "subscriptions"));
 
             var sagaRegistration = adapter.Registrations.Single(r => r.Instance.GetType() == typeof(SqlServerSagaPersister));
-            var subRegistration = adapter.Registrations.Single(r => r.Instance.GetType() == typeof (SqlServerSubscriptionStorage));
-            
+            var subRegistration = adapter.Registrations.Single(r => r.Instance.GetType() == typeof(SqlServerSubscriptionStorage));
+
             var sagaPersister = (SqlServerSagaPersister)sagaRegistration.Instance;
             sagaPersister.SagaTableName.ShouldBe("saga_table");
             sagaPersister.SagaIndexTableName.ShouldBe("saga_index_table");
-            
+
             var subscriptionStorage = (SqlServerSubscriptionStorage)subRegistration.Instance;
             subscriptionStorage.SubscriptionsTableName.ShouldBe("subscriptions");
         }
@@ -165,7 +165,7 @@ namespace Rebus.Tests.Configuration
                 .Sagas(s => s.StoreInSqlServer("connection", "siosjia", "jiogejigoe"))
                 .Subscriptions(s => s.StoreInSqlServer("connection string", "jigeojge"))
                 .Serialization(s => s.UseJsonSerializer());
-            
+
             Assert.Throws<ConfigurationException>(() => configurer.CreateBus());
         }
 
@@ -179,11 +179,11 @@ namespace Rebus.Tests.Configuration
                 .DetermineEndpoints(d => d.FromNServiceBusConfiguration())
                 .CreateBus();
 
-            adapter.HasImplementationOf(typeof (IActivateHandlers)).ShouldBe(true);
-            adapter.HasImplementationOf(typeof (IStoreSubscriptions)).ShouldBe(true);
-            adapter.HasImplementationOf(typeof (IStoreSagaData)).ShouldBe(true);
-            adapter.HasImplementationOf(typeof (IInspectHandlerPipeline)).ShouldBe(true);
-            adapter.HasImplementationOf(typeof (ISerializeMessages)).ShouldBe(true);
+            adapter.HasImplementationOf(typeof(IActivateHandlers)).ShouldBe(true);
+            adapter.HasImplementationOf(typeof(IStoreSubscriptions)).ShouldBe(true);
+            adapter.HasImplementationOf(typeof(IStoreSagaData)).ShouldBe(true);
+            adapter.HasImplementationOf(typeof(IInspectHandlerPipeline)).ShouldBe(true);
+            adapter.HasImplementationOf(typeof(ISerializeMessages)).ShouldBe(true);
         }
 
         [Test]
@@ -207,7 +207,7 @@ namespace Rebus.Tests.Configuration
             {
                 object Get();
             }
-            class InstanceResolver :IResolver
+            class InstanceResolver : IResolver
             {
                 readonly object instance;
                 public InstanceResolver(object instance)
@@ -251,7 +251,7 @@ namespace Rebus.Tests.Configuration
 
                         return cachedInstance;
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         throw new ApplicationException(string.Format("Could not resolve {0}", implementationType), e);
                     }
@@ -274,8 +274,8 @@ namespace Rebus.Tests.Configuration
             public void RegisterInstance(object instance, params Type[] serviceTypes)
             {
                 registrations.Add(new Registration(instance, serviceTypes));
-                
-                foreach(var type in serviceTypes)
+
+                foreach (var type in serviceTypes)
                 {
                     AddResolver(type, new InstanceResolver(instance));
                 }
@@ -309,7 +309,7 @@ namespace Rebus.Tests.Configuration
 
             public TService Resolve<TService>()
             {
-                return (TService) resolvers[typeof (TService)].First().Get();
+                return (TService)resolvers[typeof(TService)].First().Get();
             }
 
             public TService[] ResolveAll<TService>()

@@ -1,6 +1,6 @@
 namespace Rebus.Bus
 {
-    public interface IHandleDeferredMessage
+    interface IHandleDeferredMessage
     {
         void Dispatch(object deferredMessage);
     }

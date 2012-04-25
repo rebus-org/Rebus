@@ -10,7 +10,7 @@ namespace Rebus.Bus
     /// <summary>
     ///   Implements stuff that must happen when handling one single message.
     /// </summary>
-    public class Dispatcher
+    class Dispatcher
     {
         private static ILog log;
         private readonly IActivateHandlers activateHandlers;
