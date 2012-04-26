@@ -1,8 +1,8 @@
 using System;
 
-namespace Rebus.Tests.Performance.StressMongo.Crm
+namespace Rebus.Tests.Performance.StressMongo.Crm.Messages
 {
-    class CustomerCreated
+    public class CustomerCreated
     {
         public Guid CustomerId { get; set; }
         public string Name { get; set; }

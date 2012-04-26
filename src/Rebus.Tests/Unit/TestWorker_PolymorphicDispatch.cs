@@ -35,7 +35,7 @@ namespace Rebus.Tests.Unit
                                 serializer, 
                                 new SagaDataPersisterForTesting(),
                                 inspectHandlerPipeline, "Just some test worker",
-                                Mock<IHandleDeferredMessage>());
+                                new DeferredMessageHandlerForTesting());
         }
 
         protected override void DoTearDown()

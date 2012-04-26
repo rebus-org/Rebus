@@ -22,7 +22,7 @@ namespace Rebus.Tests.Unit
                                         activator,
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
-                                        Mock<IHandleDeferredMessage>());
+                                        new DeferredMessageHandlerForTesting());
         }
 
         [Test]

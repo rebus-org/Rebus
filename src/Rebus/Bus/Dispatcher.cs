@@ -283,11 +283,13 @@ namespace Rebus.Bus
             var correlation = correlations[typeof (TMessage)];
             var fieldFromMessage = correlation.FieldFromMessage(message);
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
+            var sagaDataType = saga.GetType().GetProperty("Data").PropertyType;
+            
+            var sagaData = storeSagaData.GetType()
+                .GetMethod("Find").MakeGenericMethod(sagaDataType)
+                .Invoke(storeSagaData, new[] {sagaDataPropertyPath, fieldFromMessage ?? ""});
 
-            return (ISagaData) storeSagaData.GetType()
-                                   .GetMethod("Find")
-                                   .MakeGenericMethod(saga.GetType().GetProperty("Data").PropertyType)
-                                   .Invoke(storeSagaData, new[] {sagaDataPropertyPath, fieldFromMessage ?? ""});
+            return (ISagaData) sagaData;
         }
     }
 }

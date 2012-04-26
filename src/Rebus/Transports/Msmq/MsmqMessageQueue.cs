@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Messaging;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Shared;

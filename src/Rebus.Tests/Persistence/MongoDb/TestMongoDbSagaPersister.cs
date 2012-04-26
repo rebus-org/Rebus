@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using MongoDB.Driver.Builders;
 using NUnit.Framework;
+using Ponder;
 using Rebus.MongoDb;
 using Shouldly;
 
@@ -262,6 +263,46 @@ namespace Rebus.Tests.Persistence.MongoDb
             public Guid Id { get; set; }
             public int Revision { get; set; }
             public T Property { get; set; }
+        }
+
+        [Test]
+        public void PersisterCanFindSagaDataWithNestedElements()
+        {
+            // arrange
+            DropCollection("sagas");
+
+            const string stringValue = "I expect to find something with this string!";
+            var path = Reflect.Path<SagaDataWithNestedElement>(d => d.ThisOneIsNested.SomeString);
+
+            persister.Save(new SagaDataWithNestedElement
+                               {
+                                   Id = Guid.NewGuid(),
+                                   Revision = 12,
+                                   ThisOneIsNested = new ThisOneIsNested
+                                                         {
+                                                             SomeString = stringValue
+                                                         }
+                               }, new[] {path});
+
+            // act
+            var loadedSagaData = persister.Find<SagaDataWithNestedElement>(path, stringValue);
+
+            // assert
+            loadedSagaData.ShouldNotBe(null);
+            loadedSagaData.ThisOneIsNested.ShouldNotBe(null);
+            loadedSagaData.ThisOneIsNested.SomeString.ShouldBe(stringValue);
+        }
+
+        class SagaDataWithNestedElement : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public ThisOneIsNested ThisOneIsNested { get; set; }
+        }
+
+        class ThisOneIsNested
+        {
+            public string SomeString { get; set; }
         }
     }
 }

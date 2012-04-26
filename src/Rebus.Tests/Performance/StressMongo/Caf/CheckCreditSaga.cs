@@ -1,12 +1,14 @@
 using System;
+using Rebus.Tests.Performance.StressMongo.Caf.Messages;
 using Rebus.Tests.Performance.StressMongo.Crm;
+using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 
 namespace Rebus.Tests.Performance.StressMongo.Caf
 {
-    internal class CheckCreditSaga
+    class CheckCreditSaga
         : Saga<CheckCreditSagaData>,
           IAmInitiatedBy<CustomerCreated>,
-          IHandleMessages<CreditCheckComplete>
+          IHandleMessages<SimulatedCreditCheckComplete>
     {
         readonly IBus bus;
         readonly IFlowLog flowLog;
@@ -21,39 +23,35 @@ namespace Rebus.Tests.Performance.StressMongo.Caf
         public override void ConfigureHowToFindSaga()
         {
             Incoming<CustomerCreated>(m => m.CustomerId).CorrelatesWith(d => d.CustomerInfo.CustomerId);
-            Incoming<CreditCheckComplete>(m => m.CustomerId).CorrelatesWith(d => d.CustomerInfo.CustomerId);
+            Incoming<SimulatedCreditCheckComplete>(m => m.CustomerId).CorrelatesWith(d => d.CustomerInfo.CustomerId);
         }
 
         public void Handle(CustomerCreated message)
         {
-            // if saga is new, store the ID and pretend to do some work
-            if (Data.CustomerInfo == null)
-            {
-                var customerId = message.CustomerId;
+            // we're idempotent!
+            if (Data.CustomerInfo != null) return;
 
-                flowLog.Log(customerId, "Commencing credit check of {0}", message.Name);
+            var customerId = message.CustomerId;
 
-                Data.CustomerInfo = new CustomerInfo
-                                        {
-                                            CustomerId = customerId,
-                                            CustomerName = message.Name,
-                                        };
+            flowLog.LogFlow(customerId, "Commencing credit check of {0}", message.Name);
 
-                bus.Defer(random.Next(5).Seconds() + 5.Seconds(),
-                          new CreditCheckComplete {CustomerId = customerId});
-            }
+            Data.CustomerInfo = new CustomerInfo
+                                    {
+                                        CustomerId = customerId,
+                                        CustomerName = message.Name,
+                                    };
+
+            bus.Defer(random.Next(5).Seconds() + 5.Seconds(),
+                      new SimulatedCreditCheckComplete {CustomerId = customerId});
         }
 
-        public void Handle(CreditCheckComplete message)
+        public void Handle(SimulatedCreditCheckComplete message)
         {
-            flowLog.Log(message.CustomerId, "Credit check completed!");
+            flowLog.LogFlow(message.CustomerId, "Credit check completed!");
+
+            bus.Publish(new CustomerCreditCheckComplete{CustomerId = message.CustomerId});
 
             MarkAsComplete();
         }
-    }
-
-    class CreditCheckComplete
-    {
-        public Guid CustomerId { get; set; }
     }
 }

@@ -151,9 +151,11 @@
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
+    <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
+    <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestDynamicDispatch.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
@@ -167,9 +169,14 @@
     <Compile Include="Bugs\SagasNotWorkingWithRavenDbEnlistingInTransaction.cs" />
     <Compile Include="Performance\StressMongo\Caf\CheckCreditSaga.cs" />
     <Compile Include="Performance\StressMongo\Caf\CheckCreditSagaData.cs" />
-    <Compile Include="Performance\StressMongo\Crm\CustomerCreated.cs" />
+    <Compile Include="Performance\StressMongo\Caf\CustomerCreditCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\Caf\Messages\SimulatedCreditCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\Crm\Messages\CustomerCreated.cs" />
+    <Compile Include="Performance\StressMongo\Dcc\MaintainCustomerInformationSaga.cs" />
     <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSaga.cs" />
     <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSagaData.cs" />
+    <Compile Include="Performance\StressMongo\Legal\CustomerLegallyApproved.cs" />
+    <Compile Include="Performance\StressMongo\Legal\Messages\SimulatedLegalCheckComplete.cs" />
     <Compile Include="Performance\StressMongo\TestStressMongo.cs" />
     <Compile Include="Persistence\MongoDb\TestMongoDbTimeoutStorage.cs" />
     <Compile Include="Bugs\CheckCallsMade.cs" />
@@ -259,9 +266,7 @@
     </Content>
     <Content Include="Contracts\readme.txt" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Performance\StressMongo\Dcc\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

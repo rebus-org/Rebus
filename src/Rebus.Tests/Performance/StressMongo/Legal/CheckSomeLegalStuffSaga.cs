@@ -1,12 +1,14 @@
 ﻿using System;
 using Rebus.Tests.Performance.StressMongo.Crm;
+using Rebus.Tests.Performance.StressMongo.Crm.Messages;
+using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 
 namespace Rebus.Tests.Performance.StressMongo.Legal
 {
-    internal class CheckSomeLegalStuffSaga
+    class CheckSomeLegalStuffSaga
         : Saga<CheckSomeLegalStuffSagaData>,
           IAmInitiatedBy<CustomerCreated>,
-          IHandleMessages<LegalCheckComplete>
+          IHandleMessages<SimulatedLegalCheckComplete>
     {
         readonly IBus bus;
         readonly IFlowLog flowLog;
@@ -20,33 +22,30 @@ namespace Rebus.Tests.Performance.StressMongo.Legal
         public override void ConfigureHowToFindSaga()
         {
             Incoming<CustomerCreated>(m => m.CustomerId).CorrelatesWith(d => d.CustomerId);
-            Incoming<LegalCheckComplete>(m => m.CustomerId).CorrelatesWith(d => d.CustomerId);
+            Incoming<SimulatedLegalCheckComplete>(m => m.CustomerId).CorrelatesWith(d => d.CustomerId);
         }
 
         public void Handle(CustomerCreated message)
         {
-            if (Data.CustomerId == Guid.Empty)
-            {
-                var customerId = message.CustomerId;
+            // we're idempotent!
+            if (Data.CustomerId != Guid.Empty) return;
 
-                flowLog.Log(customerId, "Commencing legal check of {0}", message.Name);
+            var customerId = message.CustomerId;
 
-                Data.CustomerId = customerId;
+            flowLog.LogFlow(customerId, "Commencing legal check of {0}", message.Name);
 
-                bus.Defer(8.Seconds(), new LegalCheckComplete {CustomerId = customerId});
-            }
+            Data.CustomerId = customerId;
+
+            bus.Defer(8.Seconds(), new SimulatedLegalCheckComplete {CustomerId = customerId});
         }
 
-        public void Handle(LegalCheckComplete message)
+        public void Handle(SimulatedLegalCheckComplete message)
         {
-            flowLog.Log(message.CustomerId, "Legal check completed!");
+            flowLog.LogFlow(message.CustomerId, "Legal check completed!");
+
+            bus.Publish(new CustomerLegallyApproved {CustomerId = message.CustomerId});
 
             MarkAsComplete();
         }
-    }
-
-    class LegalCheckComplete
-    {
-        public Guid CustomerId { get; set; }
     }
 }

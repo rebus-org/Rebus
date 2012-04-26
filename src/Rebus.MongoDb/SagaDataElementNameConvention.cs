@@ -6,7 +6,7 @@ namespace Rebus.MongoDb
 {
     public class SagaDataElementNameConvention : IElementNameConvention
     {
-        readonly CamelCaseElementNameConvention defaultElementNameConvention = new CamelCaseElementNameConvention();
+        readonly IElementNameConvention defaultElementNameConvention = new MemberNameElementNameConvention();
         
         public string GetElementName(MemberInfo member)
         {

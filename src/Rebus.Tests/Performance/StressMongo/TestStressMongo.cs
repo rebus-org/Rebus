@@ -1,34 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Castle.Windsor;
+using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.MongoDb;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Tests.Performance.StressMongo.Caf;
+using Rebus.Tests.Performance.StressMongo.Caf.Messages;
 using Rebus.Tests.Performance.StressMongo.Crm;
+using Rebus.Tests.Performance.StressMongo.Crm.Messages;
+using Rebus.Tests.Performance.StressMongo.Dcc;
 using Rebus.Tests.Performance.StressMongo.Legal;
+using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 using Rebus.Tests.Persistence.MongoDb;
 using Rebus.Timeout;
 using Rebus.Transports.Msmq;
 using System.Linq;
+using Shouldly;
 
 namespace Rebus.Tests.Performance.StressMongo
 {
-    [TestFixture, Category(TestCategories.Integration)]
+    [TestFixture, Category(TestCategories.Integration), Category(TestCategories.Mongo)]
     public class TestStressMongo : MongoDbFixtureBase, IDetermineDestination, IFlowLog
     {
-        readonly Dictionary<Guid, List<string>> log = new Dictionary<Guid, List<string>>();
+        readonly Dictionary<string, List<string>> log = new Dictionary<string, List<string>>();
         
         readonly Dictionary<Type, string> endpointMappings =
             new Dictionary<Type, string>
                 {
                     {typeof (CustomerCreated), GetEndpoint("crm")},
+                    {typeof (CustomerCreditCheckComplete), GetEndpoint("caf")},
+                    {typeof (CustomerLegallyApproved), GetEndpoint("legal")},
                 };
 
         readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
@@ -41,40 +50,59 @@ namespace Rebus.Tests.Performance.StressMongo
 
         protected override void DoSetUp()
         {
-            crm = CreateBus("crm", ContainerAdapterWith());
-            caf = CreateBus("caf", ContainerAdapterWith(typeof(CheckCreditSaga)));
-            legal = CreateBus("legal", ContainerAdapterWith(typeof(CheckSomeLegalStuffSaga)));
-            dcc = CreateBus("dcc", ContainerAdapterWith());
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
 
+            crm = CreateBus("crm", ContainerAdapterWith("crm"));
+            caf = CreateBus("caf", ContainerAdapterWith("caf", typeof(CheckCreditSaga)));
+            legal = CreateBus("legal", ContainerAdapterWith("legal", typeof(CheckSomeLegalStuffSaga)));
+            dcc = CreateBus("dcc", ContainerAdapterWith("dcc", typeof(MaintainCustomerInformationSaga)));
+
+            DropCollection("rebus.timeouts");
             timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, "rebus.timeouts"));
             timeout.Start();
 
             caf.Subscribe<CustomerCreated>();
+            legal.Subscribe<CustomerCreated>();
 
-            Thread.Sleep(1.Seconds());
+            dcc.Subscribe<CustomerCreated>();
+            dcc.Subscribe<CustomerCreditCheckComplete>();
+            dcc.Subscribe<CustomerLegallyApproved>();
+
+            Thread.Sleep(5.Seconds());
         }
 
-        [Test]
-        public void StatementOfSomething()
+        [TestCase(1)]
+        public void StatementOfSomething(int count)
         {
-            crm.Publish(new CustomerCreated{Name = "John Doe", CustomerId = Guid.NewGuid()});
-            crm.Publish(new CustomerCreated{Name = "Jane Doe", CustomerId = Guid.NewGuid()});
-            crm.Publish(new CustomerCreated{Name = "Moe Doe", CustomerId = Guid.NewGuid()});
-
-            Thread.Sleep(20.Seconds());
+            var no = 1;
+            count.Times(() => crm.Publish(new CustomerCreated {Name = "John Doe" + no++, CustomerId = Guid.NewGuid()}));
+            
+            Thread.Sleep(15.Seconds() + (count * 0.8).Seconds());
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
+
+            var sagas = Collection<CustomerInformationSagaData>("dcc.sagas");
+            var allSagas = sagas.FindAll();
+
+            allSagas.Count().ShouldBe(count);
         }
 
         string FormatLogContents()
         {
-            return string.Join(Environment.NewLine + Environment.NewLine,
-                               log.Select(
-                                   kvp =>
-                                   string.Format(@"Log for {0}:
-{1}", kvp.Key,
-                                                 string.Join(Environment.NewLine,
-                                                             kvp.Value.Select(l => string.Format("    " + l))))));
+            return string.Join(Environment.NewLine + Environment.NewLine, FormatLog(log));
+        }
+
+        static IEnumerable<string> FormatLog(Dictionary<string, List<string>> log)
+        {
+            return log.Select(
+                kvp =>
+                string.Format(@"Log for {0}:
+{1}", kvp.Key, FormatLog(kvp.Value)));
+        }
+
+        static string FormatLog(IEnumerable<string> value)
+        {
+            return string.Join(Environment.NewLine, value.Select(l => "    " + l));
         }
 
         protected override void DoTearDown()
@@ -93,7 +121,7 @@ namespace Rebus.Tests.Performance.StressMongo
             timeout.Stop();
         }
 
-        IContainerAdapter ContainerAdapterWith(params Type[] types)
+        IContainerAdapter ContainerAdapterWith(string serviceName, params Type[] types)
         {
             var container = new WindsorContainer();
 
@@ -103,8 +131,72 @@ namespace Rebus.Tests.Performance.StressMongo
             }
 
             container.Register(Component.For<IFlowLog>().Instance(this));
+            container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
 
             return new WindsorContainerAdapter(container);
+        }
+
+        class MessageLogger : IHandleMessages<object>
+        {
+            readonly IFlowLog flowLog;
+            readonly string id;
+
+            public MessageLogger(IFlowLog flowLog, string id)
+            {
+                this.flowLog = flowLog;
+                this.id = id;
+            }
+
+            public void Handle(object message)
+            {
+                flowLog.LogSequence(id, "Received {0}", FormatMessage(message));
+            }
+
+            string FormatMessage(object message)
+            {
+                var name = message.GetType().Name;
+
+                return string.Format("{0}: {1}", name, GetInfo(message));
+            }
+
+            string GetInfo(object message)
+            {
+                if (message is SimulatedCreditCheckComplete)
+                {
+                    return ((SimulatedCreditCheckComplete) message).CustomerId.ToString();
+                }
+
+                if (message is CustomerCreated)
+                {
+                    var customerCreated = (CustomerCreated) message;
+
+                    return string.Format("{0} {1}", customerCreated.CustomerId, customerCreated.Name);
+                }
+
+                if (message is TimeoutReply)
+                {
+                    var timeoutReply = (TimeoutReply) message;
+
+                    return timeoutReply.CustomData;
+                }
+
+                if (message is CustomerCreditCheckComplete)
+                {
+                    return ((CustomerCreditCheckComplete) message).CustomerId.ToString();
+                }
+
+                if (message is SimulatedLegalCheckComplete)
+                {
+                    return ((SimulatedLegalCheckComplete) message).CustomerId.ToString();
+                }
+
+                if (message is CustomerLegallyApproved)
+                {
+                    return ((CustomerLegallyApproved) message).CustomerId.ToString();
+                }
+
+                return "n/a";
+            }
         }
 
         Type[] GetServices(Type type)
@@ -126,10 +218,18 @@ namespace Rebus.Tests.Performance.StressMongo
 
         IBus CreateBus(string serviceName, IContainerAdapter containerAdapter)
         {
-            var msmqMessageQueue = new MsmqMessageQueue(GetEndpoint(serviceName), "error");
+            var sagaCollectionName = serviceName + ".sagas";
+            var subscriptionsCollectionName = "rebus.subscriptions";
+
+            DropCollection(sagaCollectionName);
+            DropCollection(subscriptionsCollectionName);
+
+            var msmqMessageQueue = new MsmqMessageQueue(GetEndpoint(serviceName), "error").PurgeInputQueue();
+            MsmqUtil.PurgeQueue("error");
+
             var bus = new RebusBus(containerAdapter, msmqMessageQueue, msmqMessageQueue,
-                                   new MongoDbSubscriptionStorage(ConnectionString, "rebus.subscriptions"),
-                                   new MongoDbSagaPersister(ConnectionString, serviceName + ".sagas"), this,
+                                   new MongoDbSubscriptionStorage(ConnectionString, subscriptionsCollectionName),
+                                   new MongoDbSagaPersister(ConnectionString, sagaCollectionName), this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector());
 
             stuffToDispose.Add(bus);
@@ -144,14 +244,33 @@ namespace Rebus.Tests.Performance.StressMongo
             return "test.stress.mongo." + serviceName;
         }
 
-        public void Log(Guid correlationId, string message, params object[] objs)
+        public void LogFlow(Guid correlationId, string message, params object[] objs)
         {
-            if (!log.ContainsKey(correlationId))
-            {
-                log[correlationId] = new List<string>();
-            }
+            var key = correlationId.ToString();
+            
+            LogSequence(key, message, objs);
+        }
 
-            log[correlationId].Add(string.Format(message, objs));
+        public void LogSequence(string id, string message, params object[] objs)
+        {
+            Log(id, message, objs);
+        }
+
+        void Log(string id, string message, object[] objs)
+        {
+            try
+            {
+                if (!log.ContainsKey(id))
+                {
+                    log[id] = new List<string>();
+                }
+
+                log[id].Add(string.Format(message, objs));
+            }
+            catch(Exception e)
+            {
+                int a = 2;
+            }
         }
     }
 
@@ -160,6 +279,7 @@ namespace Rebus.Tests.Performance.StressMongo
     /// </summary>
     public interface IFlowLog
     {
-        void Log(Guid correlationId, string message, params object[] objs);
+        void LogFlow(Guid correlationId, string message, params object[] objs);
+        void LogSequence(string id, string message, params object[] objs);
     }
 }
