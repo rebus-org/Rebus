@@ -14,7 +14,6 @@ using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Tests.Performance.StressMongo.Caf;
 using Rebus.Tests.Performance.StressMongo.Caf.Messages;
-using Rebus.Tests.Performance.StressMongo.Crm;
 using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 using Rebus.Tests.Performance.StressMongo.Dcc;
 using Rebus.Tests.Performance.StressMongo.Legal;
@@ -72,12 +71,13 @@ namespace Rebus.Tests.Performance.StressMongo
         }
 
         [TestCase(1)]
+        [TestCase(100)]
         public void StatementOfSomething(int count)
         {
             var no = 1;
             count.Times(() => crm.Publish(new CustomerCreated {Name = "John Doe" + no++, CustomerId = Guid.NewGuid()}));
             
-            Thread.Sleep(15.Seconds() + (count * 0.8).Seconds());
+            Thread.Sleep(15.Seconds() + (count * 0.4).Seconds());
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
 
@@ -85,6 +85,8 @@ namespace Rebus.Tests.Performance.StressMongo
             var allSagas = sagas.FindAll();
 
             allSagas.Count().ShouldBe(count);
+            allSagas.Count(s => s.CreditStatus.Complete).ShouldBe(count);
+            allSagas.Count(s => s.LegalStatus.Complete).ShouldBe(count);
         }
 
         string FormatLogContents()
@@ -131,7 +133,7 @@ namespace Rebus.Tests.Performance.StressMongo
             }
 
             container.Register(Component.For<IFlowLog>().Instance(this));
-            container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
+          //  container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
 
             return new WindsorContainerAdapter(container);
         }
@@ -236,7 +238,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             containerAdapter.RegisterInstance(bus, typeof(IBus));
 
-            return bus.Start(1);
+            return bus.Start(5);
         }
 
         static string GetEndpoint(string serviceName)
