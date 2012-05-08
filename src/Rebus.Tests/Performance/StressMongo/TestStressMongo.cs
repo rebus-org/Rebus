@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -29,7 +30,7 @@ namespace Rebus.Tests.Performance.StressMongo
     [TestFixture, Category(TestCategories.Integration), Category(TestCategories.Mongo)]
     public class TestStressMongo : MongoDbFixtureBase, IDetermineDestination, IFlowLog
     {
-        readonly Dictionary<string, List<string>> log = new Dictionary<string, List<string>>();
+        readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
         
         readonly Dictionary<Type, string> endpointMappings =
             new Dictionary<Type, string>
@@ -77,7 +78,7 @@ namespace Rebus.Tests.Performance.StressMongo
             var no = 1;
             count.Times(() => crm.Publish(new CustomerCreated {Name = "John Doe" + no++, CustomerId = Guid.NewGuid()}));
             
-            Thread.Sleep(15.Seconds() + (count * 0.4).Seconds());
+            Thread.Sleep(15.Seconds() + (count * 0.8).Seconds());
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
 
@@ -94,7 +95,7 @@ namespace Rebus.Tests.Performance.StressMongo
             return string.Join(Environment.NewLine + Environment.NewLine, FormatLog(log));
         }
 
-        static IEnumerable<string> FormatLog(Dictionary<string, List<string>> log)
+        static IEnumerable<string> FormatLog(ConcurrentDictionary<string, ConcurrentQueue<string>> log)
         {
             return log.Select(
                 kvp =>
@@ -262,12 +263,9 @@ namespace Rebus.Tests.Performance.StressMongo
         {
             try
             {
-                if (!log.ContainsKey(id))
-                {
-                    log[id] = new List<string>();
-                }
+                log.TryAdd(id, new ConcurrentQueue<string>());
 
-                log[id].Add(string.Format(message, objs));
+                log[id].Enqueue(string.Format(message, objs));
             }
             catch(Exception e)
             {

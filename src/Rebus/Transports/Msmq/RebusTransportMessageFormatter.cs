@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Messaging;
 using System.Text;
-using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Shared;
 using Message = System.Messaging.Message;
@@ -42,8 +41,9 @@ namespace Rebus.Transports.Msmq
             var transportMessage = obj as TransportMessageToSend;
             if (transportMessage == null)
             {
-                throw new ArgumentException(string.Format("Object to serialize is not a TransportMessage - it's a {0}",
-                                                          obj.GetType()));
+                throw new ArgumentException(
+                    string.Format("Object to serialize is not a TransportMessage - it's a {0}",
+                                  obj.GetType()));
             }
             message.BodyStream = new MemoryStream(transportMessage.Body);
             message.Extension = HeaderEcoding.GetBytes(DictionarySerializer.Serialize(transportMessage.Headers));
@@ -65,7 +65,7 @@ namespace Rebus.Transports.Msmq
                 return new ReceivedTransportMessage
                            {
                                Id = message.Id,
-                               Body = reader.ReadBytes((int) stream.Length),
+                               Body = reader.ReadBytes((int)stream.Length),
                                Label = message.Label,
                                Headers = DictionarySerializer.Deserialize(HeaderEcoding.GetString(message.Extension))
                            };
