@@ -12,6 +12,10 @@ namespace Rebus.Castle.Windsor
         public WindsorContainerAdapter(IWindsorContainer container)
         {
             this.container = container;
+
+            container.Register(Component.For<IMessageContext>()
+                                   .UsingFactoryMethod(k => MessageContext.GetCurrent())
+                                   .LifeStyle.Transient);
         }
 
         public override void RegisterInstance(object instance, params Type[] serviceTypes)
