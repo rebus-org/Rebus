@@ -118,6 +118,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
+    <Compile Include="SimpleHandlerActivator.cs" />
     <Compile Include="Time.cs" />
     <Compile Include="Timed.cs" />
     <Compile Include="TimeMachine.cs" />

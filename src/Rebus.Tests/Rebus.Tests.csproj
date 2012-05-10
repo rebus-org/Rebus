@@ -215,6 +215,7 @@
     <Compile Include="Unit\TestHeaderContext.cs" />
     <Compile Include="Unit\TestErrorTracker.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
+    <Compile Include="Unit\TestSimpleHandlerActivator.cs" />
     <Compile Include="Unit\TestWorker_ErrorHandling.cs" />
     <Compile Include="Unit\TestWorker_PolymorphicDispatch.cs" />
     <Compile Include="Unit\TestWorker_MessageContext.cs" />
