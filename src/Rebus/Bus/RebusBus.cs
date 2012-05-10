@@ -51,6 +51,7 @@ namespace Rebus.Bus
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly List<Worker> workers = new List<Worker>();
         readonly ErrorTracker errorTracker = new ErrorTracker();
+        readonly HeaderContext headerContext = new HeaderContext();
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -431,8 +432,6 @@ namespace Rebus.Bus
         {
             headerContext.AttachHeader(message, key, value);
         }
-
-        readonly HeaderContext headerContext = new HeaderContext();
 
         internal class HeaderContext
         {
