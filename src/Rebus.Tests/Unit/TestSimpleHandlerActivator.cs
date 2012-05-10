@@ -99,7 +99,7 @@ namespace Rebus.Tests.Unit
         {
             public void Handle(string message)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
 
@@ -107,7 +107,7 @@ namespace Rebus.Tests.Unit
         {
             public void Handle(string message)
             {
-                throw new System.NotImplementedException();
+                throw new NotImplementedException();
             }
         }
     }
