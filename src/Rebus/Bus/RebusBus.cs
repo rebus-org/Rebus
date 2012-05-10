@@ -324,6 +324,7 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
+            headerContext.Dispose();
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
@@ -466,6 +467,11 @@ namespace Rebus.Bus
             public void Tick()
             {
                 Headers.RemoveDeadReferences();
+            }
+
+            public void Dispose()
+            {
+                CleanupTimer.Dispose();
             }
         }
     }
