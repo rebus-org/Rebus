@@ -1,6 +1,4 @@
-﻿using System;
-using System.Dynamic;
-using System.Threading;
+﻿using System.Threading;
 using NUnit.Framework;
 using Rebus.Logging;
 using Shouldly;

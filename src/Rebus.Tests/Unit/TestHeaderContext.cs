@@ -10,11 +10,11 @@ namespace Rebus.Tests.Unit
     [TestFixture]
     public class TestHeaderContext : FixtureBase
     {
-        HeaderContext c;
+        RebusBus.HeaderContext c;
 
         protected override void DoSetUp()
         {
-            c = new HeaderContext();
+            c = new RebusBus.HeaderContext();
         }
 
         [Test]

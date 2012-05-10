@@ -2,7 +2,6 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -100,8 +99,8 @@ is just because there was a bug some time when the grouping of the messages was 
             var someMessage = new FirstMessage();
             var anotherMessage = new SecondMessage();
 
-            someMessage.AttachHeader(Headers.ReturnAddress, "same-endpoint");
-            anotherMessage.AttachHeader(Headers.ReturnAddress, "same-endpoint");
+            bus.AttachHeader(someMessage, Headers.ReturnAddress, "same-endpoint");
+            bus.AttachHeader(anotherMessage, Headers.ReturnAddress, "same-endpoint");
 
             // act
             // assert
@@ -119,8 +118,8 @@ is just because there was a bug some time when the grouping of the messages was 
             var someMessage = new FirstMessage();
             var anotherMessage = new SecondMessage();
 
-            someMessage.AttachHeader(Headers.ReturnAddress, "some-endpoint");
-            anotherMessage.AttachHeader(Headers.ReturnAddress, "another-endpoint");
+            bus.AttachHeader(someMessage, Headers.ReturnAddress, "some-endpoint");
+            bus.AttachHeader(anotherMessage, Headers.ReturnAddress, "another-endpoint");
 
             // act
             // assert
@@ -137,7 +136,7 @@ Or should it?")]
             // arrange
             var someRandomMessage = new SomeRandomMessage();
 
-            someRandomMessage.AttachHeader("some-key", "some-value");
+            bus.AttachHeader(someRandomMessage, "some-key", "some-value");
 
             // act
             bus.Send("somewhere", someRandomMessage);
@@ -161,10 +160,10 @@ Or should it?")]
             var secondMessage1 = new SecondMessage();
             var secondMessage2 = new SecondMessage();
 
-            firstMessage1.AttachHeader("firstMessage1", "foo");
-            firstMessage2.AttachHeader("firstMessage2", "foo");
-            secondMessage1.AttachHeader("secondMessage1", "foo");
-            secondMessage2.AttachHeader("secondMessage2", "foo");
+            bus.AttachHeader(firstMessage1, "firstMessage1", "foo");
+            bus.AttachHeader(firstMessage2, "firstMessage2", "foo");
+            bus.AttachHeader(secondMessage1, "secondMessage1", "foo");
+            bus.AttachHeader(secondMessage2, "secondMessage2", "foo");
 
             bus.PublishBatch(firstMessage1, secondMessage1, firstMessage2, secondMessage2);
 
@@ -192,9 +191,9 @@ Or should it?")]
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
             determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
-            
-            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
-            anotherRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:10");
+
+            bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
+            bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:10");
 
             // act
             var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
@@ -211,8 +210,8 @@ Or should it?")]
             var someRandomMessage = new SomeRandomMessage();
             var anotherRandomMessage = new SomeRandomMessage();
             determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
-            
-            anotherRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+
+            bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
             var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
@@ -228,8 +227,8 @@ Or should it?")]
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
             determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
-            
-            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+
+            bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
             var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.SendBatch(someRandomMessage, anotherRandomMessage));
@@ -243,7 +242,7 @@ Or should it?")]
         {
             // arrange
             var someRandomMessage = new SomeRandomMessage();
-            someRandomMessage.AttachHeader(Headers.TimeToBeReceived, "00:00:05");
+            bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
             bus.Send("hardcoded.endpoint.to.skip.lookup", someRandomMessage);

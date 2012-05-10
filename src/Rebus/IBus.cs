@@ -58,5 +58,12 @@ namespace Rebus
         /// work.
         /// </summary>
         void Defer(TimeSpan delay, object message);
+
+        /// <summary>
+        /// Attaches to the specified message a header with the given key and value. The header will
+        /// be associated with the message, and will be supplied when the message is sent - even if
+        /// it is sent multiple times.
+        /// </summary>
+        void AttachHeader(object message, string key, string value);
     }
 }

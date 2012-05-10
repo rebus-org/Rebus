@@ -54,6 +54,9 @@ namespace Rebus.Tests.Transports.Msmq
         ///
         /// After refactoring:
         ///     Sending 10000 messages took 29 s - that's 340 msg/s
+        /// 
+        /// On battery, in the train:
+        ///     Sending 10000 messages took 32 s - that's 312 msg/s
         /// </summary>
         [TestCase(10000)]
         public void CheckSendPerformance(int count)

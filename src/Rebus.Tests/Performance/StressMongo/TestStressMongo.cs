@@ -72,7 +72,7 @@ namespace Rebus.Tests.Performance.StressMongo
         }
 
         [TestCase(1)]
-        [TestCase(100)]
+        [TestCase(100, Ignore = true)]
         public void StatementOfSomething(int count)
         {
             var no = 1;

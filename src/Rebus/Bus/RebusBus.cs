@@ -68,8 +68,6 @@ namespace Rebus.Bus
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
         {
-            HeaderContext.Initialize();
-
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
@@ -248,7 +246,7 @@ namespace Rebus.Bus
             var transportMessageHeaders = messageToSend.Headers.Clone();
 
             var messages = messageToSend.Messages
-                .Select(m => new Tuple<object, Dictionary<string, string>>(m, HeaderContext.Current.GetHeadersFor(m)))
+                .Select(m => new Tuple<object, Dictionary<string, string>>(m, headerContext.GetHeadersFor(m)))
                 .ToList();
 
             AssertTimeToBeReceivedIsNotInconsistent(messages);
@@ -326,8 +324,6 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
-
-            HeaderContext.Destroy();
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
@@ -429,6 +425,49 @@ namespace Rebus.Bus
 
             InternalSend("rebus.timeout", messages);
         }
+
+        public void AttachHeader(object message, string key, string value)
+        {
+            headerContext.AttachHeader(message, key, value);
+        }
+
+        readonly HeaderContext headerContext = new HeaderContext();
+
+        internal class HeaderContext
+        {
+            internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
+
+            internal readonly System.Timers.Timer CleanupTimer;
+
+            public HeaderContext()
+            {
+                CleanupTimer = new System.Timers.Timer { Interval = 1000 };
+                CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
+            }
+
+            public void AttachHeader(object message, string key, string value)
+            {
+                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
+
+                headerDictionary.Add(key, value);
+            }
+
+            public Dictionary<string, string> GetHeadersFor(object message)
+            {
+                Dictionary<string, string> temp;
+
+                var headersForThisMessage = Headers.TryGetValue(message, out temp)
+                                                ? temp
+                                                : new Dictionary<string, string>();
+
+                return headersForThisMessage;
+            }
+
+            public void Tick()
+            {
+                Headers.RemoveDeadReferences();
+            }
+        }
     }
 
     class DeferredMessageReDispatcher: IHandleDeferredMessage
@@ -443,71 +482,6 @@ namespace Rebus.Bus
         public void Dispatch(object deferredMessage)
         {
             bus.SendLocal(deferredMessage);
-        }
-    }
-
-    class HeaderContext
-    {
-        static HeaderContext()
-        {
-            Current = new HeaderContext();
-        }
-
-        static int initCounter = 0;
-
-        public static void Initialize()
-        {
-            var shouldInitTimer = Interlocked.Increment(ref initCounter) == 1;
-            
-            if (shouldInitTimer)
-            {
-                Current.CleanupTimer.Start();
-            }
-        }
-
-        public static void Destroy()
-        {
-            var shouldStopTimer = Interlocked.Decrement(ref initCounter) == 0;
-
-            if (shouldStopTimer)
-            {
-                Current.CleanupTimer.Start();
-            }
-        }
-
-        public static HeaderContext Current { get; set; }
-
-        internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
-
-        internal readonly System.Timers.Timer CleanupTimer;
-
-        public HeaderContext()
-        {
-            CleanupTimer = new System.Timers.Timer {Interval = 1000};
-            CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
-        }
-
-        public void AttachHeader(object message, string key, string value)
-        {
-            var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
-
-            headerDictionary.Add(key, value);
-        }
-
-        public Dictionary<string, string> GetHeadersFor(object message)
-        {
-            Dictionary<string, string> temp;
-
-            var headersForThisMessage = Headers.TryGetValue(message, out temp)
-                                            ? temp
-                                            : new Dictionary<string, string>();
-
-            return headersForThisMessage;
-        }
-
-        public void Tick()
-        {
-            Headers.RemoveDeadReferences();
         }
     }
 
@@ -560,10 +534,10 @@ namespace Rebus.Bus
 
     public static class MessageExtensions
     {
-        public static TMessage AttachHeader<TMessage>(this TMessage message, string key, string value)
-        {
-            HeaderContext.Current.AttachHeader(message, key, value);
-            return message;
-        }
+        //public static TMessage AttachHeader<TMessage>(this TMessage message, string key, string value)
+        //{
+        //    HeaderContext.Current.AttachHeader(message, key, value);
+        //    return message;
+        //}
     }
 }
