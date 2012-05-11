@@ -94,23 +94,18 @@ namespace Rebus.MongoDb
             var collection = database.GetCollection(typeof(T), collectionName);
 
             if (sagaDataPropertyPath == "Id")
-                return collection.FindOneByIdAs<T>(ToBsonValue(fieldFromMessage));
+                return collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
 
-            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), ToBsonValue(fieldFromMessage));
+            var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), BsonValue.Create(fieldFromMessage));
 
             var sagaData = collection.FindOneAs<T>(query);
             return sagaData;
         }
 
-        static BsonValue ToBsonValue(object fieldFromMessage)
-        {
-            return BsonValue.Create(fieldFromMessage);
-        }
-
         string MapSagaDataPropertyPath(string sagaDataPropertyPath, Type sagaDataType)
         {
             var propertyInfo = sagaDataType.GetProperty(sagaDataPropertyPath, BindingFlags.Public | BindingFlags.Instance);
-
+            
             if (propertyInfo == null)
                 return sagaDataPropertyPath;
 

@@ -23,10 +23,10 @@ namespace Rebus.Tests.Persistence.MongoDb
         {
             TimeMachine.Reset();
 
-            DoSetUp();
-
             db = MongoDatabase.Create(ConnectionString);
             collectionsToDrop.Clear();
+            
+            DoSetUp();
         }
 
         protected virtual void DoSetUp()

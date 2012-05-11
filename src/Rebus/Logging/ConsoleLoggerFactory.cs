@@ -39,7 +39,7 @@ namespace Rebus.Logging
             ILog logger;
             if (!Loggers.TryGetValue(type, out logger))
             {
-                logger = new ConsoleLogger(type, colored, colors, minLevel);
+                logger = new ConsoleLogger(type, colors, this);
                 Loggers.TryAdd(type, logger);
             }
             return logger;
@@ -47,17 +47,15 @@ namespace Rebus.Logging
 
         class ConsoleLogger : ILog
         {
-            readonly bool colored;
             readonly LoggingColors loggingColors;
-            readonly LogLevel minLevel;
+            readonly ConsoleLoggerFactory factory;
             readonly Type type;
 
-            public ConsoleLogger(Type type, bool colored, LoggingColors loggingColors, LogLevel minLevel)
+            public ConsoleLogger(Type type, LoggingColors loggingColors, ConsoleLoggerFactory factory)
             {
                 this.type = type;
-                this.colored = colored;
                 this.loggingColors = loggingColors;
-                this.minLevel = minLevel;
+                this.factory = factory;
             }
 
             #region ILog Members
@@ -91,7 +89,7 @@ namespace Rebus.Logging
 
             void Log(LogLevel level, string message, ColorSetting colorSetting, params object[] objs)
             {
-                if (colored)
+                if (factory.colored)
                 {
                     using (colorSetting.Enter())
                     {
@@ -123,7 +121,7 @@ namespace Rebus.Logging
 
             void Write(LogLevel level, string message, object[] objs)
             {
-                if (level < minLevel) return;
+                if ((int)level < (int)factory.MinLevel) return;
 
                 var levelString = LevelString(level);
 

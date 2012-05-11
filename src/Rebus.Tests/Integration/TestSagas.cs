@@ -18,7 +18,10 @@ namespace Rebus.Tests.Integration
         {
             persister = new SagaDataPersisterForTesting();
             activator = new HandlerActivatorForTesting();
-            dispatcher = new Dispatcher(persister, activator, new InMemorySubscriptionStorage(), new TrivialPipelineInspector(), Mock<IHandleDeferredMessage>());
+            dispatcher = new Dispatcher(persister, activator,
+                                        new InMemorySubscriptionStorage(),
+                                        new TrivialPipelineInspector(),
+                                        new DeferredMessageHandlerForTesting());
         }
 
         [Test]

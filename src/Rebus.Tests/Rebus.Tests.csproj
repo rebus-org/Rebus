@@ -39,6 +39,12 @@
     <Reference Include="BouncyCastle.Crypto">
       <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\BouncyCastle.Crypto.dll</HintPath>
     </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.0.0.4001\lib\net40-client\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor">
+      <HintPath>..\packages\Castle.Windsor.3.0.0.4001\lib\net40\Castle.Windsor.dll</HintPath>
+    </Reference>
     <Reference Include="Esent.Interop">
       <HintPath>..\packages\RavenDB-Embedded.1.0.701\lib\net40\Esent.Interop.dll</HintPath>
     </Reference>
@@ -145,9 +151,11 @@
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
+    <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
+    <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestDynamicDispatch.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
@@ -159,6 +167,17 @@
     <Compile Include="MessageReceiverForTesting.cs" />
     <Compile Include="Integration\TestRetryLogic.cs" />
     <Compile Include="Bugs\SagasNotWorkingWithRavenDbEnlistingInTransaction.cs" />
+    <Compile Include="Performance\StressMongo\Caf\CheckCreditSaga.cs" />
+    <Compile Include="Performance\StressMongo\Caf\CheckCreditSagaData.cs" />
+    <Compile Include="Performance\StressMongo\Caf\CustomerCreditCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\Caf\Messages\SimulatedCreditCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\Crm\Messages\CustomerCreated.cs" />
+    <Compile Include="Performance\StressMongo\Dcc\MaintainCustomerInformationSaga.cs" />
+    <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSaga.cs" />
+    <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSagaData.cs" />
+    <Compile Include="Performance\StressMongo\Legal\CustomerLegallyApproved.cs" />
+    <Compile Include="Performance\StressMongo\Legal\Messages\SimulatedLegalCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\TestStressMongo.cs" />
     <Compile Include="Persistence\MongoDb\TestMongoDbTimeoutStorage.cs" />
     <Compile Include="Bugs\CheckCallsMade.cs" />
     <Compile Include="Persistence\RavenDb\TestRavenDbSubscriptionStorage.cs" />
@@ -206,6 +225,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj">
+      <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
+      <Name>Rebus.Castle.Windsor</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
       <Name>Rebus.Log4Net</Name>

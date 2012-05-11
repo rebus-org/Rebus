@@ -1,39 +1,40 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Timers;
 using System.Transactions;
 using Rebus.Bus;
-using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
-using log4net;
 using System.Linq;
-using ILog = log4net.ILog;
 
 namespace Rebus.Timeout
 {
     public class TimeoutService : IHandleMessages<TimeoutRequest>, IActivateHandlers
     {
+        static ILog log;
+
+        static TimeoutService()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         readonly IStoreTimeouts storeTimeouts;
-        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         const string InputQueueName = "rebus.timeout";
-        
+
         readonly IBus bus;
         readonly Timer timer = new Timer();
         readonly RebusBus rebusBus;
-        static readonly Type[] IgnoredMessageTypes = new[]{typeof(object), typeof(IRebusControlMessage)};
+        static readonly Type[] IgnoredMessageTypes = new[] { typeof(object), typeof(IRebusControlMessage) };
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
             this.storeTimeouts = storeTimeouts;
             var msmqMessageQueue = new MsmqMessageQueue(InputQueueName, InputQueue + ".error");
 
-            RebusLoggerFactory.Current = new Log4NetLoggerFactory();
             rebusBus = new RebusBus(this, msmqMessageQueue, msmqMessageQueue, null, null, null, new JsonMessageSerializer(), new TrivialPipelineInspector());
             bus = rebusBus;
 
@@ -50,7 +51,7 @@ namespace Rebus.Timeout
         {
             if (typeof(T) == typeof(TimeoutRequest))
             {
-                return new[] {(IHandleMessages<T>) this};
+                return new[] { (IHandleMessages<T>)this };
             }
 
             if (IgnoredMessageTypes.Contains(typeof(T)))
@@ -67,17 +68,17 @@ namespace Rebus.Timeout
 
         public void Start()
         {
-            Log.Info("Starting bus");
+            log.Info("Starting bus");
             rebusBus.Start(1);
-            Log.Info("Starting inner timer");
+            log.Info("Starting inner timer");
             timer.Start();
         }
 
         public void Stop()
         {
-            Log.Info("Stopping inner timer");
+            log.Info("Stopping inner timer");
             timer.Stop();
-            Log.Info("Disposing bus");
+            log.Info("Disposing bus");
             rebusBus.Dispose();
         }
 
@@ -96,7 +97,7 @@ namespace Rebus.Timeout
 
             storeTimeouts.Add(newTimeout);
 
-            Log.InfoFormat("Added new timeout: {0}", newTimeout);
+            log.Info("Added new timeout: {0}", newTimeout);
         }
 
         void CheckCallbacks(object sender, ElapsedEventArgs e)
@@ -107,7 +108,7 @@ namespace Rebus.Timeout
 
                 foreach (var timeout in dueTimeouts)
                 {
-                    Log.InfoFormat("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
+                    log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
                     bus.Send(timeout.ReplyTo,
                              new TimeoutReply

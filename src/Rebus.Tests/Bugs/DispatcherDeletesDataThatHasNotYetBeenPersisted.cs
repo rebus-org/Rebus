@@ -24,7 +24,7 @@ namespace Rebus.Tests.Bugs
                                         activator,
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
-                                        Mock<IHandleDeferredMessage>());
+                                        new DeferredMessageHandlerForTesting());
         }
 
         [Test]

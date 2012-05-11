@@ -431,7 +431,7 @@ namespace Rebus.Bus
         }
     }
 
-    internal class DeferredMessageReDispatcher: IHandleDeferredMessage
+    class DeferredMessageReDispatcher: IHandleDeferredMessage
     {
         readonly IBus bus;
 
@@ -446,7 +446,7 @@ namespace Rebus.Bus
         }
     }
 
-    internal class HeaderContext
+    class HeaderContext
     {
         static HeaderContext()
         {

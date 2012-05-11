@@ -14,3 +14,4 @@ goto :DONE
 %WINDIR%\Microsoft.NET\Framework\v4.0.30319\MSBuild.exe scripts\build.proj /v:m /t:build;pushNugetPackages /p:Version=%VERSION%
 
 :DONE
+@prompt $p$g

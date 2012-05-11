@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Messages;
 using Rebus.Shared;
 
 namespace Rebus.Bus
@@ -12,7 +11,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Internal worker thread that continually attempts to receive messages and dispatch to handlers.
     /// </summary>
-    public class Worker : IDisposable
+    class Worker : IDisposable
     {
         static ILog log;
 

@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Messaging;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Shared;
@@ -23,7 +20,6 @@ namespace Rebus.Transports.Msmq
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        readonly ConcurrentDictionary<string, MessageQueue> outputQueues = new ConcurrentDictionary<string, MessageQueue>();
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
@@ -98,24 +94,14 @@ namespace Rebus.Transports.Msmq
         {
             var recipientPath = MsmqUtil.GetPath(destinationQueueName);
 
-            MessageQueue outputQueue;
-            if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
+            using (var outputQueue = CreateMessageQueue(recipientPath, createIfNotExists: false))
             {
-                lock (outputQueues)
-                {
-                    if (!outputQueues.TryGetValue(recipientPath, out outputQueue))
-                    {
-                        outputQueue = CreateMessageQueue(recipientPath, createIfNotExists: false);
-                        outputQueues[recipientPath] = outputQueue;
-                    }
-                }
+                var transactionWrapper = GetOrCreateTransactionWrapper();
+
+                outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
+
+                transactionWrapper.Commit();
             }
-
-            var transactionWrapper = GetOrCreateTransactionWrapper();
-
-            outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
-
-            transactionWrapper.Commit();
         }
 
         public MsmqMessageQueue PurgeInputQueue()
@@ -129,7 +115,6 @@ namespace Rebus.Transports.Msmq
         {
             log.Info("Disposing message queues");
             inputQueue.Dispose();
-            outputQueues.Values.ToList().ForEach(q => q.Dispose());
         }
 
         public override string ToString()
@@ -192,22 +177,33 @@ create its queues automatically.", path);
             {
                 log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
+                var administratorAccountName = new WindowsPlatform().GetAdministratorAccountName();
+
                 try
                 {
                     using (var messageQueue = MessageQueue.Create(path, true))
                     {
-                        var administratorAccountName = new WindowsPlatform().GetAdministratorAccountName();
 
                         messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
                                                     MessageQueueAccessRights.GenericWrite);
 
-
                         messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
                     }
                 }
-                catch
+                catch(Exception e)
                 {
-                    MessageQueue.Delete(path);
+                    log.Error(e,
+                              "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
+                              path,
+                              administratorAccountName);
+                    try
+                    {
+                        MessageQueue.Delete(path);
+                    }
+                    catch(Exception ex)
+                    {
+                        log.Error(ex, "Could not delete queue {0}", path);
+                    }
                 }
             }
         }

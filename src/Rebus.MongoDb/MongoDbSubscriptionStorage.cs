@@ -26,7 +26,8 @@ namespace Rebus.MongoDb
 
             var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
 
-            EnsureResultIsGood(safeModeResult);
+            EnsureResultIsGood(safeModeResult, "Adding {0} to {1} where _id is {2}",
+                               subscriberInputQueue, collectionName, messageType.FullName);
         }
 
         public void Remove(Type messageType, string subscriberInputQueue)
@@ -38,23 +39,30 @@ namespace Rebus.MongoDb
 
             var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
 
-            EnsureResultIsGood(safeModeResult);
+            EnsureResultIsGood(safeModeResult, "Removing {0} from {1} where _id is {2}",
+                               subscriberInputQueue, collectionName, messageType.FullName);
         }
 
         public string[] GetSubscribers(Type messageType)
         {
             var collection = database.GetCollection(collectionName);
 
-            var doc = collection.FindOne(Query.EQ("_id", messageType.FullName)).AsBsonDocument;
+            var doc = collection.FindOne(Query.EQ("_id", messageType.FullName));
             if (doc == null) return new string[0];
 
-            var endpoints = doc["endpoints"].AsBsonArray;
+            var bsonDocument = doc.AsBsonDocument;
+            if (bsonDocument == null) return new string[0];
+
+            var endpoints = bsonDocument["endpoints"].AsBsonArray;
             return endpoints.Values.Select(v => v.ToString()).ToArray();
         }
 
-        void EnsureResultIsGood(SafeModeResult safeModeResult)
+        void EnsureResultIsGood(SafeModeResult safeModeResult, string message, params object[] objs)
         {
-                
+            if (!safeModeResult.Ok)
+            {
+                throw new ApplicationException(string.Format("The following operation didn't suceed: {0}", string.Format(message, objs)));
+            }
         }
     }
 }
