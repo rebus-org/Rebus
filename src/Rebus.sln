@@ -5,7 +5,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\create_table_sagas.sql = ..\scripts\create_table_sagas.sql
 		..\scripts\create_table_subscriptions.sql = ..\scripts\create_table_subscriptions.sql
-		..\scripts\create_table_timeouts.sql = ..\scripts\create_table_timeouts.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus", "Rebus\Rebus.csproj", "{F57A06FA-F471-49C8-A92D-85D5A27055C4}"

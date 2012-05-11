@@ -19,7 +19,7 @@ using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 using Rebus.Tests.Performance.StressMongo.Dcc;
 using Rebus.Tests.Performance.StressMongo.Legal;
 using Rebus.Tests.Performance.StressMongo.Legal.Messages;
-using Rebus.Tests.Persistence.MongoDb;
+using Rebus.Tests.Persistence;
 using Rebus.Timeout;
 using Rebus.Transports.Msmq;
 using System.Linq;

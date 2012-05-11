@@ -4,6 +4,7 @@ GO
 CREATE TABLE [dbo].[timeouts](
 	[time_to_return] [datetime] NOT NULL,
 	[correlation_id] [nvarchar](200) NOT NULL,
+	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
 	[custom_data] [nvarchar](MAX) NULL,
  CONSTRAINT [PK_timeouts] PRIMARY KEY CLUSTERED 

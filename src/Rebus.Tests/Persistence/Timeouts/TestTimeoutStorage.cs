@@ -1,28 +1,30 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using Raven.Client.Embedded;
-using Rebus.RavenDb;
+using Rebus.Tests.Persistence.Timeouts.Factories;
+using Rebus.Timeout;
 using Shouldly;
 
-namespace Rebus.Tests.Persistence.RavenDb
+namespace Rebus.Tests.Persistence.Timeouts
 {
-    [TestFixture, Category(TestCategories.Raven)]
-    public class TestRavenDbTimeoutStorage
+    [TestFixture(typeof(InMemoryTimeoutStorageFactory))]
+    [TestFixture(typeof(SqlServerTimeoutStorageFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(RavenDbTimeoutStorageFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(MongoDbTimeoutStorageFactory), Category = TestCategories.Mongo)]
+    public class TestSubscriptionStorage<TFactory> : FixtureBase where TFactory : ITimeoutStorageFactory
     {
-        private RavenDbTimeoutStorage storage;
-        private EmbeddableDocumentStore store;
+        TFactory factory;
+        IStoreTimeouts storage;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
-            store = new EmbeddableDocumentStore
-                        {
-                            RunInMemory = true
-                        };
-            store.Initialize();
+            factory = Activator.CreateInstance<TFactory>();
+            storage = factory.CreateStore();
+        }
 
-            storage = new RavenDbTimeoutStorage(store);
+        protected override void DoTearDown()
+        {
+            factory.Dispose();
         }
 
         [Test]

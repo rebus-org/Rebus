@@ -119,15 +119,28 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"select s.data 
-                                                from sagas s 
-                                                    join saga_index i on s.id = i.saga_id 
-                                                where i.[key] = @key 
-                                                    and i.value = @value";
-                    command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                    if (sagaDataPropertyPath == "Id")
+                    {
+                        command.CommandText = @"select s.data from sagas s where s.id = @value";
+                    }
+                    else
+                    {
+                        command.CommandText = @"select s.data 
+                                                    from sagas s 
+                                                        join saga_index i on s.id = i.saga_id 
+                                                    where i.[key] = @key 
+                                                        and i.value = @value";
+                        command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                    }
+
                     command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
 
-                    return (T)JsonConvert.DeserializeObject((string)command.ExecuteScalar(), Settings);
+                    var value = (string) command.ExecuteScalar();
+                    
+                    if (value == null)
+                        return default(T);
+
+                    return (T)JsonConvert.DeserializeObject(value, Settings);
                 }
             }
         }
