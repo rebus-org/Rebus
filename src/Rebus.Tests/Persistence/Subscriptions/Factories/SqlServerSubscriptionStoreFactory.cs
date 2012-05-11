@@ -2,24 +2,23 @@ using System.Data.SqlClient;
 using Rebus.Persistence.SqlServer;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.Sagas
+namespace Rebus.Tests.Persistence.Subscriptions.Factories
 {
-    public class SqlServerSagaPersisterFactory : ISagaPersisterFactory
+    public class SqlServerSubscriptionStoreFactory : ISubscriptionStoreFactory
     {
-        static SqlServerSagaPersisterFactory()
+        static SqlServerSubscriptionStoreFactory()
         {
             XmlConfigurator.Configure();
         }
 
-        public IStoreSagaData CreatePersister()
-        {
-            DeleteRows("sagas");
-            DeleteRows("saga_index");
-            return new SqlServerSagaPersister(SqlServerC.ConnectionString, "saga_index", "sagas");
-        }
-
         public void Dispose()
         {
+        }
+
+        public IStoreSubscriptions CreateStore()
+        {
+            DeleteRows("subscriptions");
+            return new SqlServerSubscriptionStorage(ConnectionStrings.SqlServer, "subscriptions");
         }
 
         protected void DeleteRows(string tableName)
@@ -29,7 +28,7 @@ namespace Rebus.Tests.Persistence.Sagas
 
         static void ExecuteCommand(string commandText)
         {
-            using (var conn = new SqlConnection(SqlServerC.ConnectionString))
+            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {
                 conn.Open();
 

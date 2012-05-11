@@ -1,24 +1,25 @@
 using System.Data.SqlClient;
 using Rebus.Persistence.SqlServer;
+using Rebus.Timeout;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.Subscriptions
+namespace Rebus.Tests.Persistence.Timeouts.Factories
 {
-    public class SqlServerSubscriptionStoreFactory : ISubscriptionStoreFactory
+    public class SqlServerTimeoutStorageFactory : ITimeoutStorageFactory
     {
-        static SqlServerSubscriptionStoreFactory()
+        static SqlServerTimeoutStorageFactory()
         {
             XmlConfigurator.Configure();
         }
 
-        public void Dispose()
+        public IStoreTimeouts CreateStore()
         {
+            DeleteRows("timeouts");
+            return new SqlServerTimeoutStorage(ConnectionStrings.SqlServer, "timeouts");
         }
 
-        public IStoreSubscriptions CreateStore()
+        public void Dispose()
         {
-            DeleteRows("subscriptions");
-            return new SqlServerSubscriptionStorage(SqlServerC.ConnectionString, "subscriptions");
         }
 
         protected void DeleteRows(string tableName)
@@ -28,7 +29,7 @@ namespace Rebus.Tests.Persistence.Subscriptions
 
         static void ExecuteCommand(string commandText)
         {
-            using (var conn = new SqlConnection(SqlServerC.ConnectionString))
+            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {
                 conn.Open();
 

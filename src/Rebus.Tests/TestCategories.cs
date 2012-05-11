@@ -1,8 +1,7 @@
 using System;
 using System.Linq;
 using NUnit.Framework;
-using Rebus.Tests.Persistence.MongoDb;
-using Rebus.Tests.Persistence.SqlServer;
+using Rebus.Tests.Persistence;
 using Rebus.Tests.Transports.Rabbit;
 
 namespace Rebus.Tests
@@ -21,7 +20,7 @@ namespace Rebus.Tests
         public const bool IgnoreLongRunningTests = true;
 
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
-        [TestCase(typeof(DbFixtureBase), MsSql)]
+        [TestCase(typeof(SqlServerFixtureBase), MsSql)]
         [TestCase(typeof(RabbitMqFixtureBase), Rabbit)]
         public void AssertCategoriesIfPossible(Type fixtureBaseType, string expectedCategoryName)
         {

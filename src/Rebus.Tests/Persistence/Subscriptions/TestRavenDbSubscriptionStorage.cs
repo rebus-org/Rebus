@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Tests.Persistence.Subscriptions.Factories;
 using Shouldly;
 
 namespace Rebus.Tests.Persistence.Subscriptions

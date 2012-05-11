@@ -1,13 +1,13 @@
 using Raven.Client.Embedded;
 using Rebus.RavenDb;
 
-namespace Rebus.Tests.Persistence.Subscriptions
+namespace Rebus.Tests.Persistence.Sagas.Factories
 {
-    public class RavenDbSubscriptionStoreFactory : ISubscriptionStoreFactory
+    public class RavenDbSagaPersisterFactory : ISagaPersisterFactory
     {
         EmbeddableDocumentStore store;
 
-        public IStoreSubscriptions CreateStore()
+        public IStoreSagaData CreatePersister()
         {
             store = new EmbeddableDocumentStore
                         {
@@ -15,7 +15,7 @@ namespace Rebus.Tests.Persistence.Subscriptions
                         };
             store.Initialize();
 
-            return new RavenDbSubscriptionStorage(store, "subscriptions");
+            return new RavenDbSagaPersister(store);            
         }
 
         public void Dispose()

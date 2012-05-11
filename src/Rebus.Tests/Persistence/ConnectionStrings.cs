@@ -4,9 +4,9 @@ using NUnit.Framework;
 
 namespace Rebus.Tests.Persistence
 {
-    public class SqlServerC
+    public static class ConnectionStrings
     {
-        public static string ConnectionString
+        public static string SqlServer
         {
             get
             {
@@ -19,6 +19,11 @@ namespace Rebus.Tests.Persistence
 
                 return connectionStringSettings.ConnectionString;
             }
+        }
+
+        public static string MongoDb
+        {
+            get { return "mongodb://localhost:27017/rebus_test"; }
         }
     }
 }

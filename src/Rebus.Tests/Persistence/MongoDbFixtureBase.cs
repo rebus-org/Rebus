@@ -2,7 +2,7 @@ using MongoDB.Driver;
 using NUnit.Framework;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.MongoDb
+namespace Rebus.Tests.Persistence
 {
     public abstract class MongoDbFixtureBase
     {
@@ -20,7 +20,7 @@ namespace Rebus.Tests.Persistence.MongoDb
 
             DoSetUp();
 
-            db = MongoDatabase.Create(MongoDbC.ConnectionString);
+            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
         }
 
         protected virtual void DoSetUp()

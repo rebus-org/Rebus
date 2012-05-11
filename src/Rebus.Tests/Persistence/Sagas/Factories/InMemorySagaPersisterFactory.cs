@@ -1,6 +1,6 @@
 using Rebus.Persistence.InMemory;
 
-namespace Rebus.Tests.Persistence.Sagas
+namespace Rebus.Tests.Persistence.Sagas.Factories
 {
     public class InMemorySagaPersisterFactory : ISagaPersisterFactory
     {

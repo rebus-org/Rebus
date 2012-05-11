@@ -1,6 +1,6 @@
 using Rebus.Persistence.InMemory;
 
-namespace Rebus.Tests.Persistence.Subscriptions
+namespace Rebus.Tests.Persistence.Subscriptions.Factories
 {
     public class InMemorySubscriptionStoreFactory : ISubscriptionStoreFactory
     {

@@ -1,7 +1,7 @@
 using MongoDB.Driver;
 using Rebus.MongoDb;
 
-namespace Rebus.Tests.Persistence.Subscriptions
+namespace Rebus.Tests.Persistence.Subscriptions.Factories
 {
     public class MongoDbSubscriptionStoreFactory : ISubscriptionStoreFactory
     {
@@ -9,8 +9,8 @@ namespace Rebus.Tests.Persistence.Subscriptions
 
         public IStoreSubscriptions CreateStore()
         {
-            db = MongoDatabase.Create(MongoDbC.ConnectionString);
-            return new MongoDbSubscriptionStorage(MongoDbC.ConnectionString, "sagas");
+            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            return new MongoDbSubscriptionStorage(ConnectionStrings.MongoDb, "sagas");
         }
 
         public void Dispose()

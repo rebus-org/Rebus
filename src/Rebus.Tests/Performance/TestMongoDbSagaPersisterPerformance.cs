@@ -1,7 +1,6 @@
 ﻿using NUnit.Framework;
 using Rebus.MongoDb;
 using Rebus.Tests.Persistence;
-using Rebus.Tests.Persistence.MongoDb;
 
 namespace Rebus.Tests.Performance
 {
@@ -12,7 +11,7 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
-            persister = new MongoDbSagaPersister(MongoDbC.ConnectionString, "sagas");
+            persister = new MongoDbSagaPersister(ConnectionStrings.MongoDb, "sagas");
         }
 
         /// <summary>

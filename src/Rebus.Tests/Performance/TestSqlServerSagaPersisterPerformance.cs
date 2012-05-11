@@ -1,18 +1,17 @@
 ﻿using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Persistence;
-using Rebus.Tests.Persistence.SqlServer;
 
 namespace Rebus.Tests.Performance
 {
     [TestFixture, Category(TestCategories.MsSql), Category(TestCategories.Performance)]
-    public class TestSqlServerSagaPersisterPerformance : DbFixtureBase
+    public class TestSqlServerSagaPersisterPerformance : SqlServerFixtureBase
     {
         protected IStoreSagaData persister;
 
         protected override void DoSetUp()
         {
-            persister = new SqlServerSagaPersister(SqlServerC.ConnectionString, "saga_index", "sagas");
+            persister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, "saga_index", "sagas");
             DeleteRows("sagas");
             DeleteRows("saga_index");
         }
