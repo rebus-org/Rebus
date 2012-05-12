@@ -117,6 +117,23 @@ namespace Rebus.Tests.Persistence.Sagas
             mySagaData.SomeField.ShouldBe("2");
         }
 
+        [Test]
+        public void SamePersisterCanSaveMultipleTypesOfSagaDatas()
+        {
+            var sagaId1 = Guid.NewGuid();
+            var sagaId2 = Guid.NewGuid();
+            Persister.Save(new SimpleSagaData { Id = sagaId1, SomeString = "Olé" }, new[] { "Id" });
+            Persister.Save(new MySagaData { Id = sagaId2, AnotherField = "Yipiie" }, new[] { "Id" });
+
+            var saga1 = Persister.Find<SimpleSagaData>("Id", sagaId1);
+            var saga2 = Persister.Find<MySagaData>("Id", sagaId2);
+
+            saga1.ShouldNotBe(null);
+            saga1.SomeString.ShouldBe("Olé");
+            saga2.ShouldNotBe(null);
+            saga2.AnotherField.ShouldBe("Yipiie");
+        }
+
        [Test]
        public void PersisterCanFindSagaDataWithNestedElements()
        {
