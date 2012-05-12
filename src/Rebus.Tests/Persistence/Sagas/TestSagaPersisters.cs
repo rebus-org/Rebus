@@ -29,7 +29,7 @@ namespace Rebus.Tests.Persistence.Sagas
             var savedSagaDataId = Guid.NewGuid();
             savedSagaData.Id = savedSagaDataId;
             sagaDataType.GetProperty("Property").SetValue(savedSagaData, propertyValueToUse, new object[0]);
-            Persister.Save(savedSagaData, new[] { "Property" });
+            Persister.Insert(savedSagaData, new[] { "Property" });
 
             var foundSagaData = Persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse);
 
@@ -43,7 +43,7 @@ namespace Rebus.Tests.Persistence.Sagas
             var savedSagaData = new MySagaData();
             var savedSagaDataId = Guid.NewGuid();
             savedSagaData.Id = savedSagaDataId;
-            Persister.Save(savedSagaData, new string[0]);
+            Persister.Insert(savedSagaData, new string[0]);
 
             var foundSagaData = Persister.Find<MySagaData>("Id", savedSagaDataId);
 
@@ -75,7 +75,7 @@ namespace Rebus.Tests.Persistence.Sagas
                                }
                 };
 
-            Persister.Save(complexPieceOfSagaData, new[] { "SomeField" });
+            Persister.Insert(complexPieceOfSagaData, new[] { "SomeField" });
 
             var sagaData = Persister.Find<MySagaData>("Id", sagaDataId);
             sagaData.ShouldNotBe(null);
@@ -93,7 +93,7 @@ namespace Rebus.Tests.Persistence.Sagas
                                  SomeString = "whoolala"
                              };
 
-            Persister.Save(mySagaData, new[] { "SomeString" });
+            Persister.Insert(mySagaData, new[] { "SomeString" });
             Persister.Delete(mySagaData);
 
             var sagaData = Persister.Find<SimpleSagaData>("Id", mySagaDataId);
@@ -103,9 +103,9 @@ namespace Rebus.Tests.Persistence.Sagas
         [Test]
         public void CanFindSagaByPropertyValues()
         {
-            Persister.Save(SagaData(1, "some field 1"), new[] { "AnotherField" });
-            Persister.Save(SagaData(2, "some field 2"), new[] { "AnotherField" });
-            Persister.Save(SagaData(3, "some field 3"), new[] { "AnotherField" });
+            Persister.Insert(SagaData(1, "some field 1"), new[] { "AnotherField" });
+            Persister.Insert(SagaData(2, "some field 2"), new[] { "AnotherField" });
+            Persister.Insert(SagaData(3, "some field 3"), new[] { "AnotherField" });
 
             var dataViaNonexistentValue = Persister.Find<MySagaData>("AnotherField", "non-existent value");
             var dataViaNonexistentField = Persister.Find<MySagaData>("SomeFieldThatDoesNotExist", "doesn't matter");
@@ -122,8 +122,8 @@ namespace Rebus.Tests.Persistence.Sagas
         {
             var sagaId1 = Guid.NewGuid();
             var sagaId2 = Guid.NewGuid();
-            Persister.Save(new SimpleSagaData { Id = sagaId1, SomeString = "Olé" }, new[] { "Id" });
-            Persister.Save(new MySagaData { Id = sagaId2, AnotherField = "Yipiie" }, new[] { "Id" });
+            Persister.Insert(new SimpleSagaData { Id = sagaId1, SomeString = "Olé" }, new[] { "Id" });
+            Persister.Insert(new MySagaData { Id = sagaId2, AnotherField = "Yipiie" }, new[] { "Id" });
 
             var saga1 = Persister.Find<SimpleSagaData>("Id", sagaId1);
             var saga2 = Persister.Find<MySagaData>("Id", sagaId2);
@@ -140,7 +140,7 @@ namespace Rebus.Tests.Persistence.Sagas
            const string stringValue = "I expect to find something with this string!";
            var path = Reflect.Path<SagaDataWithNestedElement>(d => d.ThisOneIsNested.SomeString);
 
-           Persister.Save(new SagaDataWithNestedElement
+           Persister.Insert(new SagaDataWithNestedElement
                               {
                                   Id = Guid.NewGuid(),
                                   Revision = 12,

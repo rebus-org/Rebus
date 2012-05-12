@@ -10,7 +10,13 @@ namespace Rebus.Persistence.InMemory
     {
         readonly ConcurrentDictionary<Guid, ISagaData> data = new ConcurrentDictionary<Guid, ISagaData>();
 
-        public virtual void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        public virtual void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        {
+            var key = sagaData.Id;
+            data[key] = sagaData;
+        }
+
+        public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var key = sagaData.Id;
             data[key] = sagaData;

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Raven.Abstractions.Exceptions;
 using Raven.Client;
+using Raven.Client.Exceptions;
 
 namespace Rebus.RavenDb
 {
@@ -15,7 +16,25 @@ namespace Rebus.RavenDb
             this.store = store;
         }
 
-        public void Save(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        {
+            var session = GetSession();
+            try
+            {
+                session.Store(sagaData);
+                session.SaveChanges();
+            }
+            catch (ConcurrencyException concurrencyException)
+            {
+                throw new OptimisticLockingException(sagaData, concurrencyException);
+            }
+            catch (NonUniqueObjectException concurrencyException)
+            {
+                throw new OptimisticLockingException(sagaData, concurrencyException);
+            }
+        }
+
+        public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var session = GetSession();
             try

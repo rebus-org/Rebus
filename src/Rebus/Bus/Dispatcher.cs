@@ -246,7 +246,15 @@ namespace Rebus.Bus
             }
 
             var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
-            storeSagaData.Save(sagaData, sagaDataPropertyPathsToIndex);
+
+            if (!saga.IsNew)
+            {
+                storeSagaData.Update(sagaData, sagaDataPropertyPathsToIndex);
+            }
+            else
+            {
+                storeSagaData.Insert(sagaData, sagaDataPropertyPathsToIndex);
+            }
         }
 
         private string[] GetSagaDataPropertyPathsToIndex(Saga saga)
