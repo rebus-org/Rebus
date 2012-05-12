@@ -60,7 +60,14 @@ namespace Rebus.Tests.Performance
             {
                 foreach (var data in sagaDatas)
                 {
-                    persister.Insert(data, pathsToIndex);
+                    if (counter == 0)
+                    {
+                        persister.Insert(data, pathsToIndex);
+                    }
+                    else
+                    {
+                        persister.Update(data, pathsToIndex);
+                    }
                 }
             }
 
