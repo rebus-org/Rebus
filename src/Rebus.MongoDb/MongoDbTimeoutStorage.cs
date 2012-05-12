@@ -35,27 +35,50 @@ namespace Rebus.MongoDb
         public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
         {
             var collection = database.GetCollection(collectionName);
-
-            var timeout = collection.FindAndRemove(Query.LTE("time", Time.Now()), SortBy.Ascending("time"));
-
-            var document = timeout.ModifiedDocument;
-
-            if (document == null)
+            var gotResult = true;
+            do
             {
-                return new Timeout.Timeout[0];
-            }
+                var result = collection.FindAndRemove(Query.LTE("time", Time.Now()), SortBy.Ascending("time"));
 
-            return new[]
-                       {
-                           new Timeout.Timeout
-                               {
-                                   CorrelationId = document["corr_id"].AsString,
-                                   SagaId = document["saga_id"].AsGuid,
-                                   CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
-                                   ReplyTo = document["reply_to"].AsString,
-                                   TimeToReturn = document["time"].AsDateTime,
-                               }
-                       };
+                if (result != null && result.ModifiedDocument != null)
+                {
+                    var document = result.ModifiedDocument;
+
+                    yield return new Timeout.Timeout
+                        {
+                            CorrelationId = document["corr_id"].AsString,
+                            SagaId = document["saga_id"].AsGuid,
+                            CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
+                            ReplyTo = document["reply_to"].AsString,
+                            TimeToReturn = document["time"].AsDateTime,
+                        };
+                }
+                else
+                {
+                    gotResult = false;
+                }
+            } while (gotResult);
+
+            //var timeout = collection.FindAndRemove(Query.LTE("time", Time.Now()), SortBy.Ascending("time"));
+
+            //var document = timeout.ModifiedDocument;
+
+            //if (document == null)
+            //{
+            //    return new Timeout.Timeout[0];
+            //}
+
+            //return new[]
+            //           {
+            //               new Timeout.Timeout
+            //                   {
+            //                       CorrelationId = document["corr_id"].AsString,
+            //                       SagaId = document["saga_id"].AsGuid,
+            //                       CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
+            //                       ReplyTo = document["reply_to"].AsString,
+            //                       TimeToReturn = document["time"].AsDateTime,
+            //                   }
+            //           };
         }
     }
 }
