@@ -187,7 +187,6 @@
     <Compile Include="Persistence\Sagas\Factories\RavenDbSagaPersisterFactory.cs" />
     <Compile Include="Persistence\Sagas\TestSagaPersisters.cs" />
     <Compile Include="Persistence\Sagas\TestSagaPersistersEmployingOptimisticConcurrency.cs" />
-    <Compile Include="Persistence\Sagas\TestSagaPersistersEmployingTransactionalConcurrency.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\InMemorySubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\ISubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\MongoDbSubscriptionStoreFactory.cs" />

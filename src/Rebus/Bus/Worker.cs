@@ -149,7 +149,7 @@ namespace Rebus.Bus
 
         void TryProcessIncomingMessage()
         {
-            using (var transactionScope = new TransactionScope())
+            using (var transactionScope = BeginTransaction())
             {
                 var transportMessage = receiveMessages.ReceiveMessage();
 
@@ -203,6 +203,16 @@ namespace Rebus.Bus
                 errorTracker.StopTracking(id);
                 AfterMessage(null);
             }
+        }
+
+        TransactionScope BeginTransaction()
+        {
+            var transactionOptions = new TransactionOptions
+            {
+                IsolationLevel = IsolationLevel.ReadCommitted,
+                Timeout = TransactionManager.DefaultTimeout
+            };
+            return new TransactionScope(TransactionScopeOption.Required, transactionOptions);
         }
 
         MethodInfo GetDispatchMethod(Type typeToDispatch)
