@@ -1,23 +1,25 @@
-using System.Configuration;
 using System.Data.SqlClient;
-using System.Linq;
 using NUnit.Framework;
 using log4net.Config;
 
-namespace Rebus.Tests.Persistence.SqlServer
+namespace Rebus.Tests.Persistence
 {
-    public class DbFixtureBase
+    public class SqlServerFixtureBase
     {
-        static DbFixtureBase()
+        static SqlServerFixtureBase()
         {
             XmlConfigurator.Configure();
+        }
+
+        public static string ConnectionString
+        {
+            get { return ConnectionStrings.SqlServer; }
         }
 
         [SetUp]
         public void SetUp()
         {
             TimeMachine.Reset();
-
             DoSetUp();
         }
 
@@ -35,21 +37,6 @@ namespace Rebus.Tests.Persistence.SqlServer
         {
         }
 
-        protected static string ConnectionString
-        {
-            get
-            {
-                var connectionStringSettings = ConfigurationManager.ConnectionStrings
-                        .Cast<ConnectionStringSettings>()
-                        .FirstOrDefault();
-
-                Assert.IsNotNull(connectionStringSettings,
-                                 "There doesn't seem to be any connection strings in the app.config.");
-
-                return connectionStringSettings.ConnectionString;
-            }
-        }
-
         protected void DeleteRows(string tableName)
         {
             ExecuteCommand("delete from " + tableName);
@@ -57,7 +44,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         static void ExecuteCommand(string commandText)
         {
-            using (var conn = new SqlConnection(ConnectionString))
+            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {
                 conn.Open();
 

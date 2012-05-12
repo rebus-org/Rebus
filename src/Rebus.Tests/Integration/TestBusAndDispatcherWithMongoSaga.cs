@@ -5,7 +5,7 @@ using Rebus.Bus;
 using Rebus.MongoDb;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
-using Rebus.Tests.Persistence.MongoDb;
+using Rebus.Tests.Persistence;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;

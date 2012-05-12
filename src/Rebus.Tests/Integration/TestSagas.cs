@@ -65,7 +65,6 @@ namespace Rebus.Tests.Integration
             Assert.AreEqual(0, persister.Count());
         }
 
-
         class MySaga : Saga<MySagaData>,
             IAmInitiatedBy<OrderPlaced>,
             IHandleMessages<OrderBilled>,

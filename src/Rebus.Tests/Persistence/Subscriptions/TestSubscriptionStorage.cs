@@ -1,27 +1,29 @@
-﻿using NUnit.Framework;
-using Raven.Client.Embedded;
+using System;
+using NUnit.Framework;
 using Rebus.Extensions;
-using Rebus.RavenDb;
+using Rebus.Tests.Persistence.Subscriptions.Factories;
 using Shouldly;
 
-namespace Rebus.Tests.Persistence.RavenDb
+namespace Rebus.Tests.Persistence.Subscriptions
 {
-    [TestFixture, Category(TestCategories.Raven)]
-    public class TestRavenDbSubscriptionStorage
+    [TestFixture(typeof(InMemorySubscriptionStoreFactory))]
+    [TestFixture(typeof(SqlServerSubscriptionStoreFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(RavenDbSubscriptionStoreFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(MongoDbSubscriptionStoreFactory), Category = TestCategories.Mongo)]
+    public class TestSubscriptionStorage<TFactory> : FixtureBase where TFactory : ISubscriptionStoreFactory
     {
-        RavenDbSubscriptionStorage storage;
-        EmbeddableDocumentStore store;
+        TFactory factory;
+        IStoreSubscriptions storage;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
-            store = new EmbeddableDocumentStore
-            {
-                RunInMemory = true
-            };
-            store.Initialize();
+            factory = Activator.CreateInstance<TFactory>();
+            storage = factory.CreateStore();
+        }
 
-            storage = new RavenDbSubscriptionStorage(store, "Subscriptions");
+        protected override void DoTearDown()
+        {
+            factory.Dispose();
         }
 
         [Test]
@@ -62,7 +64,25 @@ namespace Rebus.Tests.Persistence.RavenDb
             anotherSubscribers.ShouldContain(e => e.In(new[] { "yet_another_sub" }));
         }
 
-        class SomeMessageType {}
-        class AnotherMessageType {}
+        [Test]
+        public void DoesntThrowWhenTheresNoSubscriptionsForTheGivenMessageType()
+        {
+            // arrange
+
+            // act
+            var subscribers = storage.GetSubscribers(typeof(NeverSubscribeToThisOne_ItWillRuinTheTest));
+
+            // assert
+        }
+
+        class NeverSubscribeToThisOne_ItWillRuinTheTest { }
+    }
+
+    public class SomeMessageType
+    {
+    }
+
+    public class AnotherMessageType
+    {
     }
 }

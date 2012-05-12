@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -48,9 +49,57 @@ namespace Rebus.Tests.Unit
             calls[4].ShouldBe("YetAnotherHandler: another_interface");
         }
 
+        [Test]
+        public void NewSagaIsMarkedAsSuch()
+        {
+            var saga = new SmallestSagaOnEarth();
+            activator.UseHandler(saga);
+            dispatcher.Dispatch(new SomeMessageWithANumber(1));
+            saga.IsNew.ShouldBe(true);
+        }
+
+        [Test]
+        public void SagaInitiatedTwiceIsNotMarkedAsNewTheSecondTime()
+        {
+            var saga = new SmallestSagaOnEarth();
+            activator.UseHandler(saga);
+            dispatcher.Dispatch(new SomeMessageWithANumber(1));
+            dispatcher.Dispatch(new SomeMessageWithANumber(1));
+            saga.IsNew.ShouldBe(false);
+        }
+
         interface ISomeInterface { }
         interface IAnotherInterface { }
         class SomeMessage : ISomeInterface, IAnotherInterface { }
+        class SomeMessageWithANumber
+        {
+            public SomeMessageWithANumber(int theNumber)
+            {
+                TheNumber = theNumber;
+            }
+
+            public int TheNumber { get; private set; }
+        }
+
+        class SmallestSagaOnEarth : Saga<SagaData>, IAmInitiatedBy<SomeMessageWithANumber>
+        {
+            public void Handle(SomeMessageWithANumber message)
+            {
+                Data.TheNumber = message.TheNumber;
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+                Incoming<SomeMessageWithANumber>(m => m.TheNumber).CorrelatesWith(d => d.TheNumber);
+            }
+        }
+
+        class SagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public int TheNumber { get; set; }
+        }
 
         class AuthHandler : IHandleMessages<object>
         {

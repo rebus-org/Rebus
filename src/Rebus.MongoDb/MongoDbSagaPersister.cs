@@ -56,7 +56,6 @@ namespace Rebus.MongoDb
             try
             {
                 safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
-
             }
             catch (MongoSafeModeException)
             {

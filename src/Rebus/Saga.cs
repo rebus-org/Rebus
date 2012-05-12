@@ -7,6 +7,7 @@ namespace Rebus
     {
         internal ConcurrentDictionary<Type, Correlation> Correlations { get; set; }
         internal bool Complete { get; set; }
+        public bool IsNew { get; internal set; }
         public abstract void ConfigureHowToFindSaga();
     }
 
@@ -17,12 +18,12 @@ namespace Rebus
             Correlations = new ConcurrentDictionary<Type, Correlation>();
         }
 
+        public TData Data { get; internal set; }
+
         protected Correlator<TData, TMessage> Incoming<TMessage>(Func<TMessage, object> messageProperty) where TMessage : class
         {
             return new Correlator<TData, TMessage>(messageProperty, this);
         }
-
-        public TData Data { get; set; }
 
         protected void MarkAsComplete()
         {

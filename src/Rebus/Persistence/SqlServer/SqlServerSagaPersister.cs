@@ -46,19 +46,30 @@ namespace Rebus.Persistence.SqlServer
                     command.ExecuteNonQuery();
                 }
 
-                // next, update the saga
+                // next, update or insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"update [{0}] set data = @data where id = @id", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
+                    command.Parameters.AddWithValue("current_revision", sagaData.Revision);
+                    
+                    sagaData.Revision++;
+                    command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
+                    command.CommandText = string.Format(@"update [{0}] set data = @data, revision = @next_revision where id = @id and revision = @current_revision", sagaTableName);
                     var rows = command.ExecuteNonQuery();
-
                     if (rows == 0)
                     {
-                        command.CommandText = string.Format(@"insert into [{0}] (id, data) values (@id, @data)", sagaTableName);
-                        command.ExecuteNonQuery();
+                        command.CommandText = string.Format(@"insert into [{0}] (id, revision, data) values (@id, @next_revision, @data)", sagaTableName);
+
+                        try
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                        catch (SqlException)
+                        {
+                            throw new OptimisticLockingException(sagaData);
+                        }
                     }
                 }
 
@@ -119,15 +130,28 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"select s.data 
-                                                from sagas s 
-                                                    join saga_index i on s.id = i.saga_id 
-                                                where i.[key] = @key 
-                                                    and i.value = @value";
-                    command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                    if (sagaDataPropertyPath == "Id")
+                    {
+                        command.CommandText = @"select s.data from sagas s where s.id = @value";
+                    }
+                    else
+                    {
+                        command.CommandText = @"select s.data 
+                                                    from sagas s 
+                                                        join saga_index i on s.id = i.saga_id 
+                                                    where i.[key] = @key 
+                                                        and i.value = @value";
+                        command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                    }
+
                     command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
 
-                    return (T)JsonConvert.DeserializeObject((string)command.ExecuteScalar(), Settings);
+                    var value = (string) command.ExecuteScalar();
+                    
+                    if (value == null)
+                        return default(T);
+
+                    return (T)JsonConvert.DeserializeObject(value, Settings);
                 }
             }
         }

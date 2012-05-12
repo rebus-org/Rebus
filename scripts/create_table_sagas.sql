@@ -3,6 +3,7 @@ GO
 
 CREATE TABLE [dbo].[sagas](
 	[id] [uniqueidentifier] NOT NULL,
+	[revision] [int] NOT NULL,
 	[data] [nvarchar](max) NOT NULL,
  CONSTRAINT [PK_sagas] PRIMARY KEY CLUSTERED 
 (

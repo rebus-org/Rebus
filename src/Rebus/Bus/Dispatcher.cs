@@ -209,9 +209,9 @@ namespace Rebus.Bus
             {
                 saga.ConfigureHowToFindSaga();
                 var sagaData = GetSagaData(message, saga);
-                var hasExistingSagaData = sagaData != null;
 
-                if (!hasExistingSagaData)
+                saga.IsNew = sagaData == null;
+                if (saga.IsNew)
                 {
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
@@ -226,7 +226,7 @@ namespace Rebus.Bus
 
                 handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
                 handler.Handle(message);
-                PerformSaveActions(saga, sagaData, hasExistingSagaData);
+                PerformSaveActions(saga, sagaData);
                 return;
             }
 
@@ -234,17 +234,19 @@ namespace Rebus.Bus
         }
         // ReSharper restore UnusedMember.Local
 
-        void PerformSaveActions(Saga saga, ISagaData sagaData, bool existingSagaDataWasFound)
+        void PerformSaveActions(Saga saga, ISagaData sagaData)
         {
-            if (!saga.Complete)
+            if (saga.Complete)
             {
-                var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
-                storeSagaData.Save(sagaData, sagaDataPropertyPathsToIndex);
+                if (!saga.IsNew)
+                {
+                    storeSagaData.Delete(sagaData);
+                }
+                return;
             }
-            else if (existingSagaDataWasFound)
-            {
-                storeSagaData.Delete(sagaData);
-            }
+
+            var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
+            storeSagaData.Save(sagaData, sagaDataPropertyPathsToIndex);
         }
 
         private string[] GetSagaDataPropertyPathsToIndex(Saga saga)

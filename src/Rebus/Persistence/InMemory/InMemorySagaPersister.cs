@@ -27,18 +27,12 @@ namespace Rebus.Persistence.InMemory
             foreach (var sagaData in data)
             {
                 var valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString();
-
                 if (valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()))
                 {
                     return (T) sagaData.Value;
                 }
             }
             return default(T);
-        }
-
-        public void UseIndex(string[] sagaDataPathsToIndex)
-        {
-            
         }
 
         public IEnumerator<ISagaData> GetEnumerator()

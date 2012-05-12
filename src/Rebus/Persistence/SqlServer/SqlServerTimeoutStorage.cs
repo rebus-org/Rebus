@@ -36,6 +36,7 @@ namespace Rebus.Persistence.SqlServer
                             {
                                 new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn),
                                 new Tuple<string, object>("correlation_id", newTimeout.CorrelationId),
+                                new Tuple<string, object>("saga_id", newTimeout.SagaId),
                                 new Tuple<string, object>("reply_to", newTimeout.ReplyTo)
                             };
 
@@ -82,7 +83,7 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText =
                         string.Format(
-                            @"select time_to_return, correlation_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
+                            @"select time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
                             timeoutsTableName);
 
                     command.Parameters.AddWithValue("current_time", Time.Now());
@@ -92,6 +93,7 @@ namespace Rebus.Persistence.SqlServer
                         while (reader.Read())
                         {
                             var correlationId = (string) reader["correlation_id"];
+                            var sagaId = (Guid) reader["saga_id"];
                             var replyTo = (string) reader["reply_to"];
                             var timeToReturn = (DateTime) reader["time_to_return"];
                             var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
@@ -99,6 +101,7 @@ namespace Rebus.Persistence.SqlServer
                             dueTimeouts.Add(new Timeout.Timeout
                                                 {
                                                     CorrelationId = correlationId,
+                                                    SagaId = sagaId,
                                                     ReplyTo = replyTo,
                                                     TimeToReturn = timeToReturn,
                                                     CustomData = customData,

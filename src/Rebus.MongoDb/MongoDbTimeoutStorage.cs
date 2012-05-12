@@ -25,6 +25,7 @@ namespace Rebus.MongoDb
             collection.Insert(new
                                   {
                                       corr_id = newTimeout.CorrelationId,
+                                      saga_id = newTimeout.SagaId,
                                       time = newTimeout.TimeToReturn,
                                       data = newTimeout.CustomData,
                                       reply_to = newTimeout.ReplyTo,
@@ -49,6 +50,7 @@ namespace Rebus.MongoDb
                            new Timeout.Timeout
                                {
                                    CorrelationId = document["corr_id"].AsString,
+                                   SagaId = document["saga_id"].AsGuid,
                                    CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
                                    ReplyTo = document["reply_to"].AsString,
                                    TimeToReturn = document["time"].AsDateTime,

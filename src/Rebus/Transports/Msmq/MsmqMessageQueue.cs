@@ -1,5 +1,6 @@
 using System;
 using System.Messaging;
+using System.Security.Principal;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Shared;
@@ -177,7 +178,8 @@ create its queues automatically.", path);
             {
                 log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
-                var administratorAccountName = new WindowsPlatform().GetAdministratorAccountName();
+            	var administratorAccountName =
+            		new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof (NTAccount)).ToString();
 
                 try
                 {
