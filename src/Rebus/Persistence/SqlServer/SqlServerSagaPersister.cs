@@ -3,6 +3,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using Newtonsoft.Json;
 using Ponder;
+using Raven.Abstractions.Exceptions;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -46,19 +47,30 @@ namespace Rebus.Persistence.SqlServer
                     command.ExecuteNonQuery();
                 }
 
-                // next, update the saga
+                // next, update or insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"update [{0}] set data = @data where id = @id", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
+                    command.Parameters.AddWithValue("current_revision", sagaData.Revision);
+                    
+                    sagaData.Revision++;
+                    command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
+                    command.CommandText = string.Format(@"update [{0}] set data = @data, revision = @next_revision where id = @id and revision = @current_revision", sagaTableName);
                     var rows = command.ExecuteNonQuery();
-
                     if (rows == 0)
                     {
-                        command.CommandText = string.Format(@"insert into [{0}] (id, data) values (@id, @data)", sagaTableName);
-                        command.ExecuteNonQuery();
+                        command.CommandText = string.Format(@"insert into [{0}] (id, revision, data) values (@id, @next_revision, @data)", sagaTableName);
+
+                        try
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                        catch (SqlException)
+                        {
+                            throw new OptimisticLockingException(sagaData);
+                        }
                     }
                 }
 
