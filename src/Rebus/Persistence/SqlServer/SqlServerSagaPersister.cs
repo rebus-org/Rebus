@@ -3,7 +3,6 @@ using System.Data.SqlClient;
 using System.Linq;
 using Newtonsoft.Json;
 using Ponder;
-using Raven.Abstractions.Exceptions;
 
 namespace Rebus.Persistence.SqlServer
 {

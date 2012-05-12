@@ -1,6 +1,7 @@
 using System;
 using NUnit.Framework;
 using Rebus.Tests.Persistence.Sagas.Factories;
+using Shouldly;
 
 namespace Rebus.Tests.Persistence.Sagas
 {
@@ -51,6 +52,27 @@ namespace Rebus.Tests.Persistence.Sagas
             ReturnToOriginalMessageContext();
 
             Assert.Throws<OptimisticLockingException>(() => Persister.Save(sagaData1, indexBySomeString));
+        }
+
+        [Test]
+        public void ConcurrentDeleteAndUpdateLetsTheDeleteWin()
+        {
+            var indexBySomeString = new[] { "Id" };
+            var id = Guid.NewGuid();
+            var simpleSagaData = new SimpleSagaData { Id = id };
+            Persister.Save(simpleSagaData, indexBySomeString);
+
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
+
+            EnterAFakeMessageContext();
+
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
+            Persister.Delete(sagaData2);
+
+            ReturnToOriginalMessageContext();
+
+            Persister.Save(sagaData1, indexBySomeString);
+            Persister.Find<SimpleSagaData>("Id", id).ShouldBe(null);
         }
     }
 }
