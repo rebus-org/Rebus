@@ -49,8 +49,7 @@ namespace Rebus.Tests.Performance
                         Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.Id),
                         Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.OrdinaryField),
                         Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.AnotherEmbeddedThing.EmbeddedValue),
-                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(
-                            d => d.YetAnotherEmbeddedThing.EvenDeeperEmbeddedThing.FinallySomeValue),
+                        Reflect.Path<SomePieceOfFairlyComplexSagaData>(d => d.YetAnotherEmbeddedThing.EvenDeeperEmbeddedThing.FinallySomeValue),
                     };
 
             Console.WriteLine("Running {0} iterations of saving/updating {1} sagas", iterations, numberOfSagas);

@@ -5,6 +5,7 @@ using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
+using System.Linq;
 
 namespace Rebus.MongoDb
 {
@@ -51,12 +52,12 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (MongoSafeModeException)
+            catch (MongoSafeModeException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
                 // ... therefore, we map the MongoSafeModeException to our own OptimisticLockingException
-                throw new OptimisticLockingException(sagaData);
+                throw new OptimisticLockingException(sagaData, ex);
             }
         }
 
@@ -82,12 +83,12 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (MongoSafeModeException)
+            catch (MongoSafeModeException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
                 // ... therefore, we map the MongoSafeModeException to our own OptimisticLockingException
-                throw new OptimisticLockingException(sagaData);
+                throw new OptimisticLockingException(sagaData, ex);
             }
         }
 
@@ -95,9 +96,9 @@ namespace Rebus.MongoDb
         {
             if (!indexCreated)
             {
-                foreach (var propertyToIndex in sagaDataPropertyPathsToIndex)
+                foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[]{"Id"}))
                 {
-                    collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex), IndexOptions.SetBackground(false));
+                    collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex), IndexOptions.SetBackground(false).SetUnique(true));
                 }
                 indexCreated = true;
             }
@@ -120,12 +121,12 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (MongoSafeModeException)
+            catch (MongoSafeModeException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
                 // ... therefore, we map the MongoSafeModeException to our own OptimisticLockingException
-                throw new OptimisticLockingException(sagaData);
+                throw new OptimisticLockingException(sagaData, ex);
             }
         }
 

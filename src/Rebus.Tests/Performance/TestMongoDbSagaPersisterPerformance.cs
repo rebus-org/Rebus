@@ -11,6 +11,7 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
+            DropCollection("sagas");
             persister = new MongoDbSagaPersister(ConnectionStrings.MongoDb, "sagas");
         }
 
@@ -33,6 +34,7 @@ namespace Rebus.Tests.Performance
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 2)]
+        [TestCase(2, 1)]
         public void RunTest(int numberOfSagas, int iterations)
         {
             SagaPersisterPerformanceTestHelper.DoTheTest(persister, numberOfSagas, iterations);

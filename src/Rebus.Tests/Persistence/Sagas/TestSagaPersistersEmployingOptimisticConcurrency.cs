@@ -2,7 +2,6 @@ using System;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
-using Shouldly;
 
 namespace Rebus.Tests.Persistence.Sagas
 {

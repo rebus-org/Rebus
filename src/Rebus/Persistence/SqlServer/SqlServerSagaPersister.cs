@@ -8,6 +8,8 @@ namespace Rebus.Persistence.SqlServer
 {
     public class SqlServerSagaPersister : IStoreSagaData
     {
+        const int PrimaryKeyViolationNumber = 2627;
+
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
@@ -94,7 +96,20 @@ namespace Rebus.Persistence.SqlServer
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 
                         command.CommandText = sql;
-                        command.ExecuteNonQuery();
+
+                        try
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                        catch(SqlException sqlException)
+                        {
+                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            {
+                                throw new OptimisticLockingException(sagaData);
+                            }
+
+                            throw;
+                        }
                     }
                 }
             }
