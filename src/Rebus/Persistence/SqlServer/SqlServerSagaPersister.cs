@@ -9,6 +9,7 @@ namespace Rebus.Persistence.SqlServer
     public class SqlServerSagaPersister : IStoreSagaData
     {
         const int PrimaryKeyViolationNumber = 2627;
+        const int MaximumSagaDataTypeNameLength = 40;
 
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
@@ -87,10 +88,10 @@ namespace Rebus.Persistence.SqlServer
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
-                                                            ([key], value, saga_id) 
+                                                            ([saga_type], [key], value, saga_id) 
                                                         values 
-                                                            ('{1}', '{2}', '{3}')",
-                                sagaIndexTableName, a.Key, a.Value,
+                                                            ('{1}', '{2}', '{3}', '{4}')",
+                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
                                 sagaData.Id.ToString()));
 
                         var sql = string.Join(";" + Environment.NewLine, inserts);
@@ -113,6 +114,26 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
             }
+        }
+
+        string GetSagaTypeName(Type sagaDataType)
+        {
+            var sagaTypeName = sagaDataType.Name;
+
+            if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        @"Sorry, but the maximum length of the name of a saga data class is currently limited to {0} characters!
+
+This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
+since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
+there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the
+saga type name.",
+                        MaximumSagaDataTypeNameLength));
+            }
+
+            return sagaTypeName;
         }
 
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
@@ -165,10 +186,10 @@ namespace Rebus.Persistence.SqlServer
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
-                                                            ([key], value, saga_id) 
+                                                            ([saga_type], [key], value, saga_id) 
                                                         values 
-                                                            ('{1}', '{2}', '{3}')",
-                                sagaIndexTableName, a.Key, a.Value,
+                                                            ('{1}', '{2}', '{3}', '{4}')",
+                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
                                 sagaData.Id.ToString()));
 
                         var sql = string.Join(";" + Environment.NewLine, inserts);
@@ -196,7 +217,7 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
-        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
+        public TSagaData Find<TSagaData>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaData : ISagaData
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -213,9 +234,11 @@ namespace Rebus.Persistence.SqlServer
                         command.CommandText = @"select s.data 
                                                     from sagas s 
                                                         join saga_index i on s.id = i.saga_id 
-                                                    where i.[key] = @key 
+                                                    where i.[saga_type] = @saga_type
+                                                        and i.[key] = @key 
                                                         and i.value = @value";
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
                     }
 
                     command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
@@ -223,9 +246,9 @@ namespace Rebus.Persistence.SqlServer
                     var value = (string)command.ExecuteScalar();
 
                     if (value == null)
-                        return default(T);
+                        return default(TSagaData);
 
-                    return (T)JsonConvert.DeserializeObject(value, Settings);
+                    return (TSagaData)JsonConvert.DeserializeObject(value, Settings);
                 }
             }
         }
