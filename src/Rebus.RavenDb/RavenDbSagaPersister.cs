@@ -39,7 +39,6 @@ namespace Rebus.RavenDb
             var session = GetSession();
             try
             {
-                session.Store(sagaData);
                 session.SaveChanges();
             }
             catch (ConcurrencyException concurrencyException)
