@@ -87,7 +87,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
 
-            var sagas = Collection<CustomerInformationSagaData>("dcc.sagas");
+            var sagas = Collection<CustomerInformationSagaData>("customer_information_sagas");
             var allSagas = sagas.FindAll();
 
             allSagas.Count().ShouldBe(count);
