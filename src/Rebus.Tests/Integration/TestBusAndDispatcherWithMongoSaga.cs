@@ -21,11 +21,16 @@ namespace Rebus.Tests.Integration
         protected override void DoSetUp()
         {
             DropCollection("sagas");
+
             var msmqMessageQueue = new MsmqMessageQueue("test.dispatcher.and.mongo", "error");
             handlers = new HandlerActivatorForTesting().UseHandler(new MySaga());
+            
+            var persister = new MongoDbSagaPersister(ConnectionString)
+                .SetCollectionName<MySagaData>("sagas");
+            
             bus = new RebusBus(handlers, msmqMessageQueue,
                                msmqMessageQueue, new InMemorySubscriptionStorage(),
-                               new MongoDbSagaPersister(ConnectionString, "sagas"),
+                               persister,
                                null,
                                new JsonMessageSerializer(),
                                new TrivialPipelineInspector())

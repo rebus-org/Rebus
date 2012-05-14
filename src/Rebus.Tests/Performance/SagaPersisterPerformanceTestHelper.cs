@@ -78,7 +78,7 @@ namespace Rebus.Tests.Performance
                               numberOfSagas*iterations/elapsed.TotalSeconds);
         }
 
-        class SomePieceOfFairlyComplexSagaData : ISagaData
+        internal class SomePieceOfFairlyComplexSagaData : ISagaData
         {
             public SomePieceOfFairlyComplexSagaData()
             {
@@ -99,7 +99,7 @@ namespace Rebus.Tests.Performance
             public YetAnotherEmbeddedThing YetAnotherEmbeddedThing { get; set; }
         }
 
-        class SomeEmbeddedThing
+        internal class SomeEmbeddedThing
         {
             public SomeEmbeddedThing()
             {
@@ -109,7 +109,7 @@ namespace Rebus.Tests.Performance
             public string SomeValue { get; set; }
         }
 
-        class AnotherEmbeddedThing
+        internal class AnotherEmbeddedThing
         {
             public AnotherEmbeddedThing()
             {
@@ -122,7 +122,7 @@ namespace Rebus.Tests.Performance
             public string EmbeddedValue { get; set; }
         }
 
-        class LeafThing
+        internal class LeafThing
         {
             public LeafThing()
             {
@@ -132,12 +132,12 @@ namespace Rebus.Tests.Performance
             public string SomeValue { get; set; }
         }
 
-        class YetAnotherEmbeddedThing
+        internal class YetAnotherEmbeddedThing
         {
             public EvenDeeperEmbeddedThing EvenDeeperEmbeddedThing { get; set; }
         }
 
-        class EvenDeeperEmbeddedThing
+        internal class EvenDeeperEmbeddedThing
         {
             public EvenDeeperEmbeddedThing()
             {
@@ -146,6 +146,5 @@ namespace Rebus.Tests.Performance
 
             public string FinallySomeValue { get; set; }
         }
-
     }
 }

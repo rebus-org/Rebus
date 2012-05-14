@@ -12,7 +12,9 @@ namespace Rebus.Tests.Performance
         protected override void DoSetUp()
         {
             DropCollection("sagas");
-            persister = new MongoDbSagaPersister(ConnectionStrings.MongoDb, "sagas");
+
+            persister = new MongoDbSagaPersister(ConnectionStrings.MongoDb)
+                .SetCollectionName<SagaPersisterPerformanceTestHelper.SomePieceOfFairlyComplexSagaData>("sagas");
         }
 
         /// <summary>

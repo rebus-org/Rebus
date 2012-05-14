@@ -57,6 +57,11 @@ namespace Rebus.Tests.Performance.StressMongo
             legal = CreateBus("legal", ContainerAdapterWith("legal", typeof(CheckSomeLegalStuffSaga)));
             dcc = CreateBus("dcc", ContainerAdapterWith("dcc", typeof(MaintainCustomerInformationSaga)));
 
+            // clear saga data collections
+            DropCollection("check_credit_sagas");
+            DropCollection("check_legal_sagas");
+            DropCollection("customer_information_sagas");
+
             DropCollection("rebus.timeouts");
             timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, "rebus.timeouts"));
             timeout.Start();
@@ -230,9 +235,14 @@ namespace Rebus.Tests.Performance.StressMongo
             var msmqMessageQueue = new MsmqMessageQueue(GetEndpoint(serviceName), "error").PurgeInputQueue();
             MsmqUtil.PurgeQueue("error");
 
+            var sagaPersister = new MongoDbSagaPersister(ConnectionString)
+                .SetCollectionName<CheckCreditSagaData>("check_credit_sagas")
+                .SetCollectionName<CheckSomeLegalStuffSagaData>("check_legal_sagas")
+                .SetCollectionName<CustomerInformationSagaData>("customer_information_sagas");
+
             var bus = new RebusBus(containerAdapter, msmqMessageQueue, msmqMessageQueue,
                                    new MongoDbSubscriptionStorage(ConnectionString, subscriptionsCollectionName),
-                                   new MongoDbSagaPersister(ConnectionString, sagaCollectionName), this,
+                                   sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector());
 
             stuffToDispose.Add(bus);

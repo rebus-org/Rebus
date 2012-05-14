@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
@@ -16,16 +17,15 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbSagaPersister : IStoreSagaData
     {
+        readonly Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
         readonly SagaDataElementNameConvention elementNameConventions;
-        readonly string collectionName;
         readonly MongoDatabase database;
 
         bool indexCreated;
+        bool allowAutomaticSagaCollectionNames;
 
-        public MongoDbSagaPersister(string connectionString, string collectionName)
+        public MongoDbSagaPersister(string connectionString)
         {
-            this.collectionName = collectionName;
-
             database = MongoDatabase.Create(connectionString);
 
             elementNameConventions = new SagaDataElementNameConvention();
@@ -35,9 +35,15 @@ namespace Rebus.MongoDb
             BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
 
+        public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName)
+        {
+            collectionNames.Add(typeof (TSagaData), collectionName);
+            return this;
+        }
+
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            var collection = database.GetCollection(collectionName);
+            var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
 
             EnsureIndexHasBeenCreated(sagaDataPropertyPathsToIndex, collection);
 
@@ -63,7 +69,7 @@ namespace Rebus.MongoDb
 
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            var collection = database.GetCollection(collectionName);
+            var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
 
             EnsureIndexHasBeenCreated(sagaDataPropertyPathsToIndex, collection);
 
@@ -92,7 +98,35 @@ namespace Rebus.MongoDb
             }
         }
 
-        void EnsureIndexHasBeenCreated(string[] sagaDataPropertyPathsToIndex, MongoCollection<BsonDocument> collection)
+        string GetCollectionName(Type sagaDataType)
+        {
+            if (collectionNames.ContainsKey(sagaDataType))
+            {
+                return collectionNames[sagaDataType];
+            }
+
+            if (allowAutomaticSagaCollectionNames)
+            {
+                return string.Format("{0}_sagas", sagaDataType.Name);
+            }
+
+            // TODO: update error message when fluent cfg API has been made for Mongo
+            throw new InvalidOperationException(
+                string.Format(
+                    @"This MongoDB saga persister doesn't know where to store sagas of type {0}.
+
+You must specify a collection for each saga type on the persister, e.g. like so:
+
+    new MongoDbSagaPersister(ConnectionString)
+        .SetCollectionName<MySagaData>(""my_sagas"")
+        .SetCollectionName<MyOtherSagaData>(""my_other_sagas"");
+
+if you create the persister manually, or in some other way if you're using the fluent configuration API.
+",
+                    sagaDataType));
+        }
+
+        void EnsureIndexHasBeenCreated(IEnumerable<string> sagaDataPropertyPathsToIndex, MongoCollection<BsonDocument> collection)
         {
             if (!indexCreated)
             {
@@ -106,7 +140,7 @@ namespace Rebus.MongoDb
 
         public void Delete(ISagaData sagaData)
         {
-            var collection = database.GetCollection(collectionName);
+            var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
 
             var query = Query.And(Query.EQ("_id", sagaData.Id),
                                   Query.EQ("_rev", sagaData.Revision));
@@ -132,7 +166,7 @@ namespace Rebus.MongoDb
 
         public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
         {
-            var collection = database.GetCollection(typeof(T), collectionName);
+            var collection = database.GetCollection(typeof(T), GetCollectionName(typeof(T)));
 
             if (sagaDataPropertyPath == "Id")
                 return collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
@@ -171,6 +205,12 @@ namespace Rebus.MongoDb
 
                 throw new MongoSafeModeException(exceptionMessage, safeModeResult);
             }
+        }
+
+        public MongoDbSagaPersister AllowAutomaticSagaCollectionNames()
+        {
+            allowAutomaticSagaCollectionNames = true;
+            return this;
         }
     }
 }
