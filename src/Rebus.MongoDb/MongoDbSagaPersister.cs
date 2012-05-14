@@ -107,7 +107,7 @@ namespace Rebus.MongoDb
 
             if (allowAutomaticSagaCollectionNames)
             {
-                return string.Format("{0}_sagas", sagaDataType.Name);
+                return string.Format("sagas_{0}", sagaDataType.Name);
             }
 
             // TODO: update error message when fluent cfg API has been made for Mongo
@@ -121,7 +121,26 @@ You must specify a collection for each saga type on the persister, e.g. like so:
         .SetCollectionName<MySagaData>(""my_sagas"")
         .SetCollectionName<MyOtherSagaData>(""my_other_sagas"");
 
-if you create the persister manually, or in some other way if you're using the fluent configuration API.
+if you create the persister manually, or like this if you're using the fluent configuration API:
+
+    Configure.With(adapter)
+        (...)
+        .Sagas(s => s.StoreInMongoDb(ConnectionString)
+                        .SetCollectionName<string>(""string_sagas"")
+                        .SetCollectionName<DateTime>(""datetime_sagas""))
+        (...)
+
+Alternatively, if you're more into the ""convention over configuration"" thing, trade a little
+bit of control for reduced friction, and let the persister come up with a name by itself:
+
+    Configure.With(adapter)
+        (...)
+        .Sagas(s => s.StoreInMongoDb(ConnectionString)
+                        .AllowAutomaticSagaCollectionNames())
+        (...)
+
+which will make the persister use the type of the saga to come up with collection names 
+automatically.
 ",
                     sagaDataType));
         }

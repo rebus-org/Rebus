@@ -181,6 +181,7 @@
     <Compile Include="Bugs\CheckCallsMade.cs" />
     <Compile Include="Persistence\ConnectionStrings.cs" />
     <Compile Include="Persistence\MongoDbFixtureBase.cs" />
+    <Compile Include="Persistence\MongoDb\TestMongoDbSagaPersister.cs" />
     <Compile Include="Persistence\Sagas\Factories\InMemorySagaPersisterFactory.cs" />
     <Compile Include="Persistence\Sagas\ISagaPersisterFactory.cs" />
     <Compile Include="Persistence\Sagas\Factories\MongoDbSagaPersisterFactory.cs" />
