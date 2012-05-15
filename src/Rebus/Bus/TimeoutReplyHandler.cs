@@ -4,7 +4,7 @@ using Rebus.Messages;
 
 namespace Rebus.Bus
 {
-    class TimeoutReplyHandler : IHandleMessages<TimeoutReply>
+    internal class TimeoutReplyHandler : IHandleMessages<TimeoutReply>
     {
         readonly IHandleDeferredMessage handleDeferredMessage;
         internal const string TimeoutReplySecretCorrelationId = "rebus.secret.deferred.message.id";
@@ -26,6 +26,9 @@ namespace Rebus.Bus
 
         public void Handle(TimeoutReply message)
         {
+            if (message.CorrelationId != TimeoutReplySecretCorrelationId)
+                return;
+
             var deferredMessage = Deserialize(message.CustomData);
 
             log.Info("Received timeout reply - sending deferred message to self.");
