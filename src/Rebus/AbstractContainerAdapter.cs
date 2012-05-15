@@ -18,7 +18,10 @@ namespace Rebus
 
         public void Release(IEnumerable handlerInstances)
         {
-            Release((object)handlerInstances);
+            foreach (var handlerInstance in handlerInstances)
+            {
+                Release(handlerInstance);
+            }
         }
 
         public abstract void RegisterInstance(object instance, params Type[] serviceTypes);
