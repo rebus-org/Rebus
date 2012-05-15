@@ -64,7 +64,7 @@
 
     <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
     <!-- should probably use variables instead of hardcoded DLL paths here ... -->
-    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4 /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
   </Target>
 
   <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
