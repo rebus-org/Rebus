@@ -22,6 +22,34 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
+        public void ConfiguringLoggingDoesNotRegisterTwoHandlerActivators()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.None())
+                .Serialization(s => s.UseJsonSerializer());
+
+            adapter.Registrations
+                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .ShouldBe(1);
+        }
+
+        [Test]
+        public void NotConfiguringLoggingStillRegistersTheHandlerActivator()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.None())
+                .Serialization(s => s.UseJsonSerializer());
+
+            adapter.Registrations
+                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .ShouldBe(1);
+        }
+
+        [Test]
         public void CanConfigureDiscovery()
         {
             var adapter = new TestContainerAdapter();

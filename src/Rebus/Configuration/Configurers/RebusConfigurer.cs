@@ -5,6 +5,10 @@ using Rebus.Serialization.Binary;
 
 namespace Rebus.Configuration.Configurers
 {
+    /// <summary>
+    /// Fluent builder class that can be used to build a configuration and have various configurers
+    /// called with the container adapter.
+    /// </summary>
     public class RebusConfigurer
     {
         protected readonly IContainerAdapter containerAdapter;
@@ -12,7 +16,6 @@ namespace Rebus.Configuration.Configurers
         public RebusConfigurer(IContainerAdapter containerAdapter)
         {
             this.containerAdapter = containerAdapter;
-            containerAdapter.RegisterInstance(containerAdapter, typeof (IActivateHandlers));
         }
 
         public RebusConfigurer Transport(Action<TransportConfigurer> configureTransport)
