@@ -11,7 +11,7 @@ namespace Rebus.Configuration.Configurers
         public RebusConfigurer Logging(Action<LoggingConfigurer> configureLogging)
         {
             configureLogging(new LoggingConfigurer());
-            return new RebusConfigurer(containerAdapter);
+            return this;
         }
     }
 }

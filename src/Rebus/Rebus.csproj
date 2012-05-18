@@ -112,6 +112,7 @@
     <Compile Include="Messages\TimeoutReply.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
+    <Compile Include="Persistence\InMemory\InMemoryExtensions.cs" />
     <Compile Include="Persistence\InMemory\InMemoryTimeoutStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
