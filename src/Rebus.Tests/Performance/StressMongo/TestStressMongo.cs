@@ -31,7 +31,7 @@ namespace Rebus.Tests.Performance.StressMongo
     public class TestStressMongo : MongoDbFixtureBase, IDetermineDestination, IFlowLog
     {
         readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
-        
+
         readonly Dictionary<Type, string> endpointMappings =
             new Dictionary<Type, string>
                 {
@@ -41,7 +41,7 @@ namespace Rebus.Tests.Performance.StressMongo
                 };
 
         readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
-        
+
         IBus crm;
         IBus caf;
         IBus legal;
@@ -81,8 +81,8 @@ namespace Rebus.Tests.Performance.StressMongo
         public void StatementOfSomething(int count)
         {
             var no = 1;
-            count.Times(() => crm.Publish(new CustomerCreated {Name = "John Doe" + no++, CustomerId = Guid.NewGuid()}));
-            
+            count.Times(() => crm.Publish(new CustomerCreated { Name = "John Doe" + no++, CustomerId = Guid.NewGuid() }));
+
             Thread.Sleep(15.Seconds() + (count * 0.8).Seconds());
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
@@ -139,7 +139,7 @@ namespace Rebus.Tests.Performance.StressMongo
             }
 
             container.Register(Component.For<IFlowLog>().Instance(this));
-          //  container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
+            //  container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
 
             return new WindsorContainerAdapter(container);
         }
@@ -171,36 +171,36 @@ namespace Rebus.Tests.Performance.StressMongo
             {
                 if (message is SimulatedCreditCheckComplete)
                 {
-                    return ((SimulatedCreditCheckComplete) message).CustomerId.ToString();
+                    return ((SimulatedCreditCheckComplete)message).CustomerId.ToString();
                 }
 
                 if (message is CustomerCreated)
                 {
-                    var customerCreated = (CustomerCreated) message;
+                    var customerCreated = (CustomerCreated)message;
 
                     return string.Format("{0} {1}", customerCreated.CustomerId, customerCreated.Name);
                 }
 
                 if (message is TimeoutReply)
                 {
-                    var timeoutReply = (TimeoutReply) message;
+                    var timeoutReply = (TimeoutReply)message;
 
                     return timeoutReply.CustomData;
                 }
 
                 if (message is CustomerCreditCheckComplete)
                 {
-                    return ((CustomerCreditCheckComplete) message).CustomerId.ToString();
+                    return ((CustomerCreditCheckComplete)message).CustomerId.ToString();
                 }
 
                 if (message is SimulatedLegalCheckComplete)
                 {
-                    return ((SimulatedLegalCheckComplete) message).CustomerId.ToString();
+                    return ((SimulatedLegalCheckComplete)message).CustomerId.ToString();
                 }
 
                 if (message is CustomerLegallyApproved)
                 {
-                    return ((CustomerLegallyApproved) message).CustomerId.ToString();
+                    return ((CustomerLegallyApproved)message).CustomerId.ToString();
                 }
 
                 return "n/a";
@@ -211,8 +211,8 @@ namespace Rebus.Tests.Performance.StressMongo
         {
             return type.GetInterfaces()
                 .Where(i => i.IsGenericType &&
-                            (i.GetGenericTypeDefinition() == typeof (IHandleMessages<>)
-                             || i.GetGenericTypeDefinition() == typeof (IAmInitiatedBy<>)))
+                            (i.GetGenericTypeDefinition() == typeof(IHandleMessages<>)
+                             || i.GetGenericTypeDefinition() == typeof(IAmInitiatedBy<>)))
                 .ToArray();
         }
 
@@ -260,7 +260,7 @@ namespace Rebus.Tests.Performance.StressMongo
         public void LogFlow(Guid correlationId, string message, params object[] objs)
         {
             var key = correlationId.ToString();
-            
+
             LogSequence(key, message, objs);
         }
 
@@ -271,16 +271,9 @@ namespace Rebus.Tests.Performance.StressMongo
 
         void Log(string id, string message, object[] objs)
         {
-            try
-            {
-                log.TryAdd(id, new ConcurrentQueue<string>());
+            log.TryAdd(id, new ConcurrentQueue<string>());
 
-                log[id].Enqueue(string.Format(message, objs));
-            }
-            catch(Exception e)
-            {
-                int a = 2;
-            }
+            log[id].Enqueue(string.Format(message, objs));
         }
     }
 

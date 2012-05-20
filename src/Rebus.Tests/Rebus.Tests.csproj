@@ -123,6 +123,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Shouldly.1.1.0.0\lib\35\Shouldly.dll</HintPath>
     </Reference>
+    <Reference Include="StructureMap">
+      <HintPath>..\packages\structuremap.2.6.3\lib\StructureMap.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
@@ -151,6 +154,9 @@
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
@@ -255,6 +261,10 @@
     <ProjectReference Include="..\Rebus.RavenDb\Rebus.RavenDb.csproj">
       <Project>{A56478ED-F8B1-4300-9C6C-87322E565252}</Project>
       <Name>Rebus.RavenDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.StructureMap\Rebus.StructureMap.csproj">
+      <Project>{D5263804-AD2A-40E3-B656-5132255883A8}</Project>
+      <Name>Rebus.StructureMap</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Timeout\Rebus.Timeout.csproj">
       <Project>{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}</Project>
