@@ -8,7 +8,9 @@ namespace Rebus
     public interface IContainerAdapter : IActivateHandlers
     {
         /// <summary>
-        /// Registers the given instance as an implementation of the specified service types.
+        /// Registers the given instance as an implementation of the specified service types. The instance
+        /// is to be considered "given" to the underlying container - i.e. the container will assume
+        /// responsibility for disposing it if necessary.
         /// </summary>
         void RegisterInstance(object instance, params Type[] serviceTypes);
         

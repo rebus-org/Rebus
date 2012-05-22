@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Castle.Core;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
@@ -9,9 +10,27 @@ namespace Rebus.Castle.Windsor
     {
         readonly IWindsorContainer container;
 
+        class InstanceDisposer : IDisposable
+        {
+            readonly List<IDisposable> instances = new List<IDisposable>();
+
+            public void AddInstance(IDisposable instanceToDisposeWhenDisposed)
+            {
+                instances.Add(instanceToDisposeWhenDisposed);
+            }
+
+            public void Dispose()
+            {
+                instances.ForEach(i => i.Dispose());
+                instances.Clear();
+            }
+        }
+
         public WindsorContainerAdapter(IWindsorContainer container)
         {
             this.container = container;
+
+            container.Register(Component.For<InstanceDisposer>().LifeStyle.Singleton);
 
             container.Register(Component.For<IMessageContext>()
                                    .UsingFactoryMethod(k => MessageContext.GetCurrent())
@@ -21,6 +40,11 @@ namespace Rebus.Castle.Windsor
         public override void RegisterInstance(object instance, params Type[] serviceTypes)
         {
             container.Register(Component.For(serviceTypes).Instance(instance).NamedAutomatically(RandomName()));
+
+            if (instance is IDisposable)
+            {
+                container.Resolve<InstanceDisposer>().AddInstance((IDisposable)instance);
+            }
         }
 
         public override void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)

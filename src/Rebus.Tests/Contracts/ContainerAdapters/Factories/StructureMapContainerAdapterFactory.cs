@@ -5,9 +5,17 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {
     public class StructureMapContainerAdapterFactory : IContainerAdapterFactory
     {
+        Container container;
+
         public IContainerAdapter Create()
         {
-            return new StructureMapContainerAdapter(new Container());
+            container = new Container();
+            return new StructureMapContainerAdapter(container);
+        }
+
+        public void DisposeInnerContainer()
+        {
+            container.Dispose();
         }
     }
 }

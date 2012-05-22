@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
@@ -12,12 +13,71 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
+        TFactory factory;
 
         protected override void DoSetUp()
         {
+            SomeDisposable.Reset();
             Console.WriteLine("Running setup for {0}", typeof(TFactory));
-            var factory = new TFactory();
+            factory = new TFactory();
             adapter = factory.Create();
+        }
+
+        [Test]
+        public void DisposesSingletonsWhenContainerIsDisposed()
+        {
+            // arrange
+            adapter.Register(typeof(SomeDisposable), Lifestyle.Singleton, typeof(SomeDisposable));
+
+            // act
+            // ensure that the singleton has been initialized
+            adapter.Resolve<SomeDisposable>();
+            factory.DisposeInnerContainer();
+
+            // assert
+            SomeDisposable.WasDisposed.ShouldBe(true);
+        }
+
+        [Test]
+        public void DisposesInstancesWhenContainerIsDisposed()
+        {
+            // arrange
+            adapter.RegisterInstance(new SomeDisposable(), typeof(SomeDisposable));
+
+            // act
+            factory.DisposeInnerContainer();
+
+            // assert
+            SomeDisposable.WasDisposed.ShouldBe(true);
+        }
+
+        [Test]
+        public void DisposesTransientWhenInstanceIsReleased()
+        {
+            // arrange
+            adapter.Register(typeof(SomeDisposable), Lifestyle.Instance, typeof(SomeDisposable));
+            var instance = adapter.Resolve<SomeDisposable>();
+
+            // act
+            adapter.Release(instance);
+
+            // assert
+            SomeDisposable.WasDisposed.ShouldBe(true);
+        }
+
+        class SomeDisposable : IDisposable
+        {
+            public static bool WasDisposed = false;
+            
+            public static void Reset()
+            {
+                WasDisposed = false;
+            }
+
+            public void Dispose()
+            {
+                WasDisposed = true;
+            }
         }
 
         [Test]
@@ -131,5 +191,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     public interface IContainerAdapterFactory
     {
         IContainerAdapter Create();
+        void DisposeInnerContainer();
     }
 }

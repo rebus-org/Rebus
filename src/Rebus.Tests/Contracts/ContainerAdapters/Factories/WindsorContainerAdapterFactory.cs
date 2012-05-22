@@ -5,9 +5,17 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {
     public class WindsorContainerAdapterFactory : IContainerAdapterFactory
     {
+        WindsorContainer container;
+
         public IContainerAdapter Create()
         {
-            return new WindsorContainerAdapter(new WindsorContainer());
+            container = new WindsorContainer();
+            return new WindsorContainerAdapter(container);
+        }
+
+        public void DisposeInnerContainer()
+        {
+            container.Dispose();
         }
     }
 }
