@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Rebus.Timeout")]
+[assembly: AssemblyTitle("Rebus.Xml")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Rebus.Timeout")]
+[assembly: AssemblyProduct("Rebus.Xml")]
 [assembly: AssemblyCopyright("Copyright ©  2012")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("1f4b2fb1-6058-4bc7-a235-e1216fe57456")]
+[assembly: Guid("a360379b-846e-4be0-b6fa-1097bbe6a3f3")]
 
 // Version information for an assembly consists of the following four values:
 //

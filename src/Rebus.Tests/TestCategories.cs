@@ -14,6 +14,7 @@ namespace Rebus.Tests
         public const string Mongo = "mongo";
         public const string Raven = "raven";
         public const string MsSql = "mssql";
+        public const string Xml = "xml";
         public const string ToDo = "todo";
         public const string Performance = "performance";
 
