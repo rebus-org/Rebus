@@ -56,7 +56,7 @@ namespace Rebus.Shared
                 {
                     throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", queueName));
                 }
-                return new QueueInfo {MachineName = tokens[0], QueueName = tokens[1]};
+                return new QueueInfo {QueueName = tokens[0], MachineName = tokens[1]};
             }
             return new QueueInfo {QueueName = queueName};
         }
