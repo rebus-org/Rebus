@@ -18,6 +18,7 @@ namespace Rebus.Tests.Transports.Msmq
     [TestFixture]
     public class TestMsmqMessageQueue
     {
+        List<IDisposable> disposables;
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
         string destinationQueuePath;
@@ -27,6 +28,8 @@ namespace Rebus.Tests.Transports.Msmq
         [SetUp]
         public void SetUp()
         {
+            disposables = new List<IDisposable>();
+
             serializer = new JsonMessageSerializer();
             senderQueue = new MsmqMessageQueue("test.msmq.tx.sender", "error");
             destinationQueueName = "test.msmq.tx.destination";
@@ -46,6 +49,36 @@ namespace Rebus.Tests.Transports.Msmq
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
+
+            disposables.Add(senderQueue);
+            disposables.Add(destinationQueue);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            disposables.ForEach(d => d.Dispose());
+        }
+
+        [Test]
+        public void CanSendAndReceiveMessageToQueueOnSpecificMachine()
+        {
+            // arrange
+            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error");
+            disposables.Add(queue);
+
+            var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
+
+            // act
+            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+
+            Thread.Sleep(200);
+
+            // assert
+
+            var receivedTransportMessage = queue.ReceiveMessage();
+            receivedTransportMessage.ShouldNotBe(null);
+            Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
 
         /// <summary>
@@ -74,7 +107,7 @@ namespace Rebus.Tests.Transports.Msmq
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
             Console.WriteLine("Sending {0} messages took {1:0} s - that's {2:0} msg/s",
-                              count, totalSeconds, count/totalSeconds);
+                              count, totalSeconds, count / totalSeconds);
         }
 
         [Test]
@@ -155,13 +188,13 @@ namespace Rebus.Tests.Transports.Msmq
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                                       {
-                                                          Messages = new object[] {"W00t!"},
+                                                          Messages = new object[] { "W00t!" },
                                                           Headers = headers
                                                       }));
             var msmqMessage = Receive();
 
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
-            
+
             var receivedTransportMessage = (ReceivedTransportMessage)msmqMessage.Body;
             receivedTransportMessage.Headers = new DictionarySerializer().Deserialize(Encoding.UTF7.GetString(msmqMessage.Extension));
             var message = serializer.Deserialize(receivedTransportMessage);
