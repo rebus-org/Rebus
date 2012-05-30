@@ -1,56 +1,59 @@
 ﻿using System;
 using System.Linq;
-using System.Collections.Generic;
 using StructureMap;
 
 namespace Rebus.StructureMap
 {
     public class StructureMapContainerAdapter : AbstractContainerAdapter
     {
-        private readonly IContainer _container;
+        private readonly IContainer container;
 
         public StructureMapContainerAdapter(IContainer container)
         {
-            _container = container;
+            this.container = container;
         }
 
         public override void RegisterInstance(object instance, params Type[] serviceTypes)
         {
-            _container.Configure(x =>
+            container.Configure(x =>
                 {
                     foreach (var serviceType in serviceTypes)
                     {
-                        x.For(serviceType).Add(instance);
+                        x.For(serviceType).Singleton().Add(instance);
                     }
                 });    
         }
 
         public override void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)
         {
-            _container.Configure(x =>
+            container.Configure(x =>
                 {
-                    foreach (var serviceType in serviceTypes)
+                    // make registration with primary service type
+                    var primaryServiceType = serviceTypes.First();
+                    x.For(primaryServiceType).LifecycleIs(MapLifestyle(lifestyle)).Add(implementationType);
+
+                    // forward resolution of additional service types to resolving the first
+                    var secondaryServiceTypes = serviceTypes.Skip(1);
+                    foreach (var serviceType in secondaryServiceTypes)
                     {
-                        x.For(serviceType)
-                            .LifecycleIs(MapLifestyle(lifestyle))
-                            .Add(implementationType);
+                        x.For(serviceType).Use(c => c.GetInstance(primaryServiceType));
                     }
                 });
         }
 
         public override bool HasImplementationOf(Type serviceType)
         {
-            return _container.Model.HasImplementationsFor(serviceType);
+            return container.Model.HasImplementationsFor(serviceType);
         }
 
         public override T Resolve<T>()
         {
-            return _container.GetInstance<T>();
+            return container.GetInstance<T>();
         }
 
         public override T[] ResolveAll<T>()
         {
-            return _container.GetAllInstances<T>().ToArray();
+            return container.GetAllInstances<T>().ToArray();
         }
 
         public override void Release(object obj)

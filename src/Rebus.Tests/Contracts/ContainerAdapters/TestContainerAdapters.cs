@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
@@ -21,6 +20,32 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             Console.WriteLine("Running setup for {0}", typeof(TFactory));
             factory = new TFactory();
             adapter = factory.Create();
+        }
+
+        [Test]
+        public void RegisteringSingletonAsImplementorOfMultipleServicesYieldsTheSameInstance()
+        {
+            // arrange
+            adapter.Register(typeof(Implementor), Lifestyle.Singleton, typeof(IFirst), typeof(ISecond));
+
+            // act
+            var first = adapter.Resolve<IFirst>();
+            var second = adapter.Resolve<ISecond>();
+
+            // assert
+            first.ShouldBeSameAs(second);
+        }
+
+        interface IFirst
+        {
+        }
+
+        interface ISecond
+        {
+        }
+
+        class Implementor : IFirst, ISecond
+        {
         }
 
         [Test]
@@ -68,7 +93,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         class SomeDisposable : IDisposable
         {
             public static bool WasDisposed = false;
-            
+
             public static void Reset()
             {
                 WasDisposed = false;
