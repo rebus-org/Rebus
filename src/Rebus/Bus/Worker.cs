@@ -31,11 +31,11 @@ namespace Rebus.Bus
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
 
-        internal event Action BeforeMessage = delegate { };
+        internal event Action<ReceivedTransportMessage> BeforeMessage = delegate { };
         
-        internal event Action<Exception> AfterMessage = delegate { };
+        internal event Action<Exception, ReceivedTransportMessage> AfterMessage = delegate { };
         
-        internal event Action PoisonMessage = delegate { };
+        internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -159,7 +159,7 @@ namespace Rebus.Bus
                     return;
                 }
 
-                BeforeMessage();
+                BeforeMessage(transportMessage);
 
                 var id = transportMessage.Id;
                 var label = transportMessage.Label;
@@ -169,7 +169,7 @@ namespace Rebus.Bus
                     log.Error("Handling message {0} has failed the maximum number of times", id);
                     MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
                     errorTracker.StopTracking(id);
-                    PoisonMessage();
+                    PoisonMessage(transportMessage);
                 }
                 else
                 {
@@ -194,14 +194,14 @@ namespace Rebus.Bus
                     {
                         log.Debug("Handling message {0} ({1}) has failed", label, id);
                         errorTracker.TrackDeliveryFail(id, exception);
-                        AfterMessage(exception);
+                        AfterMessage(exception, transportMessage);
                         throw;
                     }
                 }
 
                 transactionScope.Complete();
                 errorTracker.StopTracking(id);
-                AfterMessage(null);
+                AfterMessage(null, transportMessage);
             }
         }
 
