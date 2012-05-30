@@ -10,12 +10,16 @@ namespace Rebus.Tests.Persistence.Sagas.Factories
         public IStoreSagaData CreatePersister()
         {
             db = MongoDatabase.Create(ConnectionStrings.MongoDb);
-            return new MongoDbSagaPersister(ConnectionStrings.MongoDb, "sagas");
+            
+            db.Drop();
+
+            return new MongoDbSagaPersister(ConnectionStrings.MongoDb)
+                .AllowAutomaticSagaCollectionNames();
         }
 
         public void Dispose()
         {
-            db.DropCollection("sagas");
+            db.Drop();
         }
     }
 }

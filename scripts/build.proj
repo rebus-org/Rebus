@@ -13,6 +13,7 @@
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
     <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Timeout\*.csproj"/>
+    <RebusProjects Include="..\src\Rebus.Autofac\*.csproj"/>
 
     <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
@@ -64,7 +65,7 @@
 
     <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
     <!-- should probably use variables instead of hardcoded DLL paths here ... -->
-    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:v4 /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
   </Target>
 
   <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
@@ -92,9 +93,6 @@
     <Exec Command="$(NuGet) push %(NuGetPackages.FullPath)" />
   </Target>
 
-  
-  
-  
   <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;merge_snoop;zip_snoop" />
 
   <Target Name="clean_snoop_output_folder">

@@ -27,9 +27,9 @@ namespace Rebus.Tests.Integration
                                     });
 
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
-            receiver.BeforeMessage += () => events.Add("Before message");
-            receiver.AfterMessage += e => events.Add("After message: " + e);
-            receiver.PoisonMessage += () => events.Add("Poison!");
+            receiver.BeforeMessage += m => events.Add("Before message");
+            receiver.AfterMessage += (e, m) => events.Add("After message: " + e);
+            receiver.PoisonMessage += m => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
             sender.Send(receiverInputQueueName, "test");

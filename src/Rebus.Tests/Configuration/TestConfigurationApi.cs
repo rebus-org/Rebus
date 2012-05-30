@@ -9,16 +9,46 @@ using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
+using Rebus.Tests.Persistence;
 using Rebus.Transports.Encrypted;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
+using Rebus.MongoDb;
 
 namespace Rebus.Tests.Configuration
 {
     [TestFixture]
     public class TestConfigurationApi : FixtureBase
     {
+        [Test]
+        public void ConfiguringLoggingDoesNotRegisterTwoHandlerActivators()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.None())
+                .Serialization(s => s.UseJsonSerializer());
+
+            adapter.Registrations
+                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .ShouldBe(1);
+        }
+
+        [Test]
+        public void NotConfiguringLoggingStillRegistersTheHandlerActivator()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.None())
+                .Serialization(s => s.UseJsonSerializer());
+
+            adapter.Registrations
+                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .ShouldBe(1);
+        }
+
         [Test]
         public void CanConfigureDiscovery()
         {
@@ -196,6 +226,18 @@ namespace Rebus.Tests.Configuration
 
             adapter.Resolve<ISendMessages>().ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
             adapter.Resolve<IReceiveMessages>().ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+        }
+
+        [Test]
+        public void CanConfigureAllTheMongoStuff()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Sagas(s => s.StoreInMongoDb(MongoDbFixtureBase.ConnectionString)
+                                .SetCollectionName<string>("string_sagas")
+                                .SetCollectionName<DateTime>("datetime_sagas"));
+
         }
 
         /// <summary>

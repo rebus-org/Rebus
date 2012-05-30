@@ -18,7 +18,7 @@ namespace Rebus
             Correlations = new ConcurrentDictionary<Type, Correlation>();
         }
 
-        public TData Data { get; internal set; }
+        public TData Data { get; set; }
 
         protected Correlator<TData, TMessage> Incoming<TMessage>(Func<TMessage, object> messageProperty) where TMessage : class
         {

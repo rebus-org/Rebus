@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using Rebus.Extensions;
-using Rebus.Shared;
 
 namespace Rebus
 {

@@ -178,10 +178,12 @@ namespace Rebus.Bus
             {
                 return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
             }
+            
             if (typeof(T) == typeof(TimeoutReply))
             {
                 return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
             }
+            
             return new IHandleMessages<T>[0];
         }
 

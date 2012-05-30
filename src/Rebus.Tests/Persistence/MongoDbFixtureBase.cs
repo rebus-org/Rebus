@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using MongoDB.Driver;
 using NUnit.Framework;
 using log4net.Config;
@@ -24,6 +25,7 @@ namespace Rebus.Tests.Persistence
             TimeMachine.Reset();
 
             db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            db.Drop();
 
             DoSetUp();
         }
@@ -45,6 +47,11 @@ namespace Rebus.Tests.Persistence
         protected void DropCollection(string collectionName)
         {
             db.DropCollection(collectionName);
+        }
+
+        protected IEnumerable<string> GetCollectionNames()
+        {
+            return db.GetCollectionNames();
         }
 
         protected MongoCollection<T> Collection<T>(string collectionName)

@@ -13,7 +13,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Implements <see cref="IBus"/> as Rebus would do it.
     /// </summary>
-    public class RebusBus : IStartableBus, IBus
+    public class RebusBus : IStartableBus, IAdvancedBus
     {
         static ILog log;
 
@@ -26,20 +26,20 @@ namespace Rebus.Bus
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.
         /// </summary>
-        public event Action BeforeMessage = delegate { };
+        public event Action<ReceivedTransportMessage> BeforeMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised after a transport message has been handled.
         /// If an error occurs, the caught exception will be passed to the
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
-        public event Action<Exception> AfterMessage = delegate { };
+        public event Action<Exception, ReceivedTransportMessage> AfterMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message
         /// has failed too many times.
         /// </summary>
-        public event Action PoisonMessage = delegate { };
+        public event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
 
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
@@ -121,7 +121,7 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
-        internal void SendBatch(params object[] messages)
+        public void SendBatch(params object[] messages)
         {
             var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
 
@@ -141,7 +141,7 @@ namespace Rebus.Bus
             }
         }
 
-        internal void PublishBatch(params object[] messages)
+        public void PublishBatch(params object[] messages)
         {
             var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
 
@@ -357,19 +357,19 @@ namespace Rebus.Bus
             }
         }
 
-        void RaiseBeforeMessage()
+        void RaiseBeforeMessage(ReceivedTransportMessage transportMessage)
         {
-            BeforeMessage();
+            BeforeMessage(transportMessage);
         }
 
-        void RaiseAfterMessage(Exception exception)
+        void RaiseAfterMessage(Exception exception, ReceivedTransportMessage transportMessage)
         {
-            AfterMessage(exception);
+            AfterMessage(exception, transportMessage);
         }
 
-        void RaisePosionMessage()
+        void RaisePosionMessage(ReceivedTransportMessage transportMessage)
         {
-            PoisonMessage();
+            PoisonMessage(transportMessage);
         }
 
         void RemoveWorker()

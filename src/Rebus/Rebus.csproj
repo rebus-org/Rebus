@@ -58,6 +58,7 @@
     <Compile Include="AbstractContainerAdapter.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />
     <Compile Include="Bus\TimeoutReplyHandler.cs" />
     <Compile Include="Configuration\Configurers\DiscoveryConfigurer.cs" />
@@ -112,6 +113,7 @@
     <Compile Include="Messages\TimeoutReply.cs" />
     <Compile Include="OptimisticLockingException.cs" />
     <Compile Include="Configuration\Configurers\RebusConfigurer.cs" />
+    <Compile Include="Persistence\InMemory\InMemoryExtensions.cs" />
     <Compile Include="Persistence\InMemory\InMemoryTimeoutStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
