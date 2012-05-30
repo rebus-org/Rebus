@@ -13,7 +13,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Implements <see cref="IBus"/> as Rebus would do it.
     /// </summary>
-    public class RebusBus : IStartableBus, IBus
+    public class RebusBus : IStartableBus, IAdvancedBus
     {
         static ILog log;
 
@@ -121,7 +121,7 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
-        internal void SendBatch(params object[] messages)
+        public void SendBatch(params object[] messages)
         {
             var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
 
@@ -141,7 +141,7 @@ namespace Rebus.Bus
             }
         }
 
-        internal void PublishBatch(params object[] messages)
+        public void PublishBatch(params object[] messages)
         {
             var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
 
