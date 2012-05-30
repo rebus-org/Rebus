@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -18,12 +19,12 @@ namespace Rebus.Tests.Persistence.Sagas
             var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
             Persister.Insert(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = Persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            var sagaData1 = Persister.Find<SimpleSagaData>("SomeString", "hello world!").Single();
             sagaData1.SomeString = "I changed this on one worker";
 
             EnterAFakeMessageContext();
 
-            var sagaData2 = Persister.Find<SimpleSagaData>("SomeString", "hello world!");
+            var sagaData2 = Persister.Find<SimpleSagaData>("SomeString", "hello world!").Single();
             sagaData2.SomeString = "I changed this on another worker";
             Persister.Update(sagaData2, indexBySomeString);
 
@@ -40,12 +41,12 @@ namespace Rebus.Tests.Persistence.Sagas
             var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
             Persister.Insert(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id).Single();
             sagaData1.SomeString = "I changed this on one worker";
 
             EnterAFakeMessageContext();
 
-            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id).Single();
             sagaData2.SomeString = "I changed this on another worker";
             Persister.Update(sagaData2, indexBySomeString);
 
@@ -55,20 +56,19 @@ namespace Rebus.Tests.Persistence.Sagas
         }
 
         [Test]
-        public void ConcurrentDeleteAndUpdateLetsTheDeleteWin()
+        public void ConcurrentDeleteAndUpdateThrows()
         {
             var indexBySomeString = new[] { "Id" };
             var id = Guid.NewGuid();
             var simpleSagaData = new SimpleSagaData { Id = id };
-            Persister.Insert(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
+            Persister.Insert(simpleSagaData, indexBySomeString);
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id).Single();
+            sagaData1.SomeString = "Some new value";
 
             EnterAFakeMessageContext();
-
-            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id).Single();
             Persister.Delete(sagaData2);
-
             ReturnToOriginalMessageContext();
 
             Assert.Throws<OptimisticLockingException>(() => Persister.Update(sagaData1, indexBySomeString));

@@ -1,4 +1,6 @@
-﻿namespace Rebus
+﻿using System.Collections.Generic;
+
+namespace Rebus
 {
     /// <summary>
     /// Implement this in order to control how saga data gets persisted.
@@ -30,6 +32,6 @@
         /// Queries the underlying data store for the saga whose correlation field has a value
         /// that mathces the given field from the incoming message.
         /// </summary>
-        T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData;
+        IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData;
     }
 }

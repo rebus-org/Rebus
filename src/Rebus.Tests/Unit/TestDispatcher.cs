@@ -52,7 +52,7 @@ namespace Rebus.Tests.Unit
         [Test]
         public void NewSagaIsMarkedAsSuch()
         {
-            var saga = new SmallestSagaOnEarth();
+            var saga = new SmallestSagaOnEarthCorrelatedOnInitialMessage();
             activator.UseHandler(saga);
             dispatcher.Dispatch(new SomeMessageWithANumber(1));
             saga.IsNew.ShouldBe(true);
@@ -61,11 +61,25 @@ namespace Rebus.Tests.Unit
         [Test]
         public void SagaInitiatedTwiceIsNotMarkedAsNewTheSecondTime()
         {
-            var saga = new SmallestSagaOnEarth();
+            var saga = new SmallestSagaOnEarthCorrelatedOnInitialMessage();
             activator.UseHandler(saga);
             dispatcher.Dispatch(new SomeMessageWithANumber(1));
             dispatcher.Dispatch(new SomeMessageWithANumber(1));
             saga.IsNew.ShouldBe(false);
+        }
+
+        [Test]
+        public void OneMessageCanCorrelateWithSeveralSagas()
+        {
+            var saga = new SmallestSagaOnEarthNotCorrelatedOnInitialMessage();
+            activator.UseHandler(saga);
+
+            // initiate two sagas with the same number
+            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
+            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
+
+            dispatcher.Dispatch(new SomeMessageWithANumber(1));
+            saga.TimesHandlingSomeMessageWithANumber.ShouldBe(2);
         }
 
         interface ISomeInterface { }
@@ -81,9 +95,40 @@ namespace Rebus.Tests.Unit
             public int TheNumber { get; private set; }
         }
 
-        class SmallestSagaOnEarth : Saga<SagaData>, IAmInitiatedBy<SomeMessageWithANumber>
+        class InitiatingMessageWithANumber
+        {
+            public InitiatingMessageWithANumber(int theNumber)
+            {
+                TheNumber = theNumber;
+            }
+
+            public int TheNumber { get; private set; }
+        }
+
+
+        class SmallestSagaOnEarthCorrelatedOnInitialMessage : Saga<SagaData>, IAmInitiatedBy<SomeMessageWithANumber>
         {
             public void Handle(SomeMessageWithANumber message)
+            {
+                Data.TheNumber = message.TheNumber;
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+                Incoming<SomeMessageWithANumber>(m => m.TheNumber).CorrelatesWith(d => d.TheNumber);
+            }
+        }
+
+        class SmallestSagaOnEarthNotCorrelatedOnInitialMessage : Saga<SagaData>, IAmInitiatedBy<InitiatingMessageWithANumber>, IHandleMessages<SomeMessageWithANumber>
+        {
+            public int TimesHandlingSomeMessageWithANumber { get; set; }
+
+            public void Handle(SomeMessageWithANumber message)
+            {
+                TimesHandlingSomeMessageWithANumber++;
+            }
+
+            public void Handle(InitiatingMessageWithANumber message)
             {
                 Data.TheNumber = message.TheNumber;
             }
@@ -157,4 +202,5 @@ namespace Rebus.Tests.Unit
             }
         }
     }
+
 }

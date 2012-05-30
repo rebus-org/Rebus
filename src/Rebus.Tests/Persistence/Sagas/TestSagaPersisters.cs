@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -7,10 +8,10 @@ using Shouldly;
 namespace Rebus.Tests.Persistence.Sagas
 {
     [TestFixture(typeof(InMemorySagaPersisterFactory))]
+    [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
-    [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
-    public class TestSagaPersisters<TFactory>: TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
+    public class TestSagaPersisters<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]
         public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
@@ -31,9 +32,8 @@ namespace Rebus.Tests.Persistence.Sagas
             sagaDataType.GetProperty("Property").SetValue(savedSagaData, propertyValueToUse, new object[0]);
             Persister.Insert(savedSagaData, new[] { "Property" });
 
-            var foundSagaData = Persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse);
+            var foundSagaData = Persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse).Single();
 
-            foundSagaData.ShouldNotBe(null);
             foundSagaData.Id.ShouldBe(savedSagaDataId);
         }
 
@@ -45,9 +45,8 @@ namespace Rebus.Tests.Persistence.Sagas
             savedSagaData.Id = savedSagaDataId;
             Persister.Insert(savedSagaData, new string[0]);
 
-            var foundSagaData = Persister.Find<MySagaData>("Id", savedSagaDataId);
+            var foundSagaData = Persister.Find<MySagaData>("Id", savedSagaDataId).Single();
 
-            foundSagaData.ShouldNotBe(null);
             foundSagaData.Id.ShouldBe(savedSagaDataId);
         }
 
@@ -77,8 +76,7 @@ namespace Rebus.Tests.Persistence.Sagas
 
             Persister.Insert(complexPieceOfSagaData, new[] { "SomeField" });
 
-            var sagaData = Persister.Find<MySagaData>("Id", sagaDataId);
-            sagaData.ShouldNotBe(null);
+            var sagaData = Persister.Find<MySagaData>("Id", sagaDataId).Single();
             sagaData.SomeField.ShouldBe("hello");
             sagaData.AnotherField.ShouldBe("world!");
         }
@@ -97,7 +95,7 @@ namespace Rebus.Tests.Persistence.Sagas
             Persister.Delete(mySagaData);
 
             var sagaData = Persister.Find<SimpleSagaData>("Id", mySagaDataId);
-            sagaData.ShouldBe(null);
+            sagaData.ShouldBeEmpty();
         }
 
         [Test]
@@ -111,10 +109,9 @@ namespace Rebus.Tests.Persistence.Sagas
             var dataViaNonexistentField = Persister.Find<MySagaData>("SomeFieldThatDoesNotExist", "doesn't matter");
             var mySagaData = Persister.Find<MySagaData>("AnotherField", "some field 2");
 
-            dataViaNonexistentField.ShouldBe(null);
-            dataViaNonexistentValue.ShouldBe(null);
-            mySagaData.ShouldNotBe(null);
-            mySagaData.SomeField.ShouldBe("2");
+            dataViaNonexistentField.ShouldBeEmpty();
+            dataViaNonexistentValue.ShouldBeEmpty();
+            mySagaData.Single().SomeField.ShouldBe("2");
         }
 
         [Test]
@@ -128,10 +125,8 @@ namespace Rebus.Tests.Persistence.Sagas
             var saga1 = Persister.Find<SimpleSagaData>("Id", sagaId1);
             var saga2 = Persister.Find<MySagaData>("Id", sagaId2);
 
-            saga1.ShouldNotBe(null);
-            saga1.SomeString.ShouldBe("Olé");
-            saga2.ShouldNotBe(null);
-            saga2.AnotherField.ShouldBe("Yipiie");
+            saga1.Single().SomeString.ShouldBe("Olé");
+            saga2.Single().AnotherField.ShouldBe("Yipiie");
         }
 
        [Test]
@@ -150,9 +145,8 @@ namespace Rebus.Tests.Persistence.Sagas
                                                         }
                               }, new[] {path});
 
-           var loadedSagaData = Persister.Find<SagaDataWithNestedElement>(path, stringValue);
+           var loadedSagaData = Persister.Find<SagaDataWithNestedElement>(path, stringValue).Single();
 
-           loadedSagaData.ShouldNotBe(null);
            loadedSagaData.ThisOneIsNested.ShouldNotBe(null);
            loadedSagaData.ThisOneIsNested.SomeString.ShouldBe(stringValue);
        }
@@ -168,15 +162,15 @@ namespace Rebus.Tests.Persistence.Sagas
         }
 
         class SagaDataWithNestedElement : ISagaData
-       {
-           public Guid Id { get; set; }
-           public int Revision { get; set; }
-           public ThisOneIsNested ThisOneIsNested { get; set; }
-       }
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public ThisOneIsNested ThisOneIsNested { get; set; }
+        }
 
         class ThisOneIsNested
-       {
-           public string SomeString { get; set; }
-       }
+        {
+            public string SomeString { get; set; }
+        }
     }
 }

@@ -7,6 +7,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
 using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus.MongoDb
 {
@@ -183,17 +184,18 @@ automatically.
             }
         }
 
-        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
+        public IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             var collection = database.GetCollection(typeof(T), GetCollectionName(typeof(T)));
 
             if (sagaDataPropertyPath == "Id")
-                return collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
+            {
+                var sagaData = collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
+                return sagaData != null ? sagaData.AsEnumerable() : Enumerable.Empty<T>();
+            }
 
             var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), BsonValue.Create(fieldFromMessage));
-
-            var sagaData = collection.FindOneAs<T>(query);
-            return sagaData;
+            return collection.FindAs<T>(query);
         }
 
         string MapSagaDataPropertyPath(string sagaDataPropertyPath, Type sagaDataType)

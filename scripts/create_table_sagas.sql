@@ -27,5 +27,3 @@ CREATE TABLE [dbo].[saga_index](
 ) ON [PRIMARY]
 
 GO
-
- 

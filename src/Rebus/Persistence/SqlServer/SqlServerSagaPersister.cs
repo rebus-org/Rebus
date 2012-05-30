@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using Newtonsoft.Json;
 using Ponder;
+using Rebus.Extensions;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -217,7 +219,7 @@ saga type name.",
             }
         }
 
-        public TSagaData Find<TSagaData>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaData : ISagaData
+        public IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -238,7 +240,7 @@ saga type name.",
                                                         and i.[key] = @key 
                                                         and i.value = @value";
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
-                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
+                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(T)));
                     }
 
                     command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
@@ -246,9 +248,9 @@ saga type name.",
                     var value = (string)command.ExecuteScalar();
 
                     if (value == null)
-                        return default(TSagaData);
+                        return Enumerable.Empty<T>();
 
-                    return (TSagaData)JsonConvert.DeserializeObject(value, Settings);
+                    return ((T)JsonConvert.DeserializeObject(value, Settings)).AsEnumerable();
                 }
             }
         }

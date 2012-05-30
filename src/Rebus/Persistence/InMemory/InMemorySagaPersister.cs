@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Ponder;
 
 namespace Rebus.Persistence.InMemory
@@ -28,17 +29,12 @@ namespace Rebus.Persistence.InMemory
             data.TryRemove(sagaData.Id, out temp);
         }
 
-        public virtual T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
+        public virtual IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
-            foreach (var sagaData in data)
-            {
-                var valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString();
-                if (valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()))
-                {
-                    return (T) sagaData.Value;
-                }
-            }
-            return default(T);
+            return from sagaData in data 
+                   let valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString() 
+                   where valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()) 
+                   select (T) sagaData.Value;
         }
 
         public IEnumerator<ISagaData> GetEnumerator()

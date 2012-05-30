@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Raven.Abstractions.Exceptions;
 using Raven.Client;
 using Raven.Client.Exceptions;
+using Rebus.Extensions;
 
 namespace Rebus.RavenDb
 {
@@ -54,17 +56,20 @@ namespace Rebus.RavenDb
             session.SaveChanges();
         }
 
-        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : ISagaData
+        public IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             var session = GetSession();
 
             if (sagaDataPropertyPath == "Id")
-                return session.Load<T>(store.Conventions.GetTypeTagName(typeof (T)) + "/" + fieldFromMessage);
+            {
+                var sagaData = session.Load<T>(store.Conventions.GetTypeTagName(typeof (T)) + "/" + fieldFromMessage);
+                return sagaData != null ? sagaData.AsEnumerable() : Enumerable.Empty<T>();
+            }
 
             return session.Advanced.LuceneQuery<T>()
                 .WaitForNonStaleResults()
                 .WhereEquals(sagaDataPropertyPath, fieldFromMessage)
-                .SingleOrDefault();
+                .ToList();
         }
 
         IMessageContext CurrentMessageContext

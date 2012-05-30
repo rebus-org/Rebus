@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -23,8 +24,8 @@ namespace Rebus.Tests.Persistence.Sagas
             Persister.Insert(new OneKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathOne });
             Persister.Insert(new AnotherKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathAnother });
 
-            var oneKindOfSagaLoaded = Persister.Find<OneKindOfSaga>(someFieldPathOne, someString);
-            var anotherKindOfSagaLoaded = Persister.Find<AnotherKindOfSaga>(someFieldPathAnother, someString);
+            var oneKindOfSagaLoaded = Persister.Find<OneKindOfSaga>(someFieldPathOne, someString).Single();
+            var anotherKindOfSagaLoaded = Persister.Find<AnotherKindOfSaga>(someFieldPathAnother, someString).Single();
 
             // assert
             oneKindOfSagaLoaded.ShouldBeTypeOf<OneKindOfSaga>();
