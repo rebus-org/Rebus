@@ -37,10 +37,37 @@ namespace Rebus.Transports.Msmq
         public MsmqMessageQueue(string inputQueueName, string errorQueue)
         {
             inputQueuePath = MsmqUtil.GetPath(inputQueueName);
-            inputQueue = CreateMessageQueue(inputQueuePath, createIfNotExists: true);
-            EnsureMessageQueueExists(MsmqUtil.GetPath(errorQueue), createIfNotExists: true);
+            EnsureMessageQueueExists(inputQueuePath);
+            EnsureMessageQueueIsTransactional(inputQueuePath);
+
+            inputQueue = GetMessageQueue(inputQueuePath);
+            var errorQueuePath = MsmqUtil.GetPath(errorQueue);
+            EnsureMessageQueueExists(errorQueuePath);
+            EnsureMessageQueueIsTransactional(errorQueuePath);
+            
             this.inputQueueName = inputQueueName;
             this.errorQueue = errorQueue;
+        }
+
+        void EnsureMessageQueueIsTransactional(string path)
+        {
+            using (var queue = GetMessageQueue(path))
+            {
+                if (!queue.Transactional)
+                {
+                    var message =
+                        string.Format(
+                            @"The queue {0} is NOT transactional!
+
+Everything around Rebus is built with the assumption that queues are transactional,
+so Rebus will malfunction if queues aren't transactional. 
+
+To remedy this, ensure that any existing queues are transactional, or let Rebus 
+create its queues automatically.",
+                            path);
+                    throw new InvalidOperationException(message);
+                }
+            }
         }
 
         public string ErrorQueue
@@ -95,7 +122,7 @@ namespace Rebus.Transports.Msmq
         {
             var recipientPath = MsmqUtil.GetPath(destinationQueueName);
 
-            using (var outputQueue = CreateMessageQueue(recipientPath, createIfNotExists: false))
+            using (var outputQueue = GetMessageQueue(recipientPath))
             {
                 var transactionWrapper = GetOrCreateTransactionWrapper();
 
@@ -136,9 +163,10 @@ namespace Rebus.Transports.Msmq
             return currentTransaction;
         }
 
-        MessageQueue CreateMessageQueue(string path, bool createIfNotExists)
+        MessageQueue GetMessageQueue(string path)
         {
-            var messageQueue = GetMessageQueue(path, createIfNotExists);
+            var queue = new MessageQueue(path);
+            var messageQueue = queue;
             messageQueue.Formatter = new RebusTransportMessageFormatter();
             var messageReadPropertyFilter = new MessagePropertyFilter();
             messageReadPropertyFilter.Id = true;
@@ -149,63 +177,41 @@ namespace Rebus.Transports.Msmq
             return messageQueue;
         }
 
-        MessageQueue GetMessageQueue(string path, bool createIfNotExists)
-        {
-            EnsureMessageQueueExists(path, createIfNotExists);
-
-            var queue = new MessageQueue(path);
-
-            if (!queue.Transactional)
-            {
-                var message = string.Format(@"The queue {0} is NOT transactional!
-
-Everything around Rebus is built with the assumption that queues are transactional,
-so Rebus will malfunction if queues aren't transactional. 
-
-To remedy this, ensure that any existing queues are transactional, or let Rebus 
-create its queues automatically.", path);
-                throw new InvalidOperationException(message);
-            }
-
-            return queue;
-        }
-
-        static void EnsureMessageQueueExists(string path, bool createIfNotExists)
+        static void EnsureMessageQueueExists(string path)
         {
             var queueExists = MessageQueue.Exists(path);
 
-            if (!queueExists && createIfNotExists)
+            if (queueExists) return;
+
+            log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
+
+            var administratorAccountName =
+                new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof (NTAccount)).ToString();
+
+            try
             {
-                log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
+                using (var messageQueue = MessageQueue.Create(path, true))
+                {
 
-            	var administratorAccountName =
-            		new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof (NTAccount)).ToString();
+                    messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                                                MessageQueueAccessRights.GenericWrite);
 
+                    messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
+                }
+            }
+            catch(Exception e)
+            {
+                log.Error(e,
+                          "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
+                          path,
+                          administratorAccountName);
                 try
                 {
-                    using (var messageQueue = MessageQueue.Create(path, true))
-                    {
-
-                        messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                                                    MessageQueueAccessRights.GenericWrite);
-
-                        messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
-                    }
+                    MessageQueue.Delete(path);
                 }
-                catch(Exception e)
+                catch(Exception ex)
                 {
-                    log.Error(e,
-                              "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
-                              path,
-                              administratorAccountName);
-                    try
-                    {
-                        MessageQueue.Delete(path);
-                    }
-                    catch(Exception ex)
-                    {
-                        log.Error(ex, "Could not delete queue {0}", path);
-                    }
+                    log.Error(ex, "Could not delete queue {0}", path);
                 }
             }
         }

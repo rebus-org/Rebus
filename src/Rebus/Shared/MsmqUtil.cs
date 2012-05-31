@@ -1,5 +1,6 @@
 using System;
 using System.Messaging;
+using System.Linq;
 
 namespace Rebus.Shared
 {
@@ -38,7 +39,24 @@ namespace Rebus.Shared
 
         static string GenerateSimplePath(string machineName, string queueName)
         {
+            if (IsIpAddress(machineName))
+            {
+                return string.Format(@"FormatName:DIRECT=TCP:{0}\{1}", machineName.ToLower(), queueName);
+            }
+
             return string.Format(@"{0}\private$\{1}", machineName, queueName);
+        }
+
+        static bool IsIpAddress(string machineName)
+        {
+            var ipTokens = machineName.Split('.');
+            return ipTokens.Length == 4 && ipTokens.All(IsByte);
+        }
+
+        static bool IsByte(string str)
+        {
+            byte temp;
+            return byte.TryParse(str, out temp);
         }
 
         class QueueInfo

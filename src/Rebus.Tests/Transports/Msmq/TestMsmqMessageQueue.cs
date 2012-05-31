@@ -81,6 +81,27 @@ namespace Rebus.Tests.Transports.Msmq
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
 
+        [Test, Ignore("make this one pass!")]
+        public void CanSendAndReceiveMessageToQueueOnMachineSpecifiedByIp()
+        {
+            // arrange
+            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error");
+            disposables.Add(queue);
+
+            var machineQualifiedQueueName = "test.msmq.mach.input@127.0.0.1";
+
+            // act
+            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+
+            Thread.Sleep(200);
+
+            // assert
+
+            var receivedTransportMessage = queue.ReceiveMessage();
+            receivedTransportMessage.ShouldNotBe(null);
+            Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
+        }
+
         /// <summary>
         /// Before refactoring:
         ///     Sending 10000 messages took 7 s - that's 1427 msg/s
@@ -90,6 +111,13 @@ namespace Rebus.Tests.Transports.Msmq
         /// 
         /// On battery, in the train:
         ///     Sending 10000 messages took 32 s - that's 312 msg/s
+        /// 
+        /// Before removing the MessageQueue.Exists(recipient):
+        ///     Sending 10000 messages took 31 s - that's 322 msg/s
+        ///
+        /// Without checking that recipient queue exists:
+        ///     Sending 10000 messages took 17 s - that's 595 msg/s
+        /// 
         /// </summary>
         [TestCase(10000)]
         public void CheckSendPerformance(int count)
