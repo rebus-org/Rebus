@@ -1,7 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Messaging;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Transactions;
@@ -111,11 +115,13 @@ namespace Rebus.Tests.Transports.Msmq
         [Test]
         public void CanSendAndReceiveMessageToQueueOnMachineSpecifiedByIp()
         {
+            var ipAddress = GuessOwnIpAddress();
+
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.ip.input", "test.msmq.ip.error").PurgeInputQueue();
             disposables.Add(queue);
 
-            var ipQualifiedName = "test.msmq.ip.input@127.0.0.1";
+            var ipQualifiedName = "test.msmq.ip.input@" + ipAddress;
 
             // act
             queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
@@ -126,6 +132,21 @@ namespace Rebus.Tests.Transports.Msmq
             var receivedTransportMessage = queue.ReceiveMessage();
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
+        }
+
+        static IPAddress GuessOwnIpAddress()
+        {
+            var localAddress =
+                NetworkInterface.GetAllNetworkInterfaces()
+                    .Where(ni => ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                    .Select(ni => new {ni, props = ni.GetIPProperties()})
+                    .SelectMany(t => t.props.UnicastAddresses, (t, ip) => new {t, IpAddress = ip})
+                    .Where(t => t.IpAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+                    .Select(t => t.IpAddress)
+                    .FirstOrDefault(t => t.PrefixOrigin == PrefixOrigin.Dhcp);
+
+            var ipAddress = localAddress.Address;
+            return ipAddress;
         }
 
         /// <summary>
