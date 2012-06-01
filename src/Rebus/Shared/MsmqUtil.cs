@@ -34,22 +34,23 @@ namespace Rebus.Shared
 
         public static string GenerateFullPath(string machineName, string queueName)
         {
+            if (IsIpAddress(machineName))
+            {
+                return string.Format(@"FormatName:DIRECT=TCP:{0}\private$\{1}", machineName.ToLower(), queueName);
+            }
+
             return string.Format(@"FormatName:DIRECT=OS:{0}\private$\{1}", machineName.ToLower(), queueName);
         }
 
         static string GenerateSimplePath(string machineName, string queueName)
         {
-            if (IsIpAddress(machineName))
-            {
-                return string.Format(@"FormatName:DIRECT=TCP:{0}\{1}", machineName.ToLower(), queueName);
-            }
-
             return string.Format(@"{0}\private$\{1}", machineName, queueName);
         }
 
         static bool IsIpAddress(string machineName)
         {
             var ipTokens = machineName.Split('.');
+            
             return ipTokens.Length == 4 && ipTokens.All(IsByte);
         }
 

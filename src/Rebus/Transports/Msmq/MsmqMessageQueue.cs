@@ -120,7 +120,9 @@ create its queues automatically.",
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            var recipientPath = MsmqUtil.GetPath(destinationQueueName);
+            var recipientPath = MsmqUtil.GetFullPath(destinationQueueName);
+
+            log.Debug("Sending {0} to {1}", message, recipientPath);
 
             using (var outputQueue = GetMessageQueue(recipientPath))
             {
@@ -141,7 +143,7 @@ create its queues automatically.",
 
         public void Dispose()
         {
-            log.Info("Disposing message queues");
+            log.Info("Disposing message queue {0}", inputQueuePath);
             inputQueue.Dispose();
         }
 
@@ -179,20 +181,18 @@ create its queues automatically.",
 
         static void EnsureMessageQueueExists(string path)
         {
-            var queueExists = MessageQueue.Exists(path);
-
-            if (queueExists) return;
+            if (MessageQueue.Exists(path)) return;
 
             log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
-            var administratorAccountName =
-                new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null).Translate(typeof (NTAccount)).ToString();
+            var administratorAccountName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
+                .Translate(typeof (NTAccount))
+                .ToString();
 
             try
             {
                 using (var messageQueue = MessageQueue.Create(path, true))
                 {
-
                     messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
                                                 MessageQueueAccessRights.GenericWrite);
 

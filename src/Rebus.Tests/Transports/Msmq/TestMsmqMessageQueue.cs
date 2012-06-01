@@ -75,28 +75,26 @@ namespace Rebus.Tests.Transports.Msmq
             Thread.Sleep(200);
 
             // assert
-
             var receivedTransportMessage = queue.ReceiveMessage();
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
 
-        [Test, Ignore("make this one pass!")]
+        [Test]
         public void CanSendAndReceiveMessageToQueueOnMachineSpecifiedByIp()
         {
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error");
             disposables.Add(queue);
 
-            var machineQualifiedQueueName = "test.msmq.mach.input@127.0.0.1";
+            var ipQualifiedName = "test.msmq.mach.input@127.0.0.1";
 
             // act
-            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
 
-            Thread.Sleep(200);
+            Thread.Sleep(2.Seconds());
 
             // assert
-
             var receivedTransportMessage = queue.ReceiveMessage();
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
