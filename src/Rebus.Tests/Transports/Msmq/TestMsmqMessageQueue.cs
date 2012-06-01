@@ -89,6 +89,26 @@ namespace Rebus.Tests.Transports.Msmq
         }
 
         [Test]
+        public void CanSendAndReceiveMessageToQueueOnLocalhost()
+        {
+            // arrange
+            var queue = new MsmqMessageQueue("test.msmq.loca.input", "test.msmq.loca.error").PurgeInputQueue();
+            disposables.Add(queue);
+
+            var localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
+
+            // act
+            queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+
+            Thread.Sleep(200);
+
+            // assert
+            var receivedTransportMessage = queue.ReceiveMessage();
+            receivedTransportMessage.ShouldNotBe(null);
+            Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
+        }
+
+        [Test]
         public void CanSendAndReceiveMessageToQueueOnMachineSpecifiedByIp()
         {
             // arrange
@@ -129,6 +149,8 @@ namespace Rebus.Tests.Transports.Msmq
         public void CheckSendPerformance(int count)
         {
             var queue = new MsmqMessageQueue("test.msmq.performance", "error").PurgeInputQueue();
+            disposables.Add(queue);
+
             var transportMessageToSend = new TransportMessageToSend
                                              {
                                                  Headers = new Dictionary<string, string>(),

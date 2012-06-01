@@ -139,8 +139,6 @@ create its queues automatically.",
         {
             var recipientPath = MsmqUtil.GetFullPath(destinationQueueName);
 
-            log.Debug("Sending {0} to {1}", message, recipientPath);
-
             using (var outputQueue = GetMessageQueue(recipientPath))
             {
                 var transactionWrapper = GetOrCreateTransactionWrapper();
