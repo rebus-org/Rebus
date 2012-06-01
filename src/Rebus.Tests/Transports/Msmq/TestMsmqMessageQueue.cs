@@ -57,14 +57,22 @@ namespace Rebus.Tests.Transports.Msmq
         [TearDown]
         public void TearDown()
         {
-            disposables.ForEach(d => d.Dispose());
+            disposables.ForEach(d =>
+                {
+                    var msmqMessageQueue = d as MsmqMessageQueue;
+                    if (msmqMessageQueue != null)
+                    {
+                        msmqMessageQueue.DeleteInputQueue();
+                    }
+                    d.Dispose();
+                });
         }
 
         [Test]
         public void CanSendAndReceiveMessageToQueueOnSpecificMachine()
         {
             // arrange
-            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error");
+            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error").PurgeInputQueue();
             disposables.Add(queue);
 
             var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
@@ -84,15 +92,15 @@ namespace Rebus.Tests.Transports.Msmq
         public void CanSendAndReceiveMessageToQueueOnMachineSpecifiedByIp()
         {
             // arrange
-            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error");
+            var queue = new MsmqMessageQueue("test.msmq.ip.input", "test.msmq.ip.error").PurgeInputQueue();
             disposables.Add(queue);
 
-            var ipQualifiedName = "test.msmq.mach.input@127.0.0.1";
+            var ipQualifiedName = "test.msmq.ip.input@127.0.0.1";
 
             // act
             queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
 
-            Thread.Sleep(2.Seconds());
+            Thread.Sleep(1.Seconds());
 
             // assert
             var receivedTransportMessage = queue.ReceiveMessage();

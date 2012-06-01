@@ -9,5 +9,10 @@ namespace Rebus.Extensions
          {
              return elements.Any(e => e.Equals(element));
          }
+
+        public static bool In<T>(this T element, params T[] elements)
+         {
+             return elements.Any(e => e.Equals(element));
+         }
     }
 }

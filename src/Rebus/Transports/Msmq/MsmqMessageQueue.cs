@@ -4,6 +4,7 @@ using System.Security.Principal;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Shared;
+using Rebus.Extensions;
 
 namespace Rebus.Transports.Msmq
 {
@@ -39,14 +40,30 @@ namespace Rebus.Transports.Msmq
             inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             EnsureMessageQueueExists(inputQueuePath);
             EnsureMessageQueueIsTransactional(inputQueuePath);
+            EnsureMessageQueueIsLocal(inputQueueName);
 
-            inputQueue = GetMessageQueue(inputQueuePath);
             var errorQueuePath = MsmqUtil.GetPath(errorQueue);
             EnsureMessageQueueExists(errorQueuePath);
             EnsureMessageQueueIsTransactional(errorQueuePath);
             
+            inputQueue = GetMessageQueue(inputQueuePath);
+
             this.inputQueueName = inputQueueName;
             this.errorQueue = errorQueue;
+        }
+
+        void EnsureMessageQueueIsLocal(string inputQueueName)
+        {
+            if (!inputQueueName.Contains("@")) return;
+
+            var tokens = inputQueueName.Split('@');
+
+            if (tokens.Length == 2 && tokens[1].In( ".", "localhost", "127.0.0.1")) return;
+
+            throw new ArgumentException(string.Format(@"Attempted to use {0} as an input queue, but the input queue must always be local!
+
+If you could use a remote queue as an input queue, one of the nifty benefits of MSMQ would be defeated,
+because there would be remote calls involved when you wanted to receive a message.", inputQueueName));
         }
 
         void EnsureMessageQueueIsTransactional(string path)
@@ -138,6 +155,16 @@ create its queues automatically.",
         {
             log.Warn("Purging {0}", inputQueuePath);
             inputQueue.Purge();
+            return this;
+        }
+
+        public MsmqMessageQueue DeleteInputQueue()
+        {
+            if (MessageQueue.Exists(inputQueuePath))
+            {
+                log.Warn("Deleting {0}", inputQueuePath);
+                MessageQueue.Delete(inputQueuePath);
+            }
             return this;
         }
 
