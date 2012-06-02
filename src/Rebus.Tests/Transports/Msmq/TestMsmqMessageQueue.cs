@@ -146,7 +146,7 @@ namespace Rebus.Tests.Transports.Msmq
             var localAddress = addresses
                 .Where(t => t.IpAddress.Address.AddressFamily == AddressFamily.InterNetwork)
                 .Select(t => t.IpAddress)
-                .FirstOrDefault(t => t.PrefixOrigin == PrefixOrigin.Dhcp || t.SuffixOrigin == SuffixOrigin.OriginDhcp);
+                .FirstOrDefault(t => t.PrefixOrigin == PrefixOrigin.Dhcp || t.PrefixOrigin == PrefixOrigin.Manual);
 
             if (localAddress == null)
             {
