@@ -136,14 +136,29 @@ namespace Rebus.Tests.Transports.Msmq
 
         static IPAddress GuessOwnIpAddress()
         {
-            var localAddress =
-                NetworkInterface.GetAllNetworkInterfaces()
-                    .Where(ni => ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                    .Select(ni => new {ni, props = ni.GetIPProperties()})
-                    .SelectMany(t => t.props.UnicastAddresses, (t, ip) => new {t, IpAddress = ip})
-                    .Where(t => t.IpAddress.Address.AddressFamily == AddressFamily.InterNetwork)
-                    .Select(t => t.IpAddress)
-                    .FirstOrDefault(t => t.PrefixOrigin == PrefixOrigin.Dhcp);
+            var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(ni => ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .Select(ni => new {ni, props = ni.GetIPProperties()});
+
+            var addresses = networkInterfaces
+                .SelectMany(t => t.props.UnicastAddresses, (t, ip) => new {t, IpAddress = ip});
+
+            var localAddress = addresses
+                .Where(t => t.IpAddress.Address.AddressFamily == AddressFamily.InterNetwork)
+                .Select(t => t.IpAddress)
+                .FirstOrDefault(t => t.PrefixOrigin == PrefixOrigin.Dhcp || t.SuffixOrigin == SuffixOrigin.OriginDhcp);
+
+            if (localAddress == null)
+            {
+                Assert.Fail(@"Could not find an inter-network adapter with an IP assigned by DHCP...
+
+The following addresses were collected:
+
+{0}",
+                            string.Join(Environment.NewLine,
+                                        addresses.Select(
+                                            a => string.Format("{0} ({1})", a.IpAddress.Address, a.t.ni.Name))));
+            }
 
             var ipAddress = localAddress.Address;
             return ipAddress;
