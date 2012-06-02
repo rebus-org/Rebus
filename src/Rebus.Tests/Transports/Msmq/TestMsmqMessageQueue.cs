@@ -157,7 +157,7 @@ The following addresses were collected:
 {0}",
                             string.Join(Environment.NewLine,
                                         addresses.Select(
-                                            a => string.Format("{0} ({1})", a.IpAddress.Address, a.t.ni.Name))));
+                                            a => string.Format("{0} ({1}, {2})", a.IpAddress.Address, a.t.ni.Name, a.IpAddress.PrefixOrigin))));
             }
 
             var ipAddress = localAddress.Address;
