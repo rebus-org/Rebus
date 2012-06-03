@@ -10,6 +10,7 @@ namespace Rebus.Tests.Persistence.Subscriptions
     [TestFixture(typeof(SqlServerSubscriptionStoreFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSubscriptionStoreFactory), Category = TestCategories.Raven)]
     [TestFixture(typeof(MongoDbSubscriptionStoreFactory), Category = TestCategories.Mongo)]
+    [TestFixture(typeof(MongoDbSubscriptionStoreFactory), Category = TestCategories.Xml)]
     public class TestSubscriptionStorage<TFactory> : FixtureBase where TFactory : ISubscriptionStoreFactory
     {
         TFactory factory;
