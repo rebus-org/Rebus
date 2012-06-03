@@ -14,6 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -206,6 +207,7 @@
     <Compile Include="Persistence\Sagas\TestSagaPersistersEmployingOptimisticConcurrency.cs" />
     <Compile Include="Persistence\Sagas\TestSagaPersisterWithMultipleSagaTypes.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\InMemorySubscriptionStoreFactory.cs" />
+    <Compile Include="Persistence\Subscriptions\Factories\XmlSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\ISubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\MongoDbSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\RavenDbSubscriptionStoreFactory.cs" />
@@ -289,6 +291,10 @@
     <ProjectReference Include="..\Rebus.Transports.Rabbit\Rebus.Transports.Rabbit.csproj">
       <Project>{5836C347-90FC-4628-B4A1-16926B6CA781}</Project>
       <Name>Rebus.Transports.Rabbit</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Xml\Rebus.Xml.csproj">
+      <Project>{7DDBC6F9-0931-46CC-992C-06E6239A8416}</Project>
+      <Name>Rebus.Xml</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
