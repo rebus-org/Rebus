@@ -118,6 +118,8 @@
     <Compile Include="Persistence\SqlServer\SqlServerExtensions.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutStorage.cs" />
+    <Compile Include="Persistence\Xml\XmlPersistenceConfigurationExtensions.cs" />
+    <Compile Include="Persistence\Xml\XmlSubscriptionStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Extensions\EnumerableExt.cs" />

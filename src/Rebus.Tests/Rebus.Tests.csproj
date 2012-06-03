@@ -291,10 +291,6 @@
       <Project>{5836C347-90FC-4628-B4A1-16926B6CA781}</Project>
       <Name>Rebus.Transports.Rabbit</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus.Xml\Rebus.Xml.csproj">
-      <Project>{F7B6B061-1387-4491-84A1-7DF6A4B99714}</Project>
-      <Name>Rebus.Xml</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
       <Name>Rebus</Name>

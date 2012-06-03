@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.IO;
+using Rebus.Persistence.Xml;
 
 namespace Rebus.Tests.Persistence.Subscriptions.Factories
 {
@@ -14,7 +12,7 @@ namespace Rebus.Tests.Persistence.Subscriptions.Factories
             var filename = "subscriptions.xml";
             var filePath = Path.Combine(path, filename);
 
-            var store = new Rebus.Xml.XmlSubscriptionStorage(filePath);
+            var store = new XmlSubscriptionStorage(filePath);
             store.ClearAllSubscriptions();
             return store;
         }
