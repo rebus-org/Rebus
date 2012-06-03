@@ -13,6 +13,7 @@ namespace Rebus.Tests
         public const string Integration = "integration";
         public const string Mongo = "mongo";
         public const string Raven = "raven";
+        public const string Xml = "xml";
         public const string MsSql = "mssql";
         public const string ToDo = "todo";
         public const string Performance = "performance";
