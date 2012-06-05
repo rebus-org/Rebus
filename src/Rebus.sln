@@ -24,13 +24,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MongoDb", "Rebus.Mong
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Log4Net", "Rebus.Log4net\Rebus.Log4Net.csproj", "{2AFAE434-5CD2-494E-8341-005CD637FE2D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Azure", "Rebus.Transports.Azure\Rebus.Transports.Azure.csproj", "{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{35C585ED-8CB0-48D1-83FC-375548298233}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Timeout", "Rebus.Timeout\Rebus.Timeout.csproj", "{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Rabbit", "Rebus.Transports.Rabbit\Rebus.Transports.Rabbit.csproj", "{5836C347-90FC-4628-B4A1-16926B6CA781}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Castle.Windsor", "Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj", "{2178D256-94D6-4443-B23B-53F723184441}"
 EndProject
@@ -43,6 +39,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
 		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
+		..\scripts\Rebus.RabbitMQ.nuspec = ..\scripts\Rebus.RabbitMQ.nuspec
 		..\scripts\Rebus.RavenDb.nuspec = ..\scripts\Rebus.RavenDb.nuspec
 		..\scripts\Rebus.StructureMap.nuspec = ..\scripts\Rebus.StructureMap.nuspec
 		..\scripts\Rebus.Unity.nuspec = ..\scripts\Rebus.Unity.nuspec
@@ -55,6 +52,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Autofac", "Rebus.Autofac\Rebus.Autofac.csproj", "{539812E2-0F65-49ED-8F26-1736CF6CBFDA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Unity", "Rebus.Unity\Rebus.Unity.csproj", "{93AEA3E2-F995-427A-BAF4-F2EBD271E818}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Azure", "Rebus.Azure\Rebus.Azure.csproj", "{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.RabbitMQ", "Rebus.RabbitMQ\Rebus.RabbitMQ.csproj", "{5836C347-90FC-4628-B4A1-16926B6CA781}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -106,16 +107,6 @@ Global
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D}.Release|x86.ActiveCfg = Release|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|x86.ActiveCfg = Release|Any CPU
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Any CPU.ActiveCfg = Debug|x86
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Debug|Mixed Platforms.Build.0 = Debug|x86
@@ -126,16 +117,6 @@ Global
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|Mixed Platforms.Build.0 = Release|x86
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|x86.ActiveCfg = Release|x86
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8}.Release|x86.Build.0 = Release|x86
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|x86.ActiveCfg = Release|Any CPU
 		{2178D256-94D6-4443-B23B-53F723184441}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2178D256-94D6-4443-B23B-53F723184441}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2178D256-94D6-4443-B23B-53F723184441}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -196,6 +177,26 @@ Global
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818}.Release|x86.ActiveCfg = Release|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}.Release|x86.ActiveCfg = Release|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{5836C347-90FC-4628-B4A1-16926B6CA781}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -204,13 +205,13 @@ Global
 		{9A835FA7-6BCF-4A99-B4EC-D9BA8A91A4CA} = {37452F2B-E43B-4A39-9956-E3FB17DA2042}
 		{81686CC0-5387-4990-AF61-00CDAA972B81} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
-		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
-		{5836C347-90FC-4628-B4A1-16926B6CA781} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{2178D256-94D6-4443-B23B-53F723184441} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{D5263804-AD2A-40E3-B656-5132255883A8} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{A56478ED-F8B1-4300-9C6C-87322E565252} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{539812E2-0F65-49ED-8F26-1736CF6CBFDA} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
+		{5836C347-90FC-4628-B4A1-16926B6CA781} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{C60AE485-707F-4BA1-AB17-4FF6ED1FD1B8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{E81E0B57-0B61-4752-9997-B0B3EAEDE884} = {35C585ED-8CB0-48D1-83FC-375548298233}
 	EndGlobalSection

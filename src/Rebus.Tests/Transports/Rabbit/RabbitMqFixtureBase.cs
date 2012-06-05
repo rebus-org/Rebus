@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
+using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
-using Rebus.Transports.Rabbit;
 using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit

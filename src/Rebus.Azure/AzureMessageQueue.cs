@@ -7,8 +7,9 @@ using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Shared;
+using Rebus.Transports;
 
-namespace Rebus.Transports.Azure.AzureMessageQueue
+namespace Rebus.Azure
 {
     public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
     {

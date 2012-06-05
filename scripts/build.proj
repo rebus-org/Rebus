@@ -15,6 +15,7 @@
     <RebusProjects Include="..\src\Rebus.Timeout\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.Autofac\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.Unity\*.csproj"/>
+    <RebusProjects Include="..\src\Rebus.RabbitMQ\*.csproj"/>
 
     <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />

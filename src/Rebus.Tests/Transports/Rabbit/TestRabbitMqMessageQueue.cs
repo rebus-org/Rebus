@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Transports.Rabbit;
+using Rebus.RabbitMQ;
 using Shouldly;
 
 namespace Rebus.Tests.Transports.Rabbit

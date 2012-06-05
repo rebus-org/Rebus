@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading;
 using Microsoft.WindowsAzure;
 using NUnit.Framework;
+using Rebus.Azure;
+using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
-using Rebus.Transports.Azure.AzureMessageQueue;
 using Rebus.Transports.Msmq;
-using Rebus.Transports.Rabbit;
 using Shouldly;
 
 namespace Rebus.Tests.Contracts
@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts
                              {
                                  MsmqTransports(),
                                  //AzureQueueTransports(),
-                                 //RabbitMqTransports(),
+                                 RabbitMqTransports(),
                              };
         }
 

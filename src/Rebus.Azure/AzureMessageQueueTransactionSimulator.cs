@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Transactions;
 using Microsoft.WindowsAzure.StorageClient;
 
-namespace Rebus.Transports.Azure.AzureMessageQueue
+namespace Rebus.Azure
 {
     internal class AzureMessageQueueTransactionSimulator : IEnlistmentNotification
     {

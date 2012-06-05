@@ -2,7 +2,7 @@ using System;
 using System.Transactions;
 using Rebus.Logging;
 
-namespace Rebus.Transports.Rabbit
+namespace Rebus.RabbitMQ
 {
     class AmbientTxHack : IEnlistmentNotification, IDisposable
     {

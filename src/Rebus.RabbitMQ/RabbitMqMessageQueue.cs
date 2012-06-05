@@ -9,7 +9,7 @@ using RabbitMQ.Client.MessagePatterns;
 using Rebus.Logging;
 using Rebus.Shared;
 
-namespace Rebus.Transports.Rabbit
+namespace Rebus.RabbitMQ
 {
     public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
