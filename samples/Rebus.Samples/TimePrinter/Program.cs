@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Timers;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus;
@@ -19,14 +20,14 @@ namespace TimePrinter
 
             container.Register(Component.For<IHandleMessages<DateTime>>().ImplementedBy<PrintDateTime>());
 
-            Configure.With(new WindsorContainerAdapter(container))
+            var bus = Configure.With(new WindsorContainerAdapter(container))
                 .Logging(l => l.None())
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
                 .DetermineEndpoints(d => d.FromRebusConfigurationSection())
                 .CreateBus().Start();
 
-            var timer = new System.Timers.Timer();
-            timer.Elapsed += delegate { container.Resolve<IBus>().SendLocal(DateTime.Now); };
+            var timer = new Timer();
+            timer.Elapsed += delegate { bus.Send(DateTime.Now); };
             timer.Interval = 1000;
             timer.Start();
 
