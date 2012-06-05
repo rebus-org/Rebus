@@ -19,6 +19,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external web service", "ext
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSample.ExternalWebService", "IntegrationSample.ExternalWebService\IntegrationSample.ExternalWebService.csproj", "{118F573E-3DB1-4949-9841-B7A5F42923C4}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "print current time", "print current time", "{CA9A4993-76AA-4D17-9469-052256B403EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimePrinter", "TimePrinter\TimePrinter.csproj", "{464E78AA-0EDF-4434-9726-9BBA7DB54657}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +73,16 @@ Global
 		{118F573E-3DB1-4949-9841-B7A5F42923C4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{118F573E-3DB1-4949-9841-B7A5F42923C4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{118F573E-3DB1-4949-9841-B7A5F42923C4}.Release|x86.ActiveCfg = Release|Any CPU
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Debug|x86.ActiveCfg = Debug|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Debug|x86.Build.0 = Debug|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Release|Any CPU.ActiveCfg = Release|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Release|Mixed Platforms.Build.0 = Release|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Release|x86.ActiveCfg = Release|x86
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,5 +93,6 @@ Global
 		{C4613784-944B-47E3-8DAB-53AD9AD1E6BB} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{007AF927-CE5D-4723-8C18-FABE1E1DB5E5} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{118F573E-3DB1-4949-9841-B7A5F42923C4} = {007AF927-CE5D-4723-8C18-FABE1E1DB5E5}
+		{464E78AA-0EDF-4434-9726-9BBA7DB54657} = {CA9A4993-76AA-4D17-9469-052256B403EA}
 	EndGlobalSection
 EndGlobal
