@@ -9,6 +9,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(WindsorContainerAdapterFactory))]
     [TestFixture(typeof(StructureMapContainerAdapterFactory))]
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
+    [TestFixture(typeof(UnityContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
