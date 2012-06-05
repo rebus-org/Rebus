@@ -8,6 +8,7 @@ using Rebus.Configuration.Configurers;
 using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
+using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Encrypted;
