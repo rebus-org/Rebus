@@ -197,10 +197,13 @@
     <Compile Include="Performance\StressMongo\Caf\Messages\SimulatedCreditCheckComplete.cs" />
     <Compile Include="Performance\StressMongo\Crm\Messages\CustomerCreated.cs" />
     <Compile Include="Performance\StressMongo\Dcc\MaintainCustomerInformationSaga.cs" />
+    <Compile Include="Performance\StressMongo\Factories\IMessageQueueFactory.cs" />
+    <Compile Include="Performance\StressMongo\Factories\RabbitMqMessageQueueFactory.cs" />
     <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSaga.cs" />
     <Compile Include="Performance\StressMongo\Legal\CheckSomeLegalStuffSagaData.cs" />
     <Compile Include="Performance\StressMongo\Legal\CustomerLegallyApproved.cs" />
     <Compile Include="Performance\StressMongo\Legal\Messages\SimulatedLegalCheckComplete.cs" />
+    <Compile Include="Performance\StressMongo\Factories\MsmqMessageQueueFactory.cs" />
     <Compile Include="Performance\StressMongo\TestStressMongo.cs" />
     <Compile Include="Bugs\CheckCallsMade.cs" />
     <Compile Include="Persistence\ConnectionStrings.cs" />

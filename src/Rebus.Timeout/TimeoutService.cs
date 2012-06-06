@@ -21,21 +21,32 @@ namespace Rebus.Timeout
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        readonly IStoreTimeouts storeTimeouts;
+        IStoreTimeouts storeTimeouts;
 
-        const string InputQueueName = "rebus.timeout";
+        public const string InputQueueName = "rebus.timeout";
 
-        readonly IBus bus;
+        IBus bus;
         readonly Timer timer = new Timer();
-        readonly RebusBus rebusBus;
+        RebusBus rebusBus;
         static readonly Type[] IgnoredMessageTypes = new[] { typeof(object), typeof(IRebusControlMessage) };
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
-            this.storeTimeouts = storeTimeouts;
             var msmqMessageQueue = new MsmqMessageQueue(InputQueueName, InputQueue + ".error");
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
+        }
 
-            rebusBus = new RebusBus(this, msmqMessageQueue, msmqMessageQueue, null, null, null, new JsonMessageSerializer(), new TrivialPipelineInspector());
+        public TimeoutService(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
+        {
+            Initialize(storeTimeouts, sendMessages, receiveMessages);
+        }
+
+        void Initialize(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
+        {
+            this.storeTimeouts = storeTimeouts;
+
+            rebusBus = new RebusBus(this, sendMessages, receiveMessages, null, null, null, new JsonMessageSerializer(),
+                                    new TrivialPipelineInspector());
             bus = rebusBus;
 
             timer.Interval = 300;

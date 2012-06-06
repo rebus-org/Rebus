@@ -12,23 +12,23 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.MongoDb;
 using Rebus.Serialization.Json;
-using Rebus.Shared;
 using Rebus.Tests.Performance.StressMongo.Caf;
 using Rebus.Tests.Performance.StressMongo.Caf.Messages;
 using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 using Rebus.Tests.Performance.StressMongo.Dcc;
+using Rebus.Tests.Performance.StressMongo.Factories;
 using Rebus.Tests.Performance.StressMongo.Legal;
 using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 using Rebus.Tests.Persistence;
 using Rebus.Timeout;
-using Rebus.Transports.Msmq;
 using System.Linq;
 using Shouldly;
 
 namespace Rebus.Tests.Performance.StressMongo
 {
-    [TestFixture, Category(TestCategories.Integration), Category(TestCategories.Mongo)]
-    public class TestStressMongo : MongoDbFixtureBase, IDetermineDestination, IFlowLog
+    [TestFixture(typeof(MsmqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo)]
+    [TestFixture(typeof(RabbitMqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo), Category(TestCategories.Rabbit)]
+    public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineDestination, IFlowLog where TFactory : IMessageQueueFactory, new()
     {
         readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
 
@@ -47,9 +47,12 @@ namespace Rebus.Tests.Performance.StressMongo
         IBus legal;
         IBus dcc;
         TimeoutService timeout;
+        TFactory messageQueueFactory;
 
         protected override void DoSetUp()
         {
+            messageQueueFactory = new TFactory();
+
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
 
             crm = CreateBus("crm", ContainerAdapterWith("crm"));
@@ -63,7 +66,11 @@ namespace Rebus.Tests.Performance.StressMongo
             DropCollection("customer_information_sagas");
 
             DropCollection("rebus.timeouts");
-            timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, "rebus.timeouts"));
+
+            var timeoutServiceQueues = messageQueueFactory.GetQueue(TimeoutService.InputQueueName);
+            timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, "rebus.timeouts"),
+                                         timeoutServiceQueues.Item1,
+                                         timeoutServiceQueues.Item2);
             timeout.Start();
 
             caf.Subscribe<CustomerCreated>();
@@ -77,8 +84,9 @@ namespace Rebus.Tests.Performance.StressMongo
         }
 
         [TestCase(1)]
-        [TestCase(100, Ignore = true)]
-        public void StatementOfSomething(int count)
+        [TestCase(10)]
+        [TestCase(100)]
+        public void ItWorksWithSagasAndEverything(int count)
         {
             var no = 1;
             count.Times(() => crm.Publish(new CustomerCreated { Name = "John Doe" + no++, CustomerId = Guid.NewGuid() }));
@@ -125,7 +133,7 @@ namespace Rebus.Tests.Performance.StressMongo
                                            {
                                            }
                                        });
-
+            messageQueueFactory.CleanUp();
             timeout.Stop();
         }
 
@@ -232,15 +240,16 @@ namespace Rebus.Tests.Performance.StressMongo
             DropCollection(sagaCollectionName);
             DropCollection(subscriptionsCollectionName);
 
-            var msmqMessageQueue = new MsmqMessageQueue(GetEndpoint(serviceName), "error").PurgeInputQueue();
-            MsmqUtil.PurgeQueue("error");
+            var inputQueueName = GetEndpoint(serviceName);
+
+            var queue = messageQueueFactory.GetQueue(inputQueueName);
 
             var sagaPersister = new MongoDbSagaPersister(ConnectionString)
                 .SetCollectionName<CheckCreditSagaData>("check_credit_sagas")
                 .SetCollectionName<CheckSomeLegalStuffSagaData>("check_legal_sagas")
                 .SetCollectionName<CustomerInformationSagaData>("customer_information_sagas");
 
-            var bus = new RebusBus(containerAdapter, msmqMessageQueue, msmqMessageQueue,
+            var bus = new RebusBus(containerAdapter, queue.Item1, queue.Item2,
                                    new MongoDbSubscriptionStorage(ConnectionString, subscriptionsCollectionName),
                                    sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector());
