@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Transactions;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
@@ -85,6 +87,49 @@ namespace Rebus.Tests.Transports.Rabbit
                               totalMessageCount, consumers, totalSeconds, totalMessageCount/totalSeconds);
 
             receivedMessageCount.ShouldBe(totalMessageCount);
+        }
+
+        [TestCase(true, Description="Asserts that all three messages are received when three sends are done and the tx is committed")]
+        [TestCase(false, Description = "Asserts that no messages are received when three sends are done and the tx is NOT committed")]
+        public void CanSendMessagesInTransaction(bool commitTransactionAndExpectMessagesToBeThere)
+        {
+            // arrange
+            var sender = GetQueue("test.tx.sender");
+            var recipient = GetQueue("test.tx.recipient");
+
+            // act
+            using(var tx = new TransactionScope())
+            {
+                var msg = new TransportMessageToSend {Body = Encoding.UTF8.GetBytes("this is a message!")};
+                
+                sender.Send(recipient.InputQueue,msg);
+                sender.Send(recipient.InputQueue,msg);
+                sender.Send(recipient.InputQueue,msg);
+
+                if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
+            }
+
+            // assert
+            var receivedTransportMessages = GetAllMessages(recipient);
+
+            receivedTransportMessages.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
+        }
+
+        static List<ReceivedTransportMessage> GetAllMessages(RabbitMqMessageQueue recipient)
+        {
+            var timesNullReceived = 0;
+            var receivedTransportMessages = new List<ReceivedTransportMessage>();
+            do
+            {
+                var msg = recipient.ReceiveMessage();
+                if (msg == null)
+                {
+                    timesNullReceived++;
+                    continue;
+                }
+                receivedTransportMessages.Add(msg);
+            } while (timesNullReceived < 5);
+            return receivedTransportMessages;
         }
 
         RabbitMqMessageQueue GetQueue(string queueName)
