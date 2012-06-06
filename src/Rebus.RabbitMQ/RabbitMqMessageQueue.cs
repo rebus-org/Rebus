@@ -77,6 +77,32 @@ namespace Rebus.RabbitMQ
             {
                 if (Transaction.Current != null)
                 {
+                    if (transactionManager == null)
+                    {
+                        var model = connection.CreateModel();
+                        model.TxSelect();
+                        transactionManager = new AmbientTxHack(
+                            () =>
+                            {
+                                model.TxCommit();
+                                transactionManager = null;
+                                ambientModel = null;
+                            },
+                            () =>
+                            {
+                                model.TxRollback();
+                                transactionManager = null;
+                                ambientModel = null;
+                            },
+                            model);
+
+                        handleModel(model);
+                        ambientModel = model;
+                    }
+                    else
+                    {
+                        handleModel(ambientModel);
+                    }
                 }
                 else
                 {
@@ -87,6 +113,12 @@ namespace Rebus.RabbitMQ
                 }
             }
         }
+
+        [ThreadStatic]
+        static AmbientTxHack transactionManager;
+
+        [ThreadStatic]
+        static IModel ambientModel;
 
         void WithSubscription(Action<Subscription> handleSubscription)
         {

@@ -39,7 +39,7 @@ namespace Rebus.Tests.Transports.Rabbit
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 10)] // Ignore = TestCategories.IgnoreLongRunningTests
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             const string senderInputQueue = "test.rabbit.sender";
@@ -48,7 +48,7 @@ namespace Rebus.Tests.Transports.Rabbit
             var sender = GetQueue(senderInputQueue);
             var receiver = GetQueue(receiverInputQueue);
 
-            var totalMessageCount = count*consumers;
+            var totalMessageCount = count * consumers;
 
             var stopwatch = Stopwatch.StartNew();
 
@@ -89,14 +89,14 @@ namespace Rebus.Tests.Transports.Rabbit
             threads.ForEach(t => t.Join());
 
             totalSeconds = stopwatch.Elapsed.TotalSeconds;
-            
+
             Console.WriteLine("Receiving {0} messages spread across {1} consumers took {2:0.0} s - that's {3:0} msg/s",
-                              totalMessageCount, consumers, totalSeconds, totalMessageCount/totalSeconds);
+                              totalMessageCount, consumers, totalSeconds, totalMessageCount / totalSeconds);
 
             receivedMessageCount.ShouldBe(totalMessageCount);
         }
 
-        [TestCase(true, Description="Asserts that all three messages are received when three sends are done and the tx is committed")]
+        [TestCase(true, Description = "Asserts that all three messages are received when three sends are done and the tx is committed")]
         [TestCase(false, Description = "Asserts that no messages are received when three sends are done and the tx is NOT committed")]
         public void CanSendMessagesInTransaction(bool commitTransactionAndExpectMessagesToBeThere)
         {
@@ -105,13 +105,13 @@ namespace Rebus.Tests.Transports.Rabbit
             var recipient = GetQueue("test.tx.recipient");
 
             // act
-            using(var tx = new TransactionScope())
+            using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend {Body = Encoding.UTF8.GetBytes("this is a message!")};
-                
-                sender.Send(recipient.InputQueue,msg);
-                sender.Send(recipient.InputQueue,msg);
-                sender.Send(recipient.InputQueue,msg);
+                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+
+                sender.Send(recipient.InputQueue, msg);
+                sender.Send(recipient.InputQueue, msg);
+                sender.Send(recipient.InputQueue, msg);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
