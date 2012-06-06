@@ -85,7 +85,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
         [TestCase(1)]
         [TestCase(10)]
-        [TestCase(100)]
+        [TestCase(100, Ignore = true)]
         public void ItWorksWithSagasAndEverything(int count)
         {
             var no = 1;
