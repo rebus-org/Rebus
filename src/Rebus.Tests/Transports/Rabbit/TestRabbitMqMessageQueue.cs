@@ -21,7 +21,7 @@ namespace Rebus.Tests.Transports.Rabbit
         }
 
         /// <summary>
-        /// First:
+        /// Shared locked model for send/subscribe:
         ///     Sending 1000 messages took 0,1 s - that's 7988 msg/s
         ///     Receiving 1000 messages spread across 10 consumers took 6,1 s - that's 165 msg/s
         /// 
@@ -29,10 +29,17 @@ namespace Rebus.Tests.Transports.Rabbit
         ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15665 msg/s
         /// 
         ///     Conclusion: Seems there's a pretty large overhead in establishing a subscription...
+        /// 
+        /// Now creating model for every send (because we're outside of a transaction):
+        ///     Sending 1000 messages took 1,3 s - that's 754 msg/s
+        ///     Receiving 1000 messages spread across 10 consumers took 6,0 s - that's 166 msg/s
+        ///
+        ///     Sending 100000 messages took 130,4 s - that's 767 msg/s
+        ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15645 msg/s
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 10)]
+        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             const string senderInputQueue = "test.rabbit.sender";

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Transactions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
@@ -27,7 +28,7 @@ namespace Rebus.RabbitMQ
 
         readonly string inputQueueName;
         readonly string errorQueue;
-        readonly IModel model;
+        readonly IModel subscriptionModel;
         readonly object modelLock = new object();
         readonly Subscription subscription;
         readonly object subscriptionLock = new object();
@@ -38,10 +39,10 @@ namespace Rebus.RabbitMQ
             this.errorQueue = errorQueue;
 
             log.Info("Opening Rabbit connection");
-            connection = new ConnectionFactory {Uri = connectionString}.CreateConnection();
-            
+            connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
+
             log.Debug("Creating model");
-            model = connection.CreateModel();
+            subscriptionModel = connection.CreateModel();
 
             log.Info("Initializing exchange and input queue");
             var tempModel = connection.CreateModel();
@@ -53,7 +54,7 @@ namespace Rebus.RabbitMQ
             CreateLogicalQueue(tempModel, this.errorQueue);
 
             log.Debug("Opening subscription");
-            subscription = new Subscription(model, inputQueueName);
+            subscription = new Subscription(subscriptionModel, inputQueueName);
         }
 
         void CreateLogicalQueue(IModel tempModel, string queueName)
@@ -72,15 +73,24 @@ namespace Rebus.RabbitMQ
 
         void WithModel(Action<IModel> handleModel)
         {
-            lock(modelLock)
+            lock (modelLock)
             {
-                handleModel(model);
+                if (Transaction.Current != null)
+                {
+                }
+                else
+                {
+                    using (var model = connection.CreateModel())
+                    {
+                        handleModel(model);
+                    }
+                }
             }
         }
 
         void WithSubscription(Action<Subscription> handleSubscription)
         {
-            lock(subscriptionLock)
+            lock (subscriptionLock)
             {
                 handleSubscription(subscription);
             }
@@ -90,13 +100,13 @@ namespace Rebus.RabbitMQ
         {
             BasicDeliverEventArgs ea = null;
             var gotMessage = false;
-            
+
             WithSubscription(sub => gotMessage = sub.Next(200, out ea));
-            
+
             if (gotMessage)
             {
                 using (new AmbientTxHack(() => WithSubscription(sub => sub.Ack(ea)),
-                                         () => {},
+                                         () => { },
                                          null))
                 {
                     return new ReceivedTransportMessage
@@ -119,7 +129,7 @@ namespace Rebus.RabbitMQ
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
             WithModel(m => m.BasicPublish(ExchangeName, destinationQueueName,
-                                          GetHeaders(message),
+                                          GetHeaders(m, message),
                                           GetBody(message)));
         }
 
@@ -137,34 +147,30 @@ namespace Rebus.RabbitMQ
             subscription.Close();
 
             log.Debug("Disposing model");
-            model.Close();
-            model.Dispose();
+            subscriptionModel.Close();
+            subscriptionModel.Dispose();
 
             log.Debug("Disposing connection");
             connection.Close();
             connection.Dispose();
         }
 
-        IBasicProperties GetHeaders(TransportMessageToSend message)
+        IBasicProperties GetHeaders(IModel model, TransportMessageToSend message)
         {
-            IBasicProperties props = null;
-            WithModel(m =>
-                          {
-                              props = m.CreateBasicProperties();
+            var props = model.CreateBasicProperties();
 
-                              if (message.Headers != null)
-                              {
-                                  props.Headers = message.Headers.ToDictionary(e => e.Key,
-                                                                               e => Encoding.GetBytes(e.Value));
+            if (message.Headers != null)
+            {
+                props.Headers = message.Headers.ToDictionary(e => e.Key,
+                                                             e => Encoding.GetBytes(e.Value));
 
-                                  if (message.Headers.ContainsKey(Headers.ReturnAddress))
-                                  {
-                                      props.ReplyTo = message.Headers[Headers.ReturnAddress];
-                                  }
-                              }
+                if (message.Headers.ContainsKey(Headers.ReturnAddress))
+                {
+                    props.ReplyTo = message.Headers[Headers.ReturnAddress];
+                }
+            }
 
-                              props.MessageId = Guid.NewGuid().ToString();
-                          });
+            props.MessageId = Guid.NewGuid().ToString();
             return props;
         }
 
@@ -178,7 +184,7 @@ namespace Rebus.RabbitMQ
             if (result == null) return new Dictionary<string, string>();
 
             return result.Cast<DictionaryEntry>()
-                .ToDictionary(e => (string) e.Key, e => Encoding.GetString((byte[]) e.Value));
+                .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
         }
     }
 }
