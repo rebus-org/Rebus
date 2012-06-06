@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
@@ -19,6 +18,16 @@ namespace Rebus.Tests.Transports.Rabbit
             RebusLoggerFactory.Current = new NullLoggerFactory();
         }
 
+        /// <summary>
+        /// First:
+        ///     Sending 1000 messages took 0,1 s - that's 7988 msg/s
+        ///     Receiving 1000 messages spread across 10 consumers took 6,1 s - that's 165 msg/s
+        /// 
+        ///     Sending 100000 messages took 11,5 s - that's 8676 msg/s
+        ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15665 msg/s
+        /// 
+        ///     Conclusion: Seems there's a pretty large overhead in establishing a subscription...
+        /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
         [TestCase(10000, 10)]
