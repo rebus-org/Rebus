@@ -178,6 +178,8 @@
     <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
+    <Compile Include="Gateway\TestGatewayIntegration.cs" />
+    <Compile Include="Gateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
@@ -279,6 +281,10 @@
     <ProjectReference Include="..\Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj">
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Gateway\Rebus.Gateway.csproj">
+      <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
+      <Name>Rebus.Gateway</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
