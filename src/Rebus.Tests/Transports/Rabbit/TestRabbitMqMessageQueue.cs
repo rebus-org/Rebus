@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Shouldly;
 
@@ -13,42 +14,75 @@ namespace Rebus.Tests.Transports.Rabbit
     [TestFixture, Category(TestCategories.Rabbit)]
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
+        protected override void DoSetUp()
+        {
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+        }
+
         [TestCase(100, 10)]
-        [TestCase(1000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
-        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(1000, 10)]
+        [TestCase(10000, 10)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
-            var sender = new RabbitMqMessageQueue(ConnectionString, "test.rabbit.sender", "test.rabbit.sender.error").PurgeInputQueue();
-            
-            const string consumerInputQueue = "test.rabbit.receiver";
+            const string senderInputQueue = "test.rabbit.sender";
+            const string receiverInputQueue = "test.rabbit.receiver";
 
-            var competingConsumers = Enumerable.Range(0, consumers)
-                .Select(i => new RabbitMqMessageQueue(ConnectionString, consumerInputQueue, consumerInputQueue + ".error").PurgeInputQueue())
-                .ToArray();
+            var sender = GetQueue(senderInputQueue);
+            var receiver = GetQueue(receiverInputQueue);
 
-            var messageCount = count*consumers;
-
-            Console.WriteLine("Sending {0} messages", messageCount);
-            messageCount.Times(() => sender.Send(consumerInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t!") }));
-
-            Console.WriteLine("Receiving {0} messages", messageCount);
-            long receivedMessageCount = 0;
+            var totalMessageCount = count*consumers;
 
             var stopwatch = Stopwatch.StartNew();
 
-            Parallel.For(0, consumers,
-                         i => count.Times(() =>
-                                              {
-                                                  var receivedTransportMessage = competingConsumers[i].ReceiveMessage();
-                                                  if (receivedTransportMessage == null) return;
-                                                  Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("w00t!");
-                                                  Interlocked.Increment(ref receivedMessageCount);
-                                              }));
+            Console.WriteLine("Sending {0} messages", totalMessageCount);
+            Enumerable.Range(0, totalMessageCount).ToList()
+                .ForEach(i => sender.Send(receiverInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t! message " + i) }));
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
+
+            Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/s", totalMessageCount, totalSeconds, totalMessageCount / totalSeconds);
+
+            Thread.Sleep(1.Seconds());
+
+            Console.WriteLine("Receiving {0} messages", totalMessageCount);
+            long receivedMessageCount = 0;
+
+            stopwatch = Stopwatch.StartNew();
+
+            var threads = Enumerable.Range(0, consumers)
+                .Select(i => new Thread(_ =>
+                    {
+                        var gotNoMessageCount = 0;
+                        do
+                        {
+                            var receivedTransportMessage = receiver.ReceiveMessage();
+                            if (receivedTransportMessage == null)
+                            {
+                                gotNoMessageCount++;
+                                continue;
+                            }
+                            Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
+                            Interlocked.Increment(ref receivedMessageCount);
+                        } while (gotNoMessageCount < 3);
+                    }))
+                .ToList();
+
+            threads.ForEach(t => t.Start());
+            threads.ForEach(t => t.Join());
+
+            totalSeconds = stopwatch.Elapsed.TotalSeconds;
             
             Console.WriteLine("Receiving {0} messages spread across {1} consumers took {2:0.0} s - that's {3:0} msg/s",
-                              messageCount, consumers, totalSeconds, messageCount/totalSeconds);
+                              totalMessageCount, consumers, totalSeconds, totalMessageCount/totalSeconds);
+
+            receivedMessageCount.ShouldBe(totalMessageCount);
+        }
+
+        RabbitMqMessageQueue GetQueue(string queueName)
+        {
+            var queue = new RabbitMqMessageQueue(ConnectionString, queueName, queueName + ".error");
+            toDispose.Add(queue);
+            return queue.PurgeInputQueue();
         }
     }
 }

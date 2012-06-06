@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
@@ -13,7 +14,7 @@ namespace Rebus.Tests.Transports.Rabbit
     {
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
-        List<IDisposable> toDispose;
+        protected List<IDisposable> toDispose;
 
         static RabbitMqFixtureBase()
         {
@@ -36,6 +37,7 @@ namespace Rebus.Tests.Transports.Rabbit
         {
             toDispose.ForEach(b => b.Dispose());
             DoTearDown();
+            RebusLoggerFactory.Reset();
         }
 
         protected virtual void DoTearDown()
