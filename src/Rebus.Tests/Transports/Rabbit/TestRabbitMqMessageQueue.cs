@@ -122,6 +122,39 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedTransportMessages.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
         }
 
+        [TestCase(true, Description = "Asserts that all six messages are received in two separate queues when three sends are done to each, and the tx is committed")]
+        [TestCase(false, Description = "Asserts that no messages are received when six sends are done and the tx is NOT committed")]
+        public void CanSendMessagesInTransactionToMultipleQueues(bool commitTransactionAndExpectMessagesToBeThere)
+        {
+            // arrange
+            var sender = GetQueue("test.tx.sender");
+            var firstRecipient = GetQueue("test.tx.recipient1");
+            var secondRecipient = GetQueue("test.tx.recipient2");
+
+            // act
+            using (var tx = new TransactionScope())
+            {
+                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+
+                sender.Send(firstRecipient.InputQueue, msg);
+                sender.Send(firstRecipient.InputQueue, msg);
+                sender.Send(firstRecipient.InputQueue, msg);
+                
+                sender.Send(secondRecipient.InputQueue, msg);
+                sender.Send(secondRecipient.InputQueue, msg);
+                sender.Send(secondRecipient.InputQueue, msg);
+
+                if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
+            }
+
+            // assert
+            var receivedTransportMessagesFromFirstRecipient = GetAllMessages(firstRecipient);
+            var receivedTransportMessagesFromSecondRecipient = GetAllMessages(secondRecipient);
+
+            receivedTransportMessagesFromFirstRecipient.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
+            receivedTransportMessagesFromSecondRecipient.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
+        }
+
         static List<ReceivedTransportMessage> GetAllMessages(RabbitMqMessageQueue recipient)
         {
             var timesNullReceived = 0;
