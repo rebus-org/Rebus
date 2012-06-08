@@ -93,6 +93,11 @@ namespace Rebus.Tests
             get { return inputQueue; }
         }
 
+        public string InputQueueAddress
+        {
+            get { return InputQueue; }
+        }
+
         public string ErrorQueue
         {
             get { return inputQueue + ".error"; }

@@ -189,7 +189,7 @@ namespace Rebus.Bus
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
-                headers[Headers.ReturnAddress] = receiveMessages.InputQueue;
+                headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
             }
             messageToSend.Headers = headers;
 

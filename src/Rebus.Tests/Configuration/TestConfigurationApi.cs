@@ -133,8 +133,8 @@ namespace Rebus.Tests.Configuration
             registrations.Count.ShouldBe(2);
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
-            msmqMessageQueue.InputQueue.ShouldBe(@"some_input_queue");
-            msmqMessageQueue.ErrorQueue.ShouldBe(@"some_error_queue");
+            msmqMessageQueue.InputQueue.ShouldBe("some_input_queue");
+            msmqMessageQueue.ErrorQueue.ShouldBe("some_error_queue");
         }
 
         [Test]
@@ -152,7 +152,7 @@ namespace Rebus.Tests.Configuration
             registrations.Count.ShouldBe(2);
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
-            msmqMessageQueue.InputQueue.ShouldBe(@"this.is.my.input.queue");
+            msmqMessageQueue.InputQueue.ShouldBe("this.is.my.input.queue");
         }
 
         [Test]

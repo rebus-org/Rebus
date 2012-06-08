@@ -8,6 +8,7 @@ namespace Rebus.Configuration
         const string MappingsCollectionPropertyName = "endpoints";
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";
+        const string AddressAttributeName = "address";
         const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
         const string ConfigSectionName = "rebus";
@@ -26,14 +27,21 @@ namespace Rebus.Configuration
             set { this[MappingsCollectionPropertyName] = value; }
         }
 
-        [ConfigurationProperty(InputQueueAttributeName)]
+        [ConfigurationProperty(InputQueueAttributeName, IsRequired = true)]
         public string InputQueue
         {
             get { return (string)this[InputQueueAttributeName]; }
             set { this[InputQueueAttributeName] = value; }
         }
 
-        [ConfigurationProperty(ErrorQueueAttributeName)]
+        [ConfigurationProperty(AddressAttributeName)]
+        public string Address
+        {
+            get { return (string)this[AddressAttributeName]; }
+            set { this[AddressAttributeName] = value; }
+        }
+
+        [ConfigurationProperty(ErrorQueueAttributeName, IsRequired = true)]
         public string ErrorQueue
         {
             get { return (string)this[ErrorQueueAttributeName]; }
@@ -81,8 +89,10 @@ that it is NOT possible to rename this section, even though the declaration make
             if (!(section is RebusConfigurationSection)) return defaultValue;
 
             var configurationValue = getConfigurationValue((RebusConfigurationSection)section);
-
             if (configurationValue == null) return defaultValue;
+
+            var stringValue = configurationValue as string;
+            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
 
             return configurationValue;
         }

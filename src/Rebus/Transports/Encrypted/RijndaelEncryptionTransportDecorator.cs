@@ -63,6 +63,11 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueue; }
         }
 
+        public string InputQueueAddress
+        {
+            get { return innerReceiveMessages.InputQueueAddress; }
+        }
+
         public string ErrorQueue
         {
             get { return innerReceiveMessages.ErrorQueue; }

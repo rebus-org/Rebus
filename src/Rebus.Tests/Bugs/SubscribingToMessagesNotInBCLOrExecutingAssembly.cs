@@ -31,7 +31,7 @@ namespace Rebus.Tests.Bugs
             // assert
             var subscribers = subscriptionStorage.GetSubscribers(typeof (TheMessage));
             subscribers.Length.ShouldBe(1);
-            subscribers[0].ShouldBe(SubscriberInputQueueName);
+            subscribers[0].ShouldStartWith(SubscriberInputQueueName + "@");
         }
 
         public override string GetEndpointFor(Type messageType)

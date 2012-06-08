@@ -2,6 +2,7 @@ using System;
 using System.Messaging;
 using System.Security.Principal;
 using System.Threading;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Extensions;
@@ -30,6 +31,8 @@ namespace Rebus.Transports.Msmq
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
 
+        readonly string machineAddress;
+
         public static string PrivateQueue(string queueName)
         {
             return string.Format(@".\private$\{0}", queueName);
@@ -37,6 +40,8 @@ namespace Rebus.Transports.Msmq
 
         public MsmqMessageQueue(string inputQueueName, string errorQueue)
         {
+            machineAddress = GetMachineAddress();
+
             inputQueuePath = MsmqUtil.GetPath(inputQueueName);
             EnsureMessageQueueExists(inputQueuePath);
             EnsureMessageQueueIsTransactional(inputQueuePath);
@@ -50,6 +55,11 @@ namespace Rebus.Transports.Msmq
 
             this.inputQueueName = inputQueueName;
             this.errorQueue = errorQueue;
+        }
+
+        string GetMachineAddress()
+        {
+            return RebusConfigurationSection.GetConfigurationValueOrDefault(s => s.Address, Environment.MachineName);
         }
 
         void EnsureMessageQueueIsLocal(string inputQueueName)
@@ -85,6 +95,11 @@ create its queues automatically.",
                     throw new InvalidOperationException(message);
                 }
             }
+        }
+
+        public string InputQueueAddress
+        {
+            get { return InputQueue + "@" + machineAddress; }
         }
 
         public string ErrorQueue

@@ -139,6 +139,11 @@ namespace Rebus.Azure
             get { return inputQueueName; }
         }
 
+        public string InputQueueAddress
+        {
+            get { return InputQueue; }
+        }
+
         public string ErrorQueue
         {
             get { return errorQueue; }

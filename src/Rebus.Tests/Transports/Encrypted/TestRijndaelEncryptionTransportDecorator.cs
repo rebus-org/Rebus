@@ -179,6 +179,11 @@ namespace Rebus.Tests.Transports.Encrypted
                 get { throw new NotImplementedException(); }
             }
 
+            public string InputQueueAddress
+            {
+                get { throw new NotImplementedException(); }
+            }
+
             public string ErrorQueue
             {
                 get { throw new NotImplementedException(); }

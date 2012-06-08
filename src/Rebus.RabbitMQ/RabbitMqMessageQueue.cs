@@ -66,6 +66,11 @@ namespace Rebus.RabbitMQ
             tempModel.QueueBind(queueName, ExchangeName, queueName);
         }
 
+        public string InputQueueAddress
+        {
+            get { return InputQueue; }
+        }
+
         public string ErrorQueue
         {
             get { return errorQueue; }
@@ -141,10 +146,23 @@ namespace Rebus.RabbitMQ
                                          () => { },
                                          null))
                 {
+                    if (ea == null)
+                    {
+                        log.Warn("Rabbit Client said there was a message, but the message args was NULL! WTF!?");
+                        return null;
+                    }
+
+                    var basicProperties = ea.BasicProperties;
+
+                    if (basicProperties == null)
+                    {
+                        log.Warn("Properties of received message were NULL! WTF!?");
+                    }
+
                     return new ReceivedTransportMessage
                                {
-                                   Id = ea.BasicProperties.MessageId,
-                                   Headers = GetHeaders(ea.BasicProperties.Headers),
+                                   Id = basicProperties != null ? basicProperties.MessageId : "(unknown)",
+                                   Headers = basicProperties != null ? GetHeaders(basicProperties.Headers) : new Dictionary<string, string>(),
                                    Body = ea.Body,
                                };
                 }
