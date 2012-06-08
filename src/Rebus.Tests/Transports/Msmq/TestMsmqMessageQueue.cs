@@ -25,7 +25,6 @@ namespace Rebus.Tests.Transports.Msmq
         List<IDisposable> disposables;
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
-        string destinationQueuePath;
         JsonMessageSerializer serializer;
         string destinationQueueName;
 
@@ -37,25 +36,35 @@ namespace Rebus.Tests.Transports.Msmq
             serializer = new JsonMessageSerializer();
             senderQueue = new MsmqMessageQueue("test.msmq.tx.sender", "error");
             destinationQueueName = "test.msmq.tx.destination";
-            destinationQueuePath = MsmqMessageQueue.PrivateQueue(destinationQueueName);
 
-            if (!MessageQueue.Exists(destinationQueuePath))
-            {
-                var messageQueue = MessageQueue.Create(destinationQueuePath, transactional: true);
-                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
-            }
-
-            destinationQueue = new MessageQueue(destinationQueuePath)
-                                   {
-                                       Formatter = new RebusTransportMessageFormatter(),
-                                       MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
-                                   };
+            destinationQueue = NewRawMsmqQueue(destinationQueueName);
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
 
             disposables.Add(senderQueue);
             disposables.Add(destinationQueue);
+        }
+
+        MessageQueue NewRawMsmqQueue(string queueName)
+        {
+            var queuePath = MsmqUtil.GetPath(queueName);
+
+            if (!MessageQueue.Exists(queuePath))
+            {
+                var messageQueue = MessageQueue.Create(queuePath, true);
+                messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.FullControl);
+            }
+
+            var newRawMsmqQueue = new MessageQueue(queuePath)
+                {
+                    Formatter = new RebusTransportMessageFormatter(),
+                    MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
+                };
+
+            newRawMsmqQueue.Purge();
+
+            return newRawMsmqQueue;
         }
 
         [TearDown]
@@ -138,10 +147,10 @@ namespace Rebus.Tests.Transports.Msmq
         {
             var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
                 .Where(ni => ni.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .Select(ni => new {ni, props = ni.GetIPProperties()});
+                .Select(ni => new { ni, props = ni.GetIPProperties() });
 
             var addresses = networkInterfaces
-                .SelectMany(t => t.props.UnicastAddresses, (t, ip) => new {t, IpAddress = ip});
+                .SelectMany(t => t.props.UnicastAddresses, (t, ip) => new { t, IpAddress = ip });
 
             var localAddress = addresses
                 .Where(t => t.IpAddress.Address.AddressFamily == AddressFamily.InterNetwork)
@@ -320,11 +329,77 @@ The following addresses were collected:
             }
         }
 
+        [TestCase(true, Description="Asserts that, when a TransactionScope completes the ambient tx, all messages are committed atomically to multiple queues")]
+        [TestCase(false, Description = "Asserts that, when a TransactionScope does not complete the ambient tx, no messages are sent to any of the involved queues")]
+        public void MultipleSendOperationsToMultipleQueuesAreEnlistedInTheSameTransaction(bool commitTransactionAndExpectMessagesToBeThere)
+        {
+            // arrange
+            const string queueName1 = "test.tx.queue1";
+            const string queueName2 = "test.tx.queue2";
+
+            var recipient1 = NewRawMsmqQueue(queueName1);
+            var recipient2 = NewRawMsmqQueue(queueName2);
+
+            disposables.Add(recipient1);
+            disposables.Add(recipient2);
+
+            var encoding = Encoding.UTF8;
+
+            using (var tx = new TransactionScope())
+            {
+                // act
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") });
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 2!") });
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 3!") });
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 4!") });
+
+                if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
+            }
+
+            // assert
+            var allMessages = GetAllMessages(recipient1).Concat(GetAllMessages(recipient2)).ToList();
+
+            if (commitTransactionAndExpectMessagesToBeThere)
+            {
+                allMessages.Count.ShouldBe(4);
+                
+                var receivedMessages = allMessages.Select(m => encoding.GetString(m.Body)).ToList();
+                receivedMessages.ShouldContain("yo dawg 1!");
+                receivedMessages.ShouldContain("yo dawg 2!");
+                receivedMessages.ShouldContain("yo dawg 3!");
+                receivedMessages.ShouldContain("yo dawg 4!");
+            }
+            else
+            {
+                allMessages.Count.ShouldBe(0);
+            }
+        }
+
+        static IEnumerable<ReceivedTransportMessage> GetAllMessages(MessageQueue messageQueue)
+        {
+            var receivedTransportMessages = new List<ReceivedTransportMessage>();
+
+            try
+            {
+                while (true)
+                {
+                    var message = messageQueue.Receive(1.Seconds());
+                    if (message == null) break;
+                    receivedTransportMessages.Add((ReceivedTransportMessage)message.Body);
+                }
+            }
+            catch (MessageQueueException e)
+            {
+            }
+
+            return receivedTransportMessages;
+        }
+
         System.Messaging.Message Receive()
         {
             try
             {
-                return destinationQueue.Receive(TimeSpan.FromSeconds(5));
+                return destinationQueue.Receive(5.Seconds());
             }
             catch (MessageQueueException)
             {

@@ -5,7 +5,7 @@ using Rebus.Gateway;
 
 namespace Rebus.Tests.Gateway
 {
-    [TestFixture]
+    [TestFixture, Ignore("not relevant for now")]
     public class TestGatewayIntegration : RebusBusMsmqIntegrationTestBase
     {
         RebusBus pricedesk;
