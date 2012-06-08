@@ -17,11 +17,6 @@ namespace Rebus
         void Send<TCommand>(TCommand message);
 
         /// <summary>
-        /// Sends the specified message to the specified destination.
-        /// </summary>
-        void Send<TCommand>(string endpoint, TCommand message);
-
-        /// <summary>
         /// Sends the specified message to the bus' own input queue.
         /// </summary>
         void SendLocal<TCommand>(TCommand message);
@@ -38,12 +33,6 @@ namespace Rebus
         /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
         /// </summary>
         void Subscribe<TEvent>();
-
-        /// <summary>
-        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
-        /// destination.
-        /// </summary>
-        void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.

@@ -25,7 +25,7 @@ namespace Rebus.Timeout
 
         public const string InputQueueName = "rebus.timeout";
 
-        IBus bus;
+        IAdvancedBus bus;
         readonly Timer timer = new Timer();
         RebusBus rebusBus;
         static readonly Type[] IgnoredMessageTypes = new[] { typeof(object), typeof(IRebusControlMessage) };

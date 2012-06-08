@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Rebus
 {
@@ -26,6 +25,17 @@ namespace Rebus
         /// has failed too many times.
         /// </summary>
         event Action<ReceivedTransportMessage> PoisonMessage;
+
+        /// <summary>
+        /// Sends the specified message to the specified destination.
+        /// </summary>
+        void Send<TCommand>(string endpoint, TCommand message);
+
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
+        /// destination.
+        /// </summary>
+        void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
         /// Sends the specified batch of messages, dividing the batch into bacthes
