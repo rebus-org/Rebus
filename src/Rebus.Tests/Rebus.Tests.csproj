@@ -175,6 +175,7 @@
     <Compile Include="Contracts\ContainerAdapters\Factories\UnityContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ITransportFactory.cs" />
     <Compile Include="Contracts\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
