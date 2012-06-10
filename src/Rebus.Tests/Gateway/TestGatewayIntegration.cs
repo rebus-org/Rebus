@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Gateway;
@@ -14,6 +15,7 @@ namespace Rebus.Tests.Gateway
         GatewayService gatewayInside;
         string pricedeskInputQueue;
         string ordersystemInputQueue;
+        HandlerActivatorForTesting orderSystemHandlerActivator;
 
         protected override void DoSetUp()
         {
@@ -23,12 +25,14 @@ namespace Rebus.Tests.Gateway
             
             // and this one is inside
             ordersystemInputQueue = "test.ordersystem.input";
-            ordersystem = CreateBus(ordersystemInputQueue, new HandlerActivatorForTesting());
+            orderSystemHandlerActivator = new HandlerActivatorForTesting();
+            ordersystem = CreateBus(ordersystemInputQueue, orderSystemHandlerActivator);
 
-            // so we set up a gateway on each side:
+            // so we set up a one-way gateway service on each side:
             gatewayInDmz = new GatewayService
                 {
                     ListenQueue = "test.rebus.dmz.gateway",
+                    ErrorQueue = "test.rebus.dmz.gateway.error",
                     DestinationUri = "http://localhost:8080",
                 };
             gatewayInside = new GatewayService
@@ -54,17 +58,28 @@ namespace Rebus.Tests.Gateway
         public void PricedeskCanSendOrdersToOrdersystemViaGateway()
         {
             // arrange
-            
+            var resetEvent = new ManualResetEvent(false);
+            orderSystemHandlerActivator.Handle<PlaceOrderRequest>(req =>
+                {
+                    if (req.What == "beer" && req.HowMuch == 12)
+                    {
+                        resetEvent.Set();
+                    }
+                });
+            var timeout = 4.Seconds();
 
             // act
+            pricedesk.Send(new PlaceOrderRequest { What = "beer", HowMuch = 12 });
 
             // assert
-
+            Assert.That(resetEvent.WaitOne(timeout), Is.True, "Request was not received in order system within timeout of {0}", timeout);
         }
 
         // when an order is placed, this request is sent by pricedesk
         class PlaceOrderRequest
         {
+            public string What { get; set; }
+            public int HowMuch { get; set; }
         }
 
         public override string GetEndpointFor(Type messageType)

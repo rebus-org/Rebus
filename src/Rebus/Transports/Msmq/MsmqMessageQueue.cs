@@ -40,21 +40,30 @@ namespace Rebus.Transports.Msmq
 
         public MsmqMessageQueue(string inputQueueName, string errorQueue)
         {
-            machineAddress = GetMachineAddress();
+            try
+            {
+                machineAddress = GetMachineAddress();
 
-            inputQueuePath = MsmqUtil.GetPath(inputQueueName);
-            EnsureMessageQueueExists(inputQueuePath);
-            EnsureMessageQueueIsTransactional(inputQueuePath);
-            EnsureMessageQueueIsLocal(inputQueueName);
+                inputQueuePath = MsmqUtil.GetPath(inputQueueName);
+                EnsureMessageQueueExists(inputQueuePath);
+                EnsureMessageQueueIsTransactional(inputQueuePath);
+                EnsureMessageQueueIsLocal(inputQueueName);
 
-            var errorQueuePath = MsmqUtil.GetPath(errorQueue);
-            EnsureMessageQueueExists(errorQueuePath);
-            EnsureMessageQueueIsTransactional(errorQueuePath);
-            
-            inputQueue = GetMessageQueue(inputQueuePath);
+                var errorQueuePath = MsmqUtil.GetPath(errorQueue);
+                EnsureMessageQueueExists(errorQueuePath);
+                EnsureMessageQueueIsTransactional(errorQueuePath);
 
-            this.inputQueueName = inputQueueName;
-            this.errorQueue = errorQueue;
+                inputQueue = GetMessageQueue(inputQueuePath);
+
+                this.inputQueueName = inputQueueName;
+                this.errorQueue = errorQueue;
+            }
+            catch(MessageQueueException e)
+            {
+                throw new ArgumentException(
+                    string.Format(@"An error occurred while initializing MsmqMessageQueue - attempted to use '{0}' as input queue, and '{1}' as error queue",
+                        inputQueueName, errorQueue), e);
+            }
         }
 
         string GetMachineAddress()

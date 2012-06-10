@@ -91,7 +91,7 @@ namespace Rebus.Tests.Integration
             retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
 
-            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(receiverQueueName);
+            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(receiverQueueName + "@" + Environment.MachineName);
             errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: oh noes!");
         }
 

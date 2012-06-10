@@ -301,7 +301,7 @@ namespace Rebus.Bus
 
             log.Warn("Message {0} is forwarded to error queue", transportMessageToSend.Label);
 
-            transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueue;
+            transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueueAddress;
             transportMessageToSend.Headers[Headers.ErrorMessage] = errorDetail;
 
             try

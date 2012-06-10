@@ -16,14 +16,15 @@ namespace Rebus.Tests.Gateway
             var section = RebusGatewayConfigurationSection.LookItUp();
 
             // assert
-            var incomingSection = section.Incoming;
+            var incomingSection = section.Inbound;
             incomingSection.ShouldNotBe(null);
             incomingSection.ListenUri.ShouldBe("http://+:8080");
             incomingSection.DestinationQueue.ShouldBe("test.rebus.incoming");
 
-            var outgoingSection = section.Outgoing;
+            var outgoingSection = section.Outbound;
             outgoingSection.ShouldNotBe(null);
             outgoingSection.ListenQueue.ShouldBe("test.rebus.outgoing");
+            outgoingSection.ErrorQueue.ShouldBe("test.rebus.outgoing.error");
             outgoingSection.DestinationUri.ShouldBe("http://localhost:8081");
         }
     }

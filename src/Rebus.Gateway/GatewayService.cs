@@ -1,7 +1,6 @@
 using System;
-using System.Configuration;
-using System.IO;
-using System.Net;
+using Rebus.Gateway.Inbound;
+using Rebus.Gateway.Outbound;
 using Rebus.Logging;
 
 namespace Rebus.Gateway
@@ -15,9 +14,11 @@ namespace Rebus.Gateway
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        HttpListener httpListener;
+        InboundService inboundService;
+        OutboundService outboundService;
 
         public string ListenQueue { get; set; }
+        public string ErrorQueue { get; set; }
         public string DestinationUri { get; set; }
 
         public string DestinationQueue { get; set; }
@@ -81,45 +82,31 @@ The gateway can work in one of three modes: inbound, outbound, or full duplex.
 
         void InitQueueListener()
         {
-            log.Info("Starting MSMQ listener...");
-            
+            log.Info("Starting outbound service...");
+            outboundService = new OutboundService(ListenQueue, DestinationUri, ErrorQueue);
+            outboundService.Start();
         }
 
         void InitHttpListener()
         {
-            log.Info("Starting HTTP listener...");
-
-            httpListener = new HttpListener();
-            httpListener.Prefixes.Add(ListenUri);
-            httpListener.Start();
-            httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
-        }
-
-        void HandleIncomingHttpRequest(IAsyncResult asyncResult)
-        {
-            try
-            {
-                var context = httpListener.EndGetContext(asyncResult);
-                
-                var request = context.Request;
-                log.Debug("Got request from {0}", request.UserHostAddress);
-
-                using(var reader = new StreamReader(request.InputStream))
-                {
-                    var readToEnd = reader.ReadToEnd();
-                }
-            }
-            catch (Exception e)
-            {
-                log.Warn("Error while receiving request: {0}", e);
-            }
+            log.Info("Starting inbound service...");
+            inboundService = new InboundService(ListenUri, DestinationQueue);
+            inboundService.Start();
         }
 
         public void Stop()
         {
-            log.Info("Stopping HTTP listener...");
-            httpListener.Stop();
-            log.Info("Stopped!");
+            if (inboundService != null)
+            {
+                log.Info("Stopping inbound service...");
+                inboundService.Stop();
+            }
+
+            if (outboundService != null)
+            {
+                log.Info("Stopping outbound service...");
+                outboundService.Stop();
+            }
         }
     }
 }

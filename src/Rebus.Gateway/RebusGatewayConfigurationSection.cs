@@ -5,8 +5,8 @@ namespace Rebus.Gateway
     public class RebusGatewayConfigurationSection : ConfigurationSection
     {
         const string ConfigSectionName = "rebusGateway";
-        const string IncomingPropertyName = "incoming";
-        const string OutgoingPropertyName = "outgoing";
+        const string InboundPropertyName = "inbound";
+        const string OutboundPropertyName = "outbound";
 
         public static RebusGatewayConfigurationSection LookItUp()
         {
@@ -24,24 +24,25 @@ that it is NOT possible to rename this section, even though the declaration make
             return (RebusGatewayConfigurationSection)section;
         }
 
-        [ConfigurationProperty(IncomingPropertyName)]
-        public IncomingSection Incoming
+        [ConfigurationProperty(InboundPropertyName)]
+        public IncomingSection Inbound
         {
-            get { return (IncomingSection)this[IncomingPropertyName]; }
-            set { this[IncomingPropertyName] = value; }
+            get { return (IncomingSection)this[InboundPropertyName]; }
+            set { this[InboundPropertyName] = value; }
         }
 
-        [ConfigurationProperty(OutgoingPropertyName)]
-        public OutgoingSection Outgoing
+        [ConfigurationProperty(OutboundPropertyName)]
+        public OutgoingSection Outbound
         {
-            get { return (OutgoingSection)this[OutgoingPropertyName]; }
-            set { this[OutgoingPropertyName] = value; }
+            get { return (OutgoingSection)this[OutboundPropertyName]; }
+            set { this[OutboundPropertyName] = value; }
         }
     }
 
     public class OutgoingSection : ConfigurationElement
     {
         const string ListenQueuePropertyName = "listenQueue";
+        const string ErrorQueuePropertyName = "errorQueue";
         const string DestinationUriPropertyName = "destinationUri";
 
         [ConfigurationProperty(ListenQueuePropertyName)]
@@ -49,6 +50,13 @@ that it is NOT possible to rename this section, even though the declaration make
         {
             get { return (string)this[ListenQueuePropertyName]; }
             set { this[ListenQueuePropertyName] = value; }
+        }
+
+        [ConfigurationProperty(ErrorQueuePropertyName)]
+        public string ErrorQueue
+        {
+            get { return (string)this[ErrorQueuePropertyName]; }
+            set { this[ErrorQueuePropertyName] = value; }
         }
 
         [ConfigurationProperty(DestinationUriPropertyName)]

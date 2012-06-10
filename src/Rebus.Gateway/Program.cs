@@ -25,11 +25,33 @@ namespace Rebus.Gateway
 
                     s.Service<GatewayService>(c =>
                     {
-                        c.ConstructUsing(() => new GatewayService());
+                        c.ConstructUsing(GetGatewayServiceInstance);
                         c.WhenStarted(t => t.Start());
                         c.WhenStopped(t => t.Stop());
                     });
                 });
+        }
+
+        static GatewayService GetGatewayServiceInstance()
+        {
+            var cfg = RebusGatewayConfigurationSection.LookItUp();
+
+            var gateway = new GatewayService();
+
+            if (cfg.Inbound != null)
+            {
+                gateway.ListenUri = cfg.Inbound.ListenUri;
+                gateway.DestinationQueue = cfg.Inbound.DestinationQueue;
+            }
+
+            if (cfg.Outbound != null)
+            {
+                gateway.DestinationUri = cfg.Outbound.DestinationUri;
+                gateway.ListenQueue = cfg.Outbound.ListenQueue;
+                gateway.ErrorQueue = cfg.Outbound.ErrorQueue;
+            }
+
+            return gateway;
         }
     }
 }

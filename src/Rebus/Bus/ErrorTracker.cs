@@ -14,11 +14,9 @@ namespace Rebus.Bus
     {
         static ILog log;
 
-
         static ErrorTracker()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-
         }
 
         /// <summary>
@@ -47,7 +45,6 @@ namespace Rebus.Bus
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
         readonly ConcurrentQueue<Timed<string>> timedoutMessages = new ConcurrentQueue<Timed<string>>();
         TimeSpan timeoutSpan;
-
 
         private void TimeoutTracker(object state)
         {
