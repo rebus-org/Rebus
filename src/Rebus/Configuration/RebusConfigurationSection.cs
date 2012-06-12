@@ -89,10 +89,11 @@ that it is NOT possible to rename this section, even though the declaration make
             if (!(section is RebusConfigurationSection)) return defaultValue;
 
             var configurationValue = getConfigurationValue((RebusConfigurationSection)section);
+
             if (configurationValue == null) return defaultValue;
 
             var stringValue = configurationValue as string;
-            if (string.IsNullOrEmpty(stringValue)) return defaultValue;
+            if (configurationValue is string && string.IsNullOrEmpty(stringValue)) return defaultValue;
 
             return configurationValue;
         }
