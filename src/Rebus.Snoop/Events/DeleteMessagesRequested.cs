@@ -3,9 +3,9 @@ using Rebus.Snoop.ViewModel.Models;
 
 namespace Rebus.Snoop.Events
 {
-    public class MoveMessagesToSourceQueueRequested
+    public class DeleteMessagesRequested
     {
-        public MoveMessagesToSourceQueueRequested(List<Message> messagesToMove)
+        public DeleteMessagesRequested(List<Message> messagesToMove)
         {
             this.messagesToMove = messagesToMove;
         }

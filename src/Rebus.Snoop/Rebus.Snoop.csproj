@@ -83,6 +83,8 @@
     <Compile Include="Converters\ByteSizeConverter.cs" />
     <Compile Include="Converters\MessageTimeConverter.cs" />
     <Compile Include="Converters\NullVisibilityConverter.cs" />
+    <Compile Include="Events\DeleteMessagesRequested.cs" />
+    <Compile Include="Events\MessageDeleted.cs" />
     <Compile Include="Events\NotificationAdded.cs" />
     <Compile Include="Events\NotificationEvent.cs" />
     <Compile Include="Events\ReloadMessagesRequested.cs" />

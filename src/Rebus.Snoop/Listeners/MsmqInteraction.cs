@@ -22,6 +22,52 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (ReloadQueuesRequested request) => LoadQueues(request.Machine));
             Messenger.Default.Register(this, (ReloadMessagesRequested request) => LoadMessages(request.Queue));
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
+            Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
+        }
+
+        void DeleteMessages(List<Message> messages)
+        {
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        var result = new
+                            {
+                                Deleted = new List<Message>(),
+                                Failed = new List<Tuple<Message, string>>(),
+                            };
+
+                        foreach (var messageToDelete in messages)
+                        {
+                            try
+                            {
+                                DeleteMessage(messageToDelete);
+                                result.Deleted.Add(messageToDelete);
+                            }
+                            catch (Exception e)
+                            {
+                                result.Failed.Add(new Tuple<Message, string>(messageToDelete, e.ToString()));
+                            }
+                        }
+
+                        return result;
+                    })
+                .ContinueWith(t =>
+                    {
+                        var result = t.Result;
+
+                        if (result.Failed.Any())
+                        {
+                            var details = string.Join(Environment.NewLine,
+                                                      result.Failed.Select(
+                                                          f => string.Format("Id {0}: {1}", f.Item1.Id, f.Item2)));
+
+                            return NotificationEvent.Fail(details, "{0} messages deleted - {1} delete operations failed",
+                                                          result.Deleted.Count, result.Failed.Count);
+                        }
+
+                        return NotificationEvent.Success("{0} messages moved", result.Deleted.Count);
+                    })
+                .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
 
         void MoveMessagesToSourceQueues(IEnumerable<Message> messagesToMove)
@@ -67,6 +113,28 @@ namespace Rebus.Snoop.Listeners
                                       return NotificationEvent.Success("{0} messages moved", result.Moved.Count);
                                   })
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
+        }
+
+        void DeleteMessage(Message message)
+        {
+            using (var queue = new MessageQueue(message.QueuePath))
+            using (var transaction = new MessageQueueTransaction())
+            {
+                transaction.Begin();
+                try
+                {
+                    queue.ReceiveById(message.Id, transaction);
+
+                    transaction.Commit();
+                }
+                catch
+                {
+                    transaction.Abort();
+                    throw;
+                }
+            }
+
+            Messenger.Default.Send(new MessageDeleted(message));
         }
 
         void MoveMessage(Message message)

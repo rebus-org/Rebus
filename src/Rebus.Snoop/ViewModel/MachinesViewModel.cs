@@ -18,6 +18,7 @@ namespace Rebus.Snoop.ViewModel
         readonly ObservableCollection<Notification> notifications = new ObservableCollection<Notification>();
 
         bool canMoveMessagesToSourceQueue;
+        bool canDeleteMessages;
 
         public MachinesViewModel()
         {
@@ -135,7 +136,7 @@ namespace Rebus.Snoop.ViewModel
                                          }
                                  });
 
-                machines.Add(new Machine {MachineName = "yet_another_machine"});
+                machines.Add(new Machine { MachineName = "yet_another_machine" });
 
                 notifications.Add(new Notification("4 queues loaded from some_machine"));
                 notifications.Add(new Notification("5 queues loaded from another_machine"));
@@ -152,7 +153,13 @@ namespace Rebus.Snoop.ViewModel
         public bool CanMoveMessagesToSourceQueue
         {
             get { return canMoveMessagesToSourceQueue; }
-            set { SetValue( () => CanMoveMessagesToSourceQueue, value); }
+            set { SetValue(() => CanMoveMessagesToSourceQueue, value); }
+        }
+
+        public bool CanDeleteMessages
+        {
+            get { return canDeleteMessages; }
+            set { SetValue(() => CanDeleteMessages, value); }
         }
 
         public ObservableCollection<Machine> Machines
@@ -166,6 +173,8 @@ namespace Rebus.Snoop.ViewModel
 
         public RelayCommand<IEnumerable> ReturnToSourceQueuesCommand { get; set; }
 
+        public RelayCommand<IEnumerable> DeleteMessagesCommand { get; set; }
+
         public ObservableCollection<Notification> Notifications
         {
             get { return notifications; }
@@ -176,11 +185,39 @@ namespace Rebus.Snoop.ViewModel
             Messenger.Default.Register(this, (NotificationEvent n) => AddNotification(n));
             Messenger.Default.Register(this, (MessageSelectionWasMade n) => HandleMessageSelectionWasMade(n));
             Messenger.Default.Register(this, (MessageMoved m) => HandleMessageMoved(m));
+            Messenger.Default.Register(this, (MessageDeleted m) => HandleMessageDeleted(m));
+        }
+
+        void HandleMessageDeleted(MessageDeleted messageDeleted)
+        {
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        var allQueues = Machines.SelectMany(m => m.Queues).ToArray();
+
+                        // update involved queues if they have been loaded
+                        var message = messageDeleted.MessageThatWasDeleted;
+                        var sourceQueue =
+                            allQueues.FirstOrDefault(
+                                q => q.QueuePath.Equals(message.QueuePath, StringComparison.InvariantCultureIgnoreCase));
+
+                        return new
+                            {
+                                SourceQueue = sourceQueue,
+                                Message = message,
+                            };
+                    })
+                .ContinueWith(a =>
+                    {
+                        var result = a.Result;
+
+                        result.SourceQueue.Remove(result.Message);
+                    }, Context.UiThread);
         }
 
         void HandleMessageMoved(MessageMoved messageMoved)
         {
-             //BAH! just ignore for now!
+            //BAH! just ignore for now!
             Task.Factory
                 .StartNew(() =>
                               {
@@ -225,8 +262,8 @@ namespace Rebus.Snoop.ViewModel
 
         void HandleMessageSelectionWasMade(MessageSelectionWasMade messageSelectionWasMade)
         {
-            CanMoveMessagesToSourceQueue =
-                messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
+            CanMoveMessagesToSourceQueue = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
+            CanDeleteMessages = messageSelectionWasMade.SelectedMessages.Any();
         }
 
         void AddNotification(NotificationEvent n)
@@ -241,6 +278,14 @@ namespace Rebus.Snoop.ViewModel
             AddMachineCommand = new RelayCommand<string>(AddNewMachine);
             RemoveMachineCommand = new RelayCommand<Machine>(RemoveMachine);
             ReturnToSourceQueuesCommand = new RelayCommand<IEnumerable>(ReturnToSourceQueues);
+            DeleteMessagesCommand = new RelayCommand<IEnumerable>(DeleteMessages);
+        }
+
+        void DeleteMessages(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new DeleteMessagesRequested(messagesToMove));
         }
 
         void ReturnToSourceQueues(IEnumerable messages)
@@ -255,7 +300,7 @@ namespace Rebus.Snoop.ViewModel
             if (string.IsNullOrEmpty(newMachineName)) return;
             if (Machines.Any(m => m.MachineName == newMachineName)) return;
 
-            var newMachine = new Machine {MachineName = newMachineName};
+            var newMachine = new Machine { MachineName = newMachineName };
             Machines.Add(newMachine);
 
             Messenger.Default.Send(new MachineAdded(newMachine));

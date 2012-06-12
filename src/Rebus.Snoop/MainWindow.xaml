@@ -86,6 +86,11 @@
                         IsEnabled="{Binding CanMoveMessagesToSourceQueue}">
                     Return to source queue
                 </Button>
+                <Button Padding="2" Margin="2" Command="{Binding DeleteMessagesCommand}"
+                        CommandParameter="{Binding ElementName=MessagesList, Path=SelectedItems}"
+                        IsEnabled="{Binding CanDeleteMessages}">
+                    Delete
+                </Button>
             </StackPanel>
             
             <ListView Grid.Row="1" x:Name="MessagesList" ItemsSource="{Binding Machines/Queues/Messages, Mode=OneWay}" IsSynchronizedWithCurrentItem="True"
