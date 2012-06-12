@@ -62,6 +62,18 @@ namespace Rebus.Tests.Configuration
             // assert
             section.Workers.ShouldBe(5);
         }
+
+        [Test]
+        public void CanDetermineNumberOfWorkersFromExtensionMethod()
+        {
+            // arrange
+
+            // act
+            var workers = RebusConfigurationSection.GetConfigurationValueOrDefault(x => x.Workers, 0);
+
+            // assert
+            workers.ShouldBe(5);
+        }
     }
 
     class SomeMessageType
