@@ -1,8 +1,13 @@
 ﻿using System;
+using System.IO;
+using System.Net;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Threading;
 using System.Transactions;
+using Newtonsoft.Json;
 using Rebus.Logging;
-using Rebus.Shared;
+using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Gateway.Outbound
@@ -18,16 +23,15 @@ namespace Rebus.Gateway.Outbound
 
         readonly string listenQueue;
         readonly string destinationUri;
-        readonly string errorQueue;
 
         volatile bool keepRunning = true;
         Thread workerThread;
+        static readonly Encoding Encoding = Encoding.UTF8;
 
-        public OutboundService(string listenQueue, string destinationUri, string errorQueue)
+        public OutboundService(string listenQueue, string destinationUri)
         {
             this.listenQueue = listenQueue;
             this.destinationUri = destinationUri;
-            this.errorQueue = errorQueue;
         }
 
         public void Start()
@@ -49,7 +53,7 @@ namespace Rebus.Gateway.Outbound
             }
         }
 
-        void DoWork(MsmqMessageQueue messageQueue)
+        void DoWork(IReceiveMessages messageQueue)
         {
             try
             {
@@ -61,7 +65,7 @@ namespace Rebus.Gateway.Outbound
                     {
                         try
                         {
-                            TryToSendMessage(receivedTransportMessage);
+                            SendMessage(receivedTransportMessage);
 
                             tx.Complete();
                         }
@@ -81,11 +85,33 @@ namespace Rebus.Gateway.Outbound
             }
         }
 
-        void TryToSendMessage(ReceivedTransportMessage receivedTransportMessage)
+        void SendMessage(ReceivedTransportMessage receivedTransportMessage)
         {
             log.Info("Trying to send message {0} to {1}", receivedTransportMessage.Id, destinationUri);
 
-            throw new NotImplementedException("whoa!!! not implemented!1");
+            var request = (HttpWebRequest)WebRequest.Create(destinationUri);
+            request.Method = "POST";
+            
+            request.ContentType = Encoding.WebName;
+
+            var bytes = receivedTransportMessage.Body;
+            request.ContentLength = bytes.Length;
+            request.GetRequestStream().Write(bytes, 0, bytes.Length);
+
+            foreach(var header in receivedTransportMessage.Headers)
+            {
+                request.Headers.Add("x-rebus-custom-" + header.Key, header.Value);
+            }
+
+            request.Headers.Add("x-rebus-message-ID", receivedTransportMessage.Id);
+
+            using (var response = (HttpWebResponse)request.GetResponse())
+            using (var reader = new StreamReader(response.GetResponseStream()))
+            {
+                log.Info("Message {0} was sent", receivedTransportMessage.Id);
+
+                reader.ReadToEnd();
+            }
         }
 
         public void Stop()

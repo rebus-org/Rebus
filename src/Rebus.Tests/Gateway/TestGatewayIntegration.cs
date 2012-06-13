@@ -32,7 +32,6 @@ namespace Rebus.Tests.Gateway
             gatewayInDmz = new GatewayService
                 {
                     ListenQueue = "test.rebus.dmz.gateway",
-                    ErrorQueue = "test.rebus.dmz.gateway.error",
                     DestinationUri = "http://localhost:8080",
                 };
             gatewayInside = new GatewayService

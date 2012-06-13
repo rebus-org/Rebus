@@ -42,7 +42,6 @@ that it is NOT possible to rename this section, even though the declaration make
     public class OutgoingSection : ConfigurationElement
     {
         const string ListenQueuePropertyName = "listenQueue";
-        const string ErrorQueuePropertyName = "errorQueue";
         const string DestinationUriPropertyName = "destinationUri";
 
         [ConfigurationProperty(ListenQueuePropertyName)]
@@ -50,13 +49,6 @@ that it is NOT possible to rename this section, even though the declaration make
         {
             get { return (string)this[ListenQueuePropertyName]; }
             set { this[ListenQueuePropertyName] = value; }
-        }
-
-        [ConfigurationProperty(ErrorQueuePropertyName)]
-        public string ErrorQueue
-        {
-            get { return (string)this[ErrorQueuePropertyName]; }
-            set { this[ErrorQueuePropertyName] = value; }
         }
 
         [ConfigurationProperty(DestinationUriPropertyName)]

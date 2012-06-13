@@ -1,7 +1,5 @@
 using System;
 using System.Messaging;
-using System.Security.Principal;
-using System.Threading;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
@@ -32,8 +30,15 @@ namespace Rebus.Transports.Msmq
 
         readonly string machineAddress;
 
+        public static MsmqMessageQueue Sender()
+        {
+            return new MsmqMessageQueue(null);
+        }
+
         public MsmqMessageQueue(string inputQueueName)
         {
+            if (inputQueueName == null) return;
+
             try
             {
                 machineAddress = GetMachineAddress();
@@ -61,18 +66,18 @@ namespace Rebus.Transports.Msmq
             return RebusConfigurationSection.GetConfigurationValueOrDefault(s => s.Address, Environment.MachineName);
         }
 
-        void EnsureMessageQueueIsLocal(string inputQueueName)
+        void EnsureMessageQueueIsLocal(string queueName)
         {
-            if (!inputQueueName.Contains("@")) return;
+            if (!queueName.Contains("@")) return;
 
-            var tokens = inputQueueName.Split('@');
+            var tokens = queueName.Split('@');
 
             if (tokens.Length == 2 && tokens[1].In( ".", "localhost", "127.0.0.1")) return;
 
             throw new ArgumentException(string.Format(@"Attempted to use {0} as an input queue, but the input queue must always be local!
 
 If you could use a remote queue as an input queue, one of the nifty benefits of MSMQ would be defeated,
-because there would be remote calls involved when you wanted to receive a message.", inputQueueName));
+because there would be remote calls involved when you wanted to receive a message.", queueName));
         }
 
         public string InputQueueAddress
@@ -157,7 +162,11 @@ because there would be remote calls involved when you wanted to receive a messag
         public void Dispose()
         {
             log.Info("Disposing message queue {0}", inputQueuePath);
-            inputQueue.Dispose();
+
+            if (inputQueue != null)
+            {
+                inputQueue.Dispose();
+            }
         }
 
         public override string ToString()

@@ -18,7 +18,6 @@ namespace Rebus.Gateway
         OutboundService outboundService;
 
         public string ListenQueue { get; set; }
-        public string ErrorQueue { get; set; }
         public string DestinationUri { get; set; }
 
         public string DestinationQueue { get; set; }
@@ -83,7 +82,7 @@ The gateway can work in one of three modes: inbound, outbound, or full duplex.
         void InitQueueListener()
         {
             log.Info("Starting outbound service...");
-            outboundService = new OutboundService(ListenQueue, DestinationUri, ErrorQueue);
+            outboundService = new OutboundService(ListenQueue, DestinationUri);
             outboundService.Start();
         }
 

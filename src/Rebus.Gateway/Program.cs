@@ -48,7 +48,6 @@ namespace Rebus.Gateway
             {
                 gateway.DestinationUri = cfg.Outbound.DestinationUri;
                 gateway.ListenQueue = cfg.Outbound.ListenQueue;
-                gateway.ErrorQueue = cfg.Outbound.ErrorQueue;
             }
 
             return gateway;

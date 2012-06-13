@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Messaging;
 using System.Net;
+using System.Text;
 using Rebus.Logging;
+using System.Linq;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Gateway.Inbound
@@ -18,6 +22,7 @@ namespace Rebus.Gateway.Inbound
         }
 
         HttpListener httpListener;
+        static readonly Encoding Encoding = Encoding.UTF8;
 
         public InboundService(string listenUri, string destinationQueue)
         {
@@ -32,8 +37,6 @@ namespace Rebus.Gateway.Inbound
             httpListener.Prefixes.Add(GetListenUri());
             httpListener.Start();
             httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
-
-            
         }
 
         void HandleIncomingHttpRequest(IAsyncResult asyncResult)
@@ -43,16 +46,71 @@ namespace Rebus.Gateway.Inbound
                 var context = httpListener.EndGetContext(asyncResult);
 
                 var request = context.Request;
-                log.Debug("Got request from {0}", request.UserHostAddress);
+                var response = context.Response;
 
-                using (var reader = new StreamReader(request.InputStream))
+                try
                 {
-                    var readToEnd = reader.ReadToEnd();
+                    log.Debug("Got request from {0}", request.UserHostAddress);
+
+                    using (var reader = new BinaryReader(request.InputStream))
+                    {
+                        var receivedTransportMessage = new ReceivedTransportMessage
+                            {
+                                Id = request.Headers["x-rebus-message-ID"],
+                                Body = reader.ReadBytes((int)request.ContentLength64)
+                            };
+
+                        var headers = new Dictionary<string, string>();
+                        var customHeaderPrefix = "x-rebus-custom-";
+
+                        foreach (var rebusHeaderKey in request.Headers.AllKeys.Where(k => k.StartsWith(customHeaderPrefix)))
+                        {
+                            var value = request.Headers[rebusHeaderKey];
+                            var key = rebusHeaderKey.Substring(customHeaderPrefix.Length);
+
+                            headers.Add(key, value);
+                        }
+
+                        receivedTransportMessage.Headers = headers;
+
+                        log.Debug("Received message {0}", receivedTransportMessage.Id);
+
+                        var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
+
+                        using (var queue = MsmqMessageQueue.Sender())
+                        {
+                            queue.Send(destinationQueue, transportMessageToSend);
+                        }
+
+                        log.Debug("Message was sent to {0}", destinationQueue);
+
+                        response.StatusCode = (int) HttpStatusCode.OK;
+                        response.Close();
+                    }
                 }
+                catch(Exception e)
+                {
+                    log.Error(e, "An error occurred while handling HTTP request");
+
+                    response.StatusCode = (int) HttpStatusCode.InternalServerError;
+
+                    response.ContentEncoding = Encoding;
+                    response.ContentType = Encoding.WebName;
+
+                    var bytes = Encoding.GetBytes(e.ToString());
+                    response.ContentLength64 = bytes.Length;
+                    response.OutputStream.Write(bytes, 0, bytes.Length);
+
+                    response.Close();
+                }
+
+                httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
             }
             catch (Exception e)
             {
-                log.Warn("Error while receiving request: {0}", e);
+                log.Warn("Unhandled exception while receiving request: {0} - shutting down application", e);
+
+                Environment.Exit(1);
             }
         }
 

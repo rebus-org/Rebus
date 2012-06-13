@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Rebus.Shared;
 
 namespace Rebus
 {
