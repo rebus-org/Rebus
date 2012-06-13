@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Performance.StressMongo.Factories
@@ -11,8 +10,7 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
 
         public Tuple<ISendMessages, IReceiveMessages> GetQueue(string inputQueueName)
         {
-            var messageQueue = new MsmqMessageQueue(inputQueueName, "error").PurgeInputQueue();
-            MsmqUtil.PurgeQueue("error");
+            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
             disposables.Add(messageQueue);
             return new Tuple<ISendMessages, IReceiveMessages>(messageQueue, messageQueue);
         }

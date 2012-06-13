@@ -32,6 +32,7 @@ namespace Rebus.Tests.Bugs
                     {
                         t.UseReceiver(Mock<IReceiveMessages>());
                         t.UseSender(Mock<ISendMessages>());
+                        t.UseErrorTracker(Mock<IErrorTracker>());
                     })
                 .CreateBus()
                 .Start();

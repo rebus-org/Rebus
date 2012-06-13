@@ -68,12 +68,13 @@ namespace Rebus.Tests
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, string errorQueueName)
         {
-            var messageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName).PurgeInputQueue();
+            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
             MsmqUtil.PurgeQueue(errorQueueName);
             serializer = new JsonMessageSerializer();
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    storeSubscriptions, storeSagaData,
-                                   this, serializer, pipelineInspector);
+                                   this, serializer, pipelineInspector,
+                                   new ErrorTracker(errorQueueName));
             toDispose.Add(bus);
             toDispose.Add(messageQueue);
 

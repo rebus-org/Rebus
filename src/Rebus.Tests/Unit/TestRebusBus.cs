@@ -38,7 +38,8 @@ namespace Rebus.Tests.Unit
                                receiveMessages,
                                storeSubscriptions,
                                storeSagaData,
-                               determineDestination, serializeMessages, inspectHandlerPipeline);
+                               determineDestination, serializeMessages, inspectHandlerPipeline,
+                               new ErrorTracker("error"));
         }
 
         protected override void DoTearDown()

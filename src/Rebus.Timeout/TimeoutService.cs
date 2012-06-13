@@ -32,7 +32,7 @@ namespace Rebus.Timeout
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
-            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName, InputQueue + ".error");
+            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
             Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
         }
 
@@ -46,7 +46,7 @@ namespace Rebus.Timeout
             this.storeTimeouts = storeTimeouts;
 
             rebusBus = new RebusBus(this, sendMessages, receiveMessages, null, null, null, new JsonMessageSerializer(),
-                                    new TrivialPipelineInspector());
+                                    new TrivialPipelineInspector(), new ErrorTracker(receiveMessages.InputQueueAddress + ".error"));
             bus = rebusBus;
 
             timer.Interval = 300;

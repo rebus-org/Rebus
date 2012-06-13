@@ -22,7 +22,7 @@ namespace Rebus.Tests.Unit
         {
             activateHandlers = Mock<IActivateHandlers>();
             receiveMessages = new MessageReceiverForTesting(new JsonMessageSerializer());
-            worker = new Worker(new ErrorTracker(),
+            worker = new Worker(new ErrorTracker("error"),
                                 receiveMessages,
                                 activateHandlers,
                                 new InMemorySubscriptionStorage(),

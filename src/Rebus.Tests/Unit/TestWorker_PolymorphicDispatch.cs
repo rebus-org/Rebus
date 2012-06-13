@@ -28,7 +28,7 @@ namespace Rebus.Tests.Unit
             receiveMessages = new MessageReceiverForTesting(serializer);
             activateHandlers = new HandlerActivatorForTesting();
             inspectHandlerPipeline = new RearrangeHandlersPipelineInspector();
-            worker = new Worker(new ErrorTracker(),
+            worker = new Worker(new ErrorTracker("error"),
                                 receiveMessages,
                                 activateHandlers,
                                 new InMemorySubscriptionStorage(),

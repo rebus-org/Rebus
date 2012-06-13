@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Configuration.Configurers;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
@@ -72,6 +73,7 @@ A more full example configuration snippet can be seen here:
             var queue = new RabbitMqMessageQueue(connectionString, inputQueueName, errorQueueName);
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);
+            configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
         }
     }
 }

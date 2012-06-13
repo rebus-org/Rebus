@@ -1,3 +1,5 @@
+using Rebus.Bus;
+
 namespace Rebus.Configuration.Configurers
 {
     public class TransportConfigurer
@@ -17,6 +19,11 @@ namespace Rebus.Configuration.Configurers
         public void UseReceiver<T>(T instance) where T : IReceiveMessages
         {
             containerAdapter.RegisterInstance(instance, typeof(IReceiveMessages));
+        }
+
+        public void UseErrorTracker<T>(T instance) where T : IErrorTracker
+        {
+            containerAdapter.RegisterInstance(instance, typeof (IErrorTracker));
         }
     }
 }

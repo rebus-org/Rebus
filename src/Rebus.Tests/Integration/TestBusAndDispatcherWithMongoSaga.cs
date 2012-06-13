@@ -22,7 +22,7 @@ namespace Rebus.Tests.Integration
         {
             DropCollection("sagas");
 
-            var msmqMessageQueue = new MsmqMessageQueue("test.dispatcher.and.mongo", "error");
+            var msmqMessageQueue = new MsmqMessageQueue("test.dispatcher.and.mongo");
             handlers = new HandlerActivatorForTesting().UseHandler(new MySaga());
             
             var persister = new MongoDbSagaPersister(ConnectionString)
@@ -33,7 +33,8 @@ namespace Rebus.Tests.Integration
                                persister,
                                null,
                                new JsonMessageSerializer(),
-                               new TrivialPipelineInspector())
+                               new TrivialPipelineInspector(),
+                               new ErrorTracker("error"))
                 .Start(1);
         }
 

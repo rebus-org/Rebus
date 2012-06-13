@@ -34,7 +34,7 @@ namespace Rebus.Tests.Transports.Msmq
             disposables = new List<IDisposable>();
 
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender", "error");
+            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
             destinationQueueName = "test.msmq.tx.destination";
 
             destinationQueue = NewRawMsmqQueue(destinationQueueName);
@@ -85,7 +85,7 @@ namespace Rebus.Tests.Transports.Msmq
         public void CanSendAndReceiveMessageToQueueOnSpecificMachine()
         {
             // arrange
-            var queue = new MsmqMessageQueue("test.msmq.mach.input", "test.msmq.mach.error").PurgeInputQueue();
+            var queue = new MsmqMessageQueue("test.msmq.mach.input").PurgeInputQueue();
             disposables.Add(queue);
 
             var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
@@ -105,10 +105,10 @@ namespace Rebus.Tests.Transports.Msmq
         public void CanSendAndReceiveMessageToQueueOnLocalhost()
         {
             // arrange
-            var queue = new MsmqMessageQueue("test.msmq.loca.input", "test.msmq.loca.error").PurgeInputQueue();
+            var queue = new MsmqMessageQueue("test.msmq.loca.input").PurgeInputQueue();
             disposables.Add(queue);
 
-            var localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
+            const string localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
 
             // act
             queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
@@ -127,7 +127,7 @@ namespace Rebus.Tests.Transports.Msmq
             var ipAddress = GuessOwnIpAddress();
 
             // arrange
-            var queue = new MsmqMessageQueue("test.msmq.ip.input", "test.msmq.ip.error").PurgeInputQueue();
+            var queue = new MsmqMessageQueue("test.msmq.ip.input").PurgeInputQueue();
             disposables.Add(queue);
 
             var ipQualifiedName = "test.msmq.ip.input@" + ipAddress;
@@ -193,7 +193,7 @@ The following addresses were collected:
         [TestCase(10000)]
         public void CheckSendPerformance(int count)
         {
-            var queue = new MsmqMessageQueue("test.msmq.performance", "error").PurgeInputQueue();
+            var queue = new MsmqMessageQueue("test.msmq.performance").PurgeInputQueue();
             disposables.Add(queue);
 
             var transportMessageToSend = new TransportMessageToSend
@@ -216,7 +216,7 @@ The following addresses were collected:
         {
             // arrange
             var queueName = "test.some.random.queue";
-            var queuePath = MsmqMessageQueue.PrivateQueue(queueName);
+            var queuePath = MsmqUtil.GetPath(queueName);
 
             if (MessageQueue.Exists(queuePath))
             {
@@ -226,7 +226,7 @@ The following addresses were collected:
             MessageQueue.Create(queuePath, transactional: false);
 
             // act
-            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName, "error"));
+            var invalidOperationException = Assert.Throws<InvalidOperationException>(() => new MsmqMessageQueue(queueName));
 
             // assert
             invalidOperationException.Message.ShouldContain(queueName);

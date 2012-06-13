@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 
@@ -12,13 +8,18 @@ namespace Rebus.Tests.Unit
     public class TestErrorTracker : FixtureBase
     {
         ErrorTracker errorTracker;
-        private TimeSpan _timeoutSpan;
+        private TimeSpan timeoutSpan;
 
         protected override void DoSetUp()
         {
             TimeMachine.Reset();
-            _timeoutSpan = TimeSpan.FromDays(1);
-            errorTracker = new ErrorTracker(_timeoutSpan, TimeSpan.FromHours(10));
+            timeoutSpan = TimeSpan.FromDays(1);
+            errorTracker = new ErrorTracker(timeoutSpan, TimeSpan.FromHours(10), "error");
+        }
+
+        protected override void DoTearDown()
+        {
+            errorTracker.Dispose();
         }
 
         [Test]
@@ -33,7 +34,7 @@ namespace Rebus.Tests.Unit
             errorTracker.TrackDeliveryFail(messageId, new Exception());
             errorTracker.TrackDeliveryFail(messageId, new Exception());
 
-            TimeMachine.FixTo(fakeTime.Add(_timeoutSpan));
+            TimeMachine.FixTo(fakeTime.Add(timeoutSpan));
 
             errorTracker.CheckForMessageTimeout();
 
@@ -75,15 +76,16 @@ namespace Rebus.Tests.Unit
             //Arrange
             const string messageId = "testId";
             const string messageId2 = "testId2";
-            var fakeTime = Time.Now();
-            TimeMachine.FixTo(fakeTime);
+            var fakeTime = DateTime.UtcNow;
 
             //Act
-            errorTracker.TrackDeliveryFail(messageId, new Exception());
-            TimeMachine.FixTo(fakeTime.Add(TimeSpan.FromMinutes(10)));
-            errorTracker.TrackDeliveryFail(messageId2, new Exception());
-            TimeMachine.FixTo(fakeTime.AddDays(1));
+            TimeMachine.FixTo(fakeTime);
+            errorTracker.TrackDeliveryFail(messageId, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
 
+            TimeMachine.FixTo(fakeTime + TimeSpan.FromMinutes(10));
+            errorTracker.TrackDeliveryFail(messageId2, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
+
+            TimeMachine.FixTo(fakeTime + TimeSpan.FromDays(1) + TimeSpan.FromMinutes(5));
             errorTracker.CheckForMessageTimeout();
 
             var errorText1 = errorTracker.GetErrorText(messageId);

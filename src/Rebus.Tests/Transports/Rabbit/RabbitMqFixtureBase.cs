@@ -50,7 +50,8 @@ namespace Rebus.Tests.Transports.Rabbit
 
             var bus = new RebusBus(handlerActivator, rabbitMqMessageQueue, rabbitMqMessageQueue,
                                    new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,
-                                   new JsonMessageSerializer(), new TrivialPipelineInspector());
+                                   new JsonMessageSerializer(), new TrivialPipelineInspector(),
+                                   new ErrorTracker(inputQueueName + ".error"));
 
             toDispose.Add(bus);
             toDispose.Add(rabbitMqMessageQueue);

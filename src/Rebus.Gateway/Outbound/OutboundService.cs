@@ -40,7 +40,7 @@ namespace Rebus.Gateway.Outbound
 
         void StartWorker()
         {
-            using (var messageQueue = new MsmqMessageQueue(listenQueue, errorQueue))
+            using (var messageQueue = new MsmqMessageQueue(listenQueue))
             {
                 while (keepRunning)
                 {
@@ -62,19 +62,17 @@ namespace Rebus.Gateway.Outbound
                         try
                         {
                             TryToSendMessage(receivedTransportMessage);
+
+                            tx.Complete();
                         }
                         catch (Exception e)
                         {
-                            log.Error(e, "Could not send message {0} to destination URI {1} - forwarding to error queue",
+                            log.Error(e, "Could not send message {0} to destination URI {1} - waiting 1 sec before retrying",
                                       receivedTransportMessage.Id, destinationUri);
 
-                            var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
-                            transportMessageToSend.Headers.Add(Headers.SourceQueue, messageQueue.InputQueueAddress);
-                            messageQueue.Send(messageQueue.ErrorQueue, transportMessageToSend);
+                            Thread.Sleep(TimeSpan.FromSeconds(1));
                         }
                     }
-
-                    tx.Complete();
                 }
             }
             catch (Exception e)

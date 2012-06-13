@@ -38,8 +38,8 @@ namespace Rebus.Tests.Contracts
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
-            sender = new MsmqMessageQueue(@"test.contracts.sender", "error").PurgeInputQueue();
-            receiver = new MsmqMessageQueue(@"test.contracts.receiver", "error").PurgeInputQueue();
+            sender = new MsmqMessageQueue(@"test.contracts.sender").PurgeInputQueue();
+            receiver = new MsmqMessageQueue(@"test.contracts.receiver").PurgeInputQueue();
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 

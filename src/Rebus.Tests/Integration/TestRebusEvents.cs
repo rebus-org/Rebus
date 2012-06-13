@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Shared;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
@@ -9,11 +10,16 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(TestCategories.Integration)]
     public class TestRebusEvents : RebusBusMsmqIntegrationTestBase
     {
+        protected override void DoSetUp()
+        {
+            MsmqUtil.EnsureMessageQueueExists(PrivateQueueNamed("error"));
+        }
+
         [Test]
         public void RebusRaisesEventsInAllTheRightPlaces()
         {
             var events = new List<string>();
-            var receiverInputQueueName = "events.receiver";
+            const string receiverInputQueueName = "events.receiver";
 
             var receiverHandlerActivator = new HandlerActivatorForTesting()
                 .Handle<string>(str =>

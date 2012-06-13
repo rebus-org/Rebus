@@ -3,14 +3,12 @@ using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Rebus.Extensions;
 using Rebus.Logging;
 
 namespace Rebus.Bus
 {
-    /// <summary>
-    /// Class used by <see cref="RebusBus"/> to track errors between retries.
-    /// </summary>
-    public class ErrorTracker
+    public class ErrorTracker : IErrorTracker, IDisposable
     {
         static ILog log;
 
@@ -19,54 +17,62 @@ namespace Rebus.Bus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        /// <summary>
-        /// Default constructor which sets the timeoutSpan to 1 day
-        /// </summary>
-        public ErrorTracker()
-        {
-            StartTimeoutTracker(TimeSpan.FromDays(1), TimeSpan.FromMinutes(5));
-        }
+        readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
+        readonly string errorQueueAddress;
 
-        private void StartTimeoutTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval)
-        {
-            this.timeoutSpan = timeoutSpan;
-            new Timer(TimeoutTracker, null, TimeSpan.Zero, timeoutCheckInterval);
-        }
+        TimeSpan timeoutSpan;
+        Timer timer;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="timeoutSpan">How long messages will be supervised by the ErrorTracker</param>
-        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval)
+        /// <param name="timeoutCheckInterval">This is the interval that will last between checking whether delivery attempts have been tracked for too long</param>
+        /// <param name="errorQueueAddress">This is the address of the error queue to which messages should be forwarded whenever they are deemed poisonous</param>
+        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval, string errorQueueAddress)
         {
+            this.errorQueueAddress = errorQueueAddress;
             StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
         }
 
-        readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
-        readonly ConcurrentQueue<Timed<string>> timedoutMessages = new ConcurrentQueue<Timed<string>>();
-        TimeSpan timeoutSpan;
+        /// <summary>
+        /// Default constructor which sets the timeoutSpan to 1 day
+        /// </summary>
+        public ErrorTracker(string errorQueueAddress)
+            : this(TimeSpan.FromDays(1), TimeSpan.FromMinutes(5), errorQueueAddress)
+        {
+        }
 
-        private void TimeoutTracker(object state)
+        void StartTimeoutTracker(TimeSpan timeoutSpanToUse, TimeSpan timeoutCheckInterval)
+        {
+            timeoutSpan = timeoutSpanToUse;
+            timer = new Timer(TimeoutTracker, null, TimeSpan.Zero, timeoutCheckInterval);
+        }
+
+        void TimeoutTracker(object state)
         {
             CheckForMessageTimeout();
         }
 
         internal void CheckForMessageTimeout()
         {
-            Timed<string> id;
-            bool couldRetrieve = timedoutMessages.TryPeek(out id);
-
-            while (couldRetrieve && id.Time <= Time.Now())
-            {
-                if (timedoutMessages.TryDequeue(out id))
+            var keysOfExpiredMessages = trackedMessages
+                .Where(m => m.Value.Expired(timeoutSpan))
+                .Select(m => m.Key)
+                .ToList();
+            
+            keysOfExpiredMessages.ForEach(key =>
                 {
-                    TrackedMessage trackedMessage;
-                    if (trackedMessages.TryRemove(id.Value, out trackedMessage))
-                        log.Error("Handling message {0} has failed due to timeout at {1}", id.Value, Time.Now());
-                }
-
-                couldRetrieve = timedoutMessages.TryPeek(out id);
-            }
+                    TrackedMessage temp;
+                    if (trackedMessages.TryRemove(key, out temp))
+                    {
+                        log.Warn(
+                            "Timeout expired for delivery tracking of message with ID {0}. This probably means that the " +
+                            "message was deleted from the queue before the max number of retries could be carried out, " +
+                            "thus the delivery tracking for this message could not be fully completed. The error text for" +
+                            "the message deliveries is as follows: {1}", temp.Id, temp.GetErrorMessages());
+                    }
+                });
         }
 
         /// <summary>
@@ -79,6 +85,11 @@ namespace Rebus.Bus
         {
             var trackedMessage = GetOrAdd(id);
             trackedMessage.AddError(exception);
+        }
+
+        public string ErrorQueueAddress
+        {
+            get { return errorQueueAddress; }
         }
 
         /// <summary>
@@ -122,9 +133,6 @@ namespace Rebus.Bus
                 throw new ArgumentException(string.Format("Id of message to track is null! Cannot track message errors with a null id"));
             }
 
-            if (!trackedMessages.ContainsKey(id))
-                timedoutMessages.Enqueue(id.At(Time.Now().Add(timeoutSpan)));
-
             return trackedMessages.GetOrAdd(id, i => new TrackedMessage(id));
         }
 
@@ -135,9 +143,12 @@ namespace Rebus.Bus
             public TrackedMessage(string id)
             {
                 Id = id;
+                TimeAdded = Time.Now();
             }
 
-            string Id { get; set; }
+            public string Id { get; private set; }
+            
+            public DateTime TimeAdded { get; private set; }
 
             public int FailCount
             {
@@ -161,6 +172,16 @@ namespace Rebus.Bus
                 return string.Format(@"{0}:
 {1}", e.Time, e.Value);
             }
+
+            public bool Expired(TimeSpan timeout)
+            {
+                return TimeAdded.ElapsedUntilNow() >= timeout;
+            }
+        }
+
+        public void Dispose()
+        {
+            timer.Dispose();
         }
     }
 }

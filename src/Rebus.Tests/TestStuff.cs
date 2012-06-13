@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
+using RabbitMQ.Client;
+using Rebus.Tests.Transports.Rabbit;
 using Shouldly;
 using System.Linq;
 
@@ -12,6 +14,30 @@ namespace Rebus.Tests
     [TestFixture]
     public class TestStuff
     {
+        [Test, Ignore("Only run this bad boy if you know what you're doing :)")]
+        public void DeleteMsmqMessageQueuesOnTheLocalSystem()
+        {
+            var messageQueues = MessageQueue.GetPrivateQueuesByMachine("localhost");
+
+            foreach(var messageQueue in messageQueues)
+            {
+                Assert.DoesNotThrow(() => MessageQueue.Delete(messageQueue.Path),
+                                    "Something bad happened while attempting to delete {0}", messageQueue.Path);
+            }
+        }
+
+        [Test, Ignore("Only run this bad boy if you know what you're doing :)")]
+        public void DeleteRabbitMessageQueuesOnTheLocalSystem()
+        {
+            var connection = new ConnectionFactory {Uri = RabbitMqFixtureBase.ConnectionString}.CreateConnection();
+            
+            using(var model = connection.CreateModel())
+            {
+
+                // how to do this?
+            }
+        }
+
         [Test]
         public void CheckWeakReferenceEquality()
         {

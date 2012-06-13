@@ -71,11 +71,6 @@ namespace Rebus.RabbitMQ
             get { return InputQueue; }
         }
 
-        public string ErrorQueue
-        {
-            get { return errorQueue; }
-        }
-
         void WithModel(Action<IModel> handleModel)
         {
             lock (modelLock)

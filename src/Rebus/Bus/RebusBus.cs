@@ -50,7 +50,7 @@ namespace Rebus.Bus
         readonly IStoreSagaData storeSagaData;
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly List<Worker> workers = new List<Worker>();
-        readonly ErrorTracker errorTracker = new ErrorTracker();
+        readonly IErrorTracker errorTracker;
         readonly HeaderContext headerContext = new HeaderContext();
 
         static int rebusIdCounter;
@@ -67,7 +67,8 @@ namespace Rebus.Bus
         /// <param name="determineDestination">Will be used to resolve a destination in cases where the message destination is not explicitly specified as part of a send/subscribe operation.</param>
         /// <param name="serializeMessages">Will be used to serialize and deserialize transport messages.</param>
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline)
+        /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -77,6 +78,7 @@ namespace Rebus.Bus
             this.serializeMessages = serializeMessages;
             this.storeSagaData = storeSagaData;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
+            this.errorTracker = errorTracker;
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
@@ -306,7 +308,7 @@ namespace Rebus.Bus
 
             try
             {
-                sendMessages.Send(receiveMessages.ErrorQueue, transportMessageToSend);
+                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend);
             }
             catch (Exception e)
             {

@@ -26,43 +26,33 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
-        readonly string errorQueue;
 
         [ThreadStatic]
         static MsmqTransactionWrapper currentTransaction;
 
         readonly string machineAddress;
 
-        public static string PrivateQueue(string queueName)
-        {
-            return string.Format(@".\private$\{0}", queueName);
-        }
-
-        public MsmqMessageQueue(string inputQueueName, string errorQueue)
+        public MsmqMessageQueue(string inputQueueName)
         {
             try
             {
                 machineAddress = GetMachineAddress();
 
                 inputQueuePath = MsmqUtil.GetPath(inputQueueName);
-                EnsureMessageQueueExists(inputQueuePath);
-                EnsureMessageQueueIsTransactional(inputQueuePath);
+                MsmqUtil.EnsureMessageQueueExists(inputQueuePath);
+                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
                 EnsureMessageQueueIsLocal(inputQueueName);
-
-                var errorQueuePath = MsmqUtil.GetPath(errorQueue);
-                EnsureMessageQueueExists(errorQueuePath);
-                EnsureMessageQueueIsTransactional(errorQueuePath);
 
                 inputQueue = GetMessageQueue(inputQueuePath);
 
                 this.inputQueueName = inputQueueName;
-                this.errorQueue = errorQueue;
             }
             catch(MessageQueueException e)
             {
                 throw new ArgumentException(
-                    string.Format(@"An error occurred while initializing MsmqMessageQueue - attempted to use '{0}' as input queue, and '{1}' as error queue",
-                        inputQueueName, errorQueue), e);
+                    string.Format(
+                        @"An error occurred while initializing MsmqMessageQueue - attempted to use '{0}' as input queue",
+                        inputQueueName), e);
             }
         }
 
@@ -85,35 +75,9 @@ If you could use a remote queue as an input queue, one of the nifty benefits of 
 because there would be remote calls involved when you wanted to receive a message.", inputQueueName));
         }
 
-        void EnsureMessageQueueIsTransactional(string path)
-        {
-            using (var queue = GetMessageQueue(path))
-            {
-                if (!queue.Transactional)
-                {
-                    var message =
-                        string.Format(
-                            @"The queue {0} is NOT transactional!
-
-Everything around Rebus is built with the assumption that queues are transactional,
-so Rebus will malfunction if queues aren't transactional. 
-
-To remedy this, ensure that any existing queues are transactional, or let Rebus 
-create its queues automatically.",
-                            path);
-                    throw new InvalidOperationException(message);
-                }
-            }
-        }
-
         public string InputQueueAddress
         {
             get { return InputQueue + "@" + machineAddress; }
-        }
-
-        public string ErrorQueue
-        {
-            get { return errorQueue; }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
@@ -228,41 +192,5 @@ create its queues automatically.",
             return messageQueue;
         }
 
-        static void EnsureMessageQueueExists(string path)
-        {
-            if (MessageQueue.Exists(path)) return;
-
-            log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
-
-            var administratorAccountName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
-                .Translate(typeof (NTAccount))
-                .ToString();
-
-            try
-            {
-                using (var messageQueue = MessageQueue.Create(path, true))
-                {
-                    messageQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                                                MessageQueueAccessRights.GenericWrite);
-
-                    messageQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
-                }
-            }
-            catch(Exception e)
-            {
-                log.Error(e,
-                          "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
-                          path,
-                          administratorAccountName);
-                try
-                {
-                    MessageQueue.Delete(path);
-                }
-                catch(Exception ex)
-                {
-                    log.Error(ex, "Could not delete queue {0}", path);
-                }
-            }
-        }
     }
 }

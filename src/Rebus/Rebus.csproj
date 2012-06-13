@@ -57,6 +57,8 @@
     <Compile Include="AbstractContainerAdapter.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="Bus\IErrorTracker.cs" />
+    <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Serialization\SerializationConfigurationExtensions.cs" />
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />

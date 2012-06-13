@@ -1,6 +1,8 @@
 ﻿using System.Configuration;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Configuration.Configurers;
+using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
@@ -163,10 +165,16 @@ A more full example configuration snippet can be seen here:
                 throw new ConfigurationErrorsException("You need to specify an input queue.");
             }
 
-            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
+
+            var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
+
+            MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
+            MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
 
             configurer.UseSender(msmqMessageQueue);
             configurer.UseReceiver(msmqMessageQueue);
+            configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
         }
 
         static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string iv, string key, string errorQueueName)
@@ -176,11 +184,17 @@ A more full example configuration snippet can be seen here:
                 throw new ConfigurationErrorsException("You need to specify an input queue.");
             }
 
-            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName, errorQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
             var encryptionFilter = new RijndaelEncryptionTransportDecorator(msmqMessageQueue, msmqMessageQueue, iv, key);
+
+            var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
+
+            MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
+            MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
 
             configurer.UseSender(encryptionFilter);
             configurer.UseReceiver(encryptionFilter);
+            configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
         }
     }
 }

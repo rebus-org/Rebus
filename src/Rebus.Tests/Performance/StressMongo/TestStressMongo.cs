@@ -252,7 +252,8 @@ namespace Rebus.Tests.Performance.StressMongo
             var bus = new RebusBus(containerAdapter, queue.Item1, queue.Item2,
                                    new MongoDbSubscriptionStorage(ConnectionString, subscriptionsCollectionName),
                                    sagaPersister, this,
-                                   new JsonMessageSerializer(), new TrivialPipelineInspector());
+                                   new JsonMessageSerializer(), new TrivialPipelineInspector(),
+                                   new ErrorTracker("error"));
 
             stuffToDispose.Add(bus);
 

@@ -68,10 +68,10 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueueAddress; }
         }
 
-        public string ErrorQueue
-        {
-            get { return innerReceiveMessages.ErrorQueue; }
-        }
+        //public string ErrorQueue
+        //{
+        //    get { return innerReceiveMessages.ErrorQueue; }
+        //}
 
         byte[] Encrypt(byte[] bytes)
         {

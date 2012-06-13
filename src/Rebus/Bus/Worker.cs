@@ -27,7 +27,7 @@ namespace Rebus.Bus
 
         readonly Thread workerThread;
         readonly Dispatcher dispatcher;
-        readonly ErrorTracker errorTracker;
+        readonly IErrorTracker errorTracker;
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
 
@@ -40,7 +40,7 @@ namespace Rebus.Bus
         volatile bool shouldExit;
         volatile bool shouldWork;
 
-        public Worker(ErrorTracker errorTracker,
+        public Worker(IErrorTracker errorTracker,
             IReceiveMessages receiveMessages,
             IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,

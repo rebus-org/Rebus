@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using Rebus.Configuration;
-using Rebus.Configuration.Configurers;
 using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
@@ -134,7 +133,6 @@ namespace Rebus.Tests.Configuration
 
             var msmqMessageQueue = (MsmqMessageQueue)registrations.First().Instance;
             msmqMessageQueue.InputQueue.ShouldBe("some_input_queue");
-            msmqMessageQueue.ErrorQueue.ShouldBe("some_error_queue");
         }
 
         [Test]
@@ -324,7 +322,7 @@ namespace Rebus.Tests.Configuration
                 }
             }
 
-            public List<Registration> Registrations
+            public IEnumerable<Registration> Registrations
             {
                 get { return registrations; }
             }
