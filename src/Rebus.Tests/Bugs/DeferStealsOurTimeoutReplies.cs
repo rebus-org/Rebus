@@ -1,14 +1,7 @@
-using System;
-using System.Threading;
 using NUnit.Framework;
-using Newtonsoft.Json;
 using Rebus.Bus;
-using Rebus.Configuration;
-using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
-using Rebus.Timeout;
-using Shouldly;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Bugs

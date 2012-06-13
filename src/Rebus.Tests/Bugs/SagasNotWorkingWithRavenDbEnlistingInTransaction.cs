@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Raven.Client.Embedded;
 using Rebus.Persistence.InMemory;
 using Rebus.RavenDb;
-using Rebus.Tests.Persistence.RavenDb;
 
 namespace Rebus.Tests.Bugs
 {

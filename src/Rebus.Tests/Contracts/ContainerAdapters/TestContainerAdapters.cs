@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
 using System.Linq;
@@ -21,6 +22,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             Console.WriteLine("Running setup for {0}", typeof(TFactory));
             factory = new TFactory();
             adapter = factory.Create();
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false);
         }
 
         [Test]
@@ -179,6 +181,26 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         }
 
         public class SomeClass { }
+
+        [Test]
+        public void SupportsRegisteringInstanceThatImplementsMultipleServices()
+        {
+            // arrange
+            var theInstance = new TheInstance();
+            adapter.RegisterInstance(theInstance, typeof(IService1), typeof(IService2));
+
+            // act
+            var service1 = adapter.Resolve<IService1>();
+            var service2 = adapter.Resolve<IService2>();
+
+            // assert
+            service1.ShouldBeSameAs(theInstance);
+            service2.ShouldBeSameAs(theInstance);
+        }
+
+        interface IService1{}
+        interface IService2{}
+        class TheInstance :IService1,IService2{}
 
         [Test]
         public void SupportsCheckingWhetherServiceHasBeenRegistered_NoRegistration()

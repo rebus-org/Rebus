@@ -1,7 +1,6 @@
 using System;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
-using Rebus.Serialization.Binary;
 using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration.Configurers

@@ -2,11 +2,19 @@
 using System.Collections.Generic;
 using Microsoft.Practices.Unity;
 using System.Linq;
+using Rebus.Logging;
 
 namespace Rebus.Unity
 {
     public class UnityContainerAdapter : AbstractContainerAdapter
     {
+        static ILog logger;
+
+        static UnityContainerAdapter()
+        {
+            RebusLoggerFactory.Changed += f => logger = f.GetCurrentClassLogger();
+        }
+
         readonly IUnityContainer unityContainer;
         readonly Dictionary<Type, string> defaultInstanceNames = new Dictionary<Type, string>(); 
 
@@ -17,11 +25,17 @@ namespace Rebus.Unity
 
         public override void RegisterInstance(object instance, params Type[] serviceTypes)
         {
-            foreach (var type in serviceTypes)
+            foreach (var serviceType in serviceTypes)
             {
                 var name = Guid.NewGuid().ToString();
-                PossiblyRegisterDefaultInstanceName(type, name);
-                unityContainer.RegisterInstance(type, name, instance);
+                PossiblyRegisterDefaultInstanceName(serviceType, name);
+
+                logger.Debug("Registering instance of {0} as implementation of {1} named {2}", instance.GetType(), serviceType, name);
+
+                unityContainer.RegisterInstance(serviceType, name, instance);
+
+                // register a default as well
+                unityContainer.RegisterInstance(serviceType, instance);
             }
         }
 
@@ -30,13 +44,27 @@ namespace Rebus.Unity
             var nameOfPrimary = Guid.NewGuid().ToString();
             var primaryServiceType = serviceTypes.First();
             PossiblyRegisterDefaultInstanceName(primaryServiceType, nameOfPrimary);
+
+            logger.Debug("Registering type {0} as implementation of {1} named {2}", implementationType, primaryServiceType, nameOfPrimary);
+
             unityContainer.RegisterType(primaryServiceType, implementationType, nameOfPrimary, MapLifestyle(lifestyle));
 
-            foreach(var type in serviceTypes.Skip(1))
+            foreach(var additionalServiceType in serviceTypes.Skip(1))
             {
                 var name = Guid.NewGuid().ToString();
-                PossiblyRegisterDefaultInstanceName(type, name);
-                unityContainer.RegisterType(type, implementationType, name,
+                PossiblyRegisterDefaultInstanceName(additionalServiceType, name);
+                
+                logger.Debug("Registering type {0} as implementation of {1} named {2} with type forwarding to {3}/{4}", additionalServiceType, implementationType, name, primaryServiceType, nameOfPrimary);
+                
+                unityContainer.RegisterType(additionalServiceType, implementationType, name,
+                                            MapLifestyle(lifestyle),
+                                            new InjectionFactory(c => c.Resolve(primaryServiceType, nameOfPrimary)));
+            }
+
+            // and then, a bunch of defaults
+            foreach (var serviceType in serviceTypes)
+            {
+                unityContainer.RegisterType(serviceType, implementationType,
                                             MapLifestyle(lifestyle),
                                             new InjectionFactory(c => c.Resolve(primaryServiceType, nameOfPrimary)));
             }

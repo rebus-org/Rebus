@@ -1,4 +1,4 @@
-namespace Rebus.Tests.Persistence.RavenDb
+namespace Rebus.Tests.Bugs
 {
     public class CheckCallsMade
     {
