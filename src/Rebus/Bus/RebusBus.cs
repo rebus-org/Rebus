@@ -327,6 +327,7 @@ namespace Rebus.Bus
         {
             workers.ForEach(w => w.Stop());
             workers.ForEach(w => w.Dispose());
+            workers.Clear();
             headerContext.Dispose();
         }
 
