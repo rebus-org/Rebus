@@ -61,21 +61,20 @@ namespace Rebus.Gateway.Outbound
                 {
                     var receivedTransportMessage = messageQueue.ReceiveMessage();
 
-                    if (receivedTransportMessage != null)
+                    if (receivedTransportMessage == null) return;
+                 
+                    try
                     {
-                        try
-                        {
-                            SendMessage(receivedTransportMessage);
+                        SendMessage(receivedTransportMessage);
 
-                            tx.Complete();
-                        }
-                        catch (Exception e)
-                        {
-                            log.Error(e, "Could not send message {0} to destination URI {1} - waiting 1 sec before retrying",
-                                      receivedTransportMessage.Id, destinationUri);
+                        tx.Complete();
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, "Could not send message {0} to destination URI {1} - waiting 1 sec before retrying",
+                                  receivedTransportMessage.Id, destinationUri);
 
-                            Thread.Sleep(TimeSpan.FromSeconds(1));
-                        }
+                        Thread.Sleep(TimeSpan.FromSeconds(1));
                     }
                 }
             }
@@ -91,14 +90,14 @@ namespace Rebus.Gateway.Outbound
 
             var request = (HttpWebRequest)WebRequest.Create(destinationUri);
             request.Method = "POST";
-            
+
             request.ContentType = Encoding.WebName;
 
             var bytes = receivedTransportMessage.Body;
             request.ContentLength = bytes.Length;
             request.GetRequestStream().Write(bytes, 0, bytes.Length);
 
-            foreach(var header in receivedTransportMessage.Headers)
+            foreach (var header in receivedTransportMessage.Headers)
             {
                 request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, header.Value);
             }

@@ -51,9 +51,6 @@ namespace Rebus.Tests.Gateway
         {
             gatewayInDmz.Stop();
             gatewayInside.Stop();
-
-            pricedesk.Dispose();
-            ordersystem.Dispose();
         }
 
         [Test]
