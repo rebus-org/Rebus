@@ -22,7 +22,7 @@ namespace Rebus.Tests.Gateway
             // this one is in DMZ
             pricedeskInputQueue = "test.pricedesk.input";
             pricedesk = CreateBus(pricedeskInputQueue, new HandlerActivatorForTesting());
-            
+
             // and this one is inside
             ordersystemInputQueue = "test.ordersystem.input";
             orderSystemHandlerActivator = new HandlerActivatorForTesting();

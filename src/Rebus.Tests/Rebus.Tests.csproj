@@ -185,6 +185,7 @@
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="Gateway\TestGatewayIntegration.cs" />
+    <Compile Include="Gateway\TestInboundService.cs" />
     <Compile Include="Gateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
