@@ -4,6 +4,7 @@ using System.IO;
 using System.Messaging;
 using System.Net;
 using System.Text;
+using System.Threading;
 using Rebus.Logging;
 using System.Linq;
 using Rebus.Transports.Msmq;
@@ -33,6 +34,7 @@ namespace Rebus.Gateway.Inbound
         public void Start()
         {
             log.Info("Starting");
+
             httpListener = new HttpListener();
             httpListener.Prefixes.Add(GetListenUri());
             httpListener.Start();
@@ -43,6 +45,9 @@ namespace Rebus.Gateway.Inbound
         {
             try
             {
+                if (!asyncResult.IsCompleted) return;
+                if (!httpListener.IsListening) return;
+
                 var context = httpListener.EndGetContext(asyncResult);
 
                 var request = context.Request;
@@ -125,6 +130,7 @@ namespace Rebus.Gateway.Inbound
         {
             log.Info("Stopping");
             httpListener.Stop();
+            httpListener.Close();
         }
     }
 }
