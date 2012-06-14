@@ -1,13 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Net;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Threading;
 using System.Transactions;
-using Newtonsoft.Json;
 using Rebus.Logging;
-using Rebus.Serialization.Json;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Gateway.Outbound
@@ -95,7 +92,6 @@ namespace Rebus.Gateway.Outbound
 
             var bytes = receivedTransportMessage.Body;
             request.ContentLength = bytes.Length;
-            request.GetRequestStream().Write(bytes, 0, bytes.Length);
 
             foreach (var header in receivedTransportMessage.Headers)
             {
@@ -103,6 +99,10 @@ namespace Rebus.Gateway.Outbound
             }
 
             request.Headers.Add(RebusHttpHeaders.Id, receivedTransportMessage.Id);
+            
+            request.GetRequestStream().Write(bytes, 0, bytes.Length);
+
+            log.Info("Added headers to request: {0}", string.Join(", ", receivedTransportMessage.Headers.Keys));
 
             using (var response = (HttpWebResponse)request.GetResponse())
             using (var reader = new StreamReader(response.GetResponseStream()))

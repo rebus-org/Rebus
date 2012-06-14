@@ -73,7 +73,7 @@ namespace Rebus.Gateway.Inbound
                             headers.Add(key, value);
                         }
 
-                        Console.WriteLine("Got headers: {0}", string.Join(", ", request.Headers.AllKeys));
+                        log.Info("Got headers in request: {0}", string.Join(", ", headers.Keys));
 
                         receivedTransportMessage.Headers = headers;
 
