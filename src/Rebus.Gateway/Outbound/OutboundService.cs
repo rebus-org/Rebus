@@ -100,10 +100,10 @@ namespace Rebus.Gateway.Outbound
 
             foreach(var header in receivedTransportMessage.Headers)
             {
-                request.Headers.Add("x-rebus-custom-" + header.Key, header.Value);
+                request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, header.Value);
             }
 
-            request.Headers.Add("x-rebus-message-ID", receivedTransportMessage.Id);
+            request.Headers.Add(RebusHttpHeaders.Id, receivedTransportMessage.Id);
 
             using (var response = (HttpWebResponse)request.GetResponse())
             using (var reader = new StreamReader(response.GetResponseStream()))

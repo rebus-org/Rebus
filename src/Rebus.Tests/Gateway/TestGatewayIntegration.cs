@@ -42,6 +42,9 @@ namespace Rebus.Tests.Gateway
 
             gatewayInDmz.Start();
             gatewayInside.Start();
+
+            pricedesk.Start(1);
+            ordersystem.Start(1);
         }
 
         protected override void DoTearDown()
@@ -65,7 +68,7 @@ namespace Rebus.Tests.Gateway
                         resetEvent.Set();
                     }
                 });
-            var timeout = 4.Seconds();
+            var timeout = 14.Seconds();
 
             // act
             pricedesk.Send(new PlaceOrderRequest { What = "beer", HowMuch = 12 });

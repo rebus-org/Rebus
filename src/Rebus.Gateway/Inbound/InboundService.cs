@@ -50,30 +50,29 @@ namespace Rebus.Gateway.Inbound
 
                 try
                 {
-                    log.Debug("Got request from {0}", request.UserHostAddress);
-
                     using (var reader = new BinaryReader(request.InputStream))
                     {
                         var receivedTransportMessage = new ReceivedTransportMessage
                             {
-                                Id = request.Headers["x-rebus-message-ID"],
+                                Id = request.Headers[RebusHttpHeaders.Id],
                                 Body = reader.ReadBytes((int)request.ContentLength64)
                             };
 
                         var headers = new Dictionary<string, string>();
-                        var customHeaderPrefix = "x-rebus-custom-";
 
-                        foreach (var rebusHeaderKey in request.Headers.AllKeys.Where(k => k.StartsWith(customHeaderPrefix)))
+                        foreach (var rebusHeaderKey in request.Headers.AllKeys.Where(k => k.StartsWith(RebusHttpHeaders.CustomHeaderPrefix)))
                         {
                             var value = request.Headers[rebusHeaderKey];
-                            var key = rebusHeaderKey.Substring(customHeaderPrefix.Length);
+                            var key = rebusHeaderKey.Substring(RebusHttpHeaders.CustomHeaderPrefix.Length);
 
                             headers.Add(key, value);
                         }
 
+                        Console.WriteLine("Got headers: {0}", string.Join(", ", request.Headers.AllKeys));
+
                         receivedTransportMessage.Headers = headers;
 
-                        log.Debug("Received message {0}", receivedTransportMessage.Id);
+                        log.Info("Received message {0}", receivedTransportMessage.Id);
 
                         var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
 
@@ -82,7 +81,7 @@ namespace Rebus.Gateway.Inbound
                             queue.Send(destinationQueue, transportMessageToSend);
                         }
 
-                        log.Debug("Message was sent to {0}", destinationQueue);
+                        log.Info("Message was sent to {0}", destinationQueue);
 
                         response.StatusCode = (int) HttpStatusCode.OK;
                         response.Close();
