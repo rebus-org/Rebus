@@ -33,7 +33,7 @@ Then why don't I just use MassTransit then? Well, I wanted to do that, but I had
 
 Therefore, I wanted to try building a simple alternative to NServiceBus. Mainly as a personal research project, but also for myself to use in projects so I don't have to worry about licensing.
 
-If you want to read more, check out [the official Rebus documentation wiki](https://github.com/mookid8000/Rebus/wiki) or check out [my blog](http://mookid.dk/oncode/rebus).
+If you want to read more, check out [the official Rebus documentation wiki][5] or check out [my blog][6].
 
 One day, maybe I'll tweet something as well... [@mookid8000][2]
 
@@ -54,14 +54,16 @@ where `...` is a bunch of dependencies that vary depending on how you want to se
 		.CreateBus()
 		.Start();
 
-which will stuff the resulting `IBus` in the container as a singleton and use the container to look up message handlers. Check out the Configuration section on [the official Rebus documentation wiki](https://github.com/mookid8000/Rebus/wiki) for more information on how to do this.
+which will stuff the resulting `IBus` in the container as a singleton and use the container to look up message handlers. Check out the Configuration section on [the official Rebus documentation wiki][5] for more information on how to do this.
 
 License
 ====
 
-Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus however you see fit.
+Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus in any way you see fit.
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://twitter.com/#!/mookid8000
 [3]: http://nservicebus.com/
 [4]: http://masstransit-project.com/
+[5]: https://github.com/mookid8000/Rebus/wiki
+[6]: http://mookid.dk/oncode/rebus
