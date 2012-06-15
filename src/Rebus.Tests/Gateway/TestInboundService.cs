@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Net;
-using System.Text;
 using NUnit.Framework;
 using Rebus.Gateway.Inbound;
 using Shouldly;
@@ -33,7 +32,7 @@ namespace Rebus.Tests.Gateway
         [TestCase("HEAD")]
         [TestCase("DELETE")]
         [TestCase("PUT")]
-        public void GivesCorrectReplyWhenRequestUsesWrongMethodInvalid(string method)
+        public void GivesCorrectReplyWhenRequestUsesWrongMethod(string method)
         {
             // arrange
             var request = CreateRequest(InboundServiceUri, method);

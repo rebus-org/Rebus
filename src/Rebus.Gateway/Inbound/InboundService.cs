@@ -108,9 +108,7 @@ namespace Rebus.Gateway.Inbound
 
                 var headers = new Dictionary<string, string>();
 
-                foreach (
-                    var rebusHeaderKey in
-                        request.Headers.AllKeys.Where(k => k.StartsWith(RebusHttpHeaders.CustomHeaderPrefix)))
+                foreach (var rebusHeaderKey in request.Headers.AllKeys.Where(k => k.StartsWith(RebusHttpHeaders.CustomHeaderPrefix)))
                 {
                     var value = request.Headers[rebusHeaderKey];
                     var key = rebusHeaderKey.Substring(RebusHttpHeaders.CustomHeaderPrefix.Length);
@@ -124,11 +122,9 @@ namespace Rebus.Gateway.Inbound
 
                 log.Info("Received message {0}", receivedTransportMessage.Id);
 
-                var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
-
                 using (var queue = MsmqMessageQueue.Sender())
                 {
-                    queue.Send(destinationQueue, transportMessageToSend);
+                    queue.Send(destinationQueue, receivedTransportMessage.ToForwardableMessage());
                 }
 
                 log.Info("Message was sent to {0}", destinationQueue);

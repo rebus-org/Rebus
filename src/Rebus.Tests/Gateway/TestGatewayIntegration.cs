@@ -65,10 +65,37 @@ namespace Rebus.Tests.Gateway
                         resetEvent.Set();
                     }
                 });
-            var timeout = 14.Seconds();
+            var timeout = 5.Seconds();
 
             // act
             pricedesk.Send(new PlaceOrderRequest { What = "beer", HowMuch = 12 });
+
+            // assert
+            Assert.That(resetEvent.WaitOne(timeout), Is.True, "Request was not received in order system within timeout of {0}", timeout);
+        }
+
+        [Test]
+        public void CanSendMultipleMessages()
+        {
+            // arrange
+            var receivedMessageCount = 0;
+            var resetEvent = new ManualResetEvent(false);
+            orderSystemHandlerActivator.Handle<PlaceOrderRequest>(req =>
+                {
+                    if (req.What == "beer" && req.HowMuch == 12)
+                    {
+                        var result = Interlocked.Increment(ref receivedMessageCount);
+
+                        if (result == 100)
+                        {
+                            resetEvent.Set();
+                        }
+                    }
+                });
+            var timeout = 10.Seconds();
+
+            // act
+            100.Times(() => pricedesk.Send(new PlaceOrderRequest {What = "beer", HowMuch = 12}));
 
             // assert
             Assert.That(resetEvent.WaitOne(timeout), Is.True, "Request was not received in order system within timeout of {0}", timeout);
