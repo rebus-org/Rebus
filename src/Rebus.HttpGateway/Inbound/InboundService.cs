@@ -76,8 +76,6 @@ namespace Rebus.HttpGateway.Inbound
             catch (Exception e)
             {
                 log.Warn("Unhandled exception while receiving request: {0} - shutting down application", e);
-
-                Environment.Exit(1);
             }
         }
 
