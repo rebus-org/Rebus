@@ -45,7 +45,14 @@ Rebus is a simple .NET library, and everything revolves around the `RebusBus` cl
 	var bus = new RebusBus(...);
 	bus.Start();
 
+	// use the bus for the duration of the application lifetime
+
+	// remember to dispose the bus when your application exits
+	bus.Dispose();
+
 where `...` is a bunch of dependencies that vary depending on how you want to send/receive messages etc. Another way is to use the configuration API, in which case you would go
+
+    var someContainerAdapter = new AdapterForMyFavoriteIocContainer(myFavoriteIocContainer);
 
 	Configure.With(someContainerAdapter)
 		.Logging(l => l.Log4Net())
@@ -53,6 +60,11 @@ where `...` is a bunch of dependencies that vary depending on how you want to se
 		.DetermineEndpoints(d => d.FromRebusConfigurationSection())
 		.CreateBus()
 		.Start();
+
+	// have IBus injected in application services for the duration of the application lifetime
+
+	// let the container dispose the bus when your application exits
+	myFavoriteIocContainer.Dispose();
 
 which will stuff the resulting `IBus` in the container as a singleton and use the container to look up message handlers. Check out the Configuration section on [the official Rebus documentation wiki][5] for more information on how to do this.
 
