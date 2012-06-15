@@ -7,7 +7,7 @@ using System.Transactions;
 using Rebus.Logging;
 using Rebus.Transports.Msmq;
 
-namespace Rebus.Gateway.Outbound
+namespace Rebus.HttpGateway.Outbound
 {
     public class OutboundService
     {

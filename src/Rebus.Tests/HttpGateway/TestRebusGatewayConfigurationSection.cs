@@ -1,8 +1,8 @@
 ﻿using NUnit.Framework;
-using Rebus.Gateway;
+using Rebus.HttpGateway;
 using Shouldly;
 
-namespace Rebus.Tests.Gateway
+namespace Rebus.Tests.HttpGateway
 {
     [TestFixture]
     public class TestRebusGatewayConfigurationSection : FixtureBase

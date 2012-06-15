@@ -8,8 +8,8 @@
     <ProjectGuid>{3E817332-6161-46A1-8597-0E54BAD23DE0}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.Gateway</RootNamespace>
-    <AssemblyName>Rebus.Gateway</AssemblyName>
+    <RootNamespace>Rebus.HttpGateway</RootNamespace>
+    <AssemblyName>Rebus.HttpGateway</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
@@ -68,7 +68,9 @@
     <Compile Include="RebusHttpHeaders.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

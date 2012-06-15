@@ -3,8 +3,9 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Gateway;
+using Rebus.Gateway.Http;
 
-namespace Rebus.Tests.Gateway
+namespace Rebus.Tests.Gateway.Http
 {
     [TestFixture]
     public class TestGatewayIntegration : RebusBusMsmqIntegrationTestBase

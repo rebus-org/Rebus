@@ -1,4 +1,4 @@
-﻿namespace Rebus.Gateway
+﻿namespace Rebus.HttpGateway
 {
     public class RebusHttpHeaders
     {

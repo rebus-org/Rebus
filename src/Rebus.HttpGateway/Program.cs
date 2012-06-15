@@ -3,7 +3,7 @@ using Rebus.Logging;
 using Topshelf;
 using log4net.Config;
 
-namespace Rebus.Gateway
+namespace Rebus.HttpGateway
 {
     class Program
     {

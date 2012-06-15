@@ -1,9 +1,9 @@
 using System;
-using Rebus.Gateway.Inbound;
-using Rebus.Gateway.Outbound;
+using Rebus.HttpGateway.Inbound;
+using Rebus.HttpGateway.Outbound;
 using Rebus.Logging;
 
-namespace Rebus.Gateway
+namespace Rebus.HttpGateway
 {
     public class GatewayService
     {

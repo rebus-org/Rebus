@@ -1,6 +1,6 @@
 ﻿using System.Configuration;
 
-namespace Rebus.Gateway
+namespace Rebus.HttpGateway
 {
     public class RebusGatewayConfigurationSection : ConfigurationSection
     {
