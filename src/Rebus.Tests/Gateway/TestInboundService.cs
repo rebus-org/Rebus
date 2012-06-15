@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text;
 using NUnit.Framework;
 using Rebus.Gateway.Inbound;
 using Shouldly;
@@ -28,11 +29,14 @@ namespace Rebus.Tests.Gateway
             service.Stop();
         }
 
-        [Test]
-        public void GivesCorrectReplyWhenRequestIsInvalid()
+        [TestCase("GET")]
+        [TestCase("HEAD")]
+        [TestCase("DELETE")]
+        [TestCase("PUT")]
+        public void GivesCorrectReplyWhenRequestUsesWrongMethodInvalid(string method)
         {
             // arrange
-            var request = CreateRequest(InboundServiceUri, "GET");
+            var request = CreateRequest(InboundServiceUri, method);
 
             // act
             var response = GetResponse(request);
@@ -57,6 +61,7 @@ namespace Rebus.Tests.Gateway
         {
             var request = (HttpWebRequest)WebRequest.Create(uri);
             request.Method = method;
+            request.ContentLength = 0;
             return request;
         }
     }
