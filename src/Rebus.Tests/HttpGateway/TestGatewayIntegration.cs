@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.HttpGateway;
 using Rebus.Logging;
+using Rebus.Shared;
 using Shouldly;
 using System.Linq;
 
@@ -35,11 +36,14 @@ namespace Rebus.Tests.HttpGateway
             orderSystemHandlerActivator = new HandlerActivatorForTesting();
             ordersystem = CreateBus(ordersystemInputQueue, orderSystemHandlerActivator);
 
+            outboundListenQueue = "test.rebus.dmz.gateway";
+            MsmqUtil.PurgeQueue(outboundListenQueue);
+
             // so we set up a one-way gateway service on each side:
             // - the outbound is on the DMZ side
             outbound = new GatewayService
                 {
-                    ListenQueue = "test.rebus.dmz.gateway",
+                    ListenQueue = outboundListenQueue,
                     DestinationUri = "http://localhost:8080",
                 };
 
@@ -189,6 +193,7 @@ namespace Rebus.Tests.HttpGateway
         }
 
         static int counter = 1;
+        string outboundListenQueue;
 
         class OnCommit : IEnlistmentNotification
         {
