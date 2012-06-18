@@ -185,6 +185,7 @@
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\Serialization\TestSerialization.cs" />
+    <Compile Include="Contracts\Transports\TestTransactionality.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="HttpGateway\TestGatewayIntegration.cs" />

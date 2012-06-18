@@ -6,5 +6,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
     {
         Tuple<ISendMessages, IReceiveMessages> Create();
         void CleanUp();
+
+        IReceiveMessages CreateReceiver(string queueName);
     }
 }

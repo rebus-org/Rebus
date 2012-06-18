@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
 
@@ -6,21 +7,32 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 {
     public class RabbitMqTransportFactory : ITransportFactory
     {
-        RabbitMqMessageQueue sender;
-        RabbitMqMessageQueue receiver;
+        readonly List<IDisposable> disposables = new List<IDisposable>();
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
-            sender = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.sender", "tests.contracts.sender.error");
-            receiver = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.receiver", "tests.contracts.receiver.error");
-            
+            var sender = GetQueue("tests.contracts.sender");
+            var receiver = GetQueue("tests.contracts.receiver");
+
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
+        }
+
+        RabbitMqMessageQueue GetQueue(string queueName)
+        {
+            var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName, queueName + ".error");
+            queue.PurgeInputQueue();
+            disposables.Add(queue);
+            return queue;
         }
 
         public void CleanUp()
         {
-            sender.Dispose();
-            receiver.Dispose();
+            disposables.ForEach(d => d.Dispose());
+        }
+
+        public IReceiveMessages CreateReceiver(string queueName)
+        {
+            return GetQueue(queueName);
         }
     }
 }

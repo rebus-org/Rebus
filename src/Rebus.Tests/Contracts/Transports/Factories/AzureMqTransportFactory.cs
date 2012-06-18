@@ -11,10 +11,20 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
-            sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "myTestSender", "testSenderError").PurgeInputQueue();
-            receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "myTestReceiver", "testReceiverError").PurgeInputQueue();
+            sender = GetQueue("myTestSender");
+            receiver = GetQueue("myTestReceiver");
 
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
+        }
+
+        static AzureMessageQueue GetQueue(string inputQueueName)
+        {
+            return new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, inputQueueName, "error").PurgeInputQueue();
+        }
+
+        public IReceiveMessages CreateReceiver(string queueName)
+        {
+            return GetQueue(queueName);
         }
 
         public void CleanUp()

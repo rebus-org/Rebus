@@ -29,7 +29,6 @@ namespace Rebus.RabbitMQ
         readonly string inputQueueName;
         readonly string errorQueue;
         readonly IModel subscriptionModel;
-        readonly object modelLock = new object();
         readonly Subscription subscription;
         readonly object subscriptionLock = new object();
 
@@ -73,43 +72,40 @@ namespace Rebus.RabbitMQ
 
         void WithModel(Action<IModel> handleModel)
         {
-            lock (modelLock)
+            if (Transaction.Current != null)
             {
-                if (Transaction.Current != null)
+                if (transactionManager == null)
                 {
-                    if (transactionManager == null)
-                    {
-                        var model = connection.CreateModel();
-                        model.TxSelect();
-                        transactionManager = new AmbientTxHack(
-                            () =>
-                            {
-                                model.TxCommit();
-                                transactionManager = null;
-                                ambientModel = null;
-                            },
-                            () =>
-                            {
-                                model.TxRollback();
-                                transactionManager = null;
-                                ambientModel = null;
-                            },
-                            model);
+                    var model = connection.CreateModel();
+                    model.TxSelect();
+                    transactionManager = new AmbientTxHack(
+                        () =>
+                        {
+                            model.TxCommit();
+                            transactionManager = null;
+                            ambientModel = null;
+                        },
+                        () =>
+                        {
+                            model.TxRollback();
+                            transactionManager = null;
+                            ambientModel = null;
+                        },
+                        model);
 
-                        handleModel(model);
-                        ambientModel = model;
-                    }
-                    else
-                    {
-                        handleModel(ambientModel);
-                    }
+                    handleModel(model);
+                    ambientModel = model;
                 }
                 else
                 {
-                    using (var model = connection.CreateModel())
-                    {
-                        handleModel(model);
-                    }
+                    handleModel(ambientModel);
+                }
+            }
+            else
+            {
+                using (var model = connection.CreateModel())
+                {
+                    handleModel(model);
                 }
             }
         }
