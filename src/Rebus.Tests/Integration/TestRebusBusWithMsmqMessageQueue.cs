@@ -12,7 +12,7 @@ namespace Rebus.Tests.Integration
         public void CanReceiveMessagesInTransaction()
         {
             // arrange
-            var senderBus = CreateBus("test.tx.sender", new HandlerActivatorForTesting());
+            var senderBus = CreateBus("test.tx.sender", new HandlerActivatorForTesting()).Start(1);
 
             var resetEvent = new ManualResetEvent(false);
             var receivedMessageCount = 0;

@@ -55,6 +55,7 @@ namespace Rebus.Bus
 
         static int rebusIdCounter;
         readonly int rebusId;
+        bool started;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -93,14 +94,15 @@ namespace Rebus.Bus
                 .GetConfigurationValueOrDefault(s => s.Workers, defaultNumberOfWorkers)
                 .GetValueOrDefault(defaultNumberOfWorkers);
 
-            return Start(numberOfWorkers);
+            InternalStart(numberOfWorkers);
+
+            return this;
         }
 
         public RebusBus Start(int numberOfWorkers)
         {
-            log.Info("Initializing bus with {0} workers", numberOfWorkers);
-            SetNumberOfWorkers(numberOfWorkers);
-            log.Info("Bus started");
+            InternalStart(numberOfWorkers);
+
             return this;
         }
 
@@ -179,6 +181,26 @@ namespace Rebus.Bus
             InternalSend(publisherInputQueue, new List<object> { message });
         }
 
+        void InternalStart(int numberOfWorkers)
+        {
+            if (started)
+            {
+                throw new InvalidOperationException(string.Format(@"Bus has already been started - cannot start bus twice!
+
+Not that it actually matters, I mean we _could_ just ignore subsequent calls
+to Start() if we wanted to - but if you're calling Start() multiple times it's
+most likely a sign that something is wrong, i.e. you might be running you app
+initialization code more than once, etc."));
+            }
+
+            log.Info("Initializing bus with {0} workers", numberOfWorkers);
+        
+            SetNumberOfWorkers(numberOfWorkers);
+            started = true;
+
+            log.Info("Bus started");
+        }
+
         /// <summary>
         /// Core send method. This should be the only place where calls to the bus'
         /// <see cref="ISendMessages"/> instance gets called, except for when moving
@@ -187,6 +209,20 @@ namespace Rebus.Bus
         /// </summary>
         void InternalSend(string endpoint, List<object> messages)
         {
+            if (!started)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        @"Cannot send messages with a bus that has not been started!
+
+Or actually, you _could_ - but it would most likely be an error if you were
+using a bus without starting it... if you mean only to SEND messages, never
+RECEIVE anything, then you're not looking for an unstarted bus, you're looking
+for the ONE-WAY CLIENT MODE of the bus, which is what you automatically get if
+you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
+element)"));
+            }
+
             var messageToSend = new Message{Messages = messages.ToArray(),};
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
@@ -278,7 +314,7 @@ namespace Rebus.Bus
             }
         }
 
-        static void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
             {
@@ -393,6 +429,9 @@ namespace Rebus.Bus
                     workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
                     workerToRemove.UserException -= LogUserException;
                     workerToRemove.SystemException -= LogSystemException;
+                    workerToRemove.BeforeMessage -= RaiseBeforeMessage;
+                    workerToRemove.AfterMessage -= RaiseAfterMessage;
+                    workerToRemove.PoisonMessage -= RaisePosionMessage;
                     workerToRemove.Dispose();
                 }
             }
@@ -410,6 +449,11 @@ namespace Rebus.Bus
 
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
+            if (newNumberOfWorkers < 0)
+            {
+                throw new ArgumentOutOfRangeException("newNumberOfWorkers", string.Format("You can't have less than zero workers - attempted to set number of workers to {0}", newNumberOfWorkers));
+            }
+            
             while (workers.Count < newNumberOfWorkers) AddWorker();
             while (workers.Count > newNumberOfWorkers) RemoveWorker();
         }

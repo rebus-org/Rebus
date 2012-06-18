@@ -33,18 +33,48 @@ namespace Rebus.Tests.Unit
             receiveMessages = new MessageReceiverForTesting(serializeMessages);
             inspectHandlerPipeline = new TrivialPipelineInspector();
             storeSubscriptions = Mock<IStoreSubscriptions>();
-            bus = new RebusBus(activateHandlers,
-                               sendMessages,
-                               receiveMessages,
-                               storeSubscriptions,
-                               storeSagaData,
-                               determineDestination, serializeMessages, inspectHandlerPipeline,
-                               new ErrorTracker("error"));
+            bus = CreateTheBus();
+            bus.Start();
+        }
+
+        RebusBus CreateTheBus()
+        {
+            return new RebusBus(activateHandlers,
+                                sendMessages,
+                                receiveMessages,
+                                storeSubscriptions,
+                                storeSagaData,
+                                determineDestination, serializeMessages, inspectHandlerPipeline,
+                                new ErrorTracker("error"));
         }
 
         protected override void DoTearDown()
         {
             bus.Dispose();
+        }
+
+        [Test]
+        public void ThrowsWhenUsingBusThatHasNotBeenStarted()
+        {
+            var unstartedBus = CreateTheBus();
+            var invalidOperationException = Should.Throw<InvalidOperationException>(() => unstartedBus.Send("somewhere", "yo dawg!!"));
+
+            invalidOperationException.Message.ShouldContain("not been started");
+        }
+
+        [Test]
+        public void ThrowsWhenStartingBusTwice()
+        {
+            // arrange
+            var unstartedBus = CreateTheBus();
+            unstartedBus.Start();
+
+            // act
+            var invalidOperationException = Should.Throw<InvalidOperationException>(() => unstartedBus.Start());
+
+            // assert
+            invalidOperationException.Message.ShouldContain("cannot start bus twice");
+
         }
 
         [Test, Description(@"Tests that multiple message types will be properly batched if they are owned by the same endpoint. This
@@ -309,21 +339,17 @@ Or should it?")]
         [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
-            receiveMessages.Deliver(new Message
-                                        {
-                                            Messages = new object[]
-                                                           {
-                                                               new PolymorphicMessage()
-                                                           }
-                                        });
-
             var manualResetEvent = new ManualResetEvent(false);
-
             var handler = new SomeHandler(manualResetEvent);
-
             activateHandlers.UseHandler(handler);
 
-            bus.Start();
+            receiveMessages.Deliver(new Message
+                {
+                    Messages = new object[]
+                        {
+                            new PolymorphicMessage()
+                        }
+                });
 
             if (!manualResetEvent.WaitOne(TimeSpan.FromSeconds(4)))
             {

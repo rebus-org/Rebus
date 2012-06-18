@@ -53,7 +53,7 @@ namespace Rebus.Tests.Integration
 
             var retriedTooManyTimes = false;
             var senderQueueName = "test.tx.sender";
-            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting());
+            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start(1);
 
             var receivedMessageCount = 0;
             var receiverQueueName = "test.tx.receiver";

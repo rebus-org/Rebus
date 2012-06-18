@@ -5,6 +5,9 @@ namespace Rebus
     /// </summary>
     public interface IStartableBus
     {
+        /// <summary>
+        /// Starts the bus.
+        /// </summary>
         IBus Start();
     }
 }
