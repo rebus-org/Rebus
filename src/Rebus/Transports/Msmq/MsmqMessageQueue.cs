@@ -9,10 +9,9 @@ namespace Rebus.Transports.Msmq
 {
     /// <summary>
     /// MSMQ implementation of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>. Will
-    /// enlist in ambient transaction during send and receive if one is present. Uses JSON serialization
-    /// of objects in messages as default.
+    /// enlist in ambient transaction during send and receive if one is present.
     /// </summary>
-    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable, IHavePurgableInputQueue<MsmqMessageQueue>
+    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
         static ILog log;
 

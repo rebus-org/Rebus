@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using Microsoft.WindowsAzure;
 using NUnit.Framework;
-using Rebus.Azure;
+using Rebus.Tests.Contracts.Transports.Factories;
 using Shouldly;
 
-namespace Rebus.Tests.Contracts
+namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
+    [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
     public class TestSendAndReceive<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
@@ -34,26 +33,12 @@ namespace Rebus.Tests.Contracts
             factory.CleanUp();
         }
 
-        Tuple<ISendMessages, IReceiveMessages> AzureQueueTransports()
-        {
-            var sender = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", "testqueue.error").PurgeInputQueue();
-            var receiver = new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, "testqueue", "testqueue.error").PurgeInputQueue();
-
-            return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
-        }
-
         [Test]
         public void CanSendAndReceiveMessageWithHeaders()
         {
-            Console.WriteLine(@"Testing SEND and RECEIVE with headers scenario on 
-    {0} 
-and 
-    {1}
-", sender, receiver);
-
+            // arrange
             var encoding = Encoding.UTF7;
-
-            sender.Send(receiver.InputQueue, new TransportMessageToSend
+            var transportMessageToSend = new TransportMessageToSend
                 {
                     Body = encoding.GetBytes("this is some data"),
                     Headers = new Dictionary<string, string>
@@ -61,39 +46,36 @@ and
                             {"key1", "value1"},
                             {"key2", "value2"},
                         }
-                });
+                };
 
+            // act
+            sender.Send(receiver.InputQueue, transportMessageToSend);
             Thread.Sleep(MaximumExpectedQueueLatency);
-
             var receivedTransportMessage = receiver.ReceiveMessage();
 
+            // assert
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("this is some data");
             var headers = receivedTransportMessage.Headers;
+
             headers.ShouldNotBe(null);
             headers.Count.ShouldBe(2);
-            var headerList = headers.ToList();
-            headerList[0].Key.ShouldBe("key1");
-            headerList[1].Key.ShouldBe("key2");
-            headerList[0].Value.ShouldBe("value1");
-            headerList[1].Value.ShouldBe("value2");
+
+            headers.ShouldContainKeyAndValue("key1", "value1");
+            headers.ShouldContainKeyAndValue("key2", "value2");
         }
 
         [Test]
         public void CanSendAndReceiveSimpleMessage()
         {
-            Console.WriteLine(@"Testing simple SEND and RECEIVE scenario on 
-    {0} 
-and 
-    {1}
-", sender, receiver);
-
+            // arrange
             var encoding = Encoding.UTF7;
+            
+            // act
             sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") });
-
             Thread.Sleep(MaximumExpectedQueueLatency);
-
             var receivedTransportMessage = receiver.ReceiveMessage();
 
+            // assert
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("wooolalalala");
         }
     }

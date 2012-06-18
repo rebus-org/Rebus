@@ -179,8 +179,11 @@
     <Compile Include="Contracts\ContainerAdapters\Factories\UnityContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
-    <Compile Include="Contracts\ITransportFactory.cs" />
-    <Compile Include="Contracts\TestSendAndReceive.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\TestSerialization.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />

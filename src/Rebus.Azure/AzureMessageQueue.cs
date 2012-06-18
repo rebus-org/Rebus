@@ -1,17 +1,21 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
+using Rebus.Extensions;
 using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Shared;
-using Rebus.Transports;
+using System.Linq;
 
 namespace Rebus.Azure
 {
-    public class AzureMessageQueue : ISendMessages, IReceiveMessages, IHavePurgableInputQueue<AzureMessageQueue>
+    public class AzureMessageQueue : ISendMessages, IReceiveMessages
     {
         static ILog log;
 
@@ -22,24 +26,24 @@ namespace Rebus.Azure
 
         static readonly Encoding Encoding = Encoding.UTF7;
 
-        readonly CloudStorageAccount cloudStorageAccount;
         readonly string inputQueueName;
-        readonly string errorQueue;
+        readonly string errorQueueName;
         readonly CloudQueueClient cloudQueueClient;
         readonly ConcurrentDictionary<string, CloudQueue> outputQueues = new ConcurrentDictionary<string, CloudQueue>();
         readonly CloudQueue inputQueue;
         readonly DictionarySerializer dictionarySerializer;
 
-        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName, string errorQueue)
+        public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName, string errorQueueName)
         {
-            this.cloudStorageAccount = cloudStorageAccount;
-            this.inputQueueName = inputQueueName;
-            this.errorQueue = errorQueue;
-            cloudQueueClient = this.cloudStorageAccount.CreateCloudQueueClient();
-            inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
+            this.inputQueueName = inputQueueName.ToLowerInvariant();
+            this.errorQueueName = errorQueueName.ToLowerInvariant();
 
-            
+            cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
             dictionarySerializer = new DictionarySerializer();
+
+            inputQueue = cloudQueueClient.GetQueueReference(this.inputQueueName);
+            inputQueue.CreateIfNotExist();
+            cloudQueueClient.GetQueueReference(this.errorQueueName).CreateIfNotExist();
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
@@ -59,19 +63,32 @@ namespace Rebus.Azure
                 }
             }
 
+            using (var memoryStream = new MemoryStream())
+            {
+                var formatter = new BinaryFormatter();
+                var receivedTransportMessage = new ReceivedTransportMessage
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Headers = message.Headers,
+                        Body = message.Body,
+                        Label = message.Label,
+                    };
 
-            message.Headers = message.Headers ?? new Dictionary<string, string>();
+                formatter.Serialize(memoryStream, receivedTransportMessage);
+                memoryStream.Position = 0;
 
-            var headers = dictionarySerializer.Serialize(message.Headers);
+                var cloudQueueMessage = new CloudQueueMessage(memoryStream.ToArray());
 
-            var cloudMessage = new CloudQueueMessage(Encoding.GetBytes(headers + Environment.NewLine + Encoding.GetString(message.Body)));
-
-            var timeToLive = GetTimeToLive(message);
-
-            if (timeToLive.HasValue)
-                outputQueue.AddMessage(cloudMessage, timeToLive.Value);
-            else
-                outputQueue.AddMessage(cloudMessage);
+                var timeToLive = GetTimeToLive(message);
+                if (timeToLive.HasValue)
+                {
+                    outputQueue.AddMessage(cloudQueueMessage, timeToLive.Value);
+                }
+                else
+                {
+                    outputQueue.AddMessage(cloudQueueMessage);
+                }
+            }
         }
 
         private TimeSpan? GetTimeToLive(TransportMessageToSend message)
@@ -107,24 +124,13 @@ namespace Rebus.Azure
                     return null;
                 }
 
-                var allData = Encoding.GetString(rawData);
-                var dataSplitIndex = allData.IndexOf(Environment.NewLine, StringComparison.Ordinal);
-
-                var headerData = allData.Substring(0, dataSplitIndex);
-                var headers = dictionarySerializer.Deserialize(headerData);
-
-                var messageData = allData.Substring(dataSplitIndex + Environment.NewLine.Length);
-
-                var receivedTransportMessage = new ReceivedTransportMessage
-                                                   {
-                                                       Body = Encoding.GetBytes(messageData),
-                                                       Id = message.Id,
-                                                       Headers = headers
-                                                   };
-
-                azureMessageQueueTransactionSimulator.Commit();
-
-                return receivedTransportMessage;
+                using (var memoryStream = new MemoryStream(rawData))
+                {
+                    var formatter = new BinaryFormatter();
+                    var receivedTransportMessage = (ReceivedTransportMessage)formatter.Deserialize(memoryStream);
+                    azureMessageQueueTransactionSimulator.Commit();
+                    return receivedTransportMessage;
+                }
             }
             catch (Exception e)
             {
@@ -146,10 +152,8 @@ namespace Rebus.Azure
 
         public string ErrorQueue
         {
-            get { return errorQueue; }
+            get { return errorQueueName; }
         }
-
-        #region Implementation of IHavePurgableInputQueue<AzureMessageQueue>
 
         public AzureMessageQueue PurgeInputQueue()
         {
@@ -160,7 +164,5 @@ namespace Rebus.Azure
 
             return this;
         }
-
-        #endregion
     }
 }

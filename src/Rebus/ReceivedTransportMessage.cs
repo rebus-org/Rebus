@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Rebus.Extensions;
 
 namespace Rebus
 {
+    [Serializable]
     public class ReceivedTransportMessage
     {
         public ReceivedTransportMessage()

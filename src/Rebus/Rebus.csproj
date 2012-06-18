@@ -134,7 +134,6 @@
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionTransportDecorator.cs" />
-    <Compile Include="Transports\IHavePurgableInputQueue.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace Rebus
 {
+    [Serializable]
     public class TransportMessageToSend
     {
         public TransportMessageToSend()

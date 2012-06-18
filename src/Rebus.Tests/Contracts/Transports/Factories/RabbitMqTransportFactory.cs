@@ -1,16 +1,9 @@
 using System;
 using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
-using Rebus.Transports.Msmq;
 
-namespace Rebus.Tests.Contracts
+namespace Rebus.Tests.Contracts.Transports.Factories
 {
-    public interface ITransportFactory
-    {
-        Tuple<ISendMessages, IReceiveMessages> Create();
-        void CleanUp();
-    }
-
     public class RabbitMqTransportFactory : ITransportFactory
     {
         RabbitMqMessageQueue sender;
@@ -21,25 +14,6 @@ namespace Rebus.Tests.Contracts
             sender = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.sender", "tests.contracts.sender.error");
             receiver = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, "tests.contracts.receiver", "tests.contracts.receiver.error");
             
-            return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
-        }
-
-        public void CleanUp()
-        {
-            sender.Dispose();
-            receiver.Dispose();
-        }
-    }
-
-    public class MsmqTransportFactory : ITransportFactory
-    {
-        MsmqMessageQueue sender;
-        MsmqMessageQueue receiver;
-
-        public Tuple<ISendMessages, IReceiveMessages> Create()
-        {
-            sender = new MsmqMessageQueue(@"test.contracts.sender").PurgeInputQueue();
-            receiver = new MsmqMessageQueue(@"test.contracts.receiver").PurgeInputQueue();
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 

@@ -9,6 +9,7 @@ namespace Rebus.Tests
     [TestFixture]
     public class TestCategories
     {
+        public const string Azure = "azure";
         public const string Rabbit = "rabbit";
         public const string Integration = "integration";
         public const string Mongo = "mongo";
