@@ -101,8 +101,8 @@ namespace Rebus.Transports.Encrypted
             managed.BlockSize = biggestLegalBlockSize.MaxSize;
             managed.KeySize = biggestLegalKeySize.MaxSize;
 
-            RijndaelManaged.GenerateIV();
-            RijndaelManaged.GenerateKey();
+            managed.GenerateIV();
+            managed.GenerateKey();
 
             return managed;
         }
