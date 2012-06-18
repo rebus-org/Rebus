@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using Shouldly;
@@ -26,6 +26,46 @@ namespace Rebus.Tests.Transports.Encrypted
             sender = new Sender();
             receiver = new Receiver();
             transport = new RijndaelEncryptionTransportDecorator(sender, receiver, InitializationVectorBase64, KeyBase64);
+        }
+
+        [Test]
+        public void CanGenerateValidIvAndKey()
+        {
+            var iv = RijndaelEncryptionTransportDecorator.GenerateIvBase64();
+            var key = RijndaelEncryptionTransportDecorator.GenerateKeyBase64();
+
+            var localInstance = new RijndaelEncryptionTransportDecorator(sender, receiver, iv, key);
+            
+            var toSend = new TransportMessageToSend
+            {
+                Label = Guid.NewGuid().ToString(),
+                Headers = new Dictionary<string, string>
+                                               {
+                                                   {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()}
+                                               },
+                Body = Guid.NewGuid().ToByteArray(),
+            };
+
+            localInstance.Send("test", toSend);
+
+            var sentMessage = sender.SentMessage;
+            var receivedTransportMessage = new ReceivedTransportMessage
+            {
+                Id = Guid.NewGuid().ToString(),
+                Label = sentMessage.Label,
+                Headers = sentMessage.Headers,
+                Body = sentMessage.Body
+            };
+
+            receiver.SetUpReceive(receivedTransportMessage);
+
+            var receivedMessage = localInstance.ReceiveMessage();
+
+            receivedMessage.Label.ShouldBe(toSend.Label);
+            var expectedHeaders = toSend.Headers.Clone();
+            expectedHeaders[Headers.Encrypted] = null;
+            receivedMessage.Headers.ShouldBe(expectedHeaders);
+            receivedMessage.Body.ShouldBe(toSend.Body);
         }
 
         [Test]

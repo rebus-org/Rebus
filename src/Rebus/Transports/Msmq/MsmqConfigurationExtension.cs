@@ -1,4 +1,5 @@
 ﻿using System.Configuration;
+using System.Security.Cryptography;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Configuration.Configurers;
@@ -39,17 +40,23 @@ namespace Rebus.Transports.Msmq
 
                 if (rijndael == null)
                 {
-                    throw new ConfigurationErrorsException("Could not find encryption settings in Rebus configuration section. Did you forget the 'rijndael' element?");
+                    throw new ConfigurationErrorsException(string.Format(@"Could not find encryption settings in Rebus configuration section. Did you forget the 'rijndael' element?
+
+{0}", GenerateRijndaelHelp()));
                 }
 
                 if (string.IsNullOrEmpty(rijndael.Iv))
                 {
-                    throw new ConfigurationErrorsException("Could not find initialization vector settings in Rijndael element - did you forget the 'iv' attribute?");
+                    throw new ConfigurationErrorsException(string.Format(@"Could not find initialization vector settings in Rijndael element - did you forget the 'iv' attribute?
+
+{0}", GenerateRijndaelHelp()));
                 }
                 
                 if (string.IsNullOrEmpty(rijndael.Key))
                 {
-                    throw new ConfigurationErrorsException("Could not find key settings in Rijndael element - did you forget the 'key' attribute?");
+                    throw new ConfigurationErrorsException(string.Format(@"Could not find key settings in Rijndael element - did you forget the 'key' attribute?
+
+{0}", GenerateRijndaelHelp()));
                 }
 
                 DoItEncrypted(configurer, inputQueueName, rijndael.Iv, rijndael.Key, errorQueueName);
@@ -76,7 +83,7 @@ section declaration in the <configSections> element of your app.config/web.confi
 like so:
 
     <rebus InputQueue=""my.service.input.queue"">
-        <rijndael iv=""initialization vector here"" key=""key here""/>
+        <rijndael iv=""base64 encoded initialization vector"" key=""base64 encoded key""/>
     </rebus>
 
 Note also, that specifying the input queue name with the 'inputQueue' attribute is optional.
@@ -87,6 +94,22 @@ A more full example configuration snippet can be seen here:
 ",
                     e, RebusConfigurationSection.ExampleSnippetForErrorMessages);
             }            
+        }
+
+        static string GenerateRijndaelHelp()
+        {
+            return
+                string.Format(
+                    @"To help you get started, here's a valid rijndael element, including a fresh and newly generated iv and
+key - and yes, I promise that they have been generated just this moment :) you can try running your app
+again if you don't believe me.
+
+    <rijndael iv=""{0}"" key=""{1}""/>
+
+The iv and key have been generated with the biggest valid sizes, so they ought to be pretty secure.
+",
+                    RijndaelEncryptionTransportDecorator.GenerateIvBase64(),
+                    RijndaelEncryptionTransportDecorator.GenerateKeyBase64());
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using Rebus.Extensions;
 using Rebus.Shared;
+using System.Linq;
 
 namespace Rebus.Transports.Encrypted
 {
@@ -68,11 +69,6 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueueAddress; }
         }
 
-        //public string ErrorQueue
-        //{
-        //    get { return innerReceiveMessages.ErrorQueue; }
-        //}
-
         byte[] Encrypt(byte[] bytes)
         {
             return encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
@@ -81,6 +77,34 @@ namespace Rebus.Transports.Encrypted
         byte[] Decrypt(byte[] bytes)
         {
             return decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
+        }
+
+        public static string GenerateIvBase64()
+        {
+            return Convert.ToBase64String(RijndaelManaged.IV);
+        }
+
+        public static string GenerateKeyBase64()
+        {
+            return Convert.ToBase64String(RijndaelManaged.Key);
+        }
+
+        static readonly RijndaelManaged RijndaelManaged = InitRijndaelManagedGenerator();
+
+        static RijndaelManaged InitRijndaelManagedGenerator()
+        {
+            var managed = new RijndaelManaged();
+
+            var biggestLegalBlockSize = managed.LegalBlockSizes.OrderBy(b => b.MaxSize).FirstOrDefault();
+            var biggestLegalKeySize = managed.LegalKeySizes.OrderBy(b => b.MaxSize).FirstOrDefault();
+
+            managed.BlockSize = biggestLegalBlockSize.MaxSize;
+            managed.KeySize = biggestLegalKeySize.MaxSize;
+
+            RijndaelManaged.GenerateIV();
+            RijndaelManaged.GenerateKey();
+
+            return managed;
         }
     }
 }
