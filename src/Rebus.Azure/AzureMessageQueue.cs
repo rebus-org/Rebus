@@ -1,17 +1,10 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
-using Rebus.Extensions;
 using Rebus.Logging;
-using Rebus.Messages;
-using Rebus.Serialization;
 using Rebus.Shared;
-using System.Linq;
 
 namespace Rebus.Azure
 {
@@ -24,44 +17,33 @@ namespace Rebus.Azure
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        static readonly Encoding Encoding = Encoding.UTF7;
-
         readonly string inputQueueName;
         readonly string errorQueueName;
         readonly CloudQueueClient cloudQueueClient;
-        readonly ConcurrentDictionary<string, CloudQueue> outputQueues = new ConcurrentDictionary<string, CloudQueue>();
         readonly CloudQueue inputQueue;
-        readonly DictionarySerializer dictionarySerializer;
 
         public AzureMessageQueue(CloudStorageAccount cloudStorageAccount, string inputQueueName, string errorQueueName)
         {
-            this.inputQueueName = inputQueueName.ToLowerInvariant();
-            this.errorQueueName = errorQueueName.ToLowerInvariant();
+            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
+            if (errorQueueName == null) throw new ArgumentNullException("errorQueueName");
+
+            inputQueueName = inputQueueName.ToLowerInvariant();
+            errorQueueName = errorQueueName.ToLowerInvariant();
 
             cloudQueueClient = cloudStorageAccount.CreateCloudQueueClient();
-            dictionarySerializer = new DictionarySerializer();
 
-            inputQueue = cloudQueueClient.GetQueueReference(this.inputQueueName);
+            inputQueue = cloudQueueClient.GetQueueReference(inputQueueName);
             inputQueue.CreateIfNotExist();
-            cloudQueueClient.GetQueueReference(this.errorQueueName).CreateIfNotExist();
+
+            cloudQueueClient.GetQueueReference(errorQueueName).CreateIfNotExist();
+
+            this.inputQueueName = inputQueueName;
+            this.errorQueueName = errorQueueName;
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            CloudQueue outputQueue;
-
-            if (!outputQueues.TryGetValue(destinationQueueName, out outputQueue))
-            {
-                lock (outputQueues)
-                {
-                    if (!outputQueues.TryGetValue(destinationQueueName, out outputQueue))
-                    {
-                        outputQueue = cloudQueueClient.GetQueueReference(destinationQueueName);
-                        outputQueue.CreateIfNotExist();
-                        outputQueues[destinationQueueName] = outputQueue;
-                    }
-                }
-            }
+            var outputQueue = cloudQueueClient.GetQueueReference(destinationQueueName);
 
             using (var memoryStream = new MemoryStream())
             {
