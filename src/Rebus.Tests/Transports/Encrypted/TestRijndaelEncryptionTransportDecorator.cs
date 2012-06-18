@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
 using Rebus.Shared;
@@ -11,7 +10,7 @@ using Rebus.Extensions;
 
 namespace Rebus.Tests.Transports.Encrypted
 {
-    [TestFixture]
+    [TestFixture, Ignore]
     public class TestRijndaelEncryptionTransportDecorator : FixtureBase
     {
         const string InitializationVectorBase64 = "OLYKdaDyETlu7NbDMC45dA==";
