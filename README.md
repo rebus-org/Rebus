@@ -15,7 +15,7 @@ These are the goals - Rebus should have:
 * the best error messages
 * a frictionless getting-up-and-running-experience
 
-and in doing this, I want Rebus to align very well with NServiceBus, allowing users (myself included) to easily migrate to NServiceBus at some point in a project's lifetime, if Rebus for some reason falls short.
+and in doing this, Rebus should align very well with NServiceBus, allowing users (myself included) to easily migrate to NServiceBus at some point in a project's lifetime, if Rebus for some reason falls short (which I don't think it will).
 
 Oh, and Rebus is free as in beer and speech.
 
