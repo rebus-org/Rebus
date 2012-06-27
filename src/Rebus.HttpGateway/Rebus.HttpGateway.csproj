@@ -59,6 +59,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorText.cs" />
     <Compile Include="GatewayService.cs" />
     <Compile Include="Inbound\InboundService.cs" />
     <Compile Include="Outbound\OutboundService.cs" />

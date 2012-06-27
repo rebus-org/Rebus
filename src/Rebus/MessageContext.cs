@@ -26,7 +26,7 @@ namespace Rebus
         public string StackTrace { get; set; }
 #endif
 
-        internal static MessageContext Enter(string returnAddress)
+        internal static MessageContext Enter(string returnAddress, string id)
         {
             if (current != null)
             {
@@ -47,7 +47,8 @@ Stacktrace of when the current message context was created:
             var messageContext =
                 new MessageContext
                     {
-                        ReturnAddress = returnAddress
+                        ReturnAddress = returnAddress,
+                        TransportMessageId = id,
                     };
 
             current = messageContext;
@@ -67,9 +68,9 @@ Stacktrace of when the current message context was created:
 #endif
         }
 
-        public IDictionary<string, object> Items { get; private set; }
-
+        public string TransportMessageId { get; set; }
         public string ReturnAddress { get; set; }
+        public IDictionary<string, object> Items { get; private set; }
 
         public static IMessageContext GetCurrent()
         {

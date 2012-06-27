@@ -13,7 +13,7 @@ namespace Rebus.Tests.Persistence.Sagas
         protected override void DoSetUp()
         {
             factory = Activator.CreateInstance<TFactory>();
-            messageContext = MessageContext.Enter("none");
+            messageContext = MessageContext.Enter("none", "just_some_message_id");
             Persister = factory.CreatePersister();
         }
 

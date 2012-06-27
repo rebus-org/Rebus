@@ -21,6 +21,13 @@ namespace Rebus.Shared
         public const string ReturnAddress = "rebus-return-address";
 
         /// <summary>
+        /// Key of header that specifies the original return address of a message. This can be used
+        /// to specify the original sender's address in cases where a message is forwarded on another
+        /// service's behalf.
+        /// </summary>
+        public const string OriginalReturnAddress = "rebus-original-return-address";
+
+        /// <summary>
         /// Key of header that contains an error message that stems from someone having experienced bad things trying to handle this message.
         /// </summary>
         public const string ErrorMessage = "rebus-error-message";

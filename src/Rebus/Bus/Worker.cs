@@ -178,7 +178,7 @@ namespace Rebus.Bus
                         var message = serializeMessages.Deserialize(transportMessage);
                         var returnAddress = message.GetHeader(Headers.ReturnAddress);
 
-                        using (MessageContext.Enter(returnAddress))
+                        using (MessageContext.Enter(returnAddress, id))
                         {
                             foreach (var logicalMessage in message.Messages)
                             {

@@ -25,7 +25,7 @@ namespace Rebus.HttpGateway
 
         public void Start()
         {
-            if (string.IsNullOrEmpty(ListenUri) && string.IsNullOrEmpty(ListenQueue))
+            if (!HasInboundConfiguration() && !HasOutboundConfiguration())
             {
                 throw new InvalidOperationException(string.Format(@"
 Cannot start the gateway, since ListenUri and ListenQueue are both empty!
@@ -36,25 +36,35 @@ one-way mode. Available modes are described here:
 {0}", GenericHelpText()));
             }
 
-            if (string.IsNullOrEmpty(ListenUri))
-            {
-                log.Info("No listen URI has been configured - gateway service is running in one-way mode...");
-            }
-            else
+            if (HasInboundConfiguration())
             {
                 InitHttpListener();
             }
-
-            if (string.IsNullOrEmpty(ListenQueue))
-            {
-                log.Info("No listen queue name has been configured - gateway service is running in one-way mode...");
-            }
             else
+            {
+                log.Info("No listen URI has been configured - gateway service is running in one-way mode...");
+            }
+
+            if (HasOutboundConfiguration())
             {
                 InitQueueListener();
             }
+            else
+            {
+                log.Info("No listen queue name has been configured - gateway service is running in one-way mode...");
+            }
 
             log.Info("Started!");
+        }
+
+        bool HasOutboundConfiguration()
+        {
+            return !string.IsNullOrEmpty(ListenQueue);
+        }
+
+        bool HasInboundConfiguration()
+        {
+            return !string.IsNullOrEmpty(ListenUri);
         }
 
         string GenericHelpText()
