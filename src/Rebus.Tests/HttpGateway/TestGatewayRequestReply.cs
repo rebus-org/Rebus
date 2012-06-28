@@ -11,53 +11,57 @@ namespace Rebus.Tests.HttpGateway
     [TestFixture, Ignore("logic not implemented yet")]
     public class TestGatewayRequestReply : RebusBusMsmqIntegrationTestBase
     {
-        string pricedeskInputQueue;
-        RebusBus pricedesk;
-        string ordersystemInputQueue;
+        string priceDeskInputQueue;
+        RebusBus priceDesk;
+        string orderSystemInputQueue;
         HandlerActivatorForTesting orderSystemHandlerActivator;
-        RebusBus ordersystem;
-        string outboundListenQueue;
-        GatewayService outbound;
-        GatewayService inbound;
+        RebusBus orderSystem;
+        string priceDeskGatewayInputQueue;
+        GatewayService priceDeskGatewayService;
+        GatewayService orderSystemGatewayService;
         HandlerActivatorForTesting priceDeskHandlerActivator;
+        string orderSystemGatewayInputQueue;
 
         protected override void DoSetUp()
         {
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Info };
 
             // this one is in DMZ
-            pricedeskInputQueue = "test.pricedesk.input";
+            priceDeskInputQueue = "test.pricedesk.input";
             priceDeskHandlerActivator = new HandlerActivatorForTesting();
-            pricedesk = CreateBus(pricedeskInputQueue, priceDeskHandlerActivator);
+            priceDesk = CreateBus(priceDeskInputQueue, priceDeskHandlerActivator);
 
             // and this one is inside
-            ordersystemInputQueue = "test.ordersystem.input";
+            orderSystemInputQueue = "test.ordersystem.input";
             orderSystemHandlerActivator = new HandlerActivatorForTesting();
-            ordersystem = CreateBus(ordersystemInputQueue, orderSystemHandlerActivator);
+            orderSystem = CreateBus(orderSystemInputQueue, orderSystemHandlerActivator);
 
-            outboundListenQueue = "test.rebus.dmz.gateway";
-            MsmqUtil.PurgeQueue(outboundListenQueue);
+            priceDeskGatewayInputQueue = "test.rebus.pricedesk.gateway";
+            MsmqUtil.PurgeQueue(priceDeskGatewayInputQueue);
+
+            orderSystemGatewayInputQueue = "test.rebus.ordersystem.gateway";
+            MsmqUtil.PurgeQueue(orderSystemGatewayInputQueue);
 
             // so we set up a one-way gateway service on each side:
             // - the outbound is on the DMZ side
-            outbound = new GatewayService
+            priceDeskGatewayService = new GatewayService
                 {
-                    ListenQueue = outboundListenQueue,
+                    ListenQueue = priceDeskGatewayInputQueue,
                     DestinationUri = "http://localhost:8080",
                 };
 
             // and the inbound is on the network domain side
-            inbound = new GatewayService
+            orderSystemGatewayService = new GatewayService
                 {
                     ListenUri = "http://+:8080",
-                    DestinationQueue = ordersystemInputQueue,
+                    DestinationQueue = orderSystemInputQueue,
                 };
 
-            outbound.Start();
-            inbound.Start();
+            priceDeskGatewayService.Start();
+            orderSystemGatewayService.Start();
 
-            pricedesk.Start(1);
-            ordersystem.Start(1);
+            priceDesk.Start(1);
+            orderSystem.Start(1);
         }
 
         [Test]
@@ -68,7 +72,7 @@ namespace Rebus.Tests.HttpGateway
             orderSystemHandlerActivator.Handle<JustSomeRequest>(req =>
                 {
                     Console.WriteLine("Got request for {0}", req.ForWhat);
-                    ordersystem.Reply(new JustSomeReply {What = "you got " + req.ForWhat});
+                    orderSystem.Reply(new JustSomeReply { What = "you got " + req.ForWhat });
                 });
             priceDeskHandlerActivator.Handle<JustSomeReply>(rep =>
                 {
@@ -77,7 +81,7 @@ namespace Rebus.Tests.HttpGateway
                 });
 
             // act
-            pricedesk.Send(outboundListenQueue, new JustSomeRequest {ForWhat = "beers!!!11 what else????"});
+            priceDesk.Send(new JustSomeRequest { ForWhat = "beers!!!11 what else????" });
 
             // assert
             var timeout = 5.Seconds();
@@ -92,6 +96,16 @@ namespace Rebus.Tests.HttpGateway
         class JustSomeReply
         {
             public string What { get; set; }
+        }
+
+        public override string GetEndpointFor(Type messageType)
+        {
+            if (messageType == typeof(JustSomeRequest))
+            {
+                return orderSystemInputQueue + "->" + priceDeskGatewayInputQueue;
+            }
+
+            return base.GetEndpointFor(messageType);
         }
     }
 }
