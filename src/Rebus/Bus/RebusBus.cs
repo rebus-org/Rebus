@@ -23,17 +23,29 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Event that will be raised immediately when the bus is used to send a logical message.
+        /// </summary>
+        public event Action<string, object> MessageSent = delegate { };
+
+        /// <summary>
+        /// Event that will be raised for each received logical message (i.e. it will only be called
+        /// if deserialization completed, and the transport message does in fact contain one or more
+        /// logical messages).
+        /// </summary>
+        public event Action<object> MessageReceived = delegate { };
+
+        /// <summary>
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.
         /// </summary>
-        public event Action<ReceivedTransportMessage> BeforeMessage = delegate { };
+        public event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised after a transport message has been handled.
         /// If an error occurs, the caught exception will be passed to the
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
-        public event Action<Exception, ReceivedTransportMessage> AfterMessage = delegate { };
+        public event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message
@@ -221,7 +233,7 @@ initialization code more than once, etc."));
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        void InternalSend(string endpoint, List<object> messages)
+        void InternalSend(string destination, List<object> messages)
         {
             if (!started)
             {
@@ -237,6 +249,8 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element)"));
             }
 
+            messages.ForEach(m => MessageSent(destination, m));
+
             var messageToSend = new Message{Messages = messages.ToArray(),};
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
@@ -245,10 +259,10 @@ element)"));
             }
             messageToSend.Headers = headers;
 
-            log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), endpoint);
+            log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), destination);
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            sendMessages.Send(endpoint, transportMessage);
+            sendMessages.Send(destination, transportMessage);
         }
 
         IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
@@ -406,18 +420,24 @@ element)"));
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
                 worker.PoisonMessage += RaisePosionMessage;
+                worker.MessageReceived += RaiseMessageReceived;
                 worker.Start();
             }
         }
 
+        void RaiseMessageReceived(object message)
+        {
+            MessageReceived(message);
+        }
+
         void RaiseBeforeMessage(ReceivedTransportMessage transportMessage)
         {
-            BeforeMessage(transportMessage);
+            BeforeTransportMessage(transportMessage);
         }
 
         void RaiseAfterMessage(Exception exception, ReceivedTransportMessage transportMessage)
         {
-            AfterMessage(exception, transportMessage);
+            AfterTransportMessage(exception, transportMessage);
         }
 
         void RaisePosionMessage(ReceivedTransportMessage transportMessage)
@@ -446,6 +466,7 @@ element)"));
                     workerToRemove.BeforeMessage -= RaiseBeforeMessage;
                     workerToRemove.AfterMessage -= RaiseAfterMessage;
                     workerToRemove.PoisonMessage -= RaisePosionMessage;
+                    workerToRemove.MessageReceived -= MessageReceived;
                     workerToRemove.Dispose();
                 }
             }

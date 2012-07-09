@@ -11,14 +11,14 @@ namespace Rebus
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.
         /// </summary>
-        event Action<ReceivedTransportMessage> BeforeMessage;
+        event Action<ReceivedTransportMessage> BeforeTransportMessage;
 
         /// <summary>
         /// Event that will be raised after a transport message has been handled.
         /// If an error occurs, the caught exception will be passed to the
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
-        event Action<Exception, ReceivedTransportMessage> AfterMessage;
+        event Action<Exception, ReceivedTransportMessage> AfterTransportMessage;
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message

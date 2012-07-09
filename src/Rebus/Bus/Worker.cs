@@ -37,6 +37,8 @@ namespace Rebus.Bus
         
         internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
 
+        internal event Action<object> MessageReceived = delegate { };
+        
         volatile bool shouldExit;
         volatile bool shouldWork;
 
@@ -182,6 +184,8 @@ namespace Rebus.Bus
                         {
                             foreach (var logicalMessage in message.Messages)
                             {
+                                MessageReceived(logicalMessage);
+
                                 var typeToDispatch = logicalMessage.GetType();
 
                                 log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);

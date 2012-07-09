@@ -16,7 +16,34 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
-        public void RebusRaisesEventsInAllTheRightPlaces()
+        public void RebusRaisesEventsAlsoWhenSendingMessages()
+        {
+            // arrange
+            var senderEvents = new List<string>();
+            var receiverEvents = new List<string>();
+            const string receiverInputQueueName = "test.events.receiver";
+            var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting());
+            receiver.MessageReceived += m => receiverEvents.Add("received: " + m);
+            receiver.Start();
+
+            var sender = CreateBus("test.events.sender", new HandlerActivatorForTesting());
+            sender.MessageSent += (e, m) => senderEvents.Add("sent: " + m);
+            sender.Start();
+
+            // act
+            sender.Send(receiverInputQueueName, "whoa!!");
+            Thread.Sleep(0.5.Seconds());
+
+            // assert
+            senderEvents.Count.ShouldBe(1);
+            senderEvents[0].ShouldBe("sent: whoa!!");
+
+            receiverEvents.Count.ShouldBe(1);
+            receiverEvents[0].ShouldBe("received: whoa!!");
+        }
+
+        [Test]
+        public void RebusRaisesEventsInAllTheRightPlacesWhenReceivingMessages()
         {
             var events = new List<string>();
             const string receiverInputQueueName = "events.receiver";
@@ -33,8 +60,8 @@ namespace Rebus.Tests.Integration
                                     });
 
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
-            receiver.BeforeMessage += m => events.Add("Before message");
-            receiver.AfterMessage += (e, m) => events.Add("After message: " + e);
+            receiver.BeforeTransportMessage += m => events.Add("Before message");
+            receiver.AfterTransportMessage += (e, m) => events.Add("After message: " + e);
             receiver.PoisonMessage += m => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
