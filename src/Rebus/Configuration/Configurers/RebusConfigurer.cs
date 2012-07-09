@@ -122,37 +122,45 @@ both.");
                 containerAdapter.RegisterInstance(new TrivialPipelineInspector(), typeof (IInspectHandlerPipeline));
             }
 
-            if (!containerAdapter.HasImplementationOf(typeof(IStartableBus)))
-            {
-                if (containerAdapter.HasImplementationOf(typeof(IBus)))
-                {
-                    throw new ConfigurationException(@"
-Detected that there was no IStartableBus configured, even though there is an IBus! If you want
-to work with the configuration API, and you want to register your some custom implementation
-of IBus and/or IStartableBus, please assume the full responsibility and register something
-that implements both!
+            containerAdapter.Register(typeof(RebusBus), Lifestyle.Singleton,
+                          typeof(IStartableBus),
+                          typeof(IBus),
+                          typeof(IAdvancedBus));
 
-Registering only one of them will most likely lead to confusion some time in the future.
-");
-                }
+//            if (!containerAdapter.HasImplementationOf(typeof(IStartableBus)))
+//            {
+//                if (containerAdapter.HasImplementationOf(typeof(IBus)))
+//                {
+//                    throw new ConfigurationException(@"
+//Detected that there was no IStartableBus configured, even though there is an IBus! If you want
+//to work with the configuration API, and you want to register your some custom implementation
+//of IBus and/or IStartableBus, please assume the full responsibility and register something
+//that implements both!
+//
+//Registering only one of them will most likely lead to confusion some time in the future.
+//");
+//                }
 
-                containerAdapter.Register(typeof(RebusBus), Lifestyle.Singleton, typeof(IStartableBus), typeof(IBus));
-            }
-            else
-            {
-                if (!containerAdapter.HasImplementationOf(typeof(IBus)))
-                {
-                    throw new ConfigurationException(
-                        @"
-Detected that there was no IBus configured, even though there is an IStartableBus! If you want
-to work with the configuration API, and you want to register your some custom implementation
-of IBus and/or IStartableBus, please assume the full responsibility and register something
-that implements both!
-
-Registering only one of them will most likely lead to confusion some time in the future.
-");
-                }
-            }
+//                containerAdapter.Register(typeof (RebusBus), Lifestyle.Singleton,
+//                                          typeof (IStartableBus),
+//                                          typeof (IBus),
+//                                          typeof (IAdvancedBus));
+//            }
+//            else
+//            {
+//                if (!containerAdapter.HasImplementationOf(typeof(IBus)))
+//                {
+//                    throw new ConfigurationException(
+//                        @"
+//Detected that there was no IBus configured, even though there is an IStartableBus! If you want
+//to work with the configuration API, and you want to register your some custom implementation
+//of IBus and/or IStartableBus, please assume the full responsibility and register something
+//that implements both!
+//
+//Registering only one of them will most likely lead to confusion some time in the future.
+//");
+//                }
+//            }
         }
     }
 }
