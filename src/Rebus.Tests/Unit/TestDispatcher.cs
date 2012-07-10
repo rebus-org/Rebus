@@ -49,6 +49,7 @@ namespace Rebus.Tests.Unit
             calls[4].ShouldBe("YetAnotherHandler: another_interface");
         }
 
+
         [Test]
         public void NewSagaIsMarkedAsSuch()
         {
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
-        public void OneMessageCanCorrelateWithSeveralSagas()
+        public void OneMessageCanNotCorrelateWithSeveralSagas()
         {
             var saga = new SmallestSagaOnEarthNotCorrelatedOnInitialMessage();
             activator.UseHandler(saga);
@@ -79,7 +80,7 @@ namespace Rebus.Tests.Unit
             dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
 
             dispatcher.Dispatch(new SomeMessageWithANumber(1));
-            saga.TimesHandlingSomeMessageWithANumber.ShouldBe(2);
+            saga.TimesHandlingSomeMessageWithANumber.ShouldBe(1);
         }
 
         interface ISomeInterface { }
@@ -104,7 +105,6 @@ namespace Rebus.Tests.Unit
 
             public int TheNumber { get; private set; }
         }
-
 
         class SmallestSagaOnEarthCorrelatedOnInitialMessage : Saga<SagaData>, IAmInitiatedBy<SomeMessageWithANumber>
         {

@@ -212,14 +212,14 @@ namespace Rebus.Bus
             if (saga != null)
             {
                 saga.ConfigureHowToFindSaga();
-                var sagaDatas = GetSagaData(message, saga).ToList();
+                var sagaData = GetSagaData(message, saga);
 
-                saga.IsNew = !sagaDatas.Any();
+                saga.IsNew = sagaData == null;
                 if (saga.IsNew)
                 {
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
-                        sagaDatas = CreateSagaData(handler).AsEnumerable().ToList();
+                        sagaData = CreateSagaData(handler);
                     }
                     else
                     {
@@ -228,12 +228,9 @@ namespace Rebus.Bus
                     }
                 }
 
-                foreach (var sagaData in sagaDatas)
-                {
-                    handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
-                    handler.Handle(message);
-                    PerformSaveActions(saga, sagaData);
-                }
+                handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
+                handler.Handle(message);
+                PerformSaveActions(saga, sagaData);
                 return;
             }
 
@@ -252,8 +249,7 @@ namespace Rebus.Bus
                 return;
             }
 
-            var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga);
-
+            var sagaDataPropertyPathsToIndex = GetSagaDataPropertyPathsToIndex(saga).Distinct().ToArray();
             if (!saga.IsNew)
             {
                 storeSagaData.Update(sagaData, sagaDataPropertyPathsToIndex);
@@ -291,11 +287,11 @@ namespace Rebus.Bus
             return sagaData;
         }
 
-        private IEnumerable<ISagaData> GetSagaData<TMessage>(TMessage message, Saga saga)
+        private ISagaData GetSagaData<TMessage>(TMessage message, Saga saga)
         {
             var correlations = saga.Correlations;
 
-            if (!correlations.ContainsKey(typeof (TMessage))) return Enumerable.Empty<ISagaData>();
+            if (!correlations.ContainsKey(typeof (TMessage))) return null;
 
             var correlation = correlations[typeof (TMessage)];
             var fieldFromMessage = correlation.FieldFromMessage(message);
@@ -306,7 +302,7 @@ namespace Rebus.Bus
                 .GetMethod("Find").MakeGenericMethod(sagaDataType)
                 .Invoke(storeSagaData, new[] {sagaDataPropertyPath, fieldFromMessage ?? ""});
 
-            return (IEnumerable<ISagaData>)sagaData;
+            return (ISagaData)sagaData;
         }
     }
 }

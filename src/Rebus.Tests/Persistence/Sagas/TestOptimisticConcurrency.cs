@@ -9,7 +9,7 @@ namespace Rebus.Tests.Persistence.Sagas
     [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
-    public class TestSagaPersistersEmployingOptimisticConcurrency<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
+    public class TestOptimisticConcurrency<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]
         public void UsesOptimisticLockingAndDetectsRaceConditionsWhenUpdatingFindingBySomeProperty()
@@ -19,12 +19,12 @@ namespace Rebus.Tests.Persistence.Sagas
             var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
             Persister.Insert(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = Persister.Find<SimpleSagaData>("SomeString", "hello world!").Single();
+            var sagaData1 = Persister.Find<SimpleSagaData>("SomeString", "hello world!");
             sagaData1.SomeString = "I changed this on one worker";
 
             EnterAFakeMessageContext();
 
-            var sagaData2 = Persister.Find<SimpleSagaData>("SomeString", "hello world!").Single();
+            var sagaData2 = Persister.Find<SimpleSagaData>("SomeString", "hello world!");
             sagaData2.SomeString = "I changed this on another worker";
             Persister.Update(sagaData2, indexBySomeString);
 
@@ -41,12 +41,12 @@ namespace Rebus.Tests.Persistence.Sagas
             var simpleSagaData = new SimpleSagaData { Id = id, SomeString = "hello world!" };
             Persister.Insert(simpleSagaData, indexBySomeString);
 
-            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id).Single();
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
             sagaData1.SomeString = "I changed this on one worker";
 
             EnterAFakeMessageContext();
 
-            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id).Single();
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
             sagaData2.SomeString = "I changed this on another worker";
             Persister.Update(sagaData2, indexBySomeString);
 
@@ -56,22 +56,41 @@ namespace Rebus.Tests.Persistence.Sagas
         }
 
         [Test]
-        public void ConcurrentDeleteAndUpdateThrows()
+        public void ConcurrentDeleteAndUpdateThrowsOnUpdate()
         {
             var indexBySomeString = new[] { "Id" };
             var id = Guid.NewGuid();
             var simpleSagaData = new SimpleSagaData { Id = id };
 
             Persister.Insert(simpleSagaData, indexBySomeString);
-            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id).Single();
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
             sagaData1.SomeString = "Some new value";
 
             EnterAFakeMessageContext();
-            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id).Single();
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
             Persister.Delete(sagaData2);
             ReturnToOriginalMessageContext();
 
             Assert.Throws<OptimisticLockingException>(() => Persister.Update(sagaData1, indexBySomeString));
+        }
+
+        [Test]
+        public void ConcurrentDeleteAndUpdateThrowsOnDelete()
+        {
+            var indexBySomeString = new[] { "Id" };
+            var id = Guid.NewGuid();
+            var simpleSagaData = new SimpleSagaData { Id = id };
+
+            Persister.Insert(simpleSagaData, indexBySomeString);
+            var sagaData1 = Persister.Find<SimpleSagaData>("Id", id);
+
+            EnterAFakeMessageContext();
+            var sagaData2 = Persister.Find<SimpleSagaData>("Id", id);
+            sagaData2.SomeString = "Some new value";
+            Persister.Update(sagaData2, indexBySomeString);
+            ReturnToOriginalMessageContext();
+
+            Assert.Throws<OptimisticLockingException>(() => Persister.Delete(sagaData1));
         }
 
         [Test]

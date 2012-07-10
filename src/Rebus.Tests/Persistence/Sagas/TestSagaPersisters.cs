@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -32,7 +31,7 @@ namespace Rebus.Tests.Persistence.Sagas
             sagaDataType.GetProperty("Property").SetValue(savedSagaData, propertyValueToUse, new object[0]);
             Persister.Insert(savedSagaData, new[] { "Property" });
 
-            var foundSagaData = Persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse).Single();
+            var foundSagaData = Persister.Find<GenericSagaData<TProperty>>("Property", propertyValueToUse);
 
             foundSagaData.Id.ShouldBe(savedSagaDataId);
         }
@@ -45,7 +44,7 @@ namespace Rebus.Tests.Persistence.Sagas
             savedSagaData.Id = savedSagaDataId;
             Persister.Insert(savedSagaData, new string[0]);
 
-            var foundSagaData = Persister.Find<MySagaData>("Id", savedSagaDataId).Single();
+            var foundSagaData = Persister.Find<MySagaData>("Id", savedSagaDataId);
 
             foundSagaData.Id.ShouldBe(savedSagaDataId);
         }
@@ -76,7 +75,7 @@ namespace Rebus.Tests.Persistence.Sagas
 
             Persister.Insert(complexPieceOfSagaData, new[] { "SomeField" });
 
-            var sagaData = Persister.Find<MySagaData>("Id", sagaDataId).Single();
+            var sagaData = Persister.Find<MySagaData>("Id", sagaDataId);
             sagaData.SomeField.ShouldBe("hello");
             sagaData.AnotherField.ShouldBe("world!");
         }
@@ -95,7 +94,7 @@ namespace Rebus.Tests.Persistence.Sagas
             Persister.Delete(mySagaData);
 
             var sagaData = Persister.Find<SimpleSagaData>("Id", mySagaDataId);
-            sagaData.ShouldBeEmpty();
+            sagaData.ShouldBe(null);
         }
 
         [Test]
@@ -109,9 +108,9 @@ namespace Rebus.Tests.Persistence.Sagas
             var dataViaNonexistentField = Persister.Find<MySagaData>("SomeFieldThatDoesNotExist", "doesn't matter");
             var mySagaData = Persister.Find<MySagaData>("AnotherField", "some field 2");
 
-            dataViaNonexistentField.ShouldBeEmpty();
-            dataViaNonexistentValue.ShouldBeEmpty();
-            mySagaData.Single().SomeField.ShouldBe("2");
+            dataViaNonexistentField.ShouldBe(null);
+            dataViaNonexistentValue.ShouldBe(null);
+            mySagaData.SomeField.ShouldBe("2");
         }
 
         [Test]
@@ -125,8 +124,8 @@ namespace Rebus.Tests.Persistence.Sagas
             var saga1 = Persister.Find<SimpleSagaData>("Id", sagaId1);
             var saga2 = Persister.Find<MySagaData>("Id", sagaId2);
 
-            saga1.Single().SomeString.ShouldBe("Olé");
-            saga2.Single().AnotherField.ShouldBe("Yipiie");
+            saga1.SomeString.ShouldBe("Olé");
+            saga2.AnotherField.ShouldBe("Yipiie");
         }
 
        [Test]
@@ -145,7 +144,7 @@ namespace Rebus.Tests.Persistence.Sagas
                                                         }
                               }, new[] {path});
 
-           var loadedSagaData = Persister.Find<SagaDataWithNestedElement>(path, stringValue).Single();
+           var loadedSagaData = Persister.Find<SagaDataWithNestedElement>(path, stringValue);
 
            loadedSagaData.ThisOneIsNested.ShouldNotBe(null);
            loadedSagaData.ThisOneIsNested.SomeString.ShouldBe(stringValue);
