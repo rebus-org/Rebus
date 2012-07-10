@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using Rebus.Logging;
 using System.Linq;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.HttpGateway.Inbound
@@ -29,14 +30,33 @@ namespace Rebus.HttpGateway.Inbound
             this.destinationQueue = destinationQueue;
         }
 
+        public string OutboundListenerQueue { get; set; }
+
         public void Start()
         {
+            if (httpListener != null)
+            {
+                throw new InvalidOperationException("Apparently, Start() was called twice. " + ErrorText.GenericStartStopErrorHelpText);
+            }
+            
             log.Info("Starting");
 
             httpListener = new HttpListener();
             httpListener.Prefixes.Add(GetListenUri());
             httpListener.Start();
             httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
+        }
+
+        public void Stop()
+        {
+            if (httpListener == null)
+            {
+                throw new InvalidOperationException("Apparently, Stop() was called without any calls to Start(). " + ErrorText.GenericStartStopErrorHelpText);
+            }
+
+            log.Info("Stopping");
+            httpListener.Stop();
+            httpListener.Close();
         }
 
         void HandleIncomingHttpRequest(IAsyncResult asyncResult)
@@ -138,13 +158,6 @@ namespace Rebus.HttpGateway.Inbound
                 return listenUri;
 
             return listenUri + "/";
-        }
-
-        public void Stop()
-        {
-            log.Info("Stopping");
-            httpListener.Stop();
-            httpListener.Close();
         }
     }
 }

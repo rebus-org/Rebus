@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
+using System.Linq;
 
 namespace Rebus.HttpGateway.Outbound
 {
@@ -18,12 +21,12 @@ namespace Rebus.HttpGateway.Outbound
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        readonly string listenQueue;
-        readonly string destinationUri;
+        static readonly Encoding Encoding = Encoding.UTF8;
 
         volatile bool keepRunning = true;
+        readonly string listenQueue;
+        readonly string destinationUri;
         Thread workerThread;
-        static readonly Encoding Encoding = Encoding.UTF8;
 
         public OutboundService(string listenQueue, string destinationUri)
         {
@@ -33,10 +36,28 @@ namespace Rebus.HttpGateway.Outbound
 
         public void Start()
         {
+            if (workerThread != null)
+            {
+                throw new InvalidOperationException("Apparently, Start() was called twice. " + ErrorText.GenericStartStopErrorHelpText);
+            }
+
             log.Info("Starting");
 
             workerThread = new Thread(StartWorker);
             workerThread.Start();
+        }
+
+        public void Stop()
+        {
+            if (workerThread == null)
+            {
+                throw new InvalidOperationException("Apparently, Stop() was called without any calls to Start(). " + ErrorText.GenericStartStopErrorHelpText);
+            }
+
+            log.Info("Stopping");
+
+            keepRunning = false;
+            workerThread.Join();
         }
 
         void StartWorker()
@@ -59,7 +80,7 @@ namespace Rebus.HttpGateway.Outbound
                     var receivedTransportMessage = messageQueue.ReceiveMessage();
 
                     if (receivedTransportMessage == null) return;
-                 
+
                     try
                     {
                         SendMessage(receivedTransportMessage);
@@ -92,8 +113,10 @@ namespace Rebus.HttpGateway.Outbound
 
             var bytes = receivedTransportMessage.Body;
             request.ContentLength = bytes.Length;
+            
+            var headers = receivedTransportMessage.Headers.ToDictionary(d => d.Key, d => d.Value);
 
-            foreach (var header in receivedTransportMessage.Headers)
+            foreach (var header in headers)
             {
                 request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, header.Value);
             }
@@ -102,7 +125,7 @@ namespace Rebus.HttpGateway.Outbound
             
             request.GetRequestStream().Write(bytes, 0, bytes.Length);
 
-            log.Info("Added headers to request: {0}", string.Join(", ", receivedTransportMessage.Headers.Keys));
+            log.Info("Added headers to request: {0}", string.Join(", ", headers.Keys));
 
             using (var response = (HttpWebResponse)request.GetResponse())
             using (var reader = new StreamReader(response.GetResponseStream()))
@@ -111,14 +134,6 @@ namespace Rebus.HttpGateway.Outbound
 
                 reader.ReadToEnd();
             }
-        }
-
-        public void Stop()
-        {
-            log.Info("Stopping");
-
-            keepRunning = false;
-            workerThread.Join();
         }
     }
 }

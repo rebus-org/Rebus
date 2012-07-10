@@ -157,7 +157,21 @@ namespace Rebus.Bus
 
         public void Reply<TResponse>(TResponse message)
         {
-            var returnAddress = MessageContext.GetCurrent().ReturnAddress;
+            var messageContext = MessageContext.GetCurrent();
+            var returnAddress = messageContext.ReturnAddress;
+
+            if (string.IsNullOrEmpty(returnAddress))
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        @"
+Message with ID {0} cannot be replied to, because the {1} header is empty. This might be an indication
+that the requestor is not expecting a reply, e.g. if the requestor is in one-way client mode. If you want
+to offload a reply to someone, you can make the requestor include the {1} header manually,
+using the address of another service as the value - this way, replies will be sent to a third party,
+that can take action.",
+                        messageContext.TransportMessageId, Headers.ReturnAddress));
+            }
 
             InternalSend(returnAddress, new List<object> { message });
         }

@@ -193,6 +193,7 @@
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
+    <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />

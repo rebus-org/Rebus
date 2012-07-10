@@ -11,8 +11,13 @@ namespace Rebus
         /// <summary>
         /// Gets the return address of the message that is currently being handled.
         /// </summary>
-        string ReturnAddress { get; set; }
-        
+        string ReturnAddress { get; }
+
+        /// <summary>
+        /// Gets the ID of the message that is currently being handled.
+        /// </summary>
+        string TransportMessageId { get; }
+
         /// <summary>
         /// Gets the dictionary of objects associated with this message context.
         /// </summary>
