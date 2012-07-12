@@ -2,7 +2,7 @@ using System;
 
 namespace Rebus.Bus
 {
-    internal class RebusEvents : IRebusEvents
+    class RebusEvents : IRebusEvents
     {
         /// <summary>
         /// Event that will be raised immediately when the bus is used to send a logical message.

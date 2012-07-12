@@ -55,11 +55,15 @@
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
     <Compile Include="AbstractContainerAdapter.cs" />
+    <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
+    <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
+    <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
+    <Compile Include="IRebusBatchOperations.cs" />
     <Compile Include="IRebusEvents.cs" />
     <Compile Include="Serialization\SerializationConfigurationExtensions.cs" />
     <Compile Include="IAdvancedBus.cs" />

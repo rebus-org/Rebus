@@ -5,7 +5,6 @@ using System.Reflection;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Shared;
 
 namespace Rebus.Bus
 {

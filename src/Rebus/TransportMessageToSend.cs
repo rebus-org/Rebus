@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace Rebus
 {
+    /// <summary>
+    /// Message container that contains the parts of a single transport message that should be sent.
+    /// It carries a headers dictionary and a body byte array. The <seealso cref="Label"/> can be used
+    /// to label the message somehow, which can then be used to show the message if the infrastructure
+    /// supports it.
+    /// </summary>
     [Serializable]
     public class TransportMessageToSend
     {

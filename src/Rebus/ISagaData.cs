@@ -2,6 +2,10 @@ using System;
 
 namespace Rebus
 {
+    /// <summary>
+    /// The minimal interface that must be implemented by a class in order to model the state of a saga.
+    /// The state is of course pretty trivial if you don't extend it with some fields and objects.
+    /// </summary>
     public interface ISagaData
     {
         /// <summary>

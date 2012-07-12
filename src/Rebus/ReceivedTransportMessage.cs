@@ -4,6 +4,12 @@ using Rebus.Extensions;
 
 namespace Rebus
 {
+    /// <summary>
+    /// Message container that contains the received parts of a single transport message.
+    /// It carries a headers dictionary, a body byte array, and an ID which is
+    /// most like assigned by the infrastructure. The ID is used to track retries in the event that
+    /// delivery fails.
+    /// </summary>
     [Serializable]
     public class ReceivedTransportMessage
     {

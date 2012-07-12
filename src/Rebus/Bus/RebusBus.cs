@@ -34,6 +34,7 @@ namespace Rebus.Bus
         readonly IErrorTracker errorTracker;
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
+        readonly RebusBatchOperations batch;
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -62,6 +63,8 @@ namespace Rebus.Bus
             this.storeSagaData = storeSagaData;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.errorTracker = errorTracker;
+
+            batch = new RebusBatchOperations(determineDestination, storeSubscriptions, this);
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
@@ -107,16 +110,6 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
-        public void SendBatch(params object[] messages)
-        {
-            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
-
-            foreach (var batch in groupedByEndpoints)
-            {
-                InternalSend(batch.Key, batch.Value);
-            }
-        }
-
         public void Publish<TEvent>(TEvent message)
         {
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
@@ -127,19 +120,14 @@ namespace Rebus.Bus
             }
         }
 
-        public void PublishBatch(params object[] messages)
-        {
-            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
-
-            foreach (var batch in groupedByEndpoints)
-            {
-                InternalSend(batch.Key, batch.Value);
-            }
-        }
-
         public IRebusEvents Events
         {
             get { return events; }
+        }
+
+        public IRebusBatchOperations Batch
+        {
+            get { return batch; }
         }
 
         public void Reply<TResponse>(TResponse message)
@@ -208,7 +196,7 @@ initialization code more than once, etc."));
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(string destination, List<object> messages)
         {
             if (!started)
             {
@@ -238,49 +226,6 @@ element)"));
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
             sendMessages.Send(destination, transportMessage);
-        }
-
-        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
-        {
-            var dict = new Dictionary<string, List<object>>();
-            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
-                .Select(t => new KeyValuePair<Type, string[]>(t, storeSubscriptions.GetSubscribers(t) ?? new string[0]))
-                .ToDictionary(d => d.Key, d => d.Value);
-
-            foreach (var message in messages)
-            {
-                var endpoints = endpointsByType[message.GetType()];
-                foreach (var endpoint in endpoints)
-                {
-                    if (!dict.ContainsKey(endpoint))
-                    {
-                        dict[endpoint] = new List<object>();
-                    }
-                    dict[endpoint].Add(message);
-                }
-            }
-
-            return dict;
-        }
-
-        IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedByEndpoints(object[] messages)
-        {
-            var dict = new Dictionary<string, List<object>>();
-            var endpointsByType = messages.Select(m => m.GetType()).Distinct()
-                .Select(t => new KeyValuePair<Type, string>(t, determineDestination.GetEndpointFor(t) ?? ""))
-                .ToDictionary(d => d.Key, d => d.Value);
-
-            foreach (var message in messages)
-            {
-                var endpoint = endpointsByType[message.GetType()];
-                if (!dict.ContainsKey(endpoint))
-                {
-                    dict[endpoint] = new List<object>();
-                }
-                dict[endpoint].Add(message);
-            }
-
-            return dict;
         }
 
         IDictionary<string, string> MergeHeaders(Message messageToSend)
@@ -529,68 +474,6 @@ element)"));
             {
                 CleanupTimer.Dispose();
             }
-        }
-    }
-
-    class DeferredMessageReDispatcher: IHandleDeferredMessage
-    {
-        readonly IBus bus;
-
-        public DeferredMessageReDispatcher(IBus bus)
-        {
-            this.bus = bus;
-        }
-
-        public void Dispatch(object deferredMessage)
-        {
-            bus.SendLocal(deferredMessage);
-        }
-    }
-
-    public static class HeaderContextExtensions
-    {
-        public static Dictionary<string,string> GetOrAdd(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, Func<Dictionary<string, string>> factory)
-        {
-            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
-            if (entry == null)
-            {
-                lock(contexts)
-                {
-                    entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
-
-                    if (entry == null)
-                    {
-                        entry = new Tuple<WeakReference, Dictionary<string, string>>(new WeakReference(key), factory());
-                        contexts.Add(entry);
-                    }
-                }
-            }
-            return entry.Item2;
-        }
-
-        public static void RemoveDeadReferences(this List<Tuple<WeakReference, Dictionary<string, string>>> contexts)
-        {
-            if (contexts.Any(c => !c.Item1.IsAlive))
-            {
-                lock (contexts)
-                {
-                    contexts.RemoveAll(c => !c.Item1.IsAlive);
-                }
-            }
-        }
-
-        public static bool TryGetValue(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, out Dictionary<string, string> dictionery)
-        {
-            var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
-
-            if (entry == null)
-            {
-                dictionery = new Dictionary<string, string>();
-                return false;
-            }
-            
-            dictionery = entry.Item2;
-            return true;
         }
     }
 }

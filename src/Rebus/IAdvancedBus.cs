@@ -17,22 +17,13 @@ namespace Rebus
         void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
-        /// Sends the specified batch of messages, dividing the batch into bacthes
-        /// for individual recipients if necessary. For each recipient, the order
-        /// of the messages within the batch is preserved.
-        /// </summary>
-        void SendBatch(params object[] messages);
-
-        /// <summary>
-        /// Publishes the specified batch of messages, dividing the batch into
-        /// batches for individual recipients if necessary. For each subscriber,
-        /// the order of the messages within the batch is preserved.
-        /// </summary>
-        void PublishBatch(params object[] messages);
-
-        /// <summary>
         /// Gives access to all the different event hooks that Rebus exposes.
         /// </summary>
         IRebusEvents Events { get; }
+
+        /// <summary>
+        /// Gives access to Rebus' batch operations.
+        /// </summary>
+        IRebusBatchOperations Batch { get; }
     }
 }

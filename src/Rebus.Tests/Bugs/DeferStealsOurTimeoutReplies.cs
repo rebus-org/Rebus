@@ -1,8 +1,9 @@
+using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
-using Rhino.Mocks;
+using Shouldly;
 
 namespace Rebus.Tests.Bugs
 {
@@ -13,7 +14,7 @@ namespace Rebus.Tests.Bugs
         {
             var handlerActivator = new HandlerActivatorForTesting();
             var pipelineInspector = new TrivialPipelineInspector();
-            var handleDeferredMessage = Mock<IHandleDeferredMessage>();
+            var handleDeferredMessage = new MockDeferredMessageHandler();
             var dispatcher = new Dispatcher(new InMemorySagaPersister(),
                                         handlerActivator,
                                         new InMemorySubscriptionStorage(),
@@ -31,8 +32,28 @@ namespace Rebus.Tests.Bugs
                 CustomData = TimeoutReplyHandler.Serialize(new Message { Id = "2" })
             });
 
-            handleDeferredMessage.AssertWasCalled(x => x.Dispatch(Arg<Message>.Is.Anything), x => x.Repeat.Once());
-            handleDeferredMessage.AssertWasCalled(x => x.Dispatch(Arg<Message>.Matches(y => y.Id == "1")));
+            handleDeferredMessage.DispatchedMessages.Count.ShouldBe(1);
+            var dispatchedMessage = handleDeferredMessage.DispatchedMessages[0];
+            dispatchedMessage.ShouldBeTypeOf<Message>();
+            ((Message)dispatchedMessage).Id.ShouldBe("1");
+        }
+
+        /// <summary>
+        /// Manually implemented mock because DynamicProxy cannot dynamically subclass internal types.
+        /// </summary>
+        class MockDeferredMessageHandler : IHandleDeferredMessage
+        {
+            readonly List<object> dispatchedMessages = new List<object>();
+
+            public List<object> DispatchedMessages
+            {
+                get { return dispatchedMessages; }
+            }
+
+            public void Dispatch(object deferredMessage)
+            {
+                dispatchedMessages.Add(deferredMessage);
+            }
         }
 
         public class Message

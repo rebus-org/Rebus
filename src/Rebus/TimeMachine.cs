@@ -5,7 +5,7 @@ namespace Rebus
     /// <summary>
     /// Static gateway to ways of faking the current time. Should only be used in testing scenarios.
     /// </summary>
-    public class TimeMachine
+    class TimeMachine
     {
         /// <summary>
         /// Fixes the current time to the specified time which
