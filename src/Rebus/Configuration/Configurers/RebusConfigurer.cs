@@ -11,11 +11,18 @@ namespace Rebus.Configuration.Configurers
     /// </summary>
     public class RebusConfigurer
     {
+        protected EventsConfigurer eventsConfigurer = new EventsConfigurer();
         protected readonly IContainerAdapter containerAdapter;
 
         public RebusConfigurer(IContainerAdapter containerAdapter)
         {
             this.containerAdapter = containerAdapter;
+        }
+
+        public RebusConfigurer Events(Action<EventsConfigurer> configureEvents)
+        {
+            configureEvents(eventsConfigurer);
+            return this;
         }
 
         public RebusConfigurer Transport(Action<TransportConfigurer> configureTransport)
@@ -66,7 +73,9 @@ namespace Rebus.Configuration.Configurers
             
             ValidateConfiguration();
 
-            return containerAdapter.Resolve<IStartableBus>();
+            var startableBus = containerAdapter.Resolve<IStartableBus>();
+            eventsConfigurer.TransferToBus((IAdvancedBus) startableBus);
+            return startableBus;
         }
 
         void ValidateConfiguration()
@@ -126,41 +135,6 @@ both.");
                           typeof(IStartableBus),
                           typeof(IBus),
                           typeof(IAdvancedBus));
-
-//            if (!containerAdapter.HasImplementationOf(typeof(IStartableBus)))
-//            {
-//                if (containerAdapter.HasImplementationOf(typeof(IBus)))
-//                {
-//                    throw new ConfigurationException(@"
-//Detected that there was no IStartableBus configured, even though there is an IBus! If you want
-//to work with the configuration API, and you want to register your some custom implementation
-//of IBus and/or IStartableBus, please assume the full responsibility and register something
-//that implements both!
-//
-//Registering only one of them will most likely lead to confusion some time in the future.
-//");
-//                }
-
-//                containerAdapter.Register(typeof (RebusBus), Lifestyle.Singleton,
-//                                          typeof (IStartableBus),
-//                                          typeof (IBus),
-//                                          typeof (IAdvancedBus));
-//            }
-//            else
-//            {
-//                if (!containerAdapter.HasImplementationOf(typeof(IBus)))
-//                {
-//                    throw new ConfigurationException(
-//                        @"
-//Detected that there was no IBus configured, even though there is an IStartableBus! If you want
-//to work with the configuration API, and you want to register your some custom implementation
-//of IBus and/or IStartableBus, please assume the full responsibility and register something
-//that implements both!
-//
-//Registering only one of them will most likely lead to confusion some time in the future.
-//");
-//                }
-//            }
         }
     }
 }

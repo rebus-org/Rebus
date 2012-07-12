@@ -212,7 +212,7 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element)"));
             }
 
-            messages.ForEach(m => events.RaiseMessageSent(destination, m));
+            messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
 
             var messageToSend = new Message{Messages = messages.ToArray(),};
             var headers = MergeHeaders(messageToSend);
@@ -347,22 +347,22 @@ element)"));
 
         void RaiseMessageReceived(object message)
         {
-            events.RaiseMessageReceived(message);
+            events.RaiseMessageReceived(this, message);
         }
 
         void RaiseBeforeMessage(ReceivedTransportMessage transportMessage)
         {
-            events.RaiseBeforeTransportMessage(transportMessage);
+            events.RaiseBeforeTransportMessage(this, transportMessage);
         }
 
         void RaiseAfterMessage(Exception exception, ReceivedTransportMessage transportMessage)
         {
-            events.RaiseAfterTransportMessage(exception, transportMessage);
+            events.RaiseAfterTransportMessage(this, exception, transportMessage);
         }
 
         void RaisePosionMessage(ReceivedTransportMessage transportMessage)
         {
-            events.RaisePoisonMessage(transportMessage);
+            events.RaisePoisonMessage(this, transportMessage);
         }
 
         void RemoveWorker()

@@ -62,6 +62,7 @@
     <Compile Include="Bus\IErrorTracker.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
+    <Compile Include="Configuration\Configurers\EventsConfigurer.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="IRebusBatchOperations.cs" />
     <Compile Include="IRebusEvents.cs" />

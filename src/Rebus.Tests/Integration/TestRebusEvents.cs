@@ -23,11 +23,11 @@ namespace Rebus.Tests.Integration
             var receiverEvents = new List<string>();
             const string receiverInputQueueName = "test.events.receiver";
             var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting());
-            receiver.Events.MessageReceived += m => receiverEvents.Add("received: " + m);
+            receiver.Events.MessageReceived += (b, m) => receiverEvents.Add("received: " + m);
             receiver.Start();
 
             var sender = CreateBus("test.events.sender", new HandlerActivatorForTesting());
-            sender.Events.MessageSent += (e, m) => senderEvents.Add("sent: " + m);
+            sender.Events.MessageSent += (b, e, m) => senderEvents.Add("sent: " + m);
             sender.Start();
 
             // act
@@ -60,9 +60,9 @@ namespace Rebus.Tests.Integration
                                     });
 
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
-            receiver.Events.BeforeTransportMessage += m => events.Add("Before message");
-            receiver.Events.AfterTransportMessage += (e, m) => events.Add("After message: " + e);
-            receiver.Events.PoisonMessage += m => events.Add("Poison!");
+            receiver.Events.BeforeTransportMessage += (b, m) => events.Add("Before message");
+            receiver.Events.AfterTransportMessage += (b, e, m) => events.Add("After message: " + e);
+            receiver.Events.PoisonMessage += (b, m) => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
             sender.Send(receiverInputQueueName, "test");

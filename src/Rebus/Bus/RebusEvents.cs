@@ -7,57 +7,57 @@ namespace Rebus.Bus
         /// <summary>
         /// Event that will be raised immediately when the bus is used to send a logical message.
         /// </summary>
-        public event Action<string, object> MessageSent = delegate { };
+        public event MessageSentEventHandler MessageSent = delegate { };
 
         /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
         /// if deserialization completed, and the transport message does in fact contain one or more
         /// logical messages).
         /// </summary>
-        public event Action<object> MessageReceived = delegate { };
+        public event MessageReceivedEventHandler MessageReceived = delegate { };
 
         /// <summary>
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.
         /// </summary>
-        public event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
+        public event BeforeTransportMessageEventHandler BeforeTransportMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised after a transport message has been handled.
         /// If an error occurs, the caught exception will be passed to the
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
-        public event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
+        public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message
         /// has failed too many times.
         /// </summary>
-        public event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
+        public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
-        internal void RaiseMessageSent(string destination, object message)
+        internal void RaiseMessageSent(IAdvancedBus advancedBus, string destination, object message)
         {
-            MessageSent(destination, message);
+            MessageSent(advancedBus, destination, message);
         }
 
-        internal void RaiseMessageReceived(object message)
+        internal void RaiseMessageReceived(IAdvancedBus advancedBus, object message)
         {
-            MessageReceived(message);
+            MessageReceived(advancedBus, message);
         }
 
-        internal void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)
+        internal void RaiseBeforeTransportMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage)
         {
-            BeforeTransportMessage(transportMessage);
+            BeforeTransportMessage(advancedBus, transportMessage);
         }
 
-        internal void RaiseAfterTransportMessage(Exception exception, ReceivedTransportMessage transportMessage)
+        internal void RaiseAfterTransportMessage(IAdvancedBus advancedBus, Exception exception, ReceivedTransportMessage transportMessage)
         {
-            AfterTransportMessage(exception, transportMessage);
+            AfterTransportMessage(advancedBus, exception, transportMessage);
         }
 
-        internal void RaisePoisonMessage(ReceivedTransportMessage transportMessage)
+        internal void RaisePoisonMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage)
         {
-            PoisonMessage(transportMessage);
+            PoisonMessage(advancedBus, transportMessage);
         }
     }
 }

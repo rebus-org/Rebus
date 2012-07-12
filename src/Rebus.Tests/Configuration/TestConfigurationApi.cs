@@ -9,6 +9,7 @@ using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Encrypted;
 using Rebus.Transports.Msmq;
@@ -31,7 +32,7 @@ namespace Rebus.Tests.Configuration
                 .Serialization(s => s.UseJsonSerializer());
 
             adapter.Registrations
-                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .Count(r => r.ServiceTypes.Contains(typeof(IActivateHandlers)))
                 .ShouldBe(1);
         }
 
@@ -45,7 +46,7 @@ namespace Rebus.Tests.Configuration
                 .Serialization(s => s.UseJsonSerializer());
 
             adapter.Registrations
-                .Count(r => r.ServiceTypes.Contains(typeof (IActivateHandlers)))
+                .Count(r => r.ServiceTypes.Contains(typeof(IActivateHandlers)))
                 .ShouldBe(1);
         }
 
