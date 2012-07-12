@@ -22,37 +22,6 @@ namespace Rebus.Bus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        /// <summary>
-        /// Event that will be raised immediately when the bus is used to send a logical message.
-        /// </summary>
-        public event Action<string, object> MessageSent = delegate { };
-
-        /// <summary>
-        /// Event that will be raised for each received logical message (i.e. it will only be called
-        /// if deserialization completed, and the transport message does in fact contain one or more
-        /// logical messages).
-        /// </summary>
-        public event Action<object> MessageReceived = delegate { };
-
-        /// <summary>
-        /// Event that will be raised immediately after receiving a transport 
-        /// message, before any other actions are executed.
-        /// </summary>
-        public event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
-
-        /// <summary>
-        /// Event that will be raised after a transport message has been handled.
-        /// If an error occurs, the caught exception will be passed to the
-        /// listeners. If no errors occur, the passed exception will be null.
-        /// </summary>
-        public event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
-
-        /// <summary>
-        /// Event that will be raised whenever it is determined that a message
-        /// has failed too many times.
-        /// </summary>
-        public event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
-
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
         readonly IStoreSubscriptions storeSubscriptions;
@@ -64,6 +33,7 @@ namespace Rebus.Bus
         readonly List<Worker> workers = new List<Worker>();
         readonly IErrorTracker errorTracker;
         readonly HeaderContext headerContext = new HeaderContext();
+        readonly RebusEvents events = new RebusEvents();
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -167,6 +137,11 @@ namespace Rebus.Bus
             }
         }
 
+        public IRebusEvents Events
+        {
+            get { return events; }
+        }
+
         public void Reply<TResponse>(TResponse message)
         {
             var messageContext = MessageContext.GetCurrent();
@@ -249,7 +224,7 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element)"));
             }
 
-            messages.ForEach(m => MessageSent(destination, m));
+            messages.ForEach(m => events.RaiseMessageSent(destination, m));
 
             var messageToSend = new Message{Messages = messages.ToArray(),};
             var headers = MergeHeaders(messageToSend);
@@ -427,22 +402,22 @@ element)"));
 
         void RaiseMessageReceived(object message)
         {
-            MessageReceived(message);
+            events.RaiseMessageReceived(message);
         }
 
         void RaiseBeforeMessage(ReceivedTransportMessage transportMessage)
         {
-            BeforeTransportMessage(transportMessage);
+            events.RaiseBeforeTransportMessage(transportMessage);
         }
 
         void RaiseAfterMessage(Exception exception, ReceivedTransportMessage transportMessage)
         {
-            AfterTransportMessage(exception, transportMessage);
+            events.RaiseAfterTransportMessage(exception, transportMessage);
         }
 
         void RaisePosionMessage(ReceivedTransportMessage transportMessage)
         {
-            PoisonMessage(transportMessage);
+            events.RaisePoisonMessage(transportMessage);
         }
 
         void RemoveWorker()
@@ -466,7 +441,7 @@ element)"));
                     workerToRemove.BeforeMessage -= RaiseBeforeMessage;
                     workerToRemove.AfterMessage -= RaiseAfterMessage;
                     workerToRemove.PoisonMessage -= RaisePosionMessage;
-                    workerToRemove.MessageReceived -= MessageReceived;
+                    workerToRemove.MessageReceived -= RaiseMessageReceived;
                     workerToRemove.Dispose();
                 }
             }
@@ -617,14 +592,5 @@ element)"));
             dictionery = entry.Item2;
             return true;
         }
-    }
-
-    public static class MessageExtensions
-    {
-        //public static TMessage AttachHeader<TMessage>(this TMessage message, string key, string value)
-        //{
-        //    HeaderContext.Current.AttachHeader(message, key, value);
-        //    return message;
-        //}
     }
 }

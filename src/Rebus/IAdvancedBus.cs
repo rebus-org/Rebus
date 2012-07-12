@@ -1,5 +1,3 @@
-using System;
-
 namespace Rebus
 {
     /// <summary>
@@ -7,25 +5,6 @@ namespace Rebus
     /// </summary>
     public interface IAdvancedBus : IBus
     {
-        /// <summary>
-        /// Event that will be raised immediately after receiving a transport 
-        /// message, before any other actions are executed.
-        /// </summary>
-        event Action<ReceivedTransportMessage> BeforeTransportMessage;
-
-        /// <summary>
-        /// Event that will be raised after a transport message has been handled.
-        /// If an error occurs, the caught exception will be passed to the
-        /// listeners. If no errors occur, the passed exception will be null.
-        /// </summary>
-        event Action<Exception, ReceivedTransportMessage> AfterTransportMessage;
-
-        /// <summary>
-        /// Event that will be raised whenever it is determined that a message
-        /// has failed too many times.
-        /// </summary>
-        event Action<ReceivedTransportMessage> PoisonMessage;
-
         /// <summary>
         /// Sends the specified message to the specified destination.
         /// </summary>
@@ -50,5 +29,10 @@ namespace Rebus
         /// the order of the messages within the batch is preserved.
         /// </summary>
         void PublishBatch(params object[] messages);
+
+        /// <summary>
+        /// Gives access to all the different event hooks that Rebus exposes.
+        /// </summary>
+        IRebusEvents Events { get; }
     }
 }
