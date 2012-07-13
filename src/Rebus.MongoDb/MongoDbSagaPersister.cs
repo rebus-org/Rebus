@@ -22,7 +22,8 @@ namespace Rebus.MongoDb
         readonly SagaDataElementNameConvention elementNameConventions;
         readonly MongoDatabase database;
 
-        bool indexCreated;
+        volatile bool indexCreated;
+        
         bool allowAutomaticSagaCollectionNames;
 
         public MongoDbSagaPersister(string connectionString)
@@ -108,10 +109,9 @@ namespace Rebus.MongoDb
 
             if (allowAutomaticSagaCollectionNames)
             {
-                return string.Format("sagas_{0}", sagaDataType.Name);
+                return GenerateAutoSagaCollectionName(sagaDataType);
             }
 
-            // TODO: update error message when fluent cfg API has been made for Mongo
             throw new InvalidOperationException(
                 string.Format(
                     @"This MongoDB saga persister doesn't know where to store sagas of type {0}.
@@ -127,8 +127,8 @@ if you create the persister manually, or like this if you're using the fluent co
     Configure.With(adapter)
         (...)
         .Sagas(s => s.StoreInMongoDb(ConnectionString)
-                        .SetCollectionName<string>(""string_sagas"")
-                        .SetCollectionName<DateTime>(""datetime_sagas""))
+                        .SetCollectionName<SomeKindOfSaga>(""some_kind_of_saga"")
+                        .SetCollectionName<AnotherKindOfSaga>(""another_kind_of_saga""))
         (...)
 
 Alternatively, if you're more into the ""convention over configuration"" thing, trade a little
@@ -141,20 +141,33 @@ bit of control for reduced friction, and let the persister come up with a name b
         (...)
 
 which will make the persister use the type of the saga to come up with collection names 
-automatically.
+automatically - for sagas of the type {0}, the collection will be named '{1}'.
 ",
-                    sagaDataType));
+                    sagaDataType, GenerateAutoSagaCollectionName(sagaDataType)));
+        }
+
+        static string GenerateAutoSagaCollectionName(Type sagaDataType)
+        {
+            return string.Format("sagas_{0}", sagaDataType.Name);
         }
 
         void EnsureIndexHasBeenCreated(IEnumerable<string> sagaDataPropertyPathsToIndex, MongoCollection<BsonDocument> collection)
         {
             if (!indexCreated)
             {
-                foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[]{"Id"}))
+                lock (this)
                 {
-                    collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex), IndexOptions.SetBackground(false).SetUnique(true));
+                    if (!indexCreated)
+                    {
+                        foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] {"Id"}))
+                        {
+                            collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex),
+                                                   IndexOptions.SetBackground(false).SetUnique(true));
+                        }
+                        
+                        indexCreated = true;
+                    }
                 }
-                indexCreated = true;
             }
         }
 
