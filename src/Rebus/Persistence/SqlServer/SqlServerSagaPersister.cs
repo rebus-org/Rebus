@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using Newtonsoft.Json;
 using Ponder;
-using Rebus.Extensions;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -43,15 +41,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 connection.Open();
 
-                // first, delete existing index
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
-                    command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.ExecuteNonQuery();
-                }
-
-                // next, update or insert the saga
+                // next insert the saga
                 using (var command = connection.CreateCommand())
                 {
                     command.Parameters.AddWithValue("id", sagaData.Id);
@@ -108,7 +98,7 @@ namespace Rebus.Persistence.SqlServer
                         {
                             if (sqlException.Number == PrimaryKeyViolationNumber)
                             {
-                                throw new OptimisticLockingException(sagaData);
+                                throw new OptimisticLockingException(sagaData, sqlException);
                             }
 
                             throw;
@@ -197,7 +187,19 @@ saga type name.",
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 
                         command.CommandText = sql;
-                        command.ExecuteNonQuery();
+                        try
+                        {
+                            command.ExecuteNonQuery();
+                        }
+                        catch (SqlException sqlException)
+                        {
+                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            {
+                                throw new OptimisticLockingException(sagaData, sqlException);
+                            }
+
+                            throw;
+                        }
                     }
                 }
             }
@@ -211,8 +213,19 @@ saga type name.",
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from sagas where id = @id;
-                                            delete from saga_index where saga_id = @id";
+                    command.CommandText = @"delete from sagas where id = @id and revision = @current_revision;";
+                    command.Parameters.AddWithValue("id", sagaData.Id);
+                    command.Parameters.AddWithValue("current_revision", sagaData.Revision);
+                    var rows = command.ExecuteNonQuery();
+                    if (rows == 0)
+                    {
+                        throw new OptimisticLockingException(sagaData);
+                    }
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = @"delete from saga_index where saga_id = @id";
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }

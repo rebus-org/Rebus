@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Rebus
+﻿namespace Rebus
 {
     /// <summary>
     /// Implement this in order to control how saga data gets persisted.

@@ -14,19 +14,49 @@ namespace Rebus.Persistence.InMemory
         public virtual void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var key = sagaData.Id;
+
+            if (data.ContainsKey(key))
+            {
+                if (data[key].Revision != sagaData.Revision)
+                {
+                    throw new OptimisticLockingException(sagaData);
+                }
+            }
+
+            sagaData.Revision++;
+            
             data[key] = sagaData;
         }
 
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var key = sagaData.Id;
+
+            if (data.ContainsKey(key))
+            {
+                if (data[key].Revision != sagaData.Revision)
+                {
+                    throw new OptimisticLockingException(sagaData);
+                }
+            }
+
+            sagaData.Revision++;
+
             data[key] = sagaData;
         }
 
         public void Delete(ISagaData sagaData)
         {
             ISagaData temp;
-            data.TryRemove(sagaData.Id, out temp);
+
+            var key = sagaData.Id;
+            
+            if (!data.ContainsKey(key))
+            {
+                throw new OptimisticLockingException(sagaData);
+            }
+            
+            data.TryRemove(key, out temp);
         }
 
         public virtual T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
