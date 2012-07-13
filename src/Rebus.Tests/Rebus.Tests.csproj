@@ -163,6 +163,9 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
+    <Compile Include="..\..\lib\Ponder\Ponder.cs">
+      <Link>Ponder.cs</Link>
+    </Compile>
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
@@ -228,10 +231,9 @@
     <Compile Include="Persistence\Sagas\ISagaPersisterFactory.cs" />
     <Compile Include="Persistence\Sagas\Factories\MongoDbSagaPersisterFactory.cs" />
     <Compile Include="Persistence\Sagas\Factories\RavenDbSagaPersisterFactory.cs" />
-    <Compile Include="Persistence\Sagas\TestSagaPersistersEmployingTransactions.cs" />
-    <Compile Include="Persistence\Sagas\TestSagaPersistersNotEmployingTransactions.cs" />
+    <Compile Include="Persistence\Sagas\TestUniquenessOfCorrelationIds.cs" />
     <Compile Include="Persistence\Sagas\TestSagaPersisters.cs" />
-    <Compile Include="Persistence\Sagas\TestSagaPersistersEmployingOptimisticConcurrency.cs" />
+    <Compile Include="Persistence\Sagas\TestOptimisticConcurrency.cs" />
     <Compile Include="Persistence\Sagas\TestSagaPersisterWithMultipleSagaTypes.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\InMemorySubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\Subscriptions\Factories\XmlSubscriptionStoreFactory.cs" />
@@ -269,6 +271,7 @@
     <Compile Include="TestStuff.cs" />
     <Compile Include="Transports\Rabbit\TestRabbitMqMessageQueue.cs" />
     <Compile Include="Bugs\DispatcherDeletesDataThatHasNotYetBeenPersisted.cs" />
+    <Compile Include="Bugs\SagaPersisterShouldNotIndexSamePropertyTwice.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestHeaderContext.cs" />
     <Compile Include="Unit\TestErrorTracker.cs" />
@@ -279,7 +282,6 @@
     <Compile Include="Unit\TestWorker_MessageContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Raven.Studio.xap" />
     <None Include="App.config" />
     <Content Include="Configuration\RealAppConfigs\App.1.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

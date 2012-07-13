@@ -219,7 +219,7 @@ saga type name.",
             }
         }
 
-        public IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -248,9 +248,9 @@ saga type name.",
                     var value = (string)command.ExecuteScalar();
 
                     if (value == null)
-                        return Enumerable.Empty<T>();
+                        return null;
 
-                    return ((T)JsonConvert.DeserializeObject(value, Settings)).AsEnumerable();
+                    return (T)JsonConvert.DeserializeObject(value, Settings);
                 }
             }
         }

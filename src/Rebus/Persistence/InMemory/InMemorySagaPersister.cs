@@ -29,12 +29,12 @@ namespace Rebus.Persistence.InMemory
             data.TryRemove(sagaData.Id, out temp);
         }
 
-        public virtual IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+        public virtual T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
-            return from sagaData in data 
-                   let valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString() 
-                   where valueFromSagaData.Equals((fieldFromMessage ?? "").ToString()) 
-                   select (T) sagaData.Value;
+            return (from sagaData in data
+                    let valueFromSagaData = (Reflect.Value(sagaData.Value, sagaDataPropertyPath) ?? "").ToString()
+                    where valueFromSagaData.Equals((fieldFromMessage ?? "").ToString())
+                    select (T) sagaData.Value).FirstOrDefault();
         }
 
         public IEnumerator<ISagaData> GetEnumerator()

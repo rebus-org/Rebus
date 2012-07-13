@@ -184,18 +184,15 @@ automatically.
             }
         }
 
-        public IEnumerable<T> Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             var collection = database.GetCollection(typeof(T), GetCollectionName(typeof(T)));
 
             if (sagaDataPropertyPath == "Id")
-            {
-                var sagaData = collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
-                return sagaData != null ? sagaData.AsEnumerable() : Enumerable.Empty<T>();
-            }
+                return collection.FindOneByIdAs<T>(BsonValue.Create(fieldFromMessage));
 
             var query = Query.EQ(MapSagaDataPropertyPath(sagaDataPropertyPath, typeof(T)), BsonValue.Create(fieldFromMessage));
-            return collection.FindAs<T>(query);
+            return collection.FindOneAs<T>(query);
         }
 
         string MapSagaDataPropertyPath(string sagaDataPropertyPath, Type sagaDataType)
