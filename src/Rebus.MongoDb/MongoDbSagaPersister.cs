@@ -7,7 +7,6 @@ using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
 using System.Linq;
-using Rebus.Extensions;
 
 namespace Rebus.MongoDb
 {
@@ -18,8 +17,18 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbSagaPersister : IStoreSagaData
     {
+        static readonly SagaDataElementNameConvention elementNameConventions;
+        
+        static MongoDbSagaPersister()
+        {
+            elementNameConventions = new SagaDataElementNameConvention();
+            var conventionProfile = new ConventionProfile()
+                .SetElementNameConvention(elementNameConventions);
+
+            BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
+        }
+        
         readonly Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
-        readonly SagaDataElementNameConvention elementNameConventions;
         readonly MongoDatabase database;
 
         volatile bool indexCreated;
@@ -29,12 +38,6 @@ namespace Rebus.MongoDb
         public MongoDbSagaPersister(string connectionString)
         {
             database = MongoDatabase.Create(connectionString);
-
-            elementNameConventions = new SagaDataElementNameConvention();
-            var conventionProfile = new ConventionProfile()
-                .SetElementNameConvention(elementNameConventions);
-
-            BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
 
         public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName)
@@ -159,16 +162,57 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
                 {
                     if (!indexCreated)
                     {
-                        foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] {"Id"}))
+                        collection.ResetIndexCache();
+
+                        var indexes = collection.GetIndexes();
+
+                        foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] { "Id" }))
                         {
-                            collection.EnsureIndex(IndexKeys.Ascending(propertyToIndex),
+                            var indexDefinition = IndexKeys.Ascending(propertyToIndex);
+
+                            //if (IndexAlreadyExists(indexes, propertyToIndex))
+                            //{
+                            //    AssertIndexIsCorrect(indexes, propertyToIndex);
+                            //}
+
+                            collection.EnsureIndex(indexDefinition,
                                                    IndexOptions.SetBackground(false).SetUnique(true));
                         }
-                        
+
+                        collection.ReIndex();
+
                         indexCreated = true;
                     }
                 }
             }
+        }
+
+        void AssertIndexIsCorrect(GetIndexesResult indexes, string propertyToIndex)
+        {
+            var indexInfo = indexes.Single(i => IsIndexForProperty(propertyToIndex, i));
+
+            if (!indexInfo.IsUnique)
+            {
+                throw new InvalidOperationException(string.Format("The index for {0} already existed, but it wasn't enforcing a UNIQUE constraint.", propertyToIndex));
+            }
+
+            if (indexInfo.IsBackground)
+            {
+                throw new InvalidOperationException(string.Format("The index for {0} aready exists, but it wasn't SYNCHRONOUS."));
+            }
+        }
+
+        bool IndexAlreadyExists(IEnumerable<IndexInfo> indexes, string propertyToIndex)
+        {
+            return indexes
+                .Any(indexInfo => IsIndexForProperty(propertyToIndex, indexInfo));
+        }
+
+        static bool IsIndexForProperty(string propertyToIndex, IndexInfo indexInfo)
+        {
+            var indexKeys = indexInfo.Key.ToDictionary();
+
+            return indexKeys.Count == 1 && indexKeys.ContainsKey(propertyToIndex);
         }
 
         public void Delete(ISagaData sagaData)

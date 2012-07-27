@@ -31,7 +31,7 @@ namespace Rebus.Tests.Persistence.Sagas
         [Test]
         public void CannotUpdateAnotherSagaWithDuplicateCorrelationId()
         {
-            // arrange
+            // arrange  
             var theValue = "this just happens to be the same in two sagas";
             var firstSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = theValue};
             var secondSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = "other value"};
