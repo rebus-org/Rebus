@@ -83,7 +83,7 @@ namespace Rebus.Tests.Integration
                       receiverErrorQueueName)
                 .Start(1);
 
-            senderBus.Send(receiverQueueName, "HELLO!");
+            senderBus.Routing.Send(receiverQueueName, "HELLO!");
 
             var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(3)).Body;
             var errorMessage = serializer.Deserialize(transportMessage);

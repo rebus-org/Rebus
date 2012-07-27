@@ -33,7 +33,7 @@ namespace Rebus.Tests.Integration
                                               }))
                 .Start();
 
-            senderBus.Send("test.tx.receiver", "HELLO!");
+            senderBus.Routing.Send("test.tx.receiver", "HELLO!");
 
             if (!resetEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
@@ -58,7 +58,7 @@ namespace Rebus.Tests.Integration
                                                                   }))
                 .Start();
 
-            senderBus.Send(recipientQueueName, "yo!");
+            senderBus.Routing.Send(recipientQueueName, "yo!");
             manualResetEvent.WaitOne(TimeSpan.FromSeconds(5));
             Assert.IsTrue(recipientWasCalled, "The recipient did not receive a call within allotted timeout");
         }
@@ -81,7 +81,7 @@ namespace Rebus.Tests.Integration
 
             requestorBus.Start();
             replierBus.Start();
-            requestorBus.Send(replierQueueName, "ping?");
+            requestorBus.Routing.Send(replierQueueName, "ping?");
 
             if (!requestorGotMessageEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
@@ -111,7 +111,7 @@ namespace Rebus.Tests.Integration
             var firstSubscriberBus =
                 (RebusBus) CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
 
-            firstSubscriberBus.Subscribe<string>(publisherInputQueue);
+            firstSubscriberBus.Routing.Subscribe<string>(publisherInputQueue);
 
             var secondSubscriberInputQueue = "test.subscriber2";
             var secondSubscriberHandlerFactory = new HandlerActivatorForTesting()
@@ -126,7 +126,7 @@ namespace Rebus.Tests.Integration
             var secondSubscriberBus =
                 (RebusBus) CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
 
-            secondSubscriberBus.Subscribe<string>(publisherInputQueue);
+            secondSubscriberBus.Routing.Subscribe<string>(publisherInputQueue);
 
             // allow the publisher to receive the subscriptions....
             Thread.Sleep(500);

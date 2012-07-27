@@ -35,6 +35,7 @@ namespace Rebus.Bus
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
         readonly RebusBatchOperations batch;
+        readonly IRebusRouting routing;
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -65,6 +66,7 @@ namespace Rebus.Bus
             this.errorTracker = errorTracker;
 
             batch = new RebusBatchOperations(determineDestination, storeSubscriptions, this);
+            routing = new RebusRouting(this);
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
@@ -98,11 +100,6 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
-        public void Send<TCommand>(string endpoint, TCommand message)
-        {
-            InternalSend(endpoint, new List<object> { message });
-        }
-
         public void SendLocal<TCommand>(TCommand message)
         {
             var destinationEndpoint = receiveMessages.InputQueue;
@@ -128,6 +125,11 @@ namespace Rebus.Bus
         public IRebusBatchOperations Batch
         {
             get { return batch; }
+        }
+
+        public IRebusRouting Routing
+        {
+            get { return routing; }
         }
 
         public void Reply<TResponse>(TResponse message)
@@ -158,12 +160,7 @@ that can take action.",
             InternalSubscribe<TMessage>(publisherInputQueue);
         }
 
-        public void Subscribe<TMessage>(string publisherInputQueue)
-        {
-            InternalSubscribe<TMessage>(publisherInputQueue);
-        }
-
-        void InternalSubscribe<TMessage>(string publisherInputQueue)
+        internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
             var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
 

@@ -121,7 +121,7 @@ namespace Rebus.Timeout
                 {
                     log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
-                    bus.Send(timeout.ReplyTo,
+                    bus.Routing.Send(timeout.ReplyTo,
                              new TimeoutReply
                                  {
                                      SagaId = timeout.SagaId,

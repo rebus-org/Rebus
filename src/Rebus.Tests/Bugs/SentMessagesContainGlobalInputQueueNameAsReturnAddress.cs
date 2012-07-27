@@ -37,7 +37,7 @@ namespace Rebus.Tests.Bugs
                 });
 
             // act
-            sender.Send(RecipientInputQueueName, "yo dawg!!");
+            sender.Routing.Send(RecipientInputQueueName, "yo dawg!!");
 
             // assert
             Assert.That(resetEvent.WaitOne(1.Seconds()), Is.True, "The message was not received withing timeout of 1 second");

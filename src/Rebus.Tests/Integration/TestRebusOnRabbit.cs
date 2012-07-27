@@ -50,8 +50,8 @@ namespace Rebus.Tests.Integration
             using (var tx = new TransactionScope())
             {
                 var counter = 0;
-                
-                messageCount.Times(() => sender.Send(receiverQueueName, "message #" + (counter++).ToString()));
+
+                messageCount.Times(() => sender.Routing.Send(receiverQueueName, "message #" + (counter++).ToString()));
 
                 tx.Complete();
             }

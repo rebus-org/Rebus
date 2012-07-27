@@ -57,7 +57,7 @@ namespace Rebus.Tests.Unit
         public void ThrowsWhenUsingBusThatHasNotBeenStarted()
         {
             var unstartedBus = CreateTheBus();
-            var invalidOperationException = Should.Throw<InvalidOperationException>(() => unstartedBus.Send("somewhere", "yo dawg!!"));
+            var invalidOperationException = Should.Throw<InvalidOperationException>(() => unstartedBus.Routing.Send("somewhere", "yo dawg!!"));
 
             invalidOperationException.Message.ShouldContain("not been started");
         }
@@ -170,8 +170,8 @@ Or should it?")]
             bus.AttachHeader(someRandomMessage, "some-key", "some-value");
 
             // act
-            bus.Send("somewhere", someRandomMessage);
-            bus.Send("somewhereElse", someRandomMessage);
+            bus.Routing.Send("somewhere", someRandomMessage);
+            bus.Routing.Send("somewhereElse", someRandomMessage);
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
@@ -276,7 +276,7 @@ Or should it?")]
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
-            bus.Send("hardcoded.endpoint.to.skip.lookup", someRandomMessage);
+            bus.Routing.Send("hardcoded.endpoint.to.skip.lookup", someRandomMessage);
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("hardcoded.endpoint.to.skip.lookup"),

@@ -23,7 +23,7 @@ namespace Rebus.Tests.Integration
 
             pipelineInspector.SetOrder(typeof(FirstHandler), typeof(SecondHandler));
 
-            sender.Send(receiverInputQueueName, "wooooolalalalalaal");
+            sender.Routing.Send(receiverInputQueueName, "wooooolalalalalaal");
 
             Thread.Sleep(500);
 

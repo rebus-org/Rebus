@@ -6,17 +6,6 @@ namespace Rebus
     public interface IAdvancedBus : IBus
     {
         /// <summary>
-        /// Sends the specified message to the specified destination.
-        /// </summary>
-        void Send<TCommand>(string endpoint, TCommand message);
-
-        /// <summary>
-        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
-        /// destination.
-        /// </summary>
-        void Subscribe<TEvent>(string publisherInputQueue);
-
-        /// <summary>
         /// Gives access to all the different event hooks that Rebus exposes.
         /// </summary>
         IRebusEvents Events { get; }
@@ -25,5 +14,10 @@ namespace Rebus
         /// Gives access to Rebus' batch operations.
         /// </summary>
         IRebusBatchOperations Batch { get; }
+
+        /// <summary>
+        /// Gives access to Rebus' routing operations.
+        /// </summary>
+        IRebusRouting Routing { get; }
     }
 }

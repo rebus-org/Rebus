@@ -62,10 +62,12 @@
     <Compile Include="Bus\IErrorTracker.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
+    <Compile Include="Bus\RebusRouting.cs" />
     <Compile Include="Configuration\Configurers\EventsConfigurer.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="IRebusBatchOperations.cs" />
     <Compile Include="IRebusEvents.cs" />
+    <Compile Include="IRebusRouting.cs" />
     <Compile Include="Serialization\SerializationConfigurationExtensions.cs" />
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />

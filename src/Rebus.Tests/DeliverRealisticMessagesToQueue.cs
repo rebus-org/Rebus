@@ -29,9 +29,9 @@ namespace Rebus.Tests
 
             var someInteger = 1;
 
-            10.Times(() => a.Send(inputQueueNameB, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
+            10.Times(() => a.Routing.Send(inputQueueNameB, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
 
-            10.Times(() => b.Send(inputQueueNameA, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
+            10.Times(() => b.Routing.Send(inputQueueNameA, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
 
             Thread.Sleep(1500);
         }

@@ -31,7 +31,7 @@ namespace Rebus.Tests.Integration
             sender.Start();
 
             // act
-            sender.Send(receiverInputQueueName, "whoa!!");
+            sender.Routing.Send(receiverInputQueueName, "whoa!!");
             Thread.Sleep(0.5.Seconds());
 
             // assert
@@ -65,8 +65,8 @@ namespace Rebus.Tests.Integration
             receiver.Events.PoisonMessage += (b, m) => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
-            sender.Send(receiverInputQueueName, "test");
-            sender.Send(receiverInputQueueName, "throw");
+            sender.Routing.Send(receiverInputQueueName, "test");
+            sender.Routing.Send(receiverInputQueueName, "throw");
 
             Thread.Sleep(500);
 

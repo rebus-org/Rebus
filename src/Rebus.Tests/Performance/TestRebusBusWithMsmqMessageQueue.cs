@@ -37,7 +37,7 @@ namespace Rebus.Tests.Performance
 
             // send
             var stopwatch = Stopwatch.StartNew();
-            numberOfMessages.Times(() => senderBus.Send(recipientQueueName, "woooLALALALALALALA!"));
+            numberOfMessages.Times(() => senderBus.Routing.Send(recipientQueueName, "woooLALALALALALALA!"));
             var elapsed = stopwatch.Elapsed;
             Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/sec",
                               numberOfMessages,
