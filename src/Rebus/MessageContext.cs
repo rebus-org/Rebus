@@ -21,6 +21,12 @@ namespace Rebus
         public event Action Disposed = delegate { };
 
         [ThreadStatic] static internal IMessageContext current;
+        object currentMessage;
+
+        public object CurrentMessage
+        {
+            get { return currentMessage; }
+        }
 
 #if DEBUG
         public string StackTrace { get; set; }
@@ -107,6 +113,16 @@ Stacktrace of when the current message context was created:
             current = null;
             
             Disposed();
+        }
+
+        public void SetLogicalMessage(object message)
+        {
+            currentMessage = message;
+        }
+
+        public void ClearLogicalMessage()
+        {
+            currentMessage = null;
         }
     }
 }

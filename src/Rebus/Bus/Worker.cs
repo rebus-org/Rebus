@@ -180,17 +180,26 @@ namespace Rebus.Bus
                         var message = serializeMessages.Deserialize(transportMessage);
                         var returnAddress = message.GetHeader(Headers.ReturnAddress);
 
-                        using (MessageContext.Enter(returnAddress, id))
+                        using (var context = MessageContext.Enter(returnAddress, id))
                         {
                             foreach (var logicalMessage in message.Messages)
                             {
-                                MessageReceived(logicalMessage);
+                                context.SetLogicalMessage(logicalMessage);
 
-                                var typeToDispatch = logicalMessage.GetType();
+                                try
+                                {
+                                    MessageReceived(logicalMessage);
 
-                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+                                    var typeToDispatch = logicalMessage.GetType();
 
-                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
+                                    log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+
+                                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
+                                }
+                                finally
+                                {
+                                    context.ClearLogicalMessage();
+                                }
                             }
                         }
                     }

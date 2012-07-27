@@ -32,6 +32,11 @@ namespace Rebus
 
         event Action Disposed;
 
+        /// <summary>
+        /// Returns the logical message currently being handled.
+        /// </summary>
+        object CurrentMessage { get; }
+
 #if DEBUG
         string StackTrace { get; set; }
 #endif

@@ -17,7 +17,7 @@
         void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
-        /// Sends the currently handled message to the specified endpoint, preserving all
+        /// Sends the message currently being handled to the specified endpoint, preserving all
         /// of the transport level headers.
         /// </summary>
         void ForwardCurrentMessage(string destinationEndpoint);
