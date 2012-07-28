@@ -23,7 +23,7 @@ namespace Rebus.Bus
 
         public void ForwardCurrentMessage(string destinationEndpoint)
         {
-            throw new System.NotImplementedException();
+            
         }
     }
 }

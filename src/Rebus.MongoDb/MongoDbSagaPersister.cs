@@ -164,7 +164,7 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
                     {
                         collection.ResetIndexCache();
 
-                        var indexes = collection.GetIndexes();
+//                        var indexes = collection.GetIndexes();
 
                         foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] { "Id" }))
                         {
@@ -179,7 +179,7 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
                                                    IndexOptions.SetBackground(false).SetUnique(true));
                         }
 
-                        collection.ReIndex();
+                        //collection.ReIndex();
 
                         indexCreated = true;
                     }
