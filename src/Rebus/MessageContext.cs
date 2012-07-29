@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Logging;
+using Rebus.Extensions;
 
 namespace Rebus
 {
@@ -9,6 +10,7 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IDisposable, IMessageContext
     {
+        readonly IDictionary<string, string> headers;
         static ILog log;
 
         static MessageContext()
@@ -16,11 +18,17 @@ namespace Rebus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        public IDictionary<string, string> Headers
+        {
+            get { return headers; }
+        }
+
         public static event Action<IMessageContext> Established = delegate { };
-        
+
         public event Action Disposed = delegate { };
 
-        [ThreadStatic] static internal IMessageContext current;
+        [ThreadStatic]
+        static internal IMessageContext current;
         object currentMessage;
 
         public object CurrentMessage
@@ -32,7 +40,7 @@ namespace Rebus
         public string StackTrace { get; set; }
 #endif
 
-        internal static MessageContext Enter(string returnAddress, string id)
+        internal static MessageContext Enter(IDictionary<string, string> headers)
         {
             if (current != null)
             {
@@ -50,12 +58,7 @@ Stacktrace of when the current message context was created:
 #endif
 
             }
-            var messageContext =
-                new MessageContext
-                    {
-                        ReturnAddress = returnAddress,
-                        TransportMessageId = id,
-                    };
+            var messageContext = new MessageContext(headers);
 
             current = messageContext;
 
@@ -64,8 +67,10 @@ Stacktrace of when the current message context was created:
             return messageContext;
         }
 
-        MessageContext()
+        MessageContext(IDictionary<string, string> headers)
         {
+            this.headers = headers;
+
             DispatchMessageToHandlers = true;
             Items = new Dictionary<string, object>();
 
@@ -74,8 +79,16 @@ Stacktrace of when the current message context was created:
 #endif
         }
 
-        public string TransportMessageId { get; set; }
-        public string ReturnAddress { get; set; }
+        public string TransportMessageId
+        {
+            get { return headers.ValueOrNull(Shared.Headers.MessageId); }
+        }
+        
+        public string ReturnAddress
+        {
+            get { return headers.ValueOrNull(Shared.Headers.ReturnAddress); }
+        }
+
         public IDictionary<string, object> Items { get; private set; }
 
         public static IMessageContext GetCurrent()
@@ -111,7 +124,7 @@ Stacktrace of when the current message context was created:
         public void Dispose()
         {
             current = null;
-            
+
             Disposed();
         }
 

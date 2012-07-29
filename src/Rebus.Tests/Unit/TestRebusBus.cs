@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rhino.Mocks;
 using Shouldly;
@@ -11,48 +9,8 @@ using Shouldly;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestRebusBus : FixtureBase
+    public class TestRebusBus : RebusBusUnitTestBase
     {
-        RebusBus bus;
-        MessageReceiverForTesting receiveMessages;
-        HandlerActivatorForTesting activateHandlers;
-        IDetermineDestination determineDestination;
-        ISendMessages sendMessages;
-        JsonMessageSerializer serializeMessages;
-        IStoreSagaData storeSagaData;
-        IInspectHandlerPipeline inspectHandlerPipeline;
-        IStoreSubscriptions storeSubscriptions;
-
-        protected override void DoSetUp()
-        {
-            activateHandlers = new HandlerActivatorForTesting();
-            determineDestination = Mock<IDetermineDestination>();
-            sendMessages = Mock<ISendMessages>();
-            serializeMessages = new JsonMessageSerializer();
-            storeSagaData = Mock<IStoreSagaData>();
-            receiveMessages = new MessageReceiverForTesting(serializeMessages);
-            inspectHandlerPipeline = new TrivialPipelineInspector();
-            storeSubscriptions = Mock<IStoreSubscriptions>();
-            bus = CreateTheBus();
-            bus.Start();
-        }
-
-        RebusBus CreateTheBus()
-        {
-            return new RebusBus(activateHandlers,
-                                sendMessages,
-                                receiveMessages,
-                                storeSubscriptions,
-                                storeSagaData,
-                                determineDestination, serializeMessages, inspectHandlerPipeline,
-                                new ErrorTracker("error"));
-        }
-
-        protected override void DoTearDown()
-        {
-            bus.Dispose();
-        }
-
         [Test]
         public void ThrowsWhenUsingBusThatHasNotBeenStarted()
         {

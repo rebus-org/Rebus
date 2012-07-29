@@ -219,6 +219,11 @@ element)"));
             }
             messageToSend.Headers = headers;
 
+            InternalSend(destination, messageToSend);
+        }
+
+        internal void InternalSend(string destination, Message messageToSend)
+        {
             log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), destination);
             var transportMessage = serializeMessages.Serialize(messageToSend);
 

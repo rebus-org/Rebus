@@ -37,6 +37,11 @@ namespace Rebus
         /// </summary>
         object CurrentMessage { get; }
 
+        /// <summary>
+        /// Contains the headers of the transport message currently being handled.
+        /// </summary>
+        IDictionary<string, string> Headers { get; }
+
 #if DEBUG
         string StackTrace { get; set; }
 #endif

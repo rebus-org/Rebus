@@ -272,9 +272,13 @@
     <Compile Include="Transports\Rabbit\TestRabbitMqMessageQueue.cs" />
     <Compile Include="Bugs\DispatcherDeletesDataThatHasNotYetBeenPersisted.cs" />
     <Compile Include="Bugs\SagaPersisterShouldNotIndexSamePropertyTwice.cs" />
+    <Compile Include="Unit\RebusBusUnitTestBase.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestHeaderContext.cs" />
     <Compile Include="Unit\TestErrorTracker.cs" />
+    <Compile Include="Unit\TestMessageForwarding.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Unit\TestRebusBus.cs" />
     <Compile Include="Unit\TestSimpleHandlerActivator.cs" />
     <Compile Include="Unit\TestWorker_ErrorHandling.cs" />

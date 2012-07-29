@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Rebus.Extensions;
+using Rebus.Messages;
 
 namespace Rebus.Bus
 {
@@ -23,7 +26,18 @@ namespace Rebus.Bus
 
         public void ForwardCurrentMessage(string destinationEndpoint)
         {
+            var messageContext = MessageContext.GetCurrent();
             
+            var currentMessage = messageContext.CurrentMessage;
+            var headers = messageContext.Headers.Clone();
+
+            var message = new Message
+                {
+                    Headers = headers,
+                    Messages = new[] {currentMessage}
+                };
+
+            rebusBus.InternalSend(destinationEndpoint, message);
         }
     }
 }

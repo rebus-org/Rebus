@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rebus.Shared;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Persistence.Sagas
@@ -13,7 +14,12 @@ namespace Rebus.Tests.Persistence.Sagas
         protected override void DoSetUp()
         {
             factory = Activator.CreateInstance<TFactory>();
-            messageContext = MessageContext.Enter("none", "just_some_message_id");
+            var headers = new Dictionary<string, string>
+                {
+                    {Headers.ReturnAddress, "none"},
+                    {Headers.MessageId, "just_some_message_id"},
+                };
+            messageContext = MessageContext.Enter(headers);
             Persister = factory.CreatePersister();
         }
 
