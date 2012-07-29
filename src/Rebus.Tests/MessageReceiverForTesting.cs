@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Transactions;
 using Rebus.Messages;
+using Rebus.Extensions;
 
 namespace Rebus.Tests
 {
@@ -28,6 +29,7 @@ namespace Rebus.Tests
                                                    Id = NewMessageId(),
                                                    Body = transportMessageToSend.Body,
                                                    Label = transportMessageToSend.Label,
+                                                   Headers = transportMessageToSend.Headers.Clone(),
                                                };
 
             messageQueue.Enqueue(receivedTransportMessage);
