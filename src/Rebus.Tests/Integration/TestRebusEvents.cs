@@ -61,7 +61,7 @@ namespace Rebus.Tests.Integration
 
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
             receiver.Events.BeforeTransportMessage += (b, m) => events.Add("Before message");
-            receiver.Events.AfterTransportMessage += (b, e, m) => events.Add("After message: " + e);
+            receiver.Events.AfterTransportMessage += (b, e, m) => events.Add(string.Format("After message: {0} - has context: {1}", e, MessageContext.HasCurrent));
             receiver.Events.PoisonMessage += (b, m) => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
@@ -80,7 +80,7 @@ namespace Rebus.Tests.Integration
 
             events[0].ShouldBe("Before message");
             events[1].ShouldBe("Handling message: test");
-            events[2].ShouldBe("After message: ");
+            events[2].ShouldBe("After message:  - has context: True");
 
             events[eventsPerOrdinaryMessage].ShouldBe("Before message");
             events[6].ShouldBe("Before message");
@@ -107,7 +107,7 @@ namespace Rebus.Tests.Integration
 
             events[18].ShouldBe("Before message");
             events[19].ShouldBe("Poison!");
-            events[20].ShouldBe("After message: ");
+            events[20].ShouldBe("After message:  - has context: False");
         }
     }
 }

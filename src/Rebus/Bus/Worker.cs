@@ -32,13 +32,13 @@ namespace Rebus.Bus
         readonly ISerializeMessages serializeMessages;
 
         internal event Action<ReceivedTransportMessage> BeforeMessage = delegate { };
-        
+
         internal event Action<Exception, ReceivedTransportMessage> AfterMessage = delegate { };
-        
+
         internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
 
         internal event Action<object> MessageReceived = delegate { };
-        
+
         volatile bool shouldExit;
         volatile bool shouldWork;
 
@@ -166,6 +166,8 @@ namespace Rebus.Bus
                 var id = transportMessage.Id;
                 var label = transportMessage.Label;
 
+                MessageContext context = null;
+
                 if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
                 {
                     log.Error("Handling message {0} has failed the maximum number of times", id);
@@ -179,26 +181,26 @@ namespace Rebus.Bus
                     {
                         var message = serializeMessages.Deserialize(transportMessage);
 
-                        using (var context = MessageContext.Enter(message.Headers))
+                        // successfully deserialized the transport message, let's enter a message context
+                        context = MessageContext.Enter(message.Headers);
+
+                        foreach (var logicalMessage in message.Messages)
                         {
-                            foreach (var logicalMessage in message.Messages)
+                            context.SetLogicalMessage(logicalMessage);
+
+                            try
                             {
-                                context.SetLogicalMessage(logicalMessage);
+                                MessageReceived(logicalMessage);
 
-                                try
-                                {
-                                    MessageReceived(logicalMessage);
+                                var typeToDispatch = logicalMessage.GetType();
 
-                                    var typeToDispatch = logicalMessage.GetType();
+                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                                    log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
-
-                                    GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
-                                }
-                                finally
-                                {
-                                    context.ClearLogicalMessage();
-                                }
+                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
+                            }
+                            finally
+                            {
+                                context.ClearLogicalMessage();
                             }
                         }
                     }
@@ -207,6 +209,7 @@ namespace Rebus.Bus
                         log.Debug("Handling message {0} ({1}) has failed", label, id);
                         errorTracker.TrackDeliveryFail(id, exception);
                         AfterMessage(exception, transportMessage);
+                        if (context != null) context.Dispose(); //< dispose it if we entered
                         throw;
                     }
                 }
@@ -214,6 +217,7 @@ namespace Rebus.Bus
                 transactionScope.Complete();
                 errorTracker.StopTracking(id);
                 AfterMessage(null, transportMessage);
+                if (context != null) context.Dispose(); //< dispose it if we entered
             }
         }
 
