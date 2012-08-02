@@ -215,9 +215,9 @@ namespace Rebus.Bus
                 }
 
                 transactionScope.Complete();
-                errorTracker.StopTracking(id);
                 AfterMessage(null, transportMessage);
                 if (context != null) context.Dispose(); //< dispose it if we entered
+                errorTracker.StopTracking(id);
             }
         }
 
