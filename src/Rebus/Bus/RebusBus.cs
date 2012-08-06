@@ -339,32 +339,13 @@ element)"));
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
                 worker.SystemException += LogSystemException;
+                worker.BeforeTransportMessage += RaiseBeforeTransportMessage;
+                worker.AfterTransportMessage += RaiseAfterTransportMessage;
+                worker.PoisonMessage += RaisePosionMessage;
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
-                worker.PoisonMessage += RaisePosionMessage;
-                worker.MessageReceived += RaiseMessageReceived;
                 worker.Start();
             }
-        }
-
-        void RaiseMessageReceived(object message)
-        {
-            events.RaiseMessageReceived(this, message);
-        }
-
-        void RaiseBeforeMessage(ReceivedTransportMessage transportMessage)
-        {
-            events.RaiseBeforeTransportMessage(this, transportMessage);
-        }
-
-        void RaiseAfterMessage(Exception exception, ReceivedTransportMessage transportMessage)
-        {
-            events.RaiseAfterTransportMessage(this, exception, transportMessage);
-        }
-
-        void RaisePosionMessage(ReceivedTransportMessage transportMessage)
-        {
-            events.RaisePoisonMessage(this, transportMessage);
         }
 
         void RemoveWorker()
@@ -385,13 +366,39 @@ element)"));
                     workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
                     workerToRemove.UserException -= LogUserException;
                     workerToRemove.SystemException -= LogSystemException;
+                    workerToRemove.BeforeTransportMessage -= RaiseBeforeTransportMessage;
+                    workerToRemove.AfterTransportMessage -= RaiseAfterTransportMessage;
+                    workerToRemove.PoisonMessage -= RaisePosionMessage;
                     workerToRemove.BeforeMessage -= RaiseBeforeMessage;
                     workerToRemove.AfterMessage -= RaiseAfterMessage;
-                    workerToRemove.PoisonMessage -= RaisePosionMessage;
-                    workerToRemove.MessageReceived -= RaiseMessageReceived;
                     workerToRemove.Dispose();
                 }
             }
+        }
+
+        void RaiseBeforeMessage(object message)
+        {
+            events.RaiseBeforeMessage(this, message);
+        }
+
+        void RaiseAfterMessage(Exception exception, object message)
+        {
+            events.RaiseAfterMessage(this, exception, message);
+        }
+
+        void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)
+        {
+            events.RaiseBeforeTransportMessage(this, transportMessage);
+        }
+
+        void RaiseAfterTransportMessage(Exception exception, ReceivedTransportMessage transportMessage)
+        {
+            events.RaiseAfterTransportMessage(this, exception, transportMessage);
+        }
+
+        void RaisePosionMessage(ReceivedTransportMessage transportMessage)
+        {
+            events.RaisePoisonMessage(this, transportMessage);
         }
 
         void LogSystemException(Worker worker, Exception exception)

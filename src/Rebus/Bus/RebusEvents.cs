@@ -14,7 +14,14 @@ namespace Rebus.Bus
         /// if deserialization completed, and the transport message does in fact contain one or more
         /// logical messages).
         /// </summary>
-        public event MessageReceivedEventHandler MessageReceived = delegate { };
+        public event BeforeMessageEventHandler BeforeMessage = delegate { };
+
+        /// <summary>
+        /// Event that will be raised for each received logical message (i.e. it will only be called
+        /// if deserialization completed, and the transport message does in fact contain one or more
+        /// logical messages).
+        /// </summary>
+        public event AfterMessageEventHandler AfterMessage = delegate { };
 
         /// <summary>
         /// Event that will be raised immediately after receiving a transport 
@@ -40,9 +47,14 @@ namespace Rebus.Bus
             MessageSent(advancedBus, destination, message);
         }
 
-        internal void RaiseMessageReceived(IAdvancedBus advancedBus, object message)
+        internal void RaiseBeforeMessage(IAdvancedBus advancedBus, object message)
         {
-            MessageReceived(advancedBus, message);
+            BeforeMessage(advancedBus, message);
+        }
+
+        internal void RaiseAfterMessage(IAdvancedBus bus, Exception exception, object message)
+        {
+            AfterMessage(bus, exception, message);
         }
 
         internal void RaiseBeforeTransportMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage)

@@ -31,13 +31,15 @@ namespace Rebus.Bus
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
 
-        internal event Action<ReceivedTransportMessage> BeforeMessage = delegate { };
+        internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
-        internal event Action<Exception, ReceivedTransportMessage> AfterMessage = delegate { };
+        internal event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
 
         internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
 
-        internal event Action<object> MessageReceived = delegate { };
+        internal event Action<object> BeforeMessage = delegate { };
+
+        internal event Action<Exception, object> AfterMessage = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -96,6 +98,8 @@ namespace Rebus.Bus
             log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;
+
+            workerThread.Join();
         }
 
         public void Dispose()
@@ -161,8 +165,6 @@ namespace Rebus.Bus
                     return;
                 }
 
-                BeforeMessage(transportMessage);
-
                 var id = transportMessage.Id;
                 var label = transportMessage.Label;
 
@@ -173,12 +175,23 @@ namespace Rebus.Bus
                     log.Error("Handling message {0} has failed the maximum number of times", id);
                     MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
                     errorTracker.StopTracking(id);
-                    PoisonMessage(transportMessage);
+
+                    try
+                    {
+                        PoisonMessage(transportMessage);
+                    }
+                    catch (Exception exceptionWhileRaisingEvent)
+                    {
+                        log.Error("An exception occurred while raising the PoisonMessage event: {0}",
+                                  exceptionWhileRaisingEvent);
+                    }
                 }
                 else
                 {
                     try
                     {
+                        BeforeTransportMessage(transportMessage);
+
                         var message = serializeMessages.Deserialize(transportMessage);
 
                         // successfully deserialized the transport message, let's enter a message context
@@ -190,32 +203,56 @@ namespace Rebus.Bus
 
                             try
                             {
-                                MessageReceived(logicalMessage);
+                                BeforeMessage(logicalMessage);
 
                                 var typeToDispatch = logicalMessage.GetType();
 
                                 log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
                                 GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
+
+                                AfterMessage(null, logicalMessage);
+                            }
+                            catch (Exception exception)
+                            {
+                                try
+                                {
+                                    AfterMessage(exception, logicalMessage);
+                                }
+                                catch (Exception exceptionWhileRaisingEvent)
+                                {
+                                    log.Error("An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                        exception, exceptionWhileRaisingEvent);
+                                }
+                                throw;
                             }
                             finally
                             {
                                 context.ClearLogicalMessage();
                             }
                         }
+
+                        AfterTransportMessage(null, transportMessage);
                     }
                     catch (Exception exception)
                     {
                         log.Debug("Handling message {0} ({1}) has failed", label, id);
+                        try
+                        {
+                            AfterTransportMessage(exception, transportMessage);
+                        }
+                        catch (Exception exceptionWhileRaisingEvent)
+                        {
+                            log.Error("An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
+                                exception, exceptionWhileRaisingEvent);
+                        }
                         errorTracker.TrackDeliveryFail(id, exception);
-                        AfterMessage(exception, transportMessage);
                         if (context != null) context.Dispose(); //< dispose it if we entered
                         throw;
                     }
                 }
 
                 transactionScope.Complete();
-                AfterMessage(null, transportMessage);
                 if (context != null) context.Dispose(); //< dispose it if we entered
                 errorTracker.StopTracking(id);
             }

@@ -4,6 +4,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Shared;
 using Shouldly;
+using System.Linq;
 
 namespace Rebus.Tests.Integration
 {
@@ -23,7 +24,7 @@ namespace Rebus.Tests.Integration
             var receiverEvents = new List<string>();
             const string receiverInputQueueName = "test.events.receiver";
             var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting());
-            receiver.Events.MessageReceived += (b, m) => receiverEvents.Add("received: " + m);
+            receiver.Events.BeforeMessage += (b, m) => receiverEvents.Add("received: " + m);
             receiver.Start();
 
             var sender = CreateBus("test.events.sender", new HandlerActivatorForTesting());
@@ -68,11 +69,25 @@ namespace Rebus.Tests.Integration
             sender.Routing.Send(receiverInputQueueName, "test");
             sender.Routing.Send(receiverInputQueueName, "throw");
 
-            Thread.Sleep(500);
+            Thread.Sleep(1.Seconds());
 
-            events.ForEach(Console.WriteLine);
+            receiver.SetNumberOfWorkers(0);
+
+            Thread.Sleep(1.Seconds());
+
+            Console.WriteLine(@"------------------------------------------------
+Events:
+
+{0}
+
+------------------------------------------------", string.Join(Environment.NewLine, events.Select(e =>
+                {
+                    var str = e.Replace(Environment.NewLine, "////");
+                    return str.Length > 80 ? str.Substring(0, 80) + "(...)" : str;
+                })));
+
             var eventsPerOrdinaryMessage = 3;
-            var eventsToMovePoisonMessage = 3;
+            var eventsToMovePoisonMessage = 1;
 
             events.Count.ShouldBe(eventsPerOrdinaryMessage
                                   + 5 * eventsPerOrdinaryMessage
@@ -82,32 +97,32 @@ namespace Rebus.Tests.Integration
             events[1].ShouldBe("Handling message: test");
             events[2].ShouldBe("After message:  - has context: True");
 
-            events[eventsPerOrdinaryMessage].ShouldBe("Before message");
-            events[6].ShouldBe("Before message");
-            events[9].ShouldBe("Before message");
-            events[12].ShouldBe("Before message");
-            events[15].ShouldBe("Before message");
-
+            events[3].ShouldBe("Before message");
             events[4].ShouldBe("Handling message: throw");
-            events[7].ShouldBe("Handling message: throw");
-            events[10].ShouldBe("Handling message: throw");
-            events[13].ShouldBe("Handling message: throw");
-            events[16].ShouldBe("Handling message: throw");
-
             events[5].ShouldStartWith("After message: ");
             events[5].ShouldContain("System.ApplicationException: w00t!");
+            
+            events[6].ShouldBe("Before message");
+            events[7].ShouldBe("Handling message: throw");
             events[8].ShouldStartWith("After message: ");
             events[8].ShouldContain("System.ApplicationException: w00t!");
+            
+            events[9].ShouldBe("Before message");
+            events[10].ShouldBe("Handling message: throw");
             events[11].ShouldStartWith("After message: ");
             events[11].ShouldContain("System.ApplicationException: w00t!");
+            
+            events[12].ShouldBe("Before message");
+            events[13].ShouldBe("Handling message: throw");
             events[14].ShouldStartWith("After message: ");
             events[14].ShouldContain("System.ApplicationException: w00t!");
+            
+            events[15].ShouldBe("Before message");
+            events[16].ShouldBe("Handling message: throw");
             events[17].ShouldStartWith("After message: ");
             events[17].ShouldContain("System.ApplicationException: w00t!");
 
-            events[18].ShouldBe("Before message");
-            events[19].ShouldBe("Poison!");
-            events[20].ShouldBe("After message:  - has context: False");
+            events[18].ShouldBe("Poison!");
         }
     }
 }

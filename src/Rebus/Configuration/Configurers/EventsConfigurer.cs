@@ -5,7 +5,8 @@ namespace Rebus.Configuration.Configurers
     public class EventsConfigurer : IRebusEvents
     {
         public event MessageSentEventHandler MessageSent;
-        public event MessageReceivedEventHandler MessageReceived;
+        public event BeforeMessageEventHandler BeforeMessage;
+        public event AfterMessageEventHandler AfterMessage;
         public event BeforeTransportMessageEventHandler BeforeTransportMessage;
         public event AfterTransportMessageEventHandler AfterTransportMessage;
         public event PoisonMessageEventHandler PoisonMessage;
@@ -22,11 +23,19 @@ namespace Rebus.Configuration.Configurers
                 }
             }
 
-            if (MessageReceived != null)
+            if (BeforeMessage != null)
             {
-                foreach (var listener in MessageReceived.GetInvocationList().Cast<MessageReceivedEventHandler>())
+                foreach (var listener in BeforeMessage.GetInvocationList().Cast<BeforeMessageEventHandler>())
                 {
-                    rebusEvents.MessageReceived += listener;
+                    rebusEvents.BeforeMessage += listener;
+                }
+            }
+
+            if (AfterMessage != null)
+            {
+                foreach (var listener in AfterMessage.GetInvocationList().Cast<AfterMessageEventHandler>())
+                {
+                    rebusEvents.AfterMessage += listener;
                 }
             }
 

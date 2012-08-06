@@ -10,7 +10,12 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
     /// </summary>
-    public delegate void MessageReceivedEventHandler(IAdvancedBus advancedBus, object message);
+    public delegate void BeforeMessageEventHandler(IAdvancedBus advancedBus, object message);
+    
+    /// <summary>
+    /// Delegate type that can listen to whenever the bus received a logical message.
+    /// </summary>
+    public delegate void AfterMessageEventHandler(IAdvancedBus advancedBus, Exception exception, object message);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus has received a transport message, but it has not yet been deserialized.
@@ -62,6 +67,13 @@ namespace Rebus
         /// if deserialization completed, and the transport message does in fact contain one or more
         /// logical messages).
         /// </summary>
-        event MessageReceivedEventHandler MessageReceived;
+        event BeforeMessageEventHandler BeforeMessage;
+
+        /// <summary>
+        /// Event that will be raised for each received logical message (i.e. it will only be called
+        /// if deserialization completed, and the transport message does in fact contain one or more
+        /// logical messages).
+        /// </summary>
+        event AfterMessageEventHandler AfterMessage;
     }
 }

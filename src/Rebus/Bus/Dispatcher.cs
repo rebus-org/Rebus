@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 

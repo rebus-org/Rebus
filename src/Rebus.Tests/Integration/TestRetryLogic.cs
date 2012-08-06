@@ -2,9 +2,7 @@ using System;
 using System.Messaging;
 using System.Text;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
@@ -15,9 +13,13 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestRetryLogic : RebusBusMsmqIntegrationTestBase
     {
+        const string SenderQueueName = "test.tx.sender";
+        const string ReceiverQueueName = "test.tx.receiver";
+        const string ReceiverErrorQueueName = ReceiverQueueName + ".error";
+
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
             base.DoSetUp();
         }
 
@@ -50,18 +52,13 @@ namespace Rebus.Tests.Integration
         public void CanMoveMessageToErrorQueue()
         {
             // arrange
-
             var retriedTooManyTimes = false;
-            var senderQueueName = "test.tx.sender";
-            var senderBus = CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start(1);
-
+            var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
             var receivedMessageCount = 0;
-            var receiverQueueName = "test.tx.receiver";
-            var receiverErrorQueueName = receiverQueueName + ".error";
 
-            var errorQueue = GetMessageQueue(receiverErrorQueueName);
+            var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
 
-            CreateBus(receiverQueueName, new HandlerActivatorForTesting()
+            CreateBus(ReceiverQueueName, new HandlerActivatorForTesting()
                                              .Handle<string>(str =>
                                                                  {
                                                                      Console.WriteLine("Delivery!");
@@ -80,10 +77,10 @@ namespace Rebus.Tests.Integration
                                                                  }),
                       new InMemorySubscriptionStorage(),
                       new SagaDataPersisterForTesting(),
-                      receiverErrorQueueName)
+                      ReceiverErrorQueueName)
                 .Start(1);
 
-            senderBus.Routing.Send(receiverQueueName, "HELLO!");
+            senderBus.Routing.Send(ReceiverQueueName, "HELLO!");
 
             var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(3)).Body;
             var errorMessage = serializer.Deserialize(transportMessage);
@@ -91,8 +88,81 @@ namespace Rebus.Tests.Integration
             retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
 
-            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(receiverQueueName + "@" + Environment.MachineName);
+            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(ReceiverQueueName + "@" + Environment.MachineName);
             errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: oh noes!");
+        }
+
+        [TestCase("beforeTransport")]
+        [TestCase("afterTransport")]
+        [TestCase("beforeLogical")]
+        [TestCase("afterLogical")]
+        [TestCase("poison")]
+        public void CanMoveMessageToErrorQueueForExceptionsInHooks(string whenToThrow)
+        {
+            // arrange
+            var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
+            var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
+
+            var activator = new HandlerActivatorForTesting();
+            var bus = CreateBus(ReceiverQueueName, activator,
+                                new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
+                                ReceiverErrorQueueName);
+
+            switch (whenToThrow)
+            {
+                case "beforeTransport":
+                    bus.Events.BeforeTransportMessage += (_, __) =>
+                        {
+                            throw new Exception("HELLO!");
+                        };
+                    break;
+
+                case "afterTransport":
+                    bus.Events.AfterTransportMessage += (_, __, ___) =>
+                        {
+                            throw new Exception("HELLO!");
+                        };
+                    break;
+
+                case "beforeLogical":
+                    bus.Events.BeforeMessage += (_, __) =>
+                        {
+                            throw new Exception("HELLO!");
+                        };
+                    break;
+
+                case "afterLogical":
+                    bus.Events.AfterMessage += (_, __, ___) =>
+                        {
+                            throw new Exception("HELLO!");
+                        };
+                    break;
+
+                case "poison":
+                    // make sure the poison event gets raised
+                    activator.Handle<string>(str =>
+                        {
+                            throw new Exception("HELLO!");
+                        });
+
+                    bus.Events.PoisonMessage += (_, __) =>
+                        {
+                            throw new Exception("HELLO!");
+                        };
+                    break;
+            }
+
+            bus.Start(1);
+
+            senderBus.Routing.Send(ReceiverQueueName, "HELLO!");
+
+            var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(3)).Body;
+            var errorMessage = serializer.Deserialize(transportMessage);
+
+            errorMessage.Messages[0].ShouldBe("HELLO!");
+
+            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(ReceiverQueueName + "@" + Environment.MachineName);
+            errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: HELLO!");
         }
 
         MessageQueue GetMessageQueue(string queueName)

@@ -17,13 +17,14 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbSagaPersister : IStoreSagaData
     {
-        static readonly SagaDataElementNameConvention elementNameConventions;
+        static readonly SagaDataElementNameConvention ElementNameConventions;
         
         static MongoDbSagaPersister()
         {
-            elementNameConventions = new SagaDataElementNameConvention();
+            ElementNameConventions = new SagaDataElementNameConvention();
+
             var conventionProfile = new ConventionProfile()
-                .SetElementNameConvention(elementNameConventions);
+                .SetElementNameConvention(ElementNameConventions);
 
             BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
@@ -259,7 +260,7 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
             if (propertyInfo == null)
                 return sagaDataPropertyPath;
 
-            return elementNameConventions.GetElementName(propertyInfo);
+            return ElementNameConventions.GetElementName(propertyInfo);
         }
 
         void EnsureResultIsGood(SafeModeResult safeModeResult, string message, int expectedNumberOfAffectedDocuments, params object[] objs)
