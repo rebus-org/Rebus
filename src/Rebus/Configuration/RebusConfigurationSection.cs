@@ -27,7 +27,7 @@ namespace Rebus.Configuration
             set { this[MappingsCollectionPropertyName] = value; }
         }
 
-        [ConfigurationProperty(InputQueueAttributeName, IsRequired = true)]
+        [ConfigurationProperty(InputQueueAttributeName)]
         public string InputQueue
         {
             get { return (string)this[InputQueueAttributeName]; }
@@ -41,7 +41,7 @@ namespace Rebus.Configuration
             set { this[AddressAttributeName] = value; }
         }
 
-        [ConfigurationProperty(ErrorQueueAttributeName, IsRequired = true)]
+        [ConfigurationProperty(ErrorQueueAttributeName)]
         public string ErrorQueue
         {
             get { return (string)this[ErrorQueueAttributeName]; }
