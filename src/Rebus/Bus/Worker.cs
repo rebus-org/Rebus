@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Shared;
 
 namespace Rebus.Bus
 {
@@ -98,12 +97,6 @@ namespace Rebus.Bus
             log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;
-
-            if (!workerThread.Join(TimeSpan.FromSeconds(30)))
-            {
-                log.Info("Worker thread {0} did not exit within 30 seconds - aborting!", WorkerThreadName);
-                workerThread.Abort();
-            }
         }
 
         public void Dispose()
@@ -114,6 +107,12 @@ namespace Rebus.Bus
             {
                 log.Info("Worker thread {0} is currently working", WorkerThreadName);
                 Stop();
+            }
+
+            if (!workerThread.Join(TimeSpan.FromSeconds(30)))
+            {
+                log.Info("Worker thread {0} did not exit within 30 seconds - aborting!", WorkerThreadName);
+                workerThread.Abort();
             }
         }
 

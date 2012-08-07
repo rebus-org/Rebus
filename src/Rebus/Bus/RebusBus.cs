@@ -374,7 +374,6 @@ element)"));
             {
                 if (workers.Count == 0) return;
                 var workerToRemove = workers.Last();
-
                 workers.Remove(workerToRemove);
 
                 try
@@ -383,6 +382,15 @@ element)"));
                 }
                 finally
                 {
+                    try
+                    {
+                        workerToRemove.Dispose();
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, "An error occurred while disposing {0}", workerToRemove.WorkerThreadName);
+                    }
+
                     workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
                     workerToRemove.UserException -= LogUserException;
                     workerToRemove.SystemException -= LogSystemException;
@@ -391,7 +399,6 @@ element)"));
                     workerToRemove.PoisonMessage -= RaisePosionMessage;
                     workerToRemove.BeforeMessage -= RaiseBeforeMessage;
                     workerToRemove.AfterMessage -= RaiseAfterMessage;
-                    workerToRemove.Dispose();
                 }
             }
         }
