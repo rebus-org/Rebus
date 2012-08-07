@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\build.proj = ..\scripts\build.proj
@@ -241,6 +241,6 @@ Global
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35
+		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35
 	EndGlobalSection
 EndGlobal
