@@ -9,7 +9,6 @@ using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
-using Rebus.Shared;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Encrypted;
 using Rebus.Transports.Msmq;
@@ -243,7 +242,7 @@ namespace Rebus.Tests.Configuration
         /// <summary>
         /// Look ma! - an IoC container.... :)
         /// </summary>
-        class TestContainerAdapter : IContainerAdapter
+        public class TestContainerAdapter : IContainerAdapter
         {
             interface IResolver
             {
@@ -365,7 +364,7 @@ namespace Rebus.Tests.Configuration
             }
         }
 
-        class Registration
+        public class Registration
         {
             readonly object instance;
             readonly Type[] serviceTypes;

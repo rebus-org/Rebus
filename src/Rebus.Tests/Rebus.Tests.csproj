@@ -200,6 +200,7 @@
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
+    <Compile Include="Integration\TestOneWayClientMode.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
     <Compile Include="Integration\TestRebusEvents.cs" />
     <Compile Include="Integration\TestRebusOnRabbit.cs" />

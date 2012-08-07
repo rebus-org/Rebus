@@ -75,10 +75,16 @@ namespace Rebus.Tests
                                    storeSubscriptions, storeSagaData,
                                    this, serializer, pipelineInspector,
                                    new ErrorTracker(errorQueueName));
-            toDispose.Add(bus);
-            toDispose.Add(messageQueue);
+            
+            EnsureProperDisposal(bus);
+            EnsureProperDisposal(messageQueue);
 
             return bus;
+        }
+
+        protected void EnsureProperDisposal(IDisposable bus)
+        {
+            toDispose.Add(bus);
         }
 
         protected string PrivateQueueNamed(string queueName)

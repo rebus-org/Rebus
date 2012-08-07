@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -40,6 +41,7 @@ namespace Rebus.Bus
         static int rebusIdCounter;
         readonly int rebusId;
         bool started;
+        BusMode busMode;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -102,6 +104,8 @@ namespace Rebus.Bus
 
         public void SendLocal<TCommand>(TCommand message)
         {
+            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
+
             var destinationEndpoint = receiveMessages.InputQueue;
 
             InternalSend(destinationEndpoint, new List<object> { message });
@@ -134,6 +138,11 @@ namespace Rebus.Bus
 
         public void Reply<TResponse>(TResponse message)
         {
+            if (!MessageContext.HasCurrent)
+            {
+                throw new InvalidOperationException(string.Format("You seem to have called Reply outside of a message handler! You can only reply to messages within a message handler while handling a message, because that's the only place where there's a message context in place."));
+            }
+
             var messageContext = MessageContext.GetCurrent();
             var returnAddress = messageContext.ReturnAddress;
 
@@ -162,6 +171,8 @@ that can take action.",
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
+            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot Subscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+
             var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
 
             InternalSend(publisherInputQueue, new List<object> { message });
@@ -179,8 +190,15 @@ most likely a sign that something is wrong, i.e. you might be running you app
 initialization code more than once, etc."));
             }
 
+            if (receiveMessages.GetType().Name == "OneWayClientGag")
+            {
+                log.Warn("Bus will be started in the experiment one-way client mode - setting number of workers to 0 (original value was {0}...)", numberOfWorkers);
+                numberOfWorkers = 0;
+                busMode = BusMode.OneWayClientMode;
+            }
+
             log.Info("Initializing bus with {0} workers", numberOfWorkers);
-        
+
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
 
@@ -211,11 +229,14 @@ element)"));
 
             messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
 
-            var messageToSend = new Message{Messages = messages.ToArray(),};
+            var messageToSend = new Message { Messages = messages.ToArray(), };
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
-                headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                if (busMode != BusMode.OneWayClientMode)
+                {
+                    headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                }
             }
             messageToSend.Headers = headers;
 
@@ -257,6 +278,7 @@ element)"));
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
                 var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct();
+
                 if (returnAddresses.Count() > 1)
                 {
                     throw new InconsistentReturnAddressException("These return addresses were specified: {0}", string.Join(", ", returnAddresses));
@@ -311,9 +333,7 @@ element)"));
 
         public void Dispose()
         {
-            workers.ForEach(w => w.Stop());
-            workers.ForEach(w => w.Dispose());
-            workers.Clear();
+            SetNumberOfWorkers(0);
             headerContext.Dispose();
         }
 
@@ -417,7 +437,7 @@ element)"));
             {
                 throw new ArgumentOutOfRangeException("newNumberOfWorkers", string.Format("You can't have less than zero workers - attempted to set number of workers to {0}", newNumberOfWorkers));
             }
-            
+
             while (workers.Count < newNumberOfWorkers) AddWorker();
             while (workers.Count > newNumberOfWorkers) RemoveWorker();
         }
@@ -442,6 +462,13 @@ element)"));
         public void AttachHeader(object message, string key, string value)
         {
             headerContext.AttachHeader(message, key, value);
+        }
+
+        void EnsureBusModeIsNot(BusMode busModeToAvoid, string message, params object[] objs)
+        {
+            if (busMode != busModeToAvoid) return;
+
+            throw new InvalidOperationException(string.Format(message, objs));
         }
 
         internal class HeaderContext

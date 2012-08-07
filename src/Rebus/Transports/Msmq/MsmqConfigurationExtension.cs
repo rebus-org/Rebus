@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using System.Security.Cryptography;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -119,6 +120,48 @@ The iv and key have been generated with the biggest valid sizes, so they ought t
         public static void UseMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue)
         {
             DoIt(configurer, inputQueue, errorQueue);
+        }
+
+        public static void UseMsmqInOneWayClientMode(this TransportConfigurer configurer)
+        {
+            var msmqMessageQueue = MsmqMessageQueue.Sender();
+
+            configurer.UseSender(msmqMessageQueue);
+            var gag = new OneWayClientGag();
+            configurer.UseReceiver(gag);
+            configurer.UseErrorTracker(gag);
+        }
+
+        public class OneWayClientGag : IReceiveMessages, IErrorTracker
+        {
+            public ReceivedTransportMessage ReceiveMessage()
+            {
+                throw new NotImplementedException();
+            }
+
+            public string InputQueue { get; private set; }
+            public string InputQueueAddress { get; private set; }
+            public void StopTracking(string id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public bool MessageHasFailedMaximumNumberOfTimes(string id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string GetErrorText(string id)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void TrackDeliveryFail(string id, Exception exception)
+            {
+                throw new NotImplementedException();
+            }
+
+            public string ErrorQueueAddress { get; private set; }
         }
 
         /// <summary>
