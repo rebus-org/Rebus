@@ -19,13 +19,13 @@ DESTINATION EACH TIME YOU SEND OR SUBSCRIBE TO SOMETHING.
 
 To resolve this, please either configure an endpoint mapper, or resort only to the
 
-    bus.Send(destination, message)
+    advancedBus.Routing.Send(destination, message)
 
 and
 
-    bus.Subscribe<TMessage>(destination)
+    advancedBus.Routing.Subscribe<TMessage>(destination)
 
-overloads on the bus.
+overloads on the advanced bus.
 
 I encourage you, however, to configure endpoint mappings by putting all messages owned by each
 service in an assembly that serves this purpose only. Hence, endpoint mappings can be configured
