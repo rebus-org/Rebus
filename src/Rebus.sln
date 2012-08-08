@@ -3,6 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
 	ProjectSection(SolutionItems) = preProject
+		..\scripts\Rebus.NLog.nuspec = ..\scripts\Rebus.NLog.nuspec
 		..\scripts\build.proj = ..\scripts\build.proj
 		..\scripts\create_table_sagas.sql = ..\scripts\create_table_sagas.sql
 		..\scripts\create_table_subscriptions.sql = ..\scripts\create_table_subscriptions.sql
@@ -39,6 +40,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
 		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
+		..\scripts\Rebus.Ninject.nuspec = ..\scripts\Rebus.Ninject.nuspec
 		..\scripts\Rebus.RabbitMQ.nuspec = ..\scripts\Rebus.RabbitMQ.nuspec
 		..\scripts\Rebus.RavenDb.nuspec = ..\scripts\Rebus.RavenDb.nuspec
 		..\scripts\Rebus.StructureMap.nuspec = ..\scripts\Rebus.StructureMap.nuspec
@@ -66,6 +68,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "logging", "logging", "{48006958-82E0-46B0-81CB-0A6FC7BA1A75}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.HttpGateway", "Rebus.HttpGateway\Rebus.HttpGateway.csproj", "{3E817332-6161-46A1-8597-0E54BAD23DE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Ninject", "Rebus.Ninject\Rebus.Ninject.csproj", "{0630AC2A-75E1-4887-A266-E1C21D53EE69}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.NLog", "Rebus.NLog\Rebus.NLog.csproj", "{F439A82E-B375-4C38-877B-7ED7F49AC6C2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -217,6 +223,26 @@ Global
 		{3E817332-6161-46A1-8597-0E54BAD23DE0}.Release|Mixed Platforms.Build.0 = Release|x86
 		{3E817332-6161-46A1-8597-0E54BAD23DE0}.Release|x86.ActiveCfg = Release|x86
 		{3E817332-6161-46A1-8597-0E54BAD23DE0}.Release|x86.Build.0 = Release|x86
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2}.Release|x86.ActiveCfg = Release|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F57A06FA-F471-49C8-A92D-85D5A27055C4}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -239,6 +265,7 @@ Global
 		{2178D256-94D6-4443-B23B-53F723184441} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{5836C347-90FC-4628-B4A1-16926B6CA781} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
+		{F439A82E-B375-4C38-877B-7ED7F49AC6C2} = {48006958-82E0-46B0-81CB-0A6FC7BA1A75}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35
