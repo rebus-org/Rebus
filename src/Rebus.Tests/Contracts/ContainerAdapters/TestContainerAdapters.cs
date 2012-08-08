@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using Rebus.Logging;
+using Rebus.Ninject;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
 using System.Linq;
@@ -11,6 +12,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(StructureMapContainerAdapterFactory))]
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]
+    [TestFixture(typeof(NinjectContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
@@ -37,18 +39,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
 
             // assert
             first.ShouldBeSameAs(second);
-        }
-
-        interface IFirst
-        {
-        }
-
-        interface ISecond
-        {
-        }
-
-        class Implementor : IFirst, ISecond
-        {
         }
 
         [Test]
@@ -93,21 +83,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeDisposable.WasDisposed.ShouldBe(true);
         }
 
-        class SomeDisposable : IDisposable
-        {
-            public static bool WasDisposed = false;
-
-            public static void Reset()
-            {
-                WasDisposed = false;
-            }
-
-            public void Dispose()
-            {
-                WasDisposed = true;
-            }
-        }
-
         [Test]
         public void CanResolveAllLikeExpected()
         {
@@ -122,20 +97,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             handlerInstances.Count().ShouldBe(2);
             handlerInstances.ShouldContain(t => t.GetType() == typeof(FirstHandler));
             handlerInstances.ShouldContain(t => t.GetType() == typeof(SecondHandler));
-        }
-
-        public class FirstHandler : IHandleMessages<string>
-        {
-            public void Handle(string message)
-            {
-            }
-        }
-
-        public class SecondHandler : IHandleMessages<string>
-        {
-            public void Handle(string message)
-            {
-            }
         }
 
         [Test]
@@ -180,8 +141,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             resolvedInstance.ShouldBeSameAs(theInstance);
         }
 
-        public class SomeClass { }
-
         [Test]
         public void SupportsRegisteringInstanceThatImplementsMultipleServices()
         {
@@ -198,10 +157,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             service2.ShouldBeSameAs(theInstance);
         }
 
-        interface IService1{}
-        interface IService2{}
-        class TheInstance :IService1,IService2{}
-
+        
         [Test]
         public void SupportsCheckingWhetherServiceHasBeenRegistered_NoRegistration()
         {
@@ -228,17 +184,59 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             hasStringHandler.ShouldBe(true);
         }
 
-        public class StringHandler : IHandleMessages<string>
+    }
+
+    class SomeClass { }
+
+    class SomeDisposable : IDisposable
+    {
+        public static bool WasDisposed = false;
+
+        public static void Reset()
         {
-            public void Handle(string message)
-            {
-            }
+            WasDisposed = false;
+        }
+
+        public void Dispose()
+        {
+            WasDisposed = true;
         }
     }
 
-    public interface IContainerAdapterFactory
+    class FirstHandler : IHandleMessages<string>
     {
-        IContainerAdapter Create();
-        void DisposeInnerContainer();
+        public void Handle(string message)
+        {
+        }
+    }
+
+    public class SecondHandler : IHandleMessages<string>
+    {
+        public void Handle(string message)
+        {
+        }
+    }
+
+    interface IService1 { }
+    interface IService2 { }
+    class TheInstance : IService1, IService2 { }
+
+    class StringHandler : IHandleMessages<string>
+    {
+        public void Handle(string message)
+        {
+        }
+    }
+
+    interface IFirst
+    {
+    }
+
+    interface ISecond
+    {
+    }
+
+    class Implementor : IFirst, ISecond
+    {
     }
 }
