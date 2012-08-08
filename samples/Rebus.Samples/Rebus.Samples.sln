@@ -1,10 +1,14 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration sample", "integration sample", "{18381CD0-4A87-4D54-AEA1-4054DAA40D71}"
 	ProjectSection(SolutionItems) = preProject
 		integration sample readme.txt = integration sample readme.txt
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external web service", "external web service", "{007AF927-CE5D-4723-8C18-FABE1E1DB5E5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "print current time", "print current time", "{CA9A4993-76AA-4D17-9469-052256B403EA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSample.Client", "IntegrationSample.Client\IntegrationSample.Client.csproj", "{05ECDCA2-9D2A-43A6-8DAE-7A240C53346A}"
 EndProject
@@ -15,11 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSample.Integrati
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSample.IntegrationService.Messages", "IntegrationSample.IntegrationService.Messages\IntegrationSample.IntegrationService.Messages.csproj", "{C4613784-944B-47E3-8DAB-53AD9AD1E6BB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external web service", "external web service", "{007AF927-CE5D-4723-8C18-FABE1E1DB5E5}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IntegrationSample.ExternalWebService", "IntegrationSample.ExternalWebService\IntegrationSample.ExternalWebService.csproj", "{118F573E-3DB1-4949-9841-B7A5F42923C4}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "print current time", "print current time", "{CA9A4993-76AA-4D17-9469-052256B403EA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TimePrinter", "TimePrinter\TimePrinter.csproj", "{464E78AA-0EDF-4434-9726-9BBA7DB54657}"
 EndProject
@@ -88,10 +88,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{007AF927-CE5D-4723-8C18-FABE1E1DB5E5} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{05ECDCA2-9D2A-43A6-8DAE-7A240C53346A} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{F22823D6-D5BA-4875-9E7D-34E55ADB459B} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{C4613784-944B-47E3-8DAB-53AD9AD1E6BB} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
-		{007AF927-CE5D-4723-8C18-FABE1E1DB5E5} = {18381CD0-4A87-4D54-AEA1-4054DAA40D71}
 		{118F573E-3DB1-4949-9841-B7A5F42923C4} = {007AF927-CE5D-4723-8C18-FABE1E1DB5E5}
 		{464E78AA-0EDF-4434-9726-9BBA7DB54657} = {CA9A4993-76AA-4D17-9469-052256B403EA}
 	EndGlobalSection

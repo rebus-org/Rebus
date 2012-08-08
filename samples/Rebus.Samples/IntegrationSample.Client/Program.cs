@@ -7,7 +7,6 @@ using Rebus;
 using Rebus.Castle.Windsor;
 using Rebus.Transports.Msmq;
 using Rebus.Configuration;
-using Rebus.Configuration.Configurers;
 using Rebus.Logging;
 
 namespace IntegrationSample.Client
@@ -25,7 +24,6 @@ namespace IntegrationSample.Client
                 .Logging(l => l.None()) // disable logging to avoid polluting the console
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
                 .DetermineEndpoints(d => d.FromRebusConfigurationSection())
-                .Serialization(s => s.UseJsonSerializer())
                 .CreateBus().Start();
 
             Console.WriteLine("Press R to request a greeting and Q to quit...");
