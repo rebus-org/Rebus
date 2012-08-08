@@ -89,7 +89,9 @@
     <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
     <None Include="Service References\SomethingExternal\Service1.wsdl" />
     <None Include="Service References\SomethingExternal\Service1.xsd">
