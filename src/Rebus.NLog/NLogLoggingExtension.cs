@@ -5,7 +5,7 @@ namespace Rebus.NLog
 {
     public static class NLogLoggingExtension
     {
-        public static void Log4Net(this LoggingConfigurer configurer)
+        public static void NLog(this LoggingConfigurer configurer)
         {
             RebusLoggerFactory.Current = new NLogLoggerFactory();
         }
