@@ -49,6 +49,11 @@ namespace Rebus.Transports.Msmq
             message.Extension = HeaderEcoding.GetBytes(DictionarySerializer.Serialize(transportMessage.Headers));
             message.Label = transportMessage.Label ?? "???";
 
+            var expressDelivery = transportMessage.Headers.ContainsKey(Headers.Express);
+
+            message.UseDeadLetterQueue = !expressDelivery;
+            message.Recoverable = !expressDelivery;
+
             if (transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived))
             {
                 var timeToBeReceivedStr = transportMessage.Headers[Headers.TimeToBeReceived];

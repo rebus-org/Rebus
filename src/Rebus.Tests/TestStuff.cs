@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Messaging;
+using System.Text;
 using System.Threading;
 using NUnit.Framework;
 using RabbitMQ.Client;
 using Rebus.Tests.Transports.Rabbit;
+using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
 
@@ -36,6 +38,19 @@ namespace Rebus.Tests
 
                 // how to do this?
             }
+        }
+
+        [Test, Ignore]
+        public void SendMsmqMessageToUnknownRemoteQueue()
+        {
+            var sender = MsmqMessageQueue.Sender();
+            
+            sender.Send("nonexistingQueue@DACAPPL03", new TransportMessageToSend
+                {
+                    Label = "unknown host",
+                    Headers = new Dictionary<string, string>(),
+                    Body = Encoding.UTF8.GetBytes("muahahahahahahaha"),
+                });
         }
 
         [Test]
