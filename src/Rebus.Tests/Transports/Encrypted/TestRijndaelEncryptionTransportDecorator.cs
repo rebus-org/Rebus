@@ -10,7 +10,7 @@ using Rebus.Extensions;
 
 namespace Rebus.Tests.Transports.Encrypted
 {
-    [TestFixture, Ignore]
+    [TestFixture]
     public class TestRijndaelEncryptionTransportDecorator : FixtureBase
     {
         const string InitializationVectorBase64 = "OLYKdaDyETlu7NbDMC45dA==";

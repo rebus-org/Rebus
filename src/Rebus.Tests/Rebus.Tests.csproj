@@ -257,6 +257,7 @@
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Encrypted\TestRijndaelHelper.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\TestMsmqMessageQueue.cs" />
