@@ -115,10 +115,10 @@ namespace Rebus.Tests.HttpGateway
             Assert.That(resetEvent.WaitOne(timeout), Is.True, "Request was not received in order system within timeout of {0}", timeout);
         }
 
-        [TestCase(10)]
+        [TestCase(10, Ignore = true)]
         [TestCase(12, Ignore = true)]
         [TestCase(13, Ignore = true)]
-        [TestCase(1000)]
+        [TestCase(1000, Ignore = true)]
         [TestCase(1002, Ignore = true)]
         [TestCase(1003, Ignore = true)]
         public void WhenInboundHasProblemsOutboundJustKeepsOnTrucking(int numberOfMessages)
