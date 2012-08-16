@@ -13,8 +13,7 @@ namespace Rebus.Tests.Transports.Encrypted
     [TestFixture]
     public class TestRijndaelEncryptionTransportDecorator : FixtureBase
     {
-        const string InitializationVectorBase64 = "OLYKdaDyETlu7NbDMC45dA==";
-        const string KeyBase64 = "oA/ZUnFsR9w1qEatOByBSXc4woCuTxmR99tAuQ56Qko=";
+        const string KeyBase64 = "0Y67WrbVDnZurwljr9nI7RuWMiNtctEU3CMZ71NcKuA=";
 
         RijndaelEncryptionTransportDecorator transport;
         Sender sender;
@@ -24,17 +23,18 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             sender = new Sender();
             receiver = new Receiver();
-            transport = new RijndaelEncryptionTransportDecorator(sender, receiver, InitializationVectorBase64, KeyBase64);
+            transport = new RijndaelEncryptionTransportDecorator(sender, receiver, KeyBase64);
+
+            Console.WriteLine(RijndaelHelper.GenerateNewKey());
         }
 
         [Test]
-        public void CanGenerateValidIvAndKey()
+        public void CanGenerateValidKey()
         {
-            var iv = RijndaelEncryptionTransportDecorator.GenerateIvBase64();
             var key = RijndaelEncryptionTransportDecorator.GenerateKeyBase64();
 
-            var localInstance = new RijndaelEncryptionTransportDecorator(sender, receiver, iv, key);
-            
+            var localInstance = new RijndaelEncryptionTransportDecorator(sender, receiver, key);
+
             var toSend = new TransportMessageToSend
             {
                 Label = Guid.NewGuid().ToString(),
@@ -62,7 +62,6 @@ namespace Rebus.Tests.Transports.Encrypted
 
             receivedMessage.Label.ShouldBe(toSend.Label);
             var expectedHeaders = toSend.Headers.Clone();
-            expectedHeaders[Headers.Encrypted] = null;
             receivedMessage.Headers.ShouldBe(expectedHeaders);
             receivedMessage.Body.ShouldBe(toSend.Body);
         }
@@ -110,11 +109,15 @@ namespace Rebus.Tests.Transports.Encrypted
 
             // assert
             var sentMessage = sender.SentMessage;
-            sentMessage.Headers.Count.ShouldBe(2);
+            sentMessage.Headers.Count.ShouldBe(3);
             sentMessage.Headers["test"].ShouldBe("blah!");
             sentMessage.Label.ShouldBe("label");
             sentMessage.Body.ShouldNotBe(Encoding.UTF7.GetBytes("Hello world!"));
 
+            sentMessage.Headers.ShouldContainKey(Headers.Encrypted);
+            sentMessage.Headers.ShouldContainKey(Headers.EncryptionSalt);
+
+            Console.WriteLine("iv: " + sentMessage.Headers[Headers.EncryptionSalt]);
             Console.WriteLine(string.Join(", ", sentMessage.Body.Select(b => b.ToString())));
         }
 
@@ -123,11 +126,10 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             // arrange
             var encryptedHelloWorldBytes = new byte[]
-                                               {
-                                                   111, 147, 150, 228, 114, 25, 245, 28, 153, 90, 22, 143, 137, 96, 109,
-                                                   236, 57, 161, 207, 128, 130, 72, 246, 159, 144, 29, 130, 179, 87, 32,
-                                                   189, 225
-                                               };
+                {
+                    52, 37, 104, 93, 201, 121, 244, 71, 165, 73, 194, 144, 35, 150, 157, 139, 16, 142, 170, 196, 248,
+                    208, 185, 230, 222, 115, 52, 141, 247, 33, 253, 200
+                };
 
             receiver.SetUpReceive(new ReceivedTransportMessage
                                       {
@@ -135,7 +137,8 @@ namespace Rebus.Tests.Transports.Encrypted
                                           Headers = new Dictionary<string, string>
                                                         {
                                                             { "test", "blah!" },
-                                                            { Headers.Encrypted, null}
+                                                            { Headers.Encrypted, null},
+                                                            {Headers.EncryptionSalt, "IvMyFtbRGH1u8SVpT3iHCg=="}
                                                         },
                                           Label = "label",
                                           Body = encryptedHelloWorldBytes,
@@ -147,7 +150,7 @@ namespace Rebus.Tests.Transports.Encrypted
             // assert
             receivedTransportMessage.Id.ShouldBe("id");
             receivedTransportMessage.Label.ShouldBe("label");
-            receivedTransportMessage.Headers.Count.ShouldBe(2);
+            receivedTransportMessage.Headers.Count.ShouldBe(1);
             receivedTransportMessage.Headers["test"].ShouldBe("blah!");
             Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("Hello world!");
         }
@@ -182,7 +185,6 @@ namespace Rebus.Tests.Transports.Encrypted
 
             receivedMessage.Label.ShouldBe(toSend.Label);
             var expectedHeaders = toSend.Headers.Clone();
-            expectedHeaders[Headers.Encrypted] = null;
             receivedMessage.Headers.ShouldBe(expectedHeaders);
             receivedMessage.Body.ShouldBe(toSend.Body);
         }

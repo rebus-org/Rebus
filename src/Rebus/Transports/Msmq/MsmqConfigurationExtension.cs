@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Security.Cryptography;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Configuration.Configurers;
@@ -12,9 +11,9 @@ namespace Rebus.Transports.Msmq
 {
     public static class MsmqConfigurationExtension
     {
-        public static void UseEncryptedMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue, string ivBase64, string keyBase64)
+        public static void UseEncryptedMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue, string keyBase64)
         {
-            DoItEncrypted(configurer, inputQueue, ivBase64, keyBase64, errorQueue);
+            DoItEncrypted(configurer, inputQueue, keyBase64, errorQueue);
         }
 
         public static void UseEncryptedMsmqAndGetConfigurationFromAppConfig(this TransportConfigurer configurer)
@@ -45,13 +44,6 @@ namespace Rebus.Transports.Msmq
 
 {0}", GenerateRijndaelHelp()));
                 }
-
-                if (string.IsNullOrEmpty(rijndael.Iv))
-                {
-                    throw new ConfigurationErrorsException(string.Format(@"Could not find initialization vector settings in Rijndael element - did you forget the 'iv' attribute?
-
-{0}", GenerateRijndaelHelp()));
-                }
                 
                 if (string.IsNullOrEmpty(rijndael.Key))
                 {
@@ -60,7 +52,7 @@ namespace Rebus.Transports.Msmq
 {0}", GenerateRijndaelHelp()));
                 }
 
-                DoItEncrypted(configurer, inputQueueName, rijndael.Iv, rijndael.Key, errorQueueName);
+                DoItEncrypted(configurer, inputQueueName, rijndael.Key, errorQueueName);
             }
             catch (ConfigurationErrorsException e)
             {
@@ -101,15 +93,14 @@ A more full example configuration snippet can be seen here:
         {
             return
                 string.Format(
-                    @"To help you get started, here's a valid rijndael element, including a fresh and newly generated iv and
-key - and yes, I promise that they have been generated just this moment :) you can try running your app
+                    @"To help you get started, here's a valid rijndael element, including a fresh and newly generated
+key - and yes, I promise that it has been generated just this moment :) you can try running your app
 again if you don't believe me.
 
-    <rijndael iv=""{0}"" key=""{1}""/>
+    <rijndael key=""{0}""/>
 
-The iv and key have been generated with the biggest valid sizes, so they ought to be pretty secure.
+The key has been generated with the biggest valid size, so it should be pretty secure.
 ",
-                    RijndaelEncryptionTransportDecorator.GenerateIvBase64(),
                     RijndaelEncryptionTransportDecorator.GenerateKeyBase64());
         }
 
@@ -243,7 +234,7 @@ A more full example configuration snippet can be seen here:
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
         }
 
-        static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string iv, string key, string errorQueueName)
+        static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string key, string errorQueueName)
         {
             if (string.IsNullOrEmpty(inputQueueName))
             {
@@ -251,7 +242,7 @@ A more full example configuration snippet can be seen here:
             }
 
             var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
-            var encryptionFilter = new RijndaelEncryptionTransportDecorator(msmqMessageQueue, msmqMessageQueue, iv, key);
+            var encryptionFilter = new RijndaelEncryptionTransportDecorator(msmqMessageQueue, msmqMessageQueue, key);
 
             var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
 

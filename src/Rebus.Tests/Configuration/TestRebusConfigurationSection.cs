@@ -27,7 +27,6 @@ namespace Rebus.Tests.Configuration
 
                 var rijndaelSection = section.RijndaelSection;
                 rijndaelSection.ShouldNotBe(null);
-                rijndaelSection.Iv.ShouldBe("OLYKdaDyETlu7NbDMC45dA==");
                 rijndaelSection.Key.ShouldBe("oA/ZUnFsR9w1qEatOByBSXc4woCuTxmR99tAuQ56Qko=");
             }
         }

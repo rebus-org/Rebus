@@ -1,43 +1,34 @@
-﻿using System;
-using System.Security.Cryptography;
-using Rebus.Extensions;
+﻿using Rebus.Extensions;
 using Rebus.Shared;
-using System.Linq;
 
 namespace Rebus.Transports.Encrypted
 {
     public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages
     {
-        static readonly RijndaelManaged Rijndael = new RijndaelManaged();
-
+        readonly RijndaelHelper helper;
         readonly ISendMessages innerSendMessages;
         readonly IReceiveMessages innerReceiveMessages;
 
-        readonly ICryptoTransform encryptor;
-        readonly ICryptoTransform decryptor;
-
-        public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string ivBase64, string keyBase64)
+        public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string keyBase64)
         {
             this.innerSendMessages = innerSendMessages;
             this.innerReceiveMessages = innerReceiveMessages;
-
-            Rijndael.IV = Convert.FromBase64String(ivBase64);
-            Rijndael.Key = Convert.FromBase64String(keyBase64);
-
-            encryptor = Rijndael.CreateEncryptor();
-            decryptor = Rijndael.CreateDecryptor();
+            helper = new RijndaelHelper(keyBase64);
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
+            var iv = helper.GenerateNewIv();
+
             var transportMessageToSend = new TransportMessageToSend
                                              {
                                                  Headers = message.Headers.Clone(),
                                                  Label = message.Label,
-                                                 Body = Encrypt(message.Body),
+                                                 Body = helper.Encrypt(message.Body, iv),
                                              };
 
             transportMessageToSend.Headers[Headers.Encrypted] = null;
+            transportMessageToSend.Headers[Headers.EncryptionSalt] = iv;
 
             innerSendMessages.Send(destinationQueueName, transportMessageToSend);
         }
@@ -46,14 +37,26 @@ namespace Rebus.Transports.Encrypted
         {
             var receivedTransportMessage = innerReceiveMessages.ReceiveMessage();
 
-            var body = receivedTransportMessage.Headers.ContainsKey(Headers.Encrypted)
-                           ? Decrypt(receivedTransportMessage.Body)
-                           : receivedTransportMessage.Body;
+            byte[] body;
+            var headers = receivedTransportMessage.Headers.Clone();
+
+            if (headers.ContainsKey(Headers.Encrypted))
+            {
+                var iv = headers[Headers.EncryptionSalt];
+                body = helper.Decrypt(receivedTransportMessage.Body, iv);
+
+                headers.Remove(Headers.EncryptionSalt);
+                headers.Remove(Headers.Encrypted);
+            }
+            else
+            {
+                body = receivedTransportMessage.Body;
+            }
 
             return new ReceivedTransportMessage
                        {
                            Id = receivedTransportMessage.Id,
-                           Headers = receivedTransportMessage.Headers,
+                           Headers = headers,
                            Label = receivedTransportMessage.Label,
                            Body = body,
                        };
@@ -69,42 +72,9 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueueAddress; }
         }
 
-        byte[] Encrypt(byte[] bytes)
-        {
-            return encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
-        }
-
-        byte[] Decrypt(byte[] bytes)
-        {
-            return decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
-        }
-
-        public static string GenerateIvBase64()
-        {
-            return Convert.ToBase64String(RijndaelManaged.IV);
-        }
-
         public static string GenerateKeyBase64()
         {
-            return Convert.ToBase64String(RijndaelManaged.Key);
-        }
-
-        static readonly RijndaelManaged RijndaelManaged = InitRijndaelManagedGenerator();
-
-        static RijndaelManaged InitRijndaelManagedGenerator()
-        {
-            var managed = new RijndaelManaged();
-
-            var biggestLegalBlockSize = managed.LegalBlockSizes.OrderBy(b => b.MaxSize).FirstOrDefault();
-            var biggestLegalKeySize = managed.LegalKeySizes.OrderBy(b => b.MaxSize).FirstOrDefault();
-
-            managed.BlockSize = biggestLegalBlockSize.MaxSize;
-            managed.KeySize = biggestLegalKeySize.MaxSize;
-
-            managed.GenerateIV();
-            managed.GenerateKey();
-
-            return managed;
+            return RijndaelHelper.GenerateNewKey();
         }
     }
 }

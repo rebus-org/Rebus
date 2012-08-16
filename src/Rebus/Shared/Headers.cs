@@ -9,6 +9,11 @@ namespace Rebus.Shared
         /// Specifies that the contents of the message has been encrypted.
         /// </summary>
         public const string Encrypted = "rebus-encrypted";
+        
+        /// <summary>
+        /// Key of header that contains the salt that was used when encrypting this message
+        /// </summary>
+        public const string EncryptionSalt = "rebus-salt";
 
         /// <summary>
         /// Key of header that contains the unique ID of the message.
