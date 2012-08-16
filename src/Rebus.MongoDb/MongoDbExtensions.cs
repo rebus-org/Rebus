@@ -25,7 +25,7 @@ namespace Rebus.MongoDb
                 this.mongoDbSagaPersister = mongoDbSagaPersister;
             }
 
-            public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName)
+            public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName) where TSagaData : ISagaData
             {
                 return mongoDbSagaPersister.SetCollectionName<TSagaData>(collectionName);
             }

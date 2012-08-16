@@ -18,7 +18,7 @@ namespace Rebus.MongoDb
     public class MongoDbSagaPersister : IStoreSagaData
     {
         static readonly SagaDataElementNameConvention ElementNameConventions;
-        
+
         static MongoDbSagaPersister()
         {
             ElementNameConventions = new SagaDataElementNameConvention();
@@ -28,12 +28,12 @@ namespace Rebus.MongoDb
 
             BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
-        
+
         readonly Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
         readonly MongoDatabase database;
 
         volatile bool indexCreated;
-        
+
         bool allowAutomaticSagaCollectionNames;
 
         public MongoDbSagaPersister(string connectionString)
@@ -41,9 +41,9 @@ namespace Rebus.MongoDb
             database = MongoDatabase.Create(connectionString);
         }
 
-        public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName)
+        public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName) where TSagaData : ISagaData
         {
-            collectionNames.Add(typeof (TSagaData), collectionName);
+            collectionNames.Add(typeof(TSagaData), collectionName);
             return this;
         }
 
@@ -165,7 +165,7 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
                     {
                         collection.ResetIndexCache();
 
-//                        var indexes = collection.GetIndexes();
+                        //                        var indexes = collection.GetIndexes();
 
                         foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] { "Id" }))
                         {

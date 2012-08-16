@@ -234,9 +234,21 @@ namespace Rebus.Tests.Configuration
 
             Configure.With(adapter)
                 .Sagas(s => s.StoreInMongoDb(MongoDbFixtureBase.ConnectionString)
-                                .SetCollectionName<string>("string_sagas")
-                                .SetCollectionName<DateTime>("datetime_sagas"));
+                                .SetCollectionName<FirstSagaData>("string_sagas")
+                                .SetCollectionName<SecondSagaData>("datetime_sagas"));
 
+        }
+
+        class FirstSagaData: ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+        }
+
+        class SecondSagaData: ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
         }
 
         /// <summary>
