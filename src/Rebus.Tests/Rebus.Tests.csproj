@@ -295,6 +295,7 @@
     <None Include="App.config" />
     <Content Include="Configuration\RealAppConfigs\App.1.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <None Include="packages.config" />
   </ItemGroup>
