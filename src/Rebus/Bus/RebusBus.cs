@@ -8,6 +8,7 @@ using Rebus.Messages;
 using System.Linq;
 using Rebus.Shared;
 using Rebus.Extensions;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Bus
 {
@@ -184,15 +185,12 @@ that can take action.",
             {
                 throw new InvalidOperationException(string.Format(@"Bus has already been started - cannot start bus twice!
 
-Not that it actually matters, I mean we _could_ just ignore subsequent calls
-to Start() if we wanted to - but if you're calling Start() multiple times it's
-most likely a sign that something is wrong, i.e. you might be running you app
-initialization code more than once, etc."));
+Not that it actually matters, I mean we _could_ just ignore subsequent calls to Start() if we wanted to - but if you're calling Start() multiple times it's most likely a sign that something is wrong, i.e. you might be running you app initialization code more than once, etc."));
             }
 
-            if (receiveMessages.GetType().Name == "OneWayClientGag")
+            if (receiveMessages is MsmqConfigurationExtension.OneWayClientGag)
             {
-                log.Warn("Bus will be started in the experiment one-way client mode - setting number of workers to 0 (original value was {0}...)", numberOfWorkers);
+                log.Info("Bus will be started in the experimental one-way client mode");
                 numberOfWorkers = 0;
                 busMode = BusMode.OneWayClientMode;
             }
