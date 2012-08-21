@@ -65,6 +65,8 @@
     <Compile Include="Bus\RebusRouting.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
+    <Compile Include="Configuration\DecoratorsConfigurer.cs" />
+    <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />
     <Compile Include="Configuration\LoggingConfigurer.cs" />

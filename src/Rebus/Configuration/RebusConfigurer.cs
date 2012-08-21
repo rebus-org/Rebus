@@ -1,5 +1,6 @@
 using System;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 
@@ -7,6 +8,13 @@ namespace Rebus.Configuration
 {
     public class RebusConfigurer
     {
+        static ILog log;
+
+        static RebusConfigurer()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         protected readonly ConfigurationBackbone backbone;
 
         internal ConfigurationBackbone Backbone { get { return backbone; } }
@@ -14,6 +22,12 @@ namespace Rebus.Configuration
         public RebusConfigurer(ConfigurationBackbone backbone)
         {
             this.backbone = backbone;
+        }
+
+        public RebusConfigurer Events(Action<IRebusEvents> configure)
+        {
+            configure(new EventsConfigurer());
+            return this;
         }
 
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)
@@ -52,11 +66,13 @@ namespace Rebus.Configuration
 
             FillInDefaults(backbone);
 
-            //Decorate(backbone);
+            backbone.ApplyDecorators();
 
             var bus = new RebusBus(backbone.ActivateHandlers, backbone.SendMessages, backbone.ReceiveMessages,
                                    backbone.StoreSubscriptions, backbone.StoreSagaData, backbone.DetermineDestination,
                                    backbone.SerializeMessages, backbone.InspectHandlerPipeline, backbone.ErrorTracker);
+
+            backbone.TransferEvents(bus);
 
             backbone.Adapter.SaveBusInstances(bus, bus);
 
@@ -98,11 +114,13 @@ In this case, you must supply an implementation of {0} to the configuration back
         {
             if (backbone.SerializeMessages == null)
             {
+                log.Debug("Defaulting to JSON serialization");
                 backbone.SerializeMessages = new JsonMessageSerializer();
             }
 
             if (backbone.DetermineDestination == null)
             {
+                log.Debug("Defaulting to 'throwing endpoint mapper' - i.e. the bus will throw an exception when you send a message that is not explicitly routed");
                 backbone.DetermineDestination = new ThrowingEndpointMapper();
             }
 
@@ -113,13 +131,21 @@ In this case, you must supply an implementation of {0} to the configuration back
 
             if (backbone.StoreSagaData == null)
             {
+                log.Debug("Defaulting to in-memory saga persister (should probably not be used for real)");
                 backbone.StoreSagaData = new InMemorySagaPersister();
             }
 
             if (backbone.StoreSubscriptions == null)
             {
+                log.Debug("Defaulting to in-memory subscription storage (should probably not be used for real)");
                 backbone.StoreSubscriptions = new InMemorySubscriptionStorage();
             }
+        }
+
+        public RebusConfigurer Decorators(Action<DecoratorsConfigurer> configurer)
+        {
+            configurer(new DecoratorsConfigurer(backbone));
+            return this;
         }
     }
 }

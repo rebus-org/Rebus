@@ -19,6 +19,41 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
+        public void CanConfigureEvents()
+        {
+            var adapter = new TestContainerAdapter();
+            var raisedEvents = new List<string>();
+
+            var configurer = Configure.With(adapter)
+                .Events(e =>
+                    {
+                        e.BeforeTransportMessage += delegate { raisedEvents.Add("before transport message"); };
+                        e.BeforeMessage += delegate { raisedEvents.Add("before message"); };
+                        e.AfterMessage += delegate { raisedEvents.Add("after message"); };
+                        e.AfterTransportMessage += delegate { raisedEvents.Add("after transport message"); };
+
+                        e.MessageSent += delegate { raisedEvents.Add("message sent"); };
+                        e.PoisonMessage += delegate { raisedEvents.Add("poison message"); };
+                    })
+                .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
+
+            configurer.CreateBus();
+        }
+
+        [Test]
+        public void CanConfigureEncryption()
+        {
+            var configurer = Configure.With(new TestContainerAdapter())
+                .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
+                .Decorators(d => d.EncryptMessageBodies());
+
+            configurer.CreateBus();
+
+            configurer.Backbone.SendMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+        }
+
+        [Test]
         public void ConfiguringLoggingRegistersHandlerActivator()
         {
             var adapter = new TestContainerAdapter();
@@ -195,20 +230,6 @@ namespace Rebus.Tests.Configuration
             configurer.Backbone.InspectHandlerPipeline.ShouldNotBe(null);
             configurer.Backbone.SerializeMessages.ShouldNotBe(null);
             configurer.Backbone.DetermineDestination.ShouldNotBe(null);
-        }
-
-        [Test]
-        public void CanConfigureEncryptedMsmqTransport()
-        {
-            var adapter = new TestContainerAdapter();
-
-            var configurer = Configure.With(adapter)
-                .Transport(t => t.UseEncryptedMsmqAndGetConfigurationFromAppConfig());
-
-            configurer.CreateBus();
-
-            configurer.Backbone.SendMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
-            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
         }
 
         [Test]
