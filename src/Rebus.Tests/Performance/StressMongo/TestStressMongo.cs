@@ -8,7 +8,6 @@ using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Castle.Windsor;
-using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.MongoDb;
@@ -138,7 +137,7 @@ namespace Rebus.Tests.Performance.StressMongo
             timeout.Stop();
         }
 
-        IContainerAdapter ContainerAdapterWith(string serviceName, params Type[] types)
+        WindsorContainerAdapter ContainerAdapterWith(string serviceName, params Type[] types)
         {
             var container = new WindsorContainer();
 
@@ -233,7 +232,7 @@ namespace Rebus.Tests.Performance.StressMongo
             throw new ArgumentException(string.Format("Cannot determine owner of message type {0}", messageType));
         }
 
-        IBus CreateBus(string serviceName, IContainerAdapter containerAdapter)
+        IBus CreateBus(string serviceName, WindsorContainerAdapter containerAdapter)
         {
             var sagaCollectionName = serviceName + ".sagas";
             var subscriptionsCollectionName = "rebus.subscriptions";
@@ -258,8 +257,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             stuffToDispose.Add(bus);
 
-            Assert.Fail("find way to insert the bus here");
-            //containerAdapter.RegisterInstance(bus, typeof(IBus));
+            containerAdapter.Container.Register(Component.For<IBus>().Instance(bus));
 
             return bus.Start(5);
         }

@@ -22,6 +22,8 @@ namespace Rebus.Castle.Windsor
             this.container = container;
         }
 
+        public IWindsorContainer Container { get { return container; } }
+
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             return container.ResolveAll<IHandleMessages<T>>();
