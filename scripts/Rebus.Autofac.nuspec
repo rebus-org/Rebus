@@ -14,7 +14,7 @@
     <tags>rebus autofac di dependencyInjection ioc inversionOfControl</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="Autofac" version="2.6.1.841" />
+      <dependency id="Autofac" version="2.6.3.862" />
     </dependencies>
   </metadata>
   <files>

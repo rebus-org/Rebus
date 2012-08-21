@@ -14,7 +14,7 @@
     <tags>rebus rabbitmq queue messaging</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="RabbitMQ.Client" version="2.8.1" />
+      <dependency id="RabbitMQ.Client" version="2.8.4" />
     </dependencies>
   </metadata>
   <files>

@@ -14,7 +14,7 @@
     <tags>rebus structuremap</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="structuremap" version="2.6.3" />
+      <dependency id="structuremap" version="2.6.4" />
     </dependencies>
   </metadata>
   <files>

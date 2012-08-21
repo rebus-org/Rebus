@@ -15,7 +15,7 @@
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
       <dependency id="CommonServiceLocator" version="1.0" />
-      <dependency id="Unity" version="2.1.505.0" />
+      <dependency id="Unity" version="2.1.505.2" />
     </dependencies>
   </metadata>
   <files>
