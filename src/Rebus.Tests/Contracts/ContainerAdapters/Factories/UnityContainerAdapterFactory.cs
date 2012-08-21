@@ -1,4 +1,5 @@
 ﻿using Microsoft.Practices.Unity;
+using Rebus.Configuration;
 using Rebus.Unity;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories

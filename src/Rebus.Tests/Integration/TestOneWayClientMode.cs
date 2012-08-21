@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Configuration;
 using Rebus.Tests.Configuration;
 using Rebus.Transports.Msmq;
 

@@ -1,5 +1,4 @@
 using System;
-using Rebus.Configuration.Configurers;
 
 namespace Rebus.Configuration
 {

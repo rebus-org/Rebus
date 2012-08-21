@@ -2,7 +2,6 @@
 using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.Configuration.Configurers;
 using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
@@ -11,12 +10,12 @@ namespace Rebus.Transports.Msmq
 {
     public static class MsmqConfigurationExtension
     {
-        public static void UseEncryptedMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue, string keyBase64)
+        public static void UseEncryptedMsmq(this RebusTransportConfigurer configurer, string inputQueue, string errorQueue, string keyBase64)
         {
             DoItEncrypted(configurer, inputQueue, keyBase64, errorQueue);
         }
 
-        public static void UseEncryptedMsmqAndGetConfigurationFromAppConfig(this TransportConfigurer configurer)
+        public static void UseEncryptedMsmqAndGetConfigurationFromAppConfig(this RebusTransportConfigurer configurer)
         {
             try
             {
@@ -108,12 +107,12 @@ The key has been generated with the biggest valid size, so it should be pretty s
         /// Specifies that you want to use MSMQ to both send and receive messages. The input
         /// queue will be automatically created if it doesn't exist.
         /// </summary>
-        public static void UseMsmq(this TransportConfigurer configurer, string inputQueue, string errorQueue)
+        public static void UseMsmq(this RebusTransportConfigurer configurer, string inputQueue, string errorQueue)
         {
             DoIt(configurer, inputQueue, errorQueue);
         }
 
-        public static void UseMsmqInOneWayClientMode(this TransportConfigurer configurer)
+        public static void UseMsmqInOneWayClientMode(this RebusTransportConfigurer configurer)
         {
             var msmqMessageQueue = MsmqMessageQueue.Sender();
 
@@ -160,7 +159,7 @@ The key has been generated with the biggest valid size, so it should be pretty s
         /// queue name will be deduced from the Rebus configuration section in the application
         /// configuration file. The input queue will be automatically created if it doesn't exist.
         /// </summary>
-        public static void UseMsmqAndGetInputQueueNameFromAppConfig(this TransportConfigurer configurer)
+        public static void UseMsmqAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer)
         {
             try
             {
@@ -215,7 +214,7 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static void DoIt(TransportConfigurer configurer, string inputQueueName, string errorQueueName)
+        static void DoIt(RebusTransportConfigurer configurer, string inputQueueName, string errorQueueName)
         {
             if (string.IsNullOrEmpty(inputQueueName))
             {
@@ -234,7 +233,7 @@ A more full example configuration snippet can be seen here:
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
         }
 
-        static void DoItEncrypted(TransportConfigurer configurer, string inputQueueName, string key, string errorQueueName)
+        static void DoItEncrypted(RebusTransportConfigurer configurer, string inputQueueName, string key, string errorQueueName)
         {
             if (string.IsNullOrEmpty(inputQueueName))
             {

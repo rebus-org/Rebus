@@ -1,5 +1,4 @@
-﻿using Rebus.Configuration.Configurers;
-using Rebus.Logging;
+﻿using Rebus.Configuration;
 
 namespace Rebus.Log4Net
 {
@@ -7,7 +6,7 @@ namespace Rebus.Log4Net
     {
         public static void Log4Net(this LoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new Log4NetLoggerFactory();
+            configurer.Use(new Log4NetLoggerFactory());
         }
     }
 }

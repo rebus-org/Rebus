@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Rebus.Autofac;
+using Rebus.Configuration;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {

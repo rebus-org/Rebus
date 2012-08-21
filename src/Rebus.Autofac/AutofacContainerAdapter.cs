@@ -1,71 +1,45 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using Rebus.Configuration;
 
 namespace Rebus.Autofac
 {
-    public class AutofacContainerAdapter : AbstractContainerAdapter
+    public class AutofacContainerAdapter : IContainerAdapter
     {
-        private readonly IContainer _container;
+        readonly IContainer container;
 
         public AutofacContainerAdapter(IContainer container)
         {
             if (container == null)
-                throw new ArgumentNullException("container");
-            _container = container;
-        }
-
-        public override bool HasImplementationOf(Type serviceType)
-        {
-            var result = _container.IsRegistered(serviceType); ;
-            return result;
-        }
-
-        public override void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)
-        {
-            var builder = new ContainerBuilder();
-            switch (lifestyle)
             {
-                case Lifestyle.Instance:
-                    builder.RegisterType(implementationType).InstancePerDependency().As(serviceTypes);
-                    break;
-                case Lifestyle.Singleton:
-                default:
-                    builder.RegisterType(implementationType).SingleInstance().As(serviceTypes);
-                    break;
+                throw new ArgumentNullException("container");
             }
-            builder.Update(_container);
+
+            this.container = container;
         }
 
-        public override void RegisterInstance(object instance, params Type[] serviceTypes)
+        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            if (instance == null)
-                return;
-
-            var builder = new ContainerBuilder();
-            builder.RegisterInstance(instance).As(serviceTypes);
-            builder.Update(_container);
+            return container.Resolve<IEnumerable<IHandleMessages<T>>>().ToArray();
         }
 
-        public override void Release(object obj)
+        public void Release(IEnumerable handlerInstances)
         {
-            // Autofac doesn't support releasing a specific object
-            // Autofac will call Dispose on all IDisposable objects out of the box, when needed disposing
-            // Code below forces object to be disposed
-            var disposable = obj as IDisposable;
-            if (disposable != null)
+            foreach (var disposable in handlerInstances.OfType<IDisposable>())
+            {
                 disposable.Dispose();
+            }
         }
 
-        public override T Resolve<T>()
+        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
         {
-            return _container.Resolve<T>();
-        }
-
-        public override T[] ResolveAll<T>()
-        {
-            return _container.Resolve<IEnumerable<T>>().ToArray();
+            var builder = new ContainerBuilder();
+            builder.RegisterInstance(bus).As<IBus>();
+            builder.RegisterInstance(advancedBus).As<IAdvancedBus>();
+            builder.Update(container);
         }
     }
 }

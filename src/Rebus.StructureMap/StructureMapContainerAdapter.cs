@@ -1,87 +1,46 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
+using Rebus.Configuration;
 using StructureMap;
 
 namespace Rebus.StructureMap
 {
-    public class StructureMapContainerAdapter : AbstractContainerAdapter
+    public class StructureMapContainerAdapter : IContainerAdapter
     {
         private readonly IContainer container;
 
         public StructureMapContainerAdapter(IContainer container)
         {
+            if (container == null)
+            {
+                throw new ArgumentNullException("container");
+            }
+
             this.container = container;
         }
 
-        public override void RegisterInstance(object instance, params Type[] serviceTypes)
+        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            container.Configure(x =>
-                {
-                    foreach (var serviceType in serviceTypes)
-                    {
-                        x.For(serviceType).Singleton().Add(instance);
-                    }
-                });    
+            return container.GetAllInstances<IHandleMessages<T>>();
         }
 
-        public override void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)
+        public void Release(IEnumerable handlerInstances)
         {
-            container.Configure(x =>
-                {
-                    // make registration with primary service type
-                    var primaryServiceType = serviceTypes.First();
-                    x.For(primaryServiceType).LifecycleIs(MapLifestyle(lifestyle)).Add(implementationType);
-
-                    // forward resolution of additional service types to resolving the first
-                    var secondaryServiceTypes = serviceTypes.Skip(1);
-                    foreach (var serviceType in secondaryServiceTypes)
-                    {
-                        x.For(serviceType).Use(c => c.GetInstance(primaryServiceType));
-                    }
-                });
-        }
-
-        public override bool HasImplementationOf(Type serviceType)
-        {
-            return container.Model.HasImplementationsFor(serviceType);
-        }
-
-        public override T Resolve<T>()
-        {
-            return container.GetInstance<T>();
-        }
-
-        public override T[] ResolveAll<T>()
-        {
-            return container.GetAllInstances<T>().ToArray();
-        }
-
-        public override void Release(object obj)
-        {
-            // StructureMap doesn't handle Dispose unless you use nested containers.
-            // This is a manual override to work with the way Windsor does it. We should 
-            // probably discuss if this is desired.
-            var disposable = obj as IDisposable;
-
-            if(disposable != null)
+            foreach (var disposable in handlerInstances.OfType<IDisposable>())
             {
                 disposable.Dispose();
             }
         }
 
-        private InstanceScope MapLifestyle(Lifestyle lifestyle)
+        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
         {
-            switch (lifestyle)
-            {
-                case Lifestyle.Instance:
-                    return InstanceScope.Transient;
-
-                case Lifestyle.Singleton:
-                    return InstanceScope.Singleton;
-
-                default:
-                    throw new ArgumentOutOfRangeException("lifestyle");
-            }
+            container.Configure(x =>
+                {
+                    x.For<IBus>().Singleton().Add(bus);
+                    x.For<IAdvancedBus>().Singleton().Add(advancedBus);
+                });
         }
     }
 }

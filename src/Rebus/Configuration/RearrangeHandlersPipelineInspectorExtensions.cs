@@ -1,5 +1,3 @@
-using Rebus.Configuration.Configurers;
-
 namespace Rebus.Configuration
 {
     public static class RearrangeHandlersPipelineInspectorExtensions

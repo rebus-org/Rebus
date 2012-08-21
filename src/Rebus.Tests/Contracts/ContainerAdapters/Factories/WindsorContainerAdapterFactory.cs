@@ -1,5 +1,6 @@
 using Castle.Windsor;
 using Rebus.Castle.Windsor;
+using Rebus.Configuration;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {

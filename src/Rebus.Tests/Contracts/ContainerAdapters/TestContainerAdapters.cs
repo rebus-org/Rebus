@@ -1,9 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
-using System.Linq;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
@@ -26,213 +26,72 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         }
 
         [Test]
-        public void RegisteringSingletonAsImplementorOfMultipleServicesYieldsTheSameInstance()
+        public void BusIsDisposedWhenContainerIsDisposed()
         {
             // arrange
-            adapter.Register(typeof(Implementor), Lifestyle.Singleton, typeof(IFirst), typeof(ISecond));
-
-            // act
-            var first = adapter.Resolve<IFirst>();
-            var second = adapter.Resolve<ISecond>();
-
-            // assert
-            first.ShouldBeSameAs(second);
-        }
-
-        interface IFirst
-        {
-        }
-
-        interface ISecond
-        {
-        }
-
-        class Implementor : IFirst, ISecond
-        {
-        }
-
-        [Test]
-        public void DisposesSingletonsWhenContainerIsDisposed()
-        {
-            // arrange
-            adapter.Register(typeof(SomeDisposable), Lifestyle.Singleton, typeof(SomeDisposable));
-
-            // act
-            // ensure that the singleton has been initialized
-            adapter.Resolve<SomeDisposable>();
-            factory.DisposeInnerContainer();
-
-            // assert
-            SomeDisposable.WasDisposed.ShouldBe(true);
-        }
-
-        [Test]
-        public void DisposesInstancesWhenContainerIsDisposed()
-        {
-            // arrange
-            adapter.RegisterInstance(new SomeDisposable(), typeof(SomeDisposable));
+            var disposableBus = new SomeDisposable();
+            SomeDisposable.Disposed.ShouldBe(false);
+            adapter.SaveBusInstances(disposableBus, disposableBus);
 
             // act
             factory.DisposeInnerContainer();
 
             // assert
-            SomeDisposable.WasDisposed.ShouldBe(true);
+            SomeDisposable.Disposed.ShouldBe(true);
         }
 
-        [Test]
-        public void DisposesTransientWhenInstanceIsReleased()
+        class SomeDisposable : IAdvancedBus
         {
-            // arrange
-            adapter.Register(typeof(SomeDisposable), Lifestyle.Instance, typeof(SomeDisposable));
-            var instance = adapter.Resolve<SomeDisposable>();
-
-            // act
-            adapter.Release(instance);
-
-            // assert
-            SomeDisposable.WasDisposed.ShouldBe(true);
-        }
-
-        class SomeDisposable : IDisposable
-        {
-            public static bool WasDisposed = false;
-
-            public static void Reset()
-            {
-                WasDisposed = false;
-            }
+            public static bool Disposed { get; set; }
 
             public void Dispose()
             {
-                WasDisposed = true;
+                Disposed = true;
             }
-        }
 
-        [Test]
-        public void CanResolveAllLikeExpected()
-        {
-            // arrange
-            adapter.Register(typeof(FirstHandler), Lifestyle.Instance, typeof(IHandleMessages<string>));
-            adapter.Register(typeof(SecondHandler), Lifestyle.Instance, typeof(IHandleMessages<string>));
-
-            // act
-            var handlerInstances = adapter.GetHandlerInstancesFor<string>();
-
-            // assert
-            handlerInstances.Count().ShouldBe(2);
-            handlerInstances.ShouldContain(t => t.GetType() == typeof(FirstHandler));
-            handlerInstances.ShouldContain(t => t.GetType() == typeof(SecondHandler));
-        }
-
-        public class FirstHandler : IHandleMessages<string>
-        {
-            public void Handle(string message)
+            public static void Reset()
             {
+                Disposed = false;
             }
-        }
 
-        public class SecondHandler : IHandleMessages<string>
-        {
-            public void Handle(string message)
+            public void Send<TCommand>(TCommand message)
             {
+                throw new NotImplementedException();
             }
-        }
 
-        [Test]
-        public void SupportsSingletonLifestyle()
-        {
-            // arrange
-            adapter.Register(typeof(SomeClass), Lifestyle.Singleton, typeof(SomeClass));
-
-            // act
-            var firstInstance = adapter.Resolve<SomeClass>();
-            var secondInstance = adapter.Resolve<SomeClass>();
-
-            // assert
-            firstInstance.ShouldBeSameAs(secondInstance);
-        }
-
-        [Test]
-        public void SupportsTransientLifestyle()
-        {
-            // arrange
-            adapter.Register(typeof(SomeClass), Lifestyle.Instance, typeof(SomeClass));
-
-            // act
-            var firstInstance = adapter.Resolve<SomeClass>();
-            var secondInstance = adapter.Resolve<SomeClass>();
-
-            // assert
-            firstInstance.ShouldNotBeSameAs(secondInstance);
-        }
-
-        [Test]
-        public void SupportsRegisteringConcreteInstance()
-        {
-            // arrange
-            var theInstance = new SomeClass();
-            adapter.RegisterInstance(theInstance, typeof(SomeClass));
-
-            // act
-            var resolvedInstance = adapter.Resolve<SomeClass>();
-
-            // assert
-            resolvedInstance.ShouldBeSameAs(theInstance);
-        }
-
-        public class SomeClass { }
-
-        [Test]
-        public void SupportsRegisteringInstanceThatImplementsMultipleServices()
-        {
-            // arrange
-            var theInstance = new TheInstance();
-            adapter.RegisterInstance(theInstance, typeof(IService1), typeof(IService2));
-
-            // act
-            var service1 = adapter.Resolve<IService1>();
-            var service2 = adapter.Resolve<IService2>();
-
-            // assert
-            service1.ShouldBeSameAs(theInstance);
-            service2.ShouldBeSameAs(theInstance);
-        }
-
-        interface IService1{}
-        interface IService2{}
-        class TheInstance :IService1,IService2{}
-
-        [Test]
-        public void SupportsCheckingWhetherServiceHasBeenRegistered_NoRegistration()
-        {
-            // arrange
-
-
-            // act
-            var hasStringHandler = adapter.HasImplementationOf(typeof(IHandleMessages<string>));
-
-            // assert
-            hasStringHandler.ShouldBe(false);
-        }
-
-        [Test]
-        public void SupportsCheckingWhetherServiceHasBeenRegistered_OneRegistration()
-        {
-            // arrange
-            adapter.Register(typeof(StringHandler), Lifestyle.Instance, typeof(IHandleMessages<string>));
-
-            // act
-            var hasStringHandler = adapter.HasImplementationOf(typeof(IHandleMessages<string>));
-
-            // assert
-            hasStringHandler.ShouldBe(true);
-        }
-
-        public class StringHandler : IHandleMessages<string>
-        {
-            public void Handle(string message)
+            public void SendLocal<TCommand>(TCommand message)
             {
+                throw new NotImplementedException();
             }
+
+            public void Reply<TResponse>(TResponse message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Subscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Publish<TEvent>(TEvent message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Defer(TimeSpan delay, object message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void AttachHeader(object message, string key, string value)
+            {
+                throw new NotImplementedException();
+            }
+
+            public IRebusEvents Events { get; private set; }
+            public IRebusBatchOperations Batch { get; private set; }
+            public IRebusRouting Routing { get; private set; }
         }
     }
 

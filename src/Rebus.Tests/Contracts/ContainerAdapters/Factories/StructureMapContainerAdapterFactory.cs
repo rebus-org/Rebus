@@ -1,4 +1,5 @@
-﻿using Rebus.StructureMap;
+﻿using Rebus.Configuration;
+using Rebus.StructureMap;
 using StructureMap;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories

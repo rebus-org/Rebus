@@ -1,4 +1,4 @@
-﻿using Rebus.Configuration.Configurers;
+﻿using Rebus.Configuration;
 
 namespace Rebus.Logging
 {
@@ -9,7 +9,7 @@ namespace Rebus.Logging
         /// </summary>
         public static void Console(this LoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(colored: false);
+            configurer.Use(new ConsoleLoggerFactory(colored: false));
         }
 
         /// <summary>
@@ -17,7 +17,7 @@ namespace Rebus.Logging
         /// </summary>
         public static void ColoredConsole(this LoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(colored: true);
+            configurer.Use(new ConsoleLoggerFactory(colored: true));
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Rebus.Logging
         /// </summary>
         public static void ColoredConsole(this LoggingConfigurer configurer, LoggingColors colors)
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(colored: true) {Colors = colors};
+            configurer.Use(new ConsoleLoggerFactory(colored: true) {Colors = colors});
         }
 
         /// <summary>
@@ -34,7 +34,7 @@ namespace Rebus.Logging
         /// </summary>
         public static void Trace(this LoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new TraceLoggerFactory();
+            configurer.Use(new TraceLoggerFactory());
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Rebus.Logging
         /// </summary>
         public static void None(this LoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new NullLoggerFactory();
+            configurer.Use(new NullLoggerFactory());
         }
     }
 }

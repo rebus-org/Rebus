@@ -1,19 +1,18 @@
 ﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.Configuration.Configurers;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.RabbitMQ
 {
     public static class RabbitMqConfigurationExtensions
     {
-         public static void UseRabbitMq(this TransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueue)
+         public static void UseRabbitMq(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueue)
          {
              DoIt(configurer, connectionString, inputQueueName, errorQueue);
          }
 
-        public static void UseRabbitMqAndGetInputQueueNameFromAppConfig(this TransportConfigurer configurer, string connectionString)
+         public static void UseRabbitMqAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
          {
              try
              {
@@ -68,7 +67,7 @@ A more full example configuration snippet can be seen here:
              }
          }
 
-        static void DoIt(TransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
+         static void DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             var queue = new RabbitMqMessageQueue(connectionString, inputQueueName, errorQueueName);
             configurer.UseSender(queue);

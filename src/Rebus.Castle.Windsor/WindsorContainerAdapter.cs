@@ -1,94 +1,78 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
-using Castle.Core;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
+using Rebus.Configuration;
+using System.Linq;
 
 namespace Rebus.Castle.Windsor
 {
-    public class WindsorContainerAdapter : AbstractContainerAdapter
+    public class WindsorContainerAdapter : IContainerAdapter
     {
         readonly IWindsorContainer container;
 
+        public WindsorContainerAdapter(IWindsorContainer container)
+        {
+            if (container == null)
+            {
+                throw new ArgumentNullException("container");
+            }
+
+            this.container = container;
+        }
+
+        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        {
+            return container.ResolveAll<IHandleMessages<T>>();
+        }
+
+        public void Release(IEnumerable handlerInstances)
+        {
+            foreach (var handlerInstance in handlerInstances)
+            {
+                container.Release(handlerInstance);
+            }
+        }
+
+        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        {
+            container.Register(
+                Component.For<IBus>()
+                    .Named("bus")
+                    .LifestyleSingleton()
+                    .Instance(bus),
+
+                Component.For<IAdvancedBus>()
+                    .Named("advancedBus")
+                    .LifestyleSingleton()
+                    .Instance(advancedBus),
+
+                Component.For<InstanceDisposer>()
+                );
+
+            container.Resolve<InstanceDisposer>();
+        }
+
+        /// <summary>
+        /// Windsor hack that ensures that the externally provided instances of <see cref="IBus"/>
+        /// and <see cref="IAdvancedBus"/> are effectively owned and disposed by the container.
+        /// </summary>
         class InstanceDisposer : IDisposable
         {
-            readonly List<IDisposable> instances = new List<IDisposable>();
+            readonly IEnumerable<IDisposable> disposables;
 
-            public void AddInstance(IDisposable instanceToDisposeWhenDisposed)
+            public InstanceDisposer(IBus bus, IAdvancedBus advancedBus)
             {
-                instances.Add(instanceToDisposeWhenDisposed);
+                disposables = new List<IDisposable> {bus, advancedBus}.Distinct();
             }
 
             public void Dispose()
             {
-                instances.ForEach(i => i.Dispose());
-                instances.Clear();
-            }
-        }
-
-        public WindsorContainerAdapter(IWindsorContainer container)
-        {
-            this.container = container;
-
-            container.Register(Component.For<InstanceDisposer>().LifeStyle.Singleton);
-
-            container.Register(Component.For<IMessageContext>()
-                                   .UsingFactoryMethod(k => MessageContext.GetCurrent())
-                                   .LifeStyle.Transient);
-        }
-
-        public override void RegisterInstance(object instance, params Type[] serviceTypes)
-        {
-            container.Register(Component.For(serviceTypes).Instance(instance).NamedAutomatically(RandomName()));
-
-            if (instance is IDisposable)
-            {
-                container.Resolve<InstanceDisposer>().AddInstance((IDisposable)instance);
-            }
-        }
-
-        public override void Register(Type implementationType, Lifestyle lifestyle, params Type[] serviceTypes)
-        {
-            container.Register(Component.For(serviceTypes).ImplementedBy(implementationType)
-                                   .LifeStyle.Is(MapLifestyle(lifestyle))
-                                   .Named(RandomName()));
-        }
-
-        public override bool HasImplementationOf(Type serviceType)
-        {
-            return container.Kernel.HasComponent(serviceType);
-        }
-
-        public override T Resolve<T>()
-        {
-            return container.Resolve<T>();
-        }
-
-        public override T[] ResolveAll<T>()
-        {
-            return container.ResolveAll<T>();
-        }
-
-        public override void Release(object obj)
-        {
-            container.Release(obj);
-        }
-
-        static string RandomName()
-        {
-            return Guid.NewGuid().ToString();
-        }
-
-        LifestyleType MapLifestyle(Lifestyle lifestyle)
-        {
-            switch (lifestyle)
-            {
-                case Lifestyle.Singleton:
-                    return LifestyleType.Singleton;
-                case Lifestyle.Instance:
-                    return LifestyleType.Transient;
-                default:
-                    throw new ArgumentOutOfRangeException("lifestyle");
+                foreach (var disposable in disposables)
+                {
+                    disposable.Dispose();
+                }
             }
         }
     }

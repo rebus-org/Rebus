@@ -1,6 +1,7 @@
 ﻿using Microsoft.Practices.Unity;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Unity;
 using Shouldly;

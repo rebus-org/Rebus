@@ -8,6 +8,7 @@ using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Castle.Windsor;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.MongoDb;
@@ -257,7 +258,8 @@ namespace Rebus.Tests.Performance.StressMongo
 
             stuffToDispose.Add(bus);
 
-            containerAdapter.RegisterInstance(bus, typeof(IBus));
+            Assert.Fail("find way to insert the bus here");
+            //containerAdapter.RegisterInstance(bus, typeof(IBus));
 
             return bus.Start(5);
         }

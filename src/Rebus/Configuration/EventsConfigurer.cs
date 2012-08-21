@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-namespace Rebus.Configuration.Configurers
+namespace Rebus.Configuration
 {
     public class EventsConfigurer : IRebusEvents
     {
