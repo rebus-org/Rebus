@@ -98,7 +98,10 @@ namespace Rebus.Tests.Integration
         [TestCase("beforeLogical")]
         [TestCase("afterLogical")]
         [TestCase("poison")]
-        [TestCase("commitHook", Ignore = true)]
+        [TestCase("commitHook")]
+        [TestCase("rollbackHook")]
+        [TestCase("prepareHook")]
+        [TestCase("inDoubtHook")]
         public void CanMoveMessageToErrorQueueForExceptionsInHooks(string whenToThrow)
         {
             // arrange
@@ -154,9 +157,32 @@ namespace Rebus.Tests.Integration
                     break;
 
                 case "commitHook":
-                    activator.Handle<string>(str => Transaction.Current.EnlistDurable(Guid.NewGuid(),
-                                                                                      new ThingToEnlistThatWillFailOn(commit: true),
-                                                                                      EnlistmentOptions.None));
+                    activator.Handle<string>(str => Transaction.Current
+                                                        .EnlistVolatile(new ThingToEnlistThatWillFailOn(commit: true),
+                                                                       EnlistmentOptions.None));
+                    break;
+
+                case "rollbackHook":
+                    activator.Handle<string>(str =>
+                        {
+                            Transaction.Current
+                                .EnlistVolatile(new ThingToEnlistThatWillFailOn(rollback: true),
+                                                EnlistmentOptions.None);
+
+                            throw new Exception("HELLO!");
+                        });
+                    break;
+
+                case "prepareHook":
+                    activator.Handle<string>(str => Transaction.Current
+                                                        .EnlistVolatile(new ThingToEnlistThatWillFailOn(prepare: true),
+                                                                       EnlistmentOptions.None));
+                    break;
+
+                case "inDoubtHook":
+                    activator.Handle<string>(str => Transaction.Current
+                                                        .EnlistVolatile(new ThingToEnlistThatWillFailOn(inDoubt: true),
+                                                                       EnlistmentOptions.None));
                     break;
             }
 
@@ -204,22 +230,42 @@ namespace Rebus.Tests.Integration
 
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
-            preparingEnlistment.Done();
+            Console.WriteLine("preparing...");
+            if (prepare) throw new OmfgExceptionThisIsBad("prepareHook");
+            preparingEnlistment.Prepared();
+            Console.WriteLine("done preparing!");
         }
 
         public void Commit(Enlistment enlistment)
         {
+            Console.WriteLine("committing...");
+            if (commit) throw new OmfgExceptionThisIsBad("commitHook");
             enlistment.Done();
+            Console.WriteLine("done committing!");
         }
 
         public void Rollback(Enlistment enlistment)
         {
+            Console.WriteLine("rollbacking...");
+            if (rollback) throw new OmfgExceptionThisIsBad("rollbackHook");
             enlistment.Done();
+            Console.WriteLine("done rollbacking!");
         }
 
         public void InDoubt(Enlistment enlistment)
         {
+            Console.WriteLine("indoubting...");
+            if (inDoubt) throw new OmfgExceptionThisIsBad("inDoubtHook");
             enlistment.Done();
+            Console.WriteLine("done indoubting!");
+        }
+    }
+
+    public class OmfgExceptionThisIsBad : Exception
+    {
+        public OmfgExceptionThisIsBad(string message)
+            : base(message)
+        {
         }
     }
 }
