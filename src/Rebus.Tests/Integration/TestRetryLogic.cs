@@ -98,10 +98,10 @@ namespace Rebus.Tests.Integration
         [TestCase("beforeLogical")]
         [TestCase("afterLogical")]
         [TestCase("poison")]
-        [TestCase("commitHook")]
-        [TestCase("rollbackHook")]
-        [TestCase("prepareHook")]
-        [TestCase("inDoubtHook")]
+        [TestCase("commitHook", Ignore = true)]
+        [TestCase("rollbackHook", Ignore = true)]
+        [TestCase("prepareHook", Ignore = true)]
+        [TestCase("inDoubtHook", Ignore = true)]
         public void CanMoveMessageToErrorQueueForExceptionsInHooks(string whenToThrow)
         {
             // arrange
