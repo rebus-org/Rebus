@@ -34,9 +34,10 @@ namespace Rebus.Bus
         {
             this.errorQueueAddress = errorQueueAddress;
             StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
-            MaxRetries = RebusConfigurationSection
-                .GetConfigurationValueOrDefault(s => s.Retries, 5)
-                .GetValueOrDefault(5);
+
+            MaxRetries = Math.Max(0, RebusConfigurationSection
+                                         .GetConfigurationValueOrDefault(s => s.Retries, 5)
+                                         .GetValueOrDefault(5));
         }
 
         /// <summary>
