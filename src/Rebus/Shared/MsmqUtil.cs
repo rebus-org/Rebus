@@ -42,6 +42,18 @@ namespace Rebus.Shared
             return GenerateFullPath(bim.MachineName ?? Environment.MachineName, bim.QueueName);
         }
 
+        public static string GetSenderPath(string destinationQueueName)
+        {
+            var queueInfo = Parse(destinationQueueName);
+
+            if (string.IsNullOrEmpty(queueInfo.MachineName) || queueInfo.MachineName == Environment.MachineName)
+            {
+                return GenerateSimplePath(".", queueInfo.QueueName);
+            }
+
+            return GetFullPath(destinationQueueName);
+        }
+
         public static string GenerateFullPath(string machineName, string queueName)
         {
             if (IsIpAddress(machineName))

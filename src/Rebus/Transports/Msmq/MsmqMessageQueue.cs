@@ -131,7 +131,7 @@ because there would be remote calls involved when you wanted to receive a messag
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            var recipientPath = MsmqUtil.GetFullPath(destinationQueueName);
+            var recipientPath = MsmqUtil.GetSenderPath(destinationQueueName);
 
             using (var outputQueue = GetMessageQueue(recipientPath))
             {
