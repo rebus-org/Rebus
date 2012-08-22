@@ -1,6 +1,7 @@
 using System;
 using System.Messaging;
 using System.Text;
+using System.Transactions;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
@@ -97,6 +98,7 @@ namespace Rebus.Tests.Integration
         [TestCase("beforeLogical")]
         [TestCase("afterLogical")]
         [TestCase("poison")]
+        [TestCase("commitHook", Ignore = true)]
         public void CanMoveMessageToErrorQueueForExceptionsInHooks(string whenToThrow)
         {
             // arrange
@@ -150,6 +152,12 @@ namespace Rebus.Tests.Integration
                             throw new Exception("HELLO!");
                         };
                     break;
+
+                case "commitHook":
+                    activator.Handle<string>(str => Transaction.Current.EnlistDurable(Guid.NewGuid(),
+                                                                                      new ThingToEnlistThatWillFailOn(commit: true),
+                                                                                      EnlistmentOptions.None));
+                    break;
             }
 
             bus.Start(1);
@@ -176,6 +184,42 @@ namespace Rebus.Tests.Integration
                             };
             queue.Purge();
             return queue;
+        }
+    }
+
+    public class ThingToEnlistThatWillFailOn : IEnlistmentNotification
+    {
+        readonly bool prepare;
+        readonly bool commit;
+        readonly bool rollback;
+        readonly bool inDoubt;
+
+        public ThingToEnlistThatWillFailOn(bool prepare = false, bool commit = false, bool rollback = false, bool inDoubt = false)
+        {
+            this.prepare = prepare;
+            this.commit = commit;
+            this.rollback = rollback;
+            this.inDoubt = inDoubt;
+        }
+
+        public void Prepare(PreparingEnlistment preparingEnlistment)
+        {
+            preparingEnlistment.Done();
+        }
+
+        public void Commit(Enlistment enlistment)
+        {
+            enlistment.Done();
+        }
+
+        public void Rollback(Enlistment enlistment)
+        {
+            enlistment.Done();
+        }
+
+        public void InDoubt(Enlistment enlistment)
+        {
+            enlistment.Done();
         }
     }
 }
