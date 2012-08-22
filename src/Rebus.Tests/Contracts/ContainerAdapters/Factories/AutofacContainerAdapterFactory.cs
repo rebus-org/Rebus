@@ -18,5 +18,12 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             container.Dispose();
         }
+
+        public void Register<TService, TImplementation>() where TService : class where TImplementation : TService
+        {
+            var containerBuilder = new ContainerBuilder();
+            containerBuilder.RegisterType<TImplementation>().As<TService>();
+            containerBuilder.Update(container);
+        }
     }
 }

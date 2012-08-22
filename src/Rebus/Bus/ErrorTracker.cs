@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using Rebus.Configuration;
 using Rebus.Extensions;
 using Rebus.Logging;
 
@@ -33,6 +34,9 @@ namespace Rebus.Bus
         {
             this.errorQueueAddress = errorQueueAddress;
             StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
+            MaxRetries = RebusConfigurationSection
+                .GetConfigurationValueOrDefault(s => s.Retries, 5)
+                .GetValueOrDefault(5);
         }
 
         /// <summary>
@@ -123,8 +127,10 @@ namespace Rebus.Bus
         public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
             var trackedMessage = GetOrAdd(id);
-            return trackedMessage.FailCount >= 5;
+            return trackedMessage.FailCount >= MaxRetries;
         }
+
+        public int MaxRetries { get; private set; }
 
         TrackedMessage GetOrAdd(string id)
         {

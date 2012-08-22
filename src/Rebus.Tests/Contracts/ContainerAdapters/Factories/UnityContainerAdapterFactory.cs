@@ -1,4 +1,5 @@
-﻿using Microsoft.Practices.Unity;
+﻿using System;
+using Microsoft.Practices.Unity;
 using Rebus.Configuration;
 using Rebus.Unity;
 
@@ -17,6 +18,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         public void DisposeInnerContainer()
         {
             container.Dispose();
+        }
+
+        public void Register<TService, TImplementation>() where TService : class where TImplementation : TService
+        {
+            container.RegisterType(typeof (TService), typeof (TImplementation), Guid.NewGuid().ToString());
         }
     }
 }

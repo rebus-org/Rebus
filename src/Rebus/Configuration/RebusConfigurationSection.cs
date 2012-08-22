@@ -11,6 +11,7 @@ namespace Rebus.Configuration
         const string AddressAttributeName = "address";
         const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
+        const string RetriesAttributeName = "retries";
         const string ConfigSectionName = "rebus";
 
         [ConfigurationProperty(RijndaelCollectionPropertyName)]
@@ -53,6 +54,13 @@ namespace Rebus.Configuration
         {
             get { return (int?)this[WorkersAttributeName]; }
             set { this[WorkersAttributeName] = value; }
+        }
+
+        [ConfigurationProperty(RetriesAttributeName)]
+        public int? Retries
+        {
+            get { return (int?)this[RetriesAttributeName]; }
+            set { this[RetriesAttributeName] = value; }
         }
 
         public const string ExampleSnippetForErrorMessages = @"

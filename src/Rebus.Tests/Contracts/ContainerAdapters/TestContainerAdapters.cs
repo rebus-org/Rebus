@@ -4,6 +4,7 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Shouldly;
+using System.Linq;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
@@ -18,7 +19,8 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
 
         protected override void DoSetUp()
         {
-            SomeDisposable.Reset();
+            SomeDisposableSingleton.Reset();
+            SomeDisposableHandler.Reset();
             Console.WriteLine("Running setup for {0}", typeof(TFactory));
             factory = new TFactory();
             adapter = factory.Create();
@@ -26,21 +28,68 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         }
 
         [Test]
+        public void MultipleCallsToGetYieldsNewInstances()
+        {
+            // arrange
+            factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
+            var firstInstance = adapter.GetHandlerInstancesFor<string>().Single();
+
+            // act
+            var nextInstance = adapter.GetHandlerInstancesFor<string>().Single();
+
+            // assert
+            nextInstance.ShouldNotBeSameAs(firstInstance);
+        }
+
+        [Test]
+        public void CanGetHandlerInstancesAndReleaseThemAfterwardsAsExpected()
+        {
+            // arrange
+            factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
+            var instances = adapter.GetHandlerInstancesFor<string>();
+
+            // act
+            adapter.Release(instances);
+
+            // assert
+            SomeDisposableHandler.WasDisposed.ShouldBe(true);
+        }
+
+        class SomeDisposableHandler : IHandleMessages<string>, IDisposable
+        {
+            public static bool WasDisposed { get; private set; }
+            
+            public void Handle(string message)
+            {
+            }
+
+            public static void Reset()
+            {
+                WasDisposed = false;
+            }
+
+            public void Dispose()
+            {
+                WasDisposed = true;
+            }
+        }
+
+        [Test]
         public void BusIsDisposedWhenContainerIsDisposed()
         {
             // arrange
-            var disposableBus = new SomeDisposable();
-            SomeDisposable.Disposed.ShouldBe(false);
+            var disposableBus = new SomeDisposableSingleton();
+            SomeDisposableSingleton.Disposed.ShouldBe(false);
             adapter.SaveBusInstances(disposableBus, disposableBus);
 
             // act
             factory.DisposeInnerContainer();
 
             // assert
-            SomeDisposable.Disposed.ShouldBe(true);
+            SomeDisposableSingleton.Disposed.ShouldBe(true);
         }
 
-        class SomeDisposable : IAdvancedBus
+        class SomeDisposableSingleton : IAdvancedBus
         {
             public static bool Disposed { get; set; }
 
@@ -99,5 +148,9 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     {
         IContainerAdapter Create();
         void DisposeInnerContainer();
+
+        void Register<TService, TImplementation>()
+            where TImplementation : TService
+            where TService : class;
     }
 }
