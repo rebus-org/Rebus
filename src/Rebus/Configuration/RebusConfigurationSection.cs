@@ -11,7 +11,7 @@ namespace Rebus.Configuration
         const string AddressAttributeName = "address";
         const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
-        const string RetriesAttributeName = "retries";
+        const string RetriesAttributeName = "maxRetries";
         const string ConfigSectionName = "rebus";
 
         [ConfigurationProperty(RijndaelCollectionPropertyName)]
@@ -57,7 +57,7 @@ namespace Rebus.Configuration
         }
 
         [ConfigurationProperty(RetriesAttributeName)]
-        public int? Retries
+        public int? MaxRetries
         {
             get { return (int?)this[RetriesAttributeName]; }
             set { this[RetriesAttributeName] = value; }

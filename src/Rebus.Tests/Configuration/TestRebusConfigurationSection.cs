@@ -22,7 +22,7 @@ namespace Rebus.Tests.Configuration
                 section.InputQueue.ShouldBe("this.is.my.input.queue");
                 section.ErrorQueue.ShouldBe("this.is.my.error.queue");
                 section.Workers.ShouldBe(5);
-                section.Retries.ShouldBe(6);
+                section.MaxRetries.ShouldBe(6);
 
                 section.Address.ShouldBe("10.0.0.9");
 

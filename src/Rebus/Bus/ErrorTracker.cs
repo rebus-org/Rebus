@@ -36,7 +36,7 @@ namespace Rebus.Bus
             StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
 
             MaxRetries = Math.Max(0, RebusConfigurationSection
-                                         .GetConfigurationValueOrDefault(s => s.Retries, 5)
+                                         .GetConfigurationValueOrDefault(s => s.MaxRetries, 5)
                                          .GetValueOrDefault(5));
         }
 
