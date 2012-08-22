@@ -15,7 +15,7 @@ namespace Rebus.Transports.Msmq
     {
         static ILog log;
         readonly object disposeLock = new object();
-        bool disposed = false;
+        bool disposed;
 
         static MsmqMessageQueue()
         {
@@ -170,11 +170,10 @@ because there would be remote calls involved when you wanted to receive a messag
 
                 try
                 {
-                    if (inputQueue != null)
-                    {
-                        log.Info("Disposing message queue {0}", inputQueuePath);
-                        inputQueue.Dispose();
-                    }
+                    if (inputQueue == null) return;
+
+                    log.Info("Disposing message queue {0}", inputQueuePath);
+                    inputQueue.Dispose();
                 }
                 finally
                 {
