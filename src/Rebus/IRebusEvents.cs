@@ -34,6 +34,11 @@ namespace Rebus
     public delegate void PoisonMessageEventHandler(IAdvancedBus advancedBus, ReceivedTransportMessage receivedTransportMessage);
 
     /// <summary>
+    /// Delegate type that can listen when an incoming message can be handled by a saga handler, but it turns out that there was no saga data that could be correlated with the message.
+    /// </summary>
+    public delegate void UncorrelatedMessageEventHandler(object message, Saga saga);
+
+    /// <summary>
     /// Groups the different event hooks that Rebus exposes.
     /// </summary>
     public interface IRebusEvents
@@ -75,5 +80,11 @@ namespace Rebus
         /// logical messages).
         /// </summary>
         event AfterMessageEventHandler AfterMessage;
+
+        /// <summary>
+        /// Event that is raised when an incoming message can be handled by a saga handler, but it
+        /// turns out that no saga data instance could be correlated with the message.
+        /// </summary>
+        event UncorrelatedMessageEventHandler UncorrelatedMessage;
     }
 }

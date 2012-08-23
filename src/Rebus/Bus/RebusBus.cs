@@ -361,6 +361,7 @@ element)"));
                 worker.PoisonMessage += RaisePosionMessage;
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
+                worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
                 worker.Start();
             }
         }
@@ -396,8 +397,14 @@ element)"));
                     workerToRemove.PoisonMessage -= RaisePosionMessage;
                     workerToRemove.BeforeMessage -= RaiseBeforeMessage;
                     workerToRemove.AfterMessage -= RaiseAfterMessage;
+                    workerToRemove.UncorrelatedMessage -= RaiseUncorrelatedMessage;
                 }
             }
+        }
+
+        void RaiseUncorrelatedMessage(object message, Saga saga)
+        {
+            events.RaiseUncorrelatedMessage(message, saga);
         }
 
         void RaiseBeforeMessage(object message)

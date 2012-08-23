@@ -40,6 +40,8 @@ namespace Rebus.Bus
 
         internal event Action<Exception, object> AfterMessage = delegate { };
 
+        internal event Action<object, Saga> UncorrelatedMessage = delegate { }; 
+
         volatile bool shouldExit;
         volatile bool shouldWork;
 
@@ -57,11 +59,17 @@ namespace Rebus.Bus
             this.serializeMessages = serializeMessages;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
+            dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
 
             log.Info("Worker {0} created and inner thread started", WorkerThreadName);
+        }
+
+        void RaiseUncorrelatedMessage(object message, Saga saga)
+        {
+            UncorrelatedMessage(message, saga);
         }
 
         /// <summary>

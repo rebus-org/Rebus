@@ -48,6 +48,8 @@ namespace Rebus.Bus
             this.handleDeferredMessage = handleDeferredMessage;
         }
 
+        public event Action<object, Saga> UncorrelatedMessage = delegate { };
+
         /// <summary>
         /// Main entry point of the dispatcher. Dispatches the given message, doing handler
         /// lookup etc. Any exceptions thrown will bubble up.
@@ -222,6 +224,7 @@ namespace Rebus.Bus
                     else
                     {
                         log.Warn("No saga data was found for {0}", handler);
+                        UncorrelatedMessage(message, saga);
                         return;
                     }
                 }

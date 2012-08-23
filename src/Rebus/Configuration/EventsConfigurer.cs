@@ -7,6 +7,7 @@ namespace Rebus.Configuration
         public event MessageSentEventHandler MessageSent;
         public event BeforeMessageEventHandler BeforeMessage;
         public event AfterMessageEventHandler AfterMessage;
+        public event UncorrelatedMessageEventHandler UncorrelatedMessage;
         public event BeforeTransportMessageEventHandler BeforeTransportMessage;
         public event AfterTransportMessageEventHandler AfterTransportMessage;
         public event PoisonMessageEventHandler PoisonMessage;
@@ -60,6 +61,14 @@ namespace Rebus.Configuration
                 foreach (var listener in PoisonMessage.GetInvocationList().Cast<PoisonMessageEventHandler>())
                 {
                     rebusEvents.PoisonMessage += listener;
+                }
+            }
+
+            if (UncorrelatedMessage != null)
+            {
+                foreach (var listener in UncorrelatedMessage.GetInvocationList().Cast<UncorrelatedMessageEventHandler>())
+                {
+                    rebusEvents.UncorrelatedMessage += listener;
                 }
             }
         }
