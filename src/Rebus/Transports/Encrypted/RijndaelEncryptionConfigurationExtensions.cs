@@ -65,7 +65,7 @@ section declaration in the <configSections> element of your app.config/web.confi
 like so:
 
     <rebus InputQueue=""my.service.input.queue"">
-        <rijndael iv=""base64 encoded initialization vector"" key=""base64 encoded key""/>
+        <rijndael key=""base64 encoded key""/>
     </rebus>
 
 Note also, that specifying the input queue name with the 'inputQueue' attribute is optional.

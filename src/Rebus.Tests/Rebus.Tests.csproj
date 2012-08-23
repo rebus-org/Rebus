@@ -304,6 +304,7 @@
   <ItemGroup>
     <Content Include="Timeout\AppConfigExamples\app.config.01.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Timeout\AppConfigExamples\app.config.02.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

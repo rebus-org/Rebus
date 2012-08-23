@@ -65,8 +65,8 @@ namespace Rebus.Configuration
 
         public const string ExampleSnippetForErrorMessages = @"
 
-    <rebus inputQueue=""this.is.my.input.queue"" errorQueue=""this.is.my.error.queue"" workers=""5"">
-        <rijndael iv=""base64 encoded initialization vector"" key=""base64 encoded key""/>
+    <rebus inputQueue=""myService.input"" errorQueue=""myService.error"" workers=""5"">
+        <rijndael key=""base64 encoded key""/>
         <endpoints>
             <add messages=""Name.Of.Assembly"" endpoint=""message_owner_1""/>
             <add messages=""Namespace.ClassName, Name.Of.Another.Assembly"" endpoint=""message_owner_2""/>
