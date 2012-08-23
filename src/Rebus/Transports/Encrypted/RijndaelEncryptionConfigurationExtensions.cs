@@ -64,7 +64,7 @@ section declaration in the <configSections> element of your app.config/web.confi
 -and then you need a <rebus> element some place further down the app.config/web.config,
 like so:
 
-    <rebus InputQueue=""my.service.input.queue"">
+    <rebus inputQueue=""my.service.input.queue"">
         <rijndael key=""base64 encoded key""/>
     </rebus>
 
