@@ -14,15 +14,42 @@ namespace Rebus.Persistence.SqlServer
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
-        readonly string connectionString;
         readonly string sagaIndexTableName;
         readonly string sagaTableName;
 
+        readonly Func<SqlConnection> getConnection;
+        readonly Action<SqlConnection> releaseConnection;
+
+        /// <summary>
+        /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
+        /// This also means that the persister will manage the connection by itself, closing it when it has stopped using it.
+        /// </summary>
         public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
         {
-            this.connectionString = connectionString;
             this.sagaIndexTableName = sagaIndexTableName;
             this.sagaTableName = sagaTableName;
+
+            getConnection = () =>
+                {
+                    var sqlConnection = new SqlConnection(connectionString);
+                    sqlConnection.Open();
+                    return sqlConnection;
+                };
+            releaseConnection = c => c.Dispose();
+        }
+
+        /// <summary>
+        /// Constructs the persister with the ability to use an externally provided <see cref="SqlConnection"/>, thus allowing it
+        /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the perister will assume
+        /// that someone else manages the connection's lifetime.
+        /// </summary>
+        public SqlServerSagaPersister(Func<SqlConnection> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
+        {
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+
+            getConnection = connectionFactoryMethod;
+            releaseConnection = c => { };
         }
 
         public string SagaIndexTableName
@@ -37,10 +64,9 @@ namespace Rebus.Persistence.SqlServer
 
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+            try
             {
-                connection.Open();
-
                 // next insert the saga
                 using (var command = connection.CreateCommand())
                 {
@@ -94,7 +120,7 @@ namespace Rebus.Persistence.SqlServer
                         {
                             command.ExecuteNonQuery();
                         }
-                        catch(SqlException sqlException)
+                        catch (SqlException sqlException)
                         {
                             if (sqlException.Number == PrimaryKeyViolationNumber)
                             {
@@ -105,35 +131,19 @@ namespace Rebus.Persistence.SqlServer
                         }
                     }
                 }
+
             }
-        }
-
-        string GetSagaTypeName(Type sagaDataType)
-        {
-            var sagaTypeName = sagaDataType.Name;
-
-            if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
+            finally
             {
-                throw new InvalidOperationException(
-                    string.Format(
-                        @"Sorry, but the maximum length of the name of a saga data class is currently limited to {0} characters!
-
-This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
-since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
-there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the
-saga type name.",
-                        MaximumSagaDataTypeNameLength));
+                releaseConnection(connection);
             }
-
-            return sagaTypeName;
         }
 
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+            try
             {
-                connection.Open();
-
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
@@ -203,14 +213,17 @@ saga type name.",
                     }
                 }
             }
+            finally
+            {
+                releaseConnection(connection);
+            }
         }
 
         public void Delete(ISagaData sagaData)
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+            try
             {
-                connection.Open();
-
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = @"delete from sagas where id = @id and revision = @current_revision;";
@@ -230,14 +243,17 @@ saga type name.",
                     command.ExecuteNonQuery();
                 }
             }
+            finally
+            {
+                releaseConnection(connection);
+            }
         }
 
         public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+            try
             {
-                connection.Open();
-
                 using (var command = connection.CreateCommand())
                 {
                     if (sagaDataPropertyPath == "Id")
@@ -266,6 +282,30 @@ saga type name.",
                     return (T)JsonConvert.DeserializeObject(value, Settings);
                 }
             }
+            finally
+            {
+                releaseConnection(connection);
+            }
+        }
+
+        string GetSagaTypeName(Type sagaDataType)
+        {
+            var sagaTypeName = sagaDataType.Name;
+
+            if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        @"Sorry, but the maximum length of the name of a saga data class is currently limited to {0} characters!
+
+This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
+since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
+there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the
+saga type name.",
+                        MaximumSagaDataTypeNameLength));
+            }
+
+            return sagaTypeName;
         }
     }
 }
