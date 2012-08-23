@@ -11,7 +11,7 @@ namespace Rebus.Tests.Persistence.Timeouts
     [TestFixture(typeof(SqlServerTimeoutStorageFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbTimeoutStorageFactory), Category = TestCategories.Raven)]
     [TestFixture(typeof(MongoDbTimeoutStorageFactory), Category = TestCategories.Mongo)]
-    public class TestSubscriptionStorage<TFactory> : FixtureBase where TFactory : ITimeoutStorageFactory
+    public class TestTimeoutStorage<TFactory> : FixtureBase where TFactory : ITimeoutStorageFactory
     {
         TFactory factory;
         IStoreTimeouts storage;
@@ -32,9 +32,9 @@ namespace Rebus.Tests.Persistence.Timeouts
         {
             var justSomeTime = new DateTime(2010, 1, 1, 10, 30, 0, DateTimeKind.Utc);
 
-            storage.Add(new Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
-            storage.Add(new Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
-            storage.Add(new Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
+            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
+            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
+            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace Rebus.Tests.Persistence.Timeouts
             var anotherUtcTimeStamp = someUtcTimeStamp.AddHours(2);
             var thirtytwoKilobytesOfDollarSigns = new string('$', 32768);
 
-            storage.Add(new Timeout.Timeout
+            storage.Add(new Rebus.Timeout.Timeout
                             {
                                 SagaId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
                                 CorrelationId = "first",
@@ -53,7 +53,7 @@ namespace Rebus.Tests.Persistence.Timeouts
                                 CustomData = null,
                             });
 
-            storage.Add(new Timeout.Timeout
+            storage.Add(new Rebus.Timeout.Timeout
                             {
                                 SagaId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
                                 CorrelationId = "second",
@@ -94,7 +94,7 @@ namespace Rebus.Tests.Persistence.Timeouts
         {
             var justSomeUtcTimeStamp = new DateTime(2010, 3, 10, 12, 30, 15, DateTimeKind.Utc);
 
-            storage.Add(new Timeout.Timeout
+            storage.Add(new Rebus.Timeout.Timeout
             {
                 CorrelationId = "first",
                 ReplyTo = "somebody",
@@ -102,7 +102,7 @@ namespace Rebus.Tests.Persistence.Timeouts
                 CustomData = null,
             });
 
-            storage.Add(new Timeout.Timeout
+            storage.Add(new Rebus.Timeout.Timeout
             {
                 CorrelationId = "second",
                 ReplyTo = "somebody",

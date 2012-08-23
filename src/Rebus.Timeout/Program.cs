@@ -1,4 +1,6 @@
-﻿using Rebus.Log4Net;
+﻿using System;
+using System.IO;
+using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Topshelf;
@@ -10,7 +12,7 @@ namespace Rebus.Timeout
     {
         static void Main()
         {
-            XmlConfigurator.Configure();
+            XmlConfigurator.ConfigureAndWatch(new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log4net.config")));
 
             RebusLoggerFactory.Current = new Log4NetLoggerFactory();
 

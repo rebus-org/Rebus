@@ -6,7 +6,7 @@ using Rebus.Persistence.InMemory;
 using Rebus.Timeout;
 using Shouldly;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Timeout
 {
     [TestFixture]
     public class TestTimeoutService : RebusBusMsmqIntegrationTestBase
