@@ -37,6 +37,8 @@ namespace Rebus.Transports.Encrypted
         {
             var receivedTransportMessage = innerReceiveMessages.ReceiveMessage();
 
+            if (receivedTransportMessage == null) return null;
+
             byte[] body;
             var headers = receivedTransportMessage.Headers.Clone();
 

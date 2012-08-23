@@ -29,6 +29,20 @@ namespace Rebus.Tests.Transports.Encrypted
         }
 
         [Test]
+        public void DoesNotDieWhenReturnedMessageIsNull()
+        {
+            // arrange
+            receiver.SetUpReceive(null);
+
+            // act
+            var receivedTransportMessage = transport.ReceiveMessage();
+
+            // assert
+            receivedTransportMessage.ShouldBe(null);
+
+        }
+
+        [Test]
         public void CanGenerateValidKey()
         {
             var key = RijndaelEncryptionTransportDecorator.GenerateKeyBase64();
