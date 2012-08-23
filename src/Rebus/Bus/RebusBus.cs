@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;

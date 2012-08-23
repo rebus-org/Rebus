@@ -1,7 +1,9 @@
 using System.Configuration;
-using Rebus.Transports.Encrypted;
+using Rebus.Configuration;
+using Rebus.Transports.Msmq;
+using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
-namespace Rebus.Configuration
+namespace Rebus.Transports.Encrypted
 {
     public static class RijndaelEncryptionConfigurationExtensions
     {
@@ -15,7 +17,14 @@ namespace Rebus.Configuration
                     var decorator = new RijndaelEncryptionTransportDecorator(sendMessages, receiveMessages, keyBase64);
 
                     b.SendMessages = decorator;
-                    b.ReceiveMessages = decorator;
+
+                    // if we're in one-way client mode, we skip the decorator - otherwise RebusBus would not
+                    // be able to detect one-way client mode - we should definitely make this more explicit
+                    // somehow
+                    if (!(b.ReceiveMessages is MsmqConfigurationExtension.OneWayClientGag))
+                    {
+                        b.ReceiveMessages = decorator;
+                    }
                 });
         }
 

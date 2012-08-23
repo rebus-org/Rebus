@@ -3,6 +3,10 @@ using System.Security.Cryptography;
 
 namespace Rebus.Transports.Encrypted
 {
+    /// <summary>
+    /// Encryption helper that encapsulated the Rijndael-specified stuff. Basically just
+    /// gives <see cref="RijndaelManaged"/> a decent API.
+    /// </summary>
     public class RijndaelHelper
     {
         readonly byte[] key;
