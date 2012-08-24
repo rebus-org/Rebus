@@ -66,6 +66,8 @@
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
+    <Compile Include="Testing\FakeBus.cs" />
+    <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />

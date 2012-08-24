@@ -218,6 +218,7 @@
     <Compile Include="Integration\TestRebusEvents.cs" />
     <Compile Include="Integration\TestRebusOnRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
+    <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
     <Compile Include="Timeout\TestTimeoutService.cs" />
     <Compile Include="Logging\TestRebusLoggerFactory.cs" />
