@@ -190,7 +190,7 @@ The following addresses were collected:
         ///     Sending 10000 messages took 17 s - that's 595 msg/s
         /// 
         /// </summary>
-        [TestCase(10000)]
+        [TestCase(1000)]
         public void CheckSendPerformance(int count)
         {
             var queue = new MsmqMessageQueue("test.msmq.performance").PurgeInputQueue();
