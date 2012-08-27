@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
