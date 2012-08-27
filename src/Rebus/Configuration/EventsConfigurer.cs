@@ -4,6 +4,11 @@ namespace Rebus.Configuration
 {
     public class EventsConfigurer : IRebusEvents
     {
+        public EventsConfigurer(ConfigurationBackbone backbone)
+        {
+            backbone.AddEvents(this);
+        }
+
         public event MessageSentEventHandler MessageSent;
         public event BeforeMessageEventHandler BeforeMessage;
         public event AfterMessageEventHandler AfterMessage;

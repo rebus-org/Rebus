@@ -26,7 +26,7 @@ namespace Rebus.Configuration
 
         public RebusConfigurer Events(Action<IRebusEvents> configure)
         {
-            configure(new EventsConfigurer());
+            configure(new EventsConfigurer(backbone));
             return this;
         }
 
