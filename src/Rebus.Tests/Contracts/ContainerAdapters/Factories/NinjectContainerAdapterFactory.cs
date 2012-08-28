@@ -18,5 +18,10 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             kernel.Dispose();
         }
+
+        public void Register<TService, TImplementation>() where TService : class where TImplementation : TService
+        {
+            kernel.Bind<TService>().To<TImplementation>();
+        }
     }
 }
