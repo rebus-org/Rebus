@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Log4Net;
 using Rebus.Logging;
@@ -37,7 +38,22 @@ namespace Rebus.Tests.Configuration
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
-            configurer.CreateBus();
+            var bus = (IAdvancedBus)configurer.CreateBus();
+            var events = ((RebusEvents) bus.Events);
+            
+            events.RaiseBeforeTransportMessage(null, null);
+            events.RaiseBeforeMessage(null, null);
+            events.RaiseAfterMessage(null, null, null);
+            events.RaiseAfterTransportMessage(null, null, null);
+            events.RaiseMessageSent(null, null, null);
+            events.RaisePoisonMessage(null, null);
+
+            raisedEvents.ShouldContain("before transport message");
+            raisedEvents.ShouldContain("before message");
+            raisedEvents.ShouldContain("after message");
+            raisedEvents.ShouldContain("after transport message");
+            raisedEvents.ShouldContain("message sent");
+            raisedEvents.ShouldContain("poison message");
         }
 
         [Test]
