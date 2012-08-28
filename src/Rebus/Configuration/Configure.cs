@@ -9,8 +9,8 @@
         /// Starts configuring Rebus with the specified container adapter.
         /// </summary>
         public static RebusConfigurerWithLogging With(IContainerAdapter adapter)
-         {
-             return new RebusConfigurerWithLogging(new ConfigurationBackbone(adapter));
-         }
+        {
+            return new RebusConfigurerWithLogging(new ConfigurationBackbone(adapter));
+        }
     }
 }

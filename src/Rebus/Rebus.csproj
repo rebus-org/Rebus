@@ -63,6 +63,7 @@
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
