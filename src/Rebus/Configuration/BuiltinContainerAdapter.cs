@@ -8,7 +8,7 @@ namespace Rebus.Configuration
     /// Very simple and independent container adapter that relies on <see cref="SimpleHandlerActivator"/>
     /// to activate handlers.
     /// </summary>
-    public class BuiltinContainerAdapter : IContainerAdapter
+    public class BuiltinContainerAdapter : IContainerAdapter, IDisposable
     {
         readonly SimpleHandlerActivator handlerActivator = new SimpleHandlerActivator();
 
@@ -49,6 +49,16 @@ namespace Rebus.Configuration
         {
             Bus = bus;
             AdvancedBus = advancedBus;
+        }
+
+        public void Dispose()
+        {
+            Bus.Dispose();
+
+            if (!ReferenceEquals(Bus, AdvancedBus))
+            {
+                AdvancedBus.Dispose();
+            }
         }
     }
 }
