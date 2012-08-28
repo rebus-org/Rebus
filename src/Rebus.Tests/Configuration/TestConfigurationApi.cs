@@ -219,6 +219,19 @@ namespace Rebus.Tests.Configuration
         }
 
         [Test]
+        public void CanConfigureCustomSerialization()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var serializer = Mock<ISerializeMessages>();
+            
+            var configurer = Configure.With(adapter)
+                .Serialization(s => s.Use(serializer));
+
+            configurer.Backbone.SerializeMessages.ShouldBe(serializer);
+        }
+
+        [Test]
         public void RequiresThatTransportIsConfigured()
         {
             var configurer = Configure.With(new TestContainerAdapter())
