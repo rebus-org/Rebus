@@ -60,6 +60,12 @@ namespace Rebus.Configuration
             return this;
         }
 
+        public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
+        {
+            configurePipelineInspector(new PipelineInspectorConfigurer(backbone));
+            return this;
+        }
+
         public IStartableBus CreateBus()
         {
             VerifyComponents(backbone);

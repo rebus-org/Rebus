@@ -13,11 +13,5 @@ namespace Rebus.Configuration
             configurer(new LoggingConfigurer(backbone));
             return this;
         }
-
-        public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
-        {
-            configurePipelineInspector(new PipelineInspectorConfigurer(backbone));
-            return this;
-        }
     }
 }

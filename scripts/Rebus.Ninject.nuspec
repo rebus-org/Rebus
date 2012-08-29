@@ -13,8 +13,8 @@
     <copyright>Copyright 2012</copyright>
     <tags>rebus ninject di dependencyInjection ioc inversionOfControl</tags>
     <dependencies>
-      <dependency id="Rebus" version="0.0.1"/>
-      <dependency id="Ninject" version="3.0.1.10"/>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="Ninject" version="3.0.1.10" />
     </dependencies>
   </metadata>
   <files>
