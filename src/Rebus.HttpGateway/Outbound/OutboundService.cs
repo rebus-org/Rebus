@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
@@ -122,8 +121,11 @@ namespace Rebus.HttpGateway.Outbound
             }
 
             request.Headers.Add(RebusHttpHeaders.Id, receivedTransportMessage.Id);
-            
-            request.GetRequestStream().Write(bytes, 0, bytes.Length);
+
+            using(var requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(bytes, 0, bytes.Length);
+            }
 
             log.Info("Added headers to request: {0}", string.Join(", ", headers.Keys));
 
