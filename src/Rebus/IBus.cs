@@ -35,6 +35,12 @@ namespace Rebus
         void Subscribe<TEvent>();
 
         /// <summary>
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// </summary>
+        void Unsubscribe<T>();
+
+        /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.
         /// The publisher should have some kind of <see cref="IStoreSubscriptions"/> implementation,
         /// preferably a durable implementation like e.g. <see cref="SqlServerSubscriptionStorage"/>.

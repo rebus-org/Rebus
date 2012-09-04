@@ -162,20 +162,42 @@ that can take action.",
             InternalSend(returnAddress, new List<object> { message });
         }
 
-        public void Subscribe<TMessage>()
+        public void Subscribe<TEvent>()
         {
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TMessage));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
 
-            InternalSubscribe<TMessage>(publisherInputQueue);
+            InternalSubscribe<TEvent>(publisherInputQueue);
+        }
+
+        public void Unsubscribe<TEvent>()
+        {
+            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+
+            InternalUnsubscribe<TEvent>(publisherInputQueue);
         }
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot Subscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Subscribe);
+        }
 
-            var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
+        internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
+        {
+            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Unsubscribe);
+        }
 
-            InternalSend(publisherInputQueue, new List<object> { message });
+        internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
+        {
+            EnsureBusModeIsNot(BusMode.OneWayClientMode,
+                               "You cannot Subscribe/Unsubscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+
+            var message = new SubscriptionMessage
+                {
+                    Type = typeof (TMessage).AssemblyQualifiedName,
+                    Action = subscribeAction,
+                };
+
+            InternalSend(destinationQueue, new List<object> {message});
         }
 
         void InternalStart(int numberOfWorkers)
@@ -331,7 +353,19 @@ element)"));
         public void Dispose()
         {
             SetNumberOfWorkers(0);
-            headerContext.Dispose();
+
+            var disposables = new object[]
+                {
+                    headerContext, sendMessages, receiveMessages,
+                    storeSubscriptions, storeSagaData
+                }
+                .OfType<IDisposable>()
+                .Distinct();
+
+            foreach(var disposable in disposables)
+            {
+                disposable.Dispose();
+            }
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)

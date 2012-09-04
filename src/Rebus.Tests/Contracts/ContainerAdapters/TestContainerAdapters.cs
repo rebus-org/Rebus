@@ -124,6 +124,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 throw new NotImplementedException();
             }
 
+            public void Unsubscribe<T>()
+            {
+                throw new NotImplementedException();
+            }
+
             public void Publish<TEvent>(TEvent message)
             {
                 throw new NotImplementedException();

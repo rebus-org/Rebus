@@ -15,6 +15,7 @@ namespace Rebus.Testing
         readonly List<object> locallySentMessages = new List<object>();
         readonly List<object> replies = new List<object>();
         readonly List<Type> subscriptions = new List<Type>();
+        readonly List<Type> unsubscriptions = new List<Type>();
         readonly List<DeferredMessage> deferredMessages = new List<DeferredMessage>();
 
         readonly Dictionary<object, Dictionary<string, string>> attachedHeaders = new Dictionary<object, Dictionary<string, string>>();
@@ -37,6 +38,11 @@ namespace Rebus.Testing
         public void Subscribe<TEvent>()
         {
             subscriptions.Add(typeof(TEvent));
+        }
+
+        public void Unsubscribe<TEvent>()
+        {
+            unsubscriptions.Add(typeof (TEvent));
         }
 
         public void Publish<TEvent>(TEvent message)
