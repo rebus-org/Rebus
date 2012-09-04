@@ -24,7 +24,7 @@ namespace Rebus.Tests.HttpGateway
             var outgoingSection = section.Outbound;
             outgoingSection.ShouldNotBe(null);
             outgoingSection.ListenQueue.ShouldBe("test.rebus.outgoing");
-            outgoingSection.DestinationUri.ShouldBe("http://localhost:8081");
+            outgoingSection.DestinationUri.ShouldBe("http://localhost:8080");
         }
     }
 }

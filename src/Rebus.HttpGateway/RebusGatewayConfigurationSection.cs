@@ -43,6 +43,7 @@ that it is NOT possible to rename this section, even though the declaration make
     {
         const string ListenQueuePropertyName = "listenQueue";
         const string DestinationUriPropertyName = "destinationUri";
+        const string ErrorQueuePropertyName = "errorQueue";
 
         [ConfigurationProperty(ListenQueuePropertyName)]
         public string ListenQueue
@@ -56,6 +57,13 @@ that it is NOT possible to rename this section, even though the declaration make
         {
             get { return (string)this[DestinationUriPropertyName]; }
             set { this[DestinationUriPropertyName] = value; }
+        }
+
+        [ConfigurationProperty(ErrorQueuePropertyName)]
+        public string ErrorQueue
+        {
+            get { return (string)this[ErrorQueuePropertyName]; }
+            set { this[ErrorQueuePropertyName] = value; }
         }
     }
 
