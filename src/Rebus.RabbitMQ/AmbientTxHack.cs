@@ -1,5 +1,6 @@
 using System;
 using System.Transactions;
+using RabbitMQ.Client;
 using Rebus.Logging;
 
 namespace Rebus.RabbitMQ
@@ -15,14 +16,21 @@ namespace Rebus.RabbitMQ
 
         readonly Action commitAction;
         readonly Action rollbackAction;
-        readonly IDisposable toDisposeAtTheRightTime;
+        readonly IModel modelToUse;
+        readonly bool modelProvidedFromTheOutside;
         readonly bool isEnlisted;
 
-        public AmbientTxHack(Action commitAction, Action rollbackAction, IDisposable toDisposeAtTheRightTime)
+        public IModel ModelToUse
+        {
+            get { return modelToUse; }
+        }
+
+        public AmbientTxHack(Action commitAction, Action rollbackAction, IModel modelToUse, bool modelProvidedFromTheOutside)
         {
             this.commitAction = commitAction;
             this.rollbackAction = rollbackAction;
-            this.toDisposeAtTheRightTime = toDisposeAtTheRightTime;
+            this.modelToUse = modelToUse;
+            this.modelProvidedFromTheOutside = modelProvidedFromTheOutside;
 
             if (Transaction.Current != null)
             {
@@ -82,10 +90,9 @@ namespace Rebus.RabbitMQ
 
         void DisposeStuff()
         {
-            if (toDisposeAtTheRightTime != null)
-            {
-                toDisposeAtTheRightTime.Dispose();
-            }
+            if (modelProvidedFromTheOutside) return;
+
+            modelToUse.Dispose();
         }
 
         public void Dispose()

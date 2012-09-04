@@ -17,7 +17,7 @@ namespace Rebus.Tests.Transports.Rabbit
     {
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new NullLoggerFactory();
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) {MinLevel = LogLevel.Info};
         }
 
         /// <summary>
@@ -36,10 +36,16 @@ namespace Rebus.Tests.Transports.Rabbit
         ///
         ///     Sending 100000 messages took 130,4 s - that's 767 msg/s
         ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15645 msg/s
+        /// 
+        /// Now binding subscriptions and their corresponding models to the current thread (like we're in a handler on a worker thread):
+        ///     Sending 100000 messages
+        ///     Sending 100000 messages took 117,5 s - that's 851 msg/s
+        ///     Receiving 100000 messages
+        ///     Receiving 100000 messages spread across 10 consumers took 5,2 s - that's 19365 msg/s
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 10)]//, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             const string senderInputQueue = "test.rabbit.sender";
