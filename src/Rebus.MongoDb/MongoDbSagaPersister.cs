@@ -79,8 +79,10 @@ namespace Rebus.MongoDb
 
             EnsureIndexHasBeenCreated(sagaDataPropertyPathsToIndex, collection);
 
+            var revisionElementName = GetRevisionElementName(sagaData);
+
             var criteria = Query.And(Query.EQ("_id", sagaData.Id),
-                                     Query.EQ("_rev", sagaData.Revision));
+                                     Query.EQ(revisionElementName, sagaData.Revision));
 
             sagaData.Revision++;
 
@@ -203,6 +205,20 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
             }
         }
 
+        static string GetRevisionElementName(ISagaData sagaData)
+        {
+            var revisionElementName = "_rev";
+
+            var classmap = BsonClassMap.LookupClassMap(sagaData.GetType());
+            var revision = classmap.GetMemberMap("Revision");
+            if (revision != null)
+            {
+                revisionElementName = revision.ElementName;
+            }
+
+            return revisionElementName;
+        }
+
         bool IndexAlreadyExists(IEnumerable<IndexInfo> indexes, string propertyToIndex)
         {
             return indexes
@@ -220,8 +236,10 @@ automatically - for sagas of the type {0}, the collection will be named '{1}'.
         {
             var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
 
+            var revisionElementName = GetRevisionElementName(sagaData);
+
             var query = Query.And(Query.EQ("_id", sagaData.Id),
-                                  Query.EQ("_rev", sagaData.Revision));
+                                  Query.EQ(revisionElementName, sagaData.Revision));
 
             try
             {

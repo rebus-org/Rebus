@@ -8,7 +8,7 @@ using Shouldly;
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
-    [TestFixture(typeof(RabbitMqTransportFactory))]
+    [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -31,8 +31,8 @@ namespace Rebus.Tests.Contracts.Transports
             factory.CleanUp();
         }
 
-        [TestCase(true, Description="Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
-        [TestCase(false, Description="Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
+        [TestCase(true, Description = "Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
+        [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
         public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
             sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
@@ -89,7 +89,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         TransportMessageToSend MessageWith(string text)
         {
-            return new TransportMessageToSend {Body = Encoding.GetBytes(text)};
+            return new TransportMessageToSend { Body = Encoding.GetBytes(text) };
         }
     }
 }
