@@ -8,6 +8,7 @@ using Shouldly;
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
+    [TestFixture(typeof(RabbitMqTransportFactory))]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -30,8 +31,8 @@ namespace Rebus.Tests.Contracts.Transports
             factory.CleanUp();
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
+        [TestCase(true, Description="Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
+        [TestCase(false, Description="Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
         public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
             sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
@@ -39,19 +40,23 @@ namespace Rebus.Tests.Contracts.Transports
             var destination1 = factory.CreateReceiver("destination1");
             var destination2 = factory.CreateReceiver("destination2");
 
-            Thread.Sleep(300);
+            Thread.Sleep(1.Seconds());
 
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
             {
                 // arrange
                 var receivedTransportMessage = receiver.ReceiveMessage();
+                receivedTransportMessage.ShouldNotBe(null);
 
                 // act
                 sender.Send(destination1.InputQueueAddress, receivedTransportMessage.ToForwardableMessage());
                 sender.Send(destination2.InputQueueAddress, receivedTransportMessage.ToForwardableMessage());
 
-                if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
+                if (commitTransactionAndExpectMessagesToBeThere)
+                {
+                    tx.Complete();
+                }
             }
 
             Thread.Sleep(300);
@@ -74,7 +79,11 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 msg1.ShouldBe(null);
                 msg2.ShouldBe(null);
-                receiver.ReceiveMessage().ShouldNotBe(null);
+
+                using (new TransactionScope())
+                {
+                    receiver.ReceiveMessage().ShouldNotBe(null);
+                }
             }
         }
 

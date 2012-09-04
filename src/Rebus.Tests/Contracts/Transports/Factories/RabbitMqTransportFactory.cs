@@ -19,7 +19,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
-            var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName, queueName + ".error");
+            var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName);
             queue.PurgeInputQueue();
             disposables.Add(queue);
             return queue;

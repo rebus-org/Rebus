@@ -76,6 +76,7 @@ namespace Rebus.Tests.Contracts.Transports
             var receivedTransportMessage = receiver.ReceiveMessage();
 
             // assert
+            receivedTransportMessage.ShouldNotBe(null);
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("wooolalalala");
         }
     }

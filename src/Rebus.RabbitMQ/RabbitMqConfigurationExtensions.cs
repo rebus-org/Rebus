@@ -69,7 +69,7 @@ A more full example configuration snippet can be seen here:
 
          static void DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
-            var queue = new RabbitMqMessageQueue(connectionString, inputQueueName, errorQueueName);
+            var queue = new RabbitMqMessageQueue(connectionString, inputQueueName);
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
