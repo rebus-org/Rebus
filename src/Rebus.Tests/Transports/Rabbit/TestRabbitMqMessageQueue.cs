@@ -174,7 +174,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
-            var queue = new RabbitMqMessageQueue(ConnectionString, queueName, queueName + ".error");
+            var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
             toDispose.Add(queue);
             return queue.PurgeInputQueue();
         }

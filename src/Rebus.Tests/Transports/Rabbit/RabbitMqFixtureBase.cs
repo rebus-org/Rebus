@@ -46,7 +46,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
         {
-            var rabbitMqMessageQueue = new RabbitMqMessageQueue(ConnectionString, inputQueueName, inputQueueName + ".error").PurgeInputQueue();
+            var rabbitMqMessageQueue = new RabbitMqMessageQueue(ConnectionString, inputQueueName).PurgeInputQueue();
 
             var bus = new RebusBus(handlerActivator, rabbitMqMessageQueue, rabbitMqMessageQueue,
                                    new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,

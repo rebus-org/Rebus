@@ -27,15 +27,13 @@ namespace Rebus.RabbitMQ
         readonly IConnection connection;
 
         readonly string inputQueueName;
-        readonly string errorQueue;
         readonly IModel subscriptionModel;
         readonly Subscription subscription;
         readonly object subscriptionLock = new object();
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName, string errorQueue)
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
             this.inputQueueName = inputQueueName;
-            this.errorQueue = errorQueue;
 
             log.Info("Opening Rabbit connection");
             connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
@@ -50,7 +48,6 @@ namespace Rebus.RabbitMQ
             tempModel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
 
             CreateLogicalQueue(tempModel, this.inputQueueName);
-            CreateLogicalQueue(tempModel, this.errorQueue);
 
             log.Debug("Opening subscription");
             subscription = new Subscription(subscriptionModel, inputQueueName);
