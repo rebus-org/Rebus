@@ -3,10 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Transactions;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
-using RabbitMQ.Client.MessagePatterns;
 using Rebus.Logging;
 using Rebus.Shared;
 
@@ -14,6 +13,8 @@ namespace Rebus.RabbitMQ
 {
     public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
+        const string ExchangeName = "Rebus";
+        static readonly Encoding Encoding = Encoding.UTF8;
         static ILog log;
 
         static RabbitMqMessageQueue()
@@ -21,10 +22,14 @@ namespace Rebus.RabbitMQ
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        const string ExchangeName = "Rebus";
-        static readonly Encoding Encoding = Encoding.UTF8;
         readonly string inputQueueName;
         readonly IConnection connection;
+
+        [ThreadStatic]
+        static IModel threadBoundModel;
+
+        [ThreadStatic]
+        static TxMan threadBoundTxMan;
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
@@ -76,84 +81,33 @@ namespace Rebus.RabbitMQ
                 using (var localModel = connection.CreateModel())
                 {
                     var basicGetResult = localModel.BasicGet(inputQueueName, true);
+                    
+                    if (basicGetResult == null)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+                        return null;
+                    }
 
-                    return basicGetResult == null
-                               ? null
-                               : GetReceivedTransportMessage(basicGetResult.BasicProperties, basicGetResult.Body);
+                    return GetReceivedTransportMessage(basicGetResult.BasicProperties, basicGetResult.Body);
                 }
             }
 
-            EnsureThreadBoundSubscriptionIsInitialized();
-
-            BasicDeliverEventArgs args;
-
-            if (threadBoundSubscription.Next(200, out args))
-            {
-                threadBoundTxMan.OnCommit += () =>
-                    {
-                        log.Warn("ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ");
-                        threadBoundSubscription.Ack(args);
-                    };
-
-                return GetReceivedTransportMessage(args.BasicProperties, args.Body);
-            }
-
-            return null;
-        }
-
-        [ThreadStatic]
-        static IModel threadBoundModel;
-
-        [ThreadStatic]
-        static Subscription threadBoundSubscription;
-
-        [ThreadStatic]
-        static TxMan threadBoundTxMan;
-
-        void EnsureThreadBoundModelIsInitialized()
-        {
-            EnsureTxManIsInitialized();
-
-            if (threadBoundModel != null) return;
-
-            threadBoundModel = connection.CreateModel();
-            threadBoundModel.TxSelect();
-
-            threadBoundTxMan.OnCommit += () => threadBoundModel.TxCommit();
-            threadBoundTxMan.OnRollback += () => threadBoundModel.TxRollback();
-            threadBoundTxMan.Cleanup += () =>
-                {
-                    threadBoundModel.Dispose();
-                    threadBoundModel = null;
-                };
-        }
-
-        void EnsureThreadBoundSubscriptionIsInitialized()
-        {
-            if (threadBoundSubscription != null) return;
-
-            EnsureTxManIsInitialized();
             EnsureThreadBoundModelIsInitialized();
 
-            threadBoundSubscription = new Subscription(threadBoundModel, inputQueueName, false);
-            threadBoundTxMan.Cleanup += () => threadBoundSubscription = null;
-        }
+            var modelToUse = threadBoundModel;
 
-        void EnsureTxManIsInitialized()
-        {
-            if (threadBoundTxMan != null) return;
+            var result = modelToUse.BasicGet(inputQueueName, false);
 
-            threadBoundTxMan = new TxMan();
+            if (result == null)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(200));
+                return null;
+            }
 
-            Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
+            threadBoundTxMan.OnCommit += () => modelToUse.BasicAck(result.DeliveryTag, false);
+            threadBoundTxMan.OnRollback += () => modelToUse.BasicNack(result.DeliveryTag, false, true);
 
-            // should remove itself afterwards
-            threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
-        }
-
-        static bool InAmbientTransaction()
-        {
-            return Transaction.Current != null;
+            return GetReceivedTransportMessage(result.BasicProperties, result.Body);
         }
 
         public string InputQueue { get { return inputQueueName; } }
@@ -174,6 +128,38 @@ namespace Rebus.RabbitMQ
             }
 
             return this;
+        }
+
+        void EnsureThreadBoundModelIsInitialized()
+        {
+            EnsureTxManIsInitialized();
+
+            if (threadBoundModel != null) return;
+
+            threadBoundModel = connection.CreateModel();
+            threadBoundModel.TxSelect();
+
+            threadBoundTxMan.OnCommit += () => threadBoundModel.TxCommit();
+            threadBoundTxMan.OnRollback += () => threadBoundModel.TxRollback();
+            threadBoundTxMan.Cleanup += () =>
+                {
+                    threadBoundModel.Dispose();
+                    threadBoundModel = null;
+                };
+        }
+
+        void EnsureTxManIsInitialized()
+        {
+            if (threadBoundTxMan != null) return;
+
+            threadBoundTxMan = new TxMan();
+            Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
+            threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
+        }
+
+        static bool InAmbientTransaction()
+        {
+            return Transaction.Current != null;
         }
 
         static IBasicProperties GetHeaders(IModel modelToUse, TransportMessageToSend message)
@@ -261,7 +247,7 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-                log.Debug("Rolling back!: {0}", Environment.StackTrace);
+                log.Debug("Rolling back!");
                 OnRollback();
                 enlistment.Done();
             }
@@ -278,6 +264,7 @@ namespace Rebus.RabbitMQ
 
         public void InDoubt(Enlistment enlistment)
         {
+            log.Debug("In doubt!");
             enlistment.Done();
         }
     }

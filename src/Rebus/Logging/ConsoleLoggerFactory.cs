@@ -164,7 +164,7 @@ namespace Rebus.Logging
 
         bool AbortedByFilter(LogStatement logStatement)
         {
-            return filters.Any(shouldShow => !shouldShow(logStatement));
+            return filters.Any(f => !f(logStatement));
         }
     }
 }

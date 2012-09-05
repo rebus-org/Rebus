@@ -93,7 +93,7 @@ because there would be remote calls involved when you wanted to receive a messag
             try
             {
                 transactionWrapper.Begin();
-                var message = inputQueue.Receive(TimeSpan.FromSeconds(2), transactionWrapper.MessageQueueTransaction);
+                var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transactionWrapper.MessageQueueTransaction);
                 if (message == null)
                 {
                     log.Warn("Received NULL message - how weird is that?");

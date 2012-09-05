@@ -14,6 +14,12 @@ namespace Rebus.Tests
         }
 
         [DebuggerStepThrough]
+        public static TimeSpan Milliseconds(this int seconds)
+        {
+            return TimeSpan.FromMilliseconds(seconds);
+        }
+
+        [DebuggerStepThrough]
         public static TimeSpan Seconds(this int seconds)
         {
             return TimeSpan.FromSeconds(seconds);

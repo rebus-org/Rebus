@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
@@ -33,14 +34,13 @@ namespace Rebus.Tests.Contracts.Transports
 
         [TestCase(true, Description = "Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
         [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
-        public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
+        public void CanReceiveAndDoOneSingleSendAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
             sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
 
             var destination1 = factory.CreateReceiver("destination1");
-            var destination2 = factory.CreateReceiver("destination2");
 
-            Thread.Sleep(1.Seconds());
+            Thread.Sleep(300.Milliseconds());
 
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
@@ -50,8 +50,7 @@ namespace Rebus.Tests.Contracts.Transports
                 receivedTransportMessage.ShouldNotBe(null);
 
                 // act
-                sender.Send(destination1.InputQueueAddress, receivedTransportMessage.ToForwardableMessage());
-                sender.Send(destination2.InputQueueAddress, receivedTransportMessage.ToForwardableMessage());
+                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
 
                 if (commitTransactionAndExpectMessagesToBeThere)
                 {
@@ -59,7 +58,70 @@ namespace Rebus.Tests.Contracts.Transports
                 }
             }
 
-            Thread.Sleep(300);
+            Thread.Sleep(300.Milliseconds());
+
+            // assert
+            var msg1 = destination1.ReceiveMessage();
+
+            if (commitTransactionAndExpectMessagesToBeThere)
+            {
+                msg1.ShouldNotBe(null);
+                Encoding.GetString(msg1.Body).ShouldBe("hello mr. 1");
+
+                var stopwatch = Stopwatch.StartNew();
+
+                while (stopwatch.Elapsed < 10.Seconds())
+                {
+                    using (new TransactionScope())
+                    {
+                        receiver.ReceiveMessage();
+                    }
+                }
+
+                receiver.ReceiveMessage().ShouldBe(null);
+            }
+            else
+            {
+                msg1.ShouldBe(null);
+
+                using (new TransactionScope())
+                {
+                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    receivedTransportMessage.ShouldNotBe(null);
+                    Encoding.GetString(receivedTransportMessage.Body).ShouldBe("hello");
+                }
+            }
+        }
+
+        [TestCase(true, Description = "Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
+        [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
+        public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
+        {
+            sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
+
+            var destination1 = factory.CreateReceiver("destination1");
+            var destination2 = factory.CreateReceiver("destination2");
+
+            Thread.Sleep(300.Milliseconds());
+
+            // pretend that this is a message handler tx scope...
+            using (var tx = new TransactionScope())
+            {
+                // arrange
+                var receivedTransportMessage = receiver.ReceiveMessage();
+                receivedTransportMessage.ShouldNotBe(null);
+
+                // act
+                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
+                sender.Send(destination2.InputQueueAddress, MessageWith("hello mr. 2"));
+
+                if (commitTransactionAndExpectMessagesToBeThere)
+                {
+                    tx.Complete();
+                }
+            }
+
+            Thread.Sleep(300.Milliseconds());
 
             // assert
             var msg1 = destination1.ReceiveMessage();
@@ -68,15 +130,22 @@ namespace Rebus.Tests.Contracts.Transports
             if (commitTransactionAndExpectMessagesToBeThere)
             {
                 msg1.ShouldNotBe(null);
-                Encoding.GetString(msg1.Body).ShouldBe("hello");
+                Encoding.GetString(msg1.Body).ShouldBe("hello mr. 1");
 
                 msg2.ShouldNotBe(null);
-                Encoding.GetString(msg2.Body).ShouldBe("hello");
+                Encoding.GetString(msg2.Body).ShouldBe("hello mr. 2");
 
-                using(new TransactionScope())
+                var stopwatch = Stopwatch.StartNew();
+
+                while (stopwatch.Elapsed < 10.Seconds())
                 {
-                    receiver.ReceiveMessage().ShouldBe(null);
+                    using (new TransactionScope())
+                    {
+                        receiver.ReceiveMessage();
+                    }
                 }
+
+                receiver.ReceiveMessage().ShouldBe(null);
             }
             else
             {
@@ -85,7 +154,9 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    receiver.ReceiveMessage().ShouldNotBe(null);
+                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    receivedTransportMessage.ShouldNotBe(null);
+                    Encoding.GetString(receivedTransportMessage.Body).ShouldBe("hello");
                 }
             }
         }
