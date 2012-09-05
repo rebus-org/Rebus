@@ -25,6 +25,8 @@ namespace Rebus.RabbitMQ
         readonly string inputQueueName;
         readonly IConnection connection;
 
+        bool disposed;
+
         [ThreadStatic]
         static IModel threadBoundModel;
 
@@ -80,7 +82,7 @@ namespace Rebus.RabbitMQ
                 using (var localModel = connection.CreateModel())
                 {
                     var basicGetResult = localModel.BasicGet(inputQueueName, true);
-                    
+
                     if (basicGetResult == null)
                     {
                         Thread.Sleep(TimeSpan.FromMilliseconds(200));
@@ -115,9 +117,24 @@ namespace Rebus.RabbitMQ
 
         public void Dispose()
         {
+            if (disposed) return;
+
             log.Info("Disposing queue {0}", inputQueueName);
-            connection.Close();
-            connection.Dispose();
+
+            try
+            {
+                connection.Close();
+                connection.Dispose();
+            }
+            catch(Exception e)
+            {
+                log.Error("An error occurred while disposing queue {0}: {1}", inputQueueName, e);
+                throw;
+            }
+            finally
+            {
+                disposed = true;
+            }
         }
 
         public RabbitMqMessageQueue PurgeInputQueue()

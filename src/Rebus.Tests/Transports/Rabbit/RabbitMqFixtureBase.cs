@@ -35,7 +35,17 @@ namespace Rebus.Tests.Transports.Rabbit
         [TearDown]
         public void TearDown()
         {
-            toDispose.ForEach(b => b.Dispose());
+            toDispose.ForEach(b =>
+                {
+                    try
+                    {
+                        b.Dispose();
+                    }
+                    catch(Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                });
             DoTearDown();
             RebusLoggerFactory.Reset();
         }

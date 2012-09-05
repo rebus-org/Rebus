@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Text;
+﻿using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
@@ -68,17 +67,11 @@ namespace Rebus.Tests.Contracts.Transports
                 msg1.ShouldNotBe(null);
                 Encoding.GetString(msg1.Body).ShouldBe("hello mr. 1");
 
-                var stopwatch = Stopwatch.StartNew();
-
-                while (stopwatch.Elapsed < 10.Seconds())
+                using (new TransactionScope())
                 {
-                    using (new TransactionScope())
-                    {
-                        receiver.ReceiveMessage();
-                    }
+                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    Assert.That(receivedTransportMessage, Is.Null, "Received message: {0}", Encoding.GetString(receivedTransportMessage.Body));
                 }
-
-                receiver.ReceiveMessage().ShouldBe(null);
             }
             else
             {
@@ -135,17 +128,11 @@ namespace Rebus.Tests.Contracts.Transports
                 msg2.ShouldNotBe(null);
                 Encoding.GetString(msg2.Body).ShouldBe("hello mr. 2");
 
-                var stopwatch = Stopwatch.StartNew();
-
-                while (stopwatch.Elapsed < 10.Seconds())
+                using (new TransactionScope())
                 {
-                    using (new TransactionScope())
-                    {
-                        receiver.ReceiveMessage();
-                    }
+                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    Assert.That(receivedTransportMessage, Is.Null, "Received message: {0}", Encoding.GetString(receivedTransportMessage.Body));
                 }
-
-                receiver.ReceiveMessage().ShouldBe(null);
             }
             else
             {
