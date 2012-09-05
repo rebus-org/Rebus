@@ -52,7 +52,6 @@ namespace Rebus.RabbitMQ
             }
         }
 
-
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
             if (!InAmbientTransaction())
@@ -117,6 +116,8 @@ namespace Rebus.RabbitMQ
         public void Dispose()
         {
             log.Info("Disposing queue {0}", inputQueueName);
+            connection.Close();
+            connection.Dispose();
         }
 
         public RabbitMqMessageQueue PurgeInputQueue()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,6 +19,34 @@ namespace Rebus.Tests.Transports.Rabbit
         protected override void DoSetUp()
         {
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) {MinLevel = LogLevel.Info};
+        }
+
+        [Test, Description("Experienced that ACK didn't work so the same message would be received over and over")]
+        public void DoesNotReceiveTheSameMessageOverAndOver()
+        {
+            const string receiverInputQueueName = "rabbit.acktest.receiver";
+            
+            var receivedNumbers = new ConcurrentBag<int>();
+
+            // arrange
+            var receiverHandler = new HandlerActivatorForTesting()
+                .Handle<Tuple<int>>(t => receivedNumbers.Add(t.Item1));
+
+            var receiver = CreateBus(receiverInputQueueName, receiverHandler);
+            var sender = CreateBus("rabbit.acktest.sender", new HandlerActivatorForTesting());
+
+            receiver.Start(1);
+            sender.Start(1);
+
+            // act
+            // assert
+            Thread.Sleep(0.5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(0));
+            sender.Routing.Send(receiverInputQueueName, Tuple.Create(23));
+
+            Thread.Sleep(0.5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(1), "Only expected one single number in the bag");
+            Assert.That(receivedNumbers, Contains.Item(23), "Well, just expected 23 to be there");
         }
 
         /// <summary>
