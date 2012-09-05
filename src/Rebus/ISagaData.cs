@@ -17,7 +17,8 @@ namespace Rebus
         
         /// <summary>
         /// This is the revision of this saga. It may be used by the saga persister to implement
-        /// optimistic locking. Not all saga persisters need to do this though.
+        /// optimistic locking. Not all saga persisters need to do this though. Please don't mess
+        /// with this one in your code.
         /// </summary>
         int Revision { get; set; }
     }

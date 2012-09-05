@@ -14,16 +14,17 @@ namespace Rebus.RabbitMQ
 {
     public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
     {
-        const string ExchangeName = "Rebus";
-        static readonly Encoding Encoding = Encoding.UTF8;
         static ILog log;
-        readonly string inputQueueName;
-        readonly IConnection connection;
 
         static RabbitMqMessageQueue()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
+
+        const string ExchangeName = "Rebus";
+        static readonly Encoding Encoding = Encoding.UTF8;
+        readonly string inputQueueName;
+        readonly IConnection connection;
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
@@ -31,6 +32,19 @@ namespace Rebus.RabbitMQ
 
             log.Info("Opening connection to Rabbit queue {0}", inputQueueName);
             connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
+
+            log.Info("Initializing logical queue '{0}'", inputQueueName);
+            using (var model = connection.CreateModel())
+            {
+                log.Debug("Declaring exchange '{0}'", ExchangeName);
+                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+
+                log.Debug("Declaring queue '{0}'", inputQueueName);
+                model.QueueDeclare(inputQueueName, true, false, false, new Hashtable());
+
+                log.Debug("Binding topic '{0}' to queue '{1}'", inputQueueName, inputQueueName);
+                model.QueueBind(inputQueueName, ExchangeName, inputQueueName);
+            }
         }
 
 
@@ -75,7 +89,11 @@ namespace Rebus.RabbitMQ
 
             if (threadBoundSubscription.Next(200, out args))
             {
-                threadBoundTxMan.OnCommit += () => threadBoundSubscription.Ack(args);
+                threadBoundTxMan.OnCommit += () =>
+                    {
+                        log.Warn("ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ACK ");
+                        threadBoundSubscription.Ack(args);
+                    };
 
                 return GetReceivedTransportMessage(args.BasicProperties, args.Body);
             }
@@ -125,7 +143,7 @@ namespace Rebus.RabbitMQ
         {
             if (threadBoundTxMan != null) return;
 
-            threadBoundTxMan = new TxMan(log);
+            threadBoundTxMan = new TxMan();
 
             Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
 
@@ -151,6 +169,7 @@ namespace Rebus.RabbitMQ
         {
             using (var model = connection.CreateModel())
             {
+                log.Warn("Purging queue {0}", inputQueueName);
                 model.QueuePurge(inputQueueName);
             }
 
@@ -203,11 +222,11 @@ namespace Rebus.RabbitMQ
 
     class TxMan : IEnlistmentNotification
     {
-        readonly ILog log;
+        static ILog log;
 
-        public TxMan(ILog log)
+        static TxMan()
         {
-            this.log = log;
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         public event Action OnCommit = delegate { };
@@ -242,7 +261,7 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-                log.Debug("Rolling back!");
+                log.Debug("Rolling back!: {0}", Environment.StackTrace);
                 OnRollback();
                 enlistment.Done();
             }

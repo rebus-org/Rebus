@@ -26,7 +26,8 @@ namespace Rebus.Bus
 
         public void Handle(SubscriptionMessage message)
         {
-            var subscriberInputQueue = MessageContext.GetCurrent().ReturnAddress;
+            var messageContext = MessageContext.GetCurrent();
+            var subscriberInputQueue = messageContext.ReturnAddress;
 
             if (string.IsNullOrWhiteSpace(subscriberInputQueue))
             {

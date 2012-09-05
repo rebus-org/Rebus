@@ -145,7 +145,7 @@ because there would be remote calls involved when you wanted to receive a messag
 
         public MsmqMessageQueue PurgeInputQueue()
         {
-            log.Warn("Purging {0}", inputQueuePath);
+            log.Warn("Purging queue {0}", inputQueuePath);
             inputQueue.Purge();
             return this;
         }

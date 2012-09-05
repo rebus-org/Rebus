@@ -73,7 +73,10 @@ namespace Rebus.Tests.Contracts.Transports
                 msg2.ShouldNotBe(null);
                 Encoding.GetString(msg2.Body).ShouldBe("hello");
 
-                receiver.ReceiveMessage().ShouldBe(null);
+                using(new TransactionScope())
+                {
+                    receiver.ReceiveMessage().ShouldBe(null);
+                }
             }
             else
             {

@@ -1,5 +1,4 @@
 ﻿using System;
-using Rebus.Tests.Performance.StressMongo.Crm;
 using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 
