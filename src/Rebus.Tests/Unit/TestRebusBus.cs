@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Shared;
+using Rebus.Testing;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -79,6 +80,29 @@ is just because there was a bug some time when the grouping of the messages was 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint), Arg<TransportMessageToSend>.Is.Anything),
                                                             o => o.Repeat.Once());
+        }
+
+        [Test]
+        public void CanDoBatchReply()
+        {
+            // arrange
+            const string returnAddress = "some random return address";
+            var firstMessage = new FirstMessage();
+            var secondMessage = new SecondMessage();
+            var someRandomMessage = new SomeRandomMessage();
+            var fakeContext = Mock<IMessageContext>();
+            fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
+
+            // act
+            using (FakeMessageContext.Establish(fakeContext))
+            {
+                bus.Batch.Reply(firstMessage, secondMessage, someRandomMessage);
+            }
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(returnAddress),
+                                                     Arg<TransportMessageToSend>.Is.Anything),
+                                         o => o.Repeat.Once());
         }
 
         [Test]

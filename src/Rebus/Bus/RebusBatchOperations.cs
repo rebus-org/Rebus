@@ -19,6 +19,8 @@ namespace Rebus.Bus
 
         public void Send(params object[] messages)
         {
+            Guard.NotNull(messages, "messages");
+
             var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
 
             foreach (var batch in groupedByEndpoints)
@@ -29,12 +31,21 @@ namespace Rebus.Bus
 
         public void Publish(params object[] messages)
         {
+            Guard.NotNull(messages, "messages");
+
             var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
 
             foreach (var batch in groupedByEndpoints)
             {
                 bus.InternalSend(batch.Key, batch.Value);
             }
+        }
+
+        public void Reply(params object[] messages)
+        {
+            Guard.NotNull(messages, "messages");
+
+            bus.InternalReply(messages.ToList());
         }
 
         IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)

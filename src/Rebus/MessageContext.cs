@@ -8,7 +8,7 @@ namespace Rebus
     /// <summary>
     /// Holds information about the message currently being handled on this particular thread.
     /// </summary>
-    public class MessageContext : IDisposable, IMessageContext
+    public class MessageContext : IMessageContext
     {
         readonly IDictionary<string, string> headers;
         static ILog log;
@@ -124,7 +124,6 @@ Stacktrace of when the current message context was created:
         public void Dispose()
         {
             current = null;
-
             Disposed();
         }
 

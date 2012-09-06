@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Shared;
+using Rebus.Testing;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Persistence.Sagas

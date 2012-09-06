@@ -88,6 +88,9 @@ namespace Rebus.Bus
             return this;
         }
 
+        /// <summary>
+        /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
+        /// </summary>
         public RebusBus Start(int numberOfWorkers)
         {
             InternalStart(numberOfWorkers);
@@ -138,28 +141,7 @@ namespace Rebus.Bus
 
         public void Reply<TResponse>(TResponse message)
         {
-            if (!MessageContext.HasCurrent)
-            {
-                throw new InvalidOperationException(string.Format("You seem to have called Reply outside of a message handler! You can only reply to messages within a message handler while handling a message, because that's the only place where there's a message context in place."));
-            }
-
-            var messageContext = MessageContext.GetCurrent();
-            var returnAddress = messageContext.ReturnAddress;
-
-            if (string.IsNullOrEmpty(returnAddress))
-            {
-                throw new InvalidOperationException(
-                    string.Format(
-                        @"
-Message with ID {0} cannot be replied to, because the {1} header is empty. This might be an indication
-that the requestor is not expecting a reply, e.g. if the requestor is in one-way client mode. If you want
-to offload a reply to someone, you can make the requestor include the {1} header manually,
-using the address of another service as the value - this way, replies will be sent to a third party,
-that can take action.",
-                        messageContext.TransportMessageId, Headers.ReturnAddress));
-            }
-
-            InternalSend(returnAddress, new List<object> { message });
+            InternalReply(new List<object> {message});
         }
 
         public void Subscribe<TEvent>()
@@ -222,6 +204,39 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
             started = true;
 
             log.Info("Bus started");
+        }
+
+        internal void InternalReply(List<object> messages)
+        {
+            if (!MessageContext.HasCurrent)
+            {
+                var errorMessage = string.Format("You seem to have called Reply outside of a message handler! You can" +
+                                                 " only reply to messages within a message handler while handling a" +
+                                                 " message, because that's the only place where there's a message" +
+                                                 " context in place.");
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            var messageContext = MessageContext.GetCurrent();
+            var returnAddress = messageContext.ReturnAddress;
+
+            if (string.IsNullOrEmpty(returnAddress))
+            {
+                var errorMessage =
+                    string.Format("Message with ID {0} cannot be replied to, because the {1} header is empty." +
+                                  " This might be an indication that the requestor is not expecting a reply," +
+                                  " e.g. if the requestor is in one-way client mode. If you want to offload a" +
+                                  " reply to someone, you can make the requestor include the {1} header manually," +
+                                  " using the address of another service as the value - this way, replies will" +
+                                  " be sent to a third party, that can take action.",
+                                  messageContext.TransportMessageId,
+                                  Headers.ReturnAddress);
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            InternalSend(returnAddress, messages);
         }
 
         /// <summary>

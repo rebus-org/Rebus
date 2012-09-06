@@ -1,4 +1,6 @@
-﻿namespace Rebus.Testing
+﻿using System;
+
+namespace Rebus.Testing
 {
     /// <summary>
     /// Allows you to establish a fake message context for the duration of a test.
@@ -14,9 +16,11 @@
         /// Attaches the specified (most likely mocked) message context to the current thread,
         /// which will cause <see cref="MessageContext.GetCurrent"/> to return it.
         /// </summary>
-        public static void Establish(IMessageContext messageContext)
+        public static IDisposable Establish(IMessageContext messageContext)
         {
             MessageContext.current = messageContext;
+            
+            return new MessageContextResetter(messageContext);
         }
 
         /// <summary>
@@ -25,6 +29,31 @@
         public static void Reset()
         {
             MessageContext.current = null;
+        }
+
+        class MessageContextResetter : IDisposable
+        {
+            readonly IMessageContext messageContext;
+            bool disposed;
+
+            public MessageContextResetter(IMessageContext messageContext)
+            {
+                this.messageContext = messageContext;
+            }
+
+            public void Dispose()
+            {
+                if (disposed) return;
+
+                if (!ReferenceEquals(messageContext, MessageContext.current))
+                {
+                    throw new InvalidOperationException("Message context was disposed from another thread than the thread that established it!");
+                }
+
+                Reset();
+
+                disposed = true;
+            }
         }
     }
 }
