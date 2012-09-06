@@ -26,7 +26,6 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-                log.Debug("Committing!");
                 OnCommit();
                 enlistment.Done();
             }
@@ -45,7 +44,6 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-                log.Debug("Rolling back!");
                 OnRollback();
                 enlistment.Done();
             }
@@ -76,7 +74,6 @@ namespace Rebus.RabbitMQ
 
         public void InDoubt(Enlistment enlistment)
         {
-            log.Debug("In doubt!");
             enlistment.Done();
         }
     }
