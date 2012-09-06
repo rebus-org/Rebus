@@ -98,7 +98,7 @@ namespace Rebus.RabbitMQ
 
             EnsureTxManIsInitialized();
 
-            if (threadBoundSubscription == null)
+            if (threadBoundSubscription == null || !threadBoundSubscription.Model.IsOpen)
             {
                 threadBoundSubscription = new Subscription(threadBoundModel, inputQueueName, false);
             }

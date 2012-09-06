@@ -108,14 +108,19 @@ namespace Rebus.Tests.Transports.Rabbit
                         var gotNoMessageCount = 0;
                         do
                         {
-                            var receivedTransportMessage = receiver.ReceiveMessage();
-                            if (receivedTransportMessage == null)
+                            using (var scope = new TransactionScope())
                             {
-                                gotNoMessageCount++;
-                                continue;
+                                var receivedTransportMessage = receiver.ReceiveMessage();
+                                if (receivedTransportMessage == null)
+                                {
+                                    gotNoMessageCount++;
+                                    continue;
+                                }
+                                Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
+                                Interlocked.Increment(ref receivedMessageCount);
+                                
+                                scope.Complete();
                             }
-                            Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
-                            Interlocked.Increment(ref receivedMessageCount);
                         } while (gotNoMessageCount < 3);
                     }))
                 .ToList();
