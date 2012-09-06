@@ -177,8 +177,8 @@ namespace Rebus.RabbitMQ
             threadBoundTxMan = new TxMan();
             Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
 
-            threadBoundTxMan.OnCommit += () => threadBoundModel.TxCommit();
-            threadBoundTxMan.OnRollback += () => threadBoundModel.TxRollback();
+            threadBoundTxMan.DoCommit += () => threadBoundModel.TxCommit();
+            threadBoundTxMan.DoRollback += () => threadBoundModel.TxRollback();
             threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
         }
 

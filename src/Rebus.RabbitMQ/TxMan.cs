@@ -14,7 +14,9 @@ namespace Rebus.RabbitMQ
         }
 
         public event Action OnCommit = delegate { };
+        public event Action DoCommit = delegate { };
         public event Action OnRollback = delegate { };
+        public event Action DoRollback = delegate { };
         public event Action Cleanup = delegate { };
         
         public void Prepare(PreparingEnlistment preparingEnlistment)
@@ -27,6 +29,7 @@ namespace Rebus.RabbitMQ
             try
             {
                 OnCommit();
+                DoCommit();
                 enlistment.Done();
             }
             catch (Exception e)
@@ -45,6 +48,7 @@ namespace Rebus.RabbitMQ
             try
             {
                 OnRollback();
+                DoRollback();
                 enlistment.Done();
             }
             catch (Exception e)
@@ -66,6 +70,8 @@ namespace Rebus.RabbitMQ
             }
             finally
             {
+                DoCommit = null;
+                DoRollback = null;
                 OnCommit = null;
                 OnRollback = null;
                 Cleanup = null;
