@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +7,7 @@ using System.Threading;
 using System.Transactions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.MessagePatterns;
 using Rebus.Logging;
 using Rebus.Shared;
 
@@ -34,34 +34,7 @@ namespace Rebus.RabbitMQ
 
         [ThreadStatic] static TxMan threadBoundTxMan;
 
-        [ThreadStatic] static RabbitEater threadBoundConsumer;
-
-        class RabbitEater : DefaultBasicConsumer
-        {
-            readonly ConcurrentQueue<BasicDeliverEventArgs> receivedMessages = new ConcurrentQueue<BasicDeliverEventArgs>(); 
-
-            public override void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
-            {
-                receivedMessages.Enqueue(new BasicDeliverEventArgs
-                    {
-                        BasicProperties = properties,
-                        Body = body,
-                        DeliveryTag = deliveryTag,
-                        ConsumerTag = consumerTag,
-                        Exchange = exchange,
-                        Redelivered = redelivered,
-                        RoutingKey = routingKey
-                    });
-            }
-
-            public BasicDeliverEventArgs NextOrNull()
-            {
-                BasicDeliverEventArgs ea;
-                return receivedMessages.TryDequeue(out ea)
-                           ? ea
-                           : null;
-            }
-        }
+        [ThreadStatic] static Subscription threadBoundSubscription;
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
@@ -125,21 +98,26 @@ namespace Rebus.RabbitMQ
 
             EnsureTxManIsInitialized();
 
-            if (threadBoundConsumer == null)
+            if (threadBoundSubscription == null)
             {
-                threadBoundConsumer = new RabbitEater();
-                threadBoundModel.BasicConsume(inputQueueName, false, threadBoundConsumer);
+                threadBoundSubscription = new Subscription(threadBoundModel, inputQueueName, false);
             }
 
-            var ea = threadBoundConsumer.NextOrNull();
+            BasicDeliverEventArgs ea;
+            if (!threadBoundSubscription.Next((int) BackoffTime.TotalMilliseconds, out ea))
+            {
+                return null;
+            }
 
+            // wtf??
             if (ea == null)
             {
+                log.Warn("Subscription returned true, but BasicDeliverEventArgs was null!!");
                 Thread.Sleep(BackoffTime);
                 return null;
             }
 
-            threadBoundTxMan.OnCommit += () => threadBoundModel.BasicAck(ea.DeliveryTag, false);
+            threadBoundTxMan.OnCommit += () => threadBoundSubscription.Ack(ea);
             threadBoundTxMan.OnRollback += () => threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);

@@ -37,7 +37,7 @@ namespace Rebus.RabbitMQ
             }
             finally
             {
-                Cleanup();
+                RaiseCleanup();
             }
         }
 
@@ -56,7 +56,21 @@ namespace Rebus.RabbitMQ
             }
             finally
             {
+                RaiseCleanup();
+            }
+        }
+
+        void RaiseCleanup()
+        {
+            try
+            {
                 Cleanup();
+            }
+            finally
+            {
+                OnCommit = null;
+                OnRollback = null;
+                Cleanup = null;
             }
         }
 
