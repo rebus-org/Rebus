@@ -19,7 +19,7 @@ namespace Rebus.Tests.Integration
 
         [TestCase(1, 1)]
         [TestCase(100, 3)]
-        [TestCase(10000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 3)]
         [TestCase(10000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]

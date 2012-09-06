@@ -212,7 +212,7 @@ namespace Rebus.RabbitMQ
 
         void EnsureThreadBoundModelIsInitialized()
         {
-            if (threadBoundModel != null) return;
+            if (threadBoundModel != null && threadBoundModel.IsOpen) return;
 
             threadBoundModel = connection.CreateModel();
             threadBoundModel.TxSelect();
