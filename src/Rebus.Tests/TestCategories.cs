@@ -18,7 +18,11 @@ namespace Rebus.Tests
         public const string ToDo = "todo";
         public const string Performance = "performance";
 
+#if DEBUG
         public const bool IgnoreLongRunningTests = true;
+#else
+        public const bool IgnoreLongRunningTests = false;
+#endif
 
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
         [TestCase(typeof(SqlServerFixtureBase), MsSql)]

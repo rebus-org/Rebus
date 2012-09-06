@@ -74,7 +74,7 @@ namespace Rebus.Tests.Transports.Rabbit
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
-        [TestCase(10000, 10)]//, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 10, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveMessages(int count, int consumers)
         {
             const string senderInputQueue = "test.rabbit.sender";
