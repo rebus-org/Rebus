@@ -50,6 +50,9 @@ namespace Rebus.Castle.Windsor
                     .LifestyleSingleton()
                     .Instance(advancedBus),
 
+                Component.For<IMessageContext>()
+                    .UsingFactoryMethod(k => MessageContext.GetCurrent()),
+
                 Component.For<InstanceDisposer>()
                 );
 
