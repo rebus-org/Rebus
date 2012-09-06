@@ -44,8 +44,8 @@ namespace Rebus.Tests.Transports.Rabbit
             Assert.That(receivedNumbers.Count, Is.EqualTo(0));
             sender.Routing.Send(receiverInputQueueName, Tuple.Create(23));
 
-            Thread.Sleep(0.5.Seconds());
-            Assert.That(receivedNumbers.Count, Is.EqualTo(1), "Only expected one single number in the bag - got {0}", string.Join(", ", receivedNumbers));
+            Thread.Sleep(5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(1), "Expected one single number in the bag - got {0}", string.Join(", ", receivedNumbers));
             Assert.That(receivedNumbers, Contains.Item(23), "Well, just expected 23 to be there");
         }
 

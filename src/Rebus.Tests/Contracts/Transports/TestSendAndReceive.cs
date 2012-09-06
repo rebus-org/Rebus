@@ -62,6 +62,8 @@ namespace Rebus.Tests.Contracts.Transports
 
             headers.ShouldContainKeyAndValue("key1", "value1");
             headers.ShouldContainKeyAndValue("key2", "value2");
+
+            5.Times(() => receiver.ReceiveMessage().ShouldBe(null));
         }
 
         [Test]

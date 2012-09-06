@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Transactions;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using Rebus.Logging;
 using Rebus.Shared;
 
@@ -27,11 +29,38 @@ namespace Rebus.RabbitMQ
 
         bool disposed;
 
-        [ThreadStatic]
-        static IModel threadBoundModel;
+        [ThreadStatic] static IModel threadBoundModel;
 
-        [ThreadStatic]
-        static TxMan threadBoundTxMan;
+        [ThreadStatic] static TxMan threadBoundTxMan;
+
+        [ThreadStatic] static RabbitEater threadBoundConsumer;
+
+        class RabbitEater : DefaultBasicConsumer
+        {
+            readonly ConcurrentQueue<BasicDeliverEventArgs> receivedMessages = new ConcurrentQueue<BasicDeliverEventArgs>(); 
+
+            public override void HandleBasicDeliver(string consumerTag, ulong deliveryTag, bool redelivered, string exchange, string routingKey, IBasicProperties properties, byte[] body)
+            {
+                receivedMessages.Enqueue(new BasicDeliverEventArgs
+                    {
+                        BasicProperties = properties,
+                        Body = body,
+                        DeliveryTag = deliveryTag,
+                        ConsumerTag = consumerTag,
+                        Exchange = exchange,
+                        Redelivered = redelivered,
+                        RoutingKey = routingKey
+                    });
+            }
+
+            public BasicDeliverEventArgs NextOrNull()
+            {
+                BasicDeliverEventArgs ea;
+                return receivedMessages.TryDequeue(out ea)
+                           ? ea
+                           : null;
+            }
+        }
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
@@ -68,7 +97,7 @@ namespace Rebus.RabbitMQ
                 return;
             }
 
-            EnsureThreadBoundModelIsInitialized();
+            EnsureTxManIsInitialized();
 
             threadBoundModel.BasicPublish(ExchangeName, destinationQueueName,
                                           GetHeaders(threadBoundModel, message),
@@ -85,7 +114,40 @@ namespace Rebus.RabbitMQ
 
                     if (basicGetResult == null)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(200));
+                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
+                        return null;
+                    }
+
+                    return GetReceivedTransportMessage(basicGetResult.BasicProperties, basicGetResult.Body);
+                }
+            }
+
+            EnsureTxManIsInitialized();
+
+            if (threadBoundConsumer == null)
+            {
+                threadBoundConsumer = new RabbitEater();
+                threadBoundModel.BasicConsume(inputQueueName, false, threadBoundConsumer);
+            }
+
+            var ea = threadBoundConsumer.NextOrNull();
+
+            if (ea == null) return null;
+
+            threadBoundTxMan.OnCommit += () => threadBoundModel.BasicAck(ea.DeliveryTag, false);
+            threadBoundTxMan.OnRollback += () => threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
+
+            return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
+
+            if (!InAmbientTransaction())
+            {
+                using (var localModel = connection.CreateModel())
+                {
+                    var basicGetResult = localModel.BasicGet(inputQueueName, true);
+
+                    if (basicGetResult == null)
+                    {
+                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
                         return null;
                     }
 
@@ -101,7 +163,7 @@ namespace Rebus.RabbitMQ
 
             if (result == null)
             {
-                Thread.Sleep(TimeSpan.FromMilliseconds(200));
+                Thread.Sleep(TimeSpan.FromMilliseconds(500));
                 return null;
             }
 
@@ -150,28 +212,23 @@ namespace Rebus.RabbitMQ
 
         void EnsureThreadBoundModelIsInitialized()
         {
-            EnsureTxManIsInitialized();
-
             if (threadBoundModel != null) return;
 
             threadBoundModel = connection.CreateModel();
             threadBoundModel.TxSelect();
-
-            threadBoundTxMan.OnCommit += () => threadBoundModel.TxCommit();
-            threadBoundTxMan.OnRollback += () => threadBoundModel.TxRollback();
-            threadBoundTxMan.Cleanup += () =>
-                {
-                    threadBoundModel.Dispose();
-                    threadBoundModel = null;
-                };
         }
 
         void EnsureTxManIsInitialized()
         {
+            EnsureThreadBoundModelIsInitialized();
+
             if (threadBoundTxMan != null) return;
 
             threadBoundTxMan = new TxMan();
             Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
+
+            threadBoundTxMan.OnCommit += () => threadBoundModel.TxCommit();
+            threadBoundTxMan.OnRollback += () => threadBoundModel.TxRollback();
             threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
         }
 
@@ -204,15 +261,15 @@ namespace Rebus.RabbitMQ
         static ReceivedTransportMessage GetReceivedTransportMessage(IBasicProperties basicProperties, byte[] body)
         {
             return new ReceivedTransportMessage
-            {
-                Id = basicProperties != null
-                         ? basicProperties.MessageId
-                         : "(unknown)",
-                Headers = basicProperties != null
-                              ? GetHeaders(basicProperties.Headers)
-                              : new Dictionary<string, string>(),
-                Body = body,
-            };
+                {
+                    Id = basicProperties != null
+                             ? basicProperties.MessageId
+                             : "(unknown)",
+                    Headers = basicProperties != null
+                                  ? GetHeaders(basicProperties.Headers)
+                                  : new Dictionary<string, string>(),
+                    Body = body,
+                };
         }
 
         static IDictionary<string, string> GetHeaders(IDictionary result)
@@ -236,7 +293,7 @@ namespace Rebus.RabbitMQ
         public event Action OnCommit = delegate { };
         public event Action OnRollback = delegate { };
         public event Action Cleanup = delegate { };
-
+        
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
             preparingEnlistment.Prepared();
