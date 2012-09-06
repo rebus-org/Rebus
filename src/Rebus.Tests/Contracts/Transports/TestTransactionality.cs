@@ -131,7 +131,7 @@ namespace Rebus.Tests.Contracts.Transports
                 using (new TransactionScope())
                 {
                     var receivedTransportMessage = receiver.ReceiveMessage();
-                    Assert.That(receivedTransportMessage, Is.Null, "Received message: {0}", Encoding.GetString(receivedTransportMessage.Body));
+                    Assert.That(receivedTransportMessage, Is.Null);
                 }
             }
             else
