@@ -3,7 +3,6 @@ using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Tests.Contracts.Transports.Factories;
-using Shouldly;
 
 namespace Rebus.Tests.Contracts.Transports
 {
@@ -46,7 +45,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 // arrange
                 var receivedTransportMessage = receiver.ReceiveMessage();
-                receivedTransportMessage.ShouldNotBe(null);
+                Assert.That(receivedTransportMessage, Is.Not.Null);
 
                 // act
                 sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
@@ -64,8 +63,8 @@ namespace Rebus.Tests.Contracts.Transports
 
             if (commitTransactionAndExpectMessagesToBeThere)
             {
-                msg1.ShouldNotBe(null);
-                Encoding.GetString(msg1.Body).ShouldBe("hello mr. 1");
+                Assert.That(msg1, Is.Not.Null);
+                Assert.That(Encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
 
                 using (new TransactionScope())
                 {
@@ -75,13 +74,13 @@ namespace Rebus.Tests.Contracts.Transports
             }
             else
             {
-                msg1.ShouldBe(null);
+                Assert.That(msg1, Is.Null);
 
                 using (new TransactionScope())
                 {
                     var receivedTransportMessage = receiver.ReceiveMessage();
-                    receivedTransportMessage.ShouldNotBe(null);
-                    Encoding.GetString(receivedTransportMessage.Body).ShouldBe("hello");
+                    Assert.That(receivedTransportMessage, Is.Not.Null);
+                    Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }
             }
         }
@@ -102,7 +101,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 // arrange
                 var receivedTransportMessage = receiver.ReceiveMessage();
-                receivedTransportMessage.ShouldNotBe(null);
+                Assert.That(receivedTransportMessage, Is.Not.Null);
 
                 // act
                 sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
@@ -122,11 +121,11 @@ namespace Rebus.Tests.Contracts.Transports
 
             if (commitTransactionAndExpectMessagesToBeThere)
             {
-                msg1.ShouldNotBe(null);
-                Encoding.GetString(msg1.Body).ShouldBe("hello mr. 1");
+                Assert.That(msg1, Is.Not.Null);
+                Assert.That(Encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
 
-                msg2.ShouldNotBe(null);
-                Encoding.GetString(msg2.Body).ShouldBe("hello mr. 2");
+                Assert.That(msg2, Is.Not.Null);
+                Assert.That(Encoding.GetString(msg2.Body), Is.EqualTo("hello mr. 2"));
 
                 using (new TransactionScope())
                 {
@@ -136,14 +135,14 @@ namespace Rebus.Tests.Contracts.Transports
             }
             else
             {
-                msg1.ShouldBe(null);
-                msg2.ShouldBe(null);
+                Assert.That(msg1, Is.Null);
+                Assert.That(msg2, Is.Null);
 
                 using (new TransactionScope())
                 {
                     var receivedTransportMessage = receiver.ReceiveMessage();
-                    receivedTransportMessage.ShouldNotBe(null);
-                    Encoding.GetString(receivedTransportMessage.Body).ShouldBe("hello");
+                    Assert.That(receivedTransportMessage, Is.Not.Null);
+                    Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }
             }
         }
