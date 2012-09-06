@@ -17,6 +17,7 @@ namespace Rebus.RabbitMQ
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
+        static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
 
         static RabbitMqMessageQueue()
@@ -114,7 +115,7 @@ namespace Rebus.RabbitMQ
 
                     if (basicGetResult == null)
                     {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
+                        Thread.Sleep(BackoffTime);
                         return null;
                     }
 
@@ -132,45 +133,16 @@ namespace Rebus.RabbitMQ
 
             var ea = threadBoundConsumer.NextOrNull();
 
-            if (ea == null) return null;
+            if (ea == null)
+            {
+                Thread.Sleep(BackoffTime);
+                return null;
+            }
 
             threadBoundTxMan.OnCommit += () => threadBoundModel.BasicAck(ea.DeliveryTag, false);
             threadBoundTxMan.OnRollback += () => threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
-
-            if (!InAmbientTransaction())
-            {
-                using (var localModel = connection.CreateModel())
-                {
-                    var basicGetResult = localModel.BasicGet(inputQueueName, true);
-
-                    if (basicGetResult == null)
-                    {
-                        Thread.Sleep(TimeSpan.FromMilliseconds(500));
-                        return null;
-                    }
-
-                    return GetReceivedTransportMessage(basicGetResult.BasicProperties, basicGetResult.Body);
-                }
-            }
-
-            EnsureThreadBoundModelIsInitialized();
-
-            var modelToUse = threadBoundModel;
-
-            var result = modelToUse.BasicGet(inputQueueName, false);
-
-            if (result == null)
-            {
-                Thread.Sleep(TimeSpan.FromMilliseconds(500));
-                return null;
-            }
-
-            threadBoundTxMan.OnCommit += () => modelToUse.BasicAck(result.DeliveryTag, false);
-            threadBoundTxMan.OnRollback += () => modelToUse.BasicNack(result.DeliveryTag, false, true);
-
-            return GetReceivedTransportMessage(result.BasicProperties, result.Body);
         }
 
         public string InputQueue { get { return inputQueueName; } }
@@ -278,69 +250,6 @@ namespace Rebus.RabbitMQ
 
             return result.Cast<DictionaryEntry>()
                 .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
-        }
-    }
-
-    class TxMan : IEnlistmentNotification
-    {
-        static ILog log;
-
-        static TxMan()
-        {
-            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-        }
-
-        public event Action OnCommit = delegate { };
-        public event Action OnRollback = delegate { };
-        public event Action Cleanup = delegate { };
-        
-        public void Prepare(PreparingEnlistment preparingEnlistment)
-        {
-            preparingEnlistment.Prepared();
-        }
-
-        public void Commit(Enlistment enlistment)
-        {
-            try
-            {
-                log.Debug("Committing!");
-                OnCommit();
-                enlistment.Done();
-            }
-            catch (Exception e)
-            {
-                log.Error(e, "An error occurred while committing!");
-                throw;
-            }
-            finally
-            {
-                Cleanup();
-            }
-        }
-
-        public void Rollback(Enlistment enlistment)
-        {
-            try
-            {
-                log.Debug("Rolling back!");
-                OnRollback();
-                enlistment.Done();
-            }
-            catch (Exception e)
-            {
-                log.Error(e, "An error occurred while rolling back!");
-                throw;
-            }
-            finally
-            {
-                Cleanup();
-            }
-        }
-
-        public void InDoubt(Enlistment enlistment)
-        {
-            log.Debug("In doubt!");
-            enlistment.Done();
         }
     }
 }
