@@ -93,6 +93,8 @@ namespace Rebus.Bus
         /// </summary>
         public RebusBus Start(int numberOfWorkers)
         {
+            Guard.GreaterThanOrEqual(numberOfWorkers, 0, "numberOfWorkers");
+
             InternalStart(numberOfWorkers);
 
             return this;
@@ -100,6 +102,8 @@ namespace Rebus.Bus
 
         public void Send<TCommand>(TCommand message)
         {
+            Guard.NotNull(message, "message");
+
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
             InternalSend(destinationEndpoint, new List<object> { message });
@@ -107,6 +111,8 @@ namespace Rebus.Bus
 
         public void SendLocal<TCommand>(TCommand message)
         {
+            Guard.NotNull(message, "message");
+
             EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
 
             var destinationEndpoint = receiveMessages.InputQueue;
@@ -116,6 +122,8 @@ namespace Rebus.Bus
 
         public void Publish<TEvent>(TEvent message)
         {
+            Guard.NotNull(message, "message");
+
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
@@ -141,7 +149,9 @@ namespace Rebus.Bus
 
         public void Reply<TResponse>(TResponse message)
         {
-            InternalReply(new List<object> {message});
+            Guard.NotNull(message, "message");
+
+            InternalReply(new List<object> { message });
         }
 
         public void Subscribe<TEvent>()
@@ -156,6 +166,46 @@ namespace Rebus.Bus
             var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
 
             InternalUnsubscribe<TEvent>(publisherInputQueue);
+        }
+
+        /// <summary>
+        /// Sets the number of workers in this <see cref="RebusBus"/> to the specified
+        /// number. The number of workers must be greater than or equal to 0.
+        /// </summary>
+        public void SetNumberOfWorkers(int newNumberOfWorkers)
+        {
+            Guard.GreaterThanOrEqual(newNumberOfWorkers, 0, "newNumberOfWorkers");
+
+            while (workers.Count < newNumberOfWorkers) AddWorker();
+            while (workers.Count > newNumberOfWorkers) RemoveWorker();
+        }
+
+        public void Defer(TimeSpan delay, object message)
+        {
+            Guard.NotNull(message, "message");
+            Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
+
+            var customData = TimeoutReplyHandler.Serialize(message);
+
+            var messages = new List<object>
+                               {
+                                   new TimeoutRequest
+                                       {
+                                           Timeout = delay,
+                                           CustomData = customData,
+                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
+                                       }
+                               };
+
+            InternalSend("rebus.timeout", messages);
+        }
+
+        public void AttachHeader(object message, string key, string value)
+        {
+            Guard.NotNull(message, "message");
+            Guard.NotNull(key, "key");
+
+            headerContext.AttachHeader(message, key, value);
         }
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
@@ -182,7 +232,7 @@ namespace Rebus.Bus
             InternalSend(destinationQueue, new List<object> {message});
         }
 
-        void InternalStart(int numberOfWorkers)
+        internal void InternalStart(int numberOfWorkers)
         {
             if (started)
             {
@@ -374,6 +424,7 @@ element)"));
                     headerContext, sendMessages, receiveMessages,
                     storeSubscriptions, storeSagaData
                 }
+                .Where(r => !ReferenceEquals(null, r))
                 .OfType<IDisposable>()
                 .Distinct();
 
@@ -489,39 +540,6 @@ element)"));
         void LogUserException(Worker worker, Exception exception)
         {
             log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
-        }
-
-        public void SetNumberOfWorkers(int newNumberOfWorkers)
-        {
-            if (newNumberOfWorkers < 0)
-            {
-                throw new ArgumentOutOfRangeException("newNumberOfWorkers", string.Format("You can't have less than zero workers - attempted to set number of workers to {0}", newNumberOfWorkers));
-            }
-
-            while (workers.Count < newNumberOfWorkers) AddWorker();
-            while (workers.Count > newNumberOfWorkers) RemoveWorker();
-        }
-
-        public void Defer(TimeSpan delay, object message)
-        {
-            var customData = TimeoutReplyHandler.Serialize(message);
-
-            var messages = new List<object>
-                               {
-                                   new TimeoutRequest
-                                       {
-                                           Timeout = delay,
-                                           CustomData = customData,
-                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
-                                       }
-                               };
-
-            InternalSend("rebus.timeout", messages);
-        }
-
-        public void AttachHeader(object message, string key, string value)
-        {
-            headerContext.AttachHeader(message, key, value);
         }
 
         void EnsureBusModeIsNot(BusMode busModeToAvoid, string message, params object[] objs)
