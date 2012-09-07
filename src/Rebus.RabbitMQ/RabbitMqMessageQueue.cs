@@ -118,7 +118,16 @@ namespace Rebus.RabbitMQ
             }
 
             threadBoundTxMan.OnCommit += () => threadBoundSubscription.Ack(ea);
-            threadBoundTxMan.OnRollback += () => threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
+            threadBoundTxMan.AfterRollback += () =>
+                {
+                    threadBoundModel.BasicReject(ea.DeliveryTag, true);
+                    threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
+
+                    //using (var nackModel = connection.CreateModel())
+                    //{
+                    //    nackModel.BasicReject(ea.DeliveryTag, true);
+                    //}
+                };
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
         }
@@ -177,8 +186,8 @@ namespace Rebus.RabbitMQ
             threadBoundTxMan = new TxMan();
             Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
 
-            threadBoundTxMan.DoCommit += () => threadBoundModel.TxCommit();
-            threadBoundTxMan.DoRollback += () => threadBoundModel.TxRollback();
+            threadBoundTxMan.BeforeCommit += () => threadBoundModel.TxCommit();
+            threadBoundTxMan.ActualRollback += () => threadBoundModel.TxRollback();
             threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
         }
 

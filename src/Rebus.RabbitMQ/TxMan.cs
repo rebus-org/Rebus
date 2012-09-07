@@ -13,10 +13,14 @@ namespace Rebus.RabbitMQ
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// Add stuff to this event to do something when we're about to commit
+        /// </summary>
         public event Action OnCommit = delegate { };
-        public event Action DoCommit = delegate { };
-        public event Action OnRollback = delegate { };
-        public event Action DoRollback = delegate { };
+        public event Action BeforeCommit = delegate { };
+        
+        public event Action AfterRollback = delegate { };
+        public event Action ActualRollback = delegate { };
         public event Action Cleanup = delegate { };
         
         public void Prepare(PreparingEnlistment preparingEnlistment)
@@ -29,7 +33,7 @@ namespace Rebus.RabbitMQ
             try
             {
                 OnCommit();
-                DoCommit();
+                BeforeCommit();
                 enlistment.Done();
             }
             catch (Exception e)
@@ -47,8 +51,8 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-                OnRollback();
-                DoRollback();
+                ActualRollback();
+                AfterRollback();
                 enlistment.Done();
             }
             catch (Exception e)
@@ -70,10 +74,10 @@ namespace Rebus.RabbitMQ
             }
             finally
             {
-                DoCommit = null;
-                DoRollback = null;
+                BeforeCommit = null;
+                ActualRollback = null;
                 OnCommit = null;
-                OnRollback = null;
+                AfterRollback = null;
                 Cleanup = null;
             }
         }
