@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,6 +20,8 @@ namespace Rebus.RabbitMQ
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
+
+        readonly ConcurrentBag<string> initializedQueues = new ConcurrentBag<string>();
 
         static RabbitMqMessageQueue()
         {
@@ -43,22 +46,13 @@ namespace Rebus.RabbitMQ
             log.Info("Opening connection to Rabbit queue {0}", inputQueueName);
             connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
 
-            log.Info("Initializing logical queue '{0}'", inputQueueName);
-            using (var model = connection.CreateModel())
-            {
-                log.Debug("Declaring exchange '{0}'", ExchangeName);
-                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-
-                log.Debug("Declaring queue '{0}'", inputQueueName);
-                model.QueueDeclare(inputQueueName, true, false, false, new Hashtable());
-
-                log.Debug("Binding topic '{0}' to queue '{1}'", inputQueueName, inputQueueName);
-                model.QueueBind(inputQueueName, ExchangeName, inputQueueName);
-            }
+            InitializeLogicalQueue(inputQueueName);
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
+            EnsureInitialized(destinationQueueName);
+
             if (!InAmbientTransaction())
             {
                 using (var model = connection.CreateModel())
@@ -76,6 +70,36 @@ namespace Rebus.RabbitMQ
             threadBoundModel.BasicPublish(ExchangeName, destinationQueueName,
                                           GetHeaders(threadBoundModel, message),
                                           message.Body);
+        }
+
+        void EnsureInitialized(string queueName)
+        {
+            if (initializedQueues.Contains(queueName)) return;
+
+            lock(initializedQueues)
+            {
+                if (initializedQueues.Contains(queueName)) return;
+
+                InitializeLogicalQueue(queueName);
+                initializedQueues.Add(queueName);
+            }
+        }
+
+        void InitializeLogicalQueue(string queueName)
+        {
+            log.Info("Initializing logical queue '{0}'", queueName);
+            using (var model = connection.CreateModel())
+            {
+                log.Debug("Declaring exchange '{0}'", ExchangeName);
+                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+
+                log.Debug("Declaring queue '{0}'", queueName);
+                model.QueueDeclare(queueName, durable: true,
+                                   arguments: new Hashtable(), autoDelete: false, exclusive: false);
+
+                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                model.QueueBind(queueName, ExchangeName, queueName);
+            }
         }
 
         public ReceivedTransportMessage ReceiveMessage()
@@ -122,11 +146,6 @@ namespace Rebus.RabbitMQ
                 {
                     threadBoundModel.BasicReject(ea.DeliveryTag, true);
                     threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
-
-                    //using (var nackModel = connection.CreateModel())
-                    //{
-                    //    nackModel.BasicReject(ea.DeliveryTag, true);
-                    //}
                 };
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
