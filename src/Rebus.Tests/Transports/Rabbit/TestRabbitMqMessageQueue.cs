@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using RabbitMQ.Client;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Shouldly;
@@ -16,16 +17,58 @@ namespace Rebus.Tests.Transports.Rabbit
     [TestFixture, Category(TestCategories.Rabbit)]
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
+        static readonly Encoding Encoding = Encoding.UTF8;
+
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) {MinLevel = LogLevel.Info};
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        [Test, Description("Rabbit will ignore sent messages when they don't match a routing rule, in this case the topic with the same name of a recipient queue. Therefore, in order to avoid losing messages, recipient queues are automatically created.")]
+        public void AutomatiallyCreatesRecipientQueue()
+        {
+            // arrange
+            const string senderInputQueue = "test.autocreate.sender";
+            const string recipientInputQueue = "test.autocreate.recipient";
+            const string someText = "whoa! as if by magic!";
+
+            // ensure recipient queue does not exist
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    model.QueueDelete(recipientInputQueue);
+                }
+                catch
+                {
+                }
+            }
+
+            using (var sender = new RabbitMqMessageQueue(ConnectionString, senderInputQueue))
+            {
+                // act
+                sender.Send(recipientInputQueue, new TransportMessageToSend
+                    {
+                        Body = Encoding.GetBytes(someText)
+                    });
+            }
+
+            using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
+            {
+                // assert
+                var receivedTransportMessage = recipient.ReceiveMessage();
+                receivedTransportMessage.ShouldNotBe(null);
+                Encoding.GetString(receivedTransportMessage.Body).ShouldBe(someText);
+            }
         }
 
         [Test, Description("Experienced that ACK didn't work so the same message would be received over and over")]
         public void DoesNotReceiveTheSameMessageOverAndOver()
         {
             const string receiverInputQueueName = "rabbit.acktest.receiver";
-            
+
             var receivedNumbers = new ConcurrentBag<int>();
 
             // arrange
@@ -118,7 +161,7 @@ namespace Rebus.Tests.Transports.Rabbit
                                 }
                                 Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
                                 Interlocked.Increment(ref receivedMessageCount);
-                                
+
                                 scope.Complete();
                             }
                         } while (gotNoMessageCount < 3);
@@ -147,7 +190,7 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
                 sender.Send(recipient.InputQueue, msg);
                 sender.Send(recipient.InputQueue, msg);
@@ -174,12 +217,12 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
                 sender.Send(firstRecipient.InputQueue, msg);
                 sender.Send(firstRecipient.InputQueue, msg);
                 sender.Send(firstRecipient.InputQueue, msg);
-                
+
                 sender.Send(secondRecipient.InputQueue, msg);
                 sender.Send(secondRecipient.InputQueue, msg);
                 sender.Send(secondRecipient.InputQueue, msg);

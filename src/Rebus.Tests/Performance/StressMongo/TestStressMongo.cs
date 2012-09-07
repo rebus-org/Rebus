@@ -95,7 +95,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
         [TestCase(1)]
         [TestCase(10)]
-        [TestCase(100, Ignore = true)]
+        [TestCase(100, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void ItWorksWithSagasAndEverything(int count)
         {
             var no = 1;
@@ -265,7 +265,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             containerAdapter.Container.Register(Component.For<IBus>().Instance(bus));
 
-            return bus.Start(1);
+            return bus.Start(3);
         }
 
         static string GetEndpoint(string serviceName)
