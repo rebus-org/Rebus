@@ -72,36 +72,6 @@ namespace Rebus.RabbitMQ
                                           message.Body);
         }
 
-        void EnsureInitialized(string queueName)
-        {
-            if (initializedQueues.Contains(queueName)) return;
-
-            lock(initializedQueues)
-            {
-                if (initializedQueues.Contains(queueName)) return;
-
-                InitializeLogicalQueue(queueName);
-                initializedQueues.Add(queueName);
-            }
-        }
-
-        void InitializeLogicalQueue(string queueName)
-        {
-            log.Info("Initializing logical queue '{0}'", queueName);
-            using (var model = connection.CreateModel())
-            {
-                log.Debug("Declaring exchange '{0}'", ExchangeName);
-                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-
-                log.Debug("Declaring queue '{0}'", queueName);
-                model.QueueDeclare(queueName, durable: true,
-                                   arguments: new Hashtable(), autoDelete: false, exclusive: false);
-
-                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
-                model.QueueBind(queueName, ExchangeName, queueName);
-            }
-        }
-
         public ReceivedTransportMessage ReceiveMessage()
         {
             if (!InAmbientTransaction())
@@ -166,7 +136,7 @@ namespace Rebus.RabbitMQ
                 connection.Close();
                 connection.Dispose();
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 log.Error("An error occurred while disposing queue {0}: {1}", inputQueueName, e);
                 throw;
@@ -186,6 +156,36 @@ namespace Rebus.RabbitMQ
             }
 
             return this;
+        }
+
+        void EnsureInitialized(string queueName)
+        {
+            if (initializedQueues.Contains(queueName)) return;
+
+            lock(initializedQueues)
+            {
+                if (initializedQueues.Contains(queueName)) return;
+
+                InitializeLogicalQueue(queueName);
+                initializedQueues.Add(queueName);
+            }
+        }
+
+        void InitializeLogicalQueue(string queueName)
+        {
+            log.Info("Initializing logical queue '{0}'", queueName);
+            using (var model = connection.CreateModel())
+            {
+                log.Debug("Declaring exchange '{0}'", ExchangeName);
+                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+
+                log.Debug("Declaring queue '{0}'", queueName);
+                model.QueueDeclare(queueName, durable: true,
+                                   arguments: new Hashtable(), autoDelete: false, exclusive: false);
+
+                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                model.QueueBind(queueName, ExchangeName, queueName);
+            }
         }
 
         void EnsureThreadBoundModelIsInitialized()
