@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using RabbitMQ.Client;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
@@ -74,6 +75,22 @@ namespace Rebus.Tests.Transports.Rabbit
         public virtual string GetEndpointFor(Type messageType)
         {
             throw new NotImplementedException(string.Format("Don't know the destination of {0} - override this method in derived classes", messageType));
+        }
+
+        protected static void DeleteQueue(string recipientInputQueue)
+        {
+            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    model.QueueDelete(recipientInputQueue);
+                }
+                catch
+                {
+                }
+            }
         }
     }
 }

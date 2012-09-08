@@ -9,12 +9,13 @@ using System.Transactions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Shared;
 
 namespace Rebus.RabbitMQ
 {
-    public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
+    public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IMulticastTransport, IDisposable
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -33,11 +34,14 @@ namespace Rebus.RabbitMQ
 
         bool disposed;
 
-        [ThreadStatic] static IModel threadBoundModel;
+        [ThreadStatic]
+        static IModel threadBoundModel;
 
-        [ThreadStatic] static TxMan threadBoundTxMan;
+        [ThreadStatic]
+        static TxMan threadBoundTxMan;
 
-        [ThreadStatic] static Subscription threadBoundSubscription;
+        [ThreadStatic]
+        static Subscription threadBoundSubscription;
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
@@ -51,7 +55,7 @@ namespace Rebus.RabbitMQ
 
         public void Send(string destinationQueueName, TransportMessageToSend message)
         {
-            EnsureInitialized(destinationQueueName);
+            EnsureInitialized(message, destinationQueueName);
 
             if (!InAmbientTransaction())
             {
@@ -98,7 +102,7 @@ namespace Rebus.RabbitMQ
             }
 
             BasicDeliverEventArgs ea;
-            if (!threadBoundSubscription.Next((int) BackoffTime.TotalMilliseconds, out ea))
+            if (!threadBoundSubscription.Next((int)BackoffTime.TotalMilliseconds, out ea))
             {
                 return null;
             }
@@ -158,11 +162,18 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
-        void EnsureInitialized(string queueName)
+        void EnsureInitialized(TransportMessageToSend message, string queueName)
         {
+            // don't create recipient queue if multicasting
+            if (message.Headers.ContainsKey(Headers.Multicast))
+            {
+                message.Headers.Remove(Headers.Multicast);
+                return;
+            }
+
             if (initializedQueues.Contains(queueName)) return;
 
-            lock(initializedQueues)
+            lock (initializedQueues)
             {
                 if (initializedQueues.Contains(queueName)) return;
 
@@ -256,6 +267,34 @@ namespace Rebus.RabbitMQ
 
             return result.Cast<DictionaryEntry>()
                 .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
+        }
+
+        public bool ManagesSubscriptions { get; private set; }
+
+        public void Subscribe(Type messageType, string inputQueueAddress)
+        {
+            using (var model = connection.CreateModel())
+            {
+                var topic = messageType.FullName;
+                log.Info("Subscribing {0} to {1}", inputQueueAddress, topic);
+                model.QueueBind(inputQueueAddress, ExchangeName, topic);
+            }
+        }
+
+        public void Unsubscribe(Type messageType, string inputQueueAddress)
+        {
+            using (var model = connection.CreateModel())
+            {
+                var topic = messageType.FullName;
+                log.Info("Unsubscribing {0} from {1}", inputQueueAddress, topic);
+                model.QueueUnbind(inputQueueAddress, ExchangeName, topic, new Hashtable());
+            }
+        }
+
+        public void ManageSubscriptions()
+        {
+            log.Info("RabbitMQ will manage subscriptions");
+            ManagesSubscriptions = true;
         }
     }
 }

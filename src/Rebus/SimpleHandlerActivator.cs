@@ -34,6 +34,16 @@ namespace Rebus
             return this;
         }
 
+        /// <summary>
+        /// Registers a function that can handle messages of the specified type.
+        /// </summary>
+        public SimpleHandlerActivator Handle<TMessage>(Action<TMessage> handler)
+        {
+            InnerRegister(typeof(HandlerMethodWrapper<TMessage>), () => new HandlerMethodWrapper<TMessage>(handler));
+            
+            return this;
+        }
+
         void InnerRegister(Type handlerType, Func<object> factory)
         {
             var handlerInterfaces = handlerType.GetInterfaces()
@@ -61,5 +71,21 @@ namespace Rebus
         public void Release(IEnumerable handlerInstances)
         {
         }
+
+        class HandlerMethodWrapper<T> : IHandleMessages<T>
+        {
+            private readonly Action<T> action;
+
+            public HandlerMethodWrapper(Action<T> action)
+            {
+                this.action = action;
+            }
+
+            public void Handle(T message)
+            {
+                action(message);
+            }
+        }
+
     }
 }

@@ -4,18 +4,16 @@ using Rebus.Persistence.Xml;
 
 namespace Rebus.Configuration
 {
-    public class RebusSubscriptionsConfigurer
+    public class RebusSubscriptionsConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
         public RebusSubscriptionsConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public void Use(IStoreSubscriptions storeSubscriptions)
         {
-            backbone.StoreSubscriptions = storeSubscriptions;
+            Backbone.StoreSubscriptions = storeSubscriptions;
         }
 
         public void StoreInSqlServer(string connectionstring, string subscriptions)

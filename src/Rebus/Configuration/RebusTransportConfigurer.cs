@@ -2,28 +2,26 @@ using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
-    public class RebusTransportConfigurer
+    public class RebusTransportConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
         public RebusTransportConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public void UseSender(ISendMessages sendMessages)
         {
-            backbone.SendMessages = sendMessages;
+            Backbone.SendMessages = sendMessages;
         }
 
         public void UseReceiver(IReceiveMessages receiveMessages)
         {
-            backbone.ReceiveMessages = receiveMessages;
+            Backbone.ReceiveMessages = receiveMessages;
         }
 
         public void UseErrorTracker(IErrorTracker errorTracker)
         {
-            backbone.ErrorTracker = errorTracker;
+            Backbone.ErrorTracker = errorTracker;
         }
     }
 }

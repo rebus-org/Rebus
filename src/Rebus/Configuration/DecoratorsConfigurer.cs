@@ -2,18 +2,16 @@ using System;
 
 namespace Rebus.Configuration
 {
-    public class DecoratorsConfigurer
+    public class DecoratorsConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
         public DecoratorsConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public void AddDecoration(Action<ConfigurationBackbone> decorationStep)
         {
-            backbone.AddDecoration(decorationStep);
+            Backbone.AddDecoration(decorationStep);
         }
     }
 }

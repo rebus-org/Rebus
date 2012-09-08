@@ -35,6 +35,15 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Registers a function that can handle messages of the specified type.
+        /// </summary>
+        public BuiltinContainerAdapter Handle<TMessage>(Action<TMessage> handler)
+        {
+            handlerActivator.Handle(handler);
+            return this;
+        }
+
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             return handlerActivator.GetHandlerInstancesFor<T>();

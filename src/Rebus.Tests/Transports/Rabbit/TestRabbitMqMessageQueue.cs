@@ -7,7 +7,6 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using RabbitMQ.Client;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Shouldly;
@@ -33,18 +32,7 @@ namespace Rebus.Tests.Transports.Rabbit
             const string someText = "whoa! as if by magic!";
 
             // ensure recipient queue does not exist
-            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
-            using (var model = connection.CreateModel())
-            {
-                // just ignore if it fails...
-                try
-                {
-                    model.QueueDelete(recipientInputQueue);
-                }
-                catch
-                {
-                }
-            }
+            DeleteQueue(recipientInputQueue);
 
             using (var sender = new RabbitMqMessageQueue(ConnectionString, senderInputQueue))
             {

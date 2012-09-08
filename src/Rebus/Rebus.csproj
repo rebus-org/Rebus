@@ -63,6 +63,7 @@
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Configuration\BaseConfigurer.cs" />
     <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
@@ -114,7 +115,6 @@
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\PipelineInspectorConfigurer.cs" />
     <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
-    <Compile Include="Configuration\EndpointMappingsExtensions.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />

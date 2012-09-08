@@ -9,7 +9,7 @@ namespace Rebus.Shared
         /// Specifies that the contents of the message has been encrypted.
         /// </summary>
         public const string Encrypted = "rebus-encrypted";
-        
+
         /// <summary>
         /// Key of header that contains the salt that was used when encrypting this message
         /// </summary>
@@ -59,12 +59,18 @@ namespace Rebus.Shared
         /// when serializing the string.
         /// </summary>
         public const string Encoding = "rebus-encoding";
-        
+
         /// <summary>
         /// Indicates that this message may be delivered faster if it is possible, most likely at the expense of
         /// delivery guarantee. E.g. a message queue might not durably persist the message when this header is
         /// added, which might lead to message loss in the event of a server crash.
         /// </summary>
         public const string Express = "rebus-express";
+
+        /// <summary>
+        /// Indicates thats the message will be sent using some kind of multicast protocol. This might lead transport
+        /// implementations to behave differently.
+        /// </summary>
+        public const string Multicast = "rebus-multicast";
     }
 }

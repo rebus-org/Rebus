@@ -301,6 +301,7 @@
     <Compile Include="Transports\Rabbit\TestRabbitMqMessageQueue.cs" />
     <Compile Include="Bugs\DispatcherDeletesDataThatHasNotYetBeenPersisted.cs" />
     <Compile Include="Bugs\SagaPersisterShouldNotIndexSamePropertyTwice.cs" />
+    <Compile Include="Transports\Rabbit\TestRabbitSubscriptions.cs" />
     <Compile Include="Unit\RebusBusUnitTestBase.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestHeaderContext.cs" />

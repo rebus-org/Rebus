@@ -124,6 +124,14 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
 
+            var multicastTransport = sendMessages as IMulticastTransport;
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                AttachHeader(message, Headers.Multicast, "");
+                InternalSend(typeof(TEvent).FullName, new List<object> { message });
+                return;
+            }
+
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
@@ -156,6 +164,14 @@ namespace Rebus.Bus
 
         public void Subscribe<TEvent>()
         {
+            var multicastTransport = sendMessages as IMulticastTransport;
+
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                return;
+            }
+
             var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
 
             InternalSubscribe<TEvent>(publisherInputQueue);
@@ -163,6 +179,14 @@ namespace Rebus.Bus
 
         public void Unsubscribe<TEvent>()
         {
+            var multicastTransport = sendMessages as IMulticastTransport;
+
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                return;
+            }
+
             var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
 
             InternalUnsubscribe<TEvent>(publisherInputQueue);
@@ -225,11 +249,11 @@ namespace Rebus.Bus
 
             var message = new SubscriptionMessage
                 {
-                    Type = typeof (TMessage).AssemblyQualifiedName,
+                    Type = typeof(TMessage).AssemblyQualifiedName,
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> {message});
+            InternalSend(destinationQueue, new List<object> { message });
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -428,7 +452,7 @@ element)"));
                 .OfType<IDisposable>()
                 .Distinct();
 
-            foreach(var disposable in disposables)
+            foreach (var disposable in disposables)
             {
                 disposable.Dispose();
             }
@@ -589,5 +613,14 @@ element)"));
                 CleanupTimer.Dispose();
             }
         }
+    }
+
+    public interface IMulticastTransport
+    {
+        bool ManagesSubscriptions { get; }
+
+        void Subscribe(Type messageType, string inputQueueAddress);
+
+        void Unsubscribe(Type messageType, string inputQueueAddress);
     }
 }

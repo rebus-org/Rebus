@@ -2,9 +2,10 @@
 
 namespace Rebus.Configuration
 {
-    public class EventsConfigurer : IRebusEvents
+    public class EventsConfigurer : BaseConfigurer, IRebusEvents
     {
         public EventsConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
             backbone.AddEvents(this);
         }
