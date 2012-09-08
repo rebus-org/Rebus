@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Rabbit)]
     public class TestRabbitSubscriptions : RabbitMqFixtureBase
     {
         readonly List<IDisposable> disposables = new List<IDisposable>();
