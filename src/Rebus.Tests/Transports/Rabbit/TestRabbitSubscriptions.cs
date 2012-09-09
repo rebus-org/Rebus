@@ -76,9 +76,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
             // assert
             receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 2, 3, 4, 5, 6 });
-
             receivedSub2.OrderBy(i => i).ToArray().ShouldBe(new[] { 3, 4, 5 });
-
             receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
         }
 
@@ -94,8 +92,7 @@ namespace Rebus.Tests.Transports.Rabbit
             if (handler != null) adapter.Handle<SomeEvent>(e => handler(e.Number));
 
             Configure.With(adapter)
-                .Transport(t => t.UseRabbitMq(ConnectionString, inputQueueName, "error")
-                    .ManageSubscriptions())
+                .Transport(t => t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions())
                 .CreateBus().Start();
 
             disposables.Add(adapter);
