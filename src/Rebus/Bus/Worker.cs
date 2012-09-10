@@ -160,19 +160,21 @@ namespace Rebus.Bus
 
         void TryProcessIncomingMessage()
         {
-            var context = new TxBomkarl();
-            try
+            using (var context = new TxBomkarl())
             {
-                using (var transactionScope = BeginTransaction())
+                try
                 {
-                    DoTry(transactionScope);
+                    using (var transactionScope = BeginTransaction())
+                    {
+                        DoTry(transactionScope);
+                    }
+                    context.RaiseDoCommit();
                 }
-                context.RaiseDoCommit();
-            }
-            catch
-            {
-                context.RaiseDoRollback();
-                throw;
+                catch
+                {
+                    context.RaiseDoRollback();
+                    throw;
+                }
             }
         }
 

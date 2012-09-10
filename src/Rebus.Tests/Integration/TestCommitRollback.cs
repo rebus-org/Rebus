@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Tests.Integration.Factories;
 using Shouldly;
 
@@ -16,6 +17,7 @@ namespace Rebus.Tests.Integration
 
         protected override void DoSetUp()
         {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
             factory = new TFactory();
         }
 

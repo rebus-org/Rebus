@@ -125,7 +125,7 @@ namespace Rebus.RabbitMQ
 
         IModel GetSenderModel(ITransactionContext context)
         {
-            if (context[CurrentModelKey] != null)
+            if (context[CurrentModelKey] != null) 
                 return (IModel)context[CurrentModelKey];
 
             var model = GetConnection().CreateModel();
@@ -246,13 +246,22 @@ namespace Rebus.RabbitMQ
 
         void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
         {
-            if (threadBoundModel != null && threadBoundModel.IsOpen) return;
+            if (threadBoundModel != null && threadBoundModel.IsOpen)
+            {
+                if (context[CurrentModelKey] == null)
+                {
+                    context[CurrentModelKey] = threadBoundModel;
+                    context.DoCommit += () => threadBoundModel.TxCommit();
+                    context.DoRollback += () => threadBoundModel.TxRollback();
+                }
+                return;
+            }
 
             threadBoundModel = GetConnection().CreateModel();
             threadBoundModel.TxSelect();
 
-            context.DoCommit += threadBoundModel.TxCommit;
-            context.DoRollback += threadBoundModel.TxRollback;
+            context.DoCommit += () => threadBoundModel.TxCommit();
+            context.DoRollback += () => threadBoundModel.TxRollback();
 
             // ensure any sends withing this transaction will use the thread bound model
             context[CurrentModelKey] = threadBoundModel;
