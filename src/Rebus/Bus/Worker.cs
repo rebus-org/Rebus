@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Bus
 {
@@ -160,107 +161,128 @@ namespace Rebus.Bus
 
         void TryProcessIncomingMessage()
         {
-            using (var transactionScope = BeginTransaction())
+            TxBomkarl.CurrentBomkarl = new TxBomkarl();
+            try
             {
-                var transportMessage = receiveMessages.ReceiveMessage();
-
-                if (transportMessage == null)
+                using (var transactionScope = BeginTransaction())
                 {
-                    Thread.Sleep(20);
-                    return;
+                    DoTry(transactionScope, TxBomkarl.CurrentBomkarl);
                 }
+                TxBomkarl.CurrentBomkarl.RaiseDoCommit();
+            }
+            catch
+            {
+                TxBomkarl.CurrentBomkarl.RaiseDoRollback();
+                throw;
+            }
+            finally
+            {
+                TxBomkarl.CurrentBomkarl = null;
+            }
+        }
 
-                var id = transportMessage.Id;
-                var label = transportMessage.Label;
+        void DoTry(TransactionScope transactionScope, ITransactionContext transactionContext)
+        {
+            var transportMessage = receiveMessages.ReceiveMessage(transactionContext);
 
-                MessageContext context = null;
+            if (transportMessage == null)
+            {
+                Thread.Sleep(20);
+                return;
+            }
 
-                if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
+            var id = transportMessage.Id;
+            var label = transportMessage.Label;
+
+            MessageContext context = null;
+
+            if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
+            {
+                log.Error("Handling message {0} has failed the maximum number of times", id);
+                MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
+                errorTracker.StopTracking(id);
+
+                try
                 {
-                    log.Error("Handling message {0} has failed the maximum number of times", id);
-                    MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
-                    errorTracker.StopTracking(id);
+                    PoisonMessage(transportMessage);
+                }
+                catch (Exception exceptionWhileRaisingEvent)
+                {
+                    log.Error("An exception occurred while raising the PoisonMessage event: {0}",
+                              exceptionWhileRaisingEvent);
+                }
+            }
+            else
+            {
+                try
+                {
+                    BeforeTransportMessage(transportMessage);
 
+                    var message = serializeMessages.Deserialize(transportMessage);
+
+                    // successfully deserialized the transport message, let's enter a message context
+                    context = MessageContext.Enter(message.Headers);
+
+                    foreach (var logicalMessage in message.Messages)
+                    {
+                        context.SetLogicalMessage(logicalMessage);
+
+                        try
+                        {
+                            BeforeMessage(logicalMessage);
+
+                            var typeToDispatch = logicalMessage.GetType();
+
+                            log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+
+                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
+
+                            AfterMessage(null, logicalMessage);
+                        }
+                        catch (Exception exception)
+                        {
+                            try
+                            {
+                                AfterMessage(exception, logicalMessage);
+                            }
+                            catch (Exception exceptionWhileRaisingEvent)
+                            {
+                                log.Error(
+                                    "An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                    exception, exceptionWhileRaisingEvent);
+                            }
+                            throw;
+                        }
+                        finally
+                        {
+                            context.ClearLogicalMessage();
+                        }
+                    }
+
+                    AfterTransportMessage(null, transportMessage);
+                }
+                catch (Exception exception)
+                {
+                    log.Debug("Handling message {0} ({1}) has failed", label, id);
                     try
                     {
-                        PoisonMessage(transportMessage);
+                        AfterTransportMessage(exception, transportMessage);
                     }
                     catch (Exception exceptionWhileRaisingEvent)
                     {
-                        log.Error("An exception occurred while raising the PoisonMessage event: {0}",
-                                  exceptionWhileRaisingEvent);
+                        log.Error(
+                            "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
+                            exception, exceptionWhileRaisingEvent);
                     }
+                    errorTracker.TrackDeliveryFail(id, exception);
+                    if (context != null) context.Dispose(); //< dispose it if we entered
+                    throw;
                 }
-                else
-                {
-                    try
-                    {
-                        BeforeTransportMessage(transportMessage);
-
-                        var message = serializeMessages.Deserialize(transportMessage);
-
-                        // successfully deserialized the transport message, let's enter a message context
-                        context = MessageContext.Enter(message.Headers);
-
-                        foreach (var logicalMessage in message.Messages)
-                        {
-                            context.SetLogicalMessage(logicalMessage);
-
-                            try
-                            {
-                                BeforeMessage(logicalMessage);
-
-                                var typeToDispatch = logicalMessage.GetType();
-
-                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
-
-                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
-
-                                AfterMessage(null, logicalMessage);
-                            }
-                            catch (Exception exception)
-                            {
-                                try
-                                {
-                                    AfterMessage(exception, logicalMessage);
-                                }
-                                catch (Exception exceptionWhileRaisingEvent)
-                                {
-                                    log.Error("An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
-                                        exception, exceptionWhileRaisingEvent);
-                                }
-                                throw;
-                            }
-                            finally
-                            {
-                                context.ClearLogicalMessage();
-                            }
-                        }
-
-                        AfterTransportMessage(null, transportMessage);
-                    }
-                    catch (Exception exception)
-                    {
-                        log.Debug("Handling message {0} ({1}) has failed", label, id);
-                        try
-                        {
-                            AfterTransportMessage(exception, transportMessage);
-                        }
-                        catch (Exception exceptionWhileRaisingEvent)
-                        {
-                            log.Error("An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
-                                exception, exceptionWhileRaisingEvent);
-                        }
-                        errorTracker.TrackDeliveryFail(id, exception);
-                        if (context != null) context.Dispose(); //< dispose it if we entered
-                        throw;
-                    }
-                }
-
-                transactionScope.Complete();
-                if (context != null) context.Dispose(); //< dispose it if we entered
-                errorTracker.StopTracking(id);
             }
+
+            transactionScope.Complete();
+            if (context != null) context.Dispose(); //< dispose it if we entered
+            errorTracker.StopTracking(id);
         }
 
         TransactionScope BeginTransaction()

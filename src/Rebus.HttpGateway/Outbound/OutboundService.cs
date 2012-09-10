@@ -76,7 +76,8 @@ namespace Rebus.HttpGateway.Outbound
             {
                 using (var tx = new TransactionScope())
                 {
-                    var receivedTransportMessage = messageQueue.ReceiveMessage();
+                    var ctx = AmbientTransactionContext.NewAmbientContext();
+                    var receivedTransportMessage = messageQueue.ReceiveMessage(ctx);
 
                     if (receivedTransportMessage == null) return;
 

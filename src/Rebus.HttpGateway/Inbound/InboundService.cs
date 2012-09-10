@@ -166,7 +166,7 @@ http://www.netid.washington.edu/documentation/domains/sddl.aspx", GetListenUri()
 
                 using (var queue = MsmqMessageQueue.Sender())
                 {
-                    queue.Send(destinationQueue, receivedTransportMessage.ToForwardableMessage());
+                    queue.Send(destinationQueue, receivedTransportMessage.ToForwardableMessage(), new NoTransaction());
                 }
 
                 log.Info("Message was sent to {0}", destinationQueue);
@@ -174,6 +174,22 @@ http://www.netid.washington.edu/documentation/domains/sddl.aspx", GetListenUri()
                 response.StatusCode = (int) HttpStatusCode.OK;
                 response.Close();
             }
+        }
+
+        class NoTransaction : ITransactionContext
+        {
+            readonly Dictionary<string, object> items = new Dictionary<string, object>();
+
+            public bool IsTransactional { get { return false; } }
+
+            public object this[string key]
+            {
+                get { return items.ContainsKey(key) ? items[key] : null; }
+                set { items[key] = value; }
+            }
+
+            public event Action DoCommit;
+            public event Action DoRollback;
         }
 
         string GetListenUri()

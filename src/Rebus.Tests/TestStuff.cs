@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using NUnit.Framework;
 using RabbitMQ.Client;
+using Rebus.Bus;
 using Rebus.Tests.Transports.Rabbit;
 using Rebus.Transports.Msmq;
 using Shouldly;
@@ -50,7 +51,7 @@ namespace Rebus.Tests
                     Label = "unknown host",
                     Headers = new Dictionary<string, string>(),
                     Body = Encoding.UTF8.GetBytes("muahahahahahahaha"),
-                });
+                }, new NoTransaction());
         }
 
         [Test]

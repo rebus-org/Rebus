@@ -12,10 +12,11 @@ using RabbitMQ.Client.MessagePatterns;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Shared;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.RabbitMQ
 {
-    public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IMulticastTransport, IDisposable
+    public class RabbitMqMessageQueue : IDuplexTransport, IMulticastTransport, IDisposable
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -53,11 +54,32 @@ namespace Rebus.RabbitMQ
             InitializeLogicalQueue(inputQueueName);
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
-        {
-            EnsureInitialized(message, destinationQueueName);
+        //public void Send(string destinationQueueName, TransportMessageToSend message)
+        //{
+        //    EnsureInitialized(message, destinationQueueName);
 
-            if (!InAmbientTransaction())
+        //    if (!InAmbientTransaction())
+        //    {
+        //        using (var model = connection.CreateModel())
+        //        {
+        //            model.BasicPublish(ExchangeName, destinationQueueName,
+        //                               GetHeaders(model, message),
+        //                               message.Body);
+        //        }
+
+        //        return;
+        //    }
+
+        //    EnsureTxManIsInitialized();
+
+        //    threadBoundModel.BasicPublish(ExchangeName, destinationQueueName,
+        //                                  GetHeaders(threadBoundModel, message),
+        //                                  message.Body);
+        //}
+
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
+        {
+            if (!context.IsTransactional)
             {
                 using (var model = connection.CreateModel())
                 {
@@ -65,18 +87,35 @@ namespace Rebus.RabbitMQ
                                        GetHeaders(model, message),
                                        message.Body);
                 }
-
-                return;
             }
+            else
+            {
+                var model = GetSenderModel(context);
 
-            EnsureTxManIsInitialized();
-
-            threadBoundModel.BasicPublish(ExchangeName, destinationQueueName,
-                                          GetHeaders(threadBoundModel, message),
-                                          message.Body);
+                model.BasicPublish(ExchangeName, destinationQueueName,
+                                   GetHeaders(model, message),
+                                   message.Body);
+            }
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        IModel GetSenderModel(ITransactionContext context)
+        {
+            if (context[CurrentModelKey] != null)
+                return (IModel)context[CurrentModelKey];
+
+            var model = connection.CreateModel();
+            model.TxSelect();
+            context[CurrentModelKey] = model;
+
+            context.DoCommit += model.TxCommit;
+            context.DoRollback += model.TxRollback;
+
+            return model;
+        }
+
+        const string CurrentModelKey = "current_model";
+
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             if (!InAmbientTransaction())
             {

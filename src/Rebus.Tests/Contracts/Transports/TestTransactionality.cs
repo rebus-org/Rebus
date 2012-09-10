@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Contracts.Transports
@@ -34,7 +35,7 @@ namespace Rebus.Tests.Contracts.Transports
         [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
         public void CanReceiveAndDoOneSingleSendAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
-            sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
+            sender.Send(receiver.InputQueueAddress, MessageWith("hello"), new NoTransaction());
 
             var destination1 = factory.CreateReceiver("destination1");
 
@@ -43,12 +44,14 @@ namespace Rebus.Tests.Contracts.Transports
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
             {
+                var ctx = TxBomkarl.NewAmbientBomkarl();
+
                 // arrange
-                var receivedTransportMessage = receiver.ReceiveMessage();
+                var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                 Assert.That(receivedTransportMessage, Is.Not.Null);
 
                 // act
-                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
+                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"), ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere)
                 {
@@ -59,7 +62,7 @@ namespace Rebus.Tests.Contracts.Transports
             Thread.Sleep(300.Milliseconds());
 
             // assert
-            var msg1 = destination1.ReceiveMessage();
+            var msg1 = destination1.ReceiveMessage(new NoTransaction());
 
             if (commitTransactionAndExpectMessagesToBeThere)
             {
@@ -68,7 +71,8 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Null);
                 }
             }
@@ -78,7 +82,8 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
                     Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }
@@ -89,7 +94,7 @@ namespace Rebus.Tests.Contracts.Transports
         [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
         public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
-            sender.Send(receiver.InputQueueAddress, MessageWith("hello"));
+            sender.Send(receiver.InputQueueAddress, MessageWith("hello"), new NoTransaction());
 
             var destination1 = factory.CreateReceiver("destination1");
             var destination2 = factory.CreateReceiver("destination2");
@@ -99,13 +104,15 @@ namespace Rebus.Tests.Contracts.Transports
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
             {
+                var ctx = TxBomkarl.NewAmbientBomkarl();
+
                 // arrange
-                var receivedTransportMessage = receiver.ReceiveMessage();
+                var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                 Assert.That(receivedTransportMessage, Is.Not.Null);
 
                 // act
-                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"));
-                sender.Send(destination2.InputQueueAddress, MessageWith("hello mr. 2"));
+                sender.Send(destination1.InputQueueAddress, MessageWith("hello mr. 1"), ctx);
+                sender.Send(destination2.InputQueueAddress, MessageWith("hello mr. 2"), ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere)
                 {
@@ -116,8 +123,8 @@ namespace Rebus.Tests.Contracts.Transports
             Thread.Sleep(300.Milliseconds());
 
             // assert
-            var msg1 = destination1.ReceiveMessage();
-            var msg2 = destination2.ReceiveMessage();
+            var msg1 = destination1.ReceiveMessage(new NoTransaction());
+            var msg2 = destination2.ReceiveMessage(new NoTransaction());
 
             if (commitTransactionAndExpectMessagesToBeThere)
             {
@@ -129,7 +136,8 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Null);
                 }
             }
@@ -140,7 +148,8 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var receivedTransportMessage = receiver.ReceiveMessage();
+                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
                     Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }

@@ -70,6 +70,8 @@
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
+    <Compile Include="IDuplexTransport.cs" />
+    <Compile Include="ITransactionContext.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />

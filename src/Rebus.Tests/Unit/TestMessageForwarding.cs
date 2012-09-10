@@ -2,6 +2,7 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Unit
@@ -38,8 +39,13 @@ namespace Rebus.Tests.Unit
             sendMessages
                 .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("anotherEndpoint"),
                                              Arg<TransportMessageToSend>
-                                                 .Matches(m => m.Headers.ContainsKey(arbitrarykey) && m.Headers[arbitrarykey] == arbitraryValue
-                                                               && m.Headers.ContainsKey(anotherArbitraryKey) && m.Headers[anotherArbitraryKey] == anotherArbitraryValue)));
+                                                 .Matches(
+                                                     m =>
+                                                     m.Headers.ContainsKey(arbitrarykey) &&
+                                                     m.Headers[arbitrarykey] == arbitraryValue
+                                                     && m.Headers.ContainsKey(anotherArbitraryKey) &&
+                                                     m.Headers[anotherArbitraryKey] == anotherArbitraryValue),
+                                             Arg<ITransactionContext>.Is.Anything));
         }
 
         class JustSomeMessage {}

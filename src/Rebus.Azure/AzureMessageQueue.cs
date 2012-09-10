@@ -5,6 +5,7 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Shared;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Azure
 {
@@ -41,7 +42,7 @@ namespace Rebus.Azure
             this.errorQueueName = errorQueueName;
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var outputQueue = cloudQueueClient.GetQueueReference(destinationQueueName);
 
@@ -83,7 +84,7 @@ namespace Rebus.Azure
             return null;
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             var azureMessageQueueTransactionSimulator = new AzureMessageQueueTransactionSimulator(inputQueue);
             try

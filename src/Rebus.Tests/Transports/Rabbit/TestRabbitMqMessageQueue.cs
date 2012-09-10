@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Shouldly;
@@ -40,13 +41,13 @@ namespace Rebus.Tests.Transports.Rabbit
                 sender.Send(recipientInputQueue, new TransportMessageToSend
                     {
                         Body = Encoding.GetBytes(someText)
-                    });
+                    }, new NoTransaction());
             }
 
             using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
             {
                 // assert
-                var receivedTransportMessage = recipient.ReceiveMessage();
+                var receivedTransportMessage = recipient.ReceiveMessage(new NoTransaction());
                 receivedTransportMessage.ShouldNotBe(null);
                 Encoding.GetString(receivedTransportMessage.Body).ShouldBe(someText);
             }
@@ -120,7 +121,10 @@ namespace Rebus.Tests.Transports.Rabbit
 
             Console.WriteLine("Sending {0} messages", totalMessageCount);
             Enumerable.Range(0, totalMessageCount).ToList()
-                .ForEach(i => sender.Send(receiverInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t! message " + i) }));
+                .ForEach(
+                    i => sender.Send(receiverInputQueue,
+                                new TransportMessageToSend {Body = Encoding.UTF7.GetBytes("w00t! message " + i)},
+                                new NoTransaction()));
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
@@ -141,7 +145,8 @@ namespace Rebus.Tests.Transports.Rabbit
                         {
                             using (var scope = new TransactionScope())
                             {
-                                var receivedTransportMessage = receiver.ReceiveMessage();
+                                var ctx = TxBomkarl.NewAmbientBomkarl();
+                                var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                                 if (receivedTransportMessage == null)
                                 {
                                     gotNoMessageCount++;
@@ -178,11 +183,12 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
+                var ctx = TxBomkarl.NewAmbientBomkarl();
                 var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -205,15 +211,16 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
+                var ctx = TxBomkarl.NewAmbientBomkarl();
                 var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
 
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -232,7 +239,7 @@ namespace Rebus.Tests.Transports.Rabbit
             var receivedTransportMessages = new List<ReceivedTransportMessage>();
             do
             {
-                var msg = recipient.ReceiveMessage();
+                var msg = recipient.ReceiveMessage(new NoTransaction());
                 if (msg == null)
                 {
                     timesNullReceived++;
