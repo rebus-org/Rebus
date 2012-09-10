@@ -12,7 +12,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture, Description("This test creates a publisher and two subscribers and attempts to publish a stream of messages while the Rabbit MQ server process gets restarted.")]
+    [TestFixture, Ignore, Description("This test creates a publisher and two subscribers and attempts to publish a stream of messages while the Rabbit MQ server process gets restarted.")]
     [Category(TestCategories.Rabbit)]
     [Category(TestCategories.Integration)]
     public class TestResilientRabbit : FixtureBase

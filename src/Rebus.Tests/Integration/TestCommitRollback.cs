@@ -29,7 +29,7 @@ namespace Rebus.Tests.Integration
         {
             // arrange
             const string senderQueue = "test.commitrollback.sender";
-            const string middlemandQueue = "test.commitrollback.middleman";
+            const string middlemanQueue = "test.commitrollback.middleman";
             const string recipient1Queue = "test.commitrollback.recipient1";
             const string recipient2Queue = "test.commitrollback.recipient2";
 
@@ -39,7 +39,7 @@ namespace Rebus.Tests.Integration
             // middleman
             var failCounter = 0;
             var middlemanHandlerActivator = new HandlerActivatorForTesting();
-            var middleman = factory.CreateBus(middlemandQueue, middlemanHandlerActivator);
+            var middleman = factory.CreateBus(middlemanQueue, middlemanHandlerActivator);
             middlemanHandlerActivator.Handle<string>(str =>
                 {
                     failCounter++;
@@ -61,7 +61,7 @@ namespace Rebus.Tests.Integration
             Thread.Sleep(0.5.Seconds());
 
             // act
-            sender.Routing.Send(middlemandQueue, "hello there my man!");
+            sender.Routing.Send(middlemanQueue, "hello there my man!");
 
             Thread.Sleep(2.Seconds());
 
