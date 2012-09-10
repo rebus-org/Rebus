@@ -1,8 +1,5 @@
 @echo off
 
-echo Current branch:
-git branch
-
 set /P VERSION=Enter version: 
 
 echo Verify version: %VERSION%

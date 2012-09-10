@@ -230,6 +230,7 @@
     <Compile Include="Integration\TestPipelineOps.cs" />
     <Compile Include="Integration\TestRebusEvents.cs" />
     <Compile Include="Integration\TestRebusOnRabbit.cs" />
+    <Compile Include="Integration\TestResilientRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />

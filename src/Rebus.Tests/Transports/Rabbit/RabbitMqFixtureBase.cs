@@ -77,7 +77,7 @@ namespace Rebus.Tests.Transports.Rabbit
             throw new NotImplementedException(string.Format("Don't know the destination of {0} - override this method in derived classes", messageType));
         }
 
-        protected static void DeleteQueue(string recipientInputQueue)
+        public static void DeleteQueue(string recipientInputQueue)
         {
             using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
             using (var model = connection.CreateModel())
