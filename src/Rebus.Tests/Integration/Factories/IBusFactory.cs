@@ -19,7 +19,7 @@ namespace Rebus.Tests.Integration.Factories
 
     abstract class BusFactoryBase : IBusFactory
     {
-        readonly List<IStartableBus> startables = new List<IStartableBus>();
+        readonly List<RebusBus> startables = new List<RebusBus>();
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
         public IAdvancedBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
@@ -45,7 +45,7 @@ namespace Rebus.Tests.Integration.Factories
 
         public void StartAll()
         {
-            startables.ForEach(s => s.Start());
+            startables.ForEach(s => s.Start(1));
             startables.Clear();
         }
     }
