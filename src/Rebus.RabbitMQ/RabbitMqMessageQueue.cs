@@ -54,31 +54,10 @@ namespace Rebus.RabbitMQ
             InitializeLogicalQueue(inputQueueName);
         }
 
-        //public void Send(string destinationQueueName, TransportMessageToSend message)
-        //{
-        //    EnsureInitialized(message, destinationQueueName);
-
-        //    if (!InAmbientTransaction())
-        //    {
-        //        using (var model = connection.CreateModel())
-        //        {
-        //            model.BasicPublish(ExchangeName, destinationQueueName,
-        //                               GetHeaders(model, message),
-        //                               message.Body);
-        //        }
-
-        //        return;
-        //    }
-
-        //    EnsureTxManIsInitialized();
-
-        //    threadBoundModel.BasicPublish(ExchangeName, destinationQueueName,
-        //                                  GetHeaders(threadBoundModel, message),
-        //                                  message.Body);
-        //}
-
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
+            EnsureInitialized(message, destinationQueueName);
+
             if (!context.IsTransactional)
             {
                 using (var model = connection.CreateModel())
@@ -97,23 +76,6 @@ namespace Rebus.RabbitMQ
                                    message.Body);
             }
         }
-
-        IModel GetSenderModel(ITransactionContext context)
-        {
-            if (context[CurrentModelKey] != null)
-                return (IModel)context[CurrentModelKey];
-
-            var model = connection.CreateModel();
-            model.TxSelect();
-            context[CurrentModelKey] = model;
-
-            context.DoCommit += model.TxCommit;
-            context.DoRollback += model.TxRollback;
-
-            return model;
-        }
-
-        const string CurrentModelKey = "current_model";
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
@@ -163,6 +125,23 @@ namespace Rebus.RabbitMQ
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
         }
+
+        IModel GetSenderModel(ITransactionContext context)
+        {
+            if (context[CurrentModelKey] != null)
+                return (IModel)context[CurrentModelKey];
+
+            var model = connection.CreateModel();
+            model.TxSelect();
+            context[CurrentModelKey] = model;
+
+            context.DoCommit += model.TxCommit;
+            context.DoRollback += model.TxRollback;
+
+            return model;
+        }
+
+        const string CurrentModelKey = "current_model";
 
         public string InputQueue { get { return inputQueueName; } }
 
