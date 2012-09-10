@@ -260,7 +260,7 @@ The following addresses were collected:
         {
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
                 senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
                                      {
@@ -314,7 +314,7 @@ The following addresses were collected:
         {
             using (new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
                 senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
                                      {
@@ -354,7 +354,7 @@ The following addresses were collected:
 
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
 
                 // act
                 senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") }, ctx);

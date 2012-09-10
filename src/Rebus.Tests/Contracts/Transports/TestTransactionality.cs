@@ -44,7 +44,7 @@ namespace Rebus.Tests.Contracts.Transports
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
 
                 // arrange
                 var receivedTransportMessage = receiver.ReceiveMessage(ctx);
@@ -71,7 +71,7 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Null);
                 }
@@ -82,7 +82,7 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
                     Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
@@ -104,7 +104,7 @@ namespace Rebus.Tests.Contracts.Transports
             // pretend that this is a message handler tx scope...
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
 
                 // arrange
                 var receivedTransportMessage = receiver.ReceiveMessage(ctx);
@@ -136,7 +136,7 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Null);
                 }
@@ -148,7 +148,7 @@ namespace Rebus.Tests.Contracts.Transports
 
                 using (new TransactionScope())
                 {
-                    var ctx = TxBomkarl.NewAmbientBomkarl();
+                    var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
                     Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));

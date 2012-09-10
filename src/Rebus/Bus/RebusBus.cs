@@ -362,12 +362,11 @@ element)"));
 
         ITransactionContext GetTransactionContext()
         {
-            if (TxBomkarl.CurrentBomkarl != null) return TxBomkarl.CurrentBomkarl;
+            if (TransactionContext.Current != null) return TransactionContext.Current;
+         
             if (Transaction.Current == null) return new NoTransaction();
             
-            TxBomkarl.CurrentBomkarl = TxBomkarl.NewAmbientBomkarl();
-            
-            return TxBomkarl.CurrentBomkarl;
+            return new AmbientTransactionContext();
         }
 
         IDictionary<string, string> MergeHeaders(Message messageToSend)
@@ -624,103 +623,5 @@ element)"));
                 CleanupTimer.Dispose();
             }
         }
-    }
-
-    class NoTransaction : ITransactionContext
-    {
-        readonly Dictionary<string, object> items = new Dictionary<string, object>();
-
-        public bool IsTransactional { get { return false; } }
-
-        public object this[string key]
-        {
-            get { return items.ContainsKey(key) ? items[key] : null; }
-            set { items[key] = value; }
-        }
-
-        public event Action DoCommit
-        {
-            add { throw new InvalidOperationException("Don't add commit/rollback events when you're nontransactional"); }
-            remove{}
-        }
-
-        public event Action DoRollback
-        {
-            add{ throw new InvalidOperationException("Don't add commit/rollback events when you're nontransactional");}
-            remove{}
-        }
-    }
-
-    class TxBomkarl : IEnlistmentNotification, ITransactionContext
-    {
-        public static TxBomkarl NewAmbientBomkarl()
-        {
-            var bomkarl = new TxBomkarl();
-            Transaction.Current.EnlistVolatile(bomkarl, EnlistmentOptions.None);
-            return bomkarl;
-        }
-
-        [ThreadStatic]
-        internal static TxBomkarl CurrentBomkarl;
-
-        readonly Dictionary<string, object> items = new Dictionary<string, object>();
-
-        public event Action DoCommit = delegate { };
-        public event Action BeforeCommit = delegate { };
-        public event Action DoRollback = delegate { };
-        public event Action AfterRollback = delegate { };
-
-        public void Prepare(PreparingEnlistment preparingEnlistment)
-        {
-            preparingEnlistment.Prepared();
-        }
-
-        public void Commit(Enlistment enlistment)
-        {
-            BeforeCommit();
-            RaiseDoCommit();
-            CurrentBomkarl = null;
-            enlistment.Done();
-        }
-
-        public void Rollback(Enlistment enlistment)
-        {
-            RaiseDoRollback();
-            CurrentBomkarl = null;
-            enlistment.Done();
-            AfterRollback();
-        }
-
-        public void InDoubt(Enlistment enlistment)
-        {
-            enlistment.Done();
-        }
-
-        public void RaiseDoCommit()
-        {
-            DoCommit();
-        }
-
-        public void RaiseDoRollback()
-        {
-            DoRollback();
-        }
-
-        public bool IsTransactional { get { return true; } }
-
-        public object this[string key]
-        {
-            get { return items.ContainsKey(key) ? items[key] : null; }
-            set { items[key] = value; }
-        }
-    }
-
-    public interface IMulticastTransport
-    {
-        bool ManagesSubscriptions { get; }
-
-        void Subscribe(Type messageType, string inputQueueAddress);
-
-        void Unsubscribe(Type messageType, string inputQueueAddress);
     }
 }

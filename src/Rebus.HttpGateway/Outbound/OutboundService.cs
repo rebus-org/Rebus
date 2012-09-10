@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Transactions;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Transports.Msmq;
 using System.Linq;
@@ -76,7 +77,7 @@ namespace Rebus.HttpGateway.Outbound
             {
                 using (var tx = new TransactionScope())
                 {
-                    var ctx = AmbientTransactionContext.NewAmbientContext();
+                    var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = messageQueue.ReceiveMessage(ctx);
 
                     if (receivedTransportMessage == null) return;

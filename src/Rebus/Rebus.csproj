@@ -54,15 +54,20 @@
     <Compile Include="..\..\lib\Ponder\Ponder.cs">
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
+    <Compile Include="Bus\AmbientTransactionContext.cs" />
     <Compile Include="Bus\BusMode.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
     <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
+    <Compile Include="Bus\IMulticastTransport.cs" />
+    <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Bus\TransactionContext.cs" />
+    <Compile Include="Bus\TxBomkarl.cs" />
     <Compile Include="Configuration\BaseConfigurer.cs" />
     <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />

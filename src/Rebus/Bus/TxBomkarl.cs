@@ -1,28 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Transactions;
-using Rebus.Transports.Msmq;
 
-namespace Rebus.HttpGateway.Outbound
+namespace Rebus.Bus
 {
-    class AmbientTransactionContext : IEnlistmentNotification, ITransactionContext
+    class TxBomkarl : ITransactionContext
     {
-        public static AmbientTransactionContext NewAmbientContext()
-        {
-            var bomkarl = new AmbientTransactionContext();
-            Transaction.Current.EnlistVolatile(bomkarl, EnlistmentOptions.None);
-            return bomkarl;
-        }
-
-        [ThreadStatic]
-        internal static AmbientTransactionContext CurrentBomkarl;
-
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
         public event Action DoCommit = delegate { };
         public event Action BeforeCommit = delegate { };
         public event Action DoRollback = delegate { };
         public event Action AfterRollback = delegate { };
+
+        public TxBomkarl()
+        {
+            TransactionContext.Set(this);
+        }
 
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
@@ -33,14 +27,14 @@ namespace Rebus.HttpGateway.Outbound
         {
             BeforeCommit();
             RaiseDoCommit();
-            CurrentBomkarl = null;
+            TransactionContext.Clear();
             enlistment.Done();
         }
 
         public void Rollback(Enlistment enlistment)
         {
             RaiseDoRollback();
-            CurrentBomkarl = null;
+            TransactionContext.Clear();
             enlistment.Done();
             AfterRollback();
         }

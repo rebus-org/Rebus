@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Transports.Msmq;
 
 namespace Rebus.Bus
 {
@@ -161,29 +160,25 @@ namespace Rebus.Bus
 
         void TryProcessIncomingMessage()
         {
-            TxBomkarl.CurrentBomkarl = new TxBomkarl();
+            var context = new TxBomkarl();
             try
             {
                 using (var transactionScope = BeginTransaction())
                 {
-                    DoTry(transactionScope, TxBomkarl.CurrentBomkarl);
+                    DoTry(transactionScope);
                 }
-                TxBomkarl.CurrentBomkarl.RaiseDoCommit();
+                context.RaiseDoCommit();
             }
             catch
             {
-                TxBomkarl.CurrentBomkarl.RaiseDoRollback();
+                context.RaiseDoRollback();
                 throw;
-            }
-            finally
-            {
-                TxBomkarl.CurrentBomkarl = null;
             }
         }
 
-        void DoTry(TransactionScope transactionScope, ITransactionContext transactionContext)
+        void DoTry(TransactionScope transactionScope)
         {
-            var transportMessage = receiveMessages.ReceiveMessage(transactionContext);
+            var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
             if (transportMessage == null)
             {

@@ -145,7 +145,7 @@ namespace Rebus.Tests.Transports.Rabbit
                         {
                             using (var scope = new TransactionScope())
                             {
-                                var ctx = TxBomkarl.NewAmbientBomkarl();
+                                var ctx = new AmbientTransactionContext();
                                 var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                                 if (receivedTransportMessage == null)
                                 {
@@ -183,7 +183,7 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
                 var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
                 sender.Send(recipient.InputQueue, msg, ctx);
@@ -211,7 +211,7 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var ctx = TxBomkarl.NewAmbientBomkarl();
+                var ctx = new AmbientTransactionContext();
                 var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
                 sender.Send(firstRecipient.InputQueue, msg, ctx);
