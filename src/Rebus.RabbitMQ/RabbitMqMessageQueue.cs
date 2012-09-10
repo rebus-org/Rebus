@@ -12,11 +12,10 @@ using RabbitMQ.Client.MessagePatterns;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Shared;
-using Rebus.Transports.Msmq;
 
 namespace Rebus.RabbitMQ
 {
-    public class RabbitMqMessageQueue : IDuplexTransport, IMulticastTransport, IDisposable
+    public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
     {
         const string ExchangeName = "Rebus";
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -247,7 +246,7 @@ namespace Rebus.RabbitMQ
         static IBasicProperties GetHeaders(IModel modelToUse, TransportMessageToSend message)
         {
             var props = modelToUse.CreateBasicProperties();
-
+            
             if (message.Headers != null)
             {
                 props.Headers = message.Headers
@@ -261,6 +260,7 @@ namespace Rebus.RabbitMQ
             }
 
             props.MessageId = Guid.NewGuid().ToString();
+            props.SetPersistent(true);
 
             return props;
         }
