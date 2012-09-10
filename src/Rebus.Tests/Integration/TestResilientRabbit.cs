@@ -15,7 +15,7 @@ namespace Rebus.Tests.Integration
     [TestFixture, Description("This test creates a publisher and two subscribers and attempts to publish a stream of messages while the Rabbit MQ server process gets restarted.")]
     [Category(TestCategories.Rabbit)]
     [Category(TestCategories.Integration)]
-    //[Ignore]
+    [Ignore]
     public class TestResilientRabbit : FixtureBase
     {
         readonly List<IDisposable> disposables = new List<IDisposable>();
