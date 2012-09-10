@@ -49,7 +49,6 @@
     <Compile Include="RabbitMqConfigurationExtensions.cs" />
     <Compile Include="RabbitMqMessageQueue.cs" />
     <Compile Include="RabbitMqOptions.cs" />
-    <Compile Include="TxMan.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj">

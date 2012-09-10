@@ -20,19 +20,15 @@ namespace Rebus.Bus
 
         public void RaiseDoCommit()
         {
-            Console.WriteLine("Before commit!");
             BeforeCommit();
 
-            Console.WriteLine("Commit!");
             DoCommit();
         }
 
         public void RaiseDoRollback()
         {
-            Console.WriteLine("Rollback!");
             DoRollback();
 
-            Console.WriteLine("After rollback!");
             AfterRollback();
         }
 
