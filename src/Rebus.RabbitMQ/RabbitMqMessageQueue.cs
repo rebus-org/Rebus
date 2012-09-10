@@ -119,8 +119,8 @@ namespace Rebus.RabbitMQ
             threadBoundTxMan.OnCommit += () => threadBoundSubscription.Ack(ea);
             threadBoundTxMan.AfterRollback += () =>
                 {
-                    threadBoundModel.BasicReject(ea.DeliveryTag, true);
                     threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
+                    threadBoundModel.TxCommit();
                 };
 
             return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
