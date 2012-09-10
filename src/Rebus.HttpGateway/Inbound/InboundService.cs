@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using Rebus.Bus;
 using Rebus.Logging;
 using System.Linq;
 using Rebus.Transports.Msmq;
@@ -174,22 +175,6 @@ http://www.netid.washington.edu/documentation/domains/sddl.aspx", GetListenUri()
                 response.StatusCode = (int) HttpStatusCode.OK;
                 response.Close();
             }
-        }
-
-        class NoTransaction : ITransactionContext
-        {
-            readonly Dictionary<string, object> items = new Dictionary<string, object>();
-
-            public bool IsTransactional { get { return false; } }
-
-            public object this[string key]
-            {
-                get { return items.ContainsKey(key) ? items[key] : null; }
-                set { items[key] = value; }
-            }
-
-            public event Action DoCommit;
-            public event Action DoRollback;
         }
 
         string GetListenUri()

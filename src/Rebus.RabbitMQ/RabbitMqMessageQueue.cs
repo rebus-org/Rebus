@@ -39,9 +39,6 @@ namespace Rebus.RabbitMQ
         static IModel threadBoundModel;
 
         [ThreadStatic]
-        static TxMan threadBoundTxMan;
-
-        [ThreadStatic]
         static Subscription threadBoundSubscription;
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
@@ -79,7 +76,7 @@ namespace Rebus.RabbitMQ
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            if (!InAmbientTransaction())
+            if (!context.IsTransactional)
             {
                 using (var localModel = GetConnection().CreateModel())
                 {
@@ -95,7 +92,7 @@ namespace Rebus.RabbitMQ
                 }
             }
 
-            EnsureTxManIsInitialized();
+            EnsureThreadBoundModelIsInitialized(context);
 
             if (threadBoundSubscription == null || !threadBoundSubscription.Model.IsOpen)
             {
@@ -116,8 +113,8 @@ namespace Rebus.RabbitMQ
                 return null;
             }
 
-            threadBoundTxMan.OnCommit += () => threadBoundSubscription.Ack(ea);
-            threadBoundTxMan.AfterRollback += () =>
+            context.BeforeCommit += () => threadBoundSubscription.Ack(ea);
+            context.AfterRollback += () =>
                 {
                     threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
                     threadBoundModel.TxCommit();
@@ -247,32 +244,30 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        void EnsureThreadBoundModelIsInitialized()
+        void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
         {
             if (threadBoundModel != null && threadBoundModel.IsOpen) return;
 
             threadBoundModel = GetConnection().CreateModel();
             threadBoundModel.TxSelect();
+
+            context.DoCommit += () => threadBoundModel.TxCommit();
+            context.DoRollback += () => threadBoundModel.TxRollback();
         }
 
-        void EnsureTxManIsInitialized()
-        {
-            EnsureThreadBoundModelIsInitialized();
+        //void EnsureTxManIsInitialized()
+        //{
+        //    EnsureThreadBoundModelIsInitialized();
 
-            if (threadBoundTxMan != null) return;
+        //    if (threadBoundTxMan != null) return;
 
-            threadBoundTxMan = new TxMan();
-            Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
+        //    threadBoundTxMan = new TxMan();
+        //    Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
 
-            threadBoundTxMan.BeforeCommit += () => threadBoundModel.TxCommit();
-            threadBoundTxMan.ActualRollback += () => threadBoundModel.TxRollback();
-            threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
-        }
-
-        static bool InAmbientTransaction()
-        {
-            return Transaction.Current != null;
-        }
+        //    threadBoundTxMan.BeforeCommit += () => threadBoundModel.TxCommit();
+        //    threadBoundTxMan.ActualRollback += () => threadBoundModel.TxRollback();
+        //    threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
+        //}
 
         static IBasicProperties GetHeaders(IModel modelToUse, TransportMessageToSend message)
         {
@@ -322,15 +317,32 @@ namespace Rebus.RabbitMQ
         {
             if (currentConnection == null)
             {
-                currentConnection = connectionFactory.CreateConnection();
-                return currentConnection;
+                try
+                {
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+                catch(Exception e)
+                {
+                    log.Error("An error occurred while trying to open Rabbit connection", e);
+                    throw;
+                }
             }
 
             if (!currentConnection.IsOpen)
             {
-                currentConnection.Dispose();
-                currentConnection = connectionFactory.CreateConnection();
-                return currentConnection;
+                log.Info("Rabbit connection seems to have been closed - disposing old connection and reopening...");
+                try
+                {
+                    currentConnection.Dispose();
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+                catch(Exception e)
+                {
+                    log.Error("An error occurred while trying to reopen the Rabbit connection", e);
+                    throw;
+                }
             }
 
             return currentConnection;

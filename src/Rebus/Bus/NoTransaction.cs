@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Rebus.Bus
 {
-    class NoTransaction : ITransactionContext
+    public class NoTransaction : ITransactionContext
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
@@ -22,6 +22,18 @@ namespace Rebus.Bus
         }
 
         public event Action DoRollback
+        {
+            add{ throw new InvalidOperationException("Don't add commit/rollback events when you're nontransactional");}
+            remove{}
+        }
+
+        public event Action BeforeCommit
+        {
+            add { throw new InvalidOperationException("Don't add commit/rollback events when you're nontransactional"); }
+            remove{}
+        }
+
+        public event Action AfterRollback
         {
             add{ throw new InvalidOperationException("Don't add commit/rollback events when you're nontransactional");}
             remove{}

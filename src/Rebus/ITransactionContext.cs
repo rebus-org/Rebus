@@ -28,5 +28,15 @@ namespace Rebus
         /// Will be raised in the event that the transaction should be rolled back.
         /// </summary>
         event Action DoRollback;
+
+        /// <summary>
+        /// Will be raised before doing the actual commit
+        /// </summary>
+        event Action BeforeCommit;
+
+        /// <summary>
+        /// Will be raised after a transaction has been rolled back
+        /// </summary>
+        event Action AfterRollback;
     }
 }
