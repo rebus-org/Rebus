@@ -12,15 +12,16 @@ using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture, Ignore, Description("This test creates a publisher and two subscribers and attempts to publish a stream of messages while the Rabbit MQ server process gets restarted.")]
+    [TestFixture, Description("This test creates a publisher and two subscribers and attempts to publish a stream of messages while the Rabbit MQ server process gets restarted.")]
     [Category(TestCategories.Rabbit)]
     [Category(TestCategories.Integration)]
+    //[Ignore]
     public class TestResilientRabbit : FixtureBase
     {
         readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly List<int> sub1Received = new List<int>();
         readonly List<int> sub2Received = new List<int>();
-        
+
         IBus publisher;
         IBus sub1;
         IBus sub2;
@@ -69,7 +70,7 @@ namespace Rebus.Tests.Integration
                             restartRabbitSignal.Set();
                         }
 
-                        if (counter % counter/10 == 0)
+                        if (counter % counter / 10 == 0)
                         {
                             Thread.Sleep(100.Milliseconds());
                         }
