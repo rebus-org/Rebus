@@ -30,7 +30,29 @@ namespace Rebus.RabbitMQ
         }
 
         readonly string inputQueueName;
-        readonly IConnection connection;
+        
+        IConnection Connection
+        {
+            get
+            {
+                if (currentConnection == null)
+                {
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+
+                if (!currentConnection.IsOpen)
+                {
+                    currentConnection.Dispose();
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+
+                return currentConnection;
+            }
+        }
+
+        IConnection currentConnection;
 
         bool disposed;
 
@@ -43,12 +65,14 @@ namespace Rebus.RabbitMQ
         [ThreadStatic]
         static Subscription threadBoundSubscription;
 
+        ConnectionFactory connectionFactory;
+
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
             this.inputQueueName = inputQueueName;
 
             log.Info("Opening connection to Rabbit queue {0}", inputQueueName);
-            connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
+            connectionFactory = new ConnectionFactory { Uri = connectionString };
 
             InitializeLogicalQueue(inputQueueName);
         }
@@ -59,7 +83,7 @@ namespace Rebus.RabbitMQ
 
             if (!context.IsTransactional)
             {
-                using (var model = connection.CreateModel())
+                using (var model = Connection.CreateModel())
                 {
                     model.BasicPublish(ExchangeName, destinationQueueName,
                                        GetHeaders(model, message),
@@ -80,7 +104,7 @@ namespace Rebus.RabbitMQ
         {
             if (!InAmbientTransaction())
             {
-                using (var localModel = connection.CreateModel())
+                using (var localModel = Connection.CreateModel())
                 {
                     var basicGetResult = localModel.BasicGet(inputQueueName, true);
 
@@ -130,7 +154,7 @@ namespace Rebus.RabbitMQ
             if (context[CurrentModelKey] != null)
                 return (IModel)context[CurrentModelKey];
 
-            var model = connection.CreateModel();
+            var model = Connection.CreateModel();
             model.TxSelect();
             context[CurrentModelKey] = model;
 
@@ -154,8 +178,8 @@ namespace Rebus.RabbitMQ
 
             try
             {
-                connection.Close();
-                connection.Dispose();
+                Connection.Close();
+                Connection.Dispose();
             }
             catch (Exception e)
             {
@@ -170,7 +194,7 @@ namespace Rebus.RabbitMQ
 
         public RabbitMqMessageQueue PurgeInputQueue()
         {
-            using (var model = connection.CreateModel())
+            using (var model = Connection.CreateModel())
             {
                 log.Warn("Purging queue {0}", inputQueueName);
                 model.QueuePurge(inputQueueName);
@@ -202,7 +226,7 @@ namespace Rebus.RabbitMQ
         void InitializeLogicalQueue(string queueName)
         {
             log.Info("Initializing logical queue '{0}'", queueName);
-            using (var model = connection.CreateModel())
+            using (var model = Connection.CreateModel())
             {
                 log.Debug("Declaring exchange '{0}'", ExchangeName);
                 model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
@@ -220,7 +244,7 @@ namespace Rebus.RabbitMQ
         {
             if (threadBoundModel != null && threadBoundModel.IsOpen) return;
 
-            threadBoundModel = connection.CreateModel();
+            threadBoundModel = Connection.CreateModel();
             threadBoundModel.TxSelect();
         }
 
@@ -291,7 +315,7 @@ namespace Rebus.RabbitMQ
 
         public void Subscribe(Type messageType, string inputQueueAddress)
         {
-            using (var model = connection.CreateModel())
+            using (var model = Connection.CreateModel())
             {
                 var topic = messageType.FullName;
                 log.Info("Subscribing {0} to {1}", inputQueueAddress, topic);
@@ -301,7 +325,7 @@ namespace Rebus.RabbitMQ
 
         public void Unsubscribe(Type messageType, string inputQueueAddress)
         {
-            using (var model = connection.CreateModel())
+            using (var model = Connection.CreateModel())
             {
                 var topic = messageType.FullName;
                 log.Info("Unsubscribing {0} from {1}", inputQueueAddress, topic);
