@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using System.Transactions;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
@@ -18,6 +17,7 @@ namespace Rebus.RabbitMQ
     public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
     {
         const string ExchangeName = "Rebus";
+        
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
@@ -251,23 +251,12 @@ namespace Rebus.RabbitMQ
             threadBoundModel = GetConnection().CreateModel();
             threadBoundModel.TxSelect();
 
-            context.DoCommit += () => threadBoundModel.TxCommit();
-            context.DoRollback += () => threadBoundModel.TxRollback();
+            context.DoCommit += threadBoundModel.TxCommit;
+            context.DoRollback += threadBoundModel.TxRollback;
+
+            // ensure any sends withing this transaction will use the thread bound model
+            context[CurrentModelKey] = threadBoundModel;
         }
-
-        //void EnsureTxManIsInitialized()
-        //{
-        //    EnsureThreadBoundModelIsInitialized();
-
-        //    if (threadBoundTxMan != null) return;
-
-        //    threadBoundTxMan = new TxMan();
-        //    Transaction.Current.EnlistVolatile(threadBoundTxMan, EnlistmentOptions.None);
-
-        //    threadBoundTxMan.BeforeCommit += () => threadBoundModel.TxCommit();
-        //    threadBoundTxMan.ActualRollback += () => threadBoundModel.TxRollback();
-        //    threadBoundTxMan.Cleanup += () => threadBoundTxMan = null;
-        //}
 
         static IBasicProperties GetHeaders(IModel modelToUse, TransportMessageToSend message)
         {
