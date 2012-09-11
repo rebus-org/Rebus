@@ -4,7 +4,8 @@ namespace Rebus.Bus
 {
     /// <summary>
     /// Adds to <see cref="IDuplexTransport"/> the ability to send to multiple recipients at
-    /// once by using pub sub messaging.
+    /// once by using pub sub messaging. This implies that the transport can somehow persist
+    /// subscriptions and take care of routing to subscribers.
     /// </summary>
     public interface IMulticastTransport : IDuplexTransport
     {

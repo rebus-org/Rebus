@@ -8,14 +8,27 @@ namespace Rebus.Bus
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
         public event Action DoCommit = delegate { };
+        
         public event Action BeforeCommit = delegate { };
         
         public event Action DoRollback = delegate { };
+        
         public event Action AfterRollback = delegate { };
 
+        /// <summary>
+        /// Constructs the context and sets itself as current in <see cref="TransactionContext"/>.
+        /// </summary>
         public TxBomkarl()
         {
             TransactionContext.Set(this);
+        }
+
+        public bool IsTransactional { get { return true; } }
+
+        public object this[string key]
+        {
+            get { return items.ContainsKey(key) ? items[key] : null; }
+            set { items[key] = value; }
         }
 
         public void RaiseDoCommit()
@@ -30,14 +43,6 @@ namespace Rebus.Bus
             DoRollback();
 
             AfterRollback();
-        }
-
-        public bool IsTransactional { get { return true; } }
-
-        public object this[string key]
-        {
-            get { return items.ContainsKey(key) ? items[key] : null; }
-            set { items[key] = value; }
         }
 
         public void Dispose()
