@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
-    [TestFixture, Category(TestCategories.Rabbit)]
+    [TestFixture, Category(TestCategories.Rabbit), Description("Verifies that RabbitMQ can be used to implement pub/sub, thus using it to store subscriptions")]
     public class TestRabbitSubscriptions : RabbitMqFixtureBase
     {
         readonly List<IDisposable> disposables = new List<IDisposable>();

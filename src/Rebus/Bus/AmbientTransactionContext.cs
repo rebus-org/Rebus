@@ -32,6 +32,8 @@ namespace Rebus.Bus
         public event Action DoRollback = delegate { };
         
         public event Action AfterRollback = delegate { };
+        
+        public event Action Cleanup = delegate { };
 
         public bool IsTransactional { get { return true; } }
 

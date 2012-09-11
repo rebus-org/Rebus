@@ -26,10 +26,6 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
-
-        [ThreadStatic]
-        static MsmqTransactionWrapper currentTransaction;
-
         readonly string machineAddress;
 
         public static MsmqMessageQueue Sender()
@@ -128,7 +124,7 @@ because there would be remote calls involved when you wanted to receive a messag
                         log.Warn("Received message with NULL body - how weird is that?");
                         return null;
                     }
-                    var transportMessage = (ReceivedTransportMessage) body;
+                    var transportMessage = (ReceivedTransportMessage)body;
                     return transportMessage;
                 }
             }
@@ -155,15 +151,15 @@ because there would be remote calls involved when you wanted to receive a messag
             if (!context.IsTransactional)
             {
                 using (var outputQueue = GetMessageQueue(recipientPath))
+                using (var transaction = new MessageQueueTransaction())
                 {
-                    var transaction = new MessageQueueTransaction();
                     transaction.Begin();
                     outputQueue.Send(message, transaction);
                     transaction.Commit();
                 }
                 return;
             }
-            
+
             using (var outputQueue = GetMessageQueue(recipientPath))
             {
                 outputQueue.Send(message, GetTransaction(context));
@@ -180,6 +176,7 @@ because there would be remote calls involved when you wanted to receive a messag
 
             context.DoCommit += transaction.Commit;
             context.DoRollback += transaction.Abort;
+            context.Cleanup += transaction.Dispose;
 
             transaction.Begin();
 
@@ -192,7 +189,7 @@ because there would be remote calls involved when you wanted to receive a messag
 
             log.Warn("Purging queue {0}", inputQueuePath);
             inputQueue.Purge();
-            
+
             return this;
         }
 

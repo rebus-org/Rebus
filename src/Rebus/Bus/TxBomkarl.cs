@@ -15,6 +15,8 @@ namespace Rebus.Bus
         
         public event Action AfterRollback = delegate { };
 
+        public event Action Cleanup = delegate { };
+
         /// <summary>
         /// Constructs the context and sets itself as current in <see cref="TransactionContext"/>.
         /// </summary>
@@ -48,6 +50,7 @@ namespace Rebus.Bus
         public void Dispose()
         {
             TransactionContext.Clear();
+            Cleanup();
         }
     }
 }

@@ -38,5 +38,10 @@ namespace Rebus
         /// Will be raised after a transaction has been rolled back
         /// </summary>
         event Action AfterRollback;
+
+        /// <summary>
+        /// Will be raised after all work is done, allowing you to clean up resources etc.
+        /// </summary>
+        event Action Cleanup;
     }
 }

@@ -51,9 +51,12 @@ namespace Rebus.Bus
             remove{}
         }
 
+        public event Action Cleanup = delegate { };
+
         public void Dispose()
         {
             TransactionContext.Clear();
+            Cleanup();
         }
     }
 }
