@@ -80,6 +80,30 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
         }
 
+        [Test]
+        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemAlsoWhenPublishingWithGenericTypeOtherThanActualType()
+        {
+            // arrange
+            DeleteQueue("test.rabbitsub.publisher");
+            DeleteQueue("test.rabbitsub.sub1");
+
+            var receivedSub1 = new List<int>();
+            var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add);
+            var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher");
+
+            sub1.Subscribe<SomeEvent>();
+            
+            Thread.Sleep(0.5.Seconds());
+            object someEventAsObject = new SomeEvent { Number = 1 };
+
+            // act
+            publisher.Publish(someEventAsObject);
+
+            // assert
+            Thread.Sleep(0.5.Seconds());
+            receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 1 });
+        }
+
         class SomeEvent
         {
             public int Number { get; set; }
