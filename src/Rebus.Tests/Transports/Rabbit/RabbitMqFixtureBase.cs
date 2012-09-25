@@ -16,6 +16,7 @@ namespace Rebus.Tests.Transports.Rabbit
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
         protected List<IDisposable> toDispose;
+        readonly List<string> queuesToDelete = new List<string>();
 
         static RabbitMqFixtureBase()
         {
@@ -47,6 +48,7 @@ namespace Rebus.Tests.Transports.Rabbit
                         Console.WriteLine(e);
                     }
                 });
+            queuesToDelete.ForEach(DeleteQueue);
             DoTearDown();
             RebusLoggerFactory.Reset();
         }
@@ -57,6 +59,8 @@ namespace Rebus.Tests.Transports.Rabbit
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
         {
+            queuesToDelete.Add(inputQueueName);
+
             var rabbitMqMessageQueue =
                 new RabbitMqMessageQueue(ConnectionString, inputQueueName)
                     .PurgeInputQueue();
@@ -77,7 +81,7 @@ namespace Rebus.Tests.Transports.Rabbit
             throw new NotImplementedException(string.Format("Don't know the destination of {0} - override this method in derived classes", messageType));
         }
 
-        public static void DeleteQueue(string recipientInputQueue)
+        public static void DeleteQueue(string queueName)
         {
             using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
             using (var model = connection.CreateModel())
@@ -85,7 +89,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 // just ignore if it fails...
                 try
                 {
-                    model.QueueDelete(recipientInputQueue);
+                    model.QueueDelete(queueName);
                 }
                 catch
                 {

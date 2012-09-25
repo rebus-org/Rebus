@@ -1,6 +1,5 @@
 using System;
 using Rebus.Configuration;
-using Rebus.Logging;
 using Rebus.Messages;
 
 namespace Rebus.RabbitMQ

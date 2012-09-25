@@ -7,12 +7,45 @@ namespace Rebus.RabbitMQ
 {
     public static class RabbitMqConfigurationExtensions
     {
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
+        /// and will use the supplied queue names. An exchange called "Rebus" will automatically be created, which will be used to send all messages.
+        /// </summary>
         public static RabbitMqOptions UseRabbitMq(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueue)
         {
-            return DoIt(configurer, connectionString, inputQueueName, errorQueue);
+            return DoIt(configurer, connectionString, inputQueueName, errorQueue, true);
         }
 
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
+        /// and will use the supplied queue names. This configuration assumes that an exchange already exists named "Rebus", which will be used to send all messages.
+        /// </summary>
+        public static RabbitMqOptions UseRabbitMqWithExistingExchange(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueue)
+        {
+            return DoIt(configurer, connectionString, inputQueueName, errorQueue, false);
+        }
+
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
+        /// and will look up Rebus-specified settings in the Rebus configuration section in your app.config. An exchange called "Rebus" will
+        /// automatically be created, which will be used to send all messages.
+        /// </summary>
         public static RabbitMqOptions UseRabbitMqAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
+        {
+            return DoItWithAppConfig(configurer, connectionString, true);
+        }
+
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
+        /// and will look up Rebus-specified settings in the Rebus configuration section in your app.config. This configuration assumes that
+        /// an exchange already exists named "Rebus", which will be used to send all messages.
+        /// </summary>
+        public static RabbitMqOptions UseRabbitMqWithExistingExchangeAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
+        {
+            return DoItWithAppConfig(configurer, connectionString, false);
+        }
+
+        static RabbitMqOptions DoItWithAppConfig(RebusTransportConfigurer configurer, string connectionString, bool ensureExchangeIsDeclared)
         {
             try
             {
@@ -22,17 +55,19 @@ namespace Rebus.RabbitMQ
 
                 if (string.IsNullOrEmpty(inputQueueName))
                 {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
+                    throw new ConfigurationErrorsException(
+                        "Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
                 }
 
                 var errorQueueName = section.ErrorQueue;
 
                 if (string.IsNullOrEmpty(errorQueueName))
                 {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
+                    throw new ConfigurationErrorsException(
+                        "Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
                 }
 
-                return DoIt(configurer, connectionString, inputQueueName, errorQueueName);
+                return DoIt(configurer, connectionString, inputQueueName, errorQueueName, ensureExchangeIsDeclared);
             }
             catch (ConfigurationErrorsException e)
             {
@@ -65,9 +100,9 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static RabbitMqOptions DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
+        static RabbitMqOptions DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName, bool ensureExchangeIsDeclared)
         {
-            var queue = new RabbitMqMessageQueue(connectionString, inputQueueName);
+            var queue = new RabbitMqMessageQueue(connectionString, inputQueueName, ensureExchangeIsDeclared);
             
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);

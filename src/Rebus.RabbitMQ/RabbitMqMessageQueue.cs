@@ -31,6 +31,7 @@ namespace Rebus.RabbitMQ
         }
 
         readonly string inputQueueName;
+        readonly bool ensureExchangeIsDeclared;
 
         IConnection currentConnection;
         bool disposed;
@@ -41,9 +42,10 @@ namespace Rebus.RabbitMQ
         [ThreadStatic]
         static Subscription threadBoundSubscription;
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName)
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName, bool ensureExchangeIsDeclared = true)
         {
             this.inputQueueName = inputQueueName;
+            this.ensureExchangeIsDeclared = ensureExchangeIsDeclared;
 
             log.Info("Opening connection to Rabbit queue {0}", inputQueueName);
             connectionFactory = new ConnectionFactory { Uri = connectionString };
@@ -232,8 +234,11 @@ namespace Rebus.RabbitMQ
             log.Info("Initializing logical queue '{0}'", queueName);
             using (var model = GetConnection().CreateModel())
             {
-                log.Debug("Declaring exchange '{0}'", ExchangeName);
-                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+                if (ensureExchangeIsDeclared)
+                {
+                    log.Debug("Declaring exchange '{0}'", ExchangeName);
+                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+                }
 
                 var arguments = new Hashtable {{"x-ha-policy", "all"}}; //< enable queue mirroring
 

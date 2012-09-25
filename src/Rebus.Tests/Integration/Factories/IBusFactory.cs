@@ -37,13 +37,13 @@ namespace Rebus.Tests.Integration.Factories
 
         protected abstract IDuplexTransport CreateTransport(string inputQueueName);
 
-        public void Cleanup()
+        public virtual void Cleanup()
         {
             disposables.ForEach(d => d.Dispose());
             disposables.Clear();
         }
 
-        public void StartAll()
+        public virtual void StartAll()
         {
             startables.ForEach(s => s.Start(1));
             startables.Clear();
@@ -52,9 +52,19 @@ namespace Rebus.Tests.Integration.Factories
 
     class RabbitBusFactory : BusFactoryBase
     {
+        readonly List<string> queuesToDelete = new List<string>(); 
+
         protected override IDuplexTransport CreateTransport(string inputQueueName)
         {
+            queuesToDelete.Add(inputQueueName);
+
             return new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, inputQueueName);
+        }
+
+        public override void Cleanup()
+        {
+            queuesToDelete.ForEach(RabbitMqFixtureBase.DeleteQueue);
+            base.Cleanup();
         }
     }
 
