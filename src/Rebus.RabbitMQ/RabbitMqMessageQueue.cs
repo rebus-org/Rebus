@@ -235,9 +235,11 @@ namespace Rebus.RabbitMQ
                 log.Debug("Declaring exchange '{0}'", ExchangeName);
                 model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
 
+                var arguments = new Hashtable {{"x-ha-policy", "all"}}; //< enable queue mirroring
+
                 log.Debug("Declaring queue '{0}'", queueName);
                 model.QueueDeclare(queueName, durable: true,
-                                   arguments: new Hashtable(), autoDelete: false, exclusive: false);
+                                   arguments: arguments, autoDelete: false, exclusive: false);
 
                 log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
                 model.QueueBind(queueName, ExchangeName, queueName);
