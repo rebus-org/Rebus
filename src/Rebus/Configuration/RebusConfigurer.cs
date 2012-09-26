@@ -26,38 +26,63 @@ namespace Rebus.Configuration
             return this;
         }
 
+        public RebusConfigurer Decorators(Action<DecoratorsConfigurer> configurer)
+        {
+            configurer(new DecoratorsConfigurer(Backbone));
+            return this;
+        }
+
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)
         {
+            AssertIsNull(Backbone.SendMessages, "Transport");
+            AssertIsNull(Backbone.ReceiveMessages, "Transport");
             configure(new RebusTransportConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Serialization(Action<RebusSerializationConfigurer> configure)
         {
+            AssertIsNull(Backbone.SerializeMessages, "Serialization");
             configure(new RebusSerializationConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Sagas(Action<RebusSagasConfigurer> configure)
         {
+            AssertIsNull(Backbone.StoreSagaData, "Sagas");
             configure(new RebusSagasConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Subscriptions(Action<RebusSubscriptionsConfigurer> configure)
         {
+            AssertIsNull(Backbone.StoreSubscriptions, "Subscriptions");
             configure(new RebusSubscriptionsConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer DetermineEndpoints(Action<RebusRoutingConfigurer> configure)
         {
+            AssertIsNull(Backbone.DetermineDestination, "DetermineEndpoints");
             configure(new RebusRoutingConfigurer(Backbone));
             return this;
         }
 
+        void AssertIsNull(object serviceReference, string configurationThingie)
+        {
+            if (serviceReference == null) return;
+
+            throw new ConfigurationException(
+                "You have called {0} twice! Please ensure that you call each configration thingie only once." +
+                " The reason that this is an error, is because it would be ambiguous if you e.g. configured" +
+                " Rebus to use the JSON serializer and then later configured it to use the binary serializer." +
+                " It wouldn't make any sense. It's permitted, however, to configure Decorators and Events" +
+                " multiple times.", configurationThingie);
+        }
+
         public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
         {
+            AssertIsNull(Backbone.InspectHandlerPipeline, "SpecifyOrderOfHandlers");
             configurePipelineInspector(new PipelineInspectorConfigurer(Backbone));
             return this;
         }
@@ -142,12 +167,6 @@ In this case, you must supply an implementation of {0} to the configuration back
                 log.Debug("Defaulting to in-memory subscription storage (should probably not be used for real)");
                 backbone.StoreSubscriptions = new InMemorySubscriptionStorage();
             }
-        }
-
-        public RebusConfigurer Decorators(Action<DecoratorsConfigurer> configurer)
-        {
-            configurer(new DecoratorsConfigurer(Backbone));
-            return this;
         }
     }
 }
