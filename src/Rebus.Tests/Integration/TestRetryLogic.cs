@@ -150,7 +150,7 @@ namespace Rebus.Tests.Integration
                             throw new Exception("HELLO!");
                         });
 
-                    bus.Events.PoisonMessage += (_, __) =>
+                    bus.Events.PoisonMessage += (_, __, ___) =>
                         {
                             throw new Exception("HELLO!");
                         };

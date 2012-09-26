@@ -561,9 +561,9 @@ element)"));
             events.RaiseAfterTransportMessage(this, exception, transportMessage);
         }
 
-        void RaisePosionMessage(ReceivedTransportMessage transportMessage)
+        void RaisePosionMessage(ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
         {
-            events.RaisePoisonMessage(this, transportMessage);
+            events.RaisePoisonMessage(this, transportMessage, poisonMessageInfo);
         }
 
         void LogSystemException(Worker worker, Exception exception)

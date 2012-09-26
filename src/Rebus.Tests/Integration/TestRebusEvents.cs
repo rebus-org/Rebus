@@ -63,7 +63,7 @@ namespace Rebus.Tests.Integration
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
             receiver.Events.BeforeTransportMessage += (b, m) => events.Add("Before message");
             receiver.Events.AfterTransportMessage += (b, e, m) => events.Add(string.Format("After message: {0} - has context: {1}", e, MessageContext.HasCurrent));
-            receiver.Events.PoisonMessage += (b, m) => events.Add("Poison!");
+            receiver.Events.PoisonMessage += (b, m, i) => events.Add("Poison!");
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
             sender.Routing.Send(receiverInputQueueName, "test");

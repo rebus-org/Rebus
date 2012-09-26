@@ -35,6 +35,8 @@ namespace Rebus.Tests.Configuration
 
                         e.MessageSent += delegate { raisedEvents.Add("message sent"); };
                         e.PoisonMessage += delegate { raisedEvents.Add("poison message"); };
+
+                        e.UncorrelatedMessage += delegate { raisedEvents.Add("uncorrelated message"); };
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
@@ -46,7 +48,8 @@ namespace Rebus.Tests.Configuration
             events.RaiseAfterMessage(null, null, null);
             events.RaiseAfterTransportMessage(null, null, null);
             events.RaiseMessageSent(null, null, null);
-            events.RaisePoisonMessage(null, null);
+            events.RaisePoisonMessage(null, null, null);
+            events.RaiseUncorrelatedMessage(null, null);
 
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
@@ -54,6 +57,7 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("after transport message");
             raisedEvents.ShouldContain("message sent");
             raisedEvents.ShouldContain("poison message");
+            raisedEvents.ShouldContain("uncorrelated message");
         }
 
         [Test]

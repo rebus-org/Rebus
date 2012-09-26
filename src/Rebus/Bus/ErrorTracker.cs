@@ -116,7 +116,21 @@ namespace Rebus.Bus
         public string GetErrorText(string id)
         {
             var trackedMessage = GetOrAdd(id);
+            
             return trackedMessage.GetErrorMessages();
+        }
+
+        /// <summary>
+        /// Retrieves information about caught exceptions for the message with the
+        /// given id.
+        /// </summary>
+        /// <param name="id">ID of message whose poison message information to get</param>
+        /// <returns>Information about the poison message</returns>
+        public PoisonMessageInfo GetPoisonMessageInfo(string id)
+        {
+            var trackedMessage = GetOrAdd(id);
+
+            return trackedMessage.GetPoisonMessageInfo();
         }
 
         /// <summary>
@@ -173,6 +187,11 @@ namespace Rebus.Bus
             {
                 return string.Join(Environment.NewLine + Environment.NewLine, exceptions.Select(FormatTimedException));
             }
+
+            public PoisonMessageInfo GetPoisonMessageInfo()
+            {
+                return new PoisonMessageInfo(Id, exceptions.Select(e => new TimedException(e.Time, e.Value)));
+            } 
 
             static string FormatTimedException(Timed<Exception> e)
             {
