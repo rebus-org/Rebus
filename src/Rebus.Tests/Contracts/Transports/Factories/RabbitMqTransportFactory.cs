@@ -8,6 +8,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
     public class RabbitMqTransportFactory : ITransportFactory
     {
         readonly List<IDisposable> disposables = new List<IDisposable>();
+        readonly List<string> queuesToDelete = new List<string>(); 
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
@@ -19,14 +20,18 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
-            var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName, queueName + ".error");
+            queuesToDelete.Add(queueName);
+
+            var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName);
             queue.PurgeInputQueue();
+            
             disposables.Add(queue);
             return queue;
         }
 
         public void CleanUp()
         {
+            queuesToDelete.ForEach(RabbitMqFixtureBase.DeleteQueue);
             disposables.ForEach(d => d.Dispose());
         }
 

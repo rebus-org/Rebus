@@ -3,6 +3,8 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Shared;
+using Rebus.Testing;
+using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -51,10 +53,11 @@ is just because there was a bug some time when the grouping of the messages was 
             bus.Batch.Publish(firstMessage, secondMessage);
 
             // assert
-            
+
             // check that the endpoint is right
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someSubscriberEndpoint),
-                                                     Arg<TransportMessageToSend>.Is.Anything),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything),
                                          o => o.Repeat.Once());
         }
 
@@ -69,16 +72,42 @@ is just because there was a bug some time when the grouping of the messages was 
             var thirdMessage = new SomeRandomMessage();
 
             var someEndpoint = "some-endpoint";
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (FirstMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SecondMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return(someEndpoint);
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(FirstMessage))).Return(someEndpoint);
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SecondMessage))).Return(someEndpoint);
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return(someEndpoint);
 
             // act
             bus.Batch.Send(firstMessage, secondMessage, thirdMessage);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint), Arg<TransportMessageToSend>.Is.Anything),
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint),
+                Arg<TransportMessageToSend>.Is.Anything,
+                Arg<ITransactionContext>.Is.Anything),
                                                             o => o.Repeat.Once());
+        }
+
+        [Test]
+        public void CanDoBatchReply()
+        {
+            // arrange
+            const string returnAddress = "some random return address";
+            var firstMessage = new FirstMessage();
+            var secondMessage = new SecondMessage();
+            var someRandomMessage = new SomeRandomMessage();
+            var fakeContext = Mock<IMessageContext>();
+            fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
+
+            // act
+            using (FakeMessageContext.Establish(fakeContext))
+            {
+                bus.Batch.Reply(firstMessage, secondMessage, someRandomMessage);
+            }
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(returnAddress),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything),
+                                         o => o.Repeat.Once());
         }
 
         [Test]
@@ -96,8 +125,8 @@ is just because there was a bug some time when the grouping of the messages was 
             Assert.DoesNotThrow(() => bus.Batch.Send(someMessage, anotherMessage));
 
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
-                                                     Arg<TransportMessageToSend>.Matches(
-                                                         t => true)));
+                                                     Arg<TransportMessageToSend>.Matches(t => true),
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
@@ -132,16 +161,16 @@ Or should it?")]
             bus.Routing.Send("somewhereElse", someRandomMessage);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhereElse"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key")), Arg<ITransactionContext>.Is.Anything));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhereElse"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key")), Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
         public void CanPublishBatchOfMessages()
         {
             // arrange
-            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (FirstMessage))).Return(new[] {"first-sub1", "first-sub2"});
-            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (SecondMessage))).Return(new[] {"second-sub1", "second-sub2"});
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(FirstMessage))).Return(new[] { "first-sub1", "first-sub2" });
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(SecondMessage))).Return(new[] { "second-sub1", "second-sub2" });
 
             // act
             var firstMessage1 = new FirstMessage();
@@ -158,20 +187,20 @@ Or should it?")]
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub1"),
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub2"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub1"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub2"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub2"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub1"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub2"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2")), Arg<ITransactionContext>.Is.Anything));
         }
 
-        class FirstMessage{}
-        class SecondMessage{}
+        class FirstMessage { }
+        class SecondMessage { }
 
         [Test]
         public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncluded()
@@ -179,7 +208,7 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:10");
@@ -198,7 +227,7 @@ Or should it?")]
             // arrange
             var someRandomMessage = new SomeRandomMessage();
             var anotherRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
@@ -215,7 +244,7 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
@@ -238,10 +267,11 @@ Or should it?")]
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("hardcoded.endpoint.to.skip.lookup"),
-                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.TimeToBeReceived))));
+                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.TimeToBeReceived)),
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
-        class SomeRandomMessage {}
+        class SomeRandomMessage { }
 
         [Test]
         public void SendsMessagesToTheRightDestination()
@@ -254,7 +284,9 @@ Or should it?")]
             bus.Send(theMessageThatWasSent);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"), Arg<TransportMessageToSend>.Is.Anything));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
@@ -271,10 +303,12 @@ Or should it?")]
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("polymorphic message endpoint"),
-                                                     Arg<TransportMessageToSend>.Is.Anything));
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
 
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("some random message endpoint"),
-                                                     Arg<TransportMessageToSend>.Is.Anything));
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
@@ -291,7 +325,8 @@ Or should it?")]
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
                                                      Arg<TransportMessageToSend>.Matches(
                                                          m => m.Headers.ContainsKey(Headers.ReturnAddress)
-                                                              && m.Headers[Headers.ReturnAddress] == "my input queue")));
+                                                              && m.Headers[Headers.ReturnAddress] == "my input queue"),
+                                                              Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]

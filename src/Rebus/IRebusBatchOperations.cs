@@ -18,5 +18,12 @@ namespace Rebus
         /// the order of the messages within the batch is preserved.
         /// </summary>
         void Publish(params object[] messages);
+
+        /// <summary>
+        /// Sends a batch of replies back to the sender of the message currently being handled.
+        /// Can only be called when a <see cref="MessageContext"/> has been established, which happens
+        /// during the handling of an incoming message.
+        /// </summary>
+        void Reply(params object[] messages);
     }
 }

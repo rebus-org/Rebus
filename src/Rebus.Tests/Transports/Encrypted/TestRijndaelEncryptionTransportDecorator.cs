@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Shared;
 using Rebus.Transports.Encrypted;
+using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
 using Rebus.Extensions;
@@ -35,7 +37,7 @@ namespace Rebus.Tests.Transports.Encrypted
             receiver.SetUpReceive(null);
 
             // act
-            var receivedTransportMessage = transport.ReceiveMessage();
+            var receivedTransportMessage = transport.ReceiveMessage(new NoTransaction());
 
             // assert
             receivedTransportMessage.ShouldBe(null);
@@ -59,7 +61,7 @@ namespace Rebus.Tests.Transports.Encrypted
                 Body = Guid.NewGuid().ToByteArray(),
             };
 
-            localInstance.Send("test", toSend);
+            localInstance.Send("test", toSend, new NoTransaction());
 
             var sentMessage = sender.SentMessage;
             var receivedTransportMessage = new ReceivedTransportMessage
@@ -72,7 +74,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             receiver.SetUpReceive(receivedTransportMessage);
 
-            var receivedMessage = localInstance.ReceiveMessage();
+            var receivedMessage = localInstance.ReceiveMessage(new NoTransaction());
 
             receivedMessage.Label.ShouldBe(toSend.Label);
             var expectedHeaders = toSend.Headers.Clone();
@@ -87,7 +89,7 @@ namespace Rebus.Tests.Transports.Encrypted
             var transportMessageToSend = new TransportMessageToSend { Body = new byte[] { 123, 125 } };
 
             // act
-            transport.Send("somewhere", transportMessageToSend);
+            transport.Send("somewhere", transportMessageToSend, new NoTransaction());
 
             // assert
             sender.SentMessage.Headers.ShouldContainKey(Headers.Encrypted);
@@ -101,7 +103,7 @@ namespace Rebus.Tests.Transports.Encrypted
             receiver.MessageToReceive = messageWithoutEncryptedHeader;
 
             // act
-            var receivedTransportMessage = transport.ReceiveMessage();
+            var receivedTransportMessage = transport.ReceiveMessage(new NoTransaction());
 
             // assert
             receivedTransportMessage.Body.ShouldBe(new byte[] { 128 });
@@ -119,7 +121,7 @@ namespace Rebus.Tests.Transports.Encrypted
                                              };
 
             // act
-            transport.Send("test", transportMessageToSend);
+            transport.Send("test", transportMessageToSend, new NoTransaction());
 
             // assert
             var sentMessage = sender.SentMessage;
@@ -159,7 +161,7 @@ namespace Rebus.Tests.Transports.Encrypted
                                       });
 
             // act
-            var receivedTransportMessage = transport.ReceiveMessage();
+            var receivedTransportMessage = transport.ReceiveMessage(new NoTransaction());
 
             // assert
             receivedTransportMessage.Id.ShouldBe("id");
@@ -182,7 +184,7 @@ namespace Rebus.Tests.Transports.Encrypted
                                  Body = Guid.NewGuid().ToByteArray(),
                              };
 
-            transport.Send("test", toSend);
+            transport.Send("test", toSend, new NoTransaction());
 
             var sentMessage = sender.SentMessage;
             var receivedTransportMessage = new ReceivedTransportMessage
@@ -195,7 +197,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             receiver.SetUpReceive(receivedTransportMessage);
 
-            var receivedMessage = transport.ReceiveMessage();
+            var receivedMessage = transport.ReceiveMessage(new NoTransaction());
 
             receivedMessage.Label.ShouldBe(toSend.Label);
             var expectedHeaders = toSend.Headers.Clone();
@@ -205,7 +207,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
         class Sender : ISendMessages
         {
-            public void Send(string destinationQueueName, TransportMessageToSend message)
+            public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
             {
                 SentMessage = message;
             }
@@ -222,7 +224,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             public ReceivedTransportMessage MessageToReceive { get; set; }
 
-            public ReceivedTransportMessage ReceiveMessage()
+            public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
             {
                 var receivedTransportMessage = MessageToReceive;
                 MessageToReceive = null;

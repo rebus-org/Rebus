@@ -30,7 +30,7 @@ namespace Rebus.Transports.Msmq
 
         public class OneWayClientGag : IReceiveMessages, IErrorTracker
         {
-            public ReceivedTransportMessage ReceiveMessage()
+            public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
             {
                 throw new NotImplementedException();
             }

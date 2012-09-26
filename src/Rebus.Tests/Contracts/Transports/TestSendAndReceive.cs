@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Tests.Contracts.Transports.Factories;
 using Shouldly;
 
@@ -49,9 +50,9 @@ namespace Rebus.Tests.Contracts.Transports
                 };
 
             // act
-            sender.Send(receiver.InputQueue, transportMessageToSend);
+            sender.Send(receiver.InputQueue, transportMessageToSend, new NoTransaction());
             Thread.Sleep(MaximumExpectedQueueLatency);
-            var receivedTransportMessage = receiver.ReceiveMessage();
+            var receivedTransportMessage = receiver.ReceiveMessage(new NoTransaction());
 
             // assert
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("this is some data");
@@ -62,6 +63,8 @@ namespace Rebus.Tests.Contracts.Transports
 
             headers.ShouldContainKeyAndValue("key1", "value1");
             headers.ShouldContainKeyAndValue("key2", "value2");
+
+            5.Times(() => receiver.ReceiveMessage(new NoTransaction()).ShouldBe(null));
         }
 
         [Test]
@@ -71,11 +74,12 @@ namespace Rebus.Tests.Contracts.Transports
             var encoding = Encoding.UTF7;
             
             // act
-            sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") });
+            sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") }, new NoTransaction());
             Thread.Sleep(MaximumExpectedQueueLatency);
-            var receivedTransportMessage = receiver.ReceiveMessage();
+            var receivedTransportMessage = receiver.ReceiveMessage(new NoTransaction());
 
             // assert
+            receivedTransportMessage.ShouldNotBe(null);
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("wooolalalala");
         }
     }

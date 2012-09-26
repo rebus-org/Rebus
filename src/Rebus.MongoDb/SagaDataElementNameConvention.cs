@@ -1,13 +1,21 @@
 using System;
 using System.Reflection;
 using MongoDB.Bson.Serialization.Conventions;
+using Ponder;
 
 namespace Rebus.MongoDb
 {
-    public class SagaDataElementNameConvention : IElementNameConvention
+    class SagaDataElementNameConvention : IElementNameConvention
     {
         readonly IElementNameConvention defaultElementNameConvention = new MemberNameElementNameConvention();
-        
+
+        public SagaDataElementNameConvention()
+        {
+            RevisionMemberName = Reflect.Path<ISagaData>(d => d.Revision);
+        }
+
+        public string RevisionMemberName { get; private set; }
+
         public string GetElementName(MemberInfo member)
         {
             if (member == null)
@@ -15,7 +23,7 @@ namespace Rebus.MongoDb
                 throw new ArgumentNullException("member");
             }
 
-            if (member.Name == "Revision")
+            if (member.Name == RevisionMemberName)
             {
                 return "_rev";
             }

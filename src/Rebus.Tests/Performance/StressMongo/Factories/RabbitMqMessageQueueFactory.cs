@@ -11,7 +11,7 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
 
         public Tuple<ISendMessages, IReceiveMessages> GetQueue(string inputQueueName)
         {
-            var rabbitMqMessageQueue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, inputQueueName, "error").PurgeInputQueue();
+            var rabbitMqMessageQueue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, inputQueueName).PurgeInputQueue();
             disposables.Add(rabbitMqMessageQueue);
             return new Tuple<ISendMessages, IReceiveMessages>(rabbitMqMessageQueue, rabbitMqMessageQueue);
         }

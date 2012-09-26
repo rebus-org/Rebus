@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using Rebus.Logging;
+using Rebus.Testing;
 using Rhino.Mocks;
 using log4net.Config;
 

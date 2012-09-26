@@ -6,7 +6,7 @@ namespace Rebus
     /// <summary>
     /// This is 
     /// </summary>
-    public interface IMessageContext
+    public interface IMessageContext : IDisposable
     {
         /// <summary>
         /// Gets the return address of the message that is currently being handled.
@@ -30,6 +30,9 @@ namespace Rebus
         /// </summary>
         void Abort();
 
+        /// <summary>
+        /// Raised when the message context is disposed.
+        /// </summary>
         event Action Disposed;
 
         /// <summary>

@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;

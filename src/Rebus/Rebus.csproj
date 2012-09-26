@@ -35,9 +35,9 @@
     <DocumentationFile>bin\Release\Rebus.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.4.5.8\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -54,18 +54,29 @@
     <Compile Include="..\..\lib\Ponder\Ponder.cs">
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
+    <Compile Include="Bus\AmbientTransactionContext.cs" />
     <Compile Include="Bus\BusMode.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
     <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
+    <Compile Include="Bus\IMulticastTransport.cs" />
+    <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Bus\TransactionContext.cs" />
+    <Compile Include="Bus\TxBomkarl.cs" />
+    <Compile Include="Configuration\BaseConfigurer.cs" />
+    <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
+    <Compile Include="ExceptionExtensions.cs" />
+    <Compile Include="Guard.cs" />
+    <Compile Include="IDuplexTransport.cs" />
+    <Compile Include="ITransactionContext.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
@@ -95,7 +106,7 @@
     <Compile Include="Configuration\RebusConfigurationSection.cs" />
     <Compile Include="Configuration\RijndaelSection.cs" />
     <Compile Include="Extensions\DictExt.cs" />
-    <Compile Include="FakeMessageContext.cs" />
+    <Compile Include="Testing\FakeMessageContext.cs" />
     <Compile Include="IMessageContext.cs" />
     <Compile Include="InconsistentReturnAddressException.cs" />
     <Compile Include="InconsistentTimeToBeReceivedException.cs" />
@@ -111,7 +122,6 @@
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\PipelineInspectorConfigurer.cs" />
     <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
-    <Compile Include="Configuration\EndpointMappingsExtensions.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />

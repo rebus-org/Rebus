@@ -13,6 +13,10 @@ namespace Rebus
     {
         readonly Dictionary<Type, List<Func<object>>> activators = new Dictionary<Type, List<Func<object>>>();
 
+        /// <summary>
+        /// Registers the given handler type. It is assumed that the type registered has a public
+        /// default constructor - otherwise, instantiation will fail.
+        /// </summary>
         public SimpleHandlerActivator Register(Type handlerType)
         {
             InnerRegister(handlerType, () => Activator.CreateInstance(handlerType));
@@ -20,10 +24,23 @@ namespace Rebus
             return this;
         }
 
+        /// <summary>
+        /// Registers a factory method that is capable of creating a handler instance.
+        /// </summary>
         public SimpleHandlerActivator Register<THandler>(Func<THandler> handlerFactory)
         {
             InnerRegister(typeof(THandler), () => handlerFactory());
 
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a function that can handle messages of the specified type.
+        /// </summary>
+        public SimpleHandlerActivator Handle<TMessage>(Action<TMessage> handler)
+        {
+            InnerRegister(typeof(HandlerMethodWrapper<TMessage>), () => new HandlerMethodWrapper<TMessage>(handler));
+            
             return this;
         }
 
@@ -54,5 +71,21 @@ namespace Rebus
         public void Release(IEnumerable handlerInstances)
         {
         }
+
+        class HandlerMethodWrapper<T> : IHandleMessages<T>
+        {
+            private readonly Action<T> action;
+
+            public HandlerMethodWrapper(Action<T> action)
+            {
+                this.action = action;
+            }
+
+            public void Handle(T message)
+            {
+                action(message);
+            }
+        }
+
     }
 }

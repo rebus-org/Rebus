@@ -1,5 +1,6 @@
 ﻿using Rebus.Extensions;
 using Rebus.Shared;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Transports.Encrypted
 {
@@ -16,7 +17,7 @@ namespace Rebus.Transports.Encrypted
             helper = new RijndaelHelper(keyBase64);
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var iv = helper.GenerateNewIv();
 
@@ -30,12 +31,12 @@ namespace Rebus.Transports.Encrypted
             transportMessageToSend.Headers[Headers.Encrypted] = null;
             transportMessageToSend.Headers[Headers.EncryptionSalt] = iv;
 
-            innerSendMessages.Send(destinationQueueName, transportMessageToSend);
+            innerSendMessages.Send(destinationQueueName, transportMessageToSend, context);
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            var receivedTransportMessage = innerReceiveMessages.ReceiveMessage();
+            var receivedTransportMessage = innerReceiveMessages.ReceiveMessage(context);
 
             if (receivedTransportMessage == null) return null;
 

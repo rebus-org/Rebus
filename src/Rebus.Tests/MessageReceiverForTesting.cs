@@ -5,6 +5,7 @@ using System.Threading;
 using System.Transactions;
 using Rebus.Messages;
 using Rebus.Extensions;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests
 {
@@ -35,7 +36,7 @@ namespace Rebus.Tests
             messageQueue.Enqueue(receivedTransportMessage);
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             ReceivedTransportMessage temp;
             if (messageQueue.TryDequeue(out temp))

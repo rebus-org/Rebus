@@ -3,23 +3,21 @@ using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration
 {
-    public class RebusSerializationConfigurer
+    public class RebusSerializationConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
         public RebusSerializationConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public void UseJsonSerializer()
         {
-            backbone.SerializeMessages = new JsonMessageSerializer();
+            Backbone.SerializeMessages = new JsonMessageSerializer();
         }
 
         public void UseBinarySerializer()
         {
-            backbone.SerializeMessages = new BinaryMessageSerializer();
+            Backbone.SerializeMessages = new BinaryMessageSerializer();
         }
 
         public void Use(ISerializeMessages serializer)

@@ -1,209 +1,288 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Transactions;
+using System.Threading;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using RabbitMQ.Client.MessagePatterns;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Shared;
 
 namespace Rebus.RabbitMQ
 {
-    public class RabbitMqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
+    public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
     {
+        const string ExchangeName = "Rebus";
+        
+        static readonly Encoding Encoding = Encoding.UTF8;
+        static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
+
+        readonly ConcurrentBag<string> initializedQueues = new ConcurrentBag<string>();
+        readonly ConnectionFactory connectionFactory;
 
         static RabbitMqMessageQueue()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        const string ExchangeName = "Rebus";
-        static readonly Encoding Encoding = Encoding.UTF8;
-
-        readonly IConnection connection;
-
         readonly string inputQueueName;
-        readonly string errorQueue;
-        readonly IModel subscriptionModel;
-        readonly Subscription subscription;
-        readonly object subscriptionLock = new object();
+        readonly bool ensureExchangeIsDeclared;
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName, string errorQueue)
+        IConnection currentConnection;
+        bool disposed;
+
+        [ThreadStatic]
+        static IModel threadBoundModel;
+
+        [ThreadStatic]
+        static Subscription threadBoundSubscription;
+
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName, bool ensureExchangeIsDeclared = true)
         {
             this.inputQueueName = inputQueueName;
-            this.errorQueue = errorQueue;
+            this.ensureExchangeIsDeclared = ensureExchangeIsDeclared;
 
-            log.Info("Opening Rabbit connection");
-            connection = new ConnectionFactory { Uri = connectionString }.CreateConnection();
+            log.Info("Opening connection to Rabbit queue {0}", inputQueueName);
+            connectionFactory = new ConnectionFactory { Uri = connectionString };
 
-            log.Debug("Creating model");
-            subscriptionModel = connection.CreateModel();
-
-            log.Info("Initializing exchange and input queue");
-            var tempModel = connection.CreateModel();
-
-            log.Debug("Ensuring that exchange exists with the name {0}", ExchangeName);
-            tempModel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-
-            CreateLogicalQueue(tempModel, this.inputQueueName);
-            CreateLogicalQueue(tempModel, this.errorQueue);
-
-            log.Debug("Opening subscription");
-            subscription = new Subscription(subscriptionModel, inputQueueName);
+            InitializeLogicalQueue(inputQueueName);
         }
 
-        void CreateLogicalQueue(IModel tempModel, string queueName)
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
-            log.Debug("Declaring queue {0}", queueName);
-            tempModel.QueueDeclare(queueName, true, false, false, new Hashtable());
+            EnsureInitialized(message, destinationQueueName);
 
-            log.Debug("Binding {0} to {1} (routing key: {2})", queueName, ExchangeName, queueName);
-            tempModel.QueueBind(queueName, ExchangeName, queueName);
-        }
-
-        public string InputQueueAddress
-        {
-            get { return InputQueue; }
-        }
-
-        void WithModel(Action<IModel> handleModel)
-        {
-            if (Transaction.Current != null)
+            if (!context.IsTransactional)
             {
-                if (transactionManager == null)
+                using (var model = GetConnection().CreateModel())
                 {
-                    var model = connection.CreateModel();
-                    model.TxSelect();
-                    transactionManager = new AmbientTxHack(
-                        () =>
-                        {
-                            model.TxCommit();
-                            transactionManager = null;
-                            ambientModel = null;
-                        },
-                        () =>
-                        {
-                            model.TxRollback();
-                            transactionManager = null;
-                            ambientModel = null;
-                        },
-                        model);
-
-                    handleModel(model);
-                    ambientModel = model;
-                }
-                else
-                {
-                    handleModel(ambientModel);
+                    model.BasicPublish(ExchangeName, destinationQueueName,
+                                       GetHeaders(model, message),
+                                       message.Body);
                 }
             }
             else
             {
-                using (var model = connection.CreateModel())
-                {
-                    handleModel(model);
-                }
+                var model = GetSenderModel(context);
+
+                model.BasicPublish(ExchangeName, destinationQueueName,
+                                   GetHeaders(model, message),
+                                   message.Body);
             }
         }
 
-        [ThreadStatic]
-        static AmbientTxHack transactionManager;
-
-        [ThreadStatic]
-        static IModel ambientModel;
-
-        void WithSubscription(Action<Subscription> handleSubscription)
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            lock (subscriptionLock)
+            if (!context.IsTransactional)
             {
-                handleSubscription(subscription);
-            }
-        }
-
-        public ReceivedTransportMessage ReceiveMessage()
-        {
-            BasicDeliverEventArgs ea = null;
-            var gotMessage = false;
-
-            WithSubscription(sub => gotMessage = sub.Next(200, out ea));
-
-            if (gotMessage)
-            {
-                using (new AmbientTxHack(() => WithSubscription(sub => sub.Ack(ea)),
-                                         () => { },
-                                         null))
+                using (var localModel = GetConnection().CreateModel())
                 {
-                    if (ea == null)
+                    var basicGetResult = localModel.BasicGet(inputQueueName, true);
+
+                    if (basicGetResult == null)
                     {
-                        log.Warn("Rabbit Client said there was a message, but the message args was NULL! WTF!?");
+                        Thread.Sleep(BackoffTime);
                         return null;
                     }
 
-                    var basicProperties = ea.BasicProperties;
-
-                    if (basicProperties == null)
-                    {
-                        log.Warn("Properties of received message were NULL! WTF!?");
-                    }
-
-                    return new ReceivedTransportMessage
-                               {
-                                   Id = basicProperties != null ? basicProperties.MessageId : "(unknown)",
-                                   Headers = basicProperties != null ? GetHeaders(basicProperties.Headers) : new Dictionary<string, string>(),
-                                   Body = ea.Body,
-                               };
+                    return GetReceivedTransportMessage(basicGetResult.BasicProperties, basicGetResult.Body);
                 }
             }
 
-            return null;
+            EnsureThreadBoundModelIsInitialized(context);
+
+            if (threadBoundSubscription == null || !threadBoundSubscription.Model.IsOpen)
+            {
+                threadBoundSubscription = new Subscription(threadBoundModel, inputQueueName, false);
+            }
+
+            BasicDeliverEventArgs ea;
+            if (!threadBoundSubscription.Next((int)BackoffTime.TotalMilliseconds, out ea))
+            {
+                return null;
+            }
+
+            // wtf??
+            if (ea == null)
+            {
+                log.Warn("Subscription returned true, but BasicDeliverEventArgs was null!!");
+                Thread.Sleep(BackoffTime);
+                return null;
+            }
+
+            context.BeforeCommit += () => threadBoundSubscription.Ack(ea);
+            context.AfterRollback += () =>
+                {
+                    threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
+                    threadBoundModel.TxCommit();
+                };
+
+            return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
         }
 
-        public string InputQueue
+        IModel GetSenderModel(ITransactionContext context)
         {
-            get { return inputQueueName; }
+            if (context[CurrentModelKey] != null) 
+                return (IModel)context[CurrentModelKey];
+
+            var model = GetConnection().CreateModel();
+            model.TxSelect();
+            context[CurrentModelKey] = model;
+
+            context.DoCommit += model.TxCommit;
+            context.DoRollback += model.TxRollback;
+
+            return model;
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        const string CurrentModelKey = "current_model";
+
+        public string InputQueue { get { return inputQueueName; } }
+
+        public string InputQueueAddress { get { return inputQueueName; } }
+
+        public void Dispose()
         {
-            WithModel(m => m.BasicPublish(ExchangeName, destinationQueueName,
-                                          GetHeaders(m, message),
-                                          GetBody(message)));
+            if (disposed) return;
+
+            log.Info("Disposing queue {0}", inputQueueName);
+
+            try
+            {
+                if (currentConnection == null) return;
+                
+                currentConnection.Close();
+                currentConnection.Dispose();
+            }
+            catch (Exception e)
+            {
+                log.Error("An error occurred while disposing queue {0}: {1}", inputQueueName, e);
+                throw;
+            }
+            finally
+            {
+                disposed = true;
+            }
         }
 
         public RabbitMqMessageQueue PurgeInputQueue()
         {
-            WithModel(m => m.QueuePurge(inputQueueName));
+            using (var model = GetConnection().CreateModel())
+            {
+                log.Warn("Purging queue {0}", inputQueueName);
+                model.QueuePurge(inputQueueName);
+            }
 
             return this;
         }
 
-        public void Dispose()
+        public bool ManagesSubscriptions { get; private set; }
+
+        public void Subscribe(Type messageType, string inputQueueAddress)
         {
-            log.Info("Disposing Rabbit");
-            log.Debug("Closing subscription");
-            subscription.Close();
-
-            log.Debug("Disposing model");
-            subscriptionModel.Close();
-            subscriptionModel.Dispose();
-
-            log.Debug("Disposing connection");
-            connection.Close();
-            connection.Dispose();
+            using (var model = GetConnection().CreateModel())
+            {
+                var topic = messageType.FullName;
+                log.Info("Subscribing {0} to {1}", inputQueueAddress, topic);
+                model.QueueBind(inputQueueAddress, ExchangeName, topic);
+            }
         }
 
-        IBasicProperties GetHeaders(IModel model, TransportMessageToSend message)
+        public void Unsubscribe(Type messageType, string inputQueueAddress)
         {
-            var props = model.CreateBasicProperties();
+            using (var model = GetConnection().CreateModel())
+            {
+                var topic = messageType.FullName;
+                log.Info("Unsubscribing {0} from {1}", inputQueueAddress, topic);
+                model.QueueUnbind(inputQueueAddress, ExchangeName, topic, new Hashtable());
+            }
+        }
+
+        public void ManageSubscriptions()
+        {
+            log.Info("RabbitMQ will manage subscriptions");
+            ManagesSubscriptions = true;
+        }
+
+        void EnsureInitialized(TransportMessageToSend message, string queueName)
+        {
+            // don't create recipient queue if multicasting
+            if (message.Headers.ContainsKey(Headers.Multicast))
+            {
+                message.Headers.Remove(Headers.Multicast);
+                return;
+            }
+
+            if (initializedQueues.Contains(queueName)) return;
+
+            lock (initializedQueues)
+            {
+                if (initializedQueues.Contains(queueName)) return;
+
+                InitializeLogicalQueue(queueName);
+                initializedQueues.Add(queueName);
+            }
+        }
+
+        void InitializeLogicalQueue(string queueName)
+        {
+            log.Info("Initializing logical queue '{0}'", queueName);
+            using (var model = GetConnection().CreateModel())
+            {
+                if (ensureExchangeIsDeclared)
+                {
+                    log.Debug("Declaring exchange '{0}'", ExchangeName);
+                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+                }
+
+                var arguments = new Hashtable {{"x-ha-policy", "all"}}; //< enable queue mirroring
+
+                log.Debug("Declaring queue '{0}'", queueName);
+                model.QueueDeclare(queueName, durable: true,
+                                   arguments: arguments, autoDelete: false, exclusive: false);
+
+                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                model.QueueBind(queueName, ExchangeName, queueName);
+            }
+        }
+
+        void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
+        {
+            if (threadBoundModel != null && threadBoundModel.IsOpen)
+            {
+                if (context[CurrentModelKey] == null)
+                {
+                    context[CurrentModelKey] = threadBoundModel;
+                    context.DoCommit += () => threadBoundModel.TxCommit();
+                    context.DoRollback += () => threadBoundModel.TxRollback();
+                }
+                return;
+            }
+
+            threadBoundModel = GetConnection().CreateModel();
+            threadBoundModel.TxSelect();
+
+            context.DoCommit += () => threadBoundModel.TxCommit();
+            context.DoRollback += () => threadBoundModel.TxRollback();
+
+            // ensure any sends withing this transaction will use the thread bound model
+            context[CurrentModelKey] = threadBoundModel;
+        }
+
+        static IBasicProperties GetHeaders(IModel modelToUse, TransportMessageToSend message)
+        {
+            var props = modelToUse.CreateBasicProperties();
 
             if (message.Headers != null)
             {
-                props.Headers = message.Headers.ToDictionary(e => e.Key,
-                                                             e => Encoding.GetBytes(e.Value));
+                props.Headers = message.Headers
+                    .ToDictionary(e => e.Key,
+                                  e => Encoding.GetBytes(e.Value));
 
                 if (message.Headers.ContainsKey(Headers.ReturnAddress))
                 {
@@ -212,20 +291,66 @@ namespace Rebus.RabbitMQ
             }
 
             props.MessageId = Guid.NewGuid().ToString();
+            props.SetPersistent(true);
+
             return props;
         }
 
-        byte[] GetBody(TransportMessageToSend message)
+        static ReceivedTransportMessage GetReceivedTransportMessage(IBasicProperties basicProperties, byte[] body)
         {
-            return message.Body;
+            return new ReceivedTransportMessage
+                {
+                    Id = basicProperties != null
+                             ? basicProperties.MessageId
+                             : "(unknown)",
+                    Headers = basicProperties != null
+                                  ? GetHeaders(basicProperties.Headers)
+                                  : new Dictionary<string, string>(),
+                    Body = body,
+                };
         }
 
-        IDictionary<string, string> GetHeaders(IDictionary result)
+        static IDictionary<string, string> GetHeaders(IDictionary result)
         {
             if (result == null) return new Dictionary<string, string>();
 
             return result.Cast<DictionaryEntry>()
                 .ToDictionary(e => (string)e.Key, e => Encoding.GetString((byte[])e.Value));
+        }
+
+        IConnection GetConnection()
+        {
+            if (currentConnection == null)
+            {
+                try
+                {
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+                catch(Exception e)
+                {
+                    log.Error("An error occurred while trying to open Rabbit connection", e);
+                    throw;
+                }
+            }
+
+            if (!currentConnection.IsOpen)
+            {
+                log.Info("Rabbit connection seems to have been closed - disposing old connection and reopening...");
+                try
+                {
+                    currentConnection.Dispose();
+                    currentConnection = connectionFactory.CreateConnection();
+                    return currentConnection;
+                }
+                catch(Exception e)
+                {
+                    log.Error("An error occurred while trying to reopen the Rabbit connection", e);
+                    throw;
+                }
+            }
+
+            return currentConnection;
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Shouldly;
@@ -15,9 +17,68 @@ namespace Rebus.Tests.Transports.Rabbit
     [TestFixture, Category(TestCategories.Rabbit)]
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
+        static readonly Encoding Encoding = Encoding.UTF8;
+
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new NullLoggerFactory();
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        [Test, Description("Rabbit will ignore sent messages when they don't match a routing rule, in this case the topic with the same name of a recipient queue. Therefore, in order to avoid losing messages, recipient queues are automatically created.")]
+        public void AutomatiallyCreatesRecipientQueue()
+        {
+            // arrange
+            const string senderInputQueue = "test.autocreate.sender";
+            const string recipientInputQueue = "test.autocreate.recipient";
+            const string someText = "whoa! as if by magic!";
+
+            // ensure recipient queue does not exist
+            DeleteQueue(recipientInputQueue);
+
+            using (var sender = new RabbitMqMessageQueue(ConnectionString, senderInputQueue))
+            {
+                // act
+                sender.Send(recipientInputQueue, new TransportMessageToSend
+                    {
+                        Body = Encoding.GetBytes(someText)
+                    }, new NoTransaction());
+            }
+
+            using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
+            {
+                // assert
+                var receivedTransportMessage = recipient.ReceiveMessage(new NoTransaction());
+                receivedTransportMessage.ShouldNotBe(null);
+                Encoding.GetString(receivedTransportMessage.Body).ShouldBe(someText);
+            }
+        }
+
+        [Test, Description("Experienced that ACK didn't work so the same message would be received over and over")]
+        public void DoesNotReceiveTheSameMessageOverAndOver()
+        {
+            const string receiverInputQueueName = "rabbit.acktest.receiver";
+
+            var receivedNumbers = new ConcurrentBag<int>();
+
+            // arrange
+            var receiverHandler = new HandlerActivatorForTesting()
+                .Handle<Tuple<int>>(t => receivedNumbers.Add(t.Item1));
+
+            var receiver = CreateBus(receiverInputQueueName, receiverHandler);
+            var sender = CreateBus("rabbit.acktest.sender", new HandlerActivatorForTesting());
+
+            receiver.Start(1);
+            sender.Start(1);
+
+            // act
+            // assert
+            Thread.Sleep(0.5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(0));
+            sender.Routing.Send(receiverInputQueueName, Tuple.Create(23));
+
+            Thread.Sleep(5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(1), "Expected one single number in the bag - got {0}", string.Join(", ", receivedNumbers));
+            Assert.That(receivedNumbers, Contains.Item(23), "Well, just expected 23 to be there");
         }
 
         /// <summary>
@@ -36,6 +97,12 @@ namespace Rebus.Tests.Transports.Rabbit
         ///
         ///     Sending 100000 messages took 130,4 s - that's 767 msg/s
         ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15645 msg/s
+        /// 
+        /// Now binding subscriptions and their corresponding models to the current thread (like we're in a handler on a worker thread):
+        ///     Sending 100000 messages
+        ///     Sending 100000 messages took 117,5 s - that's 851 msg/s
+        ///     Receiving 100000 messages
+        ///     Receiving 100000 messages spread across 10 consumers took 5,2 s - that's 19365 msg/s
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
@@ -54,7 +121,10 @@ namespace Rebus.Tests.Transports.Rabbit
 
             Console.WriteLine("Sending {0} messages", totalMessageCount);
             Enumerable.Range(0, totalMessageCount).ToList()
-                .ForEach(i => sender.Send(receiverInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t! message " + i) }));
+                .ForEach(
+                    i => sender.Send(receiverInputQueue,
+                                new TransportMessageToSend {Body = Encoding.UTF7.GetBytes("w00t! message " + i)},
+                                new NoTransaction()));
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
@@ -73,14 +143,20 @@ namespace Rebus.Tests.Transports.Rabbit
                         var gotNoMessageCount = 0;
                         do
                         {
-                            var receivedTransportMessage = receiver.ReceiveMessage();
-                            if (receivedTransportMessage == null)
+                            using (var scope = new TransactionScope())
                             {
-                                gotNoMessageCount++;
-                                continue;
+                                var ctx = new AmbientTransactionContext();
+                                var receivedTransportMessage = receiver.ReceiveMessage(ctx);
+                                if (receivedTransportMessage == null)
+                                {
+                                    gotNoMessageCount++;
+                                    continue;
+                                }
+                                Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
+                                Interlocked.Increment(ref receivedMessageCount);
+
+                                scope.Complete();
                             }
-                            Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
-                            Interlocked.Increment(ref receivedMessageCount);
                         } while (gotNoMessageCount < 3);
                     }))
                 .ToList();
@@ -107,11 +183,12 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -134,15 +211,16 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
-                
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -161,7 +239,7 @@ namespace Rebus.Tests.Transports.Rabbit
             var receivedTransportMessages = new List<ReceivedTransportMessage>();
             do
             {
-                var msg = recipient.ReceiveMessage();
+                var msg = recipient.ReceiveMessage(new NoTransaction());
                 if (msg == null)
                 {
                     timesNullReceived++;
@@ -174,7 +252,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
-            var queue = new RabbitMqMessageQueue(ConnectionString, queueName, queueName + ".error");
+            var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
             toDispose.Add(queue);
             return queue.PurgeInputQueue();
         }

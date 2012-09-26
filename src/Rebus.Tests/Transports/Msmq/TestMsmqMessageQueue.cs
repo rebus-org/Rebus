@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -91,12 +92,12 @@ namespace Rebus.Tests.Transports.Msmq
             var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
 
             // act
-            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(200);
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -111,12 +112,12 @@ namespace Rebus.Tests.Transports.Msmq
             const string localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
 
             // act
-            queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(200);
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -133,12 +134,12 @@ namespace Rebus.Tests.Transports.Msmq
             var ipQualifiedName = "test.msmq.ip.input@" + ipAddress;
 
             // act
-            queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(1.Seconds());
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -204,7 +205,7 @@ The following addresses were collected:
                                              };
 
             var stopwatch = Stopwatch.StartNew();
-            count.Times(() => queue.Send("test.msmq.performance", transportMessageToSend));
+            count.Times(() => queue.Send("test.msmq.performance", transportMessageToSend, new NoTransaction()));
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
             Console.WriteLine("Sending {0} messages took {1:0} s - that's {2:0} msg/s",
@@ -241,10 +242,11 @@ The following addresses were collected:
 
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
-                                                      {
-                                                          Messages = new object[] { "HELLO WORLD!" },
-                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceived } },
-                                                      }));
+                                 {
+                                     Messages = new object[] {"HELLO WORLD!"},
+                                     Headers = new Dictionary<string, string> {{Headers.TimeToBeReceived, timeToBeReceived}},
+                                 }),
+                             new NoTransaction());
 
             // act
             Thread.Sleep(2.Seconds() + 1.Seconds());
@@ -258,14 +260,16 @@ The following addresses were collected:
         {
             using (var tx = new TransactionScope())
             {
+                var ctx = new AmbientTransactionContext();
                 senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
-                                                          {
-                                                              Messages = new object[]
-                                                                             {
-                                                                                 "W00t!"
-                                                                             },
-                                                          }));
+                                     {
+                                         Messages = new object[]
+                                             {
+                                                 "W00t!"
+                                             },
+                                     }),
+                                 ctx);
 
                 tx.Complete();
             }
@@ -288,10 +292,11 @@ The following addresses were collected:
 
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
-                                                      {
-                                                          Messages = new object[] { "W00t!" },
-                                                          Headers = headers
-                                                      }));
+                                 {
+                                     Messages = new object[] {"W00t!"},
+                                     Headers = headers
+                                 }),
+                             new NoTransaction());
             var msmqMessage = Receive();
 
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
@@ -309,14 +314,16 @@ The following addresses were collected:
         {
             using (new TransactionScope())
             {
+                var ctx = new AmbientTransactionContext();
                 senderQueue.Send(destinationQueueName,
                                  serializer.Serialize(new Message
-                                                          {
-                                                              Messages = new object[]
-                                                                             {
-                                                                                 "W00t! should not be delivered!"
-                                                                             }
-                                                          }));
+                                     {
+                                         Messages = new object[]
+                                             {
+                                                 "W00t! should not be delivered!"
+                                             }
+                                     }),
+                                 ctx);
 
                 //< we exit the scope without completing it!
             }
@@ -347,11 +354,13 @@ The following addresses were collected:
 
             using (var tx = new TransactionScope())
             {
+                var ctx = new AmbientTransactionContext();
+
                 // act
-                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") });
-                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 2!") });
-                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 3!") });
-                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 4!") });
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") }, ctx);
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 2!") }, ctx);
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 3!") }, ctx);
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 4!") }, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }

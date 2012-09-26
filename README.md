@@ -3,7 +3,7 @@
 What?
 ====
 
-Rebus is a lean service bus implementation, similar in nature to [NServiceBus][3] and [MassTransit][4], only leaner.
+Rebus is a lean service bus implementation for .NET, similar in nature to [NServiceBus][3] and [MassTransit][4], only leaner.
 
 These are the goals - Rebus should have:
 

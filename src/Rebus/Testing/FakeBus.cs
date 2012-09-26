@@ -15,7 +15,8 @@ namespace Rebus.Testing
         readonly List<object> locallySentMessages = new List<object>();
         readonly List<object> replies = new List<object>();
         readonly List<Type> subscriptions = new List<Type>();
-        readonly List<Tuple<TimeSpan, object>> deferredMessages = new List<Tuple<TimeSpan, object>>();
+        readonly List<Type> unsubscriptions = new List<Type>();
+        readonly List<DeferredMessage> deferredMessages = new List<DeferredMessage>();
 
         readonly Dictionary<object, Dictionary<string, string>> attachedHeaders = new Dictionary<object, Dictionary<string, string>>();
 
@@ -39,6 +40,11 @@ namespace Rebus.Testing
             subscriptions.Add(typeof(TEvent));
         }
 
+        public void Unsubscribe<TEvent>()
+        {
+            unsubscriptions.Add(typeof (TEvent));
+        }
+
         public void Publish<TEvent>(TEvent message)
         {
             publishedMessages.Add(message);
@@ -46,7 +52,7 @@ namespace Rebus.Testing
 
         public void Defer(TimeSpan delay, object message)
         {
-            deferredMessages.Add(Tuple.Create(delay, message));
+            deferredMessages.Add(new DeferredMessage(message, delay));
         }
 
         public void AttachHeader(object message, string key, string value)
@@ -100,7 +106,7 @@ namespace Rebus.Testing
         /// <summary>
         /// Accesses the accumulated list of messages deferred to the future.
         /// </summary>
-        public List<Tuple<TimeSpan, object>> DeferredMessages
+        public List<DeferredMessage> DeferredMessages
         {
             get { return deferredMessages; }
         }
@@ -125,6 +131,21 @@ namespace Rebus.Testing
 
         public void Dispose()
         {
+        }
+
+        /// <summary>
+        /// Contains information about a message deferred to the future.
+        /// </summary>
+        public class DeferredMessage
+        {
+            public DeferredMessage(object message, TimeSpan delay)
+            {
+                Message = message;
+                Delay = delay;
+            }
+
+            public object Message { get; private set; }
+            public TimeSpan Delay { get; private set; }
         }
     }
 }

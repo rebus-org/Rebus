@@ -6,7 +6,7 @@ using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration
 {
-    public class RebusConfigurer
+    public class RebusConfigurer : BaseConfigurer
     {
         static ILog log;
 
@@ -15,66 +15,68 @@ namespace Rebus.Configuration
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        protected readonly ConfigurationBackbone backbone;
-
-        internal ConfigurationBackbone Backbone { get { return backbone; } }
-
         public RebusConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public RebusConfigurer Events(Action<IRebusEvents> configure)
         {
-            configure(new EventsConfigurer(backbone));
+            configure(new EventsConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)
         {
-            configure(new RebusTransportConfigurer(backbone));
+            configure(new RebusTransportConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Serialization(Action<RebusSerializationConfigurer> configure)
         {
-            configure(new RebusSerializationConfigurer(backbone));
+            configure(new RebusSerializationConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Sagas(Action<RebusSagasConfigurer> configure)
         {
-            configure(new RebusSagasConfigurer(backbone));
+            configure(new RebusSagasConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer Subscriptions(Action<RebusSubscriptionsConfigurer> configure)
         {
-            configure(new RebusSubscriptionsConfigurer(backbone));
+            configure(new RebusSubscriptionsConfigurer(Backbone));
             return this;
         }
 
         public RebusConfigurer DetermineEndpoints(Action<RebusRoutingConfigurer> configure)
         {
-            configure(new RebusRoutingConfigurer(backbone));
+            configure(new RebusRoutingConfigurer(Backbone));
+            return this;
+        }
+
+        public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
+        {
+            configurePipelineInspector(new PipelineInspectorConfigurer(Backbone));
             return this;
         }
 
         public IStartableBus CreateBus()
         {
-            VerifyComponents(backbone);
+            VerifyComponents(Backbone);
 
-            FillInDefaults(backbone);
+            FillInDefaults(Backbone);
 
-            backbone.ApplyDecorators();
+            Backbone.ApplyDecorators();
 
-            var bus = new RebusBus(backbone.ActivateHandlers, backbone.SendMessages, backbone.ReceiveMessages,
-                                   backbone.StoreSubscriptions, backbone.StoreSagaData, backbone.DetermineDestination,
-                                   backbone.SerializeMessages, backbone.InspectHandlerPipeline, backbone.ErrorTracker);
+            var bus = new RebusBus(Backbone.ActivateHandlers, Backbone.SendMessages, Backbone.ReceiveMessages,
+                                   Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineDestination,
+                                   Backbone.SerializeMessages, Backbone.InspectHandlerPipeline, Backbone.ErrorTracker);
 
-            backbone.TransferEvents(bus);
+            Backbone.TransferEvents(bus);
 
-            backbone.Adapter.SaveBusInstances(bus, bus);
+            Backbone.Adapter.SaveBusInstances(bus, bus);
 
             return bus;
         }
@@ -144,7 +146,7 @@ In this case, you must supply an implementation of {0} to the configuration back
 
         public RebusConfigurer Decorators(Action<DecoratorsConfigurer> configurer)
         {
-            configurer(new DecoratorsConfigurer(backbone));
+            configurer(new DecoratorsConfigurer(Backbone));
             return this;
         }
     }

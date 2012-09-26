@@ -19,7 +19,7 @@ namespace Rebus.Tests.Integration
 
         [TestCase(1, 1)]
         [TestCase(100, 3)]
-        [TestCase(10000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 3)]
         [TestCase(10000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
@@ -62,10 +62,10 @@ namespace Rebus.Tests.Integration
             stopwatch = Stopwatch.StartNew();
             receiver.Start(numberOfWorkers);
 
-            var accountForLatency = TimeSpan.FromSeconds(1);
+            var accountForLatency = TimeSpan.FromSeconds(10);
             if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.01) + accountForLatency))
             {
-                Assert.Fail("Didn't receive all messages within timeout");
+                Assert.Fail("Didn't receive all messages within timeout - only {0} messages were received", receivedMessages.Count);
             }
             totalSeconds = stopwatch.Elapsed.TotalSeconds;
 

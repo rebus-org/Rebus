@@ -12,6 +12,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(StructureMapContainerAdapterFactory))]
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]
+    [TestFixture(typeof(NinjectContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
@@ -119,6 +120,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             }
 
             public void Subscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Unsubscribe<T>()
             {
                 throw new NotImplementedException();
             }

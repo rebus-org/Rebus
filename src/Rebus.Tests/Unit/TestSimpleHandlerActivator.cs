@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using System.Linq;
 using Shouldly;
@@ -13,6 +14,22 @@ namespace Rebus.Tests.Unit
         protected override void DoSetUp()
         {
             activator = new SimpleHandlerActivator();
+        }
+
+        [Test]
+        public void CanRegisterFunctionAsHandler()
+        {
+            // arrange
+            var list = new List<string>();
+            activator.Handle<string>(str => list.Add(str));
+
+            // act
+            activator.GetHandlerInstancesFor<string>().ToList()
+                .ForEach(h => h.Handle("hello there!!"));
+
+            // assert
+            list.Count.ShouldBe(1);
+            list[0].ShouldBe("hello there!!");
         }
 
         [Test]

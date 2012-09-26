@@ -1,17 +1,15 @@
 ﻿namespace Rebus.Configuration
 {
-    public class PipelineInspectorConfigurer
+    public class PipelineInspectorConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
         public PipelineInspectorConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
         public void Use(IInspectHandlerPipeline inspector)
         {
-            backbone.InspectHandlerPipeline = inspector;
+            Backbone.InspectHandlerPipeline = inspector;
         }
     }
 }

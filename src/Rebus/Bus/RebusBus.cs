@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -88,8 +89,13 @@ namespace Rebus.Bus
             return this;
         }
 
+        /// <summary>
+        /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
+        /// </summary>
         public RebusBus Start(int numberOfWorkers)
         {
+            Guard.GreaterThanOrEqual(numberOfWorkers, 0, "numberOfWorkers");
+
             InternalStart(numberOfWorkers);
 
             return this;
@@ -97,6 +103,8 @@ namespace Rebus.Bus
 
         public void Send<TCommand>(TCommand message)
         {
+            Guard.NotNull(message, "message");
+
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
             InternalSend(destinationEndpoint, new List<object> { message });
@@ -104,6 +112,8 @@ namespace Rebus.Bus
 
         public void SendLocal<TCommand>(TCommand message)
         {
+            Guard.NotNull(message, "message");
+
             EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
 
             var destinationEndpoint = receiveMessages.InputQueue;
@@ -113,6 +123,16 @@ namespace Rebus.Bus
 
         public void Publish<TEvent>(TEvent message)
         {
+            Guard.NotNull(message, "message");
+
+            var multicastTransport = sendMessages as IMulticastTransport;
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                AttachHeader(message, Headers.Multicast, "");
+                InternalSend(message.GetType().FullName, new List<object> { message });
+                return;
+            }
+
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
@@ -138,47 +158,106 @@ namespace Rebus.Bus
 
         public void Reply<TResponse>(TResponse message)
         {
-            if (!MessageContext.HasCurrent)
-            {
-                throw new InvalidOperationException(string.Format("You seem to have called Reply outside of a message handler! You can only reply to messages within a message handler while handling a message, because that's the only place where there's a message context in place."));
-            }
+            Guard.NotNull(message, "message");
 
-            var messageContext = MessageContext.GetCurrent();
-            var returnAddress = messageContext.ReturnAddress;
-
-            if (string.IsNullOrEmpty(returnAddress))
-            {
-                throw new InvalidOperationException(
-                    string.Format(
-                        @"
-Message with ID {0} cannot be replied to, because the {1} header is empty. This might be an indication
-that the requestor is not expecting a reply, e.g. if the requestor is in one-way client mode. If you want
-to offload a reply to someone, you can make the requestor include the {1} header manually,
-using the address of another service as the value - this way, replies will be sent to a third party,
-that can take action.",
-                        messageContext.TransportMessageId, Headers.ReturnAddress));
-            }
-
-            InternalSend(returnAddress, new List<object> { message });
+            InternalReply(new List<object> { message });
         }
 
-        public void Subscribe<TMessage>()
+        public void Subscribe<TEvent>()
         {
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TMessage));
+            var multicastTransport = sendMessages as IMulticastTransport;
 
-            InternalSubscribe<TMessage>(publisherInputQueue);
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                return;
+            }
+
+            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+
+            InternalSubscribe<TEvent>(publisherInputQueue);
+        }
+
+        public void Unsubscribe<TEvent>()
+        {
+            var multicastTransport = sendMessages as IMulticastTransport;
+
+            if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
+            {
+                multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                return;
+            }
+
+            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+
+            InternalUnsubscribe<TEvent>(publisherInputQueue);
+        }
+
+        /// <summary>
+        /// Sets the number of workers in this <see cref="RebusBus"/> to the specified
+        /// number. The number of workers must be greater than or equal to 0.
+        /// </summary>
+        public void SetNumberOfWorkers(int newNumberOfWorkers)
+        {
+            Guard.GreaterThanOrEqual(newNumberOfWorkers, 0, "newNumberOfWorkers");
+
+            while (workers.Count < newNumberOfWorkers) AddWorker();
+            while (workers.Count > newNumberOfWorkers) RemoveWorker();
+        }
+
+        public void Defer(TimeSpan delay, object message)
+        {
+            Guard.NotNull(message, "message");
+            Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
+
+            var customData = TimeoutReplyHandler.Serialize(message);
+
+            var messages = new List<object>
+                               {
+                                   new TimeoutRequest
+                                       {
+                                           Timeout = delay,
+                                           CustomData = customData,
+                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
+                                       }
+                               };
+
+            InternalSend("rebus.timeout", messages);
+        }
+
+        public void AttachHeader(object message, string key, string value)
+        {
+            Guard.NotNull(message, "message");
+            Guard.NotNull(key, "key");
+
+            headerContext.AttachHeader(message, key, value);
         }
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot Subscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
-
-            var message = new SubscriptionMessage { Type = typeof(TMessage).AssemblyQualifiedName };
-
-            InternalSend(publisherInputQueue, new List<object> { message });
+            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Subscribe);
         }
 
-        void InternalStart(int numberOfWorkers)
+        internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
+        {
+            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Unsubscribe);
+        }
+
+        internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
+        {
+            EnsureBusModeIsNot(BusMode.OneWayClientMode,
+                               "You cannot Subscribe/Unsubscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+
+            var message = new SubscriptionMessage
+                {
+                    Type = typeof(TMessage).AssemblyQualifiedName,
+                    Action = subscribeAction,
+                };
+
+            InternalSend(destinationQueue, new List<object> { message });
+        }
+
+        internal void InternalStart(int numberOfWorkers)
         {
             if (started)
             {
@@ -200,6 +279,39 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
             started = true;
 
             log.Info("Bus started");
+        }
+
+        internal void InternalReply(List<object> messages)
+        {
+            if (!MessageContext.HasCurrent)
+            {
+                var errorMessage = string.Format("You seem to have called Reply outside of a message handler! You can" +
+                                                 " only reply to messages within a message handler while handling a" +
+                                                 " message, because that's the only place where there's a message" +
+                                                 " context in place.");
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            var messageContext = MessageContext.GetCurrent();
+            var returnAddress = messageContext.ReturnAddress;
+
+            if (string.IsNullOrEmpty(returnAddress))
+            {
+                var errorMessage =
+                    string.Format("Message with ID {0} cannot be replied to, because the {1} header is empty." +
+                                  " This might be an indication that the requestor is not expecting a reply," +
+                                  " e.g. if the requestor is in one-way client mode. If you want to offload a" +
+                                  " reply to someone, you can make the requestor include the {1} header manually," +
+                                  " using the address of another service as the value - this way, replies will" +
+                                  " be sent to a third party, that can take action.",
+                                  messageContext.TransportMessageId,
+                                  Headers.ReturnAddress);
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            InternalSend(returnAddress, messages);
         }
 
         /// <summary>
@@ -245,7 +357,16 @@ element)"));
             log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), destination);
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            sendMessages.Send(destination, transportMessage);
+            sendMessages.Send(destination, transportMessage, GetTransactionContext());
+        }
+
+        ITransactionContext GetTransactionContext()
+        {
+            if (TransactionContext.Current != null) return TransactionContext.Current;
+         
+            if (Transaction.Current == null) return new NoTransaction();
+            
+            return new AmbientTransactionContext();
         }
 
         IDictionary<string, string> MergeHeaders(Message messageToSend)
@@ -313,7 +434,7 @@ element)"));
 
             try
             {
-                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend);
+                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, GetTransactionContext());
             }
             catch (Exception e)
             {
@@ -331,7 +452,20 @@ element)"));
         public void Dispose()
         {
             SetNumberOfWorkers(0);
-            headerContext.Dispose();
+
+            var disposables = new object[]
+                {
+                    headerContext, sendMessages, receiveMessages,
+                    storeSubscriptions, storeSagaData
+                }
+                .Where(r => !ReferenceEquals(null, r))
+                .OfType<IDisposable>()
+                .Distinct();
+
+            foreach (var disposable in disposables)
+            {
+                disposable.Dispose();
+            }
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
@@ -440,39 +574,6 @@ element)"));
         void LogUserException(Worker worker, Exception exception)
         {
             log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
-        }
-
-        public void SetNumberOfWorkers(int newNumberOfWorkers)
-        {
-            if (newNumberOfWorkers < 0)
-            {
-                throw new ArgumentOutOfRangeException("newNumberOfWorkers", string.Format("You can't have less than zero workers - attempted to set number of workers to {0}", newNumberOfWorkers));
-            }
-
-            while (workers.Count < newNumberOfWorkers) AddWorker();
-            while (workers.Count > newNumberOfWorkers) RemoveWorker();
-        }
-
-        public void Defer(TimeSpan delay, object message)
-        {
-            var customData = TimeoutReplyHandler.Serialize(message);
-
-            var messages = new List<object>
-                               {
-                                   new TimeoutRequest
-                                       {
-                                           Timeout = delay,
-                                           CustomData = customData,
-                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
-                                       }
-                               };
-
-            InternalSend("rebus.timeout", messages);
-        }
-
-        public void AttachHeader(object message, string key, string value)
-        {
-            headerContext.AttachHeader(message, key, value);
         }
 
         void EnsureBusModeIsNot(BusMode busModeToAvoid, string message, params object[] objs)

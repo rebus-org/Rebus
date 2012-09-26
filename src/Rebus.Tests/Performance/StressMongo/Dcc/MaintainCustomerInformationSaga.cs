@@ -1,10 +1,7 @@
 ﻿using System;
 using Rebus.Tests.Performance.StressMongo.Caf;
-using Rebus.Tests.Performance.StressMongo.Caf.Messages;
-using Rebus.Tests.Performance.StressMongo.Crm;
 using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 using Rebus.Tests.Performance.StressMongo.Legal;
-using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 
 namespace Rebus.Tests.Performance.StressMongo.Dcc
 {

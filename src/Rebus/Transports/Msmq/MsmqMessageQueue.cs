@@ -11,8 +11,9 @@ namespace Rebus.Transports.Msmq
     /// MSMQ implementation of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>. Will
     /// enlist in ambient transaction during send and receive if one is present.
     /// </summary>
-    public class MsmqMessageQueue : ISendMessages, IReceiveMessages, IDisposable
+    public class MsmqMessageQueue : IDuplexTransport, IDisposable
     {
+        const string CurrentTransactionKey = "current_transaction";
         static ILog log;
         readonly object disposeLock = new object();
         bool disposed;
@@ -25,10 +26,6 @@ namespace Rebus.Transports.Msmq
         readonly MessageQueue inputQueue;
         readonly string inputQueuePath;
         readonly string inputQueueName;
-
-        [ThreadStatic]
-        static MsmqTransactionWrapper currentTransaction;
-
         readonly string machineAddress;
 
         public static MsmqMessageQueue Sender()
@@ -53,7 +50,7 @@ namespace Rebus.Transports.Msmq
 
                 this.inputQueueName = inputQueueName;
             }
-            catch(MessageQueueException e)
+            catch (MessageQueueException e)
             {
                 throw new ArgumentException(
                     string.Format(
@@ -73,7 +70,7 @@ namespace Rebus.Transports.Msmq
 
             var tokens = queueName.Split('@');
 
-            if (tokens.Length == 2 && tokens[1].In( ".", "localhost", "127.0.0.1")) return;
+            if (tokens.Length == 2 && tokens[1].In(".", "localhost", "127.0.0.1")) return;
 
             throw new ArgumentException(string.Format(@"Attempted to use {0} as an input queue, but the input queue must always be local!
 
@@ -86,41 +83,59 @@ because there would be remote calls involved when you wanted to receive a messag
             get { return InputQueue + "@" + machineAddress; }
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            var transactionWrapper = new MsmqTransactionWrapper();
-
             try
             {
-                transactionWrapper.Begin();
-                var message = inputQueue.Receive(TimeSpan.FromSeconds(2), transactionWrapper.MessageQueueTransaction);
-                if (message == null)
+                if (!context.IsTransactional)
                 {
-                    log.Warn("Received NULL message - how weird is that?");
-                    transactionWrapper.Commit();
-                    return null;
+                    var transaction = new MessageQueueTransaction();
+                    transaction.Begin();
+                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
+                    if (message == null)
+                    {
+                        log.Warn("Received NULL message - how weird is that?");
+                        transaction.Commit();
+                        return null;
+                    }
+                    var body = message.Body;
+                    if (body == null)
+                    {
+                        log.Warn("Received message with NULL body - how weird is that?");
+                        transaction.Commit();
+                        return null;
+                    }
+                    var transportMessage = (ReceivedTransportMessage)body;
+                    transaction.Commit();
+                    return transportMessage;
                 }
-                var body = message.Body;
-                if (body == null)
+                else
                 {
-                    log.Warn("Received message with NULL body - how weird is that?");
-                    transactionWrapper.Commit();
-                    return null;
+                    var transaction = GetTransaction(context);
+                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
+                    if (message == null)
+                    {
+                        log.Warn("Received NULL message - how weird is that?");
+                        return null;
+                    }
+                    var body = message.Body;
+                    if (body == null)
+                    {
+                        log.Warn("Received message with NULL body - how weird is that?");
+                        return null;
+                    }
+                    var transportMessage = (ReceivedTransportMessage)body;
+                    return transportMessage;
                 }
-                var transportMessage = (ReceivedTransportMessage)body;
-                transactionWrapper.Commit();
-                return transportMessage;
             }
             catch (MessageQueueException)
             {
-                transactionWrapper.Abort();
                 return null;
             }
             catch (Exception e)
             {
                 log.Error(e, "An error occurred while receiving message from {0}", inputQueuePath);
-                transactionWrapper.Abort();
-                return null;
+                throw;
             }
         }
 
@@ -129,24 +144,52 @@ because there would be remote calls involved when you wanted to receive a messag
             get { return inputQueueName; }
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var recipientPath = MsmqUtil.GetSenderPath(destinationQueueName);
 
+            if (!context.IsTransactional)
+            {
+                using (var outputQueue = GetMessageQueue(recipientPath))
+                using (var transaction = new MessageQueueTransaction())
+                {
+                    transaction.Begin();
+                    outputQueue.Send(message, transaction);
+                    transaction.Commit();
+                }
+                return;
+            }
+
             using (var outputQueue = GetMessageQueue(recipientPath))
             {
-                var transactionWrapper = GetOrCreateTransactionWrapper();
-
-                outputQueue.Send(message, transactionWrapper.MessageQueueTransaction);
-
-                transactionWrapper.Commit();
+                outputQueue.Send(message, GetTransaction(context));
             }
+        }
+
+        static MessageQueueTransaction GetTransaction(ITransactionContext context)
+        {
+            var transaction = context[CurrentTransactionKey] as MessageQueueTransaction;
+            if (transaction != null) return transaction;
+
+            transaction = new MessageQueueTransaction();
+            context[CurrentTransactionKey] = transaction;
+
+            context.DoCommit += transaction.Commit;
+            context.DoRollback += transaction.Abort;
+            context.Cleanup += transaction.Dispose;
+
+            transaction.Begin();
+
+            return transaction;
         }
 
         public MsmqMessageQueue PurgeInputQueue()
         {
-            log.Warn("Purging {0}", inputQueuePath);
+            if (string.IsNullOrEmpty(inputQueuePath)) return this;
+
+            log.Warn("Purging queue {0}", inputQueuePath);
             inputQueue.Purge();
+
             return this;
         }
 
@@ -185,19 +228,6 @@ because there would be remote calls involved when you wanted to receive a messag
         public override string ToString()
         {
             return string.Format("MsmqMessageQueue: {0}", inputQueuePath);
-        }
-
-        MsmqTransactionWrapper GetOrCreateTransactionWrapper()
-        {
-            if (currentTransaction != null)
-            {
-                return currentTransaction;
-            }
-
-            currentTransaction = new MsmqTransactionWrapper();
-            currentTransaction.Finished += () => currentTransaction = null;
-
-            return currentTransaction;
         }
 
         MessageQueue GetMessageQueue(string path)

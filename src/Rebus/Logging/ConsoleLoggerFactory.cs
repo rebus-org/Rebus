@@ -1,14 +1,24 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Rebus.Logging
 {
     internal class ConsoleLoggerFactory : AbstractRebusLoggerFactory
     {
+        public class LogStatement
+        {
+            public LogLevel Level { get; set; }
+            public string Text { get; set; }
+            public object[] Args { get; set; }
+        }
+
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
 
         readonly bool colored;
+        readonly List<Func<LogStatement, bool>> filters = new List<Func<LogStatement, bool>>(); 
 
         LoggingColors colors = new LoggingColors();
         LogLevel minLevel = LogLevel.Debug;
@@ -32,6 +42,11 @@ namespace Rebus.Logging
                 minLevel = value;
                 Loggers.Clear();
             }
+        }
+
+        public IList<Func<LogStatement, bool>> Filters
+        {
+            get { return filters; }
         }
 
         protected override ILog GetLogger(Type type)
@@ -122,6 +137,7 @@ namespace Rebus.Logging
             void Write(LogLevel level, string message, object[] objs)
             {
                 if ((int)level < (int)factory.MinLevel) return;
+                if (factory.AbortedByFilter(new LogStatement { Level = level, Text = message, Args = objs })) return;
 
                 var levelString = LevelString(level);
 
@@ -144,6 +160,11 @@ namespace Rebus.Logging
                                       message);
                 }
             }
+        }
+
+        bool AbortedByFilter(LogStatement logStatement)
+        {
+            return filters.Any(f => !f(logStatement));
         }
     }
 }

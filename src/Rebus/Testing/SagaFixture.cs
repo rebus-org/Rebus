@@ -2,6 +2,8 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
 using Ponder;
 
 namespace Rebus.Testing
@@ -14,6 +16,7 @@ namespace Rebus.Testing
         readonly Saga<T> saga;
         readonly IList<T> availableSagaData;
         readonly ConcurrentDictionary<Type, Correlation> correlations;
+        readonly List<T> deletedSagaData = new List<T>();
 
         /// <summary>
         /// Constructs the fixture with the given saga and the given saga data available. The <see cref="availableSagaData"/>
@@ -27,10 +30,28 @@ namespace Rebus.Testing
             correlations = saga.Correlations;
         }
 
+        /// <summary>
+        /// Constructs the fixture with the given saga.
+        /// </summary>
+        public SagaFixture(Saga<T> saga)
+            : this(saga, new List<T>())
+        {
+        }
+
+        public IList<T> AvailableSagaData
+        {
+            get { return availableSagaData; }
+        }
+
+        public IList<T> DeletedSagaData
+        {
+            get { return deletedSagaData; }
+        }
+
         public delegate void CorrelatedWithExistingSagaDataEventHandler<T>(object message, T sagaData);
-        
+
         public delegate void CreatedNewSagaDataEventHandler<T>(object message, T sagaData);
-        
+
         public delegate void CouldNotCorrelateEventHandler(object message);
 
         /// <summary>
@@ -56,28 +77,16 @@ namespace Rebus.Testing
         /// </summary>
         public void Handle<TMessage>(TMessage message)
         {
-            var existingSagaData = availableSagaData.SingleOrDefault(data => Correlates(correlations, message, data));
-
-            if (existingSagaData != null)
+            try
             {
-                saga.Data = existingSagaData;
-                saga.IsNew = false;
-                CorrelatedWithExistingSagaData(message, saga.Data);
-                Dispatch(message);
-                return;
+                InnerHandle(message);
             }
-
-            if (saga.GetType().GetInterfaces().Contains(typeof(IAmInitiatedBy<TMessage>)))
+            catch (TargetInvocationException tie)
             {
-                saga.Data = new T();
-                saga.IsNew = true;
-                availableSagaData.Add(saga.Data);
-                CreatedNewSagaData(message, saga.Data);
-                Dispatch(message);
-                return;
+                var exceptionToThrow = tie.InnerException;
+                exceptionToThrow.PreserveStackTrace();
+                throw exceptionToThrow;
             }
-
-            CouldNotCorrelate(message);
         }
 
         /// <summary>
@@ -87,6 +96,44 @@ namespace Rebus.Testing
         public T Data
         {
             get { return saga.Data; }
+        }
+
+        void InnerHandle<TMessage>(TMessage message)
+        {
+            var existingSagaData = availableSagaData.SingleOrDefault(data => Correlates(correlations, message, data));
+
+            if (existingSagaData != null)
+            {
+                saga.Data = existingSagaData;
+                saga.IsNew = false;
+                CorrelatedWithExistingSagaData(message, saga.Data);
+                Dispatch(message);
+                if (saga.Complete)
+                {
+                    availableSagaData.Remove(saga.Data);
+                    deletedSagaData.Add(saga.Data);
+                }
+                return;
+            }
+
+            if (saga.GetType().GetInterfaces().Contains(typeof(IAmInitiatedBy<TMessage>)))
+            {
+                saga.Data = new T();
+                saga.IsNew = true;
+                CreatedNewSagaData(message, saga.Data);
+                Dispatch(message);
+                if (!saga.Complete)
+                {
+                    availableSagaData.Add(saga.Data);
+                }
+                else
+                {
+                    deletedSagaData.Add(saga.Data);
+                }
+                return;
+            }
+
+            CouldNotCorrelate(message);
         }
 
         bool Correlates(ConcurrentDictionary<Type, Correlation> concurrentDictionary, object message, T data)
@@ -106,6 +153,7 @@ namespace Rebus.Testing
 
         void Dispatch<TMessage>(TMessage message)
         {
+            saga.Complete = false;
             saga.GetType().GetMethod("Handle", new[] { typeof(TMessage) })
                 .Invoke(saga, new object[] { message });
         }

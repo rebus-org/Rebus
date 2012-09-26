@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using Rebus.Bus;
 using Rebus.Logging;
 using System.Linq;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.HttpGateway.Inbound
 {
     public class InboundService
     {
+        const int AccessDeniedErrorCode = 5;
         readonly string listenUri;
         readonly string destinationQueue;
         static ILog log;
@@ -41,10 +42,34 @@ namespace Rebus.HttpGateway.Inbound
             
             log.Info("Starting");
 
-            httpListener = new HttpListener();
-            httpListener.Prefixes.Add(GetListenUri());
-            httpListener.Start();
-            httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
+            try
+            {
+                httpListener = new HttpListener();
+                httpListener.Prefixes.Add(GetListenUri());
+                httpListener.Start();
+                httpListener.BeginGetContext(HandleIncomingHttpRequest, null);
+            }
+            catch(HttpListenerException ex)
+            {
+                if (ex.ErrorCode == AccessDeniedErrorCode)
+                {
+                    throw new InvalidOperationException(string.Format(@"The HTTP gateway failed to initialize the incoming HTTP listener. 
+
+The listener requires specific rights to allow it to start. You can fix this in one of two ways:
+
+1. Run the following command from a command prompt:
+netsh http add urlacl url={0} user=""NTAuthority\Authenticated Users"" sddl=""D:(A;;GX;;;AU)""
+
+2. Run the HTTP gateway under an administrative account.
+
+The first solution is recommended for servers that require production level security. Consider restricting the user part 
+of the netsh command further. For more information about the SDDL string at the end, check: 
+
+http://www.netid.washington.edu/documentation/domains/sddl.aspx", GetListenUri()));
+                }
+                
+                throw;
+            }
         }
 
         public void Stop()
@@ -142,7 +167,7 @@ namespace Rebus.HttpGateway.Inbound
 
                 using (var queue = MsmqMessageQueue.Sender())
                 {
-                    queue.Send(destinationQueue, receivedTransportMessage.ToForwardableMessage());
+                    queue.Send(destinationQueue, receivedTransportMessage.ToForwardableMessage(), new NoTransaction());
                 }
 
                 log.Info("Message was sent to {0}", destinationQueue);
