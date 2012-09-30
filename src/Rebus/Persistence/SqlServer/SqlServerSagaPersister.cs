@@ -1,15 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
+    /// and correlation properties in an index table on the side.
+    /// </summary>
     public class SqlServerSagaPersister : IStoreSagaData
     {
         const int PrimaryKeyViolationNumber = 2627;
@@ -56,11 +57,17 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
+        /// <summary>
+        /// Returnes the name of the table used to store correlation properties of saga instances
+        /// </summary>
         public string SagaIndexTableName
         {
             get { return sagaIndexTableName; }
         }
 
+        /// <summary>
+        /// Returns the name of the table used to store JSON serializations of saga instances.
+        /// </summary>
         public string SagaTableName
         {
             get { return sagaTableName; }

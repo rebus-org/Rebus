@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implements a subscriotion storage for Rebus that will store subscriptions in an SQL Server.
+    /// </summary>
     public class SqlServerSubscriptionStorage : IStoreSubscriptions
     {
         const int PrimaryKeyViolationNumber = 2627;
@@ -44,6 +46,9 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
+        /// <summary>
+        /// Returns the name of the table used to store subscriptions
+        /// </summary>
         public string SubscriptionsTableName
         {
             get { return subscriptionsTableName; }
