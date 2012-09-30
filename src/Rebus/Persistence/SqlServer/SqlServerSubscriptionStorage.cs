@@ -131,6 +131,11 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Creates the necessary subscripion storage table if it hasn't already been created. If a table already exists
+        /// with a name that matches the desired table name, no action is performed (i.e. it is assumed that
+        /// the table already exists).
+        /// </summary>
         public SqlServerSubscriptionStorage EnsureTableIsCreated()
         {
             var connection = getConnection();

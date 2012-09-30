@@ -312,6 +312,11 @@ saga type name.",
             return sagaTypeName;
         }
 
+        /// <summary>
+        /// Creates the necessary saga storage tables if they haven't already been created. If a table already exists
+        /// with a name that matches one of the desired table names, no action is performed (i.e. it is assumed that
+        /// the tables already exist).
+        /// </summary>
         public SqlServerSagaPersister EnsureTablesAreCreated()
         {
             var connection = getConnection();
