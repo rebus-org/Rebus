@@ -16,7 +16,7 @@ namespace Rebus.Tests.Transports.Rabbit
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
         protected List<IDisposable> toDispose;
-        readonly List<string> queuesToDelete = new List<string>();
+        protected readonly List<string> queuesToDelete = new List<string>();
 
         static RabbitMqFixtureBase()
         {
