@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
 
@@ -306,6 +310,69 @@ saga type name.",
             }
 
             return sagaTypeName;
+        }
+
+        public SqlServerSagaPersister EnsureTablesAreCreated()
+        {
+            var connection = getConnection();
+            try
+            {
+                using (var tx = new TransactionScope())
+                {
+                    var tableNames = connection.GetTableNames();
+
+                    // bail out if there's already a table in the database with one of the names
+                    if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
+                        || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        return this;
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[id] [uniqueidentifier] NOT NULL,
+	[revision] [int] NOT NULL,
+	[data] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+", SagaTableName);
+                        command.ExecuteNonQuery();
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[saga_type] [nvarchar](40) NOT NULL,
+	[key] [nvarchar](200) NOT NULL,
+	[value] [nvarchar](200) NOT NULL,
+	[saga_id] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+(
+	[key] ASC,
+	[value] ASC,
+	[saga_type] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+", SagaIndexTableName);
+                        command.ExecuteNonQuery();
+                    }
+
+                    tx.Complete();
+                }
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
+            return this;
         }
     }
 }

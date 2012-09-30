@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -128,6 +129,41 @@ namespace Rebus.Persistence.SqlServer
             {
                 releaseConnection(connection);
             }
+        }
+
+        public SqlServerSubscriptionStorage EnsureTableIsCreated()
+        {
+            var connection = getConnection();
+            try
+            {
+                var tableNames = connection.GetTableNames();
+
+                if (tableNames.Contains(subscriptionsTableName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return this;
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[message_type] [nvarchar](200) NOT NULL,
+	[endpoint] [nvarchar](200) NOT NULL,
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+(
+	[message_type] ASC,
+	[endpoint] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+", subscriptionsTableName);
+                    command.ExecuteNonQuery();
+                }
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
+            return this;
         }
     }
 }

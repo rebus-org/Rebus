@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using NUnit.Framework;
 using log4net.Config;
@@ -42,7 +43,30 @@ namespace Rebus.Tests.Persistence
             ExecuteCommand("delete from " + tableName);
         }
 
-        static void ExecuteCommand(string commandText)
+        protected List<string> GetTableNames()
+        {
+            var tableNames = new List<string>();
+            using(var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            {
+                conn.Open();
+
+                using(var command = conn.CreateCommand())
+                {
+                    command.CommandText = "select * from sys.Tables";
+                    
+                    using(var reader = command.ExecuteReader())
+                    {
+                        while(reader.Read())
+                        {
+                            tableNames.Add(reader["name"].ToString());
+                        }
+                    }
+                }
+            }
+            return tableNames;
+        }
+
+        protected void ExecuteCommand(string commandText)
         {
             using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {
