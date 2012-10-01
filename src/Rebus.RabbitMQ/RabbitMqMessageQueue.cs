@@ -16,7 +16,7 @@ namespace Rebus.RabbitMQ
 {
     public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
     {
-        const string ExchangeName = "Rebus";
+        public const string ExchangeName = "Rebus";
         
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
