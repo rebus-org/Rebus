@@ -43,9 +43,9 @@ namespace Rebus.Bus
             AfterTransportMessage(advancedBus, exception, transportMessage);
         }
 
-        internal void RaisePoisonMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage)
+        internal void RaisePoisonMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
         {
-            PoisonMessage(advancedBus, transportMessage);
+            PoisonMessage(advancedBus, transportMessage, poisonMessageInfo);
         }
 
         internal void RaiseUncorrelatedMessage(object message, Saga saga)

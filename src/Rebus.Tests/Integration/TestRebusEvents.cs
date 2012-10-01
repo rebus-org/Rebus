@@ -63,7 +63,7 @@ namespace Rebus.Tests.Integration
             var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
             receiver.Events.BeforeTransportMessage += (b, m) => events.Add("Before message");
             receiver.Events.AfterTransportMessage += (b, e, m) => events.Add(string.Format("After message: {0} - has context: {1}", e, MessageContext.HasCurrent));
-            receiver.Events.PoisonMessage += (b, m) => events.Add("Poison!");
+            receiver.Events.PoisonMessage += (b, m, i) => events.Add(string.Format("Poison! - {0} exceptions caught", i.Exceptions.Length));
             
             var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
             sender.Routing.Send(receiverInputQueueName, "test");
@@ -122,7 +122,7 @@ Events:
             events[17].ShouldStartWith("After message: ");
             events[17].ShouldContain("System.ApplicationException: w00t!");
 
-            events[18].ShouldBe("Poison!");
+            events[18].ShouldBe("Poison! - 5 exceptions caught");
         }
     }
 }

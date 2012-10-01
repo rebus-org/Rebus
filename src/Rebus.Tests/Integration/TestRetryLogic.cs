@@ -33,8 +33,7 @@ namespace Rebus.Tests.Integration
             var receiverQueuePath = PrivateQueueNamed(receiverQueueName);
             EnsureQueueExists(receiverQueuePath);
 
-            var messageQueueOfReceiver = new MessageQueue(receiverQueuePath);
-            messageQueueOfReceiver.Formatter = new XmlMessageFormatter();
+            var messageQueueOfReceiver = new MessageQueue(receiverQueuePath) {Formatter = new XmlMessageFormatter()};
             messageQueueOfReceiver.Purge();
 
             CreateBus(receiverQueueName, new HandlerActivatorForTesting()).Start(1);
@@ -59,23 +58,24 @@ namespace Rebus.Tests.Integration
 
             var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
 
-            CreateBus(ReceiverQueueName, new HandlerActivatorForTesting()
-                                             .Handle<string>(str =>
-                                                                 {
-                                                                     Console.WriteLine("Delivery!");
-                                                                     if (str != "HELLO!") return;
+            CreateBus(ReceiverQueueName,
+                      new HandlerActivatorForTesting()
+                          .Handle<string>(str =>
+                              {
+                                  Console.WriteLine("Delivery!");
+                                  if (str != "HELLO!") return;
 
-                                                                     receivedMessageCount++;
+                                  receivedMessageCount++;
 
-                                                                     if (receivedMessageCount > 5)
-                                                                     {
-                                                                         retriedTooManyTimes = true;
-                                                                     }
-                                                                     else
-                                                                     {
-                                                                         throw new Exception("oh noes!");
-                                                                     }
-                                                                 }),
+                                  if (receivedMessageCount > 5)
+                                  {
+                                      retriedTooManyTimes = true;
+                                  }
+                                  else
+                                  {
+                                      throw new Exception("oh noes!");
+                                  }
+                              }),
                       new InMemorySubscriptionStorage(),
                       new SagaDataPersisterForTesting(),
                       ReceiverErrorQueueName)
@@ -150,7 +150,7 @@ namespace Rebus.Tests.Integration
                             throw new Exception("HELLO!");
                         });
 
-                    bus.Events.PoisonMessage += (_, __) =>
+                    bus.Events.PoisonMessage += (_, __, ___) =>
                         {
                             throw new Exception("HELLO!");
                         };

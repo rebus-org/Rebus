@@ -20,6 +20,44 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
+        public void InvokingTheSameConfigurerTwiceYeildsAnException()
+        {
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                                                            .DetermineEndpoints(d => d.FromRebusConfigurationSection()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Transport(d => d.UseMsmqInOneWayClientMode())
+                                                            .Transport(d => d.UseMsmqInOneWayClientMode()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Subscriptions(d => d.StoreInMemory())
+                                                            .Subscriptions(d => d.StoreInMemory()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Sagas(d => d.StoreInMemory())
+                                                            .Sagas(d => d.StoreInMemory()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Serialization(d => d.UseJsonSerializer())
+                                                            .Serialization(d => d.UseJsonSerializer()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .SpecifyOrderOfHandlers(d => d.First<string>())
+                                                            .SpecifyOrderOfHandlers(d => d.First<string>()));
+
+            Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
+                                                            .Events(d => d.UncorrelatedMessage += (message, saga) => { })
+                                                            .Events(d => d.UncorrelatedMessage += (message, saga) => { }));
+
+            Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
+                                                            .Decorators(d => d.AddDecoration(b => {}))
+                                                            .Decorators(d => d.AddDecoration(b => {})));
+
+
+        }
+
+        [Test]
         public void CanConfigureEvents()
         {
             var adapter = new TestContainerAdapter();
@@ -35,6 +73,8 @@ namespace Rebus.Tests.Configuration
 
                         e.MessageSent += delegate { raisedEvents.Add("message sent"); };
                         e.PoisonMessage += delegate { raisedEvents.Add("poison message"); };
+
+                        e.UncorrelatedMessage += delegate { raisedEvents.Add("uncorrelated message"); };
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
@@ -46,7 +86,8 @@ namespace Rebus.Tests.Configuration
             events.RaiseAfterMessage(null, null, null);
             events.RaiseAfterTransportMessage(null, null, null);
             events.RaiseMessageSent(null, null, null);
-            events.RaisePoisonMessage(null, null);
+            events.RaisePoisonMessage(null, null, null);
+            events.RaiseUncorrelatedMessage(null, null);
 
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
@@ -54,6 +95,7 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("after transport message");
             raisedEvents.ShouldContain("message sent");
             raisedEvents.ShouldContain("poison message");
+            raisedEvents.ShouldContain("uncorrelated message");
         }
 
         [Test]

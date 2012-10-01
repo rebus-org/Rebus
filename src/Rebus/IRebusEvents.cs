@@ -1,4 +1,5 @@
 using System;
+using Rebus.Bus;
 
 namespace Rebus
 {
@@ -31,7 +32,7 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever the bus has decided that message is poison, and should be moved to the error queue.
     /// </summary>
-    public delegate void PoisonMessageEventHandler(IAdvancedBus advancedBus, ReceivedTransportMessage receivedTransportMessage);
+    public delegate void PoisonMessageEventHandler(IAdvancedBus advancedBus, ReceivedTransportMessage receivedTransportMessage, PoisonMessageInfo poisonMessageInfo);
 
     /// <summary>
     /// Delegate type that can listen when an incoming message can be handled by a saga handler, but it turns out that there was no saga data that could be correlated with the message.

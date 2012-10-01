@@ -52,6 +52,11 @@ namespace Rebus.Transports.Msmq
                 throw new NotImplementedException();
             }
 
+            public PoisonMessageInfo GetPoisonMessageInfo(string id)
+            {
+                throw new NotImplementedException();
+            }
+
             public void TrackDeliveryFail(string id, Exception exception)
             {
                 throw new NotImplementedException();

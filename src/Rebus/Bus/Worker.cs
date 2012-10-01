@@ -34,7 +34,7 @@ namespace Rebus.Bus
 
         internal event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
 
-        internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
+        internal event Action<ReceivedTransportMessage, PoisonMessageInfo> PoisonMessage = delegate { };
 
         internal event Action<object> BeforeMessage = delegate { };
 
@@ -196,12 +196,15 @@ namespace Rebus.Bus
             if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
             {
                 log.Error("Handling message {0} has failed the maximum number of times", id);
-                MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
+                var errorText = errorTracker.GetErrorText(id);
+                var poisonMessageInfo = errorTracker.GetPoisonMessageInfo(id);
+
+                MessageFailedMaxNumberOfTimes(transportMessage, errorText);
                 errorTracker.StopTracking(id);
 
                 try
                 {
-                    PoisonMessage(transportMessage);
+                    PoisonMessage(transportMessage, poisonMessageInfo);
                 }
                 catch (Exception exceptionWhileRaisingEvent)
                 {

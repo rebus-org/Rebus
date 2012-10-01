@@ -33,6 +33,7 @@ namespace Rebus.Tests.Transports.Rabbit
             const string someText = "whoa! as if by magic!";
 
             // ensure recipient queue does not exist
+            DeleteQueue(senderInputQueue);
             DeleteQueue(recipientInputQueue);
 
             using (var sender = new RabbitMqMessageQueue(ConnectionString, senderInputQueue))
@@ -252,6 +253,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
+            queuesToDelete.Add(queueName);
             var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
             toDispose.Add(queue);
             return queue.PurgeInputQueue();

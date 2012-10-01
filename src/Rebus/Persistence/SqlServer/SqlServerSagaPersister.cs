@@ -1,11 +1,16 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
+    /// and correlation properties in an index table on the side.
+    /// </summary>
     public class SqlServerSagaPersister : IStoreSagaData
     {
         const int PrimaryKeyViolationNumber = 2627;
@@ -52,11 +57,17 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
+        /// <summary>
+        /// Returnes the name of the table used to store correlation properties of saga instances
+        /// </summary>
         public string SagaIndexTableName
         {
             get { return sagaIndexTableName; }
         }
 
+        /// <summary>
+        /// Returns the name of the table used to store JSON serializations of saga instances.
+        /// </summary>
         public string SagaTableName
         {
             get { return sagaTableName; }
@@ -306,6 +317,74 @@ saga type name.",
             }
 
             return sagaTypeName;
+        }
+
+        /// <summary>
+        /// Creates the necessary saga storage tables if they haven't already been created. If a table already exists
+        /// with a name that matches one of the desired table names, no action is performed (i.e. it is assumed that
+        /// the tables already exist).
+        /// </summary>
+        public SqlServerSagaPersister EnsureTablesAreCreated()
+        {
+            var connection = getConnection();
+            try
+            {
+                using (var tx = new TransactionScope())
+                {
+                    var tableNames = connection.GetTableNames();
+
+                    // bail out if there's already a table in the database with one of the names
+                    if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
+                        || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        return this;
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[id] [uniqueidentifier] NOT NULL,
+	[revision] [int] NOT NULL,
+	[data] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+(
+	[id] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+", SagaTableName);
+                        command.ExecuteNonQuery();
+                    }
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[saga_type] [nvarchar](40) NOT NULL,
+	[key] [nvarchar](200) NOT NULL,
+	[value] [nvarchar](200) NOT NULL,
+	[saga_id] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+(
+	[key] ASC,
+	[value] ASC,
+	[saga_type] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+
+", SagaIndexTableName);
+                        command.ExecuteNonQuery();
+                    }
+
+                    tx.Complete();
+                }
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
+            return this;
         }
     }
 }
