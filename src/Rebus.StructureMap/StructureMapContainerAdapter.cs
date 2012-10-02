@@ -40,6 +40,7 @@ namespace Rebus.StructureMap
                 {
                     x.For<IBus>().Singleton().Add(bus);
                     x.For<IAdvancedBus>().Singleton().Add(advancedBus);
+                    x.For<IMessageContext>().Transient().Use(MessageContext.GetCurrent);
                 });
         }
     }

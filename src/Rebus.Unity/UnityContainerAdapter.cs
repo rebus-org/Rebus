@@ -33,6 +33,7 @@ namespace Rebus.Unity
         {
             unityContainer.RegisterInstance(typeof(IBus), bus);
             unityContainer.RegisterInstance(typeof(IAdvancedBus), advancedBus);
+            unityContainer.RegisterType<IMessageContext>(new InjectionFactory(c => MessageContext.GetCurrent()));
         }
     }
 }
