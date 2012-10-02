@@ -21,11 +21,11 @@ namespace Rebus.Tests.Persistence.Sagas
             var secondSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = theValue};
 
             var pathsToIndex = new[] {Reflect.Path<SomeSaga>(s => s.SomeCorrelationId)};
-            Persister.Insert(firstSaga, pathsToIndex);
+            persister.Insert(firstSaga, pathsToIndex);
 
             // act
             // assert
-            Assert.Throws<OptimisticLockingException>(() => Persister.Insert(secondSaga, pathsToIndex));
+            Assert.Throws<OptimisticLockingException>(() => persister.Insert(secondSaga, pathsToIndex));
         }
 
         [Test]
@@ -37,13 +37,13 @@ namespace Rebus.Tests.Persistence.Sagas
             var secondSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = "other value"};
 
             var pathsToIndex = new[] {Reflect.Path<SomeSaga>(s => s.SomeCorrelationId)};
-            Persister.Insert(firstSaga, pathsToIndex);
-            Persister.Insert(secondSaga, pathsToIndex);
+            persister.Insert(firstSaga, pathsToIndex);
+            persister.Insert(secondSaga, pathsToIndex);
 
             // act
             // assert
             secondSaga.SomeCorrelationId = theValue;
-            Assert.Throws<OptimisticLockingException>(() => Persister.Update(secondSaga, pathsToIndex));
+            Assert.Throws<OptimisticLockingException>(() => persister.Update(secondSaga, pathsToIndex));
         }
 
         [Test]
@@ -54,9 +54,9 @@ namespace Rebus.Tests.Persistence.Sagas
             var firstSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = theValue};
 
             var pathsToIndex = new[] {Reflect.Path<SomeSaga>(s => s.SomeCorrelationId)};
-            Persister.Insert(firstSaga, pathsToIndex);
+            persister.Insert(firstSaga, pathsToIndex);
 
-            Assert.DoesNotThrow(() => Persister.Update(firstSaga, pathsToIndex));
+            Assert.DoesNotThrow(() => persister.Update(firstSaga, pathsToIndex));
         }
 
         internal class SomeSaga : ISagaData

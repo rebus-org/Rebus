@@ -8,16 +8,16 @@ namespace Rebus.Serialization
     {
         static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings();
 
-        public string Serialize(IDictionary<string, string> dictionary)
+        public string Serialize(IDictionary<string, object> dictionary)
         {
             return JsonConvert.SerializeObject(dictionary, Formatting.Indented, JsonSettings);
         }
 
-        public IDictionary<string,string> Deserialize(string str)
+        public IDictionary<string, object> Deserialize(string str)
         {
             try
             {
-                return JsonConvert.DeserializeObject<IDictionary<string, string>>(str, JsonSettings);
+                return JsonConvert.DeserializeObject<IDictionary<string, object>>(str, JsonSettings);
             }
             catch(Exception e)
             {

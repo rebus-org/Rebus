@@ -43,7 +43,7 @@ namespace Rebus
         /// <summary>
         /// Contains the headers of the transport message currently being handled.
         /// </summary>
-        IDictionary<string, string> Headers { get; }
+        IDictionary<string, object> Headers { get; }
 
 #if DEBUG
         string StackTrace { get; set; }

@@ -54,7 +54,7 @@ namespace Rebus.Tests.Transports.Encrypted
             var toSend = new TransportMessageToSend
             {
                 Label = Guid.NewGuid().ToString(),
-                Headers = new Dictionary<string, string>
+                Headers = new Dictionary<string, object>
                                                {
                                                    {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()}
                                                },
@@ -115,7 +115,7 @@ namespace Rebus.Tests.Transports.Encrypted
             // arrange
             var transportMessageToSend = new TransportMessageToSend
                                              {
-                                                 Headers = new Dictionary<string, string> { { "test", "blah!" } },
+                                                 Headers = new Dictionary<string, object> { { "test", "blah!" } },
                                                  Label = "label",
                                                  Body = Encoding.UTF7.GetBytes("Hello world!"),
                                              };
@@ -150,7 +150,7 @@ namespace Rebus.Tests.Transports.Encrypted
             receiver.SetUpReceive(new ReceivedTransportMessage
                                       {
                                           Id = "id",
-                                          Headers = new Dictionary<string, string>
+                                          Headers = new Dictionary<string, object>
                                                         {
                                                             { "test", "blah!" },
                                                             { Headers.Encrypted, null},
@@ -177,7 +177,7 @@ namespace Rebus.Tests.Transports.Encrypted
             var toSend = new TransportMessageToSend
                              {
                                  Label = Guid.NewGuid().ToString(),
-                                 Headers = new Dictionary<string, string>
+                                 Headers = new Dictionary<string, object>
                                                {
                                                    {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()}
                                                },

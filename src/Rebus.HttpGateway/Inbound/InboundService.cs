@@ -149,7 +149,7 @@ http://www.netid.washington.edu/documentation/domains/sddl.aspx", GetListenUri()
                         Body = reader.ReadBytes((int) request.ContentLength64)
                     };
 
-                var headers = new Dictionary<string, string>();
+                var headers = new Dictionary<string, object>();
 
                 foreach (var rebusHeaderKey in request.Headers.AllKeys.Where(k => k.StartsWith(RebusHttpHeaders.CustomHeaderPrefix)))
                 {

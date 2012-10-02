@@ -369,12 +369,12 @@ element)"));
             return new AmbientTransactionContext();
         }
 
-        IDictionary<string, string> MergeHeaders(Message messageToSend)
+        IDictionary<string, object> MergeHeaders(Message messageToSend)
         {
             var transportMessageHeaders = messageToSend.Headers.Clone();
 
             var messages = messageToSend.Messages
-                .Select(m => new Tuple<object, Dictionary<string, string>>(m, headerContext.GetHeadersFor(m)))
+                .Select(m => new Tuple<object, Dictionary<string, object>>(m, headerContext.GetHeadersFor(m)))
                 .ToList();
 
             AssertTimeToBeReceivedIsNotInconsistent(messages);
@@ -391,7 +391,7 @@ element)"));
             return transportMessageHeaders;
         }
 
-        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
@@ -404,7 +404,7 @@ element)"));
             }
         }
 
-        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
             {
@@ -585,8 +585,7 @@ element)"));
 
         internal class HeaderContext
         {
-            internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
-
+            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> Headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
             internal readonly System.Timers.Timer CleanupTimer;
 
             public HeaderContext()
@@ -597,18 +596,18 @@ element)"));
 
             public void AttachHeader(object message, string key, string value)
             {
-                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
+                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, object>());
 
                 headerDictionary.Add(key, value);
             }
 
-            public Dictionary<string, string> GetHeadersFor(object message)
+            public Dictionary<string, object> GetHeadersFor(object message)
             {
-                Dictionary<string, string> temp;
+                Dictionary<string, object> temp;
 
                 var headersForThisMessage = Headers.TryGetValue(message, out temp)
                                                 ? temp
-                                                : new Dictionary<string, string>();
+                                                : new Dictionary<string, object>();
 
                 return headersForThisMessage;
             }

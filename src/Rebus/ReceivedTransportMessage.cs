@@ -15,7 +15,7 @@ namespace Rebus
     {
         public ReceivedTransportMessage()
         {
-            Headers = new Dictionary<string, string>();
+            Headers = new Dictionary<string, object>();
         }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Rebus
         /// <summary>
         /// Message headers. Pre-defined header keys can be found in <see cref="Shared.Headers"/>.
         /// </summary>
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, object> Headers { get; set; }
 
         /// <summary>
         /// Message body. Should not contain any header information.
@@ -55,6 +55,11 @@ namespace Rebus
                 transportMessageToSend.Headers = Headers.Clone();
             }
             return transportMessageToSend;
+        }
+
+        public string GetHeader(string key)
+        {
+            return Headers.ContainsKey(key) && Headers[key] is string ? (string) Headers[key] : null;
         }
     }
 }

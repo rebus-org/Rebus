@@ -10,7 +10,7 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IMessageContext
     {
-        readonly IDictionary<string, string> headers;
+        readonly IDictionary<string, object> headers;
         static ILog log;
 
         static MessageContext()
@@ -18,7 +18,7 @@ namespace Rebus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public IDictionary<string, string> Headers
+        public IDictionary<string, object> Headers
         {
             get { return headers; }
         }
@@ -40,7 +40,7 @@ namespace Rebus
         public string StackTrace { get; set; }
 #endif
 
-        internal static MessageContext Enter(IDictionary<string, string> headers)
+        internal static MessageContext Enter(IDictionary<string, object> headers)
         {
             if (current != null)
             {
@@ -67,7 +67,7 @@ Stacktrace of when the current message context was created:
             return messageContext;
         }
 
-        MessageContext(IDictionary<string, string> headers)
+        MessageContext(IDictionary<string, object> headers)
         {
             this.headers = headers;
 
@@ -81,12 +81,12 @@ Stacktrace of when the current message context was created:
 
         public string TransportMessageId
         {
-            get { return headers.ValueOrNull(Shared.Headers.MessageId); }
+            get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }
         
         public string ReturnAddress
         {
-            get { return headers.ValueOrNull(Shared.Headers.ReturnAddress); }
+            get { return (string)headers.ValueOrNull(Shared.Headers.ReturnAddress); }
         }
 
         public IDictionary<string, object> Items { get; private set; }

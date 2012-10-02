@@ -27,7 +27,7 @@ namespace Rebus.Tests.Transports.Rabbit
         }
 
         [Test, Description("Because Rabbit can move around complex headers (i.e. heades whose values are themselves complete dictionaries), Rebus needs to be able to store these things, so that e.g. forwarding to error queues etc works as expected")]
-        public void RabbitTransportDoesNotChokeOneMessagesContainingComplexHeaders()
+        public void RabbitTransportDoesNotChokeOnMessagesContainingComplexHeaders()
         {
             // arrange
             const string recipientInputQueue = "test.roundtripping.receiver";

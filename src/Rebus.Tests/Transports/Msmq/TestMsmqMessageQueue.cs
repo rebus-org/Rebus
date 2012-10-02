@@ -199,7 +199,7 @@ The following addresses were collected:
 
             var transportMessageToSend = new TransportMessageToSend
                                              {
-                                                 Headers = new Dictionary<string, string>(),
+                                                 Headers = new Dictionary<string, object>(),
                                                  Body = new byte[1024],
                                                  Label = "this is just a label"
                                              };
@@ -244,7 +244,7 @@ The following addresses were collected:
                              serializer.Serialize(new Message
                                  {
                                      Messages = new object[] {"HELLO WORLD!"},
-                                     Headers = new Dictionary<string, string> {{Headers.TimeToBeReceived, timeToBeReceived}},
+                                     Headers = new Dictionary<string, object> {{Headers.TimeToBeReceived, timeToBeReceived}},
                                  }),
                              new NoTransaction());
 
@@ -285,7 +285,7 @@ The following addresses were collected:
         [Test]
         public void HeadersAreTransferred()
         {
-            var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, object>
                               {
                                   {"someRandomHeaderKey", "someRandomHeaderValue"},
                               };

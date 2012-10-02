@@ -28,7 +28,7 @@ namespace Rebus.Tests.Contracts.Serialization
             var transportMessageToSend = instance
                 .Serialize(new Message
                     {
-                        Headers = new Dictionary<string, string>
+                        Headers = new Dictionary<string, object>
                             {
                                 {"some_key", "some_value"},
                                 {"another_key", "another_value"},

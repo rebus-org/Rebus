@@ -119,7 +119,7 @@ namespace Rebus.HttpGateway.Outbound
 
             foreach (var header in headers)
             {
-                request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, header.Value);
+                request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, (string)header.Value);
             }
 
             request.Headers.Add(RebusHttpHeaders.Id, receivedTransportMessage.Id);

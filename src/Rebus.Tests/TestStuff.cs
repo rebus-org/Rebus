@@ -49,7 +49,7 @@ namespace Rebus.Tests
             sender.Send("nonexistingQueue@DACAPPL03", new TransportMessageToSend
                 {
                     Label = "unknown host",
-                    Headers = new Dictionary<string, string>(),
+                    Headers = new Dictionary<string, object>(),
                     Body = Encoding.UTF8.GetBytes("muahahahahahahaha"),
                 }, new NoTransaction());
         }

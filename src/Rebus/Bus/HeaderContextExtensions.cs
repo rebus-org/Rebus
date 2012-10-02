@@ -6,7 +6,7 @@ namespace Rebus.Bus
 {
     static class HeaderContextExtensions
     {
-        public static Dictionary<string,string> GetOrAdd(this List<Tuple<WeakReference, Dictionary<string, string>>> contexts, object key, Func<Dictionary<string, string>> factory)
+        public static Dictionary<string, object> GetOrAdd(this List<Tuple<WeakReference, Dictionary<string, object>>> contexts, object key, Func<Dictionary<string, object>> factory)
         {
             var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
             if (entry == null)
@@ -17,7 +17,7 @@ namespace Rebus.Bus
 
                     if (entry == null)
                     {
-                        entry = new Tuple<WeakReference, Dictionary<string, string>>(new WeakReference(key), factory());
+                        entry = Tuple.Create(new WeakReference(key), factory());
                         contexts.Add(entry);
                     }
                 }
@@ -25,7 +25,7 @@ namespace Rebus.Bus
             return entry.Item2;
         }
 
-        public static void RemoveDeadReferences(this List<Tuple<WeakReference, Dictionary<string, string>>> contexts)
+        public static void RemoveDeadReferences(this List<Tuple<WeakReference, Dictionary<string, object>>> contexts)
         {
             if (contexts.Any(c => !c.Item1.IsAlive))
             {
@@ -36,13 +36,13 @@ namespace Rebus.Bus
             }
         }
 
-        public static bool TryGetValue(this List<Tuple<WeakReference, Dictionary<string,string>>> contexts, object key, out Dictionary<string, string> dictionery)
+        public static bool TryGetValue(this List<Tuple<WeakReference, Dictionary<string, object>>> contexts, object key, out Dictionary<string, object> dictionery)
         {
             var entry = contexts.FirstOrDefault(c => c.Item1.Target == key);
 
             if (entry == null)
             {
-                dictionery = new Dictionary<string, string>();
+                dictionery = new Dictionary<string, object>();
                 return false;
             }
             

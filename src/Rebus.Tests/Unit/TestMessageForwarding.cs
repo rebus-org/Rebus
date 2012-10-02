@@ -25,7 +25,7 @@ namespace Rebus.Tests.Unit
 
             receiveMessages.Deliver(new Message
                 {
-                    Headers = new Dictionary<string, string>
+                    Headers = new Dictionary<string, object>
                         {
                             {arbitrarykey, arbitraryValue},
                             {anotherArbitraryKey, anotherArbitraryValue}
