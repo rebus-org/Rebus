@@ -51,7 +51,8 @@ namespace Rebus.Castle.Windsor
                     .Instance(advancedBus),
 
                 Component.For<IMessageContext>()
-                    .UsingFactoryMethod(k => MessageContext.GetCurrent()),
+                    .UsingFactoryMethod(k => MessageContext.GetCurrent())
+                    .LifestyleTransient(),
 
                 Component.For<InstanceDisposer>()
                 );
