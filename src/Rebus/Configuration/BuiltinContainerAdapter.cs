@@ -12,9 +12,15 @@ namespace Rebus.Configuration
     {
         readonly SimpleHandlerActivator handlerActivator = new SimpleHandlerActivator();
 
-        public IBus Bus { get; set; }
+        /// <summary>
+        /// Use this property to access the bus instance
+        /// </summary>
+        public IBus Bus { get; internal set; }
 
-        public IAdvancedBus AdvancedBus { get; set; }
+        /// <summary>
+        /// Use this property to access the advanced bus, which is an ordinary bus plus some advanced operations
+        /// </summary>
+        public IAdvancedBus AdvancedBus { get; internal set; }
 
         /// <summary>
         /// Registers the given handler type. It is assumed that the type registered has a public
