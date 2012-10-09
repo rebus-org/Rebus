@@ -102,6 +102,8 @@ namespace Rebus.Bus
 
         public void Stop()
         {
+            if (shouldExit) return;
+
             log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;

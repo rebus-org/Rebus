@@ -451,6 +451,9 @@ element)"));
 
         public void Dispose()
         {
+            // redundant optimization: just tell all workers to stop at the same time
+            workers.AsParallel().ForAll(w => w.Stop());
+
             SetNumberOfWorkers(0);
 
             var disposables = new object[]
@@ -522,16 +525,6 @@ element)"));
                     {
                         log.Error(e, "An error occurred while disposing {0}", workerToRemove.WorkerThreadName);
                     }
-
-                    workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
-                    workerToRemove.UserException -= LogUserException;
-                    workerToRemove.SystemException -= LogSystemException;
-                    workerToRemove.BeforeTransportMessage -= RaiseBeforeTransportMessage;
-                    workerToRemove.AfterTransportMessage -= RaiseAfterTransportMessage;
-                    workerToRemove.PoisonMessage -= RaisePosionMessage;
-                    workerToRemove.BeforeMessage -= RaiseBeforeMessage;
-                    workerToRemove.AfterMessage -= RaiseAfterMessage;
-                    workerToRemove.UncorrelatedMessage -= RaiseUncorrelatedMessage;
                 }
             }
         }
