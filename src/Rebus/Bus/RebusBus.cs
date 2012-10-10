@@ -338,7 +338,7 @@ element)"));
 
             messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
 
-            var messageToSend = new Message { Messages = messages.ToArray(), };
+            var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
@@ -350,6 +350,11 @@ element)"));
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
+        }
+
+        object MutateOutgoing(object msg)
+        {
+            return Events.MessageMutators.Aggregate(msg, (current, mutator) => mutator.MutateOutgoing(current));
         }
 
         internal void InternalSend(string destination, Message messageToSend)
@@ -488,7 +493,8 @@ element)"));
                                         storeSagaData,
                                         inspectHandlerPipeline,
                                         string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
-                                        new DeferredMessageReDispatcher(this));
+                                        new DeferredMessageReDispatcher(this),
+                                        new IncomingMessageMutatorPipeline(Events));
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

@@ -29,7 +29,8 @@ namespace Rebus.Tests.Unit
                                 new JsonMessageSerializer(),
                                 new InMemorySagaPersister(),
                                 new TrivialPipelineInspector(), "Just some test worker",
-                                new DeferredMessageHandlerForTesting());
+                                new DeferredMessageHandlerForTesting(),
+                                new IncomingMessageMutatorPipelineForTesting());
         }
 
         [Test]

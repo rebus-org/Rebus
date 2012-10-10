@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus.Configuration
 {
@@ -8,6 +9,8 @@ namespace Rebus.Configuration
             : base(backbone)
         {
             backbone.AddEvents(this);
+
+            MessageMutators = new List<IMutateMessages>();
         }
 
         public event MessageSentEventHandler MessageSent;
@@ -17,6 +20,8 @@ namespace Rebus.Configuration
         public event BeforeTransportMessageEventHandler BeforeTransportMessage;
         public event AfterTransportMessageEventHandler AfterTransportMessage;
         public event PoisonMessageEventHandler PoisonMessage;
+
+        public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
         public void TransferToBus(IAdvancedBus advancedBus)
         {
@@ -76,6 +81,11 @@ namespace Rebus.Configuration
                 {
                     rebusEvents.UncorrelatedMessage += listener;
                 }
+            }
+
+            foreach(var messageMutator in MessageMutators)
+            {
+                rebusEvents.MessageMutators.Add(messageMutator);
             }
         }
     }

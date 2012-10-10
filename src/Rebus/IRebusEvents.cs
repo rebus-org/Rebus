@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rebus.Bus;
 
 namespace Rebus
@@ -87,5 +88,11 @@ namespace Rebus
         /// turns out that no saga data instance could be correlated with the message.
         /// </summary>
         event UncorrelatedMessageEventHandler UncorrelatedMessage;
+
+        /// <summary>
+        /// Contains a pipeline of message mutators that will be run in order when messages are sent,
+        /// and in reverse order when messages are received.
+        /// </summary>
+        ICollection<IMutateMessages> MessageMutators { get; }
     }
 }

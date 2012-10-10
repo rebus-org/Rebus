@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
+using System.Linq;
 
 namespace Rebus.Bus
 {
@@ -29,6 +30,7 @@ namespace Rebus.Bus
         readonly IErrorTracker errorTracker;
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
+        readonly IMutateIncomingMessages mutateIncomingMessages;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -53,10 +55,12 @@ namespace Rebus.Bus
             IStoreSagaData storeSagaData,
             IInspectHandlerPipeline inspectHandlerPipeline,
             string workerThreadName,
-            IHandleDeferredMessage handleDeferredMessage)
+            IHandleDeferredMessage handleDeferredMessage,
+            IMutateIncomingMessages mutateIncomingMessages)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
+            this.mutateIncomingMessages = mutateIncomingMessages;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -223,7 +227,7 @@ namespace Rebus.Bus
                     // successfully deserialized the transport message, let's enter a message context
                     context = MessageContext.Enter(message.Headers);
 
-                    foreach (var logicalMessage in message.Messages)
+                    foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                     {
                         context.SetLogicalMessage(logicalMessage);
 
@@ -306,6 +310,11 @@ namespace Rebus.Bus
             }
 
             errorTracker.StopTracking(id);
+        }
+
+        object MutateIncoming(object message)
+        {
+            return mutateIncomingMessages.MutateIncoming(message);
         }
 
         void HandlePoisonMessage(string id, ReceivedTransportMessage transportMessage)
