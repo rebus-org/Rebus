@@ -14,7 +14,7 @@ namespace Rebus.Bus
         public object MutateIncoming(object message)
         {
             return rebusEvents.MessageMutators.Reverse()
-                .Aggregate(message, (current, mutator) => mutator.MutateOutgoing(current));
+                .Aggregate(message, (current, mutator) => mutator.MutateIncoming(current));
         }
     }
 }

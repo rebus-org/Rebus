@@ -21,7 +21,12 @@ namespace Rebus.Tests.Integration
             senderAdapter = new BuiltinContainerAdapter();
             Configure.With(senderAdapter)
                 .Transport(t => t.UseMsmq(SenderInputQueueName, "error"))
-                .Events(e => e.MessageMutators.Add(new CountingMutator()))
+                .Events(e =>
+                    {
+                        e.MessageMutators.Add(new EvilMutator("first"));
+                        e.MessageMutators.Add(new EvilMutator("second"));
+                        e.MessageMutators.Add(new EvilMutator("third"));
+                    })
                 .CreateBus().Start();
 
             receiverAdapter = new BuiltinContainerAdapter();
@@ -57,18 +62,21 @@ namespace Rebus.Tests.Integration
             Console.WriteLine(what);
         }
 
-        class CountingMutator : IMutateMessages
+        class EvilMutator : IMutateMessages
         {
-            int counter = 0;
+            readonly string mutatorId;
+
+            public EvilMutator(string mutatorId)
+            {
+                this.mutatorId = mutatorId;
+            }
 
             public object MutateIncoming(object message)
             {
                 var mut = message as SomeMessageThatKeepsTrackOfMutations;
                 if (mut == null) return message;
 
-                counter--;
-
-                return mut.MutateWith("mut-" + counter);
+                return mut.MutateWith("incoming-" + mutatorId);
             }
 
             public object MutateOutgoing(object message)
@@ -76,9 +84,7 @@ namespace Rebus.Tests.Integration
                 var mut = message as SomeMessageThatKeepsTrackOfMutations;
                 if (mut == null) return message;
 
-                counter++;
-
-                return mut.MutateWith("mut-" + counter);
+                return mut.MutateWith("outgoing-" + mutatorId);
             }
         }
 
