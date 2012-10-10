@@ -33,7 +33,7 @@ namespace Rebus
 
         public static Timed<T> AtThisInstant<T>(this T value)
         {
-            return new Timed<T>(Time.Now(), value);
+            return new Timed<T>(RebusTimeMachine.Now(), value);
         }
     }
 }

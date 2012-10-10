@@ -4,9 +4,10 @@ namespace Rebus
 {
     /// <summary>
     /// Static gateway to the current time. Implements the classic fake time pattern
-    /// found in all the right places.
+    /// found in all the right places. The name is goofy on purpose to avoid colliding with people's own
+    /// Time classes.
     /// </summary>
-    public class Time
+    public class RebusTimeMachine
     {
         internal static Func<DateTime> OriginalTimeFactoryMethod = () => DateTime.UtcNow;
         internal static Func<DateTime> TimeFactoryMethod = OriginalTimeFactoryMethod;

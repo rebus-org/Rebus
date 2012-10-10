@@ -146,7 +146,7 @@
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Extensions\EnumerableExt.cs" />
     <Compile Include="SimpleHandlerActivator.cs" />
-    <Compile Include="Time.cs" />
+    <Compile Include="RebusTimeMachine.cs" />
     <Compile Include="Timed.cs" />
     <Compile Include="TimeMachine.cs" />
     <Compile Include="Timeout\IStoreTimeouts.cs" />

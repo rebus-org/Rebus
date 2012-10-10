@@ -102,7 +102,7 @@ namespace Rebus.Timeout
                                      SagaId = message.SagaId,
                                      CorrelationId = message.CorrelationId,
                                      ReplyTo = currentMessageContext.ReturnAddress,
-                                     TimeToReturn = Time.Now() + message.Timeout,
+                                     TimeToReturn = RebusTimeMachine.Now() + message.Timeout,
                                      CustomData = message.CustomData,
                                  };
 
