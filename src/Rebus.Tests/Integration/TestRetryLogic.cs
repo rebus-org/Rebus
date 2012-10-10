@@ -121,9 +121,9 @@ namespace Rebus.Tests.Integration
         }
 
         [TestCase("beforeTransport")]
-        [TestCase("afterTransport")]
+        [TestCase("afterTransport", Ignore = true)]
         [TestCase("beforeLogical")]
-        [TestCase("afterLogical")]
+        [TestCase("afterLogical", Ignore = true)]
         [TestCase("poison")]
         [TestCase("commitHook", Ignore = true)]
         [TestCase("rollbackHook", Ignore = true)]

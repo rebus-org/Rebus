@@ -220,6 +220,7 @@ namespace Rebus.Bus
             }
             else
             {
+                Exception transportMessageExceptionOrNull = null;
                 try
                 {
                     BeforeTransportMessage(transportMessage);
@@ -233,6 +234,7 @@ namespace Rebus.Bus
                     {
                         context.SetLogicalMessage(logicalMessage);
 
+                        Exception logicalMessageExceptionOrNull = null;
                         try
                         {
                             BeforeMessage(logicalMessage);
@@ -242,48 +244,67 @@ namespace Rebus.Bus
                             log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
                             GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
-
-                            AfterMessage(null, logicalMessage);
                         }
                         catch (Exception exception)
                         {
-                            try
-                            {
-                                AfterMessage(exception, logicalMessage);
-                            }
-                            catch (Exception exceptionWhileRaisingEvent)
-                            {
-                                log.Error(
-                                    "An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
-                                    exception, exceptionWhileRaisingEvent);
-                            }
+                            logicalMessageExceptionOrNull = exception;
                             throw;
                         }
                         finally
                         {
+                            try
+                            {
+                                AfterMessage(logicalMessageExceptionOrNull, logicalMessage);
+                            }
+                            catch (Exception exceptionWhileRaisingEvent)
+                            {
+                                if (logicalMessageExceptionOrNull != null)
+                                {
+                                    log.Error(
+                                        "An exception occurred while raising the AfterMessage event, and an exception occurred some" +
+                                        " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                                        " AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                        logicalMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                                }
+                                else
+                                {
+                                    log.Error("An exception occurred while raising the AfterMessage event: {0}", exceptionWhileRaisingEvent);
+                                }
+                            }
+
                             context.ClearLogicalMessage();
                         }
                     }
-
-                    AfterTransportMessage(null, transportMessage);
                 }
                 catch (Exception exception)
                 {
+                    transportMessageExceptionOrNull = exception;
                     log.Debug("Handling message {0} ({1}) has failed", label, id);
-                    try
-                    {
-                        AfterTransportMessage(exception, transportMessage);
-                    }
-                    catch (Exception exceptionWhileRaisingEvent)
-                    {
-                        log.Error(
-                            "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
-                            exception, exceptionWhileRaisingEvent);
-                    }
-                    
                     errorTracker.TrackDeliveryFail(id, exception);
                     if (context != null) context.Dispose(); //< dispose it if we entered
                     throw;
+                }
+                finally
+                {
+                    try
+                    {
+                        AfterTransportMessage(transportMessageExceptionOrNull, transportMessage);
+                    }
+                    catch (Exception exceptionWhileRaisingEvent)
+                    {
+                        if (transportMessageExceptionOrNull != null)
+                        {
+                            log.Error(
+                                "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some" +
+                                " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                                " AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
+                                transportMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                        }
+                        else
+                        {
+                            log.Error("An exception occurred while raising the AfterTransportMessage event: {0}", exceptionWhileRaisingEvent);
+                        }
+                    }
                 }
             }
 
