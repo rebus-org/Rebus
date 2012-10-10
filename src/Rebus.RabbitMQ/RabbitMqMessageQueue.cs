@@ -111,8 +111,6 @@ namespace Rebus.RabbitMQ
             // wtf??
             if (ea == null)
             {
-                log.Warn("Subscription returned true, but BasicDeliverEventArgs was null!!");
-                Thread.Sleep(BackoffTime);
                 return null;
             }
 

@@ -1,3 +1,5 @@
+using System;
+
 namespace Rebus.Configuration
 {
     public class RebusRoutingConfigurer : BaseConfigurer
@@ -25,7 +27,15 @@ namespace Rebus.Configuration
         /// </summary>
         public void FromRebusConfigurationSection()
         {
-            Use(new DetermineDestinationFromConfigurationSection());
+            Use(new DetermineDestinationFromRebusConfigurationSection());
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings to be on Rebus form.
+        /// </summary>
+        public void FromRebusConfigurationSectionWithFilter(Func<Type, bool> typeFilter)
+        {
+            Use(new DetermineDestinationFromRebusConfigurationSection(typeFilter));
         }
     }
 }

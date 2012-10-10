@@ -196,7 +196,7 @@
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
-    <Compile Include="Configuration\TestDetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\TestDetermineDestinationFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
