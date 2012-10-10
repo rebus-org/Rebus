@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -22,6 +23,7 @@ namespace Rebus.Testing
         /// Constructs the fixture with the given saga and the given saga data available. The <see cref="availableSagaData"/>
         /// list will be used to look for existing saga data instances, and new ones will be added to this list as well.
         /// </summary>
+        [DebuggerStepThrough]
         public SagaFixture(Saga<T> saga, IList<T> availableSagaData)
         {
             this.saga = saga;
@@ -33,6 +35,7 @@ namespace Rebus.Testing
         /// <summary>
         /// Constructs the fixture with the given saga.
         /// </summary>
+        [DebuggerStepThrough]
         public SagaFixture(Saga<T> saga)
             : this(saga, new List<T>())
         {
@@ -48,9 +51,9 @@ namespace Rebus.Testing
             get { return deletedSagaData; }
         }
 
-        public delegate void CorrelatedWithExistingSagaDataEventHandler<T>(object message, T sagaData);
+        public delegate void CorrelatedWithExistingSagaDataEventHandler<in TSagaData>(object message, TSagaData sagaData);
 
-        public delegate void CreatedNewSagaDataEventHandler<T>(object message, T sagaData);
+        public delegate void CreatedNewSagaDataEventHandler<in TSagaData>(object message, TSagaData sagaData);
 
         public delegate void CouldNotCorrelateEventHandler(object message);
 
@@ -58,23 +61,24 @@ namespace Rebus.Testing
         /// Gets raised during message dispatch when the message could be correlated with an existing saga data instance.
         /// The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CorrelatedWithExistingSagaDataEventHandler<T> CorrelatedWithExistingSagaData = delegate { };
+        public event CorrelatedWithExistingSagaDataEventHandler<T> CorrelatedWithExistingSagaData;
 
         /// <summary>
         /// Gets raised during message dispatch when the message could not be correlated with an existing saga data instance
         /// and a new saga data instance was created. The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CreatedNewSagaDataEventHandler<T> CreatedNewSagaData = delegate { };
+        public event CreatedNewSagaDataEventHandler<T> CreatedNewSagaData;
 
         /// <summary>
         /// Gets raised during message dispatch when the message could not be correlated with a saga data instance, and 
         /// creating a new saga data instance was not allowed.
         /// </summary>
-        public event CouldNotCorrelateEventHandler CouldNotCorrelate = delegate { };
+        public event CouldNotCorrelateEventHandler CouldNotCorrelate;
 
         /// <summary>
         /// Dispatches a message to the saga, raising the appropriate events along the way.
         /// </summary>
+        [DebuggerStepThrough]
         public void Handle<TMessage>(TMessage message)
         {
             try
@@ -98,6 +102,7 @@ namespace Rebus.Testing
             get { return saga.Data; }
         }
 
+        [DebuggerStepThrough]
         void InnerHandle<TMessage>(TMessage message)
         {
             var existingSagaData = availableSagaData.SingleOrDefault(data => Correlates(correlations, message, data));
@@ -106,7 +111,7 @@ namespace Rebus.Testing
             {
                 saga.Data = existingSagaData;
                 saga.IsNew = false;
-                CorrelatedWithExistingSagaData(message, saga.Data);
+                if (CorrelatedWithExistingSagaData != null) CorrelatedWithExistingSagaData(message, saga.Data);
                 Dispatch(message);
                 if (saga.Complete)
                 {
@@ -120,7 +125,7 @@ namespace Rebus.Testing
             {
                 saga.Data = new T();
                 saga.IsNew = true;
-                CreatedNewSagaData(message, saga.Data);
+                if (CreatedNewSagaData != null) CreatedNewSagaData(message, saga.Data);
                 Dispatch(message);
                 if (!saga.Complete)
                 {
@@ -133,9 +138,10 @@ namespace Rebus.Testing
                 return;
             }
 
-            CouldNotCorrelate(message);
+            if (CouldNotCorrelate != null) CouldNotCorrelate(message);
         }
 
+        [DebuggerStepThrough]
         bool Correlates(ConcurrentDictionary<Type, Correlation> concurrentDictionary, object message, T data)
         {
             var messageType = message.GetType();
@@ -151,6 +157,7 @@ namespace Rebus.Testing
             return fieldFromMessage == fieldFromSagaData;
         }
 
+        [DebuggerStepThrough]
         void Dispatch<TMessage>(TMessage message)
         {
             saga.Complete = false;
