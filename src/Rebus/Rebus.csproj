@@ -188,6 +188,7 @@
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Messages\SubscriptionMessage.cs" />
     <Compile Include="Messages\Message.cs" />
+    <Compile Include="UnhandledMessageException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -88,9 +88,36 @@ namespace Rebus.Tests.Integration
 
             retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
-
+            
             errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(ReceiverQueueName + "@" + Environment.MachineName);
             errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: oh noes!");
+        }
+
+        [Test]
+        public void CanMoveMessageToErrorQueueWhenTheresNoHandlerForTheMessage()
+        {
+            // arrange
+            var retriedTooManyTimes = false;
+            var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
+
+            var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
+
+            CreateBus(ReceiverQueueName, new HandlerActivatorForTesting(),
+                      new InMemorySubscriptionStorage(),
+                      new SagaDataPersisterForTesting(),
+                      ReceiverErrorQueueName)
+                .Start(1);
+
+            senderBus.Routing.Send(ReceiverQueueName, "HELLO!");
+
+            var transportMessage = (ReceivedTransportMessage)errorQueue.Receive(TimeSpan.FromSeconds(3)).Body;
+            var errorMessage = serializer.Deserialize(transportMessage);
+
+            retriedTooManyTimes.ShouldBe(false);
+            errorMessage.Messages[0].ShouldBe("HELLO!");
+
+            errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(ReceiverQueueName + "@" + Environment.MachineName);
+            errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("Could not find any handlers to execute message");
         }
 
         [TestCase("beforeTransport")]
@@ -108,7 +135,7 @@ namespace Rebus.Tests.Integration
             var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
             var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
 
-            var activator = new HandlerActivatorForTesting();
+            var activator = new HandlerActivatorForTesting().Handle<string>(s => { });
             var bus = CreateBus(ReceiverQueueName, activator,
                                 new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
                                 ReceiverErrorQueueName);

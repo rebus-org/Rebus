@@ -3,6 +3,7 @@ using Rebus.Shared;
 
 namespace Rebus
 {
+    [Serializable]
     public class InconsistentReturnAddressException : ApplicationException
     {
         public InconsistentReturnAddressException(string message, params object[] objs)

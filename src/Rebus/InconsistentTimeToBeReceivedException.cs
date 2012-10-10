@@ -3,6 +3,7 @@ using Rebus.Shared;
 
 namespace Rebus
 {
+    [Serializable]
     public class InconsistentTimeToBeReceivedException : ApplicationException
     {
         public InconsistentTimeToBeReceivedException(string message, params object[] objs)

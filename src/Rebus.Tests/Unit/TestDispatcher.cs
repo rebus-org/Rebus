@@ -27,6 +27,19 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
+        public void ThrowsIfNoHandlersCanBeFound()
+        {
+            // arrange
+            var theMessage = new SomeMessage();
+            
+            // act
+            var ex = Assert.Throws<UnhandledMessageException>(() => dispatcher.Dispatch(theMessage));
+
+            // assert
+            ex.UnhandledMessage.ShouldBe(theMessage);
+        }
+
+        [Test]
         public void PolymorphicDispatchWorksLikeExpected()
         {
             // arrange

@@ -40,7 +40,7 @@ namespace Rebus.Bus
 
         internal event Action<Exception, object> AfterMessage = delegate { };
 
-        internal event Action<object, Saga> UncorrelatedMessage = delegate { }; 
+        internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -152,6 +152,10 @@ namespace Rebus.Bus
                     {
                         UserException(this, e.InnerException.InnerException);
                     }
+                    else if (e is TargetInvocationException)
+                    {
+                        UserException(this, e.InnerException);
+                    }
                     else
                     {
                         SystemException(this, e);
@@ -237,7 +241,7 @@ namespace Rebus.Bus
 
                             log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
+                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
 
                             AfterMessage(null, logicalMessage);
                         }
@@ -276,6 +280,7 @@ namespace Rebus.Bus
                             "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
                             exception, exceptionWhileRaisingEvent);
                     }
+                    
                     errorTracker.TrackDeliveryFail(id, exception);
                     if (context != null) context.Dispose(); //< dispose it if we entered
                     throw;

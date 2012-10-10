@@ -2,6 +2,7 @@
 
 namespace Rebus.Configuration
 {
+    [Serializable]
     public class ConfigurationFileFormatException : FormatException
     {
         public ConfigurationFileFormatException(string message, params object[] objs)
