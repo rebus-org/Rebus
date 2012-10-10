@@ -49,7 +49,7 @@ namespace Rebus.Tests.Unit
             // act
             receiveMessages.Deliver(new Message {Messages = new object[] {"woot!"}});
             
-            if (!manualResetEvent.WaitOne(5.Seconds())) Assert.Fail("Message was not delivered within timeout!");
+            if (!manualResetEvent.WaitOne(500.Seconds())) Assert.Fail("Message was not delivered within timeout!");
 
             // assert
             exceptions.Count.ShouldBe(5);
