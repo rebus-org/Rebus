@@ -100,6 +100,7 @@ namespace Rebus.AzureServiceBus
 
                             }
                         }
+                        messagesToSend.Value.Clear();
 
                     };
                     context.Cleanup += () =>
