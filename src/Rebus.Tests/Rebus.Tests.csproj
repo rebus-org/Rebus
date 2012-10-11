@@ -208,6 +208,7 @@
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
@@ -343,6 +344,10 @@
     <ProjectReference Include="..\Rebus.Autofac\Rebus.Autofac.csproj">
       <Project>{539812E2-0F65-49ED-8F26-1736CF6CBFDA}</Project>
       <Name>Rebus.Autofac</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.AzureServiceBus\Rebus.AzureServiceBus.csproj">
+      <Project>{761d59d5-5073-4af0-afdd-1d255f1ef594}</Project>
+      <Name>Rebus.AzureServiceBus</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Azure\Rebus.Azure.csproj">
       <Project>{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}</Project>

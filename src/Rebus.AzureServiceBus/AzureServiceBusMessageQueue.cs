@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Threading;
 using Microsoft.WindowsAzure;
 using Rebus.Logging;
 using Microsoft.ServiceBus;
@@ -13,42 +15,120 @@ namespace Rebus.AzureServiceBus
     {
 
         static ILog log;
-        NamespaceManager namespaceManager;
-        string connectionString;
-
-
         static AzureServiceBusMessageQueue()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public AzureServiceBusMessageQueue(string connectionStringConfigurationName, string inputQueueName, string errorQueueName)
+        private const string AzureServiceBusMessageQueueContextKey = "AzureServiceBusMessageQueueContextKey";
+        private readonly ThreadLocal<Queue<BrokeredMessage>> messagesReceived = new ThreadLocal<Queue<BrokeredMessage>>(() => new Queue<BrokeredMessage>());
+        private readonly ThreadLocal<Queue<Tuple<string, BrokeredMessage>>> messagesToSend = new ThreadLocal<Queue<Tuple<string, BrokeredMessage>>>(() => new Queue<Tuple<string, BrokeredMessage>>());
+        private readonly MessagingFactory messagingFactory;
+        private readonly NamespaceManager namespaceManager;
+        private readonly QueueClient receiverQueueClient;
+
+        public AzureServiceBusMessageQueue(string connectionString, string inputQueueName, string errorQueueName)
         {
-            if (connectionStringConfigurationName == null)
-                throw new ArgumentNullException("connectionStringConfigurationName");
+            if (connectionString == null) throw new ArgumentNullException("connectionString");
 
             if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
             if (errorQueueName == null) throw new ArgumentNullException("errorQueueName");
-
             inputQueueName = inputQueueName.ToLowerInvariant();
             errorQueueName = errorQueueName.ToLowerInvariant();
-            connectionString = CloudConfigurationManager.GetSetting(connectionStringConfigurationName);
+            
+            // connectionString = CloudConfigurationManager.GetSetting(connectionStringConfigurationName);
             namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
 
             if (!namespaceManager.QueueExists(inputQueueName))
             {
                 namespaceManager.CreateQueue(inputQueueName);
             }
-            var queueDescription = namespaceManager.GetQueue(inputQueueName);
+            if (!namespaceManager.QueueExists(errorQueueName))
+            {
+                namespaceManager.CreateQueue(errorQueueName);
+            }
 
+            messagingFactory = MessagingFactory.CreateFromConnectionString(connectionString);
+            receiverQueueClient = QueueClient.CreateFromConnectionString(connectionString, inputQueueName);
             this.InputQueue = inputQueueName;
             this.ErrorQueue = errorQueueName;
-            this.InputQueueAddress = queueDescription.Path;
+            this.InputQueueAddress = inputQueueName;
 
+
+        }
+
+        private void EnsureTransactionEvents(ITransactionContext context, string queueSuffix)
+        {
+            if (context.IsTransactional)
+            {
+                if (context[AzureServiceBusMessageQueueContextKey + queueSuffix] == null)
+                {
+                    context[AzureServiceBusMessageQueueContextKey + queueSuffix] = true;
+                    context.DoCommit += () =>
+                    {
+                        if (messagesToSend.Value.Count > 0)
+                        {
+                            while (messagesToSend.Value.Count > 0)
+                            {
+                                var destinationAndMessage = messagesToSend.Value.Dequeue();
+                                var client = messagingFactory.CreateQueueClient(destinationAndMessage.Item1);
+                                client.Send(destinationAndMessage.Item2);
+                            }
+
+                        }
+
+                        if (messagesReceived.Value.Count > 0)
+                        {
+                            while (messagesReceived.Value.Count > 0)
+                            {
+                                var message = messagesReceived.Value.Dequeue();
+                                message.Complete();
+
+                            }
+                        }
+
+
+                    };
+                    context.DoRollback += () =>
+                    {
+                        if (messagesReceived.Value.Count > 0)
+                        {
+                            while (messagesReceived.Value.Count > 0)
+                            {
+                                var message = messagesReceived.Value.Dequeue();
+                                message.Abandon();
+
+                            }
+                        }
+
+                    };
+                    context.Cleanup += () =>
+                        {
+                            messagingFactory.Close();
+                            
+                        };
+
+                }
+
+            }
+
+        }
+        private TimeSpan? GetTimeToLive(TransportMessageToSend message)
+        {
+            if (message.Headers != null && message.Headers.ContainsKey(Headers.TimeToBeReceived))
+            {
+                return TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
+            }
+
+            return null;
         }
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
-            QueueClient client = QueueClient.CreateFromConnectionString(connectionString, destinationQueueName);
+
+            var client = messagingFactory.CreateQueueClient(destinationQueueName);
+
+            EnsureTransactionEvents(context, "sender");
+
 
             using (var memoryStream = new MemoryStream())
             {
@@ -75,24 +155,34 @@ namespace Rebus.AzureServiceBus
 
                 }
 
-                client.Send(brokeredMessage);
+                if (!context.IsTransactional)
+                {
+                    client.Send(brokeredMessage);
+                }
+                else
+                {
+                    messagesToSend.Value.Enqueue(new Tuple<string, BrokeredMessage>(destinationQueueName, brokeredMessage));
+                }
             }
         }
-        private TimeSpan? GetTimeToLive(TransportMessageToSend message)
-        {
-            if (message.Headers != null && message.Headers.ContainsKey(Headers.TimeToBeReceived))
-            {
-                return TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
-            }
 
-            return null;
-        }
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
 
-            QueueClient client = QueueClient.CreateFromConnectionString(connectionString, InputQueue);
 
-            BrokeredMessage message = client.Receive();
+
+            EnsureTransactionEvents(context, "receiver");
+            BrokeredMessage message = null;
+            if (context.IsTransactional)
+            {
+                var queueClientTransaction = messagingFactory.CreateQueueClient(InputQueue);
+                message = queueClientTransaction.Receive(TimeSpan.FromSeconds(2));
+            }
+            else
+            {
+                message = receiverQueueClient.Receive(TimeSpan.FromSeconds(2));
+            }
+
 
             if (message != null)
             {
@@ -113,22 +203,44 @@ namespace Rebus.AzureServiceBus
                     {
                         var formatter = new BinaryFormatter();
                         var receivedTransportMessage = (ReceivedTransportMessage)formatter.Deserialize(memoryStream);
-                        message.Complete();
+
+                        if (!context.IsTransactional)
+                        {
+                            message.Complete();
+                        }
+                        else
+                        {
+                            messagesReceived.Value.Enqueue(message);
+                        }
                         return receivedTransportMessage;
                     }
                 }
                 catch (Exception e)
                 {
                     log.Error(e, "An error occurred while receiving message from {0}", InputQueue);
-                    message.Abandon();
+                    if (!context.IsTransactional)
+                    {
+                        message.Abandon();
+                    }
+
                     return null;
                 }
             }
             return null;
         }
 
+
+
         public string InputQueue { get; private set; }
         public string InputQueueAddress { get; private set; }
         public string ErrorQueue { get; private set; }
+
+        public AzureServiceBusMessageQueue ResetQueue()
+        {
+            namespaceManager.DeleteQueue(InputQueue);
+            namespaceManager.CreateQueue(InputQueue);
+
+            return this;
+        }
     }
 }
