@@ -5,9 +5,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 {
     public class AzureServiceBusMessageQueueFactory : ITransportFactory
     {
-
         string connectionString = "";
-            
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {

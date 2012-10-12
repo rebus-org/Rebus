@@ -36,6 +36,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835FA7-6BCF-4A99-B4EC-D9BA8A91A4CA}"
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\Rebus.Autofac.nuspec = ..\scripts\Rebus.Autofac.nuspec
+		..\scripts\Rebus.AzureServiceBus.nuspec = ..\scripts\Rebus.AzureServiceBus.nuspec
 		..\scripts\Rebus.Castle.Windsor.nuspec = ..\scripts\Rebus.Castle.Windsor.nuspec
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec

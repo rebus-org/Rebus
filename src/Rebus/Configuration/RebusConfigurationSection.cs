@@ -5,6 +5,22 @@ namespace Rebus.Configuration
 {
     public class RebusConfigurationSection : ConfigurationSection
     {
+        public void VerifyPresenceOfInputQueueConfig()
+        {
+            if (string.IsNullOrEmpty(InputQueue))
+            {
+                throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
+            }
+        }
+
+        public void VerifyPresenceOfErrorQueueConfig()
+        {
+            if (string.IsNullOrEmpty(ErrorQueue))
+            {
+                throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
+            } 
+        }
+
         const string MappingsCollectionPropertyName = "endpoints";
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";

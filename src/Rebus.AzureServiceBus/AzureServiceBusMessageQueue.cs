@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using Microsoft.WindowsAzure;
 using Rebus.Logging;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -13,6 +12,7 @@ namespace Rebus.AzureServiceBus
 {
     public class AzureServiceBusMessageQueue : ISendMessages, IReceiveMessages
     {
+        const string AzureServiceBusMessageQueueContextKey = "AzureServiceBusMessageQueueContextKey";
 
         static ILog log;
         static AzureServiceBusMessageQueue()
@@ -20,12 +20,11 @@ namespace Rebus.AzureServiceBus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        private const string AzureServiceBusMessageQueueContextKey = "AzureServiceBusMessageQueueContextKey";
-        private readonly ThreadLocal<Queue<BrokeredMessage>> messagesReceived = new ThreadLocal<Queue<BrokeredMessage>>(() => new Queue<BrokeredMessage>());
-        private readonly ThreadLocal<Queue<Tuple<string, BrokeredMessage>>> messagesToSend = new ThreadLocal<Queue<Tuple<string, BrokeredMessage>>>(() => new Queue<Tuple<string, BrokeredMessage>>());
-        private readonly MessagingFactory messagingFactory;
-        private readonly NamespaceManager namespaceManager;
-        private readonly QueueClient receiverQueueClient;
+        readonly ThreadLocal<Queue<BrokeredMessage>> messagesReceived = new ThreadLocal<Queue<BrokeredMessage>>(() => new Queue<BrokeredMessage>());
+        readonly ThreadLocal<Queue<Tuple<string, BrokeredMessage>>> messagesToSend = new ThreadLocal<Queue<Tuple<string, BrokeredMessage>>>(() => new Queue<Tuple<string, BrokeredMessage>>());
+        readonly MessagingFactory messagingFactory;
+        readonly NamespaceManager namespaceManager;
+        readonly QueueClient receiverQueueClient;
 
         public AzureServiceBusMessageQueue(string connectionString, string inputQueueName, string errorQueueName)
         {
@@ -50,11 +49,10 @@ namespace Rebus.AzureServiceBus
 
             messagingFactory = MessagingFactory.CreateFromConnectionString(connectionString);
             receiverQueueClient = QueueClient.CreateFromConnectionString(connectionString, inputQueueName);
-            this.InputQueue = inputQueueName;
-            this.ErrorQueue = errorQueueName;
-            this.InputQueueAddress = inputQueueName;
-
-
+            
+            InputQueue = inputQueueName;
+            ErrorQueue = errorQueueName;
+            InputQueueAddress = inputQueueName;
         }
 
         private void EnsureTransactionEvents(ITransactionContext context, string queueSuffix)
