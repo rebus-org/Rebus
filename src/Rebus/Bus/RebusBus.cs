@@ -41,6 +41,7 @@ namespace Rebus.Bus
 
         static int rebusIdCounter;
         readonly int rebusId;
+        readonly string timeoutManagerAddress;
         bool started;
         BusMode busMode;
 
@@ -74,6 +75,14 @@ namespace Rebus.Bus
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
             log.Info("Rebus bus created");
+            
+            timeoutManagerAddress = GetTimeoutManagerAddress();
+        }
+
+        static string GetTimeoutManagerAddress()
+        {
+            return RebusConfigurationSection
+                .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
         }
 
         public IBus Start()
@@ -222,7 +231,7 @@ namespace Rebus.Bus
                                        }
                                };
 
-            InternalSend("rebus.timeout", messages);
+            InternalSend(timeoutManagerAddress, messages);
         }
 
         public void AttachHeader(object message, string key, string value)

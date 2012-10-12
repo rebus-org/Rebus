@@ -21,6 +21,7 @@ namespace Rebus.Tests.Configuration
 
                 section.InputQueue.ShouldBe("this.is.my.input.queue");
                 section.ErrorQueue.ShouldBe("this.is.my.error.queue");
+                section.TimeoutManagerAddress.ShouldBe("somewhere_else");
                 section.Workers.ShouldBe(5);
                 section.MaxRetries.ShouldBe(6);
 

@@ -76,7 +76,7 @@ namespace Rebus.Tests.Performance.StressMongo
             DropCollection(CustomerInformationSagasCollectionName);
             DropCollection(TimeoutsCollectionName);
 
-            var timeoutServiceQueues = messageQueueFactory.GetQueue("test.rebus.stress.timeout");
+            var timeoutServiceQueues = messageQueueFactory.GetQueue("rebus.timeout");
             timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, TimeoutsCollectionName),
                                          timeoutServiceQueues.Item1,
                                          timeoutServiceQueues.Item2);
