@@ -53,8 +53,11 @@ namespace Rebus.Timeout
 
                 if (configuration == null)
                 {
+                    log.Warn("The timeout manager will use the in-memory timeout storage, which is NOT suitable for production use. For production use, you should use a SQL Server (e.g. a locally installed SQL Express).");
+
                     var storage = new InMemoryTimeoutStorage();
                     var timeoutService = new TimeoutService(storage);
+                    
                     return timeoutService;
                 }
 
