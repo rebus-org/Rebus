@@ -74,6 +74,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.NLog", "Rebus.NLog\Re
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Ninject", "Rebus.Ninject\Rebus.Ninject.csproj", "{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.AzureServiceBus", "Rebus.AzureServiceBus\Rebus.AzureServiceBus.csproj", "{761D59D5-5073-4AF0-AFDD-1D255F1EF594}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -244,6 +246,16 @@ Global
 		{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}.Release|x86.ActiveCfg = Release|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Release|Any CPU.Build.0 = Release|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -268,6 +280,7 @@ Global
 		{9FDF3178-567A-4EF1-81C6-5FF42AE103DF} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{5836C347-90FC-4628-B4A1-16926B6CA781} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
+		{761D59D5-5073-4AF0-AFDD-1D255F1EF594} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35
