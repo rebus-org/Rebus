@@ -3,6 +3,8 @@ using System.IO;
 using Rebus.Log4Net;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
+using Rebus.Persistence.SqlServer;
+using Rebus.Timeout.Configuration;
 using Topshelf;
 using log4net.Config;
 
@@ -10,6 +12,14 @@ namespace Rebus.Timeout
 {
     class Program
     {
+        const string DefaultTimeoutsTableName = "RebusTimeoutManager";
+        static ILog log;
+
+        static Program()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         static void Main()
         {
             XmlConfigurator.ConfigureAndWatch(new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log4net.config")));
@@ -28,11 +38,64 @@ namespace Rebus.Timeout
 
                              s.Service<TimeoutService>(c =>
                                                            {
-                                                               c.ConstructUsing(() => new TimeoutService(new InMemoryTimeoutStorage()));
+                                                               c.ConstructUsing(CreateTimeoutService);
                                                                c.WhenStarted(t => t.Start());
                                                                c.WhenStopped(t => t.Stop());
                                                            });
                          });
+        }
+
+        static TimeoutService CreateTimeoutService()
+        {
+            try
+            {
+                var configuration = TimeoutConfigurationSection.GetSection();
+
+                if (configuration == null)
+                {
+                    var storage = new InMemoryTimeoutStorage();
+                    var timeoutService = new TimeoutService(storage);
+                    return timeoutService;
+                }
+
+                EnsureIsSet(configuration.InputQueue);
+                EnsureIsSet(configuration.StorageType);
+
+                switch (configuration.StorageType.ToLowerInvariant())
+                {
+                    case "sql":
+                        log.Info("Using the SQL timeout storage - the default table name '{0}' will be used", DefaultTimeoutsTableName);
+                        return new TimeoutService(new SqlServerTimeoutStorage(configuration.Parameters, DefaultTimeoutsTableName), configuration.InputQueue);
+
+                    default:
+                        throw new ArgumentException(
+                            string.Format("Cannot use the value '{0}' as the storage type... sorry!",
+                                          configuration.StorageType));
+                }
+            }
+            catch(Exception e)
+            {
+                log.Error(e, "An error occurred while attempting to configure the timeout manager");
+                throw;
+            }
+        }
+
+        static void EnsureIsSet(string setting)
+        {
+            if (!string.IsNullOrWhiteSpace(setting)) return;
+
+            throw new ArgumentException(string.Format(@"When you include the TimeoutConfigurationSection, you must specify input queue name, error queue name and a way to store the timeouts.
+
+Take a look at this example configuration snippet
+
+  <configSections>
+    <section name=""timeout"" type=""Rebus.Timeout.Configuration.TimeoutConfigurationSection, Rebus.Timeout""/>
+  </configSections>
+
+  <timeout inputQueue=""rebus.timeout.input"" storageType=""SQL"" parameters=""server=.;initial catalog=RebusTimeoutManager;integrated security=sspi""/>
+
+for inspiration on how it can be done.
+"));
         }
     }
 }

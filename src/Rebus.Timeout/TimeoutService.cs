@@ -23,7 +23,7 @@ namespace Rebus.Timeout
 
         IStoreTimeouts storeTimeouts;
 
-        public const string InputQueueName = "rebus.timeout";
+        public const string DefaultInputQueueName = "rebus.timeout";
 
         IAdvancedBus bus;
         readonly Timer timer = new Timer();
@@ -32,7 +32,13 @@ namespace Rebus.Timeout
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
-            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
+            var msmqMessageQueue = new MsmqMessageQueue(DefaultInputQueueName);
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
+        }
+
+        public TimeoutService(IStoreTimeouts storeTimeouts, string inputQueueName)
+        {
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
             Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
         }
 
@@ -51,11 +57,6 @@ namespace Rebus.Timeout
 
             timer.Interval = 300;
             timer.Elapsed += CheckCallbacks;
-        }
-
-        public string InputQueue
-        {
-            get { return InputQueueName; }
         }
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
