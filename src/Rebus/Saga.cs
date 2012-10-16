@@ -7,7 +7,7 @@ namespace Rebus
     {
         internal ConcurrentDictionary<Type, Correlation> Correlations { get; set; }
         internal bool Complete { get; set; }
-        public bool IsNew { get; internal set; }
+        public bool IsNew { get; set; }
         public abstract void ConfigureHowToFindSaga();
     }
 
