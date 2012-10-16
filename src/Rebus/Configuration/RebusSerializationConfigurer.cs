@@ -22,7 +22,7 @@ namespace Rebus.Configuration
 
         public void Use(ISerializeMessages serializer)
         {
-            backbone.SerializeMessages = serializer;
+            Backbone.SerializeMessages = serializer;
         }
     }
 }
