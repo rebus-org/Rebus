@@ -78,7 +78,7 @@ namespace Rebus.Azure
         {
             if (message.Headers != null && message.Headers.ContainsKey(Headers.TimeToBeReceived))
             {
-                return TimeSpan.Parse(message.Headers[Headers.TimeToBeReceived]);
+                return TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
             }
 
             return null;

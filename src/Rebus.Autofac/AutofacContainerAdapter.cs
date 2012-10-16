@@ -39,6 +39,7 @@ namespace Rebus.Autofac
             var builder = new ContainerBuilder();
             builder.RegisterInstance(bus).As<IBus>();
             builder.RegisterInstance(advancedBus).As<IAdvancedBus>();
+            builder.Register(a => MessageContext.GetCurrent()).InstancePerDependency();
             builder.Update(container);
         }
     }

@@ -5,6 +5,7 @@ namespace Rebus
     /// <summary>
     /// Exception that gets thrown in cases where a race condition is detected for a piece of saga data.
     /// </summary>
+    [Serializable]
     public class OptimisticLockingException : ApplicationException
     {
         public OptimisticLockingException(ISagaData sagaData)

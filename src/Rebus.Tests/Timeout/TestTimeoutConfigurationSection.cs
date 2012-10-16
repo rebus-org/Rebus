@@ -11,14 +11,15 @@ namespace Rebus.Tests.Timeout
     public class TestTimeoutConfigurationSection
     {
         [Test]
-        public void LCanLoadConfigurationSection()
+        public void CanLoadConfigurationSection()
         {
             using (AppConfig.Change(GetPathOf("app.config.01.xml")))
             {
                 var section = TimeoutConfigurationSection.GetSection();
 
                 section.InputQueue.ShouldBe("rebus.timeout.input");
-                section.ErrorQueue.ShouldBe("rebus.timeout.error");
+                section.StorageType.ShouldBe("SQL");
+                section.Parameters.ShouldBe("server=.;initial catalog=RebusTimeoutManager;integrated security=sspi");
             }
         }
 

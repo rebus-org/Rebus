@@ -79,7 +79,7 @@ namespace Rebus.Tests.Configuration
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
             var bus = (IAdvancedBus)configurer.CreateBus();
-            var events = ((RebusEvents) bus.Events);
+            var events = (RebusEvents) bus.Events;
             
             events.RaiseBeforeTransportMessage(null, null);
             events.RaiseBeforeMessage(null, null);
@@ -290,8 +290,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var configurer = Configure.With(adapter)
-                .Transport(t => t.UseMsmq("some_input_queue_name", "some_error_queue"))
-                .DetermineEndpoints(d => d.FromNServiceBusConfiguration());
+                .Transport(t => t.UseMsmq("some_input_queue_name", "some_error_queue"));
 
             configurer.CreateBus();
 
@@ -313,6 +312,29 @@ namespace Rebus.Tests.Configuration
                                 .SetCollectionName<FirstSagaData>("string_sagas")
                                 .SetCollectionName<SecondSagaData>("datetime_sagas"));
 
+        }
+
+        [Test]
+        public void CanConfigureEndpointMapperWithFilter()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var backboneWithoutFilter =
+                (DetermineDestinationFromRebusConfigurationSection)
+                Configure.With(adapter)
+                    .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                    .Backbone.DetermineDestination;
+
+            var backboneWithFilter =
+                (DetermineDestinationFromRebusConfigurationSection)
+                Configure.With(adapter)
+                    .DetermineEndpoints(d => d.FromRebusConfigurationSectionWithFilter(f => f == typeof(SomeType)))
+                    .Backbone.DetermineDestination;
+
+            Assert.DoesNotThrow(() => backboneWithoutFilter.GetEndpointFor(typeof (SomeType)));
+
+            Assert.DoesNotThrow(() => backboneWithFilter.GetEndpointFor(typeof(SomeType)));
+            Assert.Throws<InvalidOperationException>(() => backboneWithFilter.GetEndpointFor(typeof (AnotherType)));
         }
 
         class FirstSagaData: ISagaData

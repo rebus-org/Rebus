@@ -35,7 +35,8 @@ namespace Rebus.Tests.Unit
                                 serializer, 
                                 new SagaDataPersisterForTesting(),
                                 inspectHandlerPipeline, "Just some test worker",
-                                new DeferredMessageHandlerForTesting());
+                                new DeferredMessageHandlerForTesting(),
+                                new IncomingMessageMutatorPipelineForTesting());
         }
 
         protected override void DoTearDown()

@@ -76,19 +76,11 @@ namespace Rebus.Transports.Msmq
             {
                 var section = RebusConfigurationSection.LookItUp();
 
+                section.VerifyPresenceOfInputQueueConfig();
+                section.VerifyPresenceOfErrorQueueConfig();
+
                 var inputQueueName = section.InputQueue;
-
-                if (string.IsNullOrEmpty(inputQueueName))
-                {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
-                } 
-
                 var errorQueueName = section.ErrorQueue;
-
-                if (string.IsNullOrEmpty(errorQueueName))
-                {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
-                } 
 
                 DoIt(configurer, inputQueueName, errorQueueName);
             }

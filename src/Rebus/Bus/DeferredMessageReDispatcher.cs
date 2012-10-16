@@ -1,6 +1,6 @@
 namespace Rebus.Bus
 {
-    class DeferredMessageReDispatcher: IHandleDeferredMessage
+    class DeferredMessageReDispatcher : IHandleDeferredMessage
     {
         readonly IBus bus;
 

@@ -29,7 +29,8 @@ namespace Rebus.Tests.Unit
                                 new JsonMessageSerializer(),
                                 new InMemorySagaPersister(),
                                 new TrivialPipelineInspector(), "Just some test worker",
-                                new DeferredMessageHandlerForTesting());
+                                new DeferredMessageHandlerForTesting(),
+                                new IncomingMessageMutatorPipelineForTesting());
         }
 
         [Test]
@@ -49,7 +50,7 @@ namespace Rebus.Tests.Unit
             // act
             receiveMessages.Deliver(new Message {Messages = new object[] {"woot!"}});
             
-            if (!manualResetEvent.WaitOne(5.Seconds())) Assert.Fail("Message was not delivered within timeout!");
+            if (!manualResetEvent.WaitOne(500.Seconds())) Assert.Fail("Message was not delivered within timeout!");
 
             // assert
             exceptions.Count.ShouldBe(5);

@@ -41,6 +41,7 @@ namespace Rebus.Bus
 
         static int rebusIdCounter;
         readonly int rebusId;
+        readonly string timeoutManagerAddress;
         bool started;
         BusMode busMode;
 
@@ -74,6 +75,14 @@ namespace Rebus.Bus
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
             log.Info("Rebus bus created");
+            
+            timeoutManagerAddress = GetTimeoutManagerAddress();
+        }
+
+        static string GetTimeoutManagerAddress()
+        {
+            return RebusConfigurationSection
+                .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
         }
 
         public IBus Start()
@@ -222,7 +231,7 @@ namespace Rebus.Bus
                                        }
                                };
 
-            InternalSend("rebus.timeout", messages);
+            InternalSend(timeoutManagerAddress, messages);
         }
 
         public void AttachHeader(object message, string key, string value)
@@ -338,7 +347,7 @@ element)"));
 
             messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
 
-            var messageToSend = new Message { Messages = messages.ToArray(), };
+            var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
             var headers = MergeHeaders(messageToSend);
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
@@ -350,6 +359,11 @@ element)"));
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
+        }
+
+        object MutateOutgoing(object msg)
+        {
+            return Events.MessageMutators.Aggregate(msg, (current, mutator) => mutator.MutateOutgoing(current));
         }
 
         internal void InternalSend(string destination, Message messageToSend)
@@ -369,12 +383,12 @@ element)"));
             return new AmbientTransactionContext();
         }
 
-        IDictionary<string, string> MergeHeaders(Message messageToSend)
+        IDictionary<string, object> MergeHeaders(Message messageToSend)
         {
             var transportMessageHeaders = messageToSend.Headers.Clone();
 
             var messages = messageToSend.Messages
-                .Select(m => new Tuple<object, Dictionary<string, string>>(m, headerContext.GetHeadersFor(m)))
+                .Select(m => new Tuple<object, Dictionary<string, object>>(m, headerContext.GetHeadersFor(m)))
                 .ToList();
 
             AssertTimeToBeReceivedIsNotInconsistent(messages);
@@ -391,7 +405,7 @@ element)"));
             return transportMessageHeaders;
         }
 
-        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
@@ -404,7 +418,7 @@ element)"));
             }
         }
 
-        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, string>>> messages)
+        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
             {
@@ -451,6 +465,9 @@ element)"));
 
         public void Dispose()
         {
+            // redundant optimization: just tell all workers to stop at the same time
+            workers.AsParallel().ForAll(w => w.Stop());
+
             SetNumberOfWorkers(0);
 
             var disposables = new object[]
@@ -485,7 +502,8 @@ element)"));
                                         storeSagaData,
                                         inspectHandlerPipeline,
                                         string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
-                                        new DeferredMessageReDispatcher(this));
+                                        new DeferredMessageReDispatcher(this),
+                                        new IncomingMessageMutatorPipeline(Events));
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -522,16 +540,6 @@ element)"));
                     {
                         log.Error(e, "An error occurred while disposing {0}", workerToRemove.WorkerThreadName);
                     }
-
-                    workerToRemove.MessageFailedMaxNumberOfTimes -= HandleMessageFailedMaxNumberOfTimes;
-                    workerToRemove.UserException -= LogUserException;
-                    workerToRemove.SystemException -= LogSystemException;
-                    workerToRemove.BeforeTransportMessage -= RaiseBeforeTransportMessage;
-                    workerToRemove.AfterTransportMessage -= RaiseAfterTransportMessage;
-                    workerToRemove.PoisonMessage -= RaisePosionMessage;
-                    workerToRemove.BeforeMessage -= RaiseBeforeMessage;
-                    workerToRemove.AfterMessage -= RaiseAfterMessage;
-                    workerToRemove.UncorrelatedMessage -= RaiseUncorrelatedMessage;
                 }
             }
         }
@@ -585,8 +593,7 @@ element)"));
 
         internal class HeaderContext
         {
-            internal readonly List<Tuple<WeakReference, Dictionary<string, string>>> Headers = new List<Tuple<WeakReference, Dictionary<string, string>>>();
-
+            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> Headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
             internal readonly System.Timers.Timer CleanupTimer;
 
             public HeaderContext()
@@ -597,18 +604,18 @@ element)"));
 
             public void AttachHeader(object message, string key, string value)
             {
-                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, string>());
+                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, object>());
 
                 headerDictionary.Add(key, value);
             }
 
-            public Dictionary<string, string> GetHeadersFor(object message)
+            public Dictionary<string, object> GetHeadersFor(object message)
             {
-                Dictionary<string, string> temp;
+                Dictionary<string, object> temp;
 
                 var headersForThisMessage = Headers.TryGetValue(message, out temp)
                                                 ? temp
-                                                : new Dictionary<string, string>();
+                                                : new Dictionary<string, object>();
 
                 return headersForThisMessage;
             }

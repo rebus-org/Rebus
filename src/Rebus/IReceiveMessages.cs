@@ -1,5 +1,3 @@
-using Rebus.Transports.Msmq;
-
 namespace Rebus
 {
     /// <summary>

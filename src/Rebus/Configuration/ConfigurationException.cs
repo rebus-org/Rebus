@@ -5,6 +5,7 @@ namespace Rebus.Configuration
     /// <summary>
     /// Exception that should be thrown in the event that a given configuration is somehow invalid.
     /// </summary>
+    [Serializable]
     public class ConfigurationException : ApplicationException
     {
         /// <summary>

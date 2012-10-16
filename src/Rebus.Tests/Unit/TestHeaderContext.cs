@@ -59,7 +59,7 @@ namespace Rebus.Tests.Unit
 
     public static class AssertionExtensions
     {
-        public static void ShouldContainKeyAndValue(this Tuple<WeakReference, Dictionary<string,string>> tuple, string key, string value)
+        public static void ShouldContainKeyAndValue(this Tuple<WeakReference, Dictionary<string, object>> tuple, string key, string value)
         {
             var dictionary = tuple.Item2;
 

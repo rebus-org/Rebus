@@ -1,9 +1,15 @@
 using System;
+using System.Collections.Generic;
 
 namespace Rebus.Bus
 {
     class RebusEvents : IRebusEvents
     {
+        public RebusEvents()
+        {
+            MessageMutators = new List<IMutateMessages>();
+        }
+
         public event MessageSentEventHandler MessageSent = delegate { };
 
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
@@ -17,6 +23,8 @@ namespace Rebus.Bus
         public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
 
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
+
+        public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
         internal void RaiseMessageSent(IAdvancedBus advancedBus, string destination, object message)
         {

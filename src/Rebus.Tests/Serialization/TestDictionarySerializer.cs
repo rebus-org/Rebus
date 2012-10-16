@@ -30,7 +30,7 @@ namespace Rebus.Tests.Serialization
                 toSerialize = e.ToString().Replace(Environment.NewLine, "|");
             }
 
-            var dictionaryWithExceptionMessages = new Dictionary<string, string> {{"exception-message", toSerialize}};
+            var dictionaryWithExceptionMessages = new Dictionary<string, object> {{"exception-message", toSerialize}};
             var str = serializer.Serialize(dictionaryWithExceptionMessages);
 
             Console.WriteLine(@"
@@ -48,7 +48,7 @@ here it is:
         [Test]
         public void CanRoundtripSimpleStuff()
         {
-            var dictionaryWithExceptionMessages = new Dictionary<string, string>
+            var dictionaryWithExceptionMessages = new Dictionary<string, object>
                                                       {
                                                           { "exception-message", "woohoo simple stuff works!" },
                                                           { "exception-message2", "woohoo simple stuff works!" },
@@ -61,7 +61,7 @@ here it is:
         [Test]
         public void SerializedHeadersAreHumanReadable()
         {
-            var dictionary = new Dictionary<string, string>
+            var dictionary = new Dictionary<string, object>
                                  {
                                      {"some-key", "some-value"},
                                      {"another-key", "another-value"},

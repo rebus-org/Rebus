@@ -62,6 +62,8 @@
     <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
     <Compile Include="Bus\IMulticastTransport.cs" />
+    <Compile Include="Bus\IMutateIncomingMessages.cs" />
+    <Compile Include="Bus\IncomingMessageMutatorPipeline.cs" />
     <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
@@ -76,6 +78,7 @@
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IDuplexTransport.cs" />
+    <Compile Include="IMutateMessages.cs" />
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
     <Compile Include="Testing\FakeBus.cs" />
@@ -99,7 +102,7 @@
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />
     <Compile Include="Bus\TimeoutReplyHandler.cs" />
-    <Compile Include="Configuration\DetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\DetermineDestinationFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\FluentRearrangeHandlersPipelineInspectorBuilder.cs" />
     <Compile Include="Configuration\MappingElement.cs" />
     <Compile Include="Configuration\MappingsCollection.cs" />
@@ -146,7 +149,7 @@
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
     <Compile Include="Extensions\EnumerableExt.cs" />
     <Compile Include="SimpleHandlerActivator.cs" />
-    <Compile Include="Time.cs" />
+    <Compile Include="RebusTimeMachine.cs" />
     <Compile Include="Timed.cs" />
     <Compile Include="TimeMachine.cs" />
     <Compile Include="Timeout\IStoreTimeouts.cs" />
@@ -188,6 +191,7 @@
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Messages\SubscriptionMessage.cs" />
     <Compile Include="Messages\Message.cs" />
+    <Compile Include="UnhandledMessageException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -164,7 +164,7 @@ namespace Rebus.Bus
             public TrackedMessage(string id)
             {
                 Id = id;
-                TimeAdded = Time.Now();
+                TimeAdded = RebusTimeMachine.Now();
             }
 
             public string Id { get; private set; }

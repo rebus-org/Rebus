@@ -35,7 +35,7 @@ namespace Rebus.Tests.Serialization.Json
         {
             return new Message
                        {
-                           Headers = new Dictionary<string, string>
+                           Headers = new Dictionary<string, object>
                                          {
                                              {"some-header", "some-value"},
                                          },

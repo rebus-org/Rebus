@@ -42,7 +42,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transportMessageToSend = new TransportMessageToSend
                 {
                     Body = encoding.GetBytes("this is some data"),
-                    Headers = new Dictionary<string, string>
+                    Headers = new Dictionary<string, object>
                         {
                             {"key1", "value1"},
                             {"key2", "value2"},

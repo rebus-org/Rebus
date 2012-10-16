@@ -11,13 +11,14 @@ namespace Rebus.Tests.Timeout
     [TestFixture]
     public class TestTimeoutService : RebusBusMsmqIntegrationTestBase
     {
+        const string TimeoutServiceInputQueueName = "rebus.timeout.test.input";
         TimeoutService timeoutService;
         IBus client;
         HandlerActivatorForTesting handlerActivator;
 
         protected override void DoSetUp()
         {
-            timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
+            timeoutService = new TimeoutService(new InMemoryTimeoutStorage(), TimeoutServiceInputQueueName);
             timeoutService.Start();
 
             handlerActivator = new HandlerActivatorForTesting();
@@ -76,7 +77,7 @@ namespace Rebus.Tests.Timeout
         {
             if (messageType == typeof(TimeoutRequest))
             {
-                return timeoutService.InputQueue;
+                return TimeoutServiceInputQueueName;
             }
 
             return base.GetEndpointFor(messageType);

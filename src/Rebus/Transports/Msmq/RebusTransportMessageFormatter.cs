@@ -5,6 +5,7 @@ using System.Text;
 using Rebus.Serialization;
 using Rebus.Shared;
 using Message = System.Messaging.Message;
+using System.Linq;
 
 namespace Rebus.Transports.Msmq
 {
@@ -57,7 +58,7 @@ namespace Rebus.Transports.Msmq
 
             if (transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived))
             {
-                var timeToBeReceivedStr = transportMessage.Headers[Headers.TimeToBeReceived];
+                var timeToBeReceivedStr = (string)transportMessage.Headers[Headers.TimeToBeReceived];
                 message.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
             }
         }

@@ -10,18 +10,18 @@ namespace Rebus.Tests.Persistence.Sagas
     {
         MessageContext messageContext;
         TFactory factory;
-        protected IStoreSagaData Persister;
+        protected IStoreSagaData persister;
 
         protected override void DoSetUp()
         {
             factory = Activator.CreateInstance<TFactory>();
-            var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, object>
                 {
                     {Headers.ReturnAddress, "none"},
                     {Headers.MessageId, "just_some_message_id"},
                 };
             messageContext = MessageContext.Enter(headers);
-            Persister = factory.CreatePersister();
+            persister = factory.CreatePersister();
         }
 
         protected override void DoTearDown()

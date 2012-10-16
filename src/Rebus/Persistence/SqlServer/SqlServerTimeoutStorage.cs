@@ -86,7 +86,7 @@ namespace Rebus.Persistence.SqlServer
                             @"select time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
                             timeoutsTableName);
 
-                    command.Parameters.AddWithValue("current_time", Time.Now());
+                    command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
 
                     using (var reader = command.ExecuteReader())
                     {

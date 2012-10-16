@@ -12,13 +12,13 @@ namespace Rebus.Messages
     {
         public Message()
         {
-            Headers = new Dictionary<string, string>();
+            Headers = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// Headers of this message. May include metadata like e.g. the address of the sender.
         /// </summary>
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, object> Headers { get; set; }
 
         /// <summary>
         /// Collection of logical messages that are contained within this transport message.
@@ -26,15 +26,18 @@ namespace Rebus.Messages
         public object[] Messages { get; set; }
 
         /// <summary>
-        /// Gets the header with the specified key or null if the given key is not present.
-        /// Lookup names of pre-defined keys via <see cref="Headers"/>.
+        /// Gets the string header with the specified key or null if the given key is not present
+        /// or is not a string, Lookup names of pre-defined keys via <see cref="Headers"/>.
         /// </summary>
         public string GetHeader(string key)
         {
             if (!Headers.ContainsKey(key))
                 return null;
+
+            if (!(Headers[key] is string))
+                return null;
             
-            return Headers[key];
+            return (string)Headers[key];
         }
 
         /// <summary>

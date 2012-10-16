@@ -38,7 +38,7 @@ namespace Rebus.MongoDb
             var gotResult = true;
             do
             {
-                var result = collection.FindAndRemove(Query.LTE("time", Time.Now()), SortBy.Ascending("time"));
+                var result = collection.FindAndRemove(Query.LTE("time", RebusTimeMachine.Now()), SortBy.Ascending("time"));
 
                 if (result != null && result.ModifiedDocument != null)
                 {

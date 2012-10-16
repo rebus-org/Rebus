@@ -6,7 +6,7 @@ namespace Rebus.Extensions
     {
          public static TimeSpan ElapsedUntilNow(this DateTime dateTime)
          {
-             return Time.Now() - dateTime;
+             return RebusTimeMachine.Now() - dateTime;
          }
     }
 }

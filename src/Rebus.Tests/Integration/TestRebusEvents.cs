@@ -23,7 +23,7 @@ namespace Rebus.Tests.Integration
             var senderEvents = new List<string>();
             var receiverEvents = new List<string>();
             const string receiverInputQueueName = "test.events.receiver";
-            var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting());
+            var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting().Handle<string>(s => {}));
             receiver.Events.BeforeMessage += (b, m) => receiverEvents.Add("received: " + m);
             receiver.Start();
 

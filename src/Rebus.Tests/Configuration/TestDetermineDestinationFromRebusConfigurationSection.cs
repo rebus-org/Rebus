@@ -7,15 +7,15 @@ using Shouldly;
 namespace Rebus.Tests.Configuration
 {
     [TestFixture]
-    public class TestDetermineDestinationFromConfigurationSection : FixtureBase
+    public class TestDetermineDestinationFromRebusConfigurationSection : FixtureBase
     {
-        DetermineDestinationFromConfigurationSection service;
+        DetermineDestinationFromRebusConfigurationSection service;
 
         [Test]
         public void CanDetermineSomeRandomMapping()
         {
             // arrange
-            service = new DetermineDestinationFromConfigurationSection();
+            service = new DetermineDestinationFromRebusConfigurationSection();
 
             // act
             var endpointForSomeMessageType = service.GetEndpointFor(typeof(SomeMessageType));
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Configuration
         public void ThrowsWhenMappingCannotBeFound()
         {
             // arrange
-            service = new DetermineDestinationFromConfigurationSection();
+            service = new DetermineDestinationFromRebusConfigurationSection();
 
             // act
             // assert

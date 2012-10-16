@@ -27,7 +27,7 @@ namespace Rebus.Tests.Unit
         {
             //Arrange
             const string messageId = "testId";
-            var fakeTime = Time.Now();
+            var fakeTime = RebusTimeMachine.Now();
             TimeMachine.FixTo(fakeTime);
 
             //Act
@@ -51,7 +51,7 @@ namespace Rebus.Tests.Unit
             //Arrange
             const string messageId = "testId";
             const string messageId2 = "testId2";
-            var fakeTime = Time.Now();
+            var fakeTime = RebusTimeMachine.Now();
             TimeMachine.FixTo(fakeTime);
 
             //Act
@@ -80,10 +80,10 @@ namespace Rebus.Tests.Unit
 
             //Act
             TimeMachine.FixTo(fakeTime);
-            errorTracker.TrackDeliveryFail(messageId, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
+            errorTracker.TrackDeliveryFail(messageId, new Exception(string.Format("This exception occurred at {0}", RebusTimeMachine.Now())));
 
             TimeMachine.FixTo(fakeTime + TimeSpan.FromMinutes(10));
-            errorTracker.TrackDeliveryFail(messageId2, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
+            errorTracker.TrackDeliveryFail(messageId2, new Exception(string.Format("This exception occurred at {0}", RebusTimeMachine.Now())));
 
             TimeMachine.FixTo(fakeTime + TimeSpan.FromDays(1) + TimeSpan.FromMinutes(5));
             errorTracker.CheckForMessageTimeout();

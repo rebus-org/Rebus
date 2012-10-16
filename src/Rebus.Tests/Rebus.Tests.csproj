@@ -127,9 +127,9 @@
     <Reference Include="PowerCollections">
       <HintPath>..\packages\RavenDB.Database.1.2.2081-Unstable\lib\net40\PowerCollections.dll</HintPath>
     </Reference>
-    <Reference Include="RabbitMQ.Client, Version=2.8.4.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
+    <Reference Include="RabbitMQ.Client, Version=2.8.7.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\RabbitMQ.Client.2.8.4\lib\net30\RabbitMQ.Client.dll</HintPath>
+      <HintPath>..\packages\RabbitMQ.Client.2.8.7\lib\net30\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Abstractions, Version=1.2.0.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -196,7 +196,7 @@
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
-    <Compile Include="Configuration\TestDetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\TestDetermineDestinationFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
@@ -208,6 +208,7 @@
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
@@ -220,12 +221,14 @@
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
+    <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
     <Compile Include="Integration\Factories\IBusFactory.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
+    <Compile Include="Integration\TestMessageMutation.cs" />
     <Compile Include="Integration\TestOneWayClientMode.cs" />
     <Compile Include="Integration\TestPipelineOps.cs" />
     <Compile Include="Integration\TestRebusEvents.cs" />
@@ -343,6 +346,10 @@
     <ProjectReference Include="..\Rebus.Autofac\Rebus.Autofac.csproj">
       <Project>{539812E2-0F65-49ED-8F26-1736CF6CBFDA}</Project>
       <Name>Rebus.Autofac</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.AzureServiceBus\Rebus.AzureServiceBus.csproj">
+      <Project>{761d59d5-5073-4af0-afdd-1d255f1ef594}</Project>
+      <Name>Rebus.AzureServiceBus</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Azure\Rebus.Azure.csproj">
       <Project>{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A}</Project>

@@ -10,19 +10,22 @@ namespace Rebus.Configuration
     /// <summary>
     /// Configures endpoint mappings from a <see cref="RebusConfigurationSection"/> configuration section.
     /// </summary>
-    public class DetermineDestinationFromConfigurationSection : IDetermineDestination
+    public class DetermineDestinationFromRebusConfigurationSection : IDetermineDestination
     {
         static ILog log;
+        readonly Func<Type, bool> typeFilter;
 
-        static DetermineDestinationFromConfigurationSection()
+        static DetermineDestinationFromRebusConfigurationSection()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 
-        public DetermineDestinationFromConfigurationSection()
+        public DetermineDestinationFromRebusConfigurationSection(Func<Type, bool> typeFilter)
         {
+            this.typeFilter = typeFilter;
+
             try
             {
                 var section = RebusConfigurationSection.LookItUp();
@@ -66,6 +69,11 @@ Note also, that specifying the input queue name with the 'inputQueue' attribute 
 ",
                     e, RebusConfigurationSection.ExampleSnippetForErrorMessages);
             }
+        }
+
+        public DetermineDestinationFromRebusConfigurationSection()
+            : this(t => true)
+        {
         }
 
         void PopulateMappings(RebusConfigurationSection configurationSection)
@@ -139,6 +147,8 @@ For this to work, Rebus needs access to an assembly with one of the following fi
 
         void Map(Type messageType, string endpoint)
         {
+            if (!typeFilter(messageType)) return;
+
             log.Info("    {0} -> {1}", messageType, endpoint);
             
             if (endpointMappings.ContainsKey(messageType))

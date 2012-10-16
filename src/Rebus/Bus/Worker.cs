@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
+using System.Linq;
 
 namespace Rebus.Bus
 {
@@ -29,6 +30,7 @@ namespace Rebus.Bus
         readonly IErrorTracker errorTracker;
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
+        readonly IMutateIncomingMessages mutateIncomingMessages;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -40,7 +42,7 @@ namespace Rebus.Bus
 
         internal event Action<Exception, object> AfterMessage = delegate { };
 
-        internal event Action<object, Saga> UncorrelatedMessage = delegate { }; 
+        internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -53,10 +55,12 @@ namespace Rebus.Bus
             IStoreSagaData storeSagaData,
             IInspectHandlerPipeline inspectHandlerPipeline,
             string workerThreadName,
-            IHandleDeferredMessage handleDeferredMessage)
+            IHandleDeferredMessage handleDeferredMessage,
+            IMutateIncomingMessages mutateIncomingMessages)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
+            this.mutateIncomingMessages = mutateIncomingMessages;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -102,6 +106,8 @@ namespace Rebus.Bus
 
         public void Stop()
         {
+            if (shouldExit) return;
+
             log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;
@@ -150,6 +156,10 @@ namespace Rebus.Bus
                     {
                         UserException(this, e.InnerException.InnerException);
                     }
+                    else if (e is TargetInvocationException)
+                    {
+                        UserException(this, e.InnerException);
+                    }
                     else
                     {
                         SystemException(this, e);
@@ -158,16 +168,22 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// OK - here's how stuff is nested:
+        /// 
+        /// - Message queue transaction (TxBomkarl)
+        ///     - Before/After transport message
+        ///         - TransactionScope
+        ///             - Before/After logical message
+        ///                 Dispatch logical message
+        /// </summary>
         void TryProcessIncomingMessage()
         {
             using (var context = new TxBomkarl())
             {
                 try
                 {
-                    using (var transactionScope = BeginTransaction())
-                    {
-                        DoTry(transactionScope);
-                    }
+                    DoTry();
                     context.RaiseDoCommit();
                 }
                 catch
@@ -178,7 +194,7 @@ namespace Rebus.Bus
             }
         }
 
-        void DoTry(TransactionScope transactionScope)
+        void DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
@@ -195,38 +211,27 @@ namespace Rebus.Bus
 
             if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
             {
-                log.Error("Handling message {0} has failed the maximum number of times", id);
-                var errorText = errorTracker.GetErrorText(id);
-                var poisonMessageInfo = errorTracker.GetPoisonMessageInfo(id);
-
-                MessageFailedMaxNumberOfTimes(transportMessage, errorText);
+                HandlePoisonMessage(id, transportMessage);
                 errorTracker.StopTracking(id);
-
-                try
-                {
-                    PoisonMessage(transportMessage, poisonMessageInfo);
-                }
-                catch (Exception exceptionWhileRaisingEvent)
-                {
-                    log.Error("An exception occurred while raising the PoisonMessage event: {0}",
-                              exceptionWhileRaisingEvent);
-                }
+                return;
             }
-            else
+
+            Exception transportMessageExceptionOrNull = null;
+            try
             {
-                try
+                BeforeTransportMessage(transportMessage);
+
+                using (var scope = BeginTransaction())
                 {
-                    BeforeTransportMessage(transportMessage);
-
                     var message = serializeMessages.Deserialize(transportMessage);
-
                     // successfully deserialized the transport message, let's enter a message context
                     context = MessageContext.Enter(message.Headers);
 
-                    foreach (var logicalMessage in message.Messages)
+                    foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                     {
                         context.SetLogicalMessage(logicalMessage);
 
+                        Exception logicalMessageExceptionOrNull = null;
                         try
                         {
                             BeforeMessage(logicalMessage);
@@ -235,54 +240,101 @@ namespace Rebus.Bus
 
                             log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] {logicalMessage});
-
-                            AfterMessage(null, logicalMessage);
+                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
                         }
                         catch (Exception exception)
                         {
-                            try
-                            {
-                                AfterMessage(exception, logicalMessage);
-                            }
-                            catch (Exception exceptionWhileRaisingEvent)
-                            {
-                                log.Error(
-                                    "An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
-                                    exception, exceptionWhileRaisingEvent);
-                            }
+                            logicalMessageExceptionOrNull = exception;
                             throw;
                         }
                         finally
                         {
+                            try
+                            {
+                                AfterMessage(logicalMessageExceptionOrNull, logicalMessage);
+                            }
+                            catch (Exception exceptionWhileRaisingEvent)
+                            {
+                                if (logicalMessageExceptionOrNull != null)
+                                {
+                                    log.Error(
+                                        "An exception occurred while raising the AfterMessage event, and an exception occurred some" +
+                                        " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                                        " AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                        logicalMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                                }
+                                else
+                                {
+                                    log.Error("An exception occurred while raising the AfterMessage event: {0}",
+                                              exceptionWhileRaisingEvent);
+                                }
+                            }
+
                             context.ClearLogicalMessage();
                         }
                     }
 
-                    AfterTransportMessage(null, transportMessage);
-                }
-                catch (Exception exception)
-                {
-                    log.Debug("Handling message {0} ({1}) has failed", label, id);
-                    try
-                    {
-                        AfterTransportMessage(exception, transportMessage);
-                    }
-                    catch (Exception exceptionWhileRaisingEvent)
-                    {
-                        log.Error(
-                            "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
-                            exception, exceptionWhileRaisingEvent);
-                    }
-                    errorTracker.TrackDeliveryFail(id, exception);
-                    if (context != null) context.Dispose(); //< dispose it if we entered
-                    throw;
+                    scope.Complete();
                 }
             }
+            catch (Exception exception)
+            {
+                transportMessageExceptionOrNull = exception;
+                log.Debug("Handling message {0} ({1}) has failed", label, id);
+                errorTracker.TrackDeliveryFail(id, exception);
+                throw;
+            }
+            finally
+            {
+                try
+                {
+                    AfterTransportMessage(transportMessageExceptionOrNull, transportMessage);
+                }
+                catch (Exception exceptionWhileRaisingEvent)
+                {
+                    if (transportMessageExceptionOrNull != null)
+                    {
+                        log.Error(
+                            "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some" +
+                            " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                            " AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
+                            transportMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                    }
+                    else
+                    {
+                        log.Error("An exception occurred while raising the AfterTransportMessage event: {0}", exceptionWhileRaisingEvent);
+                    }
+                }
 
-            transactionScope.Complete();
-            if (context != null) context.Dispose(); //< dispose it if we entered
+                if (context != null) context.Dispose(); //< dispose it if we entered
+            }
+
             errorTracker.StopTracking(id);
+        }
+
+        object MutateIncoming(object message)
+        {
+            return mutateIncomingMessages.MutateIncoming(message);
+        }
+
+        void HandlePoisonMessage(string id, ReceivedTransportMessage transportMessage)
+        {
+            log.Error("Handling message {0} has failed the maximum number of times", id);
+            var errorText = errorTracker.GetErrorText(id);
+            var poisonMessageInfo = errorTracker.GetPoisonMessageInfo(id);
+
+            MessageFailedMaxNumberOfTimes(transportMessage, errorText);
+            errorTracker.StopTracking(id);
+
+            try
+            {
+                PoisonMessage(transportMessage, poisonMessageInfo);
+            }
+            catch (Exception exceptionWhileRaisingEvent)
+            {
+                log.Error("An exception occurred while raising the PoisonMessage event: {0}",
+                          exceptionWhileRaisingEvent);
+            }
         }
 
         TransactionScope BeginTransaction()

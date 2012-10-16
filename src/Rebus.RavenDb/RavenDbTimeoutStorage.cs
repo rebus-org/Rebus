@@ -38,7 +38,7 @@ namespace Rebus.RavenDb
             {
                 var dueTimeouts = session.Query<RavenTimeout>()
                     .Customize(x => x.WaitForNonStaleResultsAsOfLastWrite())
-                    .Where(x => x.Time <= Time.Now()).OrderBy(x => x.Time)
+                    .Where(x => x.Time <= RebusTimeMachine.Now()).OrderBy(x => x.Time)
                     .ToList();
 
                 foreach (var timeout in dueTimeouts)
