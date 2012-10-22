@@ -24,6 +24,27 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public void ThrowsWhenSubscribing()
+        {
+            // arrange
+            using (var builtinContainerAdapter = new BuiltinContainerAdapter())
+            {
+                var bus = Configure.With(builtinContainerAdapter)
+                    .Transport(t => t.UseMsmqInOneWayClientMode())
+                    .DetermineEndpoints(d => d.Use(this))
+                    .CreateBus()
+                    .Start();
+
+
+                // act
+                var exception = Assert.Throws<InvalidOperationException>(bus.Subscribe<string>);
+
+                // assert
+                exception.Message.ShouldContain("one-way client mode");
+            }
+        }
+
+        [Test]
         public void ThrowsWhenDoingSendLocal()
         {
             // arrange
