@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Testing;
-using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 using Shouldly;
 

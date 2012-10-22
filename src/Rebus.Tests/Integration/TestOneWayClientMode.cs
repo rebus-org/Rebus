@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Tests.Configuration;
 using Rebus.Transports.Msmq;
+using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
@@ -20,6 +21,27 @@ namespace Rebus.Tests.Integration
             }
 
             return base.GetEndpointFor(messageType);
+        }
+
+        [Test]
+        public void ThrowsWhenDoingSendLocal()
+        {
+            // arrange
+            using (var builtinContainerAdapter = new BuiltinContainerAdapter())
+            {
+                var bus = Configure.With(builtinContainerAdapter)
+                    .Transport(t => t.UseMsmqInOneWayClientMode())
+                    .DetermineEndpoints(d => d.Use(this))
+                    .CreateBus()
+                    .Start();
+
+
+                // act
+                var exception = Assert.Throws<InvalidOperationException>(() => bus.SendLocal("w00t this should throw!!!"));
+
+                // assert
+                exception.Message.ShouldContain("one-way client mode");
+            }
         }
 
         [Test]
@@ -70,7 +92,7 @@ namespace Rebus.Tests.Integration
 
             EnsureProperDisposal(bus);
 
-            var advancedBus = (IAdvancedBus) bus;
+            var advancedBus = (IAdvancedBus)bus;
 
             advancedBus.Routing.Send(receiverQueueName, "w00t!!!!!!!!!!!1");
 
