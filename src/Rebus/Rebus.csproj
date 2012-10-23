@@ -160,6 +160,7 @@
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
+    <Compile Include="Transports\OneWayClientGag.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />

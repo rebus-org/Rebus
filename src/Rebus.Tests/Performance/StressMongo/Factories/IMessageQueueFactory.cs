@@ -1,4 +1,5 @@
 using System;
+using Rebus.Configuration;
 
 namespace Rebus.Tests.Performance.StressMongo.Factories
 {
@@ -6,5 +7,6 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
     {
         Tuple<ISendMessages, IReceiveMessages> GetQueue(string inputQueueName);
         void CleanUp();
+        void ConfigureOneWayClientMode(RebusTransportConfigurer configurer);
     }
 }

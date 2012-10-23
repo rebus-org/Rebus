@@ -8,7 +8,7 @@ using Rebus.Messages;
 using System.Linq;
 using Rebus.Shared;
 using Rebus.Extensions;
-using Rebus.Transports.Msmq;
+using Rebus.Transports;
 
 namespace Rebus.Bus
 {
@@ -275,9 +275,9 @@ namespace Rebus.Bus
 Not that it actually matters, I mean we _could_ just ignore subsequent calls to Start() if we wanted to - but if you're calling Start() multiple times it's most likely a sign that something is wrong, i.e. you might be running you app initialization code more than once, etc."));
             }
 
-            if (receiveMessages is MsmqConfigurationExtension.OneWayClientGag)
+            if (receiveMessages is OneWayClientGag)
             {
-                log.Info("Bus will be started in the experimental one-way client mode");
+                log.Info("Rebus {0} will be started in one-way client mode", rebusId);
                 numberOfWorkers = 0;
                 busMode = BusMode.OneWayClientMode;
             }

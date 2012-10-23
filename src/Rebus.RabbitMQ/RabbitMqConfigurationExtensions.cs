@@ -1,12 +1,23 @@
 ﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Transports;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.RabbitMQ
 {
     public static class RabbitMqConfigurationExtensions
     {
+        public static void UseRabbitMqInOneWayClientMode(this RebusTransportConfigurer configurer, string connectionString)
+        {
+            var messageQueue = RabbitMqMessageQueue.Sender(connectionString);
+            configurer.UseSender(messageQueue);
+            
+            var gag = new OneWayClientGag();
+            configurer.UseReceiver(gag);
+            configurer.UseErrorTracker(gag);
+        }
+        
         /// <summary>
         /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
         /// and will use the supplied queue names. An exchange called "Rebus" will automatically be created, which will be used to send all messages.

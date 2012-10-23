@@ -5,6 +5,7 @@ using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Logging;
+using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
 
 namespace Rebus.Tests.Integration
@@ -15,6 +16,21 @@ namespace Rebus.Tests.Integration
         protected override void DoSetUp()
         {
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
+        }
+
+        [Test]
+        public void DoesntActuallyConnectWhenCreatingTheFactory()
+        {
+            using(var connectionManager = new ConnectionManager("amqp://would_throw_if_it_connected_immediately,amqp://would_also_throw_if_it_connected_immediately"))
+            {
+                // arrange
+
+                // act
+
+                //var connection = connectionManager.GetConnection();
+
+                // assert
+            }
         }
 
         [TestCase(1, 1)]
@@ -63,7 +79,7 @@ namespace Rebus.Tests.Integration
             receiver.Start(numberOfWorkers);
 
             var accountForLatency = TimeSpan.FromSeconds(10);
-            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.01) + accountForLatency))
+            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.02) + accountForLatency))
             {
                 Assert.Fail("Didn't receive all messages within timeout - only {0} messages were received", receivedMessages.Count);
             }
