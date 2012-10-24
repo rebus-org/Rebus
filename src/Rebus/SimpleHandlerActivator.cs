@@ -7,7 +7,7 @@ namespace Rebus
 {
     /// <summary>
     /// Very simple implementation of the handler activator that allows a bunch of types to be manually registered,
-    /// either with their type or with a factory method.
+    /// either with their type or with a factoryMethod method.
     /// </summary>
     public class SimpleHandlerActivator : IActivateHandlers
     {
@@ -25,7 +25,7 @@ namespace Rebus
         }
 
         /// <summary>
-        /// Registers a factory method that is capable of creating a handler instance.
+        /// Registers a factoryMethod method that is capable of creating a handler instance.
         /// </summary>
         public SimpleHandlerActivator Register<THandler>(Func<THandler> handlerFactory)
         {
@@ -44,7 +44,7 @@ namespace Rebus
             return this;
         }
 
-        void InnerRegister(Type handlerType, Func<object> factory)
+        void InnerRegister(Type handlerType, Func<object> factoryMethod)
         {
             var handlerInterfaces = handlerType.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>));
@@ -54,7 +54,7 @@ namespace Rebus
                 if (!activators.ContainsKey(handlerInterface))
                     activators[handlerInterface] = new List<Func<object>>();
 
-                activators[handlerInterface].Add(factory);
+                activators[handlerInterface].Add(factoryMethod);
             }
         }
 
@@ -70,6 +70,12 @@ namespace Rebus
 
         public void Release(IEnumerable handlerInstances)
         {
+            foreach (var instance in handlerInstances)
+            {
+                if (!(instance is IDisposable)) continue;
+
+                ((IDisposable) instance).Dispose();
+            }
         }
 
         class HandlerMethodWrapper<T> : IHandleMessages<T>

@@ -8,16 +8,26 @@ namespace Rebus.RabbitMQ
 {
     public static class RabbitMqConfigurationExtensions
     {
-        public static void UseRabbitMqInOneWayClientMode(this RebusTransportConfigurer configurer, string connectionString)
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as a send-only transport - i.e. the bus will only be able to send messages, and if RabbitMQ manages
+        /// subscriptions it will be able to publish as well. Will connect to the Rabbit server specified by the supplied connection string. An 
+        /// exchange called "Rebus" will automatically be created, which will be used to send all messages.
+        /// </summary>
+        public static RabbitMqOptions UseRabbitMqInOneWayMode(this RebusTransportConfigurer configurer, string connectionString)
         {
-            var messageQueue = RabbitMqMessageQueue.Sender(connectionString);
-            configurer.UseSender(messageQueue);
-            
-            var gag = new OneWayClientGag();
-            configurer.UseReceiver(gag);
-            configurer.UseErrorTracker(gag);
+            return DoItOneWay(configurer, connectionString, true);
         }
-        
+
+        /// <summary>
+        /// Configures the bus to use RabbitMQ as a send-only transport - i.e. the bus will only be able to send messages, and if RabbitMQ manages
+        /// subscriptions it will be able to publish as well. Will connect to the Rabbit server specified by the supplied connection string. This 
+        /// configuration assumes that an exchange already exists named "Rebus", which will be used to send all messages.
+        /// </summary>
+        public static RabbitMqOptions UseRabbitMqInOneWayModeWithExistingExchange(this RebusTransportConfigurer configurer, string connectionString)
+        {
+            return DoItOneWay(configurer, connectionString, false);
+        }
+
         /// <summary>
         /// Configures the bus to use RabbitMQ as the transport. Will connect to the Rabbit server specified by the supplied connection string,
         /// and will use the supplied queue names. An exchange called "Rebus" will automatically be created, which will be used to send all messages.
@@ -54,6 +64,18 @@ namespace Rebus.RabbitMQ
         public static RabbitMqOptions UseRabbitMqWithExistingExchangeAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
         {
             return DoItWithAppConfig(configurer, connectionString, false);
+        }
+
+        static RabbitMqOptions DoItOneWay(RebusTransportConfigurer configurer, string connectionString, bool ensureExchangeIsDeclared)
+        {
+            var messageQueue = RabbitMqMessageQueue.Sender(connectionString, ensureExchangeIsDeclared);
+            configurer.UseSender(messageQueue);
+
+            var gag = new OneWayClientGag();
+            configurer.UseReceiver(gag);
+            configurer.UseErrorTracker(gag);
+
+            return new RabbitMqOptions(messageQueue, configurer);
         }
 
         static RabbitMqOptions DoItWithAppConfig(RebusTransportConfigurer configurer, string connectionString, bool ensureExchangeIsDeclared)

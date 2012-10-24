@@ -27,7 +27,7 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
 
         public void ConfigureOneWayClientMode(RebusTransportConfigurer configurer)
         {
-            configurer.UseRabbitMqInOneWayClientMode(RabbitMqFixtureBase.ConnectionString);
+            configurer.UseRabbitMqInOneWayMode(RabbitMqFixtureBase.ConnectionString);
         }
     }
 }

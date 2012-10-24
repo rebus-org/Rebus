@@ -34,7 +34,8 @@ namespace Rebus.RabbitMQ
         readonly bool ensureExchangeIsDeclared;
         readonly ConnectionManager connectionManager;
 
-        bool disposed;
+        readonly object disposalLock = new object();
+        volatile bool disposed;
 
         [ThreadStatic]
         static IModel threadBoundModel;
@@ -42,9 +43,9 @@ namespace Rebus.RabbitMQ
         [ThreadStatic]
         static Subscription threadBoundSubscription;
 
-        public static ISendMessages Sender(string connectionString)
+        public static RabbitMqMessageQueue Sender(string connectionString, bool ensureExchangeIsDeclared)
         {
-            return new RabbitMqMessageQueue(connectionString, null);
+            return new RabbitMqMessageQueue(connectionString, null, ensureExchangeIsDeclared);
         }
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName, bool ensureExchangeIsDeclared = true)
@@ -170,20 +171,25 @@ namespace Rebus.RabbitMQ
         {
             if (disposed) return;
 
-            log.Info("Disposing queue {0}", inputQueueName);
+            lock (disposalLock)
+            {
+                if (disposed) return;
 
-            try
-            {
-                connectionManager.Dispose();
-            }
-            catch (Exception e)
-            {
-                log.Error("An error occurred while disposing queue {0}: {1}", inputQueueName, e);
-                throw;
-            }
-            finally
-            {
-                disposed = true;
+                log.Info("Disposing queue {0}", inputQueueName);
+
+                try
+                {
+                    connectionManager.Dispose();
+                }
+                catch (Exception e)
+                {
+                    log.Error("An error occurred while disposing queue {0}: {1}", inputQueueName, e);
+                    throw;
+                }
+                finally
+                {
+                    disposed = true;
+                }
             }
         }
 
