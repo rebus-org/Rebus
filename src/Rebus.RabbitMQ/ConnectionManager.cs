@@ -56,7 +56,7 @@ namespace Rebus.RabbitMQ
 
         public void ErrorOnConnection()
         {
-            log.Warn("{0}. connection failed! Will dipose it and wait a short while...");
+            log.Warn("{0}. connection failed! Will dipose it and wait a short while...", currentConnectionIndex);
             try
             {
                 if (currentConnection != null)

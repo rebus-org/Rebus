@@ -138,7 +138,7 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(message.GetType().FullName, new List<object> { message });
+                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
                 return;
             }
 

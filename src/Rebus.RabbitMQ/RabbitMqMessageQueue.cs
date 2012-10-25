@@ -43,6 +43,8 @@ namespace Rebus.RabbitMQ
         [ThreadStatic]
         static Subscription threadBoundSubscription;
 
+        readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
+
         public static RabbitMqMessageQueue Sender(string connectionString, bool ensureExchangeIsDeclared)
         {
             return new RabbitMqMessageQueue(connectionString, null, ensureExchangeIsDeclared);
@@ -146,6 +148,12 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        public RabbitMqMessageQueue AddEventNameResolver(Func<Type, string> resolver)
+        {
+            eventNameResolvers.Add(resolver);
+            return this;
+        }
+
         IModel GetSenderModel(ITransactionContext context)
         {
             if (context[CurrentModelKey] != null)
@@ -220,7 +228,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    var topic = messageType.FullName;
+                    var topic = GetEventName(messageType);
                     log.Info("Subscribing {0} to {1}", inputQueueAddress, topic);
                     model.QueueBind(inputQueueAddress, ExchangeName, topic);
                 }
@@ -238,7 +246,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    var topic = messageType.FullName;
+                    var topic = GetEventName(messageType);
                     log.Info("Unsubscribing {0} from {1}", inputQueueAddress, topic);
                     model.QueueUnbind(inputQueueAddress, ExchangeName, topic, new Hashtable());
                 }
@@ -248,6 +256,19 @@ namespace Rebus.RabbitMQ
                 ErrorOnConnection(e);
                 throw;
             }
+        }
+
+        public string GetEventName(Type messageType)
+        {
+            foreach (var tryResolve in eventNameResolvers)
+            {
+                var eventName = tryResolve(messageType);
+                
+                if (eventName != null)
+                    return eventName;
+            }
+
+            return messageType.FullName;
         }
 
         public void ManageSubscriptions()
