@@ -255,7 +255,9 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var configurer = Configure.With(adapter)
-                .Serialization(s => s.UseJsonSerializer());
+                .Serialization(s => s.UseJsonSerializer()
+                                        .AddNameResolver(t => null)
+                                        .AddTypeResolver(d => null));
 
             configurer.Backbone.SerializeMessages.ShouldBeTypeOf<JsonMessageSerializer>();
         }
