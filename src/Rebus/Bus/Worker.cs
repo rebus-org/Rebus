@@ -209,6 +209,12 @@ namespace Rebus.Bus
 
             MessageContext context = null;
 
+            if (id == null)
+            {
+                HandlePoisonMessage(id, transportMessage);
+                return;
+            }
+
             if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
             {
                 HandlePoisonMessage(id, transportMessage);
