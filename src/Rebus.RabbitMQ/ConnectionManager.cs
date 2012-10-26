@@ -80,16 +80,9 @@ namespace Rebus.RabbitMQ
 
         public void Dispose()
         {
-            try
+            if (currentConnection != null)
             {
-                if (currentConnection != null)
-                {
-                    currentConnection.Dispose();
-                }
-            }
-            catch (Exception e)
-            {
-                log.Error(e, "Error while disposing connection!");
+                currentConnection.Dispose();
             }
         }
     }
