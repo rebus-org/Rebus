@@ -314,6 +314,7 @@
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestHeaderContext.cs" />
     <Compile Include="Unit\TestErrorTracker.cs" />
+    <Compile Include="Unit\TestMessage.cs" />
     <Compile Include="Unit\TestMessageForwarding.cs">
       <SubType>Code</SubType>
     </Compile>
