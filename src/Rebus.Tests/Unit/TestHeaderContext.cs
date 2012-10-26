@@ -30,9 +30,9 @@ namespace Rebus.Tests.Unit
             c.AttachHeader(secondObject, "second-header", "first-value");
 
             // assert
-            c.Headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header1", "first-value");
-            c.Headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header2", "first-value");
-            c.Headers.Single(s => s.Item1.Target == secondObject).ShouldContainKeyAndValue("second-header", "first-value");
+            c.headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header1", "first-value");
+            c.headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header2", "first-value");
+            c.headers.Single(s => s.Item1.Target == secondObject).ShouldContainKeyAndValue("second-header", "first-value");
         }
 
         [Test]
@@ -44,7 +44,7 @@ namespace Rebus.Tests.Unit
             c.AttachHeader(someObject, "header2", "value2");
 
             // just check that the dictionary is there
-            c.Headers.Count.ShouldBe(1);
+            c.headers.Count.ShouldBe(1);
 
             // act
             someObject = null;
@@ -53,7 +53,7 @@ namespace Rebus.Tests.Unit
             c.Tick();
 
             // assert
-            c.Headers.Count.ShouldBe(0);
+            c.headers.Count.ShouldBe(0);
         }
     }
 

@@ -75,7 +75,7 @@ namespace Rebus.Bus
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
             log.Info("Rebus bus created");
-            
+
             timeoutManagerAddress = GetTimeoutManagerAddress();
         }
 
@@ -377,9 +377,9 @@ element)"));
         ITransactionContext GetTransactionContext()
         {
             if (TransactionContext.Current != null) return TransactionContext.Current;
-         
+
             if (Transaction.Current == null) return new NoTransaction();
-            
+
             return new AmbientTransactionContext();
         }
 
@@ -593,27 +593,41 @@ element)"));
 
         internal class HeaderContext
         {
-            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> Headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
-            internal readonly System.Timers.Timer CleanupTimer;
+            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
+            internal readonly System.Timers.Timer cleanupTimer;
 
             public HeaderContext()
             {
-                CleanupTimer = new System.Timers.Timer { Interval = 1000 };
-                CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
+                cleanupTimer = new System.Timers.Timer { Interval = 1000 };
+                cleanupTimer.Elapsed += (o, ea) => headers.RemoveDeadReferences();
             }
 
             public void AttachHeader(object message, string key, string value)
             {
-                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, object>());
+                var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
 
-                headerDictionary.Add(key, value);
+                if (headerDictionary.ContainsKey(key))
+                {
+                    var existingValue = headerDictionary[key];
+
+                    if (existingValue is string && ((string)existingValue) != value)
+                    {
+                        var errorMessage = string.Format("Attempted to add {0}={1} to the header collection of {2}," +
+                                                         " but there was already a value of {3} for that key!",
+                                                         key, value, message, existingValue);
+
+                        throw new InvalidOperationException(errorMessage);
+                    }
+                }
+
+                headerDictionary[key] = value;
             }
 
             public Dictionary<string, object> GetHeadersFor(object message)
             {
                 Dictionary<string, object> temp;
 
-                var headersForThisMessage = Headers.TryGetValue(message, out temp)
+                var headersForThisMessage = headers.TryGetValue(message, out temp)
                                                 ? temp
                                                 : new Dictionary<string, object>();
 
@@ -622,12 +636,12 @@ element)"));
 
             public void Tick()
             {
-                Headers.RemoveDeadReferences();
+                headers.RemoveDeadReferences();
             }
 
             public void Dispose()
             {
-                CleanupTimer.Dispose();
+                cleanupTimer.Dispose();
             }
         }
     }
