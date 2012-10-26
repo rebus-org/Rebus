@@ -53,10 +53,13 @@ namespace Rebus.Transports.Msmq
 
             var expressDelivery = transportMessage.Headers.ContainsKey(Headers.Express);
 
-            message.UseDeadLetterQueue = !expressDelivery;
+            var hasTimeout = transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived);
+
+            // make undelivered messages go to the dead letter queue if they could disappear from the queue anyway
+            message.UseDeadLetterQueue = !(expressDelivery || hasTimeout);
             message.Recoverable = !expressDelivery;
 
-            if (transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived))
+            if (hasTimeout)
             {
                 var timeToBeReceivedStr = (string)transportMessage.Headers[Headers.TimeToBeReceived];
                 message.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
