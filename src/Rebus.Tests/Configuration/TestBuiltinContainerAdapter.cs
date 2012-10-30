@@ -26,8 +26,9 @@ namespace Rebus.Tests.Configuration
             var instances = adapter.GetHandlerInstancesFor<string>();
 
             // assert
-            instances.Count().ShouldBe(1);
+            instances.Count().ShouldBe(2);
             instances.ShouldContain(i => i is OrdinaryHandler);
+            instances.ShouldContain(i => i is AnotherOrdinaryHandler);
         }
 
         [Test]
