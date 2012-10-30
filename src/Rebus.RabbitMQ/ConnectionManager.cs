@@ -56,11 +56,18 @@ namespace Rebus.RabbitMQ
 
         public void ErrorOnConnection()
         {
-            log.Warn("{0}. connection failed! Will dipose it and wait a short while...", currentConnectionIndex);
+            log.Warn("Rabbit connection {0} failed!", currentConnectionIndex);
+
             try
             {
                 if (currentConnection != null)
                 {
+                    var shutdownReport = string.Join(Environment.NewLine + Environment.NewLine, currentConnection.ShutdownReport.Cast<ShutdownReportEntry>().Select(e => e.Description + ": " + e.Exception));
+
+                    log.Warn(@"Connection failed - close reason: {0} - shutdown report:
+{1}",
+                             currentConnection.CloseReason, shutdownReport);
+
                     currentConnection.Dispose();
                 }
             }
