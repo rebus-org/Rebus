@@ -606,20 +606,6 @@ element)"));
             {
                 var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
 
-                if (headerDictionary.ContainsKey(key))
-                {
-                    var existingValue = headerDictionary[key];
-
-                    if (existingValue is string && ((string)existingValue) != value)
-                    {
-                        var errorMessage = string.Format("Attempted to add {0}={1} to the header collection of {2}," +
-                                                         " but there was already a value of {3} for that key!",
-                                                         key, value, message, existingValue);
-
-                        throw new InvalidOperationException(errorMessage);
-                    }
-                }
-
                 headerDictionary[key] = value;
             }
 
