@@ -18,6 +18,8 @@ namespace Rebus.Bus
 
         public event UncorrelatedMessageEventHandler UncorrelatedMessage = delegate { };
 
+        public event MessageContextEstablishedEventHandler MessageContextEstablished = delegate { };
+
         public event BeforeTransportMessageEventHandler BeforeTransportMessage = delegate { };
 
         public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
@@ -25,6 +27,11 @@ namespace Rebus.Bus
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
+
+        internal void RaiseMessageContextEstablished(IAdvancedBus advancedBus, IMessageContext messageContext)
+        {
+            MessageContextEstablished(advancedBus, messageContext);
+        }
 
         internal void RaiseMessageSent(IAdvancedBus advancedBus, string destination, object message)
         {
@@ -56,9 +63,9 @@ namespace Rebus.Bus
             PoisonMessage(advancedBus, transportMessage, poisonMessageInfo);
         }
 
-        internal void RaiseUncorrelatedMessage(object message, Saga saga)
+        internal void RaiseUncorrelatedMessage(IAdvancedBus advancedBus, object message, Saga saga)
         {
-            UncorrelatedMessage(message, saga);
+            UncorrelatedMessage(advancedBus, message, saga);
         }
     }
 }

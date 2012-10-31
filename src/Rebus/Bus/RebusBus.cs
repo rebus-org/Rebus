@@ -514,6 +514,7 @@ element)"));
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
                 worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
+                worker.MessageContextEstablished += RaiseMessageContextEstablished;
                 worker.Start();
             }
         }
@@ -544,9 +545,14 @@ element)"));
             }
         }
 
+        void RaiseMessageContextEstablished(IMessageContext messageContext)
+        {
+            events.RaiseMessageContextEstablished(this, messageContext);
+        }
+
         void RaiseUncorrelatedMessage(object message, Saga saga)
         {
-            events.RaiseUncorrelatedMessage(message, saga);
+            events.RaiseUncorrelatedMessage(this, message, saga);
         }
 
         void RaiseBeforeMessage(object message)
