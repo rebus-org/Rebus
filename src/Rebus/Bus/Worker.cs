@@ -190,7 +190,12 @@ namespace Rebus.Bus
                 }
                 catch
                 {
-                    context.RaiseDoRollback();
+                    try
+                    {
+                        context.RaiseDoRollback();
+                    }
+                    catch{}
+
                     throw;
                 }
             }
