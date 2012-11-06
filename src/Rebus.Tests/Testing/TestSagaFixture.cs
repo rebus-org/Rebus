@@ -14,6 +14,57 @@ namespace Rebus.Tests.Testing
     public class TestSagaFixture : FixtureBase
     {
         [Test]
+        public void WorksWhenMessageReferenceIsOfTheSupertype()
+        {
+            // arrange
+            var data = new CounterpartData {Dcid = 800};
+            var fixture = new SagaFixture<CounterpartData>(new CounterpartUpdater(), new List<CounterpartData>{data});
+            CounterpartChanged messageSupertype1 = new CounterpartCreated {Dcid = 800};
+            CounterpartChanged messageSupertype2 = new CounterpartUpdated {Dcid = 800};
+
+            // act
+            // assert
+            Assert.DoesNotThrow(() => fixture.Handle(messageSupertype1));
+            Assert.DoesNotThrow(() => fixture.Handle(messageSupertype2));
+        }
+
+        public class CounterpartUpdater : Saga<CounterpartData>,
+            IAmInitiatedBy<CounterpartCreated>,
+            IAmInitiatedBy<CounterpartUpdated>
+        {
+            public override void ConfigureHowToFindSaga()
+            {
+                Incoming<CounterpartCreated>(m => m.Dcid).CorrelatesWith(d => d.Dcid);
+                Incoming<CounterpartUpdated>(m => m.Dcid).CorrelatesWith(d => d.Dcid);
+            }
+
+            public void Handle(CounterpartCreated message)
+            {
+                
+            }
+
+            public void Handle(CounterpartUpdated message)
+            {
+            }
+        }
+
+        public class CounterpartData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public int Dcid { get; set; }
+        }
+
+        public abstract class CounterpartChanged
+        {
+            public int Dcid { get; set; }
+        }
+
+        public class CounterpartCreated : CounterpartChanged{}
+
+        public class CounterpartUpdated : CounterpartChanged{}
+
+        [Test]
         public void CanCorrelateMessagesLikeExpected()
         {
             // arrange

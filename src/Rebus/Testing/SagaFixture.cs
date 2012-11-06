@@ -157,12 +157,13 @@ namespace Rebus.Testing
             return fieldFromMessage == fieldFromSagaData;
         }
 
-        [DebuggerStepThrough]
         void Dispatch<TMessage>(TMessage message)
         {
             saga.Complete = false;
-            saga.GetType().GetMethod("Handle", new[] { typeof(TMessage) })
-                .Invoke(saga, new object[] { message });
+            var sagaType = saga.GetType();
+            var messageType = message.GetType();
+            var handleMethod = sagaType.GetMethod("Handle", new[] {messageType});
+            handleMethod.Invoke(saga, new object[] { message });
         }
     }
 }
