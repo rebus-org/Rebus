@@ -13,9 +13,13 @@ namespace Rebus.Tests.Persistence.Sagas.Factories
 
         public IStoreSagaData CreatePersister()
         {
-            DeleteRows("sagas");
-            DeleteRows("saga_index");
-            return new SqlServerSagaPersister(ConnectionStrings.SqlServer, "saga_index", "sagas");
+            const string sagaTableName = "test_sagas";
+            const string sagaIndexTableName = "test_saga_index";
+            var sqlServerSagaPersister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, sagaIndexTableName, sagaTableName);
+            sqlServerSagaPersister.EnsureTablesAreCreated();
+            DeleteRows(sagaTableName);
+            DeleteRows(sagaIndexTableName);
+            return sqlServerSagaPersister;
         }
 
         public void Dispose()
