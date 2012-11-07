@@ -30,6 +30,6 @@ namespace Rebus.Messages
         /// Allows for specifying the ID for the saga requesting the timeout.
         /// The ID will be returned with the <see cref="TimeoutReply"/>.
         /// </summary>
-        public Guid SagaId { get; set; }       
+        public Guid SagaId { get; set; }
     }
 }

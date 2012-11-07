@@ -240,14 +240,28 @@ namespace Rebus.Bus
 
             var customData = TimeoutReplyHandler.Serialize(message);
 
+            var timeoutRequest = new TimeoutRequest
+                {
+                    Timeout = delay,
+                    CustomData = customData,
+                    CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
+                };
+
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
+                
+                // if we're in a saga context, be nice and set the saga ID automatically
+                if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
+                {
+                    var sagaContext = ((SagaContext) messageContext.Items[SagaContext.SagaContextItemKey]);
+                    timeoutRequest.SagaId = sagaContext.Id;
+                }
+            }
+
             var messages = new List<object>
                                {
-                                   new TimeoutRequest
-                                       {
-                                           Timeout = delay,
-                                           CustomData = customData,
-                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
-                                       }
+                                   timeoutRequest
                                };
 
             InternalSend(timeoutManagerAddress, messages);

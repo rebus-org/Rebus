@@ -2,8 +2,9 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
+using Rebus.Testing;
+using Rebus.Timeout;
 using Shouldly;
 using System.Linq;
 
@@ -20,6 +21,7 @@ namespace Rebus.Tests.Integration
         HandlerActivatorForTesting serviceHandlerActivator;
         HandlerActivatorForTesting sagaHandlerActivator;
         InMemorySagaPersister sagaPersister;
+        TimeoutService timeoutService;
 
         protected override void DoSetUp()
         {
@@ -34,15 +36,41 @@ namespace Rebus.Tests.Integration
 
             // this is just a bus from the outside that can initiate everything
             initiatorBus = CreateBus("test.autocorrelation.initiator", new HandlerActivatorForTesting()).Start(1);
+
+            timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
+            timeoutService.Start();
+        }
+
+        protected override void DoTearDown()
+        {
+            timeoutService.Stop();
         }
 
         [Test]
-        public void ItWorks()
+        public void WorksWithDeferredMessageAsWell()
         {
             // arrange
             var someSaga = new SomeSaga(sagaBus);
             sagaHandlerActivator.UseHandler(someSaga);
-            
+
+            // act
+            initiatorBus.Send(new InitiateDeferredMessage());
+            Thread.Sleep(3.Seconds());
+
+            // assert
+            sagaPersister.Count().ShouldBe(1);
+            var sagaData = sagaPersister.Single();
+            sagaData.ShouldBeTypeOf<SomeSagaData>();
+            ((SomeSagaData)sagaData).GotTheDeferredMessage.ShouldBe(true);
+        }
+
+        [Test]
+        public void WorksWithOrdinaryRequestReply()
+        {
+            // arrange
+            var someSaga = new SomeSaga(sagaBus);
+            sagaHandlerActivator.UseHandler(someSaga);
+
             serviceHandlerActivator.Handle<Request>(r =>
                 {
                     TestHelpers.DumpHeadersFromCurrentMessageContext();
@@ -50,14 +78,14 @@ namespace Rebus.Tests.Integration
                 });
 
             // act
-            initiatorBus.Send(new InitiateStuff());
+            initiatorBus.Send(new InitiateRequestReply());
             Thread.Sleep(1.Seconds());
 
             // assert
             sagaPersister.Count().ShouldBe(1);
             var sagaData = sagaPersister.Single();
             sagaData.ShouldBeTypeOf<SomeSagaData>();
-            ((SomeSagaData) sagaData).GotTheReply.ShouldBe(true);
+            ((SomeSagaData)sagaData).GotTheReply.ShouldBe(true);
         }
 
         public override string GetEndpointFor(Type messageType)
@@ -67,7 +95,12 @@ namespace Rebus.Tests.Integration
                 return ServiceBusInputQueueName;
             }
 
-            if (messageType == typeof(InitiateStuff))
+            if (messageType == typeof(InitiateRequestReply))
+            {
+                return SagaBusInputQueueName;
+            }
+
+            if (messageType == typeof(InitiateDeferredMessage))
             {
                 return SagaBusInputQueueName;
             }
@@ -76,13 +109,17 @@ namespace Rebus.Tests.Integration
         }
     }
 
-    class InitiateStuff{}
-    class Request{}
-    class Reply{}
+    class InitiateRequestReply { }
+    class InitiateDeferredMessage { }
+    class DeferredMessage { }
+    class Request { }
+    class Reply { }
 
     class SomeSaga : Saga<SomeSagaData>,
-        IAmInitiatedBy<InitiateStuff>,
-        IHandleMessages<Reply>
+        IAmInitiatedBy<InitiateRequestReply>,
+        IHandleMessages<Reply>,
+        IAmInitiatedBy<InitiateDeferredMessage>,
+        IHandleMessages<DeferredMessage>
     {
         readonly IBus bus;
 
@@ -93,10 +130,9 @@ namespace Rebus.Tests.Integration
 
         public override void ConfigureHowToFindSaga()
         {
-            
         }
 
-        public void Handle(InitiateStuff message)
+        public void Handle(InitiateRequestReply message)
         {
             bus.Send(new Request());
         }
@@ -107,6 +143,16 @@ namespace Rebus.Tests.Integration
 
             Data.GotTheReply = true;
         }
+
+        public void Handle(InitiateDeferredMessage message)
+        {
+            bus.Defer(1.Seconds(), new DeferredMessage());
+        }
+
+        public void Handle(DeferredMessage message)
+        {
+            Data.GotTheDeferredMessage = true;
+        }
     }
 
     class SomeSagaData : ISagaData
@@ -115,5 +161,6 @@ namespace Rebus.Tests.Integration
         public int Revision { get; set; }
 
         public bool GotTheReply { get; set; }
+        public bool GotTheDeferredMessage { get; set; }
     }
 }

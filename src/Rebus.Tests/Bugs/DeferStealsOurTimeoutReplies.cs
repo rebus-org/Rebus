@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -50,7 +51,7 @@ namespace Rebus.Tests.Bugs
                 get { return dispatchedMessages; }
             }
 
-            public void Dispatch(object deferredMessage)
+            public void Dispatch(object deferredMessage, Guid sagaId)
             {
                 dispatchedMessages.Add(deferredMessage);
             }
