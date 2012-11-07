@@ -3,6 +3,9 @@ using System.Diagnostics;
 
 namespace Rebus.Logging
 {
+    /// <summary>
+    /// Logger factory that writes log statements using the <see cref="Trace"/> API
+    /// </summary>
     public class TraceLoggerFactory : AbstractRebusLoggerFactory
     {
         protected override ILog GetLogger(Type type)

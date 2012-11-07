@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configurer for the various hooks that Rebus provides
+    /// </summary>
     public class EventsConfigurer : BaseConfigurer, IRebusEvents
     {
         public EventsConfigurer(ConfigurationBackbone backbone)

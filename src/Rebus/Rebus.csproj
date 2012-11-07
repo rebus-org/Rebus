@@ -150,7 +150,6 @@
     <Compile Include="Persistence\Xml\XmlSubscriptionStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
-    <Compile Include="Extensions\EnumerableExt.cs" />
     <Compile Include="SimpleHandlerActivator.cs" />
     <Compile Include="RebusTimeMachine.cs" />
     <Compile Include="Timed.cs" />
@@ -165,7 +164,6 @@
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="Transports\OneWayClientGag.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
-    <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />
     <Compile Include="IBus.cs" />

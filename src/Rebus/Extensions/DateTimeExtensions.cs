@@ -2,9 +2,9 @@
 
 namespace Rebus.Extensions
 {
-    public static class DateTimeExtensions
+    internal static class DateTimeExtensions
     {
-         public static TimeSpan ElapsedUntilNow(this DateTime dateTime)
+        public static TimeSpan ElapsedUntilNow(this DateTime dateTime)
          {
              return RebusTimeMachine.Now() - dateTime;
          }

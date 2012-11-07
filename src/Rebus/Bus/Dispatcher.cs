@@ -10,7 +10,7 @@ using Rebus.Shared;
 namespace Rebus.Bus
 {
     /// <summary>
-    ///   Implements stuff that must happen when handling one single message.
+    /// Implements stuff that must happen when handling one single message.
     /// </summary>
     class Dispatcher
     {

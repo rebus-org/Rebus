@@ -4,9 +4,11 @@ using Rebus.Messages;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Special internal message handler that handles timeout replies from the timeout manager
+    /// </summary>
     class TimeoutReplyHandler : IHandleMessages<TimeoutReply>
     {
-        readonly IHandleDeferredMessage handleDeferredMessage;
         internal const string TimeoutReplySecretCorrelationId = "rebus.secret.deferred.message.id";
 
         static readonly JsonSerializerSettings JsonSerializerSettings =
@@ -18,6 +20,8 @@ namespace Rebus.Bus
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
+
+        readonly IHandleDeferredMessage handleDeferredMessage;
 
         public TimeoutReplyHandler(IHandleDeferredMessage handleDeferredMessage)
         {
@@ -36,7 +40,7 @@ namespace Rebus.Bus
             handleDeferredMessage.Dispatch(deferredMessage, message.SagaId);
         }
 
-        static object Deserialize(string customData)
+        object Deserialize(string customData)
         {
             return JsonConvert.DeserializeObject(customData, JsonSerializerSettings);
         }

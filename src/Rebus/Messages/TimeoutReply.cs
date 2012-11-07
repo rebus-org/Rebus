@@ -27,7 +27,5 @@ namespace Rebus.Messages
         /// The custom data as specified in the <see cref="TimeoutRequest"/>.
         /// </summary>
         public string CustomData { get; set; }
-
-
     }
 }
