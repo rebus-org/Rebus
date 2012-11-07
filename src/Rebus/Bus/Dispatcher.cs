@@ -15,7 +15,7 @@ namespace Rebus.Bus
     class Dispatcher
     {
         static ILog log;
-        
+
         readonly IActivateHandlers activateHandlers;
 
         readonly Dictionary<Type, MethodInfo> activatorMethods = new Dictionary<Type, MethodInfo>();
@@ -64,7 +64,7 @@ namespace Rebus.Bus
 
             try
             {
-                var typesToDispatch = GetTypesToDispatch(typeof (TMessage));
+                var typesToDispatch = GetTypesToDispatch(typeof(TMessage));
                 var handlersFromActivator = typesToDispatch.SelectMany(GetHandlerInstances);
                 var handlerInstances = handlersFromActivator.ToArray();
 
@@ -84,23 +84,28 @@ namespace Rebus.Bus
                 {
                     throw new UnhandledMessageException(message);
                 }
-                else
+
+                var sagaHandlers = distinctHandlersToExecute.Where(h => h is Saga).ToArray();
+
+                if (sagaHandlers.Length > 1)
                 {
-                    foreach (var handler in distinctHandlersToExecute)
+                    throw new MultipleSagaHandlersFoundException(message, sagaHandlers.Select(h => h.GetType()).ToArray());
+                }
+
+                foreach (var handler in distinctHandlersToExecute)
+                {
+                    log.Debug("Dispatching {0} to {1}", message, handler);
+
+                    var handlerType = handler.GetType();
+
+                    foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        log.Debug("Dispatching {0} to {1}", message, handler);
-
-                        var handlerType = handler.GetType();
-
-                        foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
-                        {
-                            GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] {message, handler});
-
-                            if (MessageContext.MessageDispatchAborted) break;
-                        }
+                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
 
                         if (MessageContext.MessageDispatchAborted) break;
                     }
+
+                    if (MessageContext.MessageDispatchAborted) break;
                 }
             }
             finally
@@ -139,7 +144,7 @@ namespace Rebus.Bus
         {
             var activationMethod = GetActivationMethod(messageType);
             var handlers = activationMethod.Invoke(activateHandlers, new object[0]);
-            var handlerInstances = (IEnumerable<IHandleMessages>) (handlers ?? new IHandleMessages[0]);
+            var handlerInstances = (IEnumerable<IHandleMessages>)(handlers ?? new IHandleMessages[0]);
             return handlerInstances;
         }
 
@@ -172,7 +177,7 @@ namespace Rebus.Bus
         IEnumerable<Type> GetTypesToDispatchToThisHandler(IEnumerable<Type> typesToDispatch, Type handlerType)
         {
             var interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))
                 .Select(i => i.GetGenericArguments()[0]);
 
             return interfaces.Intersect(typesToDispatch).ToArray();
@@ -180,16 +185,16 @@ namespace Rebus.Bus
 
         IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
         {
-            if (typeof (T) == typeof (SubscriptionMessage))
+            if (typeof(T) == typeof(SubscriptionMessage))
             {
-                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
+                return new[] { (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions) };
             }
-            
+
             if (typeof(T) == typeof(TimeoutReply))
             {
-                return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
+                return new[] { (IHandleMessages<T>)new TimeoutReplyHandler(handleDeferredMessage) };
             }
-            
+
             return new IHandleMessages<T>[0];
         }
 
@@ -296,7 +301,7 @@ namespace Rebus.Bus
         ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
         {
             var dataProperty = handler.GetType().GetProperty("Data");
-            var sagaData = (ISagaData) Activator.CreateInstance(dataProperty.PropertyType);
+            var sagaData = (ISagaData)Activator.CreateInstance(dataProperty.PropertyType);
             sagaData.Id = Guid.NewGuid();
             return sagaData;
         }
@@ -308,13 +313,13 @@ namespace Rebus.Bus
             if (MessageContext.HasCurrent)
             {
                 var messageContext = MessageContext.GetCurrent();
-            
+
                 // if the incoming message contains a saga auto-correlation id, try to load that specific saga
                 if (messageContext.Headers.ContainsKey(Headers.AutoCorrelationSagaId))
                 {
                     var sagaId = messageContext.Headers[Headers.AutoCorrelationSagaId].ToString();
                     var data = GetSagaData(sagaDataType, sagaDataIdPropertyName, sagaId);
-                    
+
                     // if we found the saga, return it - otherwise, fall back to correlating properties, if anything has been set up
                     if (data != null) return (ISagaData)data;
                 }
@@ -323,12 +328,12 @@ namespace Rebus.Bus
             var correlations = saga.Correlations;
 
             // if no correlation is set up, just bail out
-            if (!correlations.ContainsKey(typeof (TMessage))) return null;
+            if (!correlations.ContainsKey(typeof(TMessage))) return null;
 
-            var correlation = correlations[typeof (TMessage)];
+            var correlation = correlations[typeof(TMessage)];
             var fieldFromMessage = correlation.FieldFromMessage(message);
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
-            
+
             var sagaData = GetSagaData(sagaDataType, sagaDataPropertyPath, fieldFromMessage);
 
             return (ISagaData)sagaData;
@@ -338,7 +343,7 @@ namespace Rebus.Bus
         {
             var sagaData = storeSagaData.GetType()
                 .GetMethod("Find").MakeGenericMethod(sagaDataType)
-                .Invoke(storeSagaData, new[] {sagaDataPropertyPath, fieldFromMessage ?? ""});
+                .Invoke(storeSagaData, new[] { sagaDataPropertyPath, fieldFromMessage ?? "" });
 
             return sagaData;
         }

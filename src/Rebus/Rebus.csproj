@@ -80,6 +80,7 @@
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
     <Compile Include="ITransactionContext.cs" />
+    <Compile Include="MultipleSagaHandlersException.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
     <Compile Include="SagaContext.cs" />
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
