@@ -49,7 +49,7 @@ for the built-in container adapter, or
 
     var someContainerAdapter = new AdapterForMyFavoriteIocContainer(myFavoriteIocContainer);
 
-to integrate with your favorite IoC container
+to integrate with your favorite IoC container, and then
 
 	Configure.With(someContainerAdapter)
 		.Logging(l => l.Log4Net())
