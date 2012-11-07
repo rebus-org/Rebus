@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -95,6 +96,7 @@ is just because there was a bug some time when the grouping of the messages was 
             var someRandomMessage = new SomeRandomMessage();
             var fakeContext = Mock<IMessageContext>();
             fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
+            fakeContext.Stub(s => s.Headers).Return(new Dictionary<string, object>());
 
             // act
             using (FakeMessageContext.Establish(fakeContext))
