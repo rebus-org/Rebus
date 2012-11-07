@@ -237,7 +237,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from sagas where id = @id and revision = @current_revision;";
+                    command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
                     var rows = command.ExecuteNonQuery();
@@ -249,7 +249,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from saga_index where saga_id = @id";
+                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -269,16 +269,17 @@ namespace Rebus.Persistence.SqlServer
                 {
                     if (sagaDataPropertyPath == "Id")
                     {
-                        command.CommandText = @"select s.data from sagas s where s.id = @value";
+                        command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
                     }
                     else
                     {
-                        command.CommandText = @"select s.data 
-                                                    from sagas s 
-                                                        join saga_index i on s.id = i.saga_id 
+                        command.CommandText = string.Format(@"select s.data 
+                                                    from [{0}] s 
+                                                        join [{1}] i on s.id = i.saga_id 
                                                     where i.[saga_type] = @saga_type
                                                         and i.[key] = @key 
-                                                        and i.value = @value";
+                                                        and i.value = @value", sagaTableName, sagaIndexTableName);
+
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(T)));
                     }
