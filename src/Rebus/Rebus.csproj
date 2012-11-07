@@ -81,6 +81,7 @@
     <Compile Include="IMutateMessages.cs" />
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
+    <Compile Include="SagaContext.cs" />
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />

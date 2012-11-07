@@ -116,6 +116,8 @@ namespace Rebus.Bus
 
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
+            PossiblyAttachSagaIdToRequest(message);
+
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
@@ -126,6 +128,8 @@ namespace Rebus.Bus
             EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
 
             var destinationEndpoint = receiveMessages.InputQueue;
+
+            PossiblyAttachSagaIdToRequest(message);
 
             InternalSend(destinationEndpoint, new List<object> { message });
         }
@@ -147,6 +151,21 @@ namespace Rebus.Bus
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
                 InternalSend(subscriberInputQueue, new List<object> { message });
+            }
+        }
+
+        internal void PossiblyAttachSagaIdToRequest<TCommand>(TCommand message)
+        {
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
+
+                if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
+                {
+                    var sagaContext = (SagaContext) messageContext.Items[SagaContext.SagaContextItemKey];
+
+                    AttachHeader(message, Headers.AutoCorrelationSagaId, sagaContext.Id.ToString());
+                }
             }
         }
 
@@ -320,6 +339,12 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 throw new InvalidOperationException(errorMessage);
             }
 
+            // transfer auto-correlation saga id to reply if it is present in the current message context
+            if (messageContext.Headers.ContainsKey(Headers.AutoCorrelationSagaId))
+            {
+                AttachHeader(messages.First(), Headers.AutoCorrelationSagaId, messageContext.Headers[Headers.AutoCorrelationSagaId].ToString());
+            }
+
             InternalSend(returnAddress, messages);
         }
 
@@ -356,6 +381,7 @@ element)"));
                     headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
                 }
             }
+
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);

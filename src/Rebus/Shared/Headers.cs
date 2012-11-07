@@ -72,5 +72,11 @@ namespace Rebus.Shared
         /// implementations to behave differently.
         /// </summary>
         public const string Multicast = "rebus-multicast";
+
+        /// <summary>
+        /// When a message is sent from within a saga, the saga's ID is attached to the outgoing
+        /// message in order to support auto-correlating replies back to the requesting saga.
+        /// </summary>
+        public const string AutoCorrelationSagaId = "rebus-autocorrelation-saga-id";
     }
 }

@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Ponder;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Shared;
 
 namespace Rebus.Bus
 {
@@ -24,6 +26,7 @@ namespace Rebus.Bus
         readonly IStoreSagaData storeSagaData;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
+        readonly string sagaDataIdPropertyName;
 
         static Dispatcher()
         {
@@ -46,6 +49,7 @@ namespace Rebus.Bus
             this.storeSubscriptions = storeSubscriptions;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.handleDeferredMessage = handleDeferredMessage;
+            sagaDataIdPropertyName = Reflect.Path<ISagaData>(s => s.Id);
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
@@ -214,11 +218,11 @@ namespace Rebus.Bus
                 saga.ConfigureHowToFindSaga();
                 var sagaData = GetSagaData(message, saga);
 
-                saga.IsNew = sagaData == null;
-                if (saga.IsNew)
+                if (sagaData == null)
                 {
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
+                        saga.IsNew = true;
                         sagaData = CreateSagaData(handler);
                     }
                     else
@@ -228,10 +232,19 @@ namespace Rebus.Bus
                         return;
                     }
                 }
+                else
+                {
+                    saga.IsNew = false;
+                }
 
                 handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
-                handler.Handle(message);
-                PerformSaveActions(saga, sagaData);
+
+                using (new SagaContext(sagaData.Id))
+                {
+                    handler.Handle(message);
+                    PerformSaveActions(saga, sagaData);
+                }
+
                 return;
             }
 
@@ -290,20 +303,44 @@ namespace Rebus.Bus
 
         ISagaData GetSagaData<TMessage>(TMessage message, Saga saga)
         {
+            var sagaDataType = saga.GetType().GetProperty("Data").PropertyType;
+
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
+            
+                // if the incoming message contains a saga auto-correlation id, try to load that specific saga
+                if (messageContext.Headers.ContainsKey(Headers.AutoCorrelationSagaId))
+                {
+                    var sagaId = messageContext.Headers[Headers.AutoCorrelationSagaId].ToString();
+                    var data = GetSagaData(sagaDataType, sagaDataIdPropertyName, sagaId);
+                    
+                    // if we found the saga, return it - otherwise, fall back to correlating properties, if anything has been set up
+                    if (data != null) return (ISagaData)data;
+                }
+            }
+
             var correlations = saga.Correlations;
 
+            // if no correlation is set up, just bail out
             if (!correlations.ContainsKey(typeof (TMessage))) return null;
 
             var correlation = correlations[typeof (TMessage)];
             var fieldFromMessage = correlation.FieldFromMessage(message);
             var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
-            var sagaDataType = saga.GetType().GetProperty("Data").PropertyType;
             
+            var sagaData = GetSagaData(sagaDataType, sagaDataPropertyPath, fieldFromMessage);
+
+            return (ISagaData)sagaData;
+        }
+
+        object GetSagaData(Type sagaDataType, string sagaDataPropertyPath, object fieldFromMessage)
+        {
             var sagaData = storeSagaData.GetType()
                 .GetMethod("Find").MakeGenericMethod(sagaDataType)
                 .Invoke(storeSagaData, new[] {sagaDataPropertyPath, fieldFromMessage ?? ""});
 
-            return (ISagaData)sagaData;
+            return sagaData;
         }
     }
 }

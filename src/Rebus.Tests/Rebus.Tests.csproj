@@ -226,6 +226,7 @@
     <Compile Include="Integration\Factories\IBusFactory.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
+    <Compile Include="Integration\TestAutoCorrelation.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
@@ -239,6 +240,7 @@
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
+    <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
     <Compile Include="Timeout\TestTimeoutService.cs" />

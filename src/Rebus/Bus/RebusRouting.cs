@@ -1,14 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Rebus.Extensions;
 using Rebus.Messages;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implements the explicitly routed messages API by using your ordinary <see cref="RebusBus"/>
+    /// </summary>
     public class RebusRouting : IRebusRouting
     {
         readonly RebusBus rebusBus;
 
+        /// <summary>
+        /// Constructs the routing API with the specified <see cref="RebusBus"/>
+        /// </summary>
         public RebusRouting(RebusBus rebusBus)
         {
             this.rebusBus = rebusBus;
@@ -16,6 +21,8 @@ namespace Rebus.Bus
 
         public void Send<TCommand>(string destinationEndpoint, TCommand message)
         {
+            rebusBus.PossiblyAttachSagaIdToRequest(message);
+
             rebusBus.InternalSend(destinationEndpoint, new List<object> { message });
         }
 
