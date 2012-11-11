@@ -181,7 +181,7 @@ namespace Rebus.Bus
 
             public void AddError(Exception exception)
             {
-                exceptions.Add(exception.AtThisInstant());
+                exceptions.Add(exception.Now());
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
             }

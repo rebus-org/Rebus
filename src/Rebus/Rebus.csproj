@@ -86,6 +86,7 @@
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
+    <Compile Include="TimedExtensions.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />

@@ -397,7 +397,7 @@ The following addresses were collected:
                     receivedTransportMessages.Add((ReceivedTransportMessage)message.Body);
                 }
             }
-            catch (MessageQueueException e)
+            catch (MessageQueueException)
             {
             }
 

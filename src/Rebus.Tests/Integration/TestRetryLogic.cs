@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Org.BouncyCastle.Ocsp;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Shared;
@@ -134,7 +135,7 @@ namespace Rebus.Tests.Integration
             var activator = new HandlerActivatorForTesting()
                 .Handle<string>(s =>
                     {
-                        throw new ExecutionEngineException("whoahhh!");
+                        throw new OmfgExceptionThisIsBad("whoahhh!");
                     });
             
             CreateBus(ReceiverQueueName, activator, new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),

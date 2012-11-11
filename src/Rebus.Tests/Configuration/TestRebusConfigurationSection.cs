@@ -33,6 +33,22 @@ namespace Rebus.Tests.Configuration
             }
         }
 
+        [Test]
+        public void CanReadSection_AlsoWorksWhenRijndaelSectionIsOmitted()
+        {
+            using (AppConfig.Change(GetPathOf("app.2.config")))
+            {
+                var section = RebusConfigurationSection.LookItUp();
+
+                section.InputQueue.ShouldBe("input");
+                section.ErrorQueue.ShouldBe("error");
+                section.Workers.ShouldBe(1);
+
+                var rijndaelSection = section.RijndaelSection;
+                rijndaelSection.Key.ShouldBe("");
+            }
+        }
+
         string GetPathOf(string testAppConfigFileName)
         {
             var testAppConfigPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Configuration\RealAppConfigs", testAppConfigFileName);

@@ -187,9 +187,6 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
-    <Compile Include="..\..\lib\Ponder\Ponder.cs">
-      <Link>Ponder.cs</Link>
-    </Compile>
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
@@ -344,7 +341,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <None Include="packages.config" />
+    <Content Include="Configuration\RealAppConfigs\App.2.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Autofac\Rebus.Autofac.csproj">

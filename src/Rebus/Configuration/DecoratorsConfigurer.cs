@@ -1,5 +1,3 @@
-using System;
-
 namespace Rebus.Configuration
 {
     /// <summary>
@@ -7,14 +5,12 @@ namespace Rebus.Configuration
     /// </summary>
     public class DecoratorsConfigurer : BaseConfigurer
     {
+        /// <summary>
+        /// Constructs the decorators configurer
+        /// </summary>
         public DecoratorsConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
-        }
-
-        public void AddDecoration(Action<ConfigurationBackbone> decorationStep)
-        {
-            Backbone.AddDecoration(decorationStep);
         }
     }
 }

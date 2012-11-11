@@ -326,7 +326,7 @@ Or should it?")]
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
                                                      Arg<TransportMessageToSend>.Matches(
                                                          m => m.Headers.ContainsKey(Headers.ReturnAddress)
-                                                              && m.Headers[Headers.ReturnAddress] == "my input queue"),
+                                                              && m.Headers[Headers.ReturnAddress].ToString() == "my input queue"),
                                                               Arg<ITransactionContext>.Is.Anything));
         }
 

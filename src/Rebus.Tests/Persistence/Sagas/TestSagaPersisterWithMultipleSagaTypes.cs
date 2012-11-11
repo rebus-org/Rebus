@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -16,7 +15,7 @@ namespace Rebus.Tests.Persistence.Sagas
         public void CanInsertSagasOfMultipleTypes()
         {
             // arrange
-            var someString = "just happens to be the same in two otherwise unrelated sagas";
+            const string someString = "just happens to be the same in two otherwise unrelated sagas";
             var someFieldPathOne = Reflect.Path<OneKindOfSaga>(s => s.SomeField);
             var someFieldPathAnother = Reflect.Path<AnotherKindOfSaga>(s => s.SomeField);
 

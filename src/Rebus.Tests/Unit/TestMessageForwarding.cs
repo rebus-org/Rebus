@@ -42,9 +42,9 @@ namespace Rebus.Tests.Unit
                                                  .Matches(
                                                      m =>
                                                      m.Headers.ContainsKey(arbitrarykey) &&
-                                                     m.Headers[arbitrarykey] == arbitraryValue
+                                                     m.Headers[arbitrarykey].ToString() == arbitraryValue
                                                      && m.Headers.ContainsKey(anotherArbitraryKey) &&
-                                                     m.Headers[anotherArbitraryKey] == anotherArbitraryValue),
+                                                     m.Headers[anotherArbitraryKey].ToString() == anotherArbitraryValue),
                                              Arg<ITransactionContext>.Is.Anything));
         }
 
