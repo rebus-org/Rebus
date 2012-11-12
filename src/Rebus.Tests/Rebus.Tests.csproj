@@ -187,6 +187,7 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
+    <Compile Include="Analysis\TestExceptions.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
@@ -381,6 +382,10 @@
     <ProjectReference Include="..\Rebus.Ninject\Rebus.Ninject.csproj">
       <Project>{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}</Project>
       <Name>Rebus.Ninject</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.NLog\Rebus.NLog.csproj">
+      <Project>{f439a82e-b375-4c38-877b-7ed7f49ac6c2}</Project>
+      <Name>Rebus.NLog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.RabbitMQ\Rebus.RabbitMQ.csproj">
       <Project>{5836C347-90FC-4628-B4A1-16926B6CA781}</Project>

@@ -3,6 +3,9 @@ using System.Configuration;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configuring collection that can contain a number of <see cref="MappingElement"/>
+    /// </summary>
     public class MappingsCollection : ConfigurationElementCollection, IEnumerable<MappingElement>
     {
         protected override ConfigurationElement CreateNewElement()

@@ -7,7 +7,7 @@ namespace Rebus.Configuration
     /// an NServiceBus format configuration from the current app.config
     /// </summary>
     [Serializable]
-    public class ConfigurationFileFormatException : FormatException
+    public class ConfigurationFileFormatException : ApplicationException
     {
         /// <summary>
         /// Constructs this bad boy!

@@ -57,7 +57,7 @@ namespace Rebus.Bus
     /// </summary>
     public class PoisonMessageInfo
     {
-        internal PoisonMessageInfo(string id, IEnumerable<TimedException> exceptions)
+        internal PoisonMessageInfo(string id, IEnumerable<Timed<Exception>> exceptions)
         {
             Id = id;
             Exceptions = exceptions.ToArray();
@@ -71,21 +71,6 @@ namespace Rebus.Bus
         /// <summary>
         /// Collection of exceptions caught at specific times while processing the message.
         /// </summary>
-        public TimedException[] Exceptions { get; private set; }
-    }
-
-    /// <summary>
-    /// Represents an exceptions that has been caught at some specific time.
-    /// </summary>
-    public class TimedException
-    {
-        internal TimedException(DateTime time, Exception exception)
-        {
-            Time = time;
-            Exception = exception;
-        }
-
-        public DateTime Time { get; private set; }
-        public Exception Exception { get; private set; }
+        public Timed<Exception>[] Exceptions { get; private set; }
     }
 }

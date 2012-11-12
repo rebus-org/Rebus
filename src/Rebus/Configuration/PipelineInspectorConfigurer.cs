@@ -5,10 +5,7 @@
     /// </summary>
     public class PipelineInspectorConfigurer : BaseConfigurer
     {
-        /// <summary>
-        /// Constructs the configurer
-        /// </summary>
-        public PipelineInspectorConfigurer(ConfigurationBackbone backbone)
+        internal PipelineInspectorConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }

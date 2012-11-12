@@ -25,14 +25,30 @@ namespace Rebus.Bus
             TransactionContext.Set(this);
         }
 
+        /// <summary>
+        /// Will be raised when it is time to commit the transaction. The transport should do its final
+        /// commit work when this event is raised.
+        /// </summary>
         public event Action DoCommit = delegate { };
-        
+
+        /// <summary>
+        /// Will be raised before doing the actual commit
+        /// </summary>
         public event Action BeforeCommit = delegate { };
-        
+
+        /// <summary>
+        /// Will be raised in the event that the transaction should be rolled back.
+        /// </summary>
         public event Action DoRollback = delegate { };
-        
+
+        /// <summary>
+        /// Will be raised after a transaction has been rolled back
+        /// </summary>
         public event Action AfterRollback = delegate { };
-        
+
+        /// <summary>
+        /// Will be raised after all work is done, allowing you to clean up resources etc.
+        /// </summary>
         public event Action Cleanup = delegate { };
 
         public bool IsTransactional { get { return true; } }

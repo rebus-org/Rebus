@@ -2,6 +2,9 @@ using System.Configuration;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configuration section for the &lt;endpoints&gt; element
+    /// </summary>
     public class MappingElement : ConfigurationElement
     {
         const string MessagesPropertyName = "messages";

@@ -3,10 +3,14 @@ using Rebus.Shared;
 
 namespace Rebus
 {
+    /// <summary>
+    /// Exception that is thrown when a return address header has been added to two or more logical messages in
+    /// a message and the return address is not the same
+    /// </summary>
     [Serializable]
     public class InconsistentReturnAddressException : ApplicationException
     {
-        public InconsistentReturnAddressException(string message, params object[] objs)
+        internal InconsistentReturnAddressException(string message, params object[] objs)
             : base(string.Format(@"When specifying the {0} header, it must be consistent across messages within one batch!
 
 That means that if you specify the return address for one message in a batch, you should either

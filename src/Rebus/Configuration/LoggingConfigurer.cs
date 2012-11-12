@@ -7,10 +7,7 @@ namespace Rebus.Configuration
     /// </summary>
     public class LoggingConfigurer : BaseConfigurer
     {
-        /// <summary>
-        /// Constructs the configurer with the specified <see cref="ConfigurationBackbone"/>
-        /// </summary>
-        public LoggingConfigurer(ConfigurationBackbone backbone)
+        internal LoggingConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }
