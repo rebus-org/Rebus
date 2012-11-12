@@ -1,4 +1,5 @@
 using System;
+using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
@@ -20,6 +21,9 @@ namespace Rebus.Configuration
             get { return backbone; }
         }
 
+        /// <summary>
+        /// Adds the specified function as a decoration step which will be executed when it's time to instantiate <see cref="RebusBus"/>
+        /// </summary>
         public void AddDecoration(Action<ConfigurationBackbone> decorationStep)
         {
             Backbone.AddDecoration(decorationStep);

@@ -9,7 +9,7 @@ namespace Rebus.Configuration
     {
         readonly RearrangeHandlersPipelineInspector rearranger = new RearrangeHandlersPipelineInspector();
         
-        public FluentRearrangeHandlersPipelineInspectorBuilder(Type first, PipelineInspectorConfigurer configurer)
+        internal FluentRearrangeHandlersPipelineInspectorBuilder(Type first, PipelineInspectorConfigurer configurer)
         {
             rearranger = new RearrangeHandlersPipelineInspector();
             rearranger.AddToOrder(first);

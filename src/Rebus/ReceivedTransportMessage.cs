@@ -13,6 +13,9 @@ namespace Rebus
     [Serializable]
     public class ReceivedTransportMessage
     {
+        /// <summary>
+        /// Constructs the wrapper of a transport message that has been received
+        /// </summary>
         public ReceivedTransportMessage()
         {
             Headers = new Dictionary<string, object>();
@@ -57,7 +60,10 @@ namespace Rebus
             return transportMessageToSend;
         }
 
-        public string GetHeader(string key)
+        /// <summary>
+        /// Gets the header with the specified key as a string if possible, otherwise null
+        /// </summary>
+        public string GetStringHeader(string key)
         {
             return Headers.ContainsKey(key) && Headers[key] is string ? (string) Headers[key] : null;
         }

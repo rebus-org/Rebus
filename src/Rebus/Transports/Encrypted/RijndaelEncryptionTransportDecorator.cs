@@ -54,7 +54,7 @@ namespace Rebus.Transports.Encrypted
 
             if (headers.ContainsKey(Headers.Encrypted))
             {
-                var iv = receivedTransportMessage.GetHeader(Headers.EncryptionSalt);
+                var iv = receivedTransportMessage.GetStringHeader(Headers.EncryptionSalt);
                 body = helper.Decrypt(receivedTransportMessage.Body, iv);
 
                 headers.Remove(Headers.EncryptionSalt);

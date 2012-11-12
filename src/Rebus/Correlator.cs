@@ -13,7 +13,7 @@ namespace Rebus
         readonly Saga<TData> saga;
         string sagaDataPropertyPath;
 
-        public Correlator(Func<TMessage, object> messageProperty, Saga<TData> saga) 
+        internal Correlator(Func<TMessage, object> messageProperty, Saga<TData> saga) 
         {
             this.messageProperty = messageProperty;
             this.saga = saga;

@@ -10,6 +10,9 @@ namespace Rebus.Configuration
         const string MessagesPropertyName = "messages";
         const string EndpointPropertyName = "endpoint";
 
+        /// <summary>
+        /// Gets/sets the value of the messages attribute on the add element
+        /// </summary>
         [ConfigurationProperty(MessagesPropertyName)]
         public string Messages
         {
@@ -17,6 +20,9 @@ namespace Rebus.Configuration
             set { this[MessagesPropertyName] = value; }
         }
 
+        /// <summary>
+        /// Gets/sets the value of the endpoint attribute on the add element
+        /// </summary>
         [ConfigurationProperty(EndpointPropertyName)]
         public string Endpoint
         {
@@ -24,6 +30,10 @@ namespace Rebus.Configuration
             set { this[EndpointPropertyName] = value; }
         }
 
+        /// <summary>
+        /// Gets whether the string stored in <seealso cref="Messages"/> is an assembly name. Otherwise,
+        /// it is a specific type name
+        /// </summary>
         public bool IsAssemblyName
         {
             get { return !Messages.Contains(","); }

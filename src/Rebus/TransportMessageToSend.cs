@@ -12,6 +12,9 @@ namespace Rebus
     [Serializable]
     public class TransportMessageToSend
     {
+        /// <summary>
+        /// Constructs the wrapper of a transport message that is about to be sent
+        /// </summary>
         public TransportMessageToSend()
         {
             Headers = new Dictionary<string, object>();
