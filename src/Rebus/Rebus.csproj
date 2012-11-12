@@ -190,7 +190,6 @@
     <Compile Include="ReceivedTransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
-    <Compile Include="Transports\Msmq\MsmqTransactionWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Messages\SubscriptionMessage.cs" />

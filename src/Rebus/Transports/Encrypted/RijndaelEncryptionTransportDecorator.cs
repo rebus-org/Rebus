@@ -1,4 +1,5 @@
-﻿using Rebus.Extensions;
+﻿using System;
+using Rebus.Extensions;
 using Rebus.Shared;
 
 namespace Rebus.Transports.Encrypted
@@ -9,7 +10,7 @@ namespace Rebus.Transports.Encrypted
     /// with the salt used to encrypt the message which is stored in <see cref="Headers.EncryptionSalt"/>.
     /// Only messages with the <see cref="Headers.Encrypted"/> header are decrypted.
     /// </summary>
-    public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages
+    public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages, IDisposable
     {
         readonly RijndaelHelper helper;
         readonly ISendMessages innerSendMessages;
@@ -90,6 +91,18 @@ namespace Rebus.Transports.Encrypted
         public static string GenerateKeyBase64()
         {
             return RijndaelHelper.GenerateNewKey();
+        }
+
+        /// <summary>
+        /// Disposes decorated components if they are disposables
+        /// </summary>
+        public void Dispose()
+        {
+            if (innerSendMessages is IDisposable)
+                ((IDisposable) innerSendMessages).Dispose();
+
+            if (innerReceiveMessages is IDisposable)
+                ((IDisposable)innerReceiveMessages).Dispose();
         }
     }
 }

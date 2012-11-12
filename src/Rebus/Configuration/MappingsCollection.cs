@@ -8,6 +8,9 @@ namespace Rebus.Configuration
     /// </summary>
     public class MappingsCollection : ConfigurationElementCollection, IEnumerable<MappingElement>
     {
+        /// <summary>
+        /// Creates a new instance of the <see cref="MappingElement"/>
+        /// </summary>
         protected override ConfigurationElement CreateNewElement()
         {
             return new MappingElement();
