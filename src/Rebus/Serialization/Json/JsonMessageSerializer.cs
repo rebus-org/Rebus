@@ -11,6 +11,10 @@ using Rebus.Shared;
 
 namespace Rebus.Serialization.Json
 {
+    /// <summary>
+    /// Implementation of <see cref="ISerializeMessages"/> that uses Newtonsoft JSON.NET internally to serialize
+    /// transport messages.
+    /// </summary>
     public class JsonMessageSerializer : ISerializeMessages
     {
         static readonly JsonSerializerSettings Settings =
@@ -21,6 +25,9 @@ namespace Rebus.Serialization.Json
         static readonly Encoding Encoding = Encoding.UTF7;
         readonly NonDefaultSerializationBinder binder;
 
+        /// <summary>
+        /// Constructs the serializer
+        /// </summary>
         public JsonMessageSerializer()
         {
             binder = new NonDefaultSerializationBinder();
@@ -85,7 +92,11 @@ namespace Rebus.Serialization.Json
             }
         }
 
-        public class NonDefaultSerializationBinder : DefaultSerializationBinder
+        /// <summary>
+        /// JSON.NET serialization binder that can be extended with a pipeline of name and type resolvers,
+        /// allowing for customizing how types are bound
+        /// </summary>
+        class NonDefaultSerializationBinder : DefaultSerializationBinder
         {
             readonly List<Func<Type, TypeDescriptor>> nameResolvers = new List<Func<Type, TypeDescriptor>>();
             readonly List<Func<TypeDescriptor, Type>> typeResolvers = new List<Func<TypeDescriptor, Type>>();
@@ -134,11 +145,21 @@ namespace Rebus.Serialization.Json
             }
         }
 
+        /// <summary>
+        /// Adds the specified function to the pipeline of resolvers that can get a <see cref="TypeDescriptor"/>
+        /// from a .NET type. If the function returns null, it means that it doesn't care and the next resulver
+        /// will be called, until ultimately it will fall back to default JSON.NET behavior
+        /// </summary>
         public void AddNameResolver(Func<Type, TypeDescriptor> resolver)
         {
             binder.Add(resolver);
         }
 
+        /// <summary>
+        /// Adds the specified function to the pipeline of resolvers that can get a .NET type from a
+        /// <see cref="TypeDescriptor"/>. If the function returns null, it means that it doesn't care and the next resulver
+        /// will be called, until ultimately it will fall back to default JSON.NET behavior
+        /// </summary>
         public void AddTypeResolver(Func<TypeDescriptor, Type> resolver)
         {
             binder.Add(resolver);

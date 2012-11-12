@@ -7,10 +7,17 @@ using Ponder;
 
 namespace Rebus.Persistence.InMemory
 {
+    /// <summary>
+    /// Saga persister that stores saga data in memory. Should probably not be used for anything real, except in scenarios
+    /// where you know the sagas are very short-lived and don't have to be durable.
+    /// </summary>
     public class InMemorySagaPersister : IStoreSagaData, IEnumerable<ISagaData>
     {
         readonly ConcurrentDictionary<Guid, ISagaData> data = new ConcurrentDictionary<Guid, ISagaData>();
 
+        /// <summary>
+        /// Constructs the persister
+        /// </summary>
         public InMemorySagaPersister()
         {
         }

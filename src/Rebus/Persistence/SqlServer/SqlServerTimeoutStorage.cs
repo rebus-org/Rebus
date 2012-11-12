@@ -6,18 +6,28 @@ using Rebus.Timeout;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implementaion of <see cref="IStoreTimeouts"/> that uses an SQL Server to store the timeouts
+    /// </summary>
     public class SqlServerTimeoutStorage : IStoreTimeouts
     {
         const int PrimaryKeyViolationNumber = 2627;
         readonly string connectionString;
         readonly string timeoutsTableName;
 
+        /// <summary>
+        /// Constructs the timeout storage which will use the specified connection string to connect to a database,
+        /// storing the timeouts in the table with the specified name
+        /// </summary>
         public SqlServerTimeoutStorage(string connectionString, string timeoutsTableName)
         {
             this.connectionString = connectionString;
             this.timeoutsTableName = timeoutsTableName;
         }
 
+        /// <summary>
+        /// Gets the name of the table where timeouts are stored
+        /// </summary>
         public string TimeoutsTableName
         {
             get { return timeoutsTableName; }

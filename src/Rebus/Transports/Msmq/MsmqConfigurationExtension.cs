@@ -6,6 +6,9 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.Transports.Msmq
 {
+    /// <summary>
+    /// Configuration extensions that allow for configuring Rebus to use <see cref="MsmqMessageQueue"/> as a message transport
+    /// </summary>
     public static class MsmqConfigurationExtension
     {
         /// <summary>
@@ -17,6 +20,9 @@ namespace Rebus.Transports.Msmq
             DoIt(configurer, inputQueue, errorQueue);
         }
 
+        /// <summary>
+        /// Configures Rebus to run in one-way client mode, which means that the bus is capable only of sending messages.
+        /// </summary>
         public static void UseMsmqInOneWayClientMode(this RebusTransportConfigurer configurer)
         {
             var msmqMessageQueue = MsmqMessageQueue.Sender();

@@ -1,10 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Timeout;
 
 namespace Rebus.Persistence.InMemory
 {
+    /// <summary>
+    /// Timeout storage that stores timeouts in memory. Please don't use this for anything other than testing stuff,
+    /// e.g. on your developer box and possibly in test environments.
+    /// </summary>
     public class InMemoryTimeoutStorage : IStoreTimeouts
     {
         readonly object listLock = new object();
