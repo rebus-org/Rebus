@@ -8,6 +8,10 @@ namespace Rebus.Logging
     /// </summary>
     public class LoggingColors
     {
+        /// <summary>
+        /// Constructs the default set of logging colors, which if gray, green, yellow, and red foreground for log
+        /// levels debug, info, warn, and error respectively.
+        /// </summary>
         public LoggingColors()
         {
             Debug = ColorSetting.Foreground(ConsoleColor.Gray);

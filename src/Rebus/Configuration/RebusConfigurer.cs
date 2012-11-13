@@ -6,6 +6,9 @@ using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Root configurer that allows for invoking configurers for each aspect of Rebus
+    /// </summary>
     public class RebusConfigurer : BaseConfigurer
     {
         static ILog log;
@@ -15,23 +18,33 @@ namespace Rebus.Configuration
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public RebusConfigurer(ConfigurationBackbone backbone)
+        internal RebusConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for hooking into Rebus' events
+        /// </summary>
         public RebusConfigurer Events(Action<IRebusEvents> configure)
         {
             configure(new EventsConfigurer(Backbone));
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for setting up decoration steps which will be called before the bus in
+        /// created
+        /// </summary>
         public RebusConfigurer Decorators(Action<DecoratorsConfigurer> configurer)
         {
             configurer(new DecoratorsConfigurer(Backbone));
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for configuring how Rebus sends and received messages
+        /// </summary>
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)
         {
             AssertIsNull(Backbone.SendMessages, "Transport");
@@ -40,6 +53,9 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for configuring how Rebus serializes transport messages
+        /// </summary>
         public RebusConfigurer Serialization(Action<RebusSerializationConfigurer> configure)
         {
             AssertIsNull(Backbone.SerializeMessages, "Serialization");
@@ -47,6 +63,9 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for configuring how Rebus should store sagas
+        /// </summary>
         public RebusConfigurer Sagas(Action<RebusSagasConfigurer> configure)
         {
             AssertIsNull(Backbone.StoreSagaData, "Sagas");
@@ -54,6 +73,9 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for configuring how Rebus should store subscriptions
+        /// </summary>
         public RebusConfigurer Subscriptions(Action<RebusSubscriptionsConfigurer> configure)
         {
             AssertIsNull(Backbone.StoreSubscriptions, "Subscriptions");
@@ -61,6 +83,10 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for configuring how Rebus does routing, which essentially can
+        /// be boiled down to one single question: which endpoint owns a particular message type
+        /// </summary>
         public RebusConfigurer DetermineEndpoints(Action<RebusRoutingConfigurer> configure)
         {
             AssertIsNull(Backbone.DetermineDestination, "DetermineEndpoints");
@@ -80,6 +106,9 @@ namespace Rebus.Configuration
                 " multiple times.", configurationThingie);
         }
 
+        /// <summary>
+        /// Invokes the configurer that allows for fluently configuring a filter for Rebus' message handler pipeline
+        /// </summary>
         public RebusConfigurer SpecifyOrderOfHandlers(Action<PipelineInspectorConfigurer> configurePipelineInspector)
         {
             AssertIsNull(Backbone.InspectHandlerPipeline, "SpecifyOrderOfHandlers");
@@ -87,6 +116,10 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Creates the bus by using all the configured implementations from the backbone, running configured decoration
+        /// steps
+        /// </summary>
         public IStartableBus CreateBus()
         {
             VerifyComponents(Backbone);

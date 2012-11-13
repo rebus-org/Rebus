@@ -1,15 +1,25 @@
-﻿using Rebus.Extensions;
+﻿using System;
+using Rebus.Extensions;
 using Rebus.Shared;
-using Rebus.Transports.Msmq;
 
 namespace Rebus.Transports.Encrypted
 {
-    public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages
+    /// <summary>
+    /// Decoration for <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/> that encrypts/decrypts
+    /// message bodies. When a message is encrypted, the header <see cref="Headers.Encrypted"/> is added along
+    /// with the salt used to encrypt the message which is stored in <see cref="Headers.EncryptionSalt"/>.
+    /// Only messages with the <see cref="Headers.Encrypted"/> header are decrypted.
+    /// </summary>
+    public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages, IDisposable
     {
         readonly RijndaelHelper helper;
         readonly ISendMessages innerSendMessages;
         readonly IReceiveMessages innerReceiveMessages;
 
+        /// <summary>
+        /// Constructs the decorator with the specified implementations of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>,
+        /// storing the specified base 64-encoded key to be used when encrypting/decrypting messages
+        /// </summary>
         public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string keyBase64)
         {
             this.innerSendMessages = innerSendMessages;
@@ -45,7 +55,7 @@ namespace Rebus.Transports.Encrypted
 
             if (headers.ContainsKey(Headers.Encrypted))
             {
-                var iv = receivedTransportMessage.GetHeader(Headers.EncryptionSalt);
+                var iv = receivedTransportMessage.GetStringHeader(Headers.EncryptionSalt);
                 body = helper.Decrypt(receivedTransportMessage.Body, iv);
 
                 headers.Remove(Headers.EncryptionSalt);
@@ -75,9 +85,24 @@ namespace Rebus.Transports.Encrypted
             get { return innerReceiveMessages.InputQueueAddress; }
         }
 
+        /// <summary>
+        /// Static helper that can be used to generate a brand-spanking-new base 64-encoded encryption key
+        /// </summary>
         public static string GenerateKeyBase64()
         {
             return RijndaelHelper.GenerateNewKey();
+        }
+
+        /// <summary>
+        /// Disposes decorated components if they are disposables
+        /// </summary>
+        public void Dispose()
+        {
+            if (innerSendMessages is IDisposable)
+                ((IDisposable) innerSendMessages).Dispose();
+
+            if (innerReceiveMessages is IDisposable)
+                ((IDisposable)innerReceiveMessages).Dispose();
         }
     }
 }

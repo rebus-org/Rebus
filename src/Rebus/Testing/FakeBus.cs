@@ -138,7 +138,7 @@ namespace Rebus.Testing
         /// </summary>
         public class DeferredMessage
         {
-            public DeferredMessage(object message, TimeSpan delay)
+            internal DeferredMessage(object message, TimeSpan delay)
             {
                 Message = message;
                 Delay = delay;

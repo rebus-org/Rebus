@@ -5,7 +5,6 @@ using System.Text;
 using Rebus.Serialization;
 using Rebus.Shared;
 using Message = System.Messaging.Message;
-using System.Linq;
 
 namespace Rebus.Transports.Msmq
 {
@@ -15,16 +14,16 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class RebusTransportMessageFormatter : IMessageFormatter
     {
-        public static readonly Encoding HeaderEcoding = Encoding.UTF7;
+        static readonly Encoding HeaderEcoding = Encoding.UTF7;
 
-        public static MessagePropertyFilter PropertyFilter
+        internal static readonly MessagePropertyFilter PropertyFilter
             = new MessagePropertyFilter
-                {
-                    Id = true,
-                    Body = true,
-                    Extension = true,
-                    Label = true,
-                };
+                  {
+                      Id = true,
+                      Body = true,
+                      Extension = true,
+                      Label = true,
+                  };
 
         static readonly DictionarySerializer DictionarySerializer = new DictionarySerializer();
 

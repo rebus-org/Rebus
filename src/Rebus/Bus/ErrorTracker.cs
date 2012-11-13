@@ -193,8 +193,8 @@ namespace Rebus.Bus
 
             public PoisonMessageInfo GetPoisonMessageInfo()
             {
-                return new PoisonMessageInfo(Id, exceptions.Select(e => new TimedException(e.Time, e.Value)));
-            } 
+                return new PoisonMessageInfo(Id, exceptions.Select(e => new Timed<Exception>(e.Time, e.Value)));
+            }
 
             static string FormatTimedException(Timed<Exception> e)
             {

@@ -25,11 +25,17 @@ namespace Rebus
             this.sagaHandlerTypes = sagaHandlerTypes;
         }
 
+        /// <summary>
+        /// Gets the types of saga handlers that were found
+        /// </summary>
         public Type[] SagaHandlerTypes
         {
             get { return sagaHandlerTypes; }
         }
 
+        /// <summary>
+        /// Gets the message that resulted in multiple saga handlers being resolved
+        /// </summary>
         public object MessageThatCouldBeHandledByMultipleSagaHandlers
         {
             get { return messageThatCouldBeHandledByMultipleSagaHandlers; }

@@ -4,6 +4,10 @@ using System.Linq;
 
 namespace Rebus.Persistence.InMemory
 {
+    /// <summary>
+    /// Implementation of <see cref="IStoreSubscriptions"/> that stores the type -> endpoint mappings in
+    /// an in-memory dictionary
+    /// </summary>
     public class InMemorySubscriptionStorage : IStoreSubscriptions
     {
         readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<string, object>>();

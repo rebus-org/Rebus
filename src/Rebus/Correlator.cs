@@ -4,13 +4,16 @@ using Ponder;
 
 namespace Rebus
 {
+    /// <summary>
+    /// Element of the fluent syntax used to configure correlations between incoming messages and saga data
+    /// </summary>
     public class Correlator<TData, TMessage> : Correlation where TData : ISagaData where TMessage : class
     {
         readonly Func<TMessage, object> messageProperty;
         readonly Saga<TData> saga;
         string sagaDataPropertyPath;
 
-        public Correlator(Func<TMessage, object> messageProperty, Saga<TData> saga) 
+        internal Correlator(Func<TMessage, object> messageProperty, Saga<TData> saga) 
         {
             this.messageProperty = messageProperty;
             this.saga = saga;
@@ -21,7 +24,7 @@ namespace Rebus
             get { return sagaDataPropertyPath; }
         }
 
-        public override object FieldFromMessage(object message)
+        internal override object FieldFromMessage(object message)
         {
             var typedMessage = message as TMessage;
             if (typedMessage == null)
@@ -33,6 +36,9 @@ namespace Rebus
             return messageProperty(typedMessage);
         }
 
+        /// <summary>
+        /// Invokes the final part of the syntax that completes the configuration of this correlation
+        /// </summary>
         public void CorrelatesWith(Expression<Func<TData,object>> sagaDataProperty)
         {
             sagaDataPropertyPath = Reflect.Path(sagaDataProperty);

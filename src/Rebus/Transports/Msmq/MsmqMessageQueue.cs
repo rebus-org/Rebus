@@ -28,11 +28,19 @@ namespace Rebus.Transports.Msmq
         readonly string inputQueueName;
         readonly string machineAddress;
 
+        /// <summary>
+        /// Constructs a special send-only instance of <see cref="MsmqMessageQueue"/>. This instance is
+        /// meant to be used when Rebus in running in one-way client mode
+        /// </summary>
         public static MsmqMessageQueue Sender()
         {
             return new MsmqMessageQueue(null);
         }
 
+        /// <summary>
+        /// Constructs the <see cref="MsmqMessageQueue"/>, using the specified input queue. If the queue does not exist,
+        /// it will attempt to create it. If it already exists, it will assert that the queue is transactional.
+        /// </summary>
         public MsmqMessageQueue(string inputQueueName)
         {
             if (inputQueueName == null) return;
@@ -183,6 +191,9 @@ because there would be remote calls involved when you wanted to receive a messag
             return transaction;
         }
 
+        /// <summary>
+        /// Purges the input queue
+        /// </summary>
         public MsmqMessageQueue PurgeInputQueue()
         {
             if (string.IsNullOrEmpty(inputQueuePath)) return this;
@@ -193,6 +204,9 @@ because there would be remote calls involved when you wanted to receive a messag
             return this;
         }
 
+        /// <summary>
+        /// Deletes the input queue entirely
+        /// </summary>
         public MsmqMessageQueue DeleteInputQueue()
         {
             if (MessageQueue.Exists(inputQueuePath))

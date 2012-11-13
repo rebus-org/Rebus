@@ -23,6 +23,9 @@ namespace Rebus
             get { return headers; }
         }
 
+        /// <summary>
+        /// Event that is raised when this message context instance is disposed
+        /// </summary>
         public event Action Disposed = delegate { };
 
         [ThreadStatic]
@@ -35,6 +38,11 @@ namespace Rebus
         }
 
 #if DEBUG
+        /// <summary>
+        /// Only applicable in DEBUG build: Stores that call stack of when this message context was created. Can be used to
+        /// chase down bugs that happen when establishing a message context on a thread where a message context has already
+        /// been established
+        /// </summary>
         public string StackTrace { get; set; }
 #endif
 
@@ -87,6 +95,10 @@ Stacktrace of when the current message context was created:
 
         public IDictionary<string, object> Items { get; private set; }
 
+        /// <summary>
+        /// Gets the current thread-bound message context if one is available, throwing an <see cref="InvalidOperationException"/>
+        /// otherwise. Use <seealso cref="HasCurrent"/> to check if a message context is available if you're unsure
+        /// </summary>
         public static IMessageContext GetCurrent()
         {
             if (current == null)
@@ -99,11 +111,17 @@ Stacktrace of when the current message context was created:
             return current;
         }
 
+        /// <summary>
+        /// Indicates whether a message context is bound to the current thread
+        /// </summary>
         public static bool HasCurrent
         {
             get { return current != null; }
         }
 
+        /// <summary>
+        /// Indicates whether message dispatch has been aborted in this message context
+        /// </summary>
         public static bool MessageDispatchAborted
         {
             get { return HasCurrent && !((MessageContext)current).DispatchMessageToHandlers; }
@@ -123,11 +141,17 @@ Stacktrace of when the current message context was created:
             Disposed();
         }
 
+        /// <summary>
+        /// Sets a reference to the logical message that is currently being handled
+        /// </summary>
         public void SetLogicalMessage(object message)
         {
             currentMessage = message;
         }
 
+        /// <summary>
+        /// Clears the reference to the logical message that was being handled
+        /// </summary>
         public void ClearLogicalMessage()
         {
             currentMessage = null;

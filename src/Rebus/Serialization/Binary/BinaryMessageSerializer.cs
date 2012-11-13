@@ -5,6 +5,10 @@ using Rebus.Extensions;
 
 namespace Rebus.Serialization.Binary
 {
+    /// <summary>
+    /// Implementation of <see cref="ISerializeMessages"/> that serializes transport messages with the
+    /// standard BCL <see cref="BinaryFormatter"/>
+    /// </summary>
     public class BinaryMessageSerializer : ISerializeMessages
     {
         public TransportMessageToSend Serialize(Message message)

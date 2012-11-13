@@ -5,13 +5,19 @@ using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configurer that allows for configuring how sagas are made persistent
+    /// </summary>
     public class RebusSagasConfigurer : BaseConfigurer
     {
-        public RebusSagasConfigurer(ConfigurationBackbone backbone)
+        internal RebusSagasConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }
 
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IStoreSagaData"/> to persist saga data
+        /// </summary>
         public void Use(IStoreSagaData storeSagaData)
         {
             Backbone.StoreSagaData = storeSagaData;

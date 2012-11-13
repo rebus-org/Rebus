@@ -5,10 +5,7 @@ namespace Rebus.Configuration
     /// </summary>
     public class DecoratorsConfigurer : BaseConfigurer
     {
-        /// <summary>
-        /// Constructs the decorators configurer
-        /// </summary>
-        public DecoratorsConfigurer(ConfigurationBackbone backbone)
+        internal DecoratorsConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }

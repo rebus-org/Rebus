@@ -2,13 +2,19 @@ using System;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configurer that allows for configuring which implementation of <see cref="IDetermineDestination"/> that should be used
+    /// </summary>
     public class RebusRoutingConfigurer : BaseConfigurer
     {
-        public RebusRoutingConfigurer(ConfigurationBackbone backbone)
+        internal RebusRoutingConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
         }
 
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IDetermineDestination"/> to determine who owns messages
+        /// </summary>
         public void Use(IDetermineDestination determineDestination)
         {
             Backbone.DetermineDestination = determineDestination;

@@ -12,11 +12,11 @@ namespace Rebus.Testing
     /// <summary>
     /// Saga fixture that can help unit testing sagas.
     /// </summary>
-    public class SagaFixture<T> where T : class, ISagaData, new()
+    public class SagaFixture<TSagaData> where TSagaData : class, ISagaData, new()
     {
-        readonly Saga<T> saga;
-        readonly IList<T> availableSagaData;
-        readonly List<T> deletedSagaData = new List<T>();
+        readonly Saga<TSagaData> saga;
+        readonly IList<TSagaData> availableSagaData;
+        readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
         readonly Dispatcher dispatcher;
         object currentLogicalMessage;
 
@@ -25,9 +25,9 @@ namespace Rebus.Testing
         /// list will be used to look for existing saga data instances, and new ones will be added to this list as well.
         /// </summary>
         [DebuggerStepThrough]
-        public SagaFixture(Saga<T> saga, IList<T> availableSagaData)
+        public SagaFixture(Saga<TSagaData> saga, IList<TSagaData> availableSagaData)
         {
-            var persister = new SagaFixtureSagaPersister<T>(availableSagaData, deletedSagaData);
+            var persister = new SagaFixtureSagaPersister<TSagaData>(availableSagaData, deletedSagaData);
 
             persister.CreatedNew += RaiseCreatedNewSagaData;
             persister.Correlated += RaiseCorrelatedWithExistingSagaData;
@@ -50,13 +50,13 @@ namespace Rebus.Testing
         void RaiseCorrelatedWithExistingSagaData(ISagaData d)
         {
             if (CorrelatedWithExistingSagaData != null)
-                CorrelatedWithExistingSagaData(currentLogicalMessage, (T)d);
+                CorrelatedWithExistingSagaData(currentLogicalMessage, (TSagaData)d);
         }
 
         void RaiseCreatedNewSagaData(ISagaData d)
         {
             if (CreatedNewSagaData != null)
-                CreatedNewSagaData(currentLogicalMessage, (T)d);
+                CreatedNewSagaData(currentLogicalMessage, (TSagaData)d);
         }
 
         class SagaFixtureHandlerActivator : IActivateHandlers
@@ -85,38 +85,54 @@ namespace Rebus.Testing
         /// Constructs the fixture with the given saga.
         /// </summary>
         [DebuggerStepThrough]
-        public SagaFixture(Saga<T> saga)
-            : this(saga, new List<T>())
+        public SagaFixture(Saga<TSagaData> saga)
+            : this(saga, new List<TSagaData>())
         {
         }
 
-        public IList<T> AvailableSagaData
+        /// <summary>
+        /// Gets a list of all the saga data that is currently persisted
+        /// </summary>
+        public IList<TSagaData> AvailableSagaData
         {
             get { return availableSagaData; }
         }
 
-        public IList<T> DeletedSagaData
+        /// <summary>
+        /// Gets a list of all the saga data that has been marked as complete
+        /// </summary>
+        public IList<TSagaData> DeletedSagaData
         {
             get { return deletedSagaData; }
         }
 
-        public delegate void CorrelatedWithExistingSagaDataEventHandler<in TSagaData>(object message, TSagaData sagaData);
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message can be correlated with an existing piece of saga data
+        /// </summary>
+        public delegate void CorrelatedWithExistingSagaDataEventHandler<in T>(object message, T sagaData);
 
-        public delegate void CreatedNewSagaDataEventHandler<in TSagaData>(object message, TSagaData sagaData);
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message gives rise to a new instance of saga data
+        /// </summary>
+        public delegate void CreatedNewSagaDataEventHandler<in T>(object message, T sagaData);
 
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message could have been handled by a saga handler but
+        /// could not be correlated with an existing piece of saga data and it wasn't allowed to initiate a new saga
+        /// </summary>
         public delegate void CouldNotCorrelateEventHandler(object message);
 
         /// <summary>
         /// Gets raised during message dispatch when the message could be correlated with an existing saga data instance.
         /// The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CorrelatedWithExistingSagaDataEventHandler<T> CorrelatedWithExistingSagaData;
+        public event CorrelatedWithExistingSagaDataEventHandler<TSagaData> CorrelatedWithExistingSagaData;
 
         /// <summary>
         /// Gets raised during message dispatch when the message could not be correlated with an existing saga data instance
         /// and a new saga data instance was created. The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CreatedNewSagaDataEventHandler<T> CreatedNewSagaData;
+        public event CreatedNewSagaDataEventHandler<TSagaData> CreatedNewSagaData;
 
         /// <summary>
         /// Gets raised during message dispatch when the message could not be correlated with a saga data instance, and 
@@ -157,18 +173,18 @@ namespace Rebus.Testing
         /// Gives access to the currently correlated piece of saga data. If none could be correlated, 
         /// null is returned.
         /// </summary>
-        public T Data
+        public TSagaData Data
         {
             get { return saga.Data; }
         }
 
-        public class SagaFixtureSagaPersister<T> : IStoreSagaData where T : ISagaData
+        class SagaFixtureSagaPersister<TSagaDataToStore> : IStoreSagaData where TSagaDataToStore : ISagaData
         {
-            readonly IList<T> availableSagaData;
-            readonly IList<T> deletedSagaData;
+            readonly IList<TSagaDataToStore> availableSagaData;
+            readonly IList<TSagaDataToStore> deletedSagaData;
             readonly InMemorySagaPersister innerPersister;
 
-            public SagaFixtureSagaPersister(IList<T> availableSagaData, IList<T> deletedSagaData)
+            public SagaFixtureSagaPersister(IList<TSagaDataToStore> availableSagaData, IList<TSagaDataToStore> deletedSagaData)
             {
                 innerPersister = new InMemorySagaPersister(availableSagaData.Cast<ISagaData>());
 
@@ -179,7 +195,7 @@ namespace Rebus.Testing
             public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
                 innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
-                availableSagaData.Add((T)sagaData);
+                availableSagaData.Add((TSagaDataToStore)sagaData);
                 CreatedNew(sagaData);
             }
 
@@ -191,12 +207,12 @@ namespace Rebus.Testing
             public void Delete(ISagaData sagaData)
             {
                 innerPersister.Delete(sagaData);
-                deletedSagaData.Add((T)sagaData);
+                deletedSagaData.Add((TSagaDataToStore)sagaData);
             }
 
-            public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+            public TSagaDataToFind Find<TSagaDataToFind>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaDataToFind : class, ISagaData
             {
-                var result = innerPersister.Find<T>(sagaDataPropertyPath, fieldFromMessage);
+                var result = innerPersister.Find<TSagaDataToFind>(sagaDataPropertyPath, fieldFromMessage);
                 if (result != null)
                 {
                     Correlated(result);

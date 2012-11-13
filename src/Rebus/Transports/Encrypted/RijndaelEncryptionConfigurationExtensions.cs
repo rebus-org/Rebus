@@ -4,8 +4,14 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.Transports.Encrypted
 {
+    /// <summary>
+    /// Configuration extensions for configuring the transport decorator <see cref="RijndaelEncryptionTransportDecorator"/>
+    /// </summary>
     public static class RijndaelEncryptionConfigurationExtensions
     {
+        /// <summary>
+        /// Configures that message bodies should be encrypted/decrypted with the specified base 64-encoded key
+        /// </summary>
         public static void EncryptMessageBodies(this DecoratorsConfigurer configurer, string keyBase64)
         {
             configurer.AddDecoration(b =>
@@ -27,6 +33,10 @@ namespace Rebus.Transports.Encrypted
                 });
         }
 
+        /// <summary>
+        /// Configures that message bodies should be encrypted/decrypted with a base 64-encoded key from the
+        /// &lt;rijndael&gt; element in the Rebus configuration section
+        /// </summary>
         public static void EncryptMessageBodies(this DecoratorsConfigurer configurer)
         {
             try

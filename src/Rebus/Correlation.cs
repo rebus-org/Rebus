@@ -11,6 +11,6 @@ namespace Rebus
         /// <summary>
         /// Extracts the relevant field from the given message
         /// </summary>
-        public abstract object FieldFromMessage(object message);
+        internal abstract object FieldFromMessage(object message);
     }
 }

@@ -503,6 +503,10 @@ element)"));
             }
         }
 
+        /// <summary>
+        /// Stops all workers, waits until they are stopped, disposes all implementations of abstractions that
+        /// implement <see cref="IDisposable"/>
+        /// </summary>
         public void Dispose()
         {
             // redundant optimization: just tell all workers to stop at the same time

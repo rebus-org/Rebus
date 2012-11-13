@@ -11,6 +11,9 @@ namespace Rebus.Messages
     [Serializable]
     public class Message
     {
+        /// <summary>
+        /// Constructs the transport message wrapper
+        /// </summary>
         public Message()
         {
             Headers = new Dictionary<string, object>();
@@ -64,7 +67,9 @@ namespace Rebus.Messages
             using(var reader = new StringReader(s))
             {
                 string line;
-                while (string.IsNullOrWhiteSpace((line = reader.ReadLine()))) ;
+                while (string.IsNullOrWhiteSpace((line = reader.ReadLine())))
+                {
+                }
                 line = Sanitize(line);
                 if (line.Length > 20) return line.Substring(0, 20) + "(...)";
                 var nextLine = reader.ReadLine();
