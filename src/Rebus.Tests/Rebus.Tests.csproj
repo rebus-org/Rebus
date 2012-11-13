@@ -271,6 +271,7 @@
     <Compile Include="Unit\TestMessageForwarding.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Unit\TestRebusTransportMessageScoping.cs" />
     <Compile Include="Unit\TestRebusBus.cs" />
     <Compile Include="Unit\TestSimpleHandlerActivator.cs" />
     <Compile Include="Unit\TestWorker_ErrorHandling.cs" />
