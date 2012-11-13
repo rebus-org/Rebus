@@ -27,6 +27,10 @@ namespace Rebus.Transports.Encrypted
             helper = new RijndaelHelper(keyBase64);
         }
 
+        /// <summary>
+        /// Sends a copy of the specified <see cref="TransportMessageToSend"/> using the underlying implementation of <see cref="ISendMessages"/>
+        /// with an encrypted message body and additional headers
+        /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var iv = helper.GenerateNewIv();
@@ -44,6 +48,10 @@ namespace Rebus.Transports.Encrypted
             innerSendMessages.Send(destinationQueueName, transportMessageToSend, context);
         }
 
+        /// <summary>
+        /// Receives a <see cref="ReceivedTransportMessage"/> using the underlying implementation of <see cref="IReceiveMessages"/>
+        /// decrypting the message body if necessary, and remove the additional encryption headers
+        /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             var receivedTransportMessage = innerReceiveMessages.ReceiveMessage(context);
@@ -75,11 +83,17 @@ namespace Rebus.Transports.Encrypted
                        };
         }
 
+        /// <summary>
+        /// Gets the simple input queue name from the wrapped implementation of <see cref="IReceiveMessages"/>
+        /// </summary>
         public string InputQueue
         {
             get { return innerReceiveMessages.InputQueue; }
         }
 
+        /// <summary>
+        /// Gets the globally addressable input queue name from the wrapped implementation of <see cref="IReceiveMessages"/>
+        /// </summary>
         public string InputQueueAddress
         {
             get { return innerReceiveMessages.InputQueueAddress; }
@@ -98,11 +112,11 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public void Dispose()
         {
-            if (innerSendMessages is IDisposable)
-                ((IDisposable) innerSendMessages).Dispose();
+            var disposableMessageSender = innerSendMessages as IDisposable;
+            if (disposableMessageSender != null) disposableMessageSender.Dispose();
 
-            if (innerReceiveMessages is IDisposable)
-                ((IDisposable)innerReceiveMessages).Dispose();
+            var disposableMessageReceiver = innerReceiveMessages as IDisposable;
+            if (disposableMessageReceiver != null) disposableMessageReceiver.Dispose();
         }
     }
 }

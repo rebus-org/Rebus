@@ -24,6 +24,9 @@ namespace Rebus.Bus
             TransactionContext.Set(this);
         }
 
+        /// <summary>
+        /// Gives access to a dictionary of stuff that will be kept for the duration of the transaction.
+        /// </summary>
         public object this[string key]
         {
             get { return items.ContainsKey(key) ? items[key] : null; }

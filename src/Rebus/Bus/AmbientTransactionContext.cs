@@ -53,6 +53,9 @@ namespace Rebus.Bus
 
         public bool IsTransactional { get { return true; } }
 
+        /// <summary>
+        /// Gives access to a dictionary of stuff that will be kept for the duration of the transaction.
+        /// </summary>
         public object this[string key]
         {
             get { return items.ContainsKey(key) ? items[key] : null; }

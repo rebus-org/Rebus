@@ -21,6 +21,9 @@ namespace Rebus
             this.unhandledMessage = unhandledMessage;
         }
 
+        /// <summary>
+        /// Gets the message that could not be handled
+        /// </summary>
         public object UnhandledMessage
         {
             get { return unhandledMessage; }

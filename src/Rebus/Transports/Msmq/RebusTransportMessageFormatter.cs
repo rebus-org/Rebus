@@ -27,16 +27,25 @@ namespace Rebus.Transports.Msmq
 
         static readonly DictionarySerializer DictionarySerializer = new DictionarySerializer();
 
+        /// <summary>
+        /// Returns this instance (it has no state)
+        /// </summary>
         public object Clone()
         {
             return this;
         }
 
+        /// <summary>
+        /// Always returns true - we always want to attempt to read the message
+        /// </summary>
         public bool CanRead(Message message)
         {
             return true;
         }
 
+        /// <summary>
+        /// Writes the MSMQ message, assuming that <see cref="obj"/> is a <see cref="TransportMessageToSend"/>
+        /// </summary>
         public void Write(Message message, object obj)
         {
             var transportMessage = obj as TransportMessageToSend;
@@ -65,6 +74,9 @@ namespace Rebus.Transports.Msmq
             }
         }
 
+        /// <summary>
+        /// Reads the given MSMQ message, wrapping the message in a <see cref="ReceivedTransportMessage"/>
+        /// </summary>
         public object Read(Message message)
         {
             var stream = message.BodyStream;

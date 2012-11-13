@@ -46,7 +46,10 @@ namespace Rebus
         IDictionary<string, object> Headers { get; }
 
 #if DEBUG
-        string StackTrace { get; set; }
+        /// <summary>
+        /// Gets the stack trace of the place in the code where this message context was created. Only on the message context in debug build though
+        /// </summary>
+        string StackTrace { get; }
 #endif
     }
 }

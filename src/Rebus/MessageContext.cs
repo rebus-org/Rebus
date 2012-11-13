@@ -18,6 +18,9 @@ namespace Rebus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// Contains the headers dictionary of the transport message currently being handled.
+        /// </summary>
         public IDictionary<string, object> Headers
         {
             get { return headers; }

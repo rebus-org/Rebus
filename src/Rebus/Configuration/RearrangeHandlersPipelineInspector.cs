@@ -20,6 +20,10 @@ namespace Rebus.Configuration
         string stackTrace;
         int maxIndex;
 
+        /// <summary>
+        /// Implements the filtering operation by attempting to return an ordered sequence of handlers where
+        /// the configured ordering of handler types is respected
+        /// </summary>
         public IEnumerable<IHandleMessages> Filter(object message, IEnumerable<IHandleMessages> handlers)
         {
             return handlers

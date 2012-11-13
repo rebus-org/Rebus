@@ -22,6 +22,11 @@ namespace Rebus.Configuration
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 
+        /// <summary>
+        /// Constructs the endpoint mapper, using the specified type filter to determine whether an encountered
+        /// type should be mapped. Can be used to avoid mapping e.g. factories and stuff if you want to put
+        /// helper classes inside your message assembly
+        /// </summary>
         public DetermineDestinationFromRebusConfigurationSection(Func<Type, bool> typeFilter)
         {
             this.typeFilter = typeFilter;
@@ -71,6 +76,9 @@ Note also, that specifying the input queue name with the 'inputQueue' attribute 
             }
         }
 
+        /// <summary>
+        /// Constructs the endpoint mapper without a type filter
+        /// </summary>
         public DetermineDestinationFromRebusConfigurationSection()
             : this(t => true)
         {
