@@ -1,5 +1,4 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Shared;
@@ -26,43 +25,6 @@ namespace Rebus.Transports.Msmq
             var gag = new OneWayClientGag();
             configurer.UseReceiver(gag);
             configurer.UseErrorTracker(gag);
-        }
-
-        public class OneWayClientGag : IReceiveMessages, IErrorTracker
-        {
-            public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string InputQueue { get; private set; }
-            public string InputQueueAddress { get; private set; }
-            public void StopTracking(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool MessageHasFailedMaximumNumberOfTimes(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetErrorText(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public PoisonMessageInfo GetPoisonMessageInfo(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void TrackDeliveryFail(string id, Exception exception)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string ErrorQueueAddress { get; private set; }
         }
 
         /// <summary>

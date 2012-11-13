@@ -47,8 +47,8 @@ namespace Rebus.Tests.Configuration
                                                             .SpecifyOrderOfHandlers(d => d.First<string>()));
 
             Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
-                                                            .Events(d => d.UncorrelatedMessage += (message, saga) => { })
-                                                            .Events(d => d.UncorrelatedMessage += (message, saga) => { }));
+                                                            .Events(d => d.UncorrelatedMessage += (bus, message, saga) => { })
+                                                            .Events(d => d.UncorrelatedMessage += (bus, message, saga) => { }));
 
             Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
                                                             .Decorators(d => d.AddDecoration(b => {}))
@@ -75,6 +75,8 @@ namespace Rebus.Tests.Configuration
                         e.PoisonMessage += delegate { raisedEvents.Add("poison message"); };
 
                         e.UncorrelatedMessage += delegate { raisedEvents.Add("uncorrelated message"); };
+
+                        e.MessageContextEstablished += delegate { raisedEvents.Add("message context established"); };
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
@@ -87,7 +89,8 @@ namespace Rebus.Tests.Configuration
             events.RaiseAfterTransportMessage(null, null, null);
             events.RaiseMessageSent(null, null, null);
             events.RaisePoisonMessage(null, null, null);
-            events.RaiseUncorrelatedMessage(null, null);
+            events.RaiseUncorrelatedMessage(null, null, null);
+            events.RaiseMessageContextEstablished(null, null);
 
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
@@ -96,6 +99,7 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("message sent");
             raisedEvents.ShouldContain("poison message");
             raisedEvents.ShouldContain("uncorrelated message");
+            raisedEvents.ShouldContain("message context established");
         }
 
         [Test]
@@ -255,7 +259,9 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var configurer = Configure.With(adapter)
-                .Serialization(s => s.UseJsonSerializer());
+                .Serialization(s => s.UseJsonSerializer()
+                                        .AddNameResolver(t => null)
+                                        .AddTypeResolver(d => null));
 
             configurer.Backbone.SerializeMessages.ShouldBeTypeOf<JsonMessageSerializer>();
         }

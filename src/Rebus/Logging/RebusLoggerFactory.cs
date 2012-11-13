@@ -5,6 +5,9 @@ using System.Linq;
 
 namespace Rebus.Logging
 {
+    /// <summary>
+    /// Static gateway that can be used by Rebus components to enlist in the logging framework
+    /// </summary>
     public class RebusLoggerFactory
     {
         static readonly List<Action<IRebusLoggerFactory>> changedHandlers = new List<Action<IRebusLoggerFactory>>();

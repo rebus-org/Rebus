@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rebus.Configuration;
 using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
 
@@ -22,6 +23,11 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
         {
             queuesToDelete.ForEach(RabbitMqFixtureBase.DeleteQueue);
             disposables.ForEach(d => d.Dispose());
+        }
+
+        public void ConfigureOneWayClientMode(RebusTransportConfigurer configurer)
+        {
+            configurer.UseRabbitMqInOneWayMode(RabbitMqFixtureBase.ConnectionString);
         }
     }
 }

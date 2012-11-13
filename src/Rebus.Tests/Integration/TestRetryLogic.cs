@@ -1,8 +1,10 @@
 using System;
 using System.Messaging;
 using System.Text;
+using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Org.BouncyCastle.Ocsp;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Shared;
@@ -120,6 +122,62 @@ namespace Rebus.Tests.Integration
             errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("Could not find any handlers to execute message");
         }
 
+        [Test]
+        public void MessageWithTimeToLiveWillDisappearFromErrorQueueAsWell()
+        {
+            // arrange
+            var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
+            
+            var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
+            var deadLetterQueue = GetMessageQueueFromPath(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DEADLETTER", Environment.MachineName));
+            var deadLetterQueue2 = GetMessageQueueFromPath(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DEADXACT", Environment.MachineName));
+
+            var activator = new HandlerActivatorForTesting()
+                .Handle<string>(s =>
+                    {
+                        throw new OmfgExceptionThisIsBad("whoahhh!");
+                    });
+            
+            CreateBus(ReceiverQueueName, activator, new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
+                      ReceiverErrorQueueName).Start(1);
+
+            const string message = "HELLO!";
+            senderBus.AttachHeader(message, Headers.TimeToBeReceived, "00:00:02");
+            senderBus.Routing.Send(ReceiverQueueName, message);
+
+            Thread.Sleep(3.Seconds());
+
+            ReceivedTransportMessage transportMessage = null;
+            try
+            {
+                transportMessage = (ReceivedTransportMessage) errorQueue.Receive(3.Seconds()).Body;
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            try
+            {
+                transportMessage = (ReceivedTransportMessage)deadLetterQueue.Receive(3.Seconds()).Body;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            try
+            {
+                transportMessage = (ReceivedTransportMessage)deadLetterQueue2.Receive(3.Seconds()).Body;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            transportMessage.ShouldBe(null);
+        }
+
         [TestCase("beforeTransport")]
         [TestCase("afterTransport", Ignore = true)]
         [TestCase("beforeLogical")]
@@ -228,13 +286,20 @@ namespace Rebus.Tests.Integration
 
         MessageQueue GetMessageQueue(string queueName)
         {
-            var queuePath = PrivateQueueNamed(queueName);
-            EnsureQueueExists(queuePath);
+            return GetMessageQueueFromPath(PrivateQueueNamed(queueName));
+        }
+
+        MessageQueue GetMessageQueueFromPath(string queuePath)
+        {
+            try
+            {
+                EnsureQueueExists(queuePath);
+            }catch{}
             var queue = new MessageQueue(queuePath)
-                            {
-                                MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
-                                Formatter = new RebusTransportMessageFormatter(),
-                            };
+                {
+                    MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
+                    Formatter = new RebusTransportMessageFormatter(),
+                };
             queue.Purge();
             return queue;
         }

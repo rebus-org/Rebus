@@ -23,8 +23,6 @@ namespace Rebus
             get { return headers; }
         }
 
-        public static event Action<IMessageContext> Established = delegate { };
-
         public event Action Disposed = delegate { };
 
         [ThreadStatic]
@@ -40,7 +38,7 @@ namespace Rebus
         public string StackTrace { get; set; }
 #endif
 
-        internal static MessageContext Enter(IDictionary<string, object> headers)
+        internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             if (current != null)
             {
@@ -61,8 +59,6 @@ Stacktrace of when the current message context was created:
             var messageContext = new MessageContext(headers);
 
             current = messageContext;
-
-            Established(current);
 
             return messageContext;
         }

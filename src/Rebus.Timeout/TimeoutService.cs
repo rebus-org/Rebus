@@ -7,6 +7,7 @@ using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
@@ -122,14 +123,23 @@ namespace Rebus.Timeout
                 {
                     log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
+                    var sagaId = timeout.SagaId;
+
+                    var reply = new TimeoutReply
+                        {
+                            SagaId = sagaId,
+                            CorrelationId = timeout.CorrelationId,
+                            DueTime = timeout.TimeToReturn,
+                            CustomData = timeout.CustomData,
+                        };
+
+                    if (sagaId != Guid.Empty)
+                    {
+                        bus.AttachHeader(reply, Headers.AutoCorrelationSagaId, sagaId.ToString());
+                    }
+
                     bus.Routing.Send(timeout.ReplyTo,
-                             new TimeoutReply
-                                 {
-                                     SagaId = timeout.SagaId,
-                                     CorrelationId = timeout.CorrelationId,
-                                     DueTime = timeout.TimeToReturn,
-                                     CustomData = timeout.CustomData,
-                                 });
+                             reply);
                 }
 
                 tx.Complete();

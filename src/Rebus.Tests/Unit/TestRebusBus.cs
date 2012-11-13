@@ -1,10 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Testing;
-using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -96,6 +96,7 @@ is just because there was a bug some time when the grouping of the messages was 
             var someRandomMessage = new SomeRandomMessage();
             var fakeContext = Mock<IMessageContext>();
             fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
+            fakeContext.Stub(s => s.Headers).Return(new Dictionary<string, object>());
 
             // act
             using (FakeMessageContext.Establish(fakeContext))
@@ -325,7 +326,7 @@ Or should it?")]
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
                                                      Arg<TransportMessageToSend>.Matches(
                                                          m => m.Headers.ContainsKey(Headers.ReturnAddress)
-                                                              && m.Headers[Headers.ReturnAddress] == "my input queue"),
+                                                              && m.Headers[Headers.ReturnAddress].ToString() == "my input queue"),
                                                               Arg<ITransactionContext>.Is.Anything));
         }
 

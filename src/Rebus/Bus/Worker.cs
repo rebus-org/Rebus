@@ -44,6 +44,8 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
+        internal event Action<IMessageContext> MessageContextEstablished = delegate { }; 
+
         volatile bool shouldExit;
         volatile bool shouldWork;
 
@@ -188,7 +190,12 @@ namespace Rebus.Bus
                 }
                 catch
                 {
-                    context.RaiseDoRollback();
+                    try
+                    {
+                        context.RaiseDoRollback();
+                    }
+                    catch{}
+
                     throw;
                 }
             }
@@ -209,6 +216,12 @@ namespace Rebus.Bus
 
             MessageContext context = null;
 
+            if (id == null)
+            {
+                HandlePoisonMessage(id, transportMessage);
+                return;
+            }
+
             if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
             {
                 HandlePoisonMessage(id, transportMessage);
@@ -225,7 +238,8 @@ namespace Rebus.Bus
                 {
                     var message = serializeMessages.Deserialize(transportMessage);
                     // successfully deserialized the transport message, let's enter a message context
-                    context = MessageContext.Enter(message.Headers);
+                    context = MessageContext.Establish(message.Headers);
+                    MessageContextEstablished(context);
 
                     foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                     {

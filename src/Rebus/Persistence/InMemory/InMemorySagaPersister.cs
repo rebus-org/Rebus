@@ -11,6 +11,21 @@ namespace Rebus.Persistence.InMemory
     {
         readonly ConcurrentDictionary<Guid, ISagaData> data = new ConcurrentDictionary<Guid, ISagaData>();
 
+        public InMemorySagaPersister()
+        {
+        }
+
+        internal InMemorySagaPersister(IEnumerable<ISagaData> sagaDataBootstrap)
+        {
+            foreach (var sagaData in sagaDataBootstrap)
+            {
+                if (sagaData.Id == Guid.Empty)
+                    sagaData.Id = Guid.NewGuid();
+
+                data[sagaData.Id] = sagaData;
+            }
+        }
+
         public virtual void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var key = sagaData.Id;

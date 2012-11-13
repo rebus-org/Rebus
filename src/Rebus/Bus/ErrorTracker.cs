@@ -9,6 +9,9 @@ using Rebus.Logging;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implements logic to track failed message deliveries and decide when to consider messages poisonous.
+    /// </summary>
     public class ErrorTracker : IErrorTracker, IDisposable
     {
         static ILog log;
@@ -178,7 +181,7 @@ namespace Rebus.Bus
 
             public void AddError(Exception exception)
             {
-                exceptions.Add(exception.AtThisInstant());
+                exceptions.Add(exception.Now());
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
             }

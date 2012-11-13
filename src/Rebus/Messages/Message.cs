@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Rebus.Messages
@@ -49,7 +50,32 @@ namespace Rebus.Messages
             if (Messages == null || Messages.Length == 0)
                 return "Empty Message";
 
-            return string.Join(" + ", Messages.Select(m => m.ToString()));
+            return string.Join(" + ", Messages.Select(GetStringRepresentation));
+        }
+
+        static string GetStringRepresentation(object m)
+        {
+            if (!(m is string)) return m.GetType().FullName;
+            
+            var s = (string) m;
+
+            if (string.IsNullOrWhiteSpace(s)) return "(empty string)";
+
+            using(var reader = new StringReader(s))
+            {
+                string line;
+                while (string.IsNullOrWhiteSpace((line = reader.ReadLine()))) ;
+                line = Sanitize(line);
+                if (line.Length > 20) return line.Substring(0, 20) + "(...)";
+                var nextLine = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(nextLine)) return line;
+                return line + "(...)";
+            }
+        }
+
+        static string Sanitize(string line)
+        {
+            return new string(line.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray()).Trim();
         }
     }
 }

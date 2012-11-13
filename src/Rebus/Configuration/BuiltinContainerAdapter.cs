@@ -68,6 +68,8 @@ namespace Rebus.Configuration
 
         public void Dispose()
         {
+            if (ReferenceEquals(null, Bus)) return;
+
             Bus.Dispose();
 
             if (!ReferenceEquals(Bus, AdvancedBus))

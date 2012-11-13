@@ -2,6 +2,9 @@
 
 namespace Rebus.Logging
 {
+    /// <summary>
+    /// This is the /dev/null of loggers...
+    /// </summary>
     public class NullLoggerFactory : AbstractRebusLoggerFactory
     {
         static readonly NullLogger Logger = new NullLogger();

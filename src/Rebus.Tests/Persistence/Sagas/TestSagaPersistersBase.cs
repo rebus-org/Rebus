@@ -20,7 +20,7 @@ namespace Rebus.Tests.Persistence.Sagas
                     {Headers.ReturnAddress, "none"},
                     {Headers.MessageId, "just_some_message_id"},
                 };
-            messageContext = MessageContext.Enter(headers);
+            messageContext = MessageContext.Establish(headers);
             persister = factory.CreatePersister();
         }
 

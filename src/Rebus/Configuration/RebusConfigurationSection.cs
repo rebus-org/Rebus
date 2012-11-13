@@ -31,7 +31,7 @@ namespace Rebus.Configuration
         const string RetriesAttributeName = "maxRetries";
         const string ConfigSectionName = "rebus";
 
-        [ConfigurationProperty(RijndaelCollectionPropertyName)]
+        [ConfigurationProperty(RijndaelCollectionPropertyName, IsRequired = false)]
         public RijndaelSection RijndaelSection
         {
             get { return (RijndaelSection)this[RijndaelCollectionPropertyName]; }

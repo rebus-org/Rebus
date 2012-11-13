@@ -26,6 +26,12 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
+        public RabbitMqOptions AddEventNameResolver(Func<Type, string> resolver)
+        {
+            queue.AddEventNameResolver(resolver);
+            return this;
+        }
+
         /// <summary>
         /// The RabbitMQ subscriptions storage handles the event where a subscriber is not configured to let
         /// RabbitMQ manage subscriptions. In this case, a <see cref="SubscriptionMessage"/> will be sent to

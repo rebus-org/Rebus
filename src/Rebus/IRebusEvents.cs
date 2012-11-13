@@ -38,7 +38,12 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen when an incoming message can be handled by a saga handler, but it turns out that there was no saga data that could be correlated with the message.
     /// </summary>
-    public delegate void UncorrelatedMessageEventHandler(object message, Saga saga);
+    public delegate void UncorrelatedMessageEventHandler(IAdvancedBus bus, object message, Saga saga);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever a message context is established.
+    /// </summary>
+    public delegate void MessageContextEstablishedEventHandler(IAdvancedBus bus, IMessageContext messageContext);
 
     /// <summary>
     /// Groups the different event hooks that Rebus exposes.
@@ -88,6 +93,13 @@ namespace Rebus
         /// turns out that no saga data instance could be correlated with the message.
         /// </summary>
         event UncorrelatedMessageEventHandler UncorrelatedMessage;
+        
+        /// <summary>
+        /// Event that is raised when an incoming transport message has been properly deserialized,
+        /// and it is about to be dispatched. The message context will last for the duration of the
+        /// message processing and is disposed at the very end.
+        /// </summary>
+        event MessageContextEstablishedEventHandler MessageContextEstablished;
 
         /// <summary>
         /// Contains a pipeline of message mutators that will be run in order when messages are sent,

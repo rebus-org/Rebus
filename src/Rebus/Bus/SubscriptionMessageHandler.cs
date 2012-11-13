@@ -6,7 +6,7 @@ using Rebus.Shared;
 namespace Rebus.Bus
 {
     /// <summary>
-    /// Internal message handler, that handles subscription messages.
+    /// Internal message handler that handles subscription messages.
     /// </summary>
     class SubscriptionMessageHandler : IHandleMessages<SubscriptionMessage>
     {

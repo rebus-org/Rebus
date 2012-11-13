@@ -1,6 +1,5 @@
 using System.Configuration;
 using Rebus.Configuration;
-using Rebus.Transports.Msmq;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.Transports.Encrypted
@@ -21,7 +20,7 @@ namespace Rebus.Transports.Encrypted
                     // if we're in one-way client mode, we skip the decorator - otherwise RebusBus would not
                     // be able to detect one-way client mode - we should definitely make this more explicit
                     // somehow
-                    if (!(b.ReceiveMessages is MsmqConfigurationExtension.OneWayClientGag))
+                    if (!(b.ReceiveMessages is OneWayClientGag))
                     {
                         b.ReceiveMessages = decorator;
                     }

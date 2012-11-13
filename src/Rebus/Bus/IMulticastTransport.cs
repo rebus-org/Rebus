@@ -23,5 +23,10 @@ namespace Rebus.Bus
         /// Unsubscribes the specified input queue address from messages of the specified type
         /// </summary>
         void Unsubscribe(Type messageType, string inputQueueAddress);
+
+        /// <summary>
+        /// Gets a proper event name for the published event of the specified type.
+        /// </summary>
+        string GetEventName(Type messageType);
     }
 }

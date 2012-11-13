@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rebus.Configuration;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Performance.StressMongo.Factories
@@ -18,6 +19,11 @@ namespace Rebus.Tests.Performance.StressMongo.Factories
         public void CleanUp()
         {
             disposables.ForEach(d => d.Dispose());
+        }
+
+        public void ConfigureOneWayClientMode(RebusTransportConfigurer configurer)
+        {
+            configurer.UseMsmqInOneWayClientMode();
         }
     }
 }

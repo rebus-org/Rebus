@@ -1,3 +1,6 @@
+using System;
+using Rebus.Shared;
+
 namespace Rebus.Bus
 {
     class DeferredMessageReDispatcher : IHandleDeferredMessage
@@ -9,8 +12,13 @@ namespace Rebus.Bus
             this.bus = bus;
         }
 
-        public void Dispatch(object deferredMessage)
+        public void Dispatch(object deferredMessage, Guid sagaId)
         {
+            if (sagaId != Guid.Empty)
+            {
+                bus.AttachHeader(deferredMessage, Headers.AutoCorrelationSagaId, sagaId.ToString());
+            }
+
             bus.SendLocal(deferredMessage);
         }
     }

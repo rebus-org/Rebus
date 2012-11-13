@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
-using Ponder;
+using Rebus.Bus;
+using Rebus.Persistence.InMemory;
+using System.Linq;
 
 namespace Rebus.Testing
 {
@@ -16,8 +16,9 @@ namespace Rebus.Testing
     {
         readonly Saga<T> saga;
         readonly IList<T> availableSagaData;
-        readonly ConcurrentDictionary<Type, Correlation> correlations;
         readonly List<T> deletedSagaData = new List<T>();
+        readonly Dispatcher dispatcher;
+        object currentLogicalMessage;
 
         /// <summary>
         /// Constructs the fixture with the given saga and the given saga data available. The <see cref="availableSagaData"/>
@@ -26,10 +27,58 @@ namespace Rebus.Testing
         [DebuggerStepThrough]
         public SagaFixture(Saga<T> saga, IList<T> availableSagaData)
         {
+            var persister = new SagaFixtureSagaPersister<T>(availableSagaData, deletedSagaData);
+
+            persister.CreatedNew += RaiseCreatedNewSagaData;
+            persister.Correlated += RaiseCorrelatedWithExistingSagaData;
+            persister.CouldNotCorrelate += RaiseCouldNotCorrelate;
+
+            dispatcher = new Dispatcher(persister,
+                                        new SagaFixtureHandlerActivator(saga), new InMemorySubscriptionStorage(),
+                                        new TrivialPipelineInspector(), null);
+
             this.saga = saga;
             this.availableSagaData = availableSagaData;
-            saga.ConfigureHowToFindSaga();
-            correlations = saga.Correlations;
+        }
+
+        void RaiseCouldNotCorrelate()
+        {
+            if (CouldNotCorrelate != null)
+                CouldNotCorrelate(currentLogicalMessage);
+        }
+
+        void RaiseCorrelatedWithExistingSagaData(ISagaData d)
+        {
+            if (CorrelatedWithExistingSagaData != null)
+                CorrelatedWithExistingSagaData(currentLogicalMessage, (T)d);
+        }
+
+        void RaiseCreatedNewSagaData(ISagaData d)
+        {
+            if (CreatedNewSagaData != null)
+                CreatedNewSagaData(currentLogicalMessage, (T)d);
+        }
+
+        class SagaFixtureHandlerActivator : IActivateHandlers
+        {
+            readonly Saga sagaInstance;
+
+            public SagaFixtureHandlerActivator(Saga sagaInstance)
+            {
+                this.sagaInstance = sagaInstance;
+            }
+
+            public IEnumerable<IHandleMessages<TMessage>> GetHandlerInstancesFor<TMessage>()
+            {
+                if (sagaInstance is IHandleMessages<TMessage>)
+                    return new[] { (IHandleMessages<TMessage>)sagaInstance };
+
+                return new IHandleMessages<TMessage>[0];
+            }
+
+            public void Release(IEnumerable handlerInstances)
+            {
+            }
         }
 
         /// <summary>
@@ -78,18 +127,29 @@ namespace Rebus.Testing
         /// <summary>
         /// Dispatches a message to the saga, raising the appropriate events along the way.
         /// </summary>
-        [DebuggerStepThrough]
         public void Handle<TMessage>(TMessage message)
         {
+            currentLogicalMessage = message;
+
             try
             {
-                InnerHandle(message);
+                dispatcher.GetType()
+                    .GetMethod("Dispatch").MakeGenericMethod(message.GetType())
+                    .Invoke(dispatcher, new object[] { message });
             }
             catch (TargetInvocationException tie)
             {
-                var exceptionToThrow = tie.InnerException;
-                exceptionToThrow.PreserveStackTrace();
-                throw exceptionToThrow;
+                var exception = (Exception)tie;
+
+                if (exception.InnerException is TargetInvocationException)
+                    exception = exception.InnerException;
+
+                if (exception.InnerException is TargetInvocationException)
+                    exception = exception.InnerException;
+
+                var exceptionToRethrow = exception.InnerException;
+                exceptionToRethrow.PreserveStackTrace();
+                throw exceptionToRethrow;
             }
         }
 
@@ -102,67 +162,55 @@ namespace Rebus.Testing
             get { return saga.Data; }
         }
 
-        [DebuggerStepThrough]
-        void InnerHandle<TMessage>(TMessage message)
+        public class SagaFixtureSagaPersister<T> : IStoreSagaData where T : ISagaData
         {
-            var existingSagaData = availableSagaData.SingleOrDefault(data => Correlates(correlations, message, data));
+            readonly IList<T> availableSagaData;
+            readonly IList<T> deletedSagaData;
+            readonly InMemorySagaPersister innerPersister;
 
-            if (existingSagaData != null)
+            public SagaFixtureSagaPersister(IList<T> availableSagaData, IList<T> deletedSagaData)
             {
-                saga.Data = existingSagaData;
-                saga.IsNew = false;
-                if (CorrelatedWithExistingSagaData != null) CorrelatedWithExistingSagaData(message, saga.Data);
-                Dispatch(message);
-                if (saga.Complete)
-                {
-                    availableSagaData.Remove(saga.Data);
-                    deletedSagaData.Add(saga.Data);
-                }
-                return;
+                innerPersister = new InMemorySagaPersister(availableSagaData.Cast<ISagaData>());
+
+                this.availableSagaData = availableSagaData;
+                this.deletedSagaData = deletedSagaData;
             }
 
-            if (saga.GetType().GetInterfaces().Contains(typeof(IAmInitiatedBy<TMessage>)))
+            public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
-                saga.Data = new T();
-                saga.IsNew = true;
-                if (CreatedNewSagaData != null) CreatedNewSagaData(message, saga.Data);
-                Dispatch(message);
-                if (!saga.Complete)
+                innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
+                availableSagaData.Add((T)sagaData);
+                CreatedNew(sagaData);
+            }
+
+            public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+            {
+                innerPersister.Update(sagaData, sagaDataPropertyPathsToIndex);
+            }
+
+            public void Delete(ISagaData sagaData)
+            {
+                innerPersister.Delete(sagaData);
+                deletedSagaData.Add((T)sagaData);
+            }
+
+            public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+            {
+                var result = innerPersister.Find<T>(sagaDataPropertyPath, fieldFromMessage);
+                if (result != null)
                 {
-                    availableSagaData.Add(saga.Data);
+                    Correlated(result);
                 }
                 else
                 {
-                    deletedSagaData.Add(saga.Data);
+                    CouldNotCorrelate();
                 }
-                return;
+                return result;
             }
 
-            if (CouldNotCorrelate != null) CouldNotCorrelate(message);
-        }
-
-        [DebuggerStepThrough]
-        bool Correlates(ConcurrentDictionary<Type, Correlation> concurrentDictionary, object message, T data)
-        {
-            var messageType = message.GetType();
-            if (!concurrentDictionary.ContainsKey(messageType)) return false;
-
-            var correlation = concurrentDictionary[messageType];
-
-            var path = correlation.SagaDataPropertyPath;
-
-            var fieldFromMessage = (correlation.FieldFromMessage(message) ?? "").ToString();
-            var fieldFromSagaData = (Reflect.Value(data, path) ?? "").ToString();
-
-            return fieldFromMessage == fieldFromSagaData;
-        }
-
-        [DebuggerStepThrough]
-        void Dispatch<TMessage>(TMessage message)
-        {
-            saga.Complete = false;
-            saga.GetType().GetMethod("Handle", new[] { typeof(TMessage) })
-                .Invoke(saga, new object[] { message });
+            public event Action<ISagaData> CreatedNew = delegate { };
+            public event Action<ISagaData> Correlated = delegate { };
+            public event Action CouldNotCorrelate = delegate { };
         }
     }
 }

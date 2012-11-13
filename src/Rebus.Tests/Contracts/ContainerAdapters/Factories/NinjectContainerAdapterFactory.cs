@@ -24,4 +24,24 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             kernel.Bind<TService>().To<TImplementation>();
         }
     }
+
+    public  class BuiltinContainerAdapterFactory : IContainerAdapterFactory
+    {
+        readonly BuiltinContainerAdapter builtinContainerAdapter = new BuiltinContainerAdapter();
+
+        public IContainerAdapter Create()
+        {
+            return builtinContainerAdapter;
+        }
+
+        public void DisposeInnerContainer()
+        {
+            builtinContainerAdapter.Dispose();
+        }
+
+        public void Register<TService, TImplementation>() where TService : class where TImplementation : TService
+        {
+            builtinContainerAdapter.Register(typeof (TImplementation));
+        }
+    }
 }

@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace Rebus.Extensions
 {
-    static class ObjectExt
+    internal static class ObjectExt
     {
         public static bool In<T>(this T element, IEnumerable<T> elements)
         {

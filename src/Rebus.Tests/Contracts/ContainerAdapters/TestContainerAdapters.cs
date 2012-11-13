@@ -13,6 +13,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]
     [TestFixture(typeof(NinjectContainerAdapterFactory))]
+    [TestFixture(typeof(BuiltinContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
@@ -26,6 +27,12 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             factory = new TFactory();
             adapter = factory.Create();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false);
+        }
+
+        [Test]
+        public void NothingHappensWhenDisposingAnEmptyContainerAdapter()
+        {
+            Assert.DoesNotThrow(() => factory.DisposeInnerContainer());
         }
 
         [Test]

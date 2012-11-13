@@ -187,14 +187,12 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
-    <Compile Include="..\..\lib\Ponder\Ponder.cs">
-      <Link>Ponder.cs</Link>
-    </Compile>
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
+    <Compile Include="Configuration\TestBuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
@@ -225,6 +223,7 @@
     <Compile Include="Integration\Factories\IBusFactory.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
+    <Compile Include="Integration\TestAutoCorrelation.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
@@ -238,6 +237,7 @@
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
+    <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
     <Compile Include="Timeout\TestTimeoutService.cs" />
@@ -314,6 +314,7 @@
     <Compile Include="Unit\TestDispatcher.cs" />
     <Compile Include="Unit\TestHeaderContext.cs" />
     <Compile Include="Unit\TestErrorTracker.cs" />
+    <Compile Include="Unit\TestMessage.cs" />
     <Compile Include="Unit\TestMessageForwarding.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -340,7 +341,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <None Include="packages.config" />
+    <Content Include="Configuration\RealAppConfigs\App.2.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Autofac\Rebus.Autofac.csproj">

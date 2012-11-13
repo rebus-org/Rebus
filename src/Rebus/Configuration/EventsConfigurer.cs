@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configurer for the various hooks that Rebus provides
+    /// </summary>
     public class EventsConfigurer : BaseConfigurer, IRebusEvents
     {
         public EventsConfigurer(ConfigurationBackbone backbone)
@@ -17,15 +20,24 @@ namespace Rebus.Configuration
         public event BeforeMessageEventHandler BeforeMessage;
         public event AfterMessageEventHandler AfterMessage;
         public event UncorrelatedMessageEventHandler UncorrelatedMessage;
+        public event MessageContextEstablishedEventHandler MessageContextEstablished;
         public event BeforeTransportMessageEventHandler BeforeTransportMessage;
         public event AfterTransportMessageEventHandler AfterTransportMessage;
         public event PoisonMessageEventHandler PoisonMessage;
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
-        public void TransferToBus(IAdvancedBus advancedBus)
+        internal void TransferToBus(IAdvancedBus advancedBus)
         {
             var rebusEvents = advancedBus.Events;
+
+            if (MessageContextEstablished != null)
+            {
+                foreach (var listener in MessageContextEstablished.GetInvocationList().Cast<MessageContextEstablishedEventHandler>())
+                {
+                    rebusEvents.MessageContextEstablished += listener;
+                }
+            }
 
             if (MessageSent != null)
             {

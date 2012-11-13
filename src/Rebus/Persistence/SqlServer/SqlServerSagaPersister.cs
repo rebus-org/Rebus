@@ -24,16 +24,22 @@ namespace Rebus.Persistence.SqlServer
 
         readonly Func<SqlConnection> getConnection;
         readonly Action<SqlConnection> releaseConnection;
+        readonly string idPropertyName;
+
+        SqlServerSagaPersister(string sagaIndexTableName, string sagaTableName)
+        {
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
+        }
 
         /// <summary>
         /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the persister will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
         public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
+            : this(sagaIndexTableName, sagaTableName)
         {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-
             getConnection = () =>
                 {
                     var sqlConnection = new SqlConnection(connectionString);
@@ -49,16 +55,14 @@ namespace Rebus.Persistence.SqlServer
         /// that someone else manages the connection's lifetime.
         /// </summary>
         public SqlServerSagaPersister(Func<SqlConnection> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
+            : this(sagaIndexTableName, sagaTableName)
         {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-
             getConnection = connectionFactoryMethod;
             releaseConnection = c => { };
         }
 
         /// <summary>
-        /// Returnes the name of the table used to store correlation properties of saga instances
+        /// Returns the name of the table used to store correlation properties of saga instances
         /// </summary>
         public string SagaIndexTableName
         {
@@ -105,7 +109,7 @@ namespace Rebus.Persistence.SqlServer
                                             Key = path,
                                             Value = (Reflect.Value(sagaData, path) ?? "").ToString()
                                         })
-                    .Where(a => a.Value != null)
+                    .Where(a => !string.IsNullOrEmpty(a.Value))
                     .ToList();
 
                 if (propertiesToIndex.Any())
@@ -237,7 +241,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from sagas where id = @id and revision = @current_revision;";
+                    command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
                     var rows = command.ExecuteNonQuery();
@@ -249,7 +253,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from saga_index where saga_id = @id";
+                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -267,18 +271,19 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    if (sagaDataPropertyPath == "Id")
+                    if (sagaDataPropertyPath == idPropertyName)
                     {
-                        command.CommandText = @"select s.data from sagas s where s.id = @value";
+                        command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
                     }
                     else
                     {
-                        command.CommandText = @"select s.data 
-                                                    from sagas s 
-                                                        join saga_index i on s.id = i.saga_id 
+                        command.CommandText = string.Format(@"select s.data 
+                                                    from [{0}] s 
+                                                        join [{1}] i on s.id = i.saga_id 
                                                     where i.[saga_type] = @saga_type
                                                         and i.[key] = @key 
-                                                        and i.value = @value";
+                                                        and i.value = @value", sagaTableName, sagaIndexTableName);
+
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(T)));
                     }

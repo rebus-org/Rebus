@@ -2,6 +2,10 @@
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implementation that mutates incoming messages by running the list of message
+    /// mutators from the current <see cref="IRebusEvents"/> in reverse
+    /// </summary>
     class IncomingMessageMutatorPipeline : IMutateIncomingMessages
     {
         readonly IRebusEvents rebusEvents;

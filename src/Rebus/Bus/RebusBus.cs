@@ -8,7 +8,7 @@ using Rebus.Messages;
 using System.Linq;
 using Rebus.Shared;
 using Rebus.Extensions;
-using Rebus.Transports.Msmq;
+using Rebus.Transports;
 
 namespace Rebus.Bus
 {
@@ -75,7 +75,7 @@ namespace Rebus.Bus
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
             log.Info("Rebus bus created");
-            
+
             timeoutManagerAddress = GetTimeoutManagerAddress();
         }
 
@@ -116,6 +116,8 @@ namespace Rebus.Bus
 
             var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
 
+            PossiblyAttachSagaIdToRequest(message);
+
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
@@ -126,6 +128,8 @@ namespace Rebus.Bus
             EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
 
             var destinationEndpoint = receiveMessages.InputQueue;
+
+            PossiblyAttachSagaIdToRequest(message);
 
             InternalSend(destinationEndpoint, new List<object> { message });
         }
@@ -138,7 +142,7 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(message.GetType().FullName, new List<object> { message });
+                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
                 return;
             }
 
@@ -147,6 +151,21 @@ namespace Rebus.Bus
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
                 InternalSend(subscriberInputQueue, new List<object> { message });
+            }
+        }
+
+        internal void PossiblyAttachSagaIdToRequest<TCommand>(TCommand message)
+        {
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
+
+                if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
+                {
+                    var sagaContext = (SagaContext) messageContext.Items[SagaContext.SagaContextItemKey];
+
+                    AttachHeader(message, Headers.AutoCorrelationSagaId, sagaContext.Id.ToString());
+                }
             }
         }
 
@@ -221,14 +240,28 @@ namespace Rebus.Bus
 
             var customData = TimeoutReplyHandler.Serialize(message);
 
+            var timeoutRequest = new TimeoutRequest
+                {
+                    Timeout = delay,
+                    CustomData = customData,
+                    CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
+                };
+
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
+                
+                // if we're in a saga context, be nice and set the saga ID automatically
+                if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
+                {
+                    var sagaContext = ((SagaContext) messageContext.Items[SagaContext.SagaContextItemKey]);
+                    timeoutRequest.SagaId = sagaContext.Id;
+                }
+            }
+
             var messages = new List<object>
                                {
-                                   new TimeoutRequest
-                                       {
-                                           Timeout = delay,
-                                           CustomData = customData,
-                                           CorrelationId = TimeoutReplyHandler.TimeoutReplySecretCorrelationId
-                                       }
+                                   timeoutRequest
                                };
 
             InternalSend(timeoutManagerAddress, messages);
@@ -275,9 +308,9 @@ namespace Rebus.Bus
 Not that it actually matters, I mean we _could_ just ignore subsequent calls to Start() if we wanted to - but if you're calling Start() multiple times it's most likely a sign that something is wrong, i.e. you might be running you app initialization code more than once, etc."));
             }
 
-            if (receiveMessages is MsmqConfigurationExtension.OneWayClientGag)
+            if (receiveMessages is OneWayClientGag)
             {
-                log.Info("Bus will be started in the experimental one-way client mode");
+                log.Info("Rebus {0} will be started in one-way client mode", rebusId);
                 numberOfWorkers = 0;
                 busMode = BusMode.OneWayClientMode;
             }
@@ -320,6 +353,12 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 throw new InvalidOperationException(errorMessage);
             }
 
+            // transfer auto-correlation saga id to reply if it is present in the current message context
+            if (messageContext.Headers.ContainsKey(Headers.AutoCorrelationSagaId))
+            {
+                AttachHeader(messages.First(), Headers.AutoCorrelationSagaId, messageContext.Headers[Headers.AutoCorrelationSagaId].ToString());
+            }
+
             InternalSend(returnAddress, messages);
         }
 
@@ -356,6 +395,7 @@ element)"));
                     headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
                 }
             }
+
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
@@ -377,9 +417,9 @@ element)"));
         ITransactionContext GetTransactionContext()
         {
             if (TransactionContext.Current != null) return TransactionContext.Current;
-         
+
             if (Transaction.Current == null) return new NoTransaction();
-            
+
             return new AmbientTransactionContext();
         }
 
@@ -514,6 +554,7 @@ element)"));
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
                 worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
+                worker.MessageContextEstablished += RaiseMessageContextEstablished;
                 worker.Start();
             }
         }
@@ -544,9 +585,14 @@ element)"));
             }
         }
 
+        void RaiseMessageContextEstablished(IMessageContext messageContext)
+        {
+            events.RaiseMessageContextEstablished(this, messageContext);
+        }
+
         void RaiseUncorrelatedMessage(object message, Saga saga)
         {
-            events.RaiseUncorrelatedMessage(message, saga);
+            events.RaiseUncorrelatedMessage(this, message, saga);
         }
 
         void RaiseBeforeMessage(object message)
@@ -593,27 +639,27 @@ element)"));
 
         internal class HeaderContext
         {
-            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> Headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
-            internal readonly System.Timers.Timer CleanupTimer;
+            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
+            internal readonly System.Timers.Timer cleanupTimer;
 
             public HeaderContext()
             {
-                CleanupTimer = new System.Timers.Timer { Interval = 1000 };
-                CleanupTimer.Elapsed += (o, ea) => Headers.RemoveDeadReferences();
+                cleanupTimer = new System.Timers.Timer { Interval = 1000 };
+                cleanupTimer.Elapsed += (o, ea) => headers.RemoveDeadReferences();
             }
 
             public void AttachHeader(object message, string key, string value)
             {
-                var headerDictionary = Headers.GetOrAdd(message, () => new Dictionary<string, object>());
+                var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
 
-                headerDictionary.Add(key, value);
+                headerDictionary[key] = value;
             }
 
             public Dictionary<string, object> GetHeadersFor(object message)
             {
                 Dictionary<string, object> temp;
 
-                var headersForThisMessage = Headers.TryGetValue(message, out temp)
+                var headersForThisMessage = headers.TryGetValue(message, out temp)
                                                 ? temp
                                                 : new Dictionary<string, object>();
 
@@ -622,12 +668,12 @@ element)"));
 
             public void Tick()
             {
-                Headers.RemoveDeadReferences();
+                headers.RemoveDeadReferences();
             }
 
             public void Dispose()
             {
-                CleanupTimer.Dispose();
+                cleanupTimer.Dispose();
             }
         }
     }

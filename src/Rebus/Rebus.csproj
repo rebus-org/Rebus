@@ -80,9 +80,13 @@
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
     <Compile Include="ITransactionContext.cs" />
+    <Compile Include="MultipleSagaHandlersException.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
+    <Compile Include="SagaContext.cs" />
+    <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
+    <Compile Include="TimedExtensions.cs" />
     <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />
@@ -147,7 +151,6 @@
     <Compile Include="Persistence\Xml\XmlSubscriptionStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
-    <Compile Include="Extensions\EnumerableExt.cs" />
     <Compile Include="SimpleHandlerActivator.cs" />
     <Compile Include="RebusTimeMachine.cs" />
     <Compile Include="Timed.cs" />
@@ -160,8 +163,8 @@
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
+    <Compile Include="Transports\OneWayClientGag.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
-    <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />
     <Compile Include="IBus.cs" />

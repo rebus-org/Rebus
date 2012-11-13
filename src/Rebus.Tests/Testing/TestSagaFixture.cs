@@ -14,6 +14,77 @@ namespace Rebus.Tests.Testing
     public class TestSagaFixture : FixtureBase
     {
         [Test]
+        public void WorksWhenMessageReferenceIsOfTheSupertype()
+        {
+            // arrange
+            var data = new CounterpartData { Dcid = 800 };
+            var calledHandlers = new List<string>();
+            var fixture = new SagaFixture<CounterpartData>(new CounterpartUpdater(calledHandlers), new List<CounterpartData> { data });
+            CounterpartChanged messageSupertype1 = new CounterpartCreated { Dcid = 800 };
+            CounterpartChanged messageSupertype2 = new CounterpartUpdated { Dcid = 800 };
+
+            // act
+            // assert
+            fixture.Handle(messageSupertype1);
+            fixture.Handle(messageSupertype2);
+
+            calledHandlers.ShouldBe(new List<string>
+                {
+                    "CounterpartCreated",
+                    "CounterpartUpdated",
+                });
+        }
+
+        public class CounterpartUpdater : Saga<CounterpartData>,
+            IAmInitiatedBy<CounterpartCreated>,
+            IAmInitiatedBy<CounterpartUpdated>
+        {
+            readonly IList<string> calledHandlers;
+
+            public CounterpartUpdater(IList<string> calledHandlers)
+            {
+                this.calledHandlers = calledHandlers;
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+                Incoming<CounterpartCreated>(m => m.Dcid).CorrelatesWith(d => d.Dcid);
+                Incoming<CounterpartUpdated>(m => m.Dcid).CorrelatesWith(d => d.Dcid);
+            }
+
+            public void Handle(CounterpartCreated message)
+            {
+                calledHandlers.Add("CounterpartCreated");
+            }
+
+            public void Handle(CounterpartUpdated message)
+            {
+                calledHandlers.Add("CounterpartUpdated");
+            }
+
+            public void Handle(CounterpartChanged message)
+            {
+                calledHandlers.Add("CounterpartChanged");
+            }
+        }
+
+        public class CounterpartData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public int Dcid { get; set; }
+        }
+
+        public abstract class CounterpartChanged
+        {
+            public int Dcid { get; set; }
+        }
+
+        public class CounterpartCreated : CounterpartChanged { }
+
+        public class CounterpartUpdated : CounterpartChanged { }
+
+        [Test]
         public void CanCorrelateMessagesLikeExpected()
         {
             // arrange
@@ -41,11 +112,11 @@ namespace Rebus.Tests.Testing
         public void GetsHumanReadableExceptionWhenSomethingGoesWrong()
         {
             // arrange
-            var data = new List<SomeSagaData> {new SomeSagaData {SagaDataId = 23}};
+            var data = new List<SomeSagaData> { new SomeSagaData { SagaDataId = 23 } };
             var fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), data);
 
             // act
-            var exception = Assert.Throws<ApplicationException>(() => fixture.Handle(new SomePoisonMessage {SagaDataId = 23}));
+            var exception = Assert.Throws<ApplicationException>(() => fixture.Handle(new SomePoisonMessage { SagaDataId = 23 }));
 
             Console.WriteLine(exception.ToString());
 
