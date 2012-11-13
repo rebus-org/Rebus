@@ -8,6 +8,14 @@ namespace Rebus
     /// </summary>
     public abstract class Saga
     {
+        /// <summary>
+        /// Sets up the internal dictionary of correlations in the saga
+        /// </summary>
+        protected Saga()
+        {
+            Correlations = new ConcurrentDictionary<Type, Correlation>();
+        }
+
         internal ConcurrentDictionary<Type, Correlation> Correlations { get; set; }
         
         internal bool Complete { get; set; }
@@ -30,21 +38,22 @@ namespace Rebus
     /// </summary>
     public abstract class Saga<TData> : Saga where TData : ISagaData
     {
-        protected Saga()
-        {
-            Correlations = new ConcurrentDictionary<Type, Correlation>();
-        }
-
         /// <summary>
         /// Gives access to the current saga data instance
         /// </summary>
         public TData Data { get; internal set; }
 
+        /// <summary>
+        /// Starts building a correlation expression
+        /// </summary>
         protected Correlator<TData, TMessage> Incoming<TMessage>(Func<TMessage, object> messageProperty) where TMessage : class
         {
             return new Correlator<TData, TMessage>(messageProperty, this);
         }
 
+        /// <summary>
+        /// Marks the saga as complete, which results in the saga data effectively being deleted
+        /// </summary>
         protected void MarkAsComplete()
         {
             Complete = true;

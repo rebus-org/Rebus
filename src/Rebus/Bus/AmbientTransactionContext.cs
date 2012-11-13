@@ -51,6 +51,9 @@ namespace Rebus.Bus
         /// </summary>
         public event Action Cleanup = delegate { };
 
+        /// <summary>
+        /// Returns true because we're always transactional when we're enlisted in an ambient transaction
+        /// </summary>
         public bool IsTransactional { get { return true; } }
 
         /// <summary>
@@ -62,11 +65,17 @@ namespace Rebus.Bus
             set { items[key] = value; }
         }
 
+        /// <summary>
+        /// Does nothing
+        /// </summary>
         public void Prepare(PreparingEnlistment preparingEnlistment)
         {
             preparingEnlistment.Prepared();
         }
 
+        /// <summary>
+        /// Performs necessary commit actions, clearing the current <see cref="TransactionContext"/>
+        /// </summary>
         public void Commit(Enlistment enlistment)
         {
             BeforeCommit();
@@ -75,6 +84,9 @@ namespace Rebus.Bus
             enlistment.Done();
         }
 
+        /// <summary>
+        /// Performs necessary rollback actions, clearing the current <see cref="TransactionContext"/>
+        /// </summary>
         public void Rollback(Enlistment enlistment)
         {
             DoRollback();
@@ -83,6 +95,9 @@ namespace Rebus.Bus
             AfterRollback();
         }
 
+        /// <summary>
+        /// Does nothing
+        /// </summary>
         public void InDoubt(Enlistment enlistment)
         {
             enlistment.Done();

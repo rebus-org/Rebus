@@ -28,11 +28,17 @@ namespace Rebus.Configuration
 
         volatile bool initialized;
 
+        /// <summary>
+        /// Constructs the endpoint mapper to use the specified <see cref="IAppConfigLoader"/> to access the app.config
+        /// </summary>
         public DetermineDestinationFromNServiceBusEndpointMappings(IAppConfigLoader appConfigLoader)
         {
             this.appConfigLoader = appConfigLoader;
         }
 
+        /// <summary>
+        /// Gets the owner of the given message type
+        /// </summary>
         public virtual string GetEndpointFor(Type messageType)
         {
             if (!initialized)
@@ -78,7 +84,7 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             throw new InvalidOperationException(message);
         }
 
-        protected virtual void Initialize()
+        void Initialize()
         {
             lock (initializationLock)
             {
@@ -90,7 +96,7 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
-        protected virtual void DoInitialize()
+        void DoInitialize()
         {
             var xmlText = appConfigLoader.LoadIt();
             var doc = XDocument.Parse(xmlText);
@@ -111,7 +117,7 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
-        protected virtual void ExtractMapping(XElement mapping)
+        void ExtractMapping(XElement mapping)
         {
             if (mapping.Name != "add")
             {
@@ -149,14 +155,14 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
-        protected virtual void AddMappingForType(string messages, string endpoint)
+        void AddMappingForType(string messages, string endpoint)
         {
             var type = Type.GetType(messages);
 
             Map(type, endpoint);
         }
 
-        protected virtual void AddMappingsForAllTypesFromAssemblyNamed(string messages, string endpoint)
+        void AddMappingsForAllTypesFromAssemblyNamed(string messages, string endpoint)
         {
             var assembly = Assembly.Load(messages);
 
@@ -166,12 +172,12 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
-        protected virtual void Map(Type type, string endpoint)
+        void Map(Type type, string endpoint)
         {
             endpoints[type] = endpoint;
         }
 
-        protected virtual bool IsAssemblyName(string messages)
+        bool IsAssemblyName(string messages)
         {
             return !messages.Contains(",");
         }
