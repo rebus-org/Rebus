@@ -11,8 +11,13 @@ namespace Rebus.Configuration
     {
         readonly ConfigurationBackbone backbone;
 
-        protected BaseConfigurer(ConfigurationBackbone backbone)
+        /// <summary>
+        /// Uses the specified <see cref="ConfigurationBackbone"/> to store references to implementations of all Rebus' abstractions
+        /// </summary>
+        internal protected BaseConfigurer(ConfigurationBackbone backbone)
         {
+            if (backbone == null) throw new ArgumentNullException("backbone", "Dude, don't try to create a configurer without a backbone!");
+
             this.backbone = backbone;
         }
 

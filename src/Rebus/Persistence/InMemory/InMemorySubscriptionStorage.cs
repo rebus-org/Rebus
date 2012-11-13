@@ -12,6 +12,9 @@ namespace Rebus.Persistence.InMemory
     {
         readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, object>> subscribers = new ConcurrentDictionary<Type, ConcurrentDictionary<string, object>>();
 
+        /// <summary>
+        /// Stores a subscription for the given message type and the given endpoint in memory
+        /// </summary>
         public void Store(Type messageType, string subscriberInputQueue)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;
@@ -31,6 +34,9 @@ namespace Rebus.Persistence.InMemory
             subscribersForThisType.TryAdd(subscriberInputQueue, null);
         }
 
+        /// <summary>
+        /// Removes the subscription (if any) for the given message type and the given endpoint from memory
+        /// </summary>
         public void Remove(Type messageType, string subscriberInputQueue)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;
@@ -42,6 +48,9 @@ namespace Rebus.Persistence.InMemory
             subscribersForThisType.TryRemove(subscriberInputQueue, out temp);
         }
 
+        /// <summary>
+        /// Gets from memory an array of endpoints that subscribe to the given message type
+        /// </summary>
         public string[] GetSubscribers(Type messageType)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;

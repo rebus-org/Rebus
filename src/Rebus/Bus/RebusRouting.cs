@@ -19,6 +19,9 @@ namespace Rebus.Bus
             this.rebusBus = rebusBus;
         }
 
+        /// <summary>
+        /// Sends the specified message to the specified destination.
+        /// </summary>
         public void Send<TCommand>(string destinationEndpoint, TCommand message)
         {
             rebusBus.PossiblyAttachSagaIdToRequest(message);
@@ -26,11 +29,19 @@ namespace Rebus.Bus
             rebusBus.InternalSend(destinationEndpoint, new List<object> { message });
         }
 
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
+        /// destination.
+        /// </summary>
         public void Subscribe<TEvent>(string publisherInputQueue)
         {
             rebusBus.InternalSubscribe<TEvent>(publisherInputQueue);
         }
 
+        /// <summary>
+        /// Sends the message currently being handled to the specified endpoint, preserving all
+        /// of the transport level headers.
+        /// </summary>
         public void ForwardCurrentMessage(string destinationEndpoint)
         {
             var messageContext = MessageContext.GetCurrent();

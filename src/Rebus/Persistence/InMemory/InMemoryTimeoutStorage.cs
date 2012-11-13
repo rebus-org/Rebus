@@ -13,6 +13,9 @@ namespace Rebus.Persistence.InMemory
         readonly object listLock = new object();
         readonly List<Timeout.Timeout> timeouts = new List<Timeout.Timeout>();
 
+        /// <summary>
+        /// Stores the given timeout in memory
+        /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
             lock (listLock)
@@ -21,6 +24,9 @@ namespace Rebus.Persistence.InMemory
             }
         }
 
+        /// <summary>
+        /// Destructively retrieves all due timeouts
+        /// </summary>
         public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
         {
             lock (listLock)

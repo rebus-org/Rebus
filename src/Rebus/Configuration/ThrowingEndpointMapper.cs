@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
@@ -10,6 +11,11 @@ namespace Rebus.Configuration
     /// </summary>
     public class ThrowingEndpointMapper : IDetermineDestination
     {
+        /// <summary>
+        /// Throws a <see cref="ConfigurationException"/> because this implementation of <see cref="IDetermineDestination"/>
+        /// is not meant to be used to actually determine who owns messages - it is installed when the service is set up
+        /// to route all messages explicitly or rely on using the capabilities of a <see cref="IMulticastTransport"/>
+        /// </summary>
         public string GetEndpointFor(Type messageType)
         {
             throw new ConfigurationException(@"Rebus is currently not configured with an endpoint mapping mechanism. This means that you take the responsibility of specifying where messages go, which in turn means that YOU MUST SPECIFY A DESTINATION EACH TIME YOU SEND OR SUBSCRIBE TO SOMETHING.

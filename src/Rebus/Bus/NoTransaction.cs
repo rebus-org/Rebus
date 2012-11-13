@@ -11,6 +11,9 @@ namespace Rebus.Bus
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
+        /// <summary>
+        /// Return false beause the <see cref="NoTransaction"/> implementation of <see cref="ITransactionContext"/> is always non-transactional
+        /// </summary>
         public bool IsTransactional { get { return false; } }
 
         /// <summary>

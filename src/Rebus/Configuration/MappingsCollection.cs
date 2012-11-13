@@ -16,11 +16,17 @@ namespace Rebus.Configuration
             return new MappingElement();
         }
 
+        /// <summary>
+        /// Performs some redundant action because that's just how .NET works
+        /// </summary>
         protected override object GetElementKey(ConfigurationElement element)
         {
             return ((MappingElement)element).Messages;
         }
 
+        /// <summary>
+        /// Performs some redundant action because that's just how .NET works
+        /// </summary>
         public new IEnumerator<MappingElement> GetEnumerator()
         {
             for (var index = 0; index < Count; index++)

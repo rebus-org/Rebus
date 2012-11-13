@@ -310,6 +310,21 @@ namespace Rebus.Bus
         {
             var sagaDataType = saga.GetType().GetProperty("Data").PropertyType;
 
+            var correlations = saga.Correlations;
+
+            // if correlation is set up, insist on using it
+            if (correlations.ContainsKey(typeof(TMessage)))
+            {
+                var correlation = correlations[typeof(TMessage)];
+                var fieldFromMessage = correlation.FieldFromMessage(message);
+                var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
+
+                var sagaData = GetSagaData(sagaDataType, sagaDataPropertyPath, fieldFromMessage);
+
+                return (ISagaData)sagaData;
+            }
+
+            // otherwise, see if we can do auto-correlation
             if (MessageContext.HasCurrent)
             {
                 var messageContext = MessageContext.GetCurrent();
@@ -325,18 +340,8 @@ namespace Rebus.Bus
                 }
             }
 
-            var correlations = saga.Correlations;
-
-            // if no correlation is set up, just bail out
-            if (!correlations.ContainsKey(typeof(TMessage))) return null;
-
-            var correlation = correlations[typeof(TMessage)];
-            var fieldFromMessage = correlation.FieldFromMessage(message);
-            var sagaDataPropertyPath = correlation.SagaDataPropertyPath;
-
-            var sagaData = GetSagaData(sagaDataType, sagaDataPropertyPath, fieldFromMessage);
-
-            return (ISagaData)sagaData;
+            // last option: bail out :)
+            return null;
         }
 
         object GetSagaData(Type sagaDataType, string sagaDataPropertyPath, object fieldFromMessage)

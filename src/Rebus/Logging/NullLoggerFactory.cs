@@ -9,6 +9,9 @@ namespace Rebus.Logging
     {
         static readonly NullLogger Logger = new NullLogger();
 
+        /// <summary>
+        /// Returns a <see cref="NullLogger"/> which is the /dev/null of logging...
+        /// </summary>
         protected override ILog GetLogger(Type type)
         {
             return Logger;

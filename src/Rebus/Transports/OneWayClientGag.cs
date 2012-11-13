@@ -9,48 +9,77 @@ namespace Rebus.Transports
     /// </summary>
     public class OneWayClientGag : IReceiveMessages, IErrorTracker
     {
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             throw GagException();
         }
 
-        public string InputQueue { get; private set; }
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
+        public string InputQueue { get { throw GagException(); } }
 
-        public string InputQueueAddress { get; private set; }
-        
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
+        public string InputQueueAddress { get { throw GagException(); } }
+
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public void StopTracking(string id)
         {
             throw GagException();
         }
 
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
             throw GagException();
         }
 
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public string GetErrorText(string id)
         {
             throw GagException();
         }
 
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public PoisonMessageInfo GetPoisonMessageInfo(string id)
         {
             throw GagException();
         }
 
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public void TrackDeliveryFail(string id, Exception exception)
         {
             throw GagException();
         }
 
-        public string ErrorQueueAddress { get; private set; }
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
+        public string ErrorQueueAddress { get { throw GagException(); } }
 
-        static NotImplementedException GagException()
+        static InvalidOperationException GagException()
         {
-            return new NotImplementedException("The bus' ability to perform all kinds of message recipient-related activities has been" +
-                                               " gagged by the OneWayClientGag. This is most likely because the bus is configured in" +
-                                               " some kind of one-way client mode, which makes operations like ReceiveMessage" +
-                                               " nonsensical.");
+            return
+                new InvalidOperationException(
+                    "The bus' ability to perform all kinds of message recipient-related activities has been" +
+                    " gagged by the OneWayClientGag. This is most likely because the bus is configured in" +
+                    " some kind of one-way client mode, which makes operations like ReceiveMessage" +
+                    " nonsensical.");
         }
     }
 }

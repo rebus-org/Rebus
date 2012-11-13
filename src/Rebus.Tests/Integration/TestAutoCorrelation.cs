@@ -3,7 +3,6 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
-using Rebus.Testing;
 using Rebus.Timeout;
 using Shouldly;
 using System.Linq;
@@ -44,6 +43,27 @@ namespace Rebus.Tests.Integration
         protected override void DoTearDown()
         {
             timeoutService.Stop();
+        }
+
+        [TestCase(true, Description = "Verifies that automatic correlation is NOT performed when a correlation is explicitly set up. This is because we want to preserve the ability to 'abandon' outstanding replies by changing a correlation ID on the saga")]
+        [TestCase(false, Description = "Verifies that automatic correlation is NOT performed when a correlation is explicitly set up. This is because we want to preserve the ability to 'abandon' outstanding replies by changing a correlation ID on the saga")]
+        public void IgnoresAutoCorrelationWhenCorrelationIsExplicitlySetUp(bool abandonReply)
+        {
+            // arrange
+            var anotherSaga = new AnotherSaga(sagaBus, abandonReply);
+            sagaHandlerActivator.UseHandler(anotherSaga);
+
+            serviceHandlerActivator.Handle<RequestWithCorrelationId>(req => serviceBus.Reply(new ReplyWithCorrelationId { Correlationid = req.Correlationid }));
+
+            // act
+            initiatorBus.Send(new InitiateRequestReply());
+            Thread.Sleep(3.Seconds());
+
+            // assert
+            sagaPersister.Count().ShouldBe(1);
+            var sagaData = sagaPersister.Single();
+            sagaData.ShouldBeTypeOf<SomeSagaData>();
+            ((SomeSagaData)sagaData).GotTheReply.ShouldBe(!abandonReply);
         }
 
         [Test]
@@ -95,6 +115,11 @@ namespace Rebus.Tests.Integration
                 return ServiceBusInputQueueName;
             }
 
+            if (messageType == typeof(RequestWithCorrelationId))
+            {
+                return ServiceBusInputQueueName;
+            }
+
             if (messageType == typeof(InitiateRequestReply))
             {
                 return SagaBusInputQueueName;
@@ -114,6 +139,52 @@ namespace Rebus.Tests.Integration
     class DeferredMessage { }
     class Request { }
     class Reply { }
+    
+    class RequestWithCorrelationId
+    {
+        public string Correlationid { get; set; }
+    }
+
+    class ReplyWithCorrelationId
+    {
+        public string Correlationid { get; set; }
+    }
+
+    class AnotherSaga : Saga<SomeSagaData>,
+        IAmInitiatedBy<InitiateRequestReply>,
+        IHandleMessages<ReplyWithCorrelationId>
+    {
+        readonly IBus bus;
+        readonly bool abandonReply;
+
+        public AnotherSaga(IBus bus, bool abandonReply)
+        {
+            this.bus = bus;
+            this.abandonReply = abandonReply;
+        }
+
+        public override void ConfigureHowToFindSaga()
+        {
+            Incoming<ReplyWithCorrelationId>(m => m.Correlationid).CorrelatesWith(d => d.CorrelationId);
+        }
+
+        public void Handle(InitiateRequestReply message)
+        {
+            Data.CorrelationId = "<this is a correlation ID!>";
+
+            bus.Send(new RequestWithCorrelationId {Correlationid = Data.CorrelationId});
+
+            if (abandonReply)
+            {
+                Data.CorrelationId = "<this is another correlation ID, which is how we may abandon outstanding replies>";
+            }
+        }
+
+        public void Handle(ReplyWithCorrelationId message)
+        {
+            Data.GotTheReply = true;
+        }
+    }
 
     class SomeSaga : Saga<SomeSagaData>,
         IAmInitiatedBy<InitiateRequestReply>,
@@ -162,5 +233,7 @@ namespace Rebus.Tests.Integration
 
         public bool GotTheReply { get; set; }
         public bool GotTheDeferredMessage { get; set; }
+
+        public string CorrelationId { get; set; }
     }
 }
