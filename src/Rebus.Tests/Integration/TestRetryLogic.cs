@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Org.BouncyCastle.Ocsp;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Shared;

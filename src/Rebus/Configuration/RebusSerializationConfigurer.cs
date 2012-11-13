@@ -33,5 +33,10 @@ namespace Rebus.Configuration
         {
             Backbone.SerializeMessages = new BinaryMessageSerializer();
         }
+
+        public void Use(ISerializeMessages serializer)
+        {
+            Backbone.SerializeMessages = serializer;
+        }
     }
 }
