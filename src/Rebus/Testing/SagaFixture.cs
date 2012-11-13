@@ -15,9 +15,9 @@ namespace Rebus.Testing
     public class SagaFixture<TSagaData> where TSagaData : class, ISagaData, new()
     {
         readonly Saga<TSagaData> saga;
-        readonly IList<TSagaData> availableSagaData;
         readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
         readonly Dispatcher dispatcher;
+        readonly SagaFixtureSagaPersister<TSagaData> persister;
         object currentLogicalMessage;
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Rebus.Testing
         [DebuggerStepThrough]
         public SagaFixture(Saga<TSagaData> saga, IList<TSagaData> availableSagaData)
         {
-            var persister = new SagaFixtureSagaPersister<TSagaData>(availableSagaData, deletedSagaData);
+            persister = new SagaFixtureSagaPersister<TSagaData>(availableSagaData, deletedSagaData);
 
             persister.CreatedNew += RaiseCreatedNewSagaData;
             persister.Correlated += RaiseCorrelatedWithExistingSagaData;
@@ -38,7 +38,6 @@ namespace Rebus.Testing
                                         new TrivialPipelineInspector(), null);
 
             this.saga = saga;
-            this.availableSagaData = availableSagaData;
         }
 
         void RaiseCouldNotCorrelate()
@@ -95,7 +94,7 @@ namespace Rebus.Testing
         /// </summary>
         public IList<TSagaData> AvailableSagaData
         {
-            get { return availableSagaData; }
+            get { return persister.AvailableSagaData; }
         }
 
         /// <summary>
@@ -180,22 +179,24 @@ namespace Rebus.Testing
 
         class SagaFixtureSagaPersister<TSagaDataToStore> : IStoreSagaData where TSagaDataToStore : ISagaData
         {
-            readonly IList<TSagaDataToStore> availableSagaData;
             readonly IList<TSagaDataToStore> deletedSagaData;
             readonly InMemorySagaPersister innerPersister;
 
-            public SagaFixtureSagaPersister(IList<TSagaDataToStore> availableSagaData, IList<TSagaDataToStore> deletedSagaData)
+            public SagaFixtureSagaPersister(IEnumerable<TSagaDataToStore> availableSagaData, IList<TSagaDataToStore> deletedSagaData)
             {
                 innerPersister = new InMemorySagaPersister(availableSagaData.Cast<ISagaData>());
 
-                this.availableSagaData = availableSagaData;
                 this.deletedSagaData = deletedSagaData;
+            }
+
+            public IList<TSagaData> AvailableSagaData
+            {
+                get { return innerPersister.Cast<TSagaData>().ToList(); }
             }
 
             public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
                 innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
-                availableSagaData.Add((TSagaDataToStore)sagaData);
                 CreatedNew(sagaData);
             }
 

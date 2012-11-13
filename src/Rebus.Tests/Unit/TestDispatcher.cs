@@ -129,20 +129,6 @@ namespace Rebus.Tests.Unit
             saga.IsNew.ShouldBe(false);
         }
 
-        [Test]
-        public void OneMessageCanNotCorrelateWithSeveralSagas()
-        {
-            var saga = new SmallestSagaOnEarthNotCorrelatedOnInitialMessage();
-            activator.UseHandler(saga);
-
-            // initiate two sagas with the same number
-            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
-            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
-
-            dispatcher.Dispatch(new SomeMessageWithANumber(1));
-            saga.TimesHandlingSomeMessageWithANumber.ShouldBe(1);
-        }
-
         interface ISomeInterface
         {
         }

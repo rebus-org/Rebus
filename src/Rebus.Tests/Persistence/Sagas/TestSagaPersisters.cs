@@ -83,15 +83,19 @@ namespace Rebus.Tests.Persistence.Sagas
         [Test]
         public void CanDeleteSaga()
         {
+            const string someStringValue = "whoolala";
+
             var mySagaDataId = Guid.NewGuid();
             var mySagaData = new SimpleSagaData
                              {
                                  Id = mySagaDataId,
-                                 SomeString = "whoolala"
+                                 SomeString = someStringValue
                              };
 
             persister.Insert(mySagaData, new[] { "SomeString" });
-            persister.Delete(mySagaData);
+            var sagaDataToDelete = persister.Find<SimpleSagaData>("Id", mySagaDataId);
+            
+            persister.Delete(sagaDataToDelete);
 
             var sagaData = persister.Find<SimpleSagaData>("Id", mySagaDataId);
             sagaData.ShouldBe(null);

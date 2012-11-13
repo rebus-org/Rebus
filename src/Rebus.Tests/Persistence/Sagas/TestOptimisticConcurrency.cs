@@ -8,6 +8,7 @@ namespace Rebus.Tests.Persistence.Sagas
     [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(InMemorySagaPersisterFactory))]
     public class TestOptimisticConcurrency<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]
@@ -107,7 +108,6 @@ namespace Rebus.Tests.Persistence.Sagas
             Assert.Throws<OptimisticLockingException>(
                 () => persister.Insert(new SimpleSagaData {Id = sagaId, Revision = 0, SomeString = "hello!"},
                                        sagaDataPropertyPathsToIndex));
-
         }
     }
 }

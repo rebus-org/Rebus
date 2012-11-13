@@ -8,6 +8,7 @@ namespace Rebus.Tests.Persistence.Sagas
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(InMemorySagaPersisterFactory))]
     public class TestUniquenessOfCorrelationIds<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test, Description("We don't allow two sagas to have the same value of a property that is used to correlate with incoming messages, " +
@@ -50,13 +51,16 @@ namespace Rebus.Tests.Persistence.Sagas
         public void CanUpdateSaga()
         {
             // arrange
-            var theValue = "this just happens to be the same in two sagas";
+            const string theValue = "this is just some value";
             var firstSaga = new SomeSaga {Id = Guid.NewGuid(), SomeCorrelationId = theValue};
 
-            var pathsToIndex = new[] {Reflect.Path<SomeSaga>(s => s.SomeCorrelationId)};
+            var propertyPath = Reflect.Path<SomeSaga>(s => s.SomeCorrelationId);
+            var pathsToIndex = new[] {propertyPath};
             persister.Insert(firstSaga, pathsToIndex);
 
-            Assert.DoesNotThrow(() => persister.Update(firstSaga, pathsToIndex));
+            var sagaToUpdate = persister.Find<SomeSaga>(propertyPath, theValue);
+
+            Assert.DoesNotThrow(() => persister.Update(sagaToUpdate, pathsToIndex));
         }
 
         internal class SomeSaga : ISagaData

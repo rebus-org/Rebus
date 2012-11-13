@@ -88,8 +88,7 @@ namespace Rebus.Tests.Testing
         public void CanCorrelateMessagesLikeExpected()
         {
             // arrange
-            var availableSagaData = new List<SomeSagaData>();
-            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), availableSagaData);
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), new List<SomeSagaData>());
 
             fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new saga data");
             fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated with existing saga data");
@@ -103,6 +102,7 @@ namespace Rebus.Tests.Testing
             fixture.Handle(new SomeMessage { SagaDataId = 12 });
 
             // assert
+            var availableSagaData = fixture.AvailableSagaData;
             availableSagaData.Count.ShouldBe(2);
             availableSagaData.Single(d => d.SagaDataId == 10).ReceivedMessages.ShouldBe(2);
             availableSagaData.Single(d => d.SagaDataId == 12).ReceivedMessages.ShouldBe(3);

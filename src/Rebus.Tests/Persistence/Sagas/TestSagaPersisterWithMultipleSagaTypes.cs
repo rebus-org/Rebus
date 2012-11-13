@@ -9,6 +9,7 @@ namespace Rebus.Tests.Persistence.Sagas
     [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(InMemorySagaPersisterFactory))]
     public class TestSagaPersisterWithMultipleSagaTypes<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]

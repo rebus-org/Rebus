@@ -33,6 +33,9 @@ namespace Rebus.Persistence.SqlServer
             get { return timeoutsTableName; }
         }
 
+        /// <summary>
+        /// Adds the given timeout to the table specified by <see cref="TimeoutsTableName"/>
+        /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
             using (var connection = new SqlConnection(connectionString))
