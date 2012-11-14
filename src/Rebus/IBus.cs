@@ -38,7 +38,7 @@ namespace Rebus
         /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
         /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
         /// </summary>
-        void Unsubscribe<T>();
+        void Unsubscribe<TEvent>();
 
         /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.

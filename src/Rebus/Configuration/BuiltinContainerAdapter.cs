@@ -50,22 +50,36 @@ namespace Rebus.Configuration
             return this;
         }
 
+        /// <summary>
+        /// Uses the underlying <see cref="SimpleHandlerActivator"/> to look up handler instances
+        /// that can handle messages of type <typeparamref name="T"/>
+        /// </summary>
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             return handlerActivator.GetHandlerInstancesFor<T>();
         }
 
+        /// <summary>
+        /// Uses the underlying <see cref="SimpleHandlerActivator"/> to release the given handler instances
+        /// </summary>
         public void Release(IEnumerable handlerInstances)
         {
             handlerActivator.Release(handlerInstances);
         }
 
+        /// <summary>
+        /// Saves the given <see cref="IBus"/> and <see cref="IAdvancedBus"/>
+        /// references for later use
+        /// </summary>
         public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
         {
             Bus = bus;
             AdvancedBus = advancedBus;
         }
 
+        /// <summary>
+        /// Makes sure that the referenced <see cref="IBus"/> and <see cref="IAdvancedBus"/> are disposed
+        /// </summary>
         public void Dispose()
         {
             if (ReferenceEquals(null, Bus)) return;

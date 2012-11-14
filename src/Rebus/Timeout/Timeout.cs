@@ -34,6 +34,9 @@ namespace Rebus.Timeout
         /// </summary>
         public string CustomData { get; set; }
 
+        /// <summary>
+        /// Gets a nifty string representation of this timeout
+        /// </summary>
         public override string ToString()
         {
             return string.Format("{0}: {1} -> {2}", TimeToReturn, CorrelationId, ReplyTo);

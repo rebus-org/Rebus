@@ -21,7 +21,7 @@ namespace Rebus.Configuration
         public JsonSerializationOptions UseJsonSerializer()
         {
             var jsonMessageSerializer = new JsonMessageSerializer();
-            Backbone.SerializeMessages = jsonMessageSerializer;
+            Use(jsonMessageSerializer);
             return new JsonSerializationOptions(jsonMessageSerializer);
         }
 
@@ -31,9 +31,12 @@ namespace Rebus.Configuration
         /// </summary>
         public void UseBinarySerializer()
         {
-            Backbone.SerializeMessages = new BinaryMessageSerializer();
+            Use(new BinaryMessageSerializer());
         }
 
+        /// <summary>
+        /// Uses the specified implementation of <see cref="ISerializeMessages"/> to serialize transport messages
+        /// </summary>
         public void Use(ISerializeMessages serializer)
         {
             Backbone.SerializeMessages = serializer;

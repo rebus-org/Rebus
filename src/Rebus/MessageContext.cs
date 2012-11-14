@@ -35,6 +35,9 @@ namespace Rebus
         static internal IMessageContext current;
         object currentMessage;
 
+        /// <summary>
+        /// Gets a reference to the current logical message being handled
+        /// </summary>
         public object CurrentMessage
         {
             get { return currentMessage; }

@@ -44,7 +44,8 @@ namespace Rebus.Transports.Msmq
         }
 
         /// <summary>
-        /// Writes the MSMQ message, assuming that <see cref="obj"/> is a <see cref="TransportMessageToSend"/>
+        /// Writes to the MSMQ message, assuming that the given object is a <see cref="TransportMessageToSend"/> -
+        /// otherwise, an <see cref="ArgumentException"/> will be thrown
         /// </summary>
         public void Write(Message message, object obj)
         {

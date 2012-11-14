@@ -34,6 +34,9 @@ namespace Rebus.Serialization.Json
             Settings.Binder = binder;
         }
 
+        /// <summary>
+        /// Serializes the transport message <see cref="Message"/> using JSON.NET and wraps it in a <see cref="TransportMessageToSend"/>
+        /// </summary>
         public TransportMessageToSend Serialize(Message message)
         {
             using (new CultureContext(SerializationCulture))
@@ -53,6 +56,9 @@ namespace Rebus.Serialization.Json
             }
         }
 
+        /// <summary>
+        /// Deserializes the transport message using JSON.NET from a <see cref="ReceivedTransportMessage"/> and wraps it in a <see cref="Message"/>
+        /// </summary>
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
             using (new CultureContext(SerializationCulture))

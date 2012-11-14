@@ -36,6 +36,9 @@ namespace Rebus
             }
         }
 
+        /// <summary>
+        /// Makes sure that the saga context is removed from the items dictionary of the current <see cref="MessageContext"/>
+        /// </summary>
         public void Dispose()
         {
             if (messageContext != null)

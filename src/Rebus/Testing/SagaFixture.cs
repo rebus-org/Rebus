@@ -21,11 +21,11 @@ namespace Rebus.Testing
         object currentLogicalMessage;
 
         /// <summary>
-        /// Constructs the fixture with the given saga and the given saga data available. The <see cref="availableSagaData"/>
-        /// list will be used to look for existing saga data instances, and new ones will be added to this list as well.
+        /// Constructs the fixture with the given saga and the given saga data initially available. Saga data
+        /// instances are cloned.
         /// </summary>
         [DebuggerStepThrough]
-        public SagaFixture(Saga<TSagaData> saga, IList<TSagaData> availableSagaData)
+        public SagaFixture(Saga<TSagaData> saga, IEnumerable<TSagaData> availableSagaData)
         {
             persister = new SagaFixtureSagaPersister<TSagaData>(availableSagaData, deletedSagaData);
 

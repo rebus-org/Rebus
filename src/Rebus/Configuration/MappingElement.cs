@@ -39,6 +39,9 @@ namespace Rebus.Configuration
             get { return !Messages.Contains(","); }
         }
 
+        /// <summary>
+        /// Gets a nifty string representation of this endpoint mapping
+        /// </summary>
         public override string ToString()
         {
             return string.Format("{0} -> {1}", Messages, Endpoint);
