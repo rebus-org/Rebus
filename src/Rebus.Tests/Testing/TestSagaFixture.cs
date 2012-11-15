@@ -19,7 +19,8 @@ namespace Rebus.Tests.Testing
             // arrange
             var data = new CounterpartData { Dcid = 800 };
             var calledHandlers = new List<string>();
-            var fixture = new SagaFixture<CounterpartData>(new CounterpartUpdater(calledHandlers), new List<CounterpartData> { data });
+            var fixture = new SagaFixture<CounterpartData>(new CounterpartUpdater(calledHandlers));
+            fixture.AddSagaData(data);
             CounterpartChanged messageSupertype1 = new CounterpartCreated { Dcid = 800 };
             CounterpartChanged messageSupertype2 = new CounterpartUpdated { Dcid = 800 };
 
@@ -84,7 +85,7 @@ namespace Rebus.Tests.Testing
 
         public class CounterpartUpdated : CounterpartChanged { }
 
-        [TestCase("in the list")]
+        [TestCase("in the list", Ignore = true, Description = "don't want to provide this option anymore")]
         [TestCase("after the fact")]
         public void CanUseSagaDataProvidedInVariousWays(string howToProvideSagaData)
         {
@@ -95,9 +96,9 @@ namespace Rebus.Tests.Testing
 
             switch (howToProvideSagaData)
             {
-                case "in the list":
-                    fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), new List<SomeSagaData> { someSagaData });
-                    break;
+                //case "in the list":
+                //    fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), new List<SomeSagaData> { someSagaData });
+                //    break;
 
                 case "after the fact":
                     fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
@@ -122,7 +123,7 @@ namespace Rebus.Tests.Testing
         public void CanCorrelateMessagesLikeExpected()
         {
             // arrange
-            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), new List<SomeSagaData>());
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
 
             fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new saga data");
             fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated with existing saga data");
@@ -147,7 +148,8 @@ namespace Rebus.Tests.Testing
         {
             // arrange
             var data = new List<SomeSagaData> { new SomeSagaData { SagaDataId = 23 } };
-            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), data);
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
+            fixture.AddSagaData(data);
 
             // act
             var exception = Assert.Throws<ApplicationException>(() => fixture.Handle(new SomePoisonMessage { SagaDataId = 23 }));

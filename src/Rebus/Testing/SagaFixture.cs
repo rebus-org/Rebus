@@ -26,9 +26,9 @@ namespace Rebus.Testing
         /// instances are cloned.
         /// </summary>
         [DebuggerStepThrough]
-        public SagaFixture(Saga<TSagaData> saga, IEnumerable<TSagaData> availableSagaData)
+        public SagaFixture(Saga<TSagaData> saga)
         {
-            persister = new SagaFixtureSagaPersister<TSagaData>(availableSagaData, deletedSagaData);
+            persister = new SagaFixtureSagaPersister<TSagaData>(deletedSagaData);
 
             persister.CreatedNew += RaiseCreatedNewSagaData;
             persister.Correlated += RaiseCorrelatedWithExistingSagaData;
@@ -39,15 +39,6 @@ namespace Rebus.Testing
                                         new TrivialPipelineInspector(), null);
 
             this.saga = saga;
-        }
-
-        /// <summary>
-        /// Constructs the fixture with the given saga.
-        /// </summary>
-        [DebuggerStepThrough]
-        public SagaFixture(Saga<TSagaData> saga)
-            : this(saga, new List<TSagaData>())
-        {
         }
 
         void RaiseCouldNotCorrelate()
@@ -180,6 +171,32 @@ namespace Rebus.Testing
         }
 
         /// <summary>
+        /// Adds the saga data from the given sequence to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(IEnumerable<TSagaData> sagaData)
+        {
+            foreach (var data in sagaData)
+            {
+                persister.AddSagaData(data);
+            }
+        }
+
+        /// <summary>
+        /// Adds the saga data from the given sequence to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(params TSagaData[] sagaData)
+        {
+            foreach (var data in sagaData)
+            {
+                persister.AddSagaData(data);
+            }
+        }
+
+        /// <summary>
         /// Gives access to the currently correlated piece of saga data. If none could be correlated, 
         /// null is returned.
         /// </summary>
@@ -193,9 +210,9 @@ namespace Rebus.Testing
             readonly IList<TSagaDataToStore> deletedSagaData;
             readonly InMemorySagaPersister innerPersister;
 
-            public SagaFixtureSagaPersister(IEnumerable<TSagaDataToStore> availableSagaData, IList<TSagaDataToStore> deletedSagaData)
+            public SagaFixtureSagaPersister(IList<TSagaDataToStore> deletedSagaData)
             {
-                innerPersister = new InMemorySagaPersister(availableSagaData.Cast<ISagaData>());
+                innerPersister = new InMemorySagaPersister();
 
                 this.deletedSagaData = deletedSagaData;
             }
