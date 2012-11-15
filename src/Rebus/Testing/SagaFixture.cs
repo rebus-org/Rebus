@@ -18,6 +18,7 @@ namespace Rebus.Testing
         readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
         readonly Dispatcher dispatcher;
         readonly SagaFixtureSagaPersister<TSagaData> persister;
+
         object currentLogicalMessage;
 
         /// <summary>
@@ -38,6 +39,15 @@ namespace Rebus.Testing
                                         new TrivialPipelineInspector(), null);
 
             this.saga = saga;
+        }
+
+        /// <summary>
+        /// Constructs the fixture with the given saga.
+        /// </summary>
+        [DebuggerStepThrough]
+        public SagaFixture(Saga<TSagaData> saga)
+            : this(saga, new List<TSagaData>())
+        {
         }
 
         void RaiseCouldNotCorrelate()
@@ -78,15 +88,6 @@ namespace Rebus.Testing
             public void Release(IEnumerable handlerInstances)
             {
             }
-        }
-
-        /// <summary>
-        /// Constructs the fixture with the given saga.
-        /// </summary>
-        [DebuggerStepThrough]
-        public SagaFixture(Saga<TSagaData> saga)
-            : this(saga, new List<TSagaData>())
-        {
         }
 
         /// <summary>
