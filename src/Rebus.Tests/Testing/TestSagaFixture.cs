@@ -84,6 +84,40 @@ namespace Rebus.Tests.Testing
 
         public class CounterpartUpdated : CounterpartChanged { }
 
+        [TestCase("in the list")]
+        [TestCase("after the fact")]
+        public void CanUseSagaDataProvidedInVariousWays(string howToProvideSagaData)
+        {
+            // arrange
+            const string recognizableText = "this, I can recognize!";
+            var someSagaData = new SomeSagaData { SagaDataId = 10, JustSomeText = recognizableText };
+            SagaFixture<SomeSagaData> fixture;
+
+            switch (howToProvideSagaData)
+            {
+                case "in the list":
+                    fixture = new SagaFixture<SomeSagaData>(new SomeSaga(), new List<SomeSagaData> { someSagaData });
+                    break;
+
+                case "after the fact":
+                    fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
+                    fixture.AddSagaData(someSagaData);
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Don't know how to provide saga data like this: {0}", howToProvideSagaData), "howToProvideSagaData");
+            }
+
+            // act
+            fixture.Handle(new SomeMessage { SagaDataId = 10 });
+
+            // assert
+            var availableSagaData = fixture.AvailableSagaData;
+            availableSagaData.Count.ShouldBe(1);
+            var sagaDataClone = availableSagaData.Single(d => d.SagaDataId == 10);
+            sagaDataClone.JustSomeText.ShouldBe(recognizableText);
+        }
+
         [Test]
         public void CanCorrelateMessagesLikeExpected()
         {
@@ -168,6 +202,7 @@ namespace Rebus.Tests.Testing
             public int SagaDataId { get; set; }
 
             public int ReceivedMessages { get; set; }
+            public string JustSomeText { get; set; }
         }
     }
 }

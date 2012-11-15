@@ -194,6 +194,11 @@ namespace Rebus.Testing
                 get { return innerPersister.Cast<TSagaData>().ToList(); }
             }
 
+            public void AddSagaData(TSagaData sagaData)
+            {
+                innerPersister.AddSagaData(sagaData);
+            }
+
             public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
                 innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
@@ -226,8 +231,15 @@ namespace Rebus.Testing
             }
 
             public event Action<ISagaData> CreatedNew = delegate { };
+
             public event Action<ISagaData> Correlated = delegate { };
+
             public event Action CouldNotCorrelate = delegate { };
+        }
+
+        public void AddSagaData(TSagaData sagaData)
+        {
+            persister.AddSagaData(sagaData);
         }
     }
 }

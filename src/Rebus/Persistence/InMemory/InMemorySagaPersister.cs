@@ -43,6 +43,25 @@ namespace Rebus.Persistence.InMemory
         }
 
         /// <summary>
+        /// Inserts the given saga data WITHOUT ANY SAFETY! So you're on your own with regards to enforcing the unique
+        /// constraing of saga data properties! Why is that? Because at this point, it's impossible to know which
+        /// properties are going to be correlation properties.
+        /// </summary>
+        internal void AddSagaData(ISagaData sagaData)
+        {
+            lock (dataLock)
+            {
+                var data = GetData(sagaData.GetType());
+                var sagaDataToSave = Clone(sagaData);
+                if (sagaDataToSave.Id == Guid.Empty)
+                {
+                    sagaDataToSave.Id = Guid.NewGuid();
+                }
+                data[sagaDataToSave.Id] = sagaDataToSave;
+            }
+        }
+
+        /// <summary>
         /// Stores the saga data in memory, throwing an <see cref="OptimisticLockingException"/> if the unique constraint
         /// of correlation properties is violated
         /// </summary>
