@@ -77,6 +77,10 @@ namespace Rebus.Persistence.SqlServer
             get { return sagaTableName; }
         }
 
+        /// <summary>
+        /// Inserts the given saga data in the underlying SQL table, generating an appropriate index in the index table for the specified
+        /// correlation properties. In this process, all existing index entries associated with this particular saga data are deleted.
+        /// </summary>
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var connection = getConnection();

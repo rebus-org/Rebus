@@ -78,6 +78,9 @@ namespace Rebus.Bus
         /// </summary>
         public event Action Cleanup = delegate { };
 
+        /// <summary>
+        /// Detaches this transaction context from the thread
+        /// </summary>
         public void Dispose()
         {
             TransactionContext.Clear();

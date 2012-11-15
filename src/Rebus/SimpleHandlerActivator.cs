@@ -58,6 +58,9 @@ namespace Rebus
             }
         }
 
+        /// <summary>
+        /// Gets all available handlers that can be cast to <see cref="IHandleMessages{TMessage}"/>
+        /// </summary>
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             if (!activators.ContainsKey(typeof(IHandleMessages<T>)))
@@ -68,6 +71,11 @@ namespace Rebus
                 .ToArray();
         }
 
+        /// <summary>
+        /// Loops throug the given sequence of handler instances and disposes those that implement <see cref="IDisposable"/>.
+        /// Obviously, this way of disposing dispoables is not as powerful as e.g. Windsor's way of doing it, do you'll
+        /// have to be sure that handlers that YOU know are singletons, are not disposable.
+        /// </summary>
         public void Release(IEnumerable handlerInstances)
         {
             foreach (var instance in handlerInstances)

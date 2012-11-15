@@ -54,6 +54,9 @@ namespace Rebus.Persistence.SqlServer
             get { return subscriptionsTableName; }
         }
 
+        /// <summary>
+        /// Stores a subscription for the given message type and the given subscriber endpoint in the underlying SQL table.
+        /// </summary>
         public void Store(Type messageType, string subscriberInputQueue)
         {
             var connection = getConnection();
@@ -84,6 +87,9 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Removes the subscription (if any) for the given message type and subscriber endpoint from the underlying SQL table.
+        /// </summary>
         public void Remove(Type messageType, string subscriberInputQueue)
         {
             var connection = getConnection();
@@ -107,6 +113,9 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Queries the underlying table for subscriber endpoints that are subscribed to the given message type
+        /// </summary>
         public string[] GetSubscribers(Type messageType)
         {
             var connection = getConnection();

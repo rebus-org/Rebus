@@ -169,6 +169,16 @@ namespace Rebus.Testing
         }
 
         /// <summary>
+        /// Adds the given saga data to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(TSagaData sagaData)
+        {
+            persister.AddSagaData(sagaData);
+        }
+
+        /// <summary>
         /// Gives access to the currently correlated piece of saga data. If none could be correlated, 
         /// null is returned.
         /// </summary>
@@ -235,11 +245,6 @@ namespace Rebus.Testing
             public event Action<ISagaData> Correlated = delegate { };
 
             public event Action CouldNotCorrelate = delegate { };
-        }
-
-        public void AddSagaData(TSagaData sagaData)
-        {
-            persister.AddSagaData(sagaData);
         }
     }
 }

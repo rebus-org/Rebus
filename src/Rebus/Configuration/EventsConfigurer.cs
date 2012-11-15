@@ -67,6 +67,9 @@ namespace Rebus.Configuration
         /// </summary>
         public event PoisonMessageEventHandler PoisonMessage;
 
+        /// <summary>
+        /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
+        /// </summary>
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
         internal void TransferToBus(IAdvancedBus advancedBus)
