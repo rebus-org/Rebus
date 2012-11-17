@@ -108,25 +108,36 @@ namespace Rebus.Testing
         public delegate void CreatedNewSagaDataEventHandler<in T>(object message, T sagaData);
 
         /// <summary>
+        /// Delegate type that can be used to define events of when handling an incoming message results in an exception
+        /// </summary>
+        public delegate void ExceptionEventHandler(object message, Exception exception);
+
+        /// <summary>
         /// Delegate type that can be used to define events of when an incoming message could have been handled by a saga handler but
         /// could not be correlated with an existing piece of saga data and it wasn't allowed to initiate a new saga
         /// </summary>
         public delegate void CouldNotCorrelateEventHandler(object message);
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could be correlated with an existing saga data instance.
+        /// Raised when the handling of an incoming message gives rise to an exception. When you add a listener to this event,
+        /// the exception will be considered "handled" - i.e. it will not be re-thrown by the saga fixture.
+        /// </summary>
+        public event ExceptionEventHandler Exception;
+
+        /// <summary>
+        /// Raised during message dispatch when the message could be correlated with an existing saga data instance.
         /// The event is raised before the message is handled by the saga.
         /// </summary>
         public event CorrelatedWithExistingSagaDataEventHandler<TSagaData> CorrelatedWithExistingSagaData;
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could not be correlated with an existing saga data instance
+        /// Raised during message dispatch when the message could not be correlated with an existing saga data instance
         /// and a new saga data instance was created. The event is raised before the message is handled by the saga.
         /// </summary>
         public event CreatedNewSagaDataEventHandler<TSagaData> CreatedNewSagaData;
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could not be correlated with a saga data instance, and 
+        /// Raised during message dispatch when the message could not be correlated with a saga data instance, and 
         /// creating a new saga data instance was not allowed.
         /// </summary>
         public event CouldNotCorrelateEventHandler CouldNotCorrelate;
@@ -155,8 +166,17 @@ namespace Rebus.Testing
                     exception = exception.InnerException;
 
                 var exceptionToRethrow = exception.InnerException;
+                
                 exceptionToRethrow.PreserveStackTrace();
-                throw exceptionToRethrow;
+
+                if (Exception != null)
+                {
+                    Exception(message, exceptionToRethrow);
+                }
+                else
+                {
+                    throw exceptionToRethrow;
+                }
             }
         }
 
