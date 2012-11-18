@@ -10,8 +10,10 @@ namespace Rebus.Snoop.ViewModel.Models
     public class Machine : ViewModel
     {
         readonly ObservableCollection<Queue> queues = new ObservableCollection<Queue>();
+#pragma warning disable 649
         string machineName;
         bool success;
+#pragma warning restore 649
 
         public Machine()
         {

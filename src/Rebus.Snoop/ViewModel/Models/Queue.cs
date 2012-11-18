@@ -13,10 +13,12 @@ namespace Rebus.Snoop.ViewModel.Models
     public class Queue : ViewModel
     {
         readonly ObservableCollection<Message> messages = new ObservableCollection<Message>();
+#pragma warning disable 649
         int messageCount;
         string queueName;
         string queuePath;
         bool initialized;
+#pragma warning restore 649
 
         public Queue()
         {

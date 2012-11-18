@@ -6,17 +6,15 @@ namespace Rebus.Snoop.ViewModel.Models
 {
     public class Message : ViewModel
     {
-        // ReSharper disable UnassignedField.Local
-        // ReSharper disable FieldCanBeMadeReadOnly.Local
-        Dictionary<string, string> headers = new Dictionary<string, string>();
+#pragma warning disable 649
+        readonly Dictionary<string, string> headers = new Dictionary<string, string>();
         string body;
         int bytes;
         string id;
         string label;
         string queuePath;
         DateTime time;
-        // ReSharper restore UnassignedField.Local
-        // ReSharper restore FieldCanBeMadeReadOnly.Local
+#pragma warning restore 649
 
         public string Body
         {

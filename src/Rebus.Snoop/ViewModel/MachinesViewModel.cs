@@ -17,8 +17,10 @@ namespace Rebus.Snoop.ViewModel
         readonly ObservableCollection<Machine> machines = new ObservableCollection<Machine>();
         readonly ObservableCollection<Notification> notifications = new ObservableCollection<Notification>();
 
+#pragma warning disable 649
         bool canMoveMessagesToSourceQueue;
         bool canDeleteMessages;
+#pragma warning restore 649
 
         public MachinesViewModel()
         {
