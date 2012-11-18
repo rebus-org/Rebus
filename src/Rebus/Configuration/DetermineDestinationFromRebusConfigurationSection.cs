@@ -84,6 +84,25 @@ Note also, that specifying the input queue name with the 'inputQueue' attribute 
         {
         }
 
+        /// <summary>
+        /// Gets the name of the endpoint that is configured to be the owner of the specified message type.
+        /// </summary>
+        public string GetEndpointFor(Type messageType)
+        {
+            string endpoint;
+            if (endpointMappings.TryGetValue(messageType, out endpoint))
+            {
+                return endpoint;
+            }
+
+            var message = string.Format(@"Could not find an endpoint mapping for the message type {0}. 
+
+Please ensure that you have mapped all message types, you wish to either Send or
+Subscribe to, to an endpoint - a 'message owner' if you will.", messageType);
+
+            throw new InvalidOperationException(message);
+        }
+
         void PopulateMappings(RebusConfigurationSection configurationSection)
         {
             //ensure that all assembly mappings are processed first,
@@ -165,22 +184,6 @@ For this to work, Rebus needs access to an assembly with one of the following fi
             }
             
             endpointMappings[messageType] = endpoint;
-        }
-
-        public string GetEndpointFor(Type messageType)
-        {
-            string endpoint;
-            if (endpointMappings.TryGetValue(messageType, out endpoint))
-            {
-                return endpoint;
-            }
-
-            var message = string.Format(@"Could not find an endpoint mapping for the message type {0}. 
-
-Please ensure that you have mapped all message types, you wish to either Send or
-Subscribe to, to an endpoint - a 'message owner' if you will.", messageType);
-
-            throw new InvalidOperationException(message);
         }
     }
 }

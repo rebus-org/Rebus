@@ -156,9 +156,9 @@ namespace Rebus.Persistence.InMemory
 
         /// <summary>
         /// Looks up an existing saga data instance by looking at the data property at the path specified by
-        /// <see cref="sagaDataPropertyPath"/> with a value that corresponds to the value specified by <see cref="fieldFromMessage"/>.
-        /// Note that ToString is called on both, so is assumed that the property pointed to by <see cref="sagaDataPropertyPath"/>
-        /// and <see cref="fieldFromMessage"/> both have a valid string representation
+        /// <paramref name="sagaDataPropertyPath"/> with a value that corresponds to the value specified by <paramref name="fieldFromMessage"/>.
+        /// Note that ToString is called on both, so is assumed that the property pointed to by <paramref name="sagaDataPropertyPath"/>
+        /// and <paramref name="fieldFromMessage"/> both have a valid string representation
         /// </summary>
         public virtual T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
@@ -173,6 +173,9 @@ namespace Rebus.Persistence.InMemory
             }
         }
 
+        /// <summary>
+        /// Gets an enumerator, allowing the underlying saga data instances to be unumerated
+        /// </summary>
         public IEnumerator<ISagaData> GetEnumerator()
         {
             return dataByType.Values.SelectMany(v => v.Values).ToList().GetEnumerator();

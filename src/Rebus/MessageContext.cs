@@ -89,16 +89,28 @@ Stacktrace of when the current message context was created:
 #endif
         }
 
+        /// <summary>
+        /// Gets the message ID from the transport message headers
+        /// </summary>
         public string TransportMessageId
         {
             get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }
         
+        /// <summary>
+        /// Gets the return address from the transport message headers. This address will most likely be the sender
+        /// of message currently being handled, but it could also have been set explicitly by the sender to another
+        /// endpoint
+        /// </summary>
         public string ReturnAddress
         {
             get { return (string)headers.ValueOrNull(Shared.Headers.ReturnAddress); }
         }
 
+        /// <summary>
+        /// Gets the dictionary of objects associated with this message context. This collection can be used to store stuff
+        /// for the duration of the handling of this transport message.
+        /// </summary>
         public IDictionary<string, object> Items { get; private set; }
 
         /// <summary>
@@ -135,12 +147,21 @@ Stacktrace of when the current message context was created:
 
         internal bool DispatchMessageToHandlers { get; set; }
 
+        /// <summary>
+        /// Aborts processing the current message - i.e., after exiting from the
+        /// current handler, no more handlers will be called. Note that this does
+        /// not cause the current transaction to be rolled back.
+        /// </summary>
         public void Abort()
         {
             log.Debug("Abort was called - will stop dispatching message to handlers");
             DispatchMessageToHandlers = false;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             current = null;

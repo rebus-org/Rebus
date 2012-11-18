@@ -253,7 +253,7 @@ namespace Rebus.Snoop.Listeners
             {
                 return (int)message.BodyStream.Length;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return -1;
             }

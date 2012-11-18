@@ -84,6 +84,9 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Queries the underlying table and returns due timeouts, removing them at the same time
+        /// </summary>
         public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
         {
             using (var connection = new SqlConnection(connectionString))

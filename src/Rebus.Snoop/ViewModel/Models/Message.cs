@@ -6,13 +6,17 @@ namespace Rebus.Snoop.ViewModel.Models
 {
     public class Message : ViewModel
     {
-        readonly Dictionary<string, string> headers = new Dictionary<string, string>();
+        // ReSharper disable UnassignedField.Local
+        // ReSharper disable FieldCanBeMadeReadOnly.Local
+        Dictionary<string, string> headers = new Dictionary<string, string>();
         string body;
         int bytes;
         string id;
         string label;
         string queuePath;
         DateTime time;
+        // ReSharper restore UnassignedField.Local
+        // ReSharper restore FieldCanBeMadeReadOnly.Local
 
         public string Body
         {
@@ -23,13 +27,18 @@ namespace Rebus.Snoop.ViewModel.Models
         public Dictionary<string, string> Headers
         {
             get { return headers; }
-            set { SetValue(() => Headers, value, ExtractPropertyName(() => HeadersExceptError), ExtractPropertyName(() => ErrorDetails)); }
+            set
+            {
+                SetValue(() => Headers, value,
+                    ExtractPropertyName(() => HeadersExceptError),
+                    ExtractPropertyName(() => ErrorDetails));
+            }
         }
 
         public IEnumerable<KeyValuePair<string, string>> HeadersExceptError
         {
             get { return Headers.Where(h => h.Key != Shared.Headers.ErrorMessage).ToArray(); }
-        } 
+        }
 
         public string Label
         {

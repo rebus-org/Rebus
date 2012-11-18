@@ -158,6 +158,10 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Updates the given saga data in the underlying SQL table, generating an appropriate index in the index table for the specified
+        /// correlation properties. In this process, all existing index entries associated with this particular saga data are deleted.
+        /// </summary>
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var connection = getConnection();
@@ -238,6 +242,9 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Deletes the saga data instance from the underlying SQL table
+        /// </summary>
         public void Delete(ISagaData sagaData)
         {
             var connection = getConnection();
@@ -268,6 +275,10 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Queries the underlying SQL table for the saga whose correlation field has a value
+        /// that matches the given field from the incoming message.
+        /// </summary>
         public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             var connection = getConnection();

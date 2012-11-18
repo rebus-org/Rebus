@@ -84,6 +84,10 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             throw new InvalidOperationException(message);
         }
 
+        /// <summary>
+        /// Initializes the endpoint mapper - will be called once the first time <see cref="GetEndpointFor"/> is called. This
+        /// method is synchronized, so it will block other threads while initialization is done
+        /// </summary>
         protected virtual void Initialize()
         {
             lock (initializationLock)
@@ -96,6 +100,9 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
+        /// <summary>
+        /// Carries out the actual initialization
+        /// </summary>
         protected virtual void DoInitialize()
         {
             var xmlText = appConfigLoader.LoadIt();
@@ -117,6 +124,9 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
+        /// <summary>
+        /// Extracts one single mapping from an encounteret <see cref="XElement"/>
+        /// </summary>
         protected virtual void ExtractMapping(XElement mapping)
         {
             if (mapping.Name != "add")
@@ -155,6 +165,9 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
+        /// <summary>
+        /// Called when the 'messages' attribute is determined to be for one specific message
+        /// </summary>
         protected virtual void AddMappingForType(string messages, string endpoint)
         {
             var type = Type.GetType(messages);
@@ -162,6 +175,9 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             Map(type, endpoint);
         }
 
+        /// <summary>
+        /// Called when the 'messages' attribute is determined to be for an entire assembly
+        /// </summary>
         protected virtual void AddMappingsForAllTypesFromAssemblyNamed(string messages, string endpoint)
         {
             var assembly = Assembly.Load(messages);
@@ -172,11 +188,17 @@ declaration pointing to NServiceBus.Core with this generic declaration:
             }
         }
 
+        /// <summary>
+        /// Will be called for each type that the endpoint mapper maps to a specific endpoint
+        /// </summary>
         protected virtual void Map(Type type, string endpoint)
         {
             endpoints[type] = endpoint;
         }
 
+        /// <summary>
+        /// Determines whether the given string specifies an assembly name (otherwise, it is assumed to be a specific type)
+        /// </summary>
         protected virtual bool IsAssemblyName(string messages)
         {
             return !messages.Contains(",");

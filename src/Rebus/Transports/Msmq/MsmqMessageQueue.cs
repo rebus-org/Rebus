@@ -86,11 +86,18 @@ If you could use a remote queue as an input queue, one of the nifty benefits of 
 because there would be remote calls involved when you wanted to receive a message.", queueName));
         }
 
+        /// <summary>
+        /// Gets a globally addressable representation of the input queue
+        /// </summary>
         public string InputQueueAddress
         {
             get { return InputQueue + "@" + machineAddress; }
         }
 
+        /// <summary>
+        /// Gets the next transport message from the underlying MSMQ queue, returning null if no message is available. The method
+        /// will block up until 1 second while waiting for the next message
+        /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             try
@@ -147,11 +154,19 @@ because there would be remote calls involved when you wanted to receive a messag
             }
         }
 
+        /// <summary>
+        /// Gets the input queue name - this queue name *might* not be globally reachable, use <see cref="InputQueueAddress"/>
+        /// instead of you need a global queue address
+        /// </summary>
         public string InputQueue
         {
             get { return inputQueueName; }
         }
 
+        /// <summary>
+        /// Sends the given <see cref="TransportMessageToSend"/> to the input queue specified by <see cref="inputQueueName"/>
+        /// using MSMQ
+        /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var recipientPath = MsmqUtil.GetSenderPath(destinationQueueName);
@@ -217,6 +232,9 @@ because there would be remote calls involved when you wanted to receive a messag
             return this;
         }
 
+        /// <summary>
+        /// Disposes the underlying <see cref="MessageQueue"/> instance
+        /// </summary>
         public void Dispose()
         {
             if (disposed) return;
@@ -239,6 +257,10 @@ because there would be remote calls involved when you wanted to receive a messag
             }
         }
 
+        /// <summary>
+        /// Generates a nifty string representation of this instance, using the MSMQ path of the input queue
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return string.Format("MsmqMessageQueue: {0}", inputQueuePath);
@@ -253,6 +275,5 @@ because there would be remote calls involved when you wanted to receive a messag
                 };
             return messageQueue;
         }
-
     }
 }

@@ -6,6 +6,7 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
+using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
 using Rebus.Transports;
@@ -85,6 +86,9 @@ namespace Rebus.Bus
                 .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
         }
 
+        /// <summary>
+        /// Starts the bus
+        /// </summary>
         public IBus Start()
         {
             const int defaultNumberOfWorkers = 1;
@@ -110,6 +114,11 @@ namespace Rebus.Bus
             return this;
         }
 
+
+        /// <summary>
+        /// Sends the specified message to the destination as specified by the currently
+        /// used implementation of <see cref="IDetermineDestination"/>.
+        /// </summary>
         public void Send<TCommand>(TCommand message)
         {
             Guard.NotNull(message, "message");
@@ -121,6 +130,9 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
+        /// <summary>
+        /// Sends the specified message to the bus' own input queue.
+        /// </summary>
         public void SendLocal<TCommand>(TCommand message)
         {
             Guard.NotNull(message, "message");
@@ -134,6 +146,11 @@ namespace Rebus.Bus
             InternalSend(destinationEndpoint, new List<object> { message });
         }
 
+        /// <summary>
+        /// Publishes the specified event message to all endpoints that are currently subscribed.
+        /// The publisher should have some kind of <see cref="IStoreSubscriptions"/> implementation,
+        /// preferably a durable implementation like e.g. <see cref="SqlServerSubscriptionStorage"/>.
+        /// </summary>
         public void Publish<TEvent>(TEvent message)
         {
             Guard.NotNull(message, "message");
@@ -169,21 +186,35 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Gives access to all the different event hooks that Rebus exposes.
+        /// </summary>
         public IRebusEvents Events
         {
             get { return events; }
         }
 
+        /// <summary>
+        /// Gives access to Rebus' batch operations.
+        /// </summary>
         public IRebusBatchOperations Batch
         {
             get { return batch; }
         }
 
+        /// <summary>
+        /// Gives access to Rebus' routing operations.
+        /// </summary>
         public IRebusRouting Routing
         {
             get { return routing; }
         }
 
+        /// <summary>
+        /// Sends a reply back to the sender of the message currently being handled. Can only
+        /// be called when a <see cref="MessageContext"/> has been established, which happens
+        /// during the handling of an incoming message.
+        /// </summary>
         public void Reply<TResponse>(TResponse message)
         {
             Guard.NotNull(message, "message");
@@ -191,6 +222,10 @@ namespace Rebus.Bus
             InternalReply(new List<object> { message });
         }
 
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// </summary>
         public void Subscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
@@ -206,6 +241,10 @@ namespace Rebus.Bus
             InternalSubscribe<TEvent>(publisherInputQueue);
         }
 
+        /// <summary>
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// </summary>
         public void Unsubscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
@@ -233,6 +272,11 @@ namespace Rebus.Bus
             while (workers.Count > newNumberOfWorkers) RemoveWorker();
         }
 
+        /// <summary>
+        /// Sends the message to the timeout manager, which will send it back after the specified
+        /// time span has elapsed. Note that you must have a running timeout manager for this to
+        /// work.
+        /// </summary>
         public void Defer(TimeSpan delay, object message)
         {
             Guard.NotNull(message, "message");
@@ -267,6 +311,11 @@ namespace Rebus.Bus
             InternalSend(timeoutManagerAddress, messages);
         }
 
+        /// <summary>
+        /// Attaches to the specified message a header with the given key and value. The header will
+        /// be associated with the message, and will be supplied when the message is sent - even if
+        /// it is sent multiple times.
+        /// </summary>
         public void AttachHeader(object message, string key, string value)
         {
             Guard.NotNull(message, "message");

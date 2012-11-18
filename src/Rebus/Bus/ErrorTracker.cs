@@ -95,6 +95,9 @@ namespace Rebus.Bus
             trackedMessage.AddError(exception);
         }
 
+        /// <summary>
+        /// Gets the globally addressable address of the error queue
+        /// </summary>
         public string ErrorQueueAddress
         {
             get { return errorQueueAddress; }
@@ -148,6 +151,9 @@ namespace Rebus.Bus
             return trackedMessage.FailCount >= MaxRetries;
         }
 
+        /// <summary>
+        /// Indicates how many times a message will be retried before it is moved to the error queue
+        /// </summary>
         public int MaxRetries { get; private set; }
 
         TrackedMessage GetOrAdd(string id)
@@ -208,6 +214,9 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Disposes the error tracker
+        /// </summary>
         public void Dispose()
         {
             timer.Dispose();

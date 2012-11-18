@@ -19,7 +19,8 @@ namespace Rebus
         string TransportMessageId { get; }
 
         /// <summary>
-        /// Gets the dictionary of objects associated with this message context.
+        /// Gets the dictionary of objects associated with this message context. This collection can be used to store stuff
+        /// for the duration of the handling of this transport message.
         /// </summary>
         IDictionary<string, object> Items { get; }
 
