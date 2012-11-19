@@ -386,6 +386,12 @@ namespace Rebus.RabbitMQ
                 {
                     props.ReplyTo = (string)message.Headers[Headers.ReturnAddress];
                 }
+
+                if (message.Headers.ContainsKey(Headers.TimeToBeReceived) && message.Headers[Headers.TimeToBeReceived] is string)
+                {
+                    var timeSpan = TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
+                    props.Expiration = ((int) timeSpan.TotalMilliseconds).ToString();
+                }
             }
 
             props.MessageId = Guid.NewGuid().ToString();

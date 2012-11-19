@@ -4,6 +4,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Messaging;
 using System.Text;
 using System.Threading;
 using System.Transactions;
@@ -12,7 +13,10 @@ using RabbitMQ.Client;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
+using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Shouldly;
+using Message = Rebus.Messages.Message;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
@@ -20,11 +24,50 @@ namespace Rebus.Tests.Transports.Rabbit
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
         static readonly Encoding Encoding = Encoding.UTF8;
+        JsonMessageSerializer serializer;
 
         protected override void DoSetUp()
         {
+            serializer = new JsonMessageSerializer();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
         }
+
+        [Test]
+        public void MessageExpirationWorks()
+        {
+            // arrange
+            var timeToBeReceived = 2.Seconds().ToString();
+
+            const string recipientInputQueueName = "test.expiration.recipient";
+            const string senderInputQueueName = "test.expiration.sender";
+
+            using(var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
+            {
+                senderQueue.Send(recipientInputQueueName,
+                                 serializer.Serialize(new Message
+                                                          {
+                                                              Messages = new object[] {"HELLO WORLD!"},
+                                                              Headers =
+                                                                  new Dictionary<string, object>
+                                                                      {
+                                                                          {
+                                                                              Headers.TimeToBeReceived,
+                                                                              timeToBeReceived
+                                                                          }
+                                                                      },
+                                                          }),
+                                 new NoTransaction());
+
+                // act
+                Thread.Sleep(2.Seconds() + 1.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipientQueue.ReceiveMessage(new NoTransaction());
+                Assert.That(receivedTransportMessage, Is.Null);
+            }
+        }
+
 
         [Test, Description("Because Rabbit can move around complex headers (i.e. heades whose values are themselves complete dictionaries), Rebus needs to be able to store these things, so that e.g. forwarding to error queues etc works as expected")]
         public void RabbitTransportDoesNotChokeOnMessagesContainingComplexHeaders()
