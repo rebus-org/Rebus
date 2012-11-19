@@ -389,8 +389,23 @@ namespace Rebus.RabbitMQ
 
                 if (message.Headers.ContainsKey(Headers.TimeToBeReceived) && message.Headers[Headers.TimeToBeReceived] is string)
                 {
-                    var timeSpan = TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
-                    props.Expiration = ((int) timeSpan.TotalMilliseconds).ToString();
+                    var timeToBeReceived = (string)message.Headers[Headers.TimeToBeReceived];
+                    try
+                    {
+                        var timeSpan = TimeSpan.Parse(timeToBeReceived);
+                        var milliseconds = (int) timeSpan.TotalMilliseconds;
+                        if (milliseconds <= 0)
+                        {
+                            throw new ArgumentException(string.Format("Cannot set TTL message expiration to {0} milliseconds! Please specify a positive value!", milliseconds));
+                        }
+                        props.Expiration = milliseconds.ToString();
+                    }
+                    catch (Exception e)
+                    {
+                        throw new FormatException(string.Format(
+                                "Could not set TTL message expiration on message - apparently, '{0}' is not a valid TTL TimeSpan",
+                                timeToBeReceived), e);
+                    }
                 }
             }
 
