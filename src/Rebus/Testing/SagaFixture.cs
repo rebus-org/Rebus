@@ -33,6 +33,7 @@ namespace Rebus.Testing
             persister.CreatedNew += RaiseCreatedNewSagaData;
             persister.Correlated += RaiseCorrelatedWithExistingSagaData;
             persister.CouldNotCorrelate += RaiseCouldNotCorrelate;
+            persister.Deleted += RaiseMarkedAsComplete;
 
             dispatcher = new Dispatcher(persister,
                                         new SagaFixtureHandlerActivator(saga), new InMemorySubscriptionStorage(),
@@ -41,22 +42,36 @@ namespace Rebus.Testing
             this.saga = saga;
         }
 
+        void RaiseMarkedAsComplete(ISagaData sagaData)
+        {
+            if (MarkedAsComplete != null)
+            {
+                MarkedAsComplete(currentLogicalMessage, (TSagaData) sagaData);
+            }
+        }
+
         void RaiseCouldNotCorrelate()
         {
             if (CouldNotCorrelate != null)
+            {
                 CouldNotCorrelate(currentLogicalMessage);
+            }
         }
 
-        void RaiseCorrelatedWithExistingSagaData(ISagaData d)
+        void RaiseCorrelatedWithExistingSagaData(ISagaData sagaData)
         {
             if (CorrelatedWithExistingSagaData != null)
-                CorrelatedWithExistingSagaData(currentLogicalMessage, (TSagaData)d);
+            {
+                CorrelatedWithExistingSagaData(currentLogicalMessage, (TSagaData)sagaData);
+            }
         }
 
-        void RaiseCreatedNewSagaData(ISagaData d)
+        void RaiseCreatedNewSagaData(ISagaData sagaData)
         {
             if (CreatedNewSagaData != null)
-                CreatedNewSagaData(currentLogicalMessage, (TSagaData)d);
+            {
+                CreatedNewSagaData(currentLogicalMessage, (TSagaData)sagaData);
+            }
         }
 
         class SagaFixtureHandlerActivator : IActivateHandlers
@@ -106,6 +121,11 @@ namespace Rebus.Testing
         /// Delegate type that can be used to define events of when an incoming message gives rise to a new instance of saga data
         /// </summary>
         public delegate void CreatedNewSagaDataEventHandler<in T>(object message, T sagaData);
+        
+        /// <summary>
+        /// Delegate type that can be used to detect when an incoming message gives rise to a saga data being marked as complete
+        /// </summary>
+        public delegate void MarkedAsCompleteEventHandler<in T>(object message, T sagaData);
 
         /// <summary>
         /// Delegate type that can be used to define events of when handling an incoming message results in an exception
@@ -141,6 +161,11 @@ namespace Rebus.Testing
         /// creating a new saga data instance was not allowed.
         /// </summary>
         public event CouldNotCorrelateEventHandler CouldNotCorrelate;
+
+        /// <summary>
+        /// Raised when the message gives rise to the saga being marked as complete.
+        /// </summary>
+        public event MarkedAsCompleteEventHandler<TSagaData> MarkedAsComplete;
 
         /// <summary>
         /// Dispatches a message to the saga, raising the appropriate events along the way.
@@ -250,7 +275,11 @@ namespace Rebus.Testing
             public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
                 innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
-                CreatedNew(sagaData);
+                
+                if (CreatedNew != null)
+                {
+                    CreatedNew(sagaData);
+                }
             }
 
             public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
@@ -262,27 +291,41 @@ namespace Rebus.Testing
             {
                 innerPersister.Delete(sagaData);
                 deletedSagaData.Add((TSagaDataToStore)sagaData);
+
+                if (Deleted != null)
+                {
+                    Deleted(sagaData);
+                }
             }
 
             public TSagaDataToFind Find<TSagaDataToFind>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaDataToFind : class, ISagaData
             {
                 var result = innerPersister.Find<TSagaDataToFind>(sagaDataPropertyPath, fieldFromMessage);
+
                 if (result != null)
                 {
-                    Correlated(result);
+                    if (Correlated != null)
+                    {
+                        Correlated(result);
+                    }
                 }
-                else
+                else 
                 {
-                    CouldNotCorrelate();
+                    if (CouldNotCorrelate != null)
+                    {
+                        CouldNotCorrelate();
+                    }
                 }
                 return result;
             }
 
-            public event Action<ISagaData> CreatedNew = delegate { };
+            public event Action<ISagaData> CreatedNew;
 
-            public event Action<ISagaData> Correlated = delegate { };
+            public event Action<ISagaData> Correlated;
+            
+            public event Action<ISagaData> Deleted;
 
-            public event Action CouldNotCorrelate = delegate { };
+            public event Action CouldNotCorrelate;
         }
     }
 }

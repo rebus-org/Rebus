@@ -228,6 +228,7 @@ namespace Rebus.Bus
                     if (handler is IAmInitiatedBy<TMessage>)
                     {
                         saga.IsNew = true;
+                        saga.Complete = false;
                         sagaData = CreateSagaData(handler);
                     }
                     else
@@ -240,6 +241,7 @@ namespace Rebus.Bus
                 else
                 {
                     saga.IsNew = false;
+                    saga.Complete = false;
                 }
 
                 handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);

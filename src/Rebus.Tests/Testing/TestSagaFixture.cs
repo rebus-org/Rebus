@@ -14,6 +14,76 @@ namespace Rebus.Tests.Testing
     public class TestSagaFixture : FixtureBase
     {
         [Test]
+        public void CanCorrectlyHandleWhenSagaIsMarkedAsComplete()
+        {
+            // arrange
+            var fixture = new SagaFixture<CompletionSagaData>(new CompletionSaga());
+            const string justTheSameFrigginId = "just the same friggin ID";
+
+            var sagaDatasMarkedAsComplete = new List<ISagaData>();
+            fixture.MarkedAsComplete += (message, data) => sagaDatasMarkedAsComplete.Add(data);
+            fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated!");
+            fixture.CouldNotCorrelate += message => Console.WriteLine("Could not correlate!");
+            fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new!");
+            fixture.Exception += (message, exception) => Console.WriteLine("Exception!");
+         
+            // act
+            fixture.Handle(new InitiatingMessage { CorrelationId = justTheSameFrigginId });
+            fixture.Handle(new CompletionMessage { CorrelationId = justTheSameFrigginId });
+            fixture.Handle(new InitiatingMessage { CorrelationId = justTheSameFrigginId });
+            fixture.Handle(new CompletionMessage { CorrelationId = justTheSameFrigginId });
+
+            // assert
+            sagaDatasMarkedAsComplete.Count.ShouldBe(2);
+            fixture.DeletedSagaData.Count.ShouldBe(2);
+        }
+
+        class InitiatingMessage
+        {
+            public string CorrelationId { get; set; }
+        }
+        
+        class CompletionMessage
+        {
+            public string CorrelationId { get; set; }
+        }
+
+        class CompletionSaga : Saga<CompletionSagaData>, IAmInitiatedBy<InitiatingMessage>, IHandleMessages<CompletionMessage>
+        {
+            static int instanceCounter = 1;
+
+            public static void ResetInstanceCounter()
+            {
+                instanceCounter = 0;
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+                Incoming<InitiatingMessage>(m => m.CorrelationId).CorrelatesWith(d => d.CorrelationId);
+                Incoming<CompletionMessage>(m => m.CorrelationId).CorrelatesWith(d => d.CorrelationId);
+            }
+
+            public void Handle(InitiatingMessage message)
+            {
+                Data.CorrelationId = message.CorrelationId;
+                Data.InstanceNumber = instanceCounter++;
+            }
+
+            public void Handle(CompletionMessage message)
+            {
+                MarkAsComplete();
+            }
+        }
+
+        class CompletionSagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string CorrelationId { get; set; }
+            public int InstanceNumber { get; set; }
+        }
+
+        [Test]
         public void WorksWhenMessageReferenceIsOfTheSupertype()
         {
             // arrange
