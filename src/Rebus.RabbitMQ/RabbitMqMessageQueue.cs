@@ -11,7 +11,6 @@ using RabbitMQ.Client.MessagePatterns;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Shared;
-using Rebus.Extensions;
 
 namespace Rebus.RabbitMQ
 {

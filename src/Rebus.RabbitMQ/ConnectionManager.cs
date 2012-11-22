@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Threading;
 using RabbitMQ.Client;
 using Rebus.Logging;
@@ -14,18 +16,20 @@ namespace Rebus.RabbitMQ
         static ConnectionManager()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+            endpointStartupTime = DateTime.Now;
         }
 
         readonly List<ConnectionFactory> connectionFactories;
 
         IConnection currentConnection;
         int currentConnectionIndex;
+        static readonly DateTime endpointStartupTime;
 
         public ConnectionManager(string connectionString)
         {
             connectionFactories = connectionString
                 .Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => new ConnectionFactory { Uri = s })
+                .Select(CreateConnectionFactory)
                 .ToList();
 
             if (!connectionFactories.Any())
@@ -34,6 +38,23 @@ namespace Rebus.RabbitMQ
                                                     " a connection string (possibly multiple, separated by ,) in order to tell the connection" +
                                                     " manager how to connect to RabbitMQ");
             }
+        }
+
+        static ConnectionFactory CreateConnectionFactory(string s)
+        {
+            return new ConnectionFactory
+                       {
+                           Uri = s,
+                           ClientProperties =
+                               new Hashtable
+                                   {
+                                       {"Machine name", Environment.MachineName},
+                                       {"User account", string.Format("{0}\\{1}", Environment.UserDomainName, Environment.UserName)},
+                                       {"Startup time", endpointStartupTime.ToString(CultureInfo.InvariantCulture)},
+                                       {"Application command line", Environment.CommandLine},
+                                       {"Client", "Rebus endpoint"},
+                                   }
+                       };
         }
 
         public IConnection GetConnection()
@@ -49,7 +70,9 @@ namespace Rebus.RabbitMQ
             }
 
             log.Info("Opening RabbitMQ connection ({0})", currentConnectionIndex);
-            currentConnection = connectionFactories[currentConnectionIndex].CreateConnection();
+            var connectionFactoryToUse = connectionFactories[currentConnectionIndex];
+            connectionFactoryToUse.ClientProperties["Connected time"] = DateTime.Now.ToString(CultureInfo.InvariantCulture);
+            currentConnection = connectionFactoryToUse.CreateConnection();
 
             return currentConnection;
         }
