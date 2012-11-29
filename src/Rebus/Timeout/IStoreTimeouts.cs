@@ -14,9 +14,10 @@ namespace Rebus.Timeout
         void Add(Timeout newTimeout);
 
         /// <summary>
-        /// Should get all due timeouts and remove them at the same time. An ambient transaction
-        /// will be present, so the implementor should enlist if possible.
+        /// Should get all due timeouts. An ambient transaction will be present, so the implementor should 
+        /// enlist if possible. When a timeout has been properly processed, <see cref="DueTimeout.MarkAsProcessed"/>
+        /// should be called.
         /// </summary>
-        IEnumerable<Timeout> RemoveDueTimeouts();
+        IEnumerable<DueTimeout> GetDueTimeouts();
     }
 }

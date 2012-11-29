@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -28,6 +29,26 @@ namespace Rebus.Tests.Timeout
         protected override void DoTearDown()
         {
             timeoutService.Stop();
+        }
+
+        [Test(Description = "Verifies that timeouts are properly marked as processed after their corresponding replies have been sent")]
+        public void DoesNotReturnTheSameTimeoutMultipleTimes()
+        {
+            // arrange
+            var receivedCorrelationIds = new List<string>();
+            var correlationIdWeCanRecognize = Guid.NewGuid().ToString();
+            handlerActivator.Handle<TimeoutReply>(reply => receivedCorrelationIds.Add(reply.CorrelationId));
+
+            // act
+            client.Send(new TimeoutRequest
+                            {
+                                CorrelationId = correlationIdWeCanRecognize,
+                                Timeout = 2.Seconds(),
+                            });
+            Thread.Sleep(5.Seconds());
+
+            // assert
+            receivedCorrelationIds.Count.ShouldBe(1);
         }
 
         [Test]

@@ -87,13 +87,13 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Queries the underlying table and returns due timeouts, removing them at the same time
         /// </summary>
-        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
+        public IEnumerable<DueTimeout> GetDueTimeouts()
         {
             using (var connection = new SqlConnection(connectionString))
             {
                 connection.Open();
 
-                var dueTimeouts = new List<Timeout.Timeout>();
+                var dueTimeouts = new List<DueTimeout>();
 
                 using (var command = connection.CreateCommand())
                 {
@@ -114,46 +114,60 @@ namespace Rebus.Persistence.SqlServer
                             var timeToReturn = (DateTime) reader["time_to_return"];
                             var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            dueTimeouts.Add(new Timeout.Timeout
-                                                {
-                                                    CorrelationId = correlationId,
-                                                    SagaId = sagaId,
-                                                    ReplyTo = replyTo,
-                                                    TimeToReturn = timeToReturn,
-                                                    CustomData = customData,
-                                                });
+                            var sqlTimeout = new DueSqlTimeout(replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
+                            
+                            dueTimeouts.Add(sqlTimeout);
                         }
                     }
 
                 }
 
-                dueTimeouts.ForEach(t => DeleteTimeout(t, connection));
-
                 return dueTimeouts;
             }
         }
 
-        void DeleteTimeout(Timeout.Timeout timeout, SqlConnection connection)
+        class DueSqlTimeout : DueTimeout
         {
-            using (var command = connection.CreateCommand())
+            readonly string connectionString;
+            readonly string timeoutsTableName;
+
+            public DueSqlTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName) 
+                : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
-                command.CommandText =
-                    string.Format(
-                        @"delete from [{0}] 
+                this.connectionString = connectionString;
+                this.timeoutsTableName = timeoutsTableName;
+            }
+
+            public override void MarkAsProcessed()
+            {
+                using (var connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText =
+                            string.Format(
+                                @"delete from [{0}] 
                           where time_to_return = @time_to_return 
                             and reply_to = @reply_to
                             and correlation_id = @correlation_id",
-                        timeoutsTableName);
+                                timeoutsTableName);
 
-                command.Parameters.AddWithValue("time_to_return", timeout.TimeToReturn);
-                command.Parameters.AddWithValue("correlation_id", timeout.CorrelationId);
-                command.Parameters.AddWithValue("reply_to", timeout.ReplyTo);
+                        command.Parameters.AddWithValue("time_to_return", TimeToReturn);
+                        command.Parameters.AddWithValue("correlation_id", CorrelationId);
+                        command.Parameters.AddWithValue("reply_to", ReplyTo);
 
-                var executeNonQuery = command.ExecuteNonQuery();
+                        var executeNonQuery = command.ExecuteNonQuery();
 
-                if (executeNonQuery == 0)
-                {
-                    throw new InvalidOperationException(string.Format("Stale state! Attempted to delete {0} from {1}, but it was already deleted!", timeout, timeoutsTableName));
+                        if (executeNonQuery == 0)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format(
+                                    "Stale state! Attempted to delete {0} from {1}, but it was already deleted!",
+                                    this, timeoutsTableName));
+                        }
+                    }
                 }
             }
         }

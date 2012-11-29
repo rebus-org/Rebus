@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Timers;
-using System.Transactions;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -28,6 +27,9 @@ namespace Rebus.Timeout
 
         IAdvancedBus bus;
         readonly Timer timer = new Timer();
+        volatile bool currentlyChecking;
+        readonly object checkLock = new object();
+
         RebusBus rebusBus;
         static readonly Type[] IgnoredMessageTypes = new[] { typeof(object), typeof(IRebusControlMessage) };
 
@@ -99,14 +101,11 @@ namespace Rebus.Timeout
         {
             var currentMessageContext = MessageContext.GetCurrent();
 
-            var newTimeout = new Timeout
-                                 {
-                                     SagaId = message.SagaId,
-                                     CorrelationId = message.CorrelationId,
-                                     ReplyTo = currentMessageContext.ReturnAddress,
-                                     TimeToReturn = RebusTimeMachine.Now() + message.Timeout,
-                                     CustomData = message.CustomData,
-                                 };
+            var newTimeout = new Timeout(currentMessageContext.ReturnAddress,
+                                         message.CorrelationId,
+                                         RebusTimeMachine.Now() + message.Timeout,
+                                         message.SagaId,
+                                         message.CustomData);
 
             storeTimeouts.Add(newTimeout);
 
@@ -115,34 +114,44 @@ namespace Rebus.Timeout
 
         void CheckCallbacks(object sender, ElapsedEventArgs e)
         {
-            using (var tx = new TransactionScope())
+            if (currentlyChecking) return;
+
+            lock (checkLock)
             {
-                var dueTimeouts = storeTimeouts.RemoveDueTimeouts();
+                if (currentlyChecking) return;
 
-                foreach (var timeout in dueTimeouts)
+                try
                 {
-                    log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
+                    currentlyChecking = true;
 
-                    var sagaId = timeout.SagaId;
-
-                    var reply = new TimeoutReply
-                        {
-                            SagaId = sagaId,
-                            CorrelationId = timeout.CorrelationId,
-                            DueTime = timeout.TimeToReturn,
-                            CustomData = timeout.CustomData,
-                        };
-
-                    if (sagaId != Guid.Empty)
+                    foreach (var timeout in storeTimeouts.GetDueTimeouts())
                     {
-                        bus.AttachHeader(reply, Headers.AutoCorrelationSagaId, sagaId.ToString());
+                        log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
+
+                        var sagaId = timeout.SagaId;
+
+                        var reply = new TimeoutReply
+                                        {
+                                            SagaId = sagaId,
+                                            CorrelationId = timeout.CorrelationId,
+                                            DueTime = timeout.TimeToReturn,
+                                            CustomData = timeout.CustomData,
+                                        };
+
+                        if (sagaId != Guid.Empty)
+                        {
+                            bus.AttachHeader(reply, Headers.AutoCorrelationSagaId, sagaId.ToString());
+                        }
+
+                        bus.Routing.Send(timeout.ReplyTo, reply);
+
+                        timeout.MarkAsProcessed();
                     }
-
-                    bus.Routing.Send(timeout.ReplyTo,
-                             reply);
                 }
-
-                tx.Complete();
+                finally
+                {
+                    currentlyChecking = false;
+                }
             }
         }
     }

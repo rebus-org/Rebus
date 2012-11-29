@@ -1,15 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using Rebus.Timeout;
+using System.Linq;
 
 namespace Rebus.MongoDb
 {
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
         readonly string collectionName;
-        MongoDatabase database;
+        readonly MongoDatabase database;
 
         public MongoDbTimeoutStorage(string connectionString, string collectionName)
         {
@@ -32,32 +34,41 @@ namespace Rebus.MongoDb
                                   });
         }
 
-        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
+        public IEnumerable<DueTimeout> GetDueTimeouts()
         {
             var collection = database.GetCollection(collectionName);
-            var gotResult = true;
-            do
+            
+            var result = collection.Find(Query.LTE("time", RebusTimeMachine.Now()))
+                                   .SetSortOrder(SortBy.Ascending("time"));
+
+            return result
+                .Select(r => new DueMongoTimeout(r["reply_to"].AsString,
+                                                 r["corr_id"].AsString,
+                                                 r["time"].AsDateTime,
+                                                 r["saga_id"].AsGuid,
+                                                 r["data"] != BsonNull.Value
+                                                     ? r["data"].AsString
+                                                     : "",
+                                                 collection,
+                                                 (ObjectId) r["_id"]));
+        }
+
+        class DueMongoTimeout : DueTimeout
+        {
+            readonly MongoCollection<BsonDocument> collection;
+            readonly ObjectId objectId;
+
+            public DueMongoTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, MongoCollection<BsonDocument> collection, ObjectId objectId) 
+                : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
-                var result = collection.FindAndRemove(Query.LTE("time", RebusTimeMachine.Now()), SortBy.Ascending("time"));
+                this.collection = collection;
+                this.objectId = objectId;
+            }
 
-                if (result != null && result.ModifiedDocument != null)
-                {
-                    var document = result.ModifiedDocument;
-
-                    yield return new Timeout.Timeout
-                        {
-                            CorrelationId = document["corr_id"].AsString,
-                            SagaId = document["saga_id"].AsGuid,
-                            CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
-                            ReplyTo = document["reply_to"].AsString,
-                            TimeToReturn = document["time"].AsDateTime,
-                        };
-                }
-                else
-                {
-                    gotResult = false;
-                }
-            } while (gotResult);
+            public override void MarkAsProcessed()
+            {
+                collection.Remove(Query.EQ("_id", objectId));
+            }
         }
     }
 }

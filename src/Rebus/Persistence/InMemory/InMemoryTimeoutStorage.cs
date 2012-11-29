@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Timeout;
@@ -27,15 +28,35 @@ namespace Rebus.Persistence.InMemory
         /// <summary>
         /// Destructively retrieves all due timeouts
         /// </summary>
-        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
+        public IEnumerable<DueTimeout> GetDueTimeouts()
         {
             lock (listLock)
             {
                 var timeoutsToRemove = timeouts.Where(t => RebusTimeMachine.Now() >= t.TimeToReturn).ToList();
 
-                timeoutsToRemove.ForEach(t => timeouts.Remove(t));
+                return timeoutsToRemove
+                    .Select(t => new DueInMemoryTimeout(t.ReplyTo,
+                                                        t.CorrelationId,
+                                                        t.TimeToReturn,
+                                                        t.SagaId,
+                                                        t.CustomData,
+                                                        () => timeouts.Remove(t)));
+            }
+        }
 
-                return timeoutsToRemove;
+        class DueInMemoryTimeout : DueTimeout
+        {
+            readonly Action removeAction;
+
+            public DueInMemoryTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, Action removeAction) 
+                : base(replyTo, correlationId, timeToReturn, sagaId, customData)
+            {
+                this.removeAction = removeAction;
+            }
+
+            public override void MarkAsProcessed()
+            {
+                removeAction();
             }
         }
     }
