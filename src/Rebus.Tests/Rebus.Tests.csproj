@@ -189,6 +189,7 @@
     <Compile Include="Integration\TestResilientRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
+    <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="TestHelpers.cs" />

@@ -9,7 +9,7 @@ namespace Rebus.Tests.Persistence.Sagas.Factories
 
         public IStoreSagaData CreatePersister()
         {
-            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            db = MongoHelper.GetDatabase(ConnectionStrings.MongoDb);
             
             db.Drop();
 

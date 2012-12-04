@@ -24,7 +24,7 @@ namespace Rebus.Tests.Persistence
         {
             TimeMachine.Reset();
 
-            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            db = MongoHelper.GetDatabase(ConnectionStrings.MongoDb);
             db.Drop();
 
             DoSetUp();

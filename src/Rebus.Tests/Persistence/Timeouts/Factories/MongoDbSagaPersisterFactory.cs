@@ -1,6 +1,5 @@
 using MongoDB.Driver;
 using Rebus.MongoDb;
-using Rebus.Tests.Persistence.Sagas;
 using Rebus.Timeout;
 
 namespace Rebus.Tests.Persistence.Timeouts.Factories
@@ -11,7 +10,7 @@ namespace Rebus.Tests.Persistence.Timeouts.Factories
 
         public IStoreTimeouts CreateStore()
         {
-            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            db = MongoHelper.GetDatabase(ConnectionStrings.MongoDb);
             return new MongoDbTimeoutStorage(ConnectionStrings.MongoDb, "timeouts");
         }
 
