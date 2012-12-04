@@ -8,16 +8,22 @@ using System.Linq;
 
 namespace Rebus.MongoDb
 {
+    /// <summary>
+    /// Implementation of <see cref="IStoreTimeouts"/> that stores timeouts in a MongoDB
+    /// </summary>
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
         readonly string collectionName;
         readonly MongoDatabase database;
 
+        /// <summary>
+        /// Constructs the timeout storage, connecting to the Mongo database pointed to by the given connection string,
+        /// storing the timeouts in the given collection
+        /// </summary>
         public MongoDbTimeoutStorage(string connectionString, string collectionName)
         {
             this.collectionName = collectionName;
-
-            database = MongoDatabase.Create(connectionString);
+            database = MongoHelper.GetDatabase(connectionString);
         }
 
         public void Add(Timeout.Timeout newTimeout)

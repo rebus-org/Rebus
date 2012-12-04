@@ -13,8 +13,7 @@ namespace Rebus.MongoDb
         public MongoDbSubscriptionStorage(string connectionString, string collectionName)
         {
             this.collectionName = collectionName;
-
-            database = MongoDatabase.Create(connectionString);
+            database = database = MongoHelper.GetDatabase(connectionString);
         }
 
         public void Store(Type messageType, string subscriberInputQueue)

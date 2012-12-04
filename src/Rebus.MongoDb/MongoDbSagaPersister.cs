@@ -50,7 +50,7 @@ namespace Rebus.MongoDb
         public MongoDbSagaPersister(string connectionString)
         {
             log.Info("Connecting to Mongo");
-            database = MongoDatabase.Create(connectionString);
+            database = MongoHelper.GetDatabase(connectionString);
         }
 
         /// <summary>
