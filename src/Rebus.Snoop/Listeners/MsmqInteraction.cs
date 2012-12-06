@@ -257,7 +257,11 @@ Body:
                                       while (enumerator.MoveNext())
                                       {
                                           var message = enumerator.Current;
-                                          list.Add(GenerateMessage(message, queue.QueuePath));
+                                          var messageViewModel = GenerateMessage(message, queue.QueuePath);
+                                          
+                                          messageViewModel.ResetDirtyFlags();
+
+                                          list.Add(messageViewModel);
                                       }
                                   }
 
@@ -265,7 +269,7 @@ Body:
                               })
                 .ContinueWith(t =>
                                   {
-                                      if (!t.IsFaulted)
+                                      if (t.Exception == null)
                                       {
                                           var result = t.Result;
 

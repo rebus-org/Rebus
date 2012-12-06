@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 
 namespace Rebus.Snoop.ViewModel.Models
@@ -8,18 +9,44 @@ namespace Rebus.Snoop.ViewModel.Models
     {
 #pragma warning disable 649
         readonly Dictionary<string, string> headers = new Dictionary<string, string>();
+        readonly string bodyPropertyName;
         string body;
         int bytes;
         string id;
         string label;
         string queuePath;
         DateTime time;
+        bool bodyChanged;
 #pragma warning restore 649
+
+        public Message()
+        {
+            PropertyChanged += TrackBodyChanged;
+            bodyPropertyName = ExtractPropertyName(() => Body);
+        }
+
+        void TrackBodyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != bodyPropertyName) return;
+
+            BodyChanged = true;
+        }
+
+        public void ResetDirtyFlags()
+        {
+            BodyChanged = false;
+        }
 
         public string Body
         {
             get { return body; }
             set { SetValue(() => Body, value); }
+        }
+
+        public bool BodyChanged
+        {
+            get { return bodyChanged; }
+            set { SetValue(() => BodyChanged, value); }
         }
 
         public Dictionary<string, string> Headers
