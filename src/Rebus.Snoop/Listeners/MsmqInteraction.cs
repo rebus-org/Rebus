@@ -403,7 +403,7 @@ Body:
                            {
                                Label = message.Label,
                                Time = message.ArrivedTime,
-                               Headers = couldDeserializeHeaders ? headers : new Dictionary<string, string>(),
+                               Headers = couldDeserializeHeaders ? new EditableDictionary<string, string>(headers) : new EditableDictionary<string, string>(),
                                Bytes = TryDetermineMessageSize(message),
                                Body = couldDecodeBody ? body : "(message encoding not specified)",
                                Id = message.Id,

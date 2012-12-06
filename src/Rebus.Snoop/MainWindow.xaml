@@ -124,10 +124,16 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
             
             <GroupBox Header="Headers" Grid.Row="0">
                 <ListView ItemsSource="{Binding Machines/Queues/Messages/HeadersExceptError}">
+                    <ListView.Resources>
+                        <DataTemplate x:Key="HeaderValueCellTemplate">
+                            <TextBox Text="{Binding Value, Mode=TwoWay}"/>
+                        </DataTemplate>
+                    </ListView.Resources>
+                    
                     <ListView.View>
                         <GridView>
                             <GridViewColumn Header="Key" Width="120" DisplayMemberBinding="{Binding Key}"/>
-                            <GridViewColumn Header="Value" Width="170" DisplayMemberBinding="{Binding Value}"/>
+                            <GridViewColumn Header="Value" Width="170" CellTemplate="{StaticResource HeaderValueCellTemplate}"/>
                         </GridView>
                     </ListView.View>
                 </ListView>

@@ -96,6 +96,7 @@
     <Compile Include="Events\UpdateMessageRequested.cs" />
     <Compile Include="Links\Stubs.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />
     <Compile Include="ViewModel\Models\Notification.cs" />
