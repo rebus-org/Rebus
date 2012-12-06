@@ -80,7 +80,7 @@ namespace Rebus.Snoop.Listeners
                                        Message = message,
                                        Queue = queueToReload,
                                        Notification =
-                                           NotificationEvent.Success("Updated message with ID {0}", message.Id),
+                                           NotificationEvent.Success("Fetched message with ID {0} and put an updated version back in the queue", message.Id),
                                    };
                     })
                 .ContinueWith(a =>
@@ -94,10 +94,9 @@ namespace Rebus.Snoop.Listeners
                             return;
                         }
 
-                        a.Result.Message.ResetDirtyFlags();
-
-                        Messenger.Default.Send(a.Result.Notification);
-                        Messenger.Default.Send(new ReloadMessagesRequested(a.Result.Queue));
+                        var result = a.Result;
+                        Messenger.Default.Send(new ReloadMessagesRequested(result.Queue));
+                        Messenger.Default.Send(result.Notification);
                     }, Context.UiThread);
         }
 
