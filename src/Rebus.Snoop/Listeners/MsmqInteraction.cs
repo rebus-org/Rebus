@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Messaging;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
@@ -23,6 +24,82 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (ReloadMessagesRequested request) => LoadMessages(request.Queue));
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
+            Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
+        }
+
+        void DownloadMessages(List<Message> messages)
+        {
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        // for now, just settle with using the desktop
+                        var directory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+
+                        Func<int, string> getName = i => Path.Combine("Snoop Message Export", string.Format("export-{0}", i));
+                        var counter = 1;
+                        var directoryName = getName(counter);
+                        while (Directory.Exists(Path.Combine(directory, directoryName)))
+                        {
+                            directoryName = getName(++counter);
+                        }
+
+                        var directoryToSaveMessagesTo =
+                            new DirectoryInfo(directory).CreateSubdirectory(directoryName);
+
+                        return new
+                                   {
+                                       Directory = directoryToSaveMessagesTo,
+                                       Messages = messages,
+                                       Success = true,
+                                       Exception = default(Exception),
+                                   };
+                    })
+                .ContinueWith(a =>
+                    {
+                        var result = a.Result;
+
+                        foreach (var message in result.Messages)
+                        {
+                            File.WriteAllText(Path.Combine(result.Directory.FullName, GenerateFileName(message)),
+                                              FormatMessage(message));
+                        }
+
+                        return NotificationEvent.Success("Successfully downloaded {0} messages into {1}",
+                                                         result.Messages.Count,
+                                                         result.Directory);
+                    })
+                .ContinueWith(a =>
+                    {
+                        if (a.Exception != null)
+                        {
+                            Messenger.Default.Send(NotificationEvent.Fail(a.Exception.ToString(),
+                                                                          "Something went wrong while attempting to download the messages"));
+
+                            return;
+                        }
+
+                        Messenger.Default.Send(a.Result);
+                    }, Context.UiThread);
+        }
+
+        string GenerateFileName(Message message)
+        {
+            var fileName = message.Id.Replace("\\", "---");
+
+            return string.Format("{0}.txt", fileName);
+        }
+
+        string FormatMessage(Message message)
+        {
+            return string.Format(@"ID: {0}
+Headers:
+{1}
+
+Body:
+{2}", message.Id,
+                                 string.Join(Environment.NewLine,
+                                             message.Headers.Select(h => string.Format("    {0}: {1}", h.Key, h.Value))),
+                                 message.Body);
         }
 
         void DeleteMessages(List<Message> messages)

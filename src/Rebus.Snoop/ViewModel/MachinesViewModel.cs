@@ -20,6 +20,7 @@ namespace Rebus.Snoop.ViewModel
 #pragma warning disable 649
         bool canMoveMessagesToSourceQueue;
         bool canDeleteMessages;
+        bool canDownloadMessages;
 #pragma warning restore 649
 
         public MachinesViewModel()
@@ -164,6 +165,12 @@ namespace Rebus.Snoop.ViewModel
             set { SetValue(() => CanDeleteMessages, value); }
         }
 
+        public bool CanDownloadMessages
+        {
+            get { return canDownloadMessages; }
+            set { SetValue(() => CanDownloadMessages, value); }
+        }
+
         public ObservableCollection<Machine> Machines
         {
             get { return machines; }
@@ -176,6 +183,8 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<IEnumerable> ReturnToSourceQueuesCommand { get; set; }
 
         public RelayCommand<IEnumerable> DeleteMessagesCommand { get; set; }
+        
+        public RelayCommand<IEnumerable> DownloadMessagesCommand { get; set; }
 
         public ObservableCollection<Notification> Notifications
         {
@@ -266,6 +275,7 @@ namespace Rebus.Snoop.ViewModel
         {
             CanMoveMessagesToSourceQueue = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
             CanDeleteMessages = messageSelectionWasMade.SelectedMessages.Any();
+            CanDownloadMessages = messageSelectionWasMade.SelectedMessages.Any();
         }
 
         void AddNotification(NotificationEvent n)
@@ -281,6 +291,14 @@ namespace Rebus.Snoop.ViewModel
             RemoveMachineCommand = new RelayCommand<Machine>(RemoveMachine);
             ReturnToSourceQueuesCommand = new RelayCommand<IEnumerable>(ReturnToSourceQueues);
             DeleteMessagesCommand = new RelayCommand<IEnumerable>(DeleteMessages);
+            DownloadMessagesCommand = new RelayCommand<IEnumerable>(DownloadMessages);
+        }
+
+        void DownloadMessages(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new DownloadMessagesRequested(messagesToMove));
         }
 
         void DeleteMessages(IEnumerable messages)
