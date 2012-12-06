@@ -13,8 +13,8 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
-        readonly string collectionName;
         readonly MongoDatabase database;
+        readonly MongoCollection<BsonDocument> collection;
 
         /// <summary>
         /// Constructs the timeout storage, connecting to the Mongo database pointed to by the given connection string,
@@ -22,14 +22,13 @@ namespace Rebus.MongoDb
         /// </summary>
         public MongoDbTimeoutStorage(string connectionString, string collectionName)
         {
-            this.collectionName = collectionName;
             database = MongoHelper.GetDatabase(connectionString);
+            collection = database.GetCollection(collectionName);
+            collection.EnsureIndex(IndexKeys.Ascending("time"), IndexOptions.SetBackground(true).SetUnique(false));
         }
 
         public void Add(Timeout.Timeout newTimeout)
         {
-            var collection = database.GetCollection(collectionName);
-
             collection.Insert(new
                                   {
                                       corr_id = newTimeout.CorrelationId,
@@ -42,8 +41,6 @@ namespace Rebus.MongoDb
 
         public IEnumerable<DueTimeout> GetDueTimeouts()
         {
-            var collection = database.GetCollection(collectionName);
-            
             var result = collection.Find(Query.LTE("time", RebusTimeMachine.Now()))
                                    .SetSortOrder(SortBy.Ascending("time"));
 
