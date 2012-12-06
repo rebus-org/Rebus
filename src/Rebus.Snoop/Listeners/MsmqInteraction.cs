@@ -24,10 +24,10 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
             Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
-            Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message));
+            Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message, request.Queue));
         }
 
-        void UpdateMessage(Message message)
+        void UpdateMessage(Message message, Queue queueToReload)
         {
             Task.Factory
                 .StartNew(() =>
@@ -42,32 +42,21 @@ namespace Rebus.Snoop.Listeners
 
                         using (var queue = new MessageQueue(message.QueuePath))
                         {
-                            queue.MessageReadPropertyFilter = DefaultFilter();
-
+                            queue.MessageReadPropertyFilter = LosslessFilter();
                             using (var transaction = new MessageQueueTransaction())
                             {
                                 transaction.Begin();
                                 try
                                 {
                                     var msmqMessage = queue.ReceiveById(message.Id, transaction);
-
-                                    /*
-                                     *
-                               Label = true,
-                               ArrivedTime = true,
-                               Extension = true,
-                               Body = true,
-                               Id = true,
-
-                                     * */
-
+                                    
                                     var newMsmqMessage =
                                         new System.Messaging.Message
                                             {
                                                 Label = msmqMessage.Label,
                                                 Extension = msmqMessage.Extension,
 
-
+                                                TimeToBeReceived = msmqMessage.TimeToBeReceived,
                                                 UseDeadLetterQueue = msmqMessage.UseDeadLetterQueue,
                                                 UseJournalQueue = msmqMessage.UseJournalQueue,
                                             };
@@ -89,6 +78,7 @@ namespace Rebus.Snoop.Listeners
                         return new
                                    {
                                        Message = message,
+                                       Queue = queueToReload,
                                        Notification =
                                            NotificationEvent.Success("Updated message with ID {0}", message.Id),
                                    };
@@ -107,6 +97,7 @@ namespace Rebus.Snoop.Listeners
                         a.Result.Message.ResetDirtyFlags();
 
                         Messenger.Default.Send(a.Result.Notification);
+                        Messenger.Default.Send(new ReloadMessagesRequested(a.Result.Queue));
                     }, Context.UiThread);
         }
 
@@ -380,8 +371,22 @@ Body:
                            Extension = true,
                            Body = true,
                            Id = true,
+                       };
+        }
+
+        static MessagePropertyFilter LosslessFilter()
+        {
+            return new MessagePropertyFilter
+                       {
+                           Label = true,
+                           ArrivedTime = true,
+                           Extension = true,
+                           Body = true,
+                           Id = true,
+
                            UseDeadLetterQueue = true,
                            UseJournalQueue = true,
+                           TimeToBeReceived = true,
                        };
         }
 

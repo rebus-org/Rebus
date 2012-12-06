@@ -307,10 +307,12 @@ namespace Rebus.Snoop.ViewModel
 
         void UpdateMessage(IEnumerable list)
         {
-            var message = list.OfType<Message>()
-                               .Single();
+            var message = list.OfType<Message>().Single();
 
-            Messenger.Default.Send(new UpdateMessageRequested(message));
+            var queue = Machines.SelectMany(m => m.Queues)
+                                .First(q => q.Messages.Contains(message));
+
+            Messenger.Default.Send(new UpdateMessageRequested(message, queue));
         }
 
         void DownloadMessages(IEnumerable messages)
