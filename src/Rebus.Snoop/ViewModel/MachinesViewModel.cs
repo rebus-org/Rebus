@@ -21,6 +21,7 @@ namespace Rebus.Snoop.ViewModel
         bool canMoveMessagesToSourceQueue;
         bool canDeleteMessages;
         bool canDownloadMessages;
+        bool canUpdateMessage;
 #pragma warning restore 649
 
         public MachinesViewModel()
@@ -165,6 +166,12 @@ namespace Rebus.Snoop.ViewModel
             set { SetValue(() => CanDeleteMessages, value); }
         }
 
+        public bool CanUpdateMessage
+        {
+            get { return canUpdateMessage; }
+            set { SetValue(() => CanUpdateMessage, value); }
+        }
+
         public bool CanDownloadMessages
         {
             get { return canDownloadMessages; }
@@ -185,6 +192,8 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<IEnumerable> DeleteMessagesCommand { get; set; }
         
         public RelayCommand<IEnumerable> DownloadMessagesCommand { get; set; }
+
+        public RelayCommand<IEnumerable> UpdateMessageCommand { get; set; }
 
         public ObservableCollection<Notification> Notifications
         {
@@ -276,6 +285,7 @@ namespace Rebus.Snoop.ViewModel
             CanMoveMessagesToSourceQueue = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
             CanDeleteMessages = messageSelectionWasMade.SelectedMessages.Any();
             CanDownloadMessages = messageSelectionWasMade.SelectedMessages.Any();
+            CanUpdateMessage = messageSelectionWasMade.SelectedMessages.Count() == 1;
         }
 
         void AddNotification(NotificationEvent n)
@@ -292,6 +302,15 @@ namespace Rebus.Snoop.ViewModel
             ReturnToSourceQueuesCommand = new RelayCommand<IEnumerable>(ReturnToSourceQueues);
             DeleteMessagesCommand = new RelayCommand<IEnumerable>(DeleteMessages);
             DownloadMessagesCommand = new RelayCommand<IEnumerable>(DownloadMessages);
+            UpdateMessageCommand = new RelayCommand<IEnumerable>(UpdateMessage);
+        }
+
+        void UpdateMessage(IEnumerable list)
+        {
+            var message = list.OfType<Message>()
+                               .Single();
+
+            Messenger.Default.Send(NotificationEvent.Success("Should update {0} now...", message.Id));
         }
 
         void DownloadMessages(IEnumerable messages)

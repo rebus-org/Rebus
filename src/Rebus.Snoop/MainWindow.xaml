@@ -4,7 +4,7 @@
         xmlns:Converters="clr-namespace:Rebus.Snoop.Converters" 
         Title="Rebus Snoop" DataContext="{Binding Source={StaticResource Locator}, Path=MachinesViewModel}" 
         mc:Ignorable="d" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:Controls="clr-namespace:Rebus.Snoop.Controls"
         Height="832" Width="1205">
     <Grid>
@@ -142,7 +142,10 @@
                     <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
                         <TextBox Text="{Binding Machines/Queues/Messages/Body}" FontFamily="Courier New"/>
                     </ScrollViewer>
-                    <Button Grid.Row="1" Visibility="{Binding Machines/Queues/Messages/BodyChanged, Mode=OneWay, Converter={StaticResource ShowIfTrue}}">
+                    <Button Grid.Row="1" Visibility="{Binding Machines/Queues/Messages/BodyChanged, Mode=OneWay, Converter={StaticResource ShowIfTrue}}"
+                            Command="{Binding UpdateMessageCommand}"
+                        CommandParameter="{Binding ElementName=MessagesList, Path=SelectedItems}"
+                        IsEnabled="{Binding CanUpdateMessage}">
                         Update message
                     </Button>
                 </Grid>
