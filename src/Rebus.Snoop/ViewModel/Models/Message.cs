@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -119,88 +118,6 @@ namespace Rebus.Snoop.ViewModel.Models
         {
             get { return couldDeserializeHeaders; }
             set { SetValue(() => CouldDeserializeHeaders, value); }
-        }
-    }
-
-    public class EditableDictionary<TKey, TValue> : IEnumerable<EditableKeyValuePair<TKey, TValue>> where TKey : IEquatable<TKey>
-    {
-        readonly List<EditableKeyValuePair<TKey, TValue>> contents = new List<EditableKeyValuePair<TKey, TValue>>();
-
-        public EditableDictionary()
-        {
-        }
-
-        public EditableDictionary(Dictionary<TKey, TValue> headers)
-        {
-            foreach (var kvp in headers)
-            {
-                Add(kvp.Key, kvp.Value);
-            }
-        }
-
-        public IEnumerator<EditableKeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            return contents.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
-
-        public bool ContainsKey(TKey key)
-        {
-            return contents.Any(i => i.Key.Equals(key));
-        }
-
-        public void Add(TKey key, TValue value)
-        {
-            contents.Add(new EditableKeyValuePair<TKey, TValue> { Key = key, Value = value });
-        }
-
-        public TValue this[TKey key]
-        {
-            get { return ContainsKey(key) ? contents.Single(c => c.Key.Equals(key)).Value : default(TValue); }
-            set
-            {
-                var item = contents.FirstOrDefault(i => i.Key.Equals(key));
-                if (item == null) Add(key, value);
-                else item.Value = value;
-            }
-        }
-    }
-
-    public class EditableKeyValuePair<TKey, TValue> : INotifyPropertyChanged
-    {
-        TKey key;
-        TValue value;
-
-        public TKey Key
-        {
-            get { return key; }
-            set
-            {
-                key = value;
-                OnPropertyChanged("Key");
-            }
-        }
-
-        public TValue Value
-        {
-            get { return value; }
-            set
-            {
-                this.value = value;
-                OnPropertyChanged("Value");
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged(string propertyName)
-        {
-            var handler = PropertyChanged;
-            if (handler != null) handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

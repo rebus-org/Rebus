@@ -97,6 +97,8 @@
     <Compile Include="Links\Stubs.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="ViewModel\Models\EditableDictionary.cs" />
+    <Compile Include="ViewModel\Models\EditableKeyValuePair.cs" />
     <Compile Include="ViewModel\Models\Machine.cs" />
     <Compile Include="ViewModel\Models\Message.cs" />
     <Compile Include="ViewModel\Models\Notification.cs" />
