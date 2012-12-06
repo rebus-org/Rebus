@@ -17,6 +17,8 @@ namespace Rebus.Snoop.ViewModel.Models
         string queuePath;
         DateTime time;
         bool bodyChanged;
+        bool couldDeserializeBody;
+        bool couldDeserializeHeaders;
 #pragma warning restore 649
 
         public Message()
@@ -103,6 +105,18 @@ namespace Rebus.Snoop.ViewModel.Models
                            ? Headers[Shared.Headers.ErrorMessage]
                            : null;
             }
+        }
+
+        public bool CouldDeserializeBody
+        {
+            get { return couldDeserializeBody; }
+            set { SetValue(() => CouldDeserializeBody, value); }
+        }
+
+        public bool CouldDeserializeHeaders
+        {
+            get { return couldDeserializeHeaders; }
+            set { SetValue(() => CouldDeserializeHeaders, value); }
         }
     }
 }

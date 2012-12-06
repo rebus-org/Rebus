@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Messaging;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
@@ -25,6 +24,90 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
             Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
+            Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message));
+        }
+
+        void UpdateMessage(Message message)
+        {
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        if (!message.CouldDeserializeBody)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format(
+                                    "Body of message with ID {0} was not properly deserialized, so it's not safe to try to update it...",
+                                    message.Id));
+                        }
+
+                        using (var queue = new MessageQueue(message.QueuePath))
+                        {
+                            queue.MessageReadPropertyFilter = DefaultFilter();
+
+                            using (var transaction = new MessageQueueTransaction())
+                            {
+                                transaction.Begin();
+                                try
+                                {
+                                    var msmqMessage = queue.ReceiveById(message.Id, transaction);
+
+                                    /*
+                                     *
+                               Label = true,
+                               ArrivedTime = true,
+                               Extension = true,
+                               Body = true,
+                               Id = true,
+
+                                     * */
+
+                                    var newMsmqMessage =
+                                        new System.Messaging.Message
+                                            {
+                                                Label = msmqMessage.Label,
+                                                Extension = msmqMessage.Extension,
+
+
+                                                UseDeadLetterQueue = msmqMessage.UseDeadLetterQueue,
+                                                UseJournalQueue = msmqMessage.UseJournalQueue,
+                                            };
+
+                                    EncodeBody(newMsmqMessage, message);
+
+                                    queue.Send(newMsmqMessage, transaction);
+
+                                    transaction.Commit();
+                                }
+                                catch
+                                {
+                                    transaction.Abort();
+                                    throw;
+                                }
+                            }
+                        }
+
+                        return new
+                                   {
+                                       Message = message,
+                                       Notification =
+                                           NotificationEvent.Success("Updated message with ID {0}", message.Id),
+                                   };
+                    })
+                .ContinueWith(a =>
+                    {
+                        if (a.Exception != null)
+                        {
+                            Messenger.Default.Send(NotificationEvent.Fail(a.Exception.ToString(),
+                                                                          "Something went wrong while attempting to update message with ID {0}", 
+                                                                          message.Id));
+
+                            return;
+                        }
+
+                        a.Result.Message.ResetDirtyFlags();
+
+                        Messenger.Default.Send(a.Result.Notification);
+                    }, Context.UiThread);
         }
 
         void DownloadMessages(List<Message> messages)
@@ -258,7 +341,7 @@ Body:
                                       {
                                           var message = enumerator.Current;
                                           var messageViewModel = GenerateMessage(message, queue.QueuePath);
-                                          
+
                                           messageViewModel.ResetDirtyFlags();
 
                                           list.Add(messageViewModel);
@@ -297,6 +380,8 @@ Body:
                            Extension = true,
                            Body = true,
                            Id = true,
+                           UseDeadLetterQueue = true,
+                           UseJournalQueue = true,
                        };
         }
 
@@ -304,17 +389,24 @@ Body:
         {
             try
             {
-                var headers = TryDeserializeHeaders(message);
+                Dictionary<string, string> headers;
+                var couldDeserializeHeaders = TryDeserializeHeaders(message, out headers);
+
+                string body;
+                var couldDecodeBody = TryDecodeBody(message, headers, out body);
 
                 return new Message
                            {
                                Label = message.Label,
                                Time = message.ArrivedTime,
-                               Headers = headers,
+                               Headers = couldDeserializeHeaders ? headers : new Dictionary<string, string>(),
                                Bytes = TryDetermineMessageSize(message),
-                               Body = TryDecodeBody(message, headers),
+                               Body = couldDecodeBody ? body : "(message encoding not specified)",
                                Id = message.Id,
                                QueuePath = queuePath,
+
+                               CouldDeserializeBody = couldDecodeBody,
+                               CouldDeserializeHeaders = couldDeserializeHeaders,
                            };
             }
             catch (Exception e)
@@ -340,7 +432,21 @@ Body:
             }
         }
 
-        string TryDecodeBody(System.Messaging.Message message, Dictionary<string, string> headers)
+        void EncodeBody(System.Messaging.Message message, Message messageModel)
+        {
+            var headers = messageModel.Headers;
+            var body = messageModel.Body;
+
+            if (headers.ContainsKey(Headers.Encoding))
+            {
+                var encoding = headers[Headers.Encoding];
+                var encoder = Encoding.GetEncoding(encoding);
+
+                message.BodyStream = new MemoryStream(encoder.GetBytes(body));
+            }
+        }
+
+        bool TryDecodeBody(System.Messaging.Message message, Dictionary<string, string> headers, out string body)
         {
             if (headers.ContainsKey(Headers.Encoding))
             {
@@ -351,24 +457,28 @@ Body:
                 {
                     var bytes = reader.ReadBytes((int)message.BodyStream.Length);
                     var str = encoder.GetString(bytes);
-                    return str;
+                    body = str;
+                    return true;
                 }
             }
 
-            return "(message encoding not specified)";
+            body = null;
+            return false;
         }
 
-        Dictionary<string, string> TryDeserializeHeaders(System.Messaging.Message message)
+        bool TryDeserializeHeaders(System.Messaging.Message message, out Dictionary<string, string> dictionary)
         {
             try
             {
                 var headersAsJsonString = Encoding.UTF7.GetString(message.Extension);
                 var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersAsJsonString);
-                return headers ?? new Dictionary<string, string>();
+                dictionary = headers;
+                return true;
             }
             catch
             {
-                return new Dictionary<string, string>();
+                dictionary = null;
+                return false;
             }
         }
 

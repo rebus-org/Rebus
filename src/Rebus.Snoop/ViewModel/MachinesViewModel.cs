@@ -310,7 +310,7 @@ namespace Rebus.Snoop.ViewModel
             var message = list.OfType<Message>()
                                .Single();
 
-            Messenger.Default.Send(NotificationEvent.Success("Should update {0} now...", message.Id));
+            Messenger.Default.Send(new UpdateMessageRequested(message));
         }
 
         void DownloadMessages(IEnumerable messages)
