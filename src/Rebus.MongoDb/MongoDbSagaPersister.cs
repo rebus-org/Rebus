@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Timers;
 using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
 using System.Linq;
-using Ponder;
 using Rebus.Logging;
 
 namespace Rebus.MongoDb
@@ -28,18 +28,25 @@ namespace Rebus.MongoDb
         static MongoDbSagaPersister()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+
+            // try to use our own naming convention
             var namingConvention = new SagaDataElementNameConvention();
             RevisionMemberName = namingConvention.RevisionMemberName;
             ElementNameConventions = namingConvention;
-            var conventionProfile = new ConventionProfile()
-                .SetElementNameConvention(ElementNameConventions);
+            var conventionProfile = new ConventionProfile().SetElementNameConvention(ElementNameConventions);
             BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
 
         readonly Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
         readonly MongoDatabase database;
+        readonly Timer indexRecreationTimer = new Timer();
 
-        volatile bool indexCreated;
+        /// <summary>
+        /// We keep track whether the index has been declared recently in order to minimize the risk that someone
+        /// accidentally removes the unique constraint behind our back
+        /// </summary>
+        volatile bool indexEnsuredRecently;
+        readonly object indexEnsuredRecentlyLock = new object();
 
         bool allowAutomaticSagaCollectionNames;
 
@@ -51,6 +58,11 @@ namespace Rebus.MongoDb
         {
             log.Info("Connecting to Mongo");
             database = MongoHelper.GetDatabase(connectionString);
+
+            // flick the bool once in a while
+            indexRecreationTimer.Elapsed += delegate { indexEnsuredRecently = false; };
+            indexRecreationTimer.Interval = TimeSpan.FromMinutes(1).Milliseconds;
+            indexRecreationTimer.Start();
         }
 
         /// <summary>
@@ -100,9 +112,9 @@ namespace Rebus.MongoDb
             sagaData.Revision++;
             try
             {
-                var safeModeResult = collection.Insert(sagaData, SafeMode.True);
+                var writeConcernResult = collection.Insert(sagaData, WriteConcern.Acknowledged);
 
-                EnsureResultIsGood(safeModeResult,
+                EnsureResultIsGood(writeConcernResult,
                        "insert saga data of type {0} with _id {1} and _rev {2}", 0,
                        sagaData.GetType(),
                        sagaData.Id,
@@ -133,7 +145,7 @@ namespace Rebus.MongoDb
             var update = MongoDB.Driver.Builders.Update.Replace(sagaData);
             try
             {
-                var safeModeResult = collection.Update(criteria, update, SafeMode.True);
+                var safeModeResult = collection.Update(criteria, update, WriteConcern.Acknowledged);
 
                 EnsureResultIsGood(safeModeResult,
                        "update saga data of type {0} with _id {1} and _rev {2}", 1,
@@ -161,7 +173,7 @@ namespace Rebus.MongoDb
 
             try
             {
-                var safeModeResult = collection.Remove(query, SafeMode.True);
+                var safeModeResult = collection.Remove(query, WriteConcern.Acknowledged);
 
                 EnsureResultIsGood(safeModeResult,
                                    "delete saga data of type {0} with _id {1} and _rev {2}", 1,
@@ -240,12 +252,14 @@ which will make the persister use the type of the saga to come up with collectio
 
         void EnsureIndexHasBeenCreated(IEnumerable<string> sagaDataPropertyPathsToIndex, MongoCollection<BsonDocument> collection)
         {
-            if (!indexCreated)
+            if (!indexEnsuredRecently)
             {
-                lock (this)
+                lock (indexEnsuredRecentlyLock)
                 {
-                    if (!indexCreated)
+                    if (!indexEnsuredRecently)
                     {
+                        log.Info("Re-declaring indexes with unique constraints for the following paths: {0}", string.Join(", ", sagaDataPropertyPathsToIndex));
+
                         collection.ResetIndexCache();
 
                         //                        var indexes = collection.GetIndexes();
@@ -265,7 +279,7 @@ which will make the persister use the type of the saga to come up with collectio
 
                         //collection.ReIndex();
 
-                        indexCreated = true;
+                        indexEnsuredRecently = true;
                     }
                 }
             }
@@ -327,23 +341,23 @@ which will make the persister use the type of the saga to come up with collectio
             return ElementNameConventions.GetElementName(propertyInfo);
         }
 
-        void EnsureResultIsGood(SafeModeResult safeModeResult, string message, int expectedNumberOfAffectedDocuments, params object[] objs)
+        void EnsureResultIsGood(WriteConcernResult writeConcernResult, string message, int expectedNumberOfAffectedDocuments, params object[] objs)
         {
-            if (!safeModeResult.Ok)
+            if (!writeConcernResult.Ok)
             {
                 var exceptionMessage = string.Format("Tried to {0}, but apparently the operation didn't succeed.",
                                                      string.Format(message, objs));
 
-                throw new MongoSafeModeException(exceptionMessage, safeModeResult);
+                throw new MongoSafeModeException(exceptionMessage, writeConcernResult);
             }
 
-            if (safeModeResult.DocumentsAffected != expectedNumberOfAffectedDocuments)
+            if (writeConcernResult.DocumentsAffected != expectedNumberOfAffectedDocuments)
             {
                 var exceptionMessage = string.Format("Tried to {0}, but documents affected != {1}.",
                                                      string.Format(message, objs),
                                                      expectedNumberOfAffectedDocuments);
 
-                throw new MongoSafeModeException(exceptionMessage, safeModeResult);
+                throw new MongoSafeModeException(exceptionMessage, writeConcernResult);
             }
         }
     }

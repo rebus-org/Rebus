@@ -23,7 +23,7 @@ namespace Rebus.MongoDb
             var criteria = Query.EQ("_id", messageType.FullName);
             var update = Update.AddToSet("endpoints", subscriberInputQueue);
 
-            var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
+            var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, WriteConcern.Acknowledged);
 
             EnsureResultIsGood(safeModeResult, "Adding {0} to {1} where _id is {2}",
                                subscriberInputQueue, collectionName, messageType.FullName);
@@ -36,7 +36,7 @@ namespace Rebus.MongoDb
             var criteria = Query.EQ("_id", messageType.FullName);
             var update = Update.Pull("endpoints", subscriberInputQueue);
 
-            var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, SafeMode.True);
+            var safeModeResult = collection.Update(criteria, update, UpdateFlags.Upsert, WriteConcern.Acknowledged);
 
             EnsureResultIsGood(safeModeResult, "Removing {0} from {1} where _id is {2}",
                                subscriberInputQueue, collectionName, messageType.FullName);
@@ -56,9 +56,9 @@ namespace Rebus.MongoDb
             return endpoints.Values.Select(v => v.ToString()).ToArray();
         }
 
-        void EnsureResultIsGood(SafeModeResult safeModeResult, string message, params object[] objs)
+        void EnsureResultIsGood(WriteConcernResult writeConcernResult, string message, params object[] objs)
         {
-            if (!safeModeResult.Ok)
+            if (!writeConcernResult.Ok)
             {
                 throw new ApplicationException(string.Format("The following operation didn't suceed: {0}", string.Format(message, objs)));
             }
