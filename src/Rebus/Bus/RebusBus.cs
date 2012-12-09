@@ -697,7 +697,7 @@ element)"));
 
             public HeaderContext()
             {
-                cleanupTimer = new System.Timers.Timer { Interval = 1000 };
+                cleanupTimer = new System.Timers.Timer { Interval = TimeSpan.FromSeconds(1).TotalMilliseconds };
                 cleanupTimer.Elapsed += (o, ea) => headers.RemoveDeadReferences();
             }
 

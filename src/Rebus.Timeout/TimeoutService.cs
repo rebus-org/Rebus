@@ -58,7 +58,7 @@ namespace Rebus.Timeout
                                     new TrivialPipelineInspector(), new ErrorTracker(receiveMessages.InputQueueAddress + ".error"));
             bus = rebusBus;
 
-            timer.Interval = 300;
+            timer.Interval = TimeSpan.FromSeconds(0.3).TotalMilliseconds;
             timer.Elapsed += CheckCallbacks;
         }
 

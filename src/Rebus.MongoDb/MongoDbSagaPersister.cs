@@ -61,7 +61,7 @@ namespace Rebus.MongoDb
 
             // flick the bool once in a while
             indexRecreationTimer.Elapsed += delegate { indexEnsuredRecently = false; };
-            indexRecreationTimer.Interval = TimeSpan.FromMinutes(1).Milliseconds;
+            indexRecreationTimer.Interval = TimeSpan.FromMinutes(1).TotalMilliseconds;
             indexRecreationTimer.Start();
         }
 
