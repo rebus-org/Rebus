@@ -12,7 +12,7 @@ namespace Rebus.Tests.Integration.Factories
 {
     public interface IBusFactory
     {
-        IAdvancedBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator);
+        IBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator);
         void Cleanup();
         void StartAll();
     }
@@ -22,7 +22,7 @@ namespace Rebus.Tests.Integration.Factories
         readonly List<RebusBus> startables = new List<RebusBus>();
         readonly List<IDisposable> disposables = new List<IDisposable>();
 
-        public IAdvancedBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
+        public IBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
         {
             var transport = CreateTransport(inputQueueName);
             

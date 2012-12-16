@@ -7,43 +7,43 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever the bus sends a logical message.
     /// </summary>
-    public delegate void MessageSentEventHandler(IAdvancedBus advancedBus, string destination, object message);
+    public delegate void MessageSentEventHandler(IBus bus, string destination, object message);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
     /// </summary>
-    public delegate void BeforeMessageEventHandler(IAdvancedBus advancedBus, object message);
+    public delegate void BeforeMessageEventHandler(IBus bus, object message);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
     /// </summary>
-    public delegate void AfterMessageEventHandler(IAdvancedBus advancedBus, Exception exception, object message);
+    public delegate void AfterMessageEventHandler(IBus bus, Exception exception, object message);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus has received a transport message, but it has not yet been deserialized.
     /// </summary>
-    public delegate void BeforeTransportMessageEventHandler(IAdvancedBus advancedBus, ReceivedTransportMessage receivedTransportMessage);
+    public delegate void BeforeTransportMessageEventHandler(IBus bus, ReceivedTransportMessage receivedTransportMessage);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus has received and dispatched a transport message, and then - depending on how that
     /// went - and exception might be passed along.
     /// </summary>
-    public delegate void AfterTransportMessageEventHandler(IAdvancedBus advancedBus, Exception exceptionOrNull, ReceivedTransportMessage receivedTransportMessage);
+    public delegate void AfterTransportMessageEventHandler(IBus bus, Exception exceptionOrNull, ReceivedTransportMessage receivedTransportMessage);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus has decided that message is poison, and should be moved to the error queue.
     /// </summary>
-    public delegate void PoisonMessageEventHandler(IAdvancedBus advancedBus, ReceivedTransportMessage receivedTransportMessage, PoisonMessageInfo poisonMessageInfo);
+    public delegate void PoisonMessageEventHandler(IBus bus, ReceivedTransportMessage receivedTransportMessage, PoisonMessageInfo poisonMessageInfo);
 
     /// <summary>
     /// Delegate type that can listen when an incoming message can be handled by a saga handler, but it turns out that there was no saga data that could be correlated with the message.
     /// </summary>
-    public delegate void UncorrelatedMessageEventHandler(IAdvancedBus bus, object message, Saga saga);
+    public delegate void UncorrelatedMessageEventHandler(IBus bus, object message, Saga saga);
 
     /// <summary>
     /// Delegate type that can listen to whenever a message context is established.
     /// </summary>
-    public delegate void MessageContextEstablishedEventHandler(IAdvancedBus bus, IMessageContext messageContext);
+    public delegate void MessageContextEstablishedEventHandler(IBus bus, IMessageContext messageContext);
 
     /// <summary>
     /// Groups the different event hooks that Rebus exposes.

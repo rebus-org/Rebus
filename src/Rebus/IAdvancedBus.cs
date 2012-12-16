@@ -1,9 +1,11 @@
+using System;
+
 namespace Rebus
 {
     /// <summary>
     /// Extends the capabilities of <see cref="IBus"/> with some more advanced features.
     /// </summary>
-    public interface IAdvancedBus : IBus
+    public interface IAdvancedBus
     {
         /// <summary>
         /// Gives access to all the different event hooks that Rebus exposes.

@@ -34,12 +34,11 @@ namespace Rebus.StructureMap
             }
         }
 
-        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        public void SaveBusInstances(IBus bus)
         {
             container.Configure(x =>
                 {
                     x.For<IBus>().Singleton().Add(bus);
-                    x.For<IAdvancedBus>().Singleton().Add(advancedBus);
                     x.For<IMessageContext>().Transient().Use(MessageContext.GetCurrent);
                 });
         }

@@ -87,6 +87,8 @@ namespace Rebus.Testing
             attachedHeaders[message][key] = value;
         }
 
+        public IAdvancedBus Advanced { get { throw new NotSupportedException(); } }
+
         /// <summary>
         /// Accesses the accumulated list of sent messages.
         /// </summary>

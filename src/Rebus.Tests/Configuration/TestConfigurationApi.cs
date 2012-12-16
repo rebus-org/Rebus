@@ -80,8 +80,8 @@ namespace Rebus.Tests.Configuration
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
-            var bus = (IAdvancedBus)configurer.CreateBus();
-            var events = (RebusEvents) bus.Events;
+            var bus = (IBus)configurer.CreateBus();
+            var events = (RebusEvents) bus.Advanced.Events;
             
             events.RaiseBeforeTransportMessage(null, null);
             events.RaiseBeforeMessage(null, null);
@@ -367,15 +367,12 @@ namespace Rebus.Tests.Configuration
                 throw new NotImplementedException();
             }
 
-            public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+            public void SaveBusInstances(IBus bus)
             {
                 Bus = bus;
-                AdvancedBus = advancedBus;
             }
 
             public IBus Bus { get; set; }
-
-            public IAdvancedBus AdvancedBus { get; set; }
         }
     }
 

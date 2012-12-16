@@ -60,5 +60,10 @@ namespace Rebus
         /// it is sent multiple times.
         /// </summary>
         void AttachHeader(object message, string key, string value);
+
+        /// <summary>
+        /// Gain access to more advanced and less commonly used features of the bus
+        /// </summary>
+        IAdvancedBus Advanced { get; }
     }
 }

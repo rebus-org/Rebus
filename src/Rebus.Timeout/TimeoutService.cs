@@ -25,7 +25,7 @@ namespace Rebus.Timeout
 
         public const string DefaultInputQueueName = "rebus.timeout";
 
-        IAdvancedBus bus;
+        IBus bus;
         readonly Timer timer = new Timer();
         volatile bool currentlyChecking;
         readonly object checkLock = new object();
@@ -143,7 +143,7 @@ namespace Rebus.Timeout
                             bus.AttachHeader(reply, Headers.AutoCorrelationSagaId, sagaId.ToString());
                         }
 
-                        bus.Routing.Send(timeout.ReplyTo, reply);
+                        bus.Advanced.Routing.Send(timeout.ReplyTo, reply);
 
                         timeout.MarkAsProcessed();
                     }

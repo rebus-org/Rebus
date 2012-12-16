@@ -22,11 +22,11 @@ namespace Rebus.Configuration
 
 To resolve this, please either configure an endpoint mapper, or resort only to the
 
-    advancedBus.Routing.Send(destination, message)
+    bus.Advanced.Routing.Send(destination, message)
 
 and
 
-    advancedBus.Routing.Subscribe<TMessage>(destination)
+    bus.Advanced.Routing.Subscribe<TMessage>(destination)
 
 overloads on the advanced bus.
 

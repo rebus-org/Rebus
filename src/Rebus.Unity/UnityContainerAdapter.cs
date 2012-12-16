@@ -29,10 +29,9 @@ namespace Rebus.Unity
             }
         }
 
-        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        public void SaveBusInstances(IBus bus)
         {
             unityContainer.RegisterInstance(typeof(IBus), bus);
-            unityContainer.RegisterInstance(typeof(IAdvancedBus), advancedBus);
             unityContainer.RegisterType<IMessageContext>(new InjectionFactory(c => MessageContext.GetCurrent()));
         }
     }

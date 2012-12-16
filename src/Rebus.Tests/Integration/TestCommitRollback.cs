@@ -46,8 +46,8 @@ namespace Rebus.Tests.Integration
                 {
                     failCounter++;
 
-                    middleman.Routing.Send(recipient1Queue, string.Format("mr. 1, this is my fail count: {0}", failCounter));
-                    middleman.Routing.Send(recipient2Queue, string.Format("mr. 2, this is my fail count: {0}", failCounter));
+                    middleman.Advanced.Routing.Send(recipient1Queue, string.Format("mr. 1, this is my fail count: {0}", failCounter));
+                    middleman.Advanced.Routing.Send(recipient2Queue, string.Format("mr. 2, this is my fail count: {0}", failCounter));
 
                     if (failCounter < 3) throw new ApplicationException("oh noes!!!!");
                 });
@@ -63,7 +63,7 @@ namespace Rebus.Tests.Integration
             Thread.Sleep(0.5.Seconds());
 
             // act
-            sender.Routing.Send(middlemanQueue, "hello there my man!");
+            sender.Advanced.Routing.Send(middlemanQueue, "hello there my man!");
 
             Thread.Sleep(2.Seconds());
 

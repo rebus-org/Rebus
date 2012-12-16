@@ -18,11 +18,6 @@ namespace Rebus.Configuration
         public IBus Bus { get; internal set; }
 
         /// <summary>
-        /// Use this property to access the advanced bus, which is an ordinary bus plus some advanced operations
-        /// </summary>
-        public IAdvancedBus AdvancedBus { get; internal set; }
-
-        /// <summary>
         /// Registers the given handler type. It is assumed that the type registered has a public
         /// default constructor - otherwise, instantiation will fail.
         /// </summary>
@@ -68,28 +63,20 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
-        /// Saves the given <see cref="IBus"/> and <see cref="IAdvancedBus"/>
-        /// references for later use
+        /// Saves the given <see cref="IBus"/> reference for later use
         /// </summary>
-        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        public void SaveBusInstances(IBus bus)
         {
             Bus = bus;
-            AdvancedBus = advancedBus;
         }
 
         /// <summary>
-        /// Makes sure that the referenced <see cref="IBus"/> and <see cref="IAdvancedBus"/> are disposed
+        /// Makes sure that the referenced <see cref="IBus"/> is disposed
         /// </summary>
         public void Dispose()
         {
             if (ReferenceEquals(null, Bus)) return;
-
             Bus.Dispose();
-
-            if (!ReferenceEquals(Bus, AdvancedBus))
-            {
-                AdvancedBus.Dispose();
-            }
         }
     }
 }

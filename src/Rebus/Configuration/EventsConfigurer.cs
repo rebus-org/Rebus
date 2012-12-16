@@ -72,9 +72,9 @@ namespace Rebus.Configuration
         /// </summary>
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
-        internal void TransferToBus(IAdvancedBus advancedBus)
+        internal void TransferToBus(IBus bus)
         {
-            var rebusEvents = advancedBus.Events;
+            var rebusEvents = bus.Advanced.Events;
 
             if (MessageContextEstablished != null)
             {

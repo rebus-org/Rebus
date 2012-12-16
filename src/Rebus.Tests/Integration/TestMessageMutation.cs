@@ -52,7 +52,7 @@ namespace Rebus.Tests.Integration
             receiverAdapter.Handle<SomeMessageThatKeepsTrackOfMutations>(msg => receiverAdapter.Bus.Reply(msg));
 
             // act
-            senderAdapter.AdvancedBus.Routing.Send(ReceiverInputQueueName, message);
+            senderAdapter.Bus.Advanced.Routing.Send(ReceiverInputQueueName, message);
 
             Thread.Sleep(2.Seconds());
 

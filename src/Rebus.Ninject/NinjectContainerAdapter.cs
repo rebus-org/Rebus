@@ -29,15 +29,13 @@ namespace Rebus.Ninject
             }
         }
 
-        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        public void SaveBusInstances(IBus bus)
         {
             kernel.Bind<IBus>().ToConstant(bus).InSingletonScope().Named("bus");
-            kernel.Bind<IAdvancedBus>().ToConstant(advancedBus).InSingletonScope().Named("advancedBus");
             kernel.Bind<IMessageContext>().ToMethod(k => MessageContext.GetCurrent()).InTransientScope().Named("messageContext");
 
             // We need to ensure that the kernel have resolved the interfaces once to make it control their lifetime
             kernel.Get<IBus>();
-            kernel.Get<IAdvancedBus>();
         }
     }
 }

@@ -16,7 +16,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Implements <see cref="IBus"/> as Rebus would do it.
     /// </summary>
-    public class RebusBus : IStartableBus, IAdvancedBus
+    public class RebusBus : IStartableBus, IBus, IAdvancedBus
     {
         static ILog log;
 
@@ -323,6 +323,8 @@ namespace Rebus.Bus
 
             headerContext.AttachHeader(message, key, value);
         }
+
+        public IAdvancedBus Advanced { get { return this; } }
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {

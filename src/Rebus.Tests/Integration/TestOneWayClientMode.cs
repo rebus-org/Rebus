@@ -105,9 +105,7 @@ namespace Rebus.Tests.Integration
                 .CreateBus()
                 .Start();
 
-            var advancedBus = (IAdvancedBus)bus;
-
-            advancedBus.Routing.Send(receiverQueueName, "w00t!!!!!!!!!!!1");
+            bus.Advanced.Routing.Send(receiverQueueName, "w00t!!!!!!!!!!!1");
 
             var timeout = 3.Seconds();
 

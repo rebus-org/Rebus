@@ -88,7 +88,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             // arrange
             var disposableBus = new SomeDisposableSingleton();
             SomeDisposableSingleton.Disposed.ShouldBe(false);
-            adapter.SaveBusInstances(disposableBus, disposableBus);
+            adapter.SaveBusInstances(disposableBus);
 
             // act
             factory.DisposeInnerContainer();
@@ -97,7 +97,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeDisposableSingleton.Disposed.ShouldBe(true);
         }
 
-        class SomeDisposableSingleton : IAdvancedBus
+        class SomeDisposableSingleton : IBus, IAdvancedBus
         {
             public static bool Disposed { get; set; }
 
@@ -150,6 +150,8 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             {
                 throw new NotImplementedException();
             }
+
+            public IAdvancedBus Advanced { get { return this; } }
 
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }

@@ -28,44 +28,44 @@ namespace Rebus.Bus
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
-        internal void RaiseMessageContextEstablished(IAdvancedBus advancedBus, IMessageContext messageContext)
+        internal void RaiseMessageContextEstablished(IBus bus, IMessageContext messageContext)
         {
-            MessageContextEstablished(advancedBus, messageContext);
+            MessageContextEstablished(bus, messageContext);
         }
 
-        internal void RaiseMessageSent(IAdvancedBus advancedBus, string destination, object message)
+        internal void RaiseMessageSent(IBus bus, string destination, object message)
         {
-            MessageSent(advancedBus, destination, message);
+            MessageSent(bus, destination, message);
         }
 
-        internal void RaiseBeforeMessage(IAdvancedBus advancedBus, object message)
+        internal void RaiseBeforeMessage(IBus bus, object message)
         {
-            BeforeMessage(advancedBus, message);
+            BeforeMessage(bus, message);
         }
 
-        internal void RaiseAfterMessage(IAdvancedBus bus, Exception exception, object message)
+        internal void RaiseAfterMessage(IBus bus, Exception exception, object message)
         {
             AfterMessage(bus, exception, message);
         }
 
-        internal void RaiseBeforeTransportMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage)
+        internal void RaiseBeforeTransportMessage(IBus bus, ReceivedTransportMessage transportMessage)
         {
-            BeforeTransportMessage(advancedBus, transportMessage);
+            BeforeTransportMessage(bus, transportMessage);
         }
 
-        internal void RaiseAfterTransportMessage(IAdvancedBus advancedBus, Exception exception, ReceivedTransportMessage transportMessage)
+        internal void RaiseAfterTransportMessage(IBus bus, Exception exception, ReceivedTransportMessage transportMessage)
         {
-            AfterTransportMessage(advancedBus, exception, transportMessage);
+            AfterTransportMessage(bus, exception, transportMessage);
         }
 
-        internal void RaisePoisonMessage(IAdvancedBus advancedBus, ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
+        internal void RaisePoisonMessage(IBus bus, ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
         {
-            PoisonMessage(advancedBus, transportMessage, poisonMessageInfo);
+            PoisonMessage(bus, transportMessage, poisonMessageInfo);
         }
 
-        internal void RaiseUncorrelatedMessage(IAdvancedBus advancedBus, object message, Saga saga)
+        internal void RaiseUncorrelatedMessage(IBus bus, object message, Saga saga)
         {
-            UncorrelatedMessage(advancedBus, message, saga);
+            UncorrelatedMessage(bus, message, saga);
         }
     }
 }

@@ -18,7 +18,7 @@ namespace Rebus.Tests.Integration
         public void CanSubscribeAndUnsubscribe()
         {
             // arrange
-            var publisher = (IAdvancedBus)CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting()).Start(1);
+            var publisher = CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting()).Start(1);
 
             var sub1ReceivedEvents = new List<int>();
             var sub2ReceivedEvents = new List<int>();

@@ -134,7 +134,7 @@ namespace Rebus.Configuration
 
             Backbone.TransferEvents(bus);
 
-            Backbone.Adapter.SaveBusInstances(bus, bus);
+            Backbone.Adapter.SaveBusInstances(bus);
 
             return bus;
         }
