@@ -1,6 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Tests.Integration;
+using System.Linq;
+using Shouldly;
 
 namespace Rebus.Tests.Unit
 {
@@ -20,6 +23,23 @@ namespace Rebus.Tests.Unit
         protected override void DoTearDown()
         {
             errorTracker.Dispose();
+        }
+
+        [Test]
+        public void KeepsOnly10MostRecentExceptionDetailsEvenThoughThereMayBeManyMoreFailedDeliveries()
+        {
+            // arrange
+            const string messageId = "bim!";
+            errorTracker.MaxRetries = 1000;
+
+            // act
+            2000.Times(() => errorTracker.TrackDeliveryFail(messageId, new OmfgExceptionThisIsBad("w00t!")));
+            var messageHasFailedMaximumNumberOfTimes = errorTracker.MessageHasFailedMaximumNumberOfTimes(messageId);
+            var info = errorTracker.GetPoisonMessageInfo(messageId);
+
+            // assert
+            messageHasFailedMaximumNumberOfTimes.ShouldBe(true);
+            info.Exceptions.Count().ShouldBe(10);
         }
 
         [Test]

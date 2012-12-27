@@ -154,7 +154,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Indicates how many times a message will be retried before it is moved to the error queue
         /// </summary>
-        public int MaxRetries { get; private set; }
+        public int MaxRetries { get; internal set; }
 
         TrackedMessage GetOrAdd(string id)
         {
@@ -168,7 +168,8 @@ namespace Rebus.Bus
 
         class TrackedMessage
         {
-            readonly List<Timed<Exception>> exceptions = new List<Timed<Exception>>();
+            readonly Queue<Timed<Exception>> exceptions = new Queue<Timed<Exception>>();
+            int errorCount;
 
             public TrackedMessage(string id)
             {
@@ -182,14 +183,20 @@ namespace Rebus.Bus
 
             public int FailCount
             {
-                get { return exceptions.Count; }
+                get { return errorCount; }
             }
 
             public void AddError(Exception exception)
             {
-                exceptions.Add(exception.Now());
+                errorCount++;
+                exceptions.Enqueue(exception.Now());
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
+
+                if (exceptions.Count > 10)
+                {
+                    while (exceptions.Count > 10) exceptions.Dequeue();
+                }
             }
 
             public string GetErrorMessages()
