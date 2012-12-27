@@ -33,11 +33,19 @@ namespace Rebus.Tests.Transports.Rabbit
 
         /// <summary>
         /// With plain string concatenation
-        ///    0,0   System.String
-        ///    0,3   System.Collections.Generic.List<System.String>
-        ///    0,4   System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32>>
-        ///    1,6   System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>>
-        ///    7,7   System.Tuple<System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>>>>>>
+        ///    0,0   System.Stri
+        ///    0,3   System.Coll
+        ///    0,4   System.Coll
+        ///    1,6   System.Tupl
+        ///    7,2   System.Tupl
+        /// 
+        /// With StringBuilder
+        ///    0,0   System.Stri
+        ///    0,2   System.Coll
+        ///    0,4   System.Coll
+        ///    1,5   System.Tupl
+        ///    6,7   System.Tupl
+        /// 
         /// </summary>
         /// <param name="count"></param>
         [TestCase(1000)]

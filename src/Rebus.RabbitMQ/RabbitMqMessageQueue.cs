@@ -278,8 +278,20 @@ namespace Rebus.RabbitMQ
                 var genericArguments = messageType.GetGenericArguments();
 
                 var fullName = genericTypeDefinition.FullName;
-                return fullName.Substring(0, fullName.IndexOf("`"))
-                       + "<" + string.Join(", ", genericArguments.Select(t => GetPrettyTypeName(t))) + ">";
+                var substring = fullName.Substring(0, fullName.IndexOf("`"));
+
+                var builder = new StringBuilder();
+                builder.Append(substring);
+                builder.Append("<");
+                var first = true;
+                foreach (var genericArgument in genericArguments)
+                {
+                    if (!first) builder.Append(", ");
+                    builder.Append(GetPrettyTypeName(genericArgument));
+                    first = false;
+                }
+                builder.Append(">");
+                return builder.ToString();
             }
             return messageType.FullName;
         }
