@@ -194,7 +194,10 @@ namespace Rebus.Bus
                     {
                         context.RaiseDoRollback();
                     }
-                    catch{}
+                    catch (Exception e)
+                    {
+                        log.Error(e, "An error occurred while rolling back the transaction!");
+                    }
 
                     throw;
                 }

@@ -96,6 +96,7 @@ namespace Rebus.RabbitMQ
         {
             try
             {
+                // this scenario is only supported for testing purposes - Rebus will always receive messages in a queue transaction
                 if (!context.IsTransactional)
                 {
                     using (var localModel = GetConnection().CreateModel())
@@ -131,11 +132,22 @@ namespace Rebus.RabbitMQ
                     return null;
                 }
 
-                context.BeforeCommit += () => threadBoundSubscription.Ack(ea);
+                var subscription = threadBoundSubscription;
+                var model = threadBoundModel;
+
+                context.BeforeCommit += () => subscription.Ack(ea);
                 context.AfterRollback += () =>
                     {
-                        threadBoundModel.BasicNack(ea.DeliveryTag, false, true);
-                        threadBoundModel.TxCommit();
+                        try
+                        {
+                            model.BasicNack(ea.DeliveryTag, false, true);
+                            model.TxCommit();
+                        }
+                        catch (Exception e)
+                        {
+                            ErrorOnConnection(e);
+                            throw;
+                        }
                     };
 
                 return GetReceivedTransportMessage(ea.BasicProperties, ea.Body);
@@ -371,7 +383,7 @@ namespace Rebus.RabbitMQ
             context.DoCommit += () => threadBoundModel.TxCommit();
             context.DoRollback += () => threadBoundModel.TxRollback();
 
-            // ensure any sends withing this transaction will use the thread bound model
+            // ensure any sends within this transaction will use the thread bound model
             context[CurrentModelKey] = threadBoundModel;
         }
 
@@ -412,24 +424,36 @@ namespace Rebus.RabbitMQ
                     props.ReplyTo = (string)message.Headers[Headers.ReturnAddress];
                 }
 
-                if (message.Headers.ContainsKey(Headers.TimeToBeReceived) && message.Headers[Headers.TimeToBeReceived] is string)
+                if (message.Headers.ContainsKey(Headers.TimeToBeReceived))
                 {
-                    var timeToBeReceived = (string)message.Headers[Headers.TimeToBeReceived];
+                    var timeToBeReceived = message.Headers[Headers.TimeToBeReceived] as string;
+
+                    if (timeToBeReceived == null)
+                    {
+                        throw new ArgumentException(
+                            string.Format(
+                                "Message header contains the {0} header, but the value is {1} and not a string as expected!",
+                                Headers.TimeToBeReceived, message.Headers[Headers.TimeToBeReceived]));
+                    }
+
                     try
                     {
                         var timeSpan = TimeSpan.Parse(timeToBeReceived);
                         var milliseconds = (int) timeSpan.TotalMilliseconds;
                         if (milliseconds <= 0)
                         {
-                            throw new ArgumentException(string.Format("Cannot set TTL message expiration to {0} milliseconds! Please specify a positive value!", milliseconds));
+                            throw new ArgumentException(
+                                string.Format(
+                                    "Cannot set TTL message expiration to {0} milliseconds! Please specify a positive value!",
+                                    milliseconds));
                         }
                         props.Expiration = milliseconds.ToString();
                     }
                     catch (Exception e)
                     {
                         throw new FormatException(string.Format(
-                                "Could not set TTL message expiration on message - apparently, '{0}' is not a valid TTL TimeSpan",
-                                timeToBeReceived), e);
+                            "Could not set TTL message expiration on message - apparently, '{0}' is not a valid TTL TimeSpan",
+                            timeToBeReceived), e);
                     }
                 }
             }
