@@ -56,6 +56,9 @@ namespace Rebus.Timeout
         }
     }
 
+    /// <summary>
+    /// Extends a timeout to become a due timeout, which is a timeput that can be marked as processed
+    /// </summary>
     public abstract class DueTimeout : Timeout
     {
         /// <summary>

@@ -87,7 +87,10 @@ namespace Rebus.Testing
             attachedHeaders[message][key] = value;
         }
 
-        public IAdvancedBus Advanced { get { throw new NotSupportedException(); } }
+        /// <summary>
+        /// Would have accessed the advanced API, but the FakeBus does not support advanced operations (yet... it might, sometime in the future)
+        /// </summary>
+        public IAdvancedBus Advanced { get { throw new NotSupportedException("sorry, but FakeBus does not support advanced operations (yet)"); } }
 
         /// <summary>
         /// Accesses the accumulated list of sent messages.

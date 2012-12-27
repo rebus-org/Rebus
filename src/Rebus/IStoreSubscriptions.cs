@@ -10,16 +10,16 @@ namespace Rebus
         /// <summary>
         /// Saves the association between the given message type and the specified endpoint name.
         /// </summary>
-        void Store(Type messageType, string subscriberInputQueue);
+        void Store(Type eventType, string subscriberInputQueue);
 
         /// <summary>
         /// Removes the association between the given message type and the specified endpoint name.
         /// </summary>
-        void Remove(Type messageType, string subscriberInputQueue);
+        void Remove(Type eventType, string subscriberInputQueue);
 
         /// <summary>
         /// Returns the endpoint names for the given message type.
         /// </summary>
-        string[] GetSubscribers(Type messageType);
+        string[] GetSubscribers(Type eventType);
     }
 }

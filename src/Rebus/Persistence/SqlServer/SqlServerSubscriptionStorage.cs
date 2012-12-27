@@ -57,7 +57,7 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Stores a subscription for the given message type and the given subscriber endpoint in the underlying SQL table.
         /// </summary>
-        public void Store(Type messageType, string subscriberInputQueue)
+        public void Store(Type eventType, string subscriberInputQueue)
         {
             var connection = getConnection();
             try
@@ -68,7 +68,7 @@ namespace Rebus.Persistence.SqlServer
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
 
-                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+                    command.Parameters.AddWithValue("message_type", eventType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
 
                     try
@@ -90,7 +90,7 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Removes the subscription (if any) for the given message type and subscriber endpoint from the underlying SQL table.
         /// </summary>
-        public void Remove(Type messageType, string subscriberInputQueue)
+        public void Remove(Type eventType, string subscriberInputQueue)
         {
             var connection = getConnection();
             try
@@ -101,7 +101,7 @@ namespace Rebus.Persistence.SqlServer
                                                 where message_type = @message_type
                                                 and endpoint = @endpoint", subscriptionsTableName);
 
-                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+                    command.Parameters.AddWithValue("message_type", eventType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
 
                     command.ExecuteNonQuery();
@@ -116,7 +116,7 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Queries the underlying table for subscriber endpoints that are subscribed to the given message type
         /// </summary>
-        public string[] GetSubscribers(Type messageType)
+        public string[] GetSubscribers(Type eventType)
         {
             var connection = getConnection();
             try
@@ -126,7 +126,7 @@ namespace Rebus.Persistence.SqlServer
                     command.CommandText = string.Format(@"select endpoint from [{0}]
                                                 where message_type = @message_type", subscriptionsTableName);
 
-                    command.Parameters.AddWithValue("message_type", messageType.FullName);
+                    command.Parameters.AddWithValue("message_type", eventType.FullName);
 
                     var endpoints = new List<string>();
                     using (var reader = command.ExecuteReader())

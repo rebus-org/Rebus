@@ -50,17 +50,17 @@ namespace Rebus.RabbitMQ
                 this.rabbitMqMessageQueue = rabbitMqMessageQueue;
             }
 
-            public void Store(Type messageType, string subscriberInputQueue)
+            public void Store(Type eventType, string subscriberInputQueue)
             {
-                rabbitMqMessageQueue.Subscribe(messageType, subscriberInputQueue);
+                rabbitMqMessageQueue.Subscribe(eventType, subscriberInputQueue);
             }
 
-            public void Remove(Type messageType, string subscriberInputQueue)
+            public void Remove(Type eventType, string subscriberInputQueue)
             {
-                rabbitMqMessageQueue.Unsubscribe(messageType, subscriberInputQueue);
+                rabbitMqMessageQueue.Unsubscribe(eventType, subscriberInputQueue);
             }
 
-            public string[] GetSubscribers(Type messageType)
+            public string[] GetSubscribers(Type eventType)
             {
                 throw new InvalidOperationException("The RabbitMQ transport implementation is configured to let RabbitMQ" +
                                                     " manage subscriptions, so it is totaly unexpected that the GetSubscribers" +

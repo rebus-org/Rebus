@@ -34,16 +34,16 @@ namespace Rebus.Persistence.Xml
         /// <summary>
         /// Gets the endpoints that are subscribed to the given message type from the configured XML file
         /// </summary>
-        public string[] GetSubscribers(Type messageType)
+        public string[] GetSubscribers(Type eventType)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
 
             lock (fileLock)
             {
                 var doc = GetSubscriptionDocument();
                 var subscriptions = GetSubscriptions(doc);
-                var key = Key(messageType);
+                var key = Key(eventType);
                 return subscriptions.Where(s => s.Type == key).Select(s => s.Queue).ToArray();
             }
         }
@@ -51,10 +51,10 @@ namespace Rebus.Persistence.Xml
         /// <summary>
         /// Removes the endpoint that is subscribed to the given message type from the configured XML file
         /// </summary>
-        public void Remove(Type messageType, string subscriberInputQueue)
+        public void Remove(Type eventType, string subscriberInputQueue)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
             if (string.IsNullOrEmpty(subscriberInputQueue))
                 throw new ArgumentNullException("subscriberInputQueue");
 
@@ -62,7 +62,7 @@ namespace Rebus.Persistence.Xml
             {
                 var existingDoc = GetSubscriptionDocument();
                 var newDoc = CreateSubscriptionDocument();
-                var key = Key(messageType);
+                var key = Key(eventType);
                 var subscriptions = GetSubscriptions(existingDoc);
                 var newSubscriptions = from s in subscriptions
                                        where !(s.Type == key && s.Queue == subscriberInputQueue)
@@ -77,17 +77,17 @@ namespace Rebus.Persistence.Xml
         /// <summary>
         /// Adds the endpoint as a subscriber of the given message type to the configured XML file
         /// </summary>
-        public void Store(Type messageType, string subscriberInputQueue)
+        public void Store(Type eventType, string subscriberInputQueue)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
             if (string.IsNullOrEmpty(subscriberInputQueue))
                 throw new ArgumentNullException("subscriberInputQueue");
 
             lock (fileLock)
             {
                 XDocument doc = GetSubscriptionDocument();
-                var key = Key(messageType);
+                var key = Key(eventType);
                 var subscriptionExist = GetSubscriptions(doc, key).Any(s => s.Queue == subscriberInputQueue);
                 if (subscriptionExist)
                     return;

@@ -13,9 +13,9 @@ using Rebus.Logging;
 namespace Rebus.MongoDb
 {
     /// <summary>
-    /// MongoDB implementation of Rebus' <see cref="IStoreSagaData"/>. Please note that MongoDB does
-    /// not support two-phase commit, which instead gets simulated by enlisting in the ambient transaction
-    /// when one is present, delaying the Save/Delete operation until the commit phase.
+    /// MongoDB implementation of Rebus' <see cref="IStoreSagaData"/>. Will store saga data as they are serialized by the
+    /// default BSON serializer, with the exception that the <see cref="ISagaData.Revision"/> property is serialized with
+    /// "_rev" as the property name.
     /// </summary>
     public class MongoDbSagaPersister : IStoreSagaData
     {
@@ -103,6 +103,10 @@ namespace Rebus.MongoDb
             return this;
         }
 
+        /// <summary>
+        /// Inserts the given saga data, once in a while also ensuring that synchronous indexes with unique
+        /// constraints are created for the given saga data property paths.
+        /// </summary>
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
@@ -120,7 +124,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (MongoSafeModeException ex)
+            catch (WriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -129,6 +133,10 @@ namespace Rebus.MongoDb
             }
         }
 
+        /// <summary>
+        /// Updates the given saga data with an optimistic lock, once in a while also ensuring that synchronous
+        /// indexes with unique constraints are created for the given saga data property paths.
+        /// </summary>
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
@@ -153,7 +161,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (MongoSafeModeException ex)
+            catch (WriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -162,6 +170,10 @@ namespace Rebus.MongoDb
             }
         }
 
+        /// <summary>
+        /// Deletes the given saga data from the underlying Mongo collection. Throws and <see cref="OptimisticLockingException"/>
+        /// if not exactly one saga data document was deleted.
+        /// </summary>
         public void Delete(ISagaData sagaData)
         {
             var collection = database.GetCollection(GetCollectionName(sagaData.GetType()));
@@ -181,7 +193,7 @@ namespace Rebus.MongoDb
                                    sagaData.Id,
                                    sagaData.Revision);
             }
-            catch (MongoSafeModeException ex)
+            catch (WriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -190,6 +202,10 @@ namespace Rebus.MongoDb
             }
         }
 
+        /// <summary>
+        /// Queries the underlying Mongo collection for a saga data of the given type with the
+        /// given value at the specified property path. Returns null if none could be found.
+        /// </summary>
         public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
             var collection = database.GetCollection(typeof(T), GetCollectionName(typeof(T)));
@@ -296,7 +312,7 @@ which will make the persister use the type of the saga to come up with collectio
 
             if (indexInfo.IsBackground)
             {
-                throw new InvalidOperationException(string.Format("The index for {0} aready exists, but it wasn't SYNCHRONOUS."));
+                throw new InvalidOperationException(string.Format("The index for {0} aready exists, but it wasn't SYNCHRONOUS.", propertyToIndex));
             }
         }
 
@@ -348,7 +364,7 @@ which will make the persister use the type of the saga to come up with collectio
                 var exceptionMessage = string.Format("Tried to {0}, but apparently the operation didn't succeed.",
                                                      string.Format(message, objs));
 
-                throw new MongoSafeModeException(exceptionMessage, writeConcernResult);
+                throw new WriteConcernException(exceptionMessage, writeConcernResult);
             }
 
             if (writeConcernResult.DocumentsAffected != expectedNumberOfAffectedDocuments)
@@ -357,7 +373,7 @@ which will make the persister use the type of the saga to come up with collectio
                                                      string.Format(message, objs),
                                                      expectedNumberOfAffectedDocuments);
 
-                throw new MongoSafeModeException(exceptionMessage, writeConcernResult);
+                throw new WriteConcernException(exceptionMessage, writeConcernResult);
             }
         }
     }

@@ -324,6 +324,9 @@ namespace Rebus.Bus
             headerContext.AttachHeader(message, key, value);
         }
 
+        /// <summary>
+        /// Gain access to more advanced and less commonly used features of the bus
+        /// </summary>
         public IAdvancedBus Advanced { get { return this; } }
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)

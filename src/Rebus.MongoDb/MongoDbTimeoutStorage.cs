@@ -13,6 +13,12 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
+        const string ReplyToProperty = "reply_to";
+        const string CorrIdProperty = "corr_id";
+        const string TimeProperty = "time";
+        const string SagaIdProperty = "saga_id";
+        const string DataProperty = "data";
+        const string IdProperty = "_id";
         readonly MongoDatabase database;
         readonly MongoCollection<BsonDocument> collection;
 
@@ -24,36 +30,47 @@ namespace Rebus.MongoDb
         {
             database = MongoHelper.GetDatabase(connectionString);
             collection = database.GetCollection(collectionName);
-            collection.EnsureIndex(IndexKeys.Ascending("time"), IndexOptions.SetBackground(true).SetUnique(false));
+            collection.EnsureIndex(IndexKeys.Ascending(TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
         }
 
+        /// <summary>
+        /// Adds the timeout to the underlying collection of timeouts
+        /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
-            collection.Insert(new
-                                  {
-                                      corr_id = newTimeout.CorrelationId,
-                                      saga_id = newTimeout.SagaId,
-                                      time = newTimeout.TimeToReturn,
-                                      data = newTimeout.CustomData,
-                                      reply_to = newTimeout.ReplyTo,
-                                  });
+            var doc = new BsonDocument()
+                .Add(CorrIdProperty, newTimeout.CorrelationId)
+                .Add(SagaIdProperty, newTimeout.SagaId)
+                .Add(TimeProperty, newTimeout.TimeToReturn)
+                .Add(DataProperty, newTimeout.CustomData)
+                .Add(ReplyToProperty, newTimeout.ReplyTo);
+
+            collection.Insert(doc);
         }
 
+        /// <summary>
+        /// Gets all timeouts that are due by now. Doesn't remove the timeouts or change them or anything,
+        /// each individual timeout can be marked as processed by calling <see cref="DueTimeout.MarkAsProcessed"/>
+        /// </summary>
         public IEnumerable<DueTimeout> GetDueTimeouts()
         {
-            var result = collection.Find(Query.LTE("time", RebusTimeMachine.Now()))
-                                   .SetSortOrder(SortBy.Ascending("time"));
+            var result = collection.Find(Query.LTE(TimeProperty, RebusTimeMachine.Now()))
+                                   .SetSortOrder(SortBy.Ascending(TimeProperty));
 
             return result
-                .Select(r => new DueMongoTimeout(r["reply_to"].AsString,
-                                                 r["corr_id"].AsString,
-                                                 r["time"].AsDateTime,
-                                                 r["saga_id"].AsGuid,
-                                                 r["data"] != BsonNull.Value
-                                                     ? r["data"].AsString
+                .Select(r => new DueMongoTimeout(r[ReplyToProperty].AsString,
+                                                 r.Contains(CorrIdProperty)
+                                                     ? r[CorrIdProperty].AsString
+                                                     : "",
+                                                 r[TimeProperty].AsDateTime,
+                                                 r.Contains(SagaIdProperty)
+                                                     ? r[SagaIdProperty].AsGuid
+                                                     : Guid.Empty,
+                                                 r.Contains(DataProperty)
+                                                     ? r[DataProperty].AsString
                                                      : "",
                                                  collection,
-                                                 (ObjectId) r["_id"]));
+                                                 (ObjectId) r[IdProperty]));
         }
 
         class DueMongoTimeout : DueTimeout
@@ -70,7 +87,7 @@ namespace Rebus.MongoDb
 
             public override void MarkAsProcessed()
             {
-                collection.Remove(Query.EQ("_id", objectId));
+                collection.Remove(Query.EQ(IdProperty, objectId));
             }
         }
     }

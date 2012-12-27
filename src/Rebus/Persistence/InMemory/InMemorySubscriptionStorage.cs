@@ -15,18 +15,18 @@ namespace Rebus.Persistence.InMemory
         /// <summary>
         /// Stores a subscription for the given message type and the given endpoint in memory
         /// </summary>
-        public void Store(Type messageType, string subscriberInputQueue)
+        public void Store(Type eventType, string subscriberInputQueue)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;
 
-            if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
+            if (!subscribers.TryGetValue(eventType, out subscribersForThisType))
             {
                 lock (subscribers)
                 {
-                    if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
+                    if (!subscribers.TryGetValue(eventType, out subscribersForThisType))
                     {
                         subscribersForThisType = new ConcurrentDictionary<string, object>();
-                        subscribers[messageType] = subscribersForThisType;
+                        subscribers[eventType] = subscribersForThisType;
                     }
                 }
             }
@@ -37,11 +37,11 @@ namespace Rebus.Persistence.InMemory
         /// <summary>
         /// Removes the subscription (if any) for the given message type and the given endpoint from memory
         /// </summary>
-        public void Remove(Type messageType, string subscriberInputQueue)
+        public void Remove(Type eventType, string subscriberInputQueue)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;
 
-            if (!subscribers.TryGetValue(messageType, out subscribersForThisType))
+            if (!subscribers.TryGetValue(eventType, out subscribersForThisType))
                 return;
 
             object temp;
@@ -51,11 +51,11 @@ namespace Rebus.Persistence.InMemory
         /// <summary>
         /// Gets from memory an array of endpoints that subscribe to the given message type
         /// </summary>
-        public string[] GetSubscribers(Type messageType)
+        public string[] GetSubscribers(Type eventType)
         {
             ConcurrentDictionary<string, object> subscribersForThisType;
 
-            return subscribers.TryGetValue(messageType, out subscribersForThisType)
+            return subscribers.TryGetValue(eventType, out subscribersForThisType)
                        ? subscribersForThisType.Keys.ToArray()
                        : new string[0];
         }
