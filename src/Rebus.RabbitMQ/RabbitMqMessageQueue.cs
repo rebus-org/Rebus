@@ -267,6 +267,20 @@ namespace Rebus.RabbitMQ
                     return eventName;
             }
 
+            return GetPrettyTypeName(messageType);
+        }
+
+        static string GetPrettyTypeName(Type messageType)
+        {
+            if (messageType.IsGenericType)
+            {
+                var genericTypeDefinition = messageType.GetGenericTypeDefinition();
+                var genericArguments = messageType.GetGenericArguments();
+
+                var fullName = genericTypeDefinition.FullName;
+                return fullName.Substring(0, fullName.IndexOf("`"))
+                       + "<" + string.Join(", ", genericArguments.Select(t => GetPrettyTypeName(t))) + ">";
+            }
             return messageType.FullName;
         }
 

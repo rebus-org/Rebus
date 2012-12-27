@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Messaging;
 using System.Text;
 using System.Threading;
 using System.Transactions;
@@ -30,6 +29,94 @@ namespace Rebus.Tests.Transports.Rabbit
         {
             serializer = new JsonMessageSerializer();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        /// <summary>
+        /// With plain string concatenation
+        ///    0,0   System.String
+        ///    0,3   System.Collections.Generic.List<System.String>
+        ///    0,4   System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32>>
+        ///    1,6   System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>>
+        ///    7,7   System.Tuple<System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>, System.Tuple<System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Tuple<System.String, System.Int32, System.Int32>>>>>>>>>>>
+        /// </summary>
+        /// <param name="count"></param>
+        [TestCase(1000)]
+        [TestCase(100000)]
+        public void TestPerformanceOfPrettyEventNameGeneration(int count)
+        {
+            var queue = new RabbitMqMessageQueue(ConnectionString, "test.eventnames");
+            var eventTypes = new List<Type>
+                                 {
+                                     typeof (string),
+                                     typeof (List<string>),
+                                     typeof (List<Tuple<string, int, int>>),
+                                     typeof (Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>>),
+                                     typeof (Tuple<Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>>>>>>),
+                                 };
+
+            var elapsed = eventTypes.Select(t =>
+                {
+                    var stopwatch = Stopwatch.StartNew();
+                    count.Times(() => queue.GetEventName(t));
+                    return Tuple.Create(queue.GetEventName(t), stopwatch.Elapsed);
+                });
+
+            Console.WriteLine(string.Join(Environment.NewLine, elapsed.Select(t => string.Format(@"    {0:0.0}   {1}", t.Item2.TotalSeconds, t.Item1))));
+        }
+
+        [Test]
+        public void CanGeneratePrettyEventNames()
+        {
+            var queue = new RabbitMqMessageQueue(ConnectionString, "test.eventnames");
+
+            var eventsAndExpectedEventNames =
+                new List<Tuple<Type, string>>
+                    {
+                        Tuple.Create(typeof (string), "System.String"),
+                        Tuple.Create(typeof (List<string>), "System.Collections.Generic.List<System.String>"),
+                        Tuple.Create(typeof (List<Tuple<string, int, int>>), "System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32>>"),
+                    };
+
+            var results = AssertEventNames(queue, eventsAndExpectedEventNames);
+
+            if (results.Any(r => r.Item1))
+            {
+                Console.WriteLine(@"The following event types were fine:
+
+{0}", string.Join(Environment.NewLine, results.Where(r => r.Item1).Select(t => string.Format(@"  {0}:
+    got : {1}
+", t.Item2, t.Item3))));
+            }
+
+            if (results.Any(r => !r.Item1))
+            {
+                Assert.Fail(@"Did not get the expected results for the following event types:
+
+{0}", string.Join(Environment.NewLine, results.Where(r => !r.Item1).Select(t => string.Format(@"  {0}:
+    got      : {1}
+    expected : {2}
+", t.Item2, t.Item3, t.Item4))));
+            }
+        }
+
+        List<Tuple<bool, Type, string, string>> AssertEventNames(RabbitMqMessageQueue queue, IEnumerable<Tuple<Type, string>> eventsAndExpectedEventNames)
+        {
+            return eventsAndExpectedEventNames
+                .Select(t =>
+                    {
+                        var eventType = t.Item1;
+                        var expectedEventName = t.Item2;
+
+                        var eventName = queue.GetEventName(eventType);
+
+                        return eventName == expectedEventName
+                                   ? Tuple.Create(true, eventType, eventName, expectedEventName)
+                                   : Tuple.Create(false, eventType, eventName, expectedEventName);
+                    })
+                .ToList();
         }
 
         [Test]
