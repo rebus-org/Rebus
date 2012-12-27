@@ -51,7 +51,7 @@ namespace Rebus.RabbitMQ
 
         public RabbitMqMessageQueue(string connectionString, string inputQueueName, bool ensureExchangeIsDeclared = true)
         {
-            connectionManager = new ConnectionManager(connectionString);
+            connectionManager = new ConnectionManager(connectionString, inputQueueName);
             if (inputQueueName == null) return;
 
             this.inputQueueName = inputQueueName;
@@ -370,21 +370,25 @@ namespace Rebus.RabbitMQ
             {
                 if (context[CurrentModelKey] == null)
                 {
-                    context[CurrentModelKey] = threadBoundModel;
-                    context.DoCommit += () => threadBoundModel.TxCommit();
-                    context.DoRollback += () => threadBoundModel.TxRollback();
+                    var model = threadBoundModel;
+                    context[CurrentModelKey] = model;
+                    context.DoCommit += model.TxCommit;
+                    context.DoRollback += model.TxRollback;
                 }
                 return;
             }
 
-            threadBoundModel = GetConnection().CreateModel();
-            threadBoundModel.TxSelect();
+            var newModel  = GetConnection().CreateModel();
+            newModel.TxSelect();
 
-            context.DoCommit += () => threadBoundModel.TxCommit();
-            context.DoRollback += () => threadBoundModel.TxRollback();
+            context.DoCommit += newModel.TxCommit;
+            context.DoRollback += newModel.TxRollback;
 
             // ensure any sends within this transaction will use the thread bound model
-            context[CurrentModelKey] = threadBoundModel;
+            context[CurrentModelKey] = newModel;
+
+            // bind it to the thread
+            threadBoundModel = newModel;
         }
 
         static ReceivedTransportMessage GetReceivedTransportMessage(IBasicProperties basicProperties, byte[] body)

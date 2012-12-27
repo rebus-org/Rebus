@@ -21,7 +21,7 @@ namespace Rebus.Tests.Integration
         [Test]
         public void DoesntActuallyConnectWhenCreatingTheFactory()
         {
-            using(var connectionManager = new ConnectionManager("amqp://would_throw_if_it_connected_immediately,amqp://would_also_throw_if_it_connected_immediately"))
+            using(var connectionManager = new ConnectionManager("amqp://would_throw_if_it_connected_immediately,amqp://would_also_throw_if_it_connected_immediately", "w00t!"))
             {
                 // arrange
 

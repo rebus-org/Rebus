@@ -11,6 +11,7 @@ namespace Rebus.RabbitMQ
 {
     internal class ConnectionManager : IDisposable
     {
+        readonly string inputQueueName;
         static ILog log;
 
         static ConnectionManager()
@@ -25,8 +26,10 @@ namespace Rebus.RabbitMQ
         int currentConnectionIndex;
         static readonly DateTime endpointStartupTime;
 
-        public ConnectionManager(string connectionString)
+        public ConnectionManager(string connectionString, string inputQueueName)
         {
+            this.inputQueueName = inputQueueName;
+
             connectionFactories = connectionString
                 .Split(",".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
                 .Select(CreateConnectionFactory)
@@ -40,7 +43,7 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        static ConnectionFactory CreateConnectionFactory(string s)
+        ConnectionFactory CreateConnectionFactory(string s)
         {
             return new ConnectionFactory
                        {
@@ -53,6 +56,7 @@ namespace Rebus.RabbitMQ
                                        {"Startup time", endpointStartupTime.ToString(CultureInfo.InvariantCulture)},
                                        {"Application command line", Environment.CommandLine},
                                        {"Client", "Rebus endpoint"},
+                                       {"Input queue", string.IsNullOrEmpty(inputQueueName) ? "(none)" : inputQueueName},
                                    }
                        };
         }
