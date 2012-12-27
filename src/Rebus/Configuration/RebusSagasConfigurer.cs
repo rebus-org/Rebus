@@ -27,9 +27,11 @@ namespace Rebus.Configuration
         /// Configures Rebus to store sagas in SQL Server. Use this overload when your saga doesn't perform
         /// any additional work in the same SQL Server.
         /// </summary>
-        public void StoreInSqlServer(string connectionstring, string sagaTable, string sagaIndexTable)
+        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(string connectionstring, string sagaTable, string sagaIndexTable)
         {
-            Use(new SqlServerSagaPersister(connectionstring, sagaIndexTable, sagaTable));
+            var persister = new SqlServerSagaPersister(connectionstring, sagaIndexTable, sagaTable);
+            Use(persister);
+            return new SqlServerSagaPersisterFluentConfigurer(persister);
         }
 
         /// <summary>
@@ -37,9 +39,11 @@ namespace Rebus.Configuration
         /// same <see cref="SqlConnection"/> as you're using, thus enlisting in whatever transactional
         /// behavior you might be using.
         /// </summary>
-        public void StoreInSqlServer(Func<SqlConnection> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
+        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(Func<SqlConnection> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
         {
-            Use(new SqlServerSagaPersister(connectionFactoryMethod, sagaIndexTable, sagaTable));
+            var persister = new SqlServerSagaPersister(connectionFactoryMethod, sagaIndexTable, sagaTable);
+            Use(persister);
+            return new SqlServerSagaPersisterFluentConfigurer(persister);
         }
 
         /// <summary>

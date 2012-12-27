@@ -29,9 +29,11 @@ namespace Rebus.Configuration
         /// <summary>
         /// Configures Rebus to use <see cref="SqlServerSubscriptionStorage"/> to store subscriptions
         /// </summary>
-        public void StoreInSqlServer(string connectionstring, string subscriptions)
+        public SqlServerSubscriptionStorageFluentConfigurer StoreInSqlServer(string connectionstring, string subscriptions)
         {
-            Use(new SqlServerSubscriptionStorage(connectionstring, subscriptions));
+            var storage = new SqlServerSubscriptionStorage(connectionstring, subscriptions);
+            Use(storage);
+            return new SqlServerSubscriptionStorageFluentConfigurer(storage);
         }
 
         /// <summary>
