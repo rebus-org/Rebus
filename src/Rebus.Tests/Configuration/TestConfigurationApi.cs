@@ -23,8 +23,8 @@ namespace Rebus.Tests.Configuration
         public void InvokingTheSameConfigurerTwiceYeildsAnException()
         {
             Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
-                                                            .DetermineEndpoints(d => d.FromRebusConfigurationSection())
-                                                            .DetermineEndpoints(d => d.FromRebusConfigurationSection()));
+                                                            .MessageOwnership(d => d.FromRebusConfigurationSection())
+                                                            .MessageOwnership(d => d.FromRebusConfigurationSection()));
 
             Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
                                                             .Transport(d => d.UseMsmqInOneWayClientMode())
@@ -305,7 +305,7 @@ namespace Rebus.Tests.Configuration
             configurer.Backbone.StoreSubscriptions.ShouldNotBe(null);
             configurer.Backbone.InspectHandlerPipeline.ShouldNotBe(null);
             configurer.Backbone.SerializeMessages.ShouldNotBe(null);
-            configurer.Backbone.DetermineDestination.ShouldNotBe(null);
+            configurer.Backbone.DetermineMessageOwnership.ShouldNotBe(null);
         }
 
         [Test]
@@ -326,16 +326,16 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var backboneWithoutFilter =
-                (DetermineDestinationFromRebusConfigurationSection)
+                (DetermineMessageOwnershipFromRebusConfigurationSection)
                 Configure.With(adapter)
-                    .DetermineEndpoints(d => d.FromRebusConfigurationSection())
-                    .Backbone.DetermineDestination;
+                    .MessageOwnership(d => d.FromRebusConfigurationSection())
+                    .Backbone.DetermineMessageOwnership;
 
             var backboneWithFilter =
-                (DetermineDestinationFromRebusConfigurationSection)
+                (DetermineMessageOwnershipFromRebusConfigurationSection)
                 Configure.With(adapter)
-                    .DetermineEndpoints(d => d.FromRebusConfigurationSectionWithFilter(f => f == typeof(SomeType)))
-                    .Backbone.DetermineDestination;
+                    .MessageOwnership(d => d.FromRebusConfigurationSectionWithFilter(f => f == typeof(SomeType)))
+                    .Backbone.DetermineMessageOwnership;
 
             Assert.DoesNotThrow(() => backboneWithoutFilter.GetEndpointFor(typeof (SomeType)));
 

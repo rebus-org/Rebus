@@ -58,7 +58,7 @@ namespace Rebus.Configuration
         /// <summary>
         /// Determines how Rebus finds out which endpoint owns any given message type
         /// </summary>
-        public IDetermineDestination DetermineDestination { get; set; }
+        public IDetermineMessageOwnership DetermineMessageOwnership { get; set; }
 
         /// <summary>
         /// Determines how Rebus stores subscribers

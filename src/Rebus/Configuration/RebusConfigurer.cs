@@ -87,9 +87,9 @@ namespace Rebus.Configuration
         /// Invokes the configurer that allows for configuring how Rebus does routing, which essentially can
         /// be boiled down to one single question: which endpoint owns a particular message type
         /// </summary>
-        public RebusConfigurer DetermineEndpoints(Action<RebusRoutingConfigurer> configure)
+        public RebusConfigurer MessageOwnership(Action<RebusRoutingConfigurer> configure)
         {
-            AssertIsNull(Backbone.DetermineDestination, "DetermineEndpoints");
+            AssertIsNull(Backbone.DetermineMessageOwnership, "MessageOwnership");
             configure(new RebusRoutingConfigurer(Backbone));
             return this;
         }
@@ -129,7 +129,7 @@ namespace Rebus.Configuration
             Backbone.ApplyDecorators();
 
             var bus = new RebusBus(Backbone.ActivateHandlers, Backbone.SendMessages, Backbone.ReceiveMessages,
-                                   Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineDestination,
+                                   Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineMessageOwnership,
                                    Backbone.SerializeMessages, Backbone.InspectHandlerPipeline, Backbone.ErrorTracker);
 
             Backbone.TransferEvents(bus);
@@ -178,10 +178,10 @@ In this case, you must supply an implementation of {0} to the configuration back
                 backbone.SerializeMessages = new JsonMessageSerializer();
             }
 
-            if (backbone.DetermineDestination == null)
+            if (backbone.DetermineMessageOwnership == null)
             {
                 log.Debug("Defaulting to 'throwing endpoint mapper' - i.e. the bus will throw an exception when you send a message that is not explicitly routed");
-                backbone.DetermineDestination = new ThrowingEndpointMapper();
+                backbone.DetermineMessageOwnership = new ThrowingEndpointMapper();
             }
 
             if (backbone.InspectHandlerPipeline == null)

@@ -6,11 +6,11 @@ using System.Xml.Linq;
 namespace Rebus.Configuration
 {
     /// <summary>
-    /// Implementation of <see cref="IDetermineDestination"/> that queries the specified XML document
+    /// Implementation of <see cref="IDetermineMessageOwnership"/> that queries the specified XML document
     /// (loaded from as assembly configuration file or web.config) for endpoint mappings specified on
     /// the format that NServiceBus understands.
     /// 
-    /// Please note that <see cref="DetermineDestinationFromNServiceBusEndpointMappings"/> is a tad more
+    /// Please note that <see cref="DetermineMessageOwnershipFromNServiceBusEndpointMappings"/> is a tad more
     /// tolerant than NServiceBus - it does not require that the UnicastBusConfig configuration section
     /// is declared, even though that is required for NServiceBus to work.
     /// 
@@ -20,7 +20,7 @@ namespace Rebus.Configuration
     /// If you want to alter the behavior of this implementation, feel free to subclass it and override
     /// any methods that you see fit.
     /// </summary>
-    public class DetermineDestinationFromNServiceBusEndpointMappings : IDetermineDestination
+    public class DetermineMessageOwnershipFromNServiceBusEndpointMappings : IDetermineMessageOwnership
     {
         readonly ConcurrentDictionary<Type, string> endpoints = new ConcurrentDictionary<Type, string>();
         readonly IAppConfigLoader appConfigLoader;
@@ -31,7 +31,7 @@ namespace Rebus.Configuration
         /// <summary>
         /// Constructs the endpoint mapper to use the specified <see cref="IAppConfigLoader"/> to access the app.config
         /// </summary>
-        public DetermineDestinationFromNServiceBusEndpointMappings(IAppConfigLoader appConfigLoader)
+        public DetermineMessageOwnershipFromNServiceBusEndpointMappings(IAppConfigLoader appConfigLoader)
         {
             this.appConfigLoader = appConfigLoader;
         }
@@ -52,7 +52,7 @@ namespace Rebus.Configuration
 
             var message = string.Format(@"No endpoint mapping configured for messages of type {0}.
 
-DetermineDestinationFromNServiceBusEndpointMappings offers the ability to specify endpoint mappings
+DetermineMessageOwnershipFromNServiceBusEndpointMappings offers the ability to specify endpoint mappings
 as they are specified with NServiceBus. Therefore, you should add to the application configuration
 file of your host process something like the following:
 

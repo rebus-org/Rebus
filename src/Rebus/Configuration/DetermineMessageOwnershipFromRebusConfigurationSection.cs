@@ -10,12 +10,12 @@ namespace Rebus.Configuration
     /// <summary>
     /// Configures endpoint mappings from a <see cref="RebusConfigurationSection"/> configuration section.
     /// </summary>
-    public class DetermineDestinationFromRebusConfigurationSection : IDetermineDestination
+    public class DetermineMessageOwnershipFromRebusConfigurationSection : IDetermineMessageOwnership
     {
         static ILog log;
         readonly Func<Type, bool> typeFilter;
 
-        static DetermineDestinationFromRebusConfigurationSection()
+        static DetermineMessageOwnershipFromRebusConfigurationSection()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
@@ -27,7 +27,7 @@ namespace Rebus.Configuration
         /// type should be mapped. Can be used to avoid mapping e.g. factories and stuff if you want to put
         /// helper classes inside your message assembly
         /// </summary>
-        public DetermineDestinationFromRebusConfigurationSection(Func<Type, bool> typeFilter)
+        public DetermineMessageOwnershipFromRebusConfigurationSection(Func<Type, bool> typeFilter)
         {
             this.typeFilter = typeFilter;
 
@@ -79,7 +79,7 @@ Note also, that specifying the input queue name with the 'inputQueue' attribute 
         /// <summary>
         /// Constructs the endpoint mapper without a type filter
         /// </summary>
-        public DetermineDestinationFromRebusConfigurationSection()
+        public DetermineMessageOwnershipFromRebusConfigurationSection()
             : this(t => true)
         {
         }

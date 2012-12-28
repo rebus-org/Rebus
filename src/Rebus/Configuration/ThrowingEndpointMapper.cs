@@ -5,14 +5,14 @@ namespace Rebus.Configuration
 {
     /// <summary>
     /// Endpoint mapper that is meant to be used as the default in cases where
-    /// an implementation of <see cref="IDetermineDestination"/> is not chosen.
+    /// an implementation of <see cref="IDetermineMessageOwnership"/> is not chosen.
     /// It will throw every time it gets called, and it will do so with a nice
     /// and friendly error message.
     /// </summary>
-    public class ThrowingEndpointMapper : IDetermineDestination
+    public class ThrowingEndpointMapper : IDetermineMessageOwnership
     {
         /// <summary>
-        /// Throws a <see cref="ConfigurationException"/> because this implementation of <see cref="IDetermineDestination"/>
+        /// Throws a <see cref="ConfigurationException"/> because this implementation of <see cref="IDetermineMessageOwnership"/>
         /// is not meant to be used to actually determine who owns messages - it is installed when the service is set up
         /// to route all messages explicitly or rely on using the capabilities of a <see cref="IMulticastTransport"/>
         /// </summary>

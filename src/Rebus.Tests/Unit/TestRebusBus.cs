@@ -72,9 +72,9 @@ is just because there was a bug some time when the grouping of the messages was 
             var thirdMessage = new SomeRandomMessage();
 
             var someEndpoint = "some-endpoint";
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(FirstMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SecondMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(FirstMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SecondMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return(someEndpoint);
 
             // act
             bus.Batch.Send(firstMessage, secondMessage, thirdMessage);
@@ -209,7 +209,7 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:10");
@@ -228,7 +228,7 @@ Or should it?")]
             // arrange
             var someRandomMessage = new SomeRandomMessage();
             var anotherRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
@@ -245,7 +245,7 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
@@ -278,7 +278,7 @@ Or should it?")]
         public void SendsMessagesToTheRightDestination()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
             // act
@@ -294,8 +294,8 @@ Or should it?")]
         public void SendsMessagesToTheRightDestinationAlsoWhenSendingBatch()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("polymorphic message endpoint");
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("some random message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("polymorphic message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("some random message endpoint");
             var firstMessage = new PolymorphicMessage();
             var secondMessage = new SomeRandomMessage();
 
@@ -316,7 +316,7 @@ Or should it?")]
         public void SubscribesToMessagesFromTheRightPublisher()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             receiveMessages.SetInputQueue("my input queue");
 
             // act

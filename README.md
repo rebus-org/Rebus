@@ -54,7 +54,7 @@ to integrate with your favorite IoC container, and then
 	Configure.With(someContainerAdapter)
 		.Logging(l => l.Log4Net())
 		.Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-		.DetermineEndpoints(d => d.FromRebusConfigurationSection())
+		.MessageOwnership(d => d.FromRebusConfigurationSection())
 		.CreateBus()
 		.Start();
 

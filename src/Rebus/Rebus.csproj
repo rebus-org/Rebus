@@ -109,7 +109,7 @@
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />
     <Compile Include="Bus\TimeoutReplyHandler.cs" />
-    <Compile Include="Configuration\DetermineDestinationFromRebusConfigurationSection.cs" />
+    <Compile Include="Configuration\DetermineMessageOwnershipFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\FluentRearrangeHandlersPipelineInspectorBuilder.cs" />
     <Compile Include="Configuration\MappingElement.cs" />
     <Compile Include="Configuration\MappingsCollection.cs" />
@@ -132,7 +132,7 @@
     <Compile Include="Configuration\ConfigurationException.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\PipelineInspectorConfigurer.cs" />
-    <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\DetermineMessageOwnershipFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
@@ -173,7 +173,7 @@
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IActivateHandlers.cs" />
-    <Compile Include="IDetermineDestination.cs" />
+    <Compile Include="IDetermineMessageOwnership.cs" />
     <Compile Include="IInspectHandlerPipeline.cs" />
     <Compile Include="ISagaData.cs" />
     <Compile Include="ISerializeMessages.cs" />

@@ -10,15 +10,15 @@ using Shouldly;
 namespace Rebus.Tests.Configuration
 {
     [TestFixture]
-    public class TestDetermineDestinationFromNServiceBusEndpointMappings : FixtureBase
+    public class TestDetermineMessageOwnershipFromNServiceBusEndpointMappings : FixtureBase
     {
-        DetermineDestinationFromNServiceBusEndpointMappings mapper;
+        DetermineMessageOwnershipFromNServiceBusEndpointMappings mapper;
         IAppConfigLoader loader;
 
         protected override void DoSetUp()
         {
             loader = Mock<IAppConfigLoader>();
-            mapper = new DetermineDestinationFromNServiceBusEndpointMappings(loader);
+            mapper = new DetermineMessageOwnershipFromNServiceBusEndpointMappings(loader);
         }
 
         [Test]
@@ -71,7 +71,7 @@ namespace Rebus.Tests.Configuration
         }
 
         [Test]
-        public void CanDetermineDestinationByLookingAtAssembly()
+        public void CanDetermineMessageOwnershipByLookingAtAssembly()
         {
             // arrange
             StubConfigFile("app.config.01.txt");
@@ -83,7 +83,7 @@ namespace Rebus.Tests.Configuration
         }
 
         [Test]
-        public void CanDetermineDestinationByLookingAtAssemblyQualifiedName()
+        public void CanDetermineMessageOwnershipByLookingAtAssemblyQualifiedName()
         {
             // arrange
             StubConfigFile("app.config.02.txt");
@@ -99,7 +99,7 @@ namespace Rebus.Tests.Configuration
         {
             mapper.GetType()
                 .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
-                .Where(m => m.DeclaringType == typeof(DetermineDestinationFromNServiceBusEndpointMappings))
+                .Where(m => m.DeclaringType == typeof(DetermineMessageOwnershipFromNServiceBusEndpointMappings))
                 .ToList()
                 .ForEach(AssertIsProtectedVirtual);
         }

@@ -28,7 +28,7 @@ namespace Rebus.Tests.Performance.StressMongo
 {
     [TestFixture(typeof(MsmqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo)]
     [TestFixture(typeof(RabbitMqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo), Category(TestCategories.Rabbit)]
-    public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineDestination, IFlowLog where TFactory : IMessageQueueFactory, new()
+    public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineMessageOwnership, IFlowLog where TFactory : IMessageQueueFactory, new()
     {
         const string CreditSagasCollectionName = "check_credit_sagas";
         const string LegalSagasCollectionName = "check_legal_sagas";

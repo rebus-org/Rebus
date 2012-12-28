@@ -28,7 +28,7 @@ namespace Rebus.Bus
         readonly ISendMessages sendMessages;
         readonly IReceiveMessages receiveMessages;
         readonly IStoreSubscriptions storeSubscriptions;
-        readonly IDetermineDestination determineDestination;
+        readonly IDetermineMessageOwnership determineMessageOwnership;
         readonly IActivateHandlers activateHandlers;
         readonly ISerializeMessages serializeMessages;
         readonly IStoreSagaData storeSagaData;
@@ -54,23 +54,23 @@ namespace Rebus.Bus
         /// <param name="receiveMessages">Will be used to receive transport messages. If the bus is configured to run with multiple threads, this one should be reentrant.</param>
         /// <param name="storeSubscriptions">Will be used to store subscription information. Is only relevant if the bus is a publisher, i.e. it publishes messages and other services assume they can subscribe to its messages.</param>
         /// <param name="storeSagaData">Will be used to store saga data. Is only relevant if one or more handlers are derived from <see cref="Saga"/>.</param>
-        /// <param name="determineDestination">Will be used to resolve a destination in cases where the message destination is not explicitly specified as part of a send/subscribe operation.</param>
+        /// <param name="determineMessageOwnership">Will be used to resolve a destination in cases where the message destination is not explicitly specified as part of a send/subscribe operation.</param>
         /// <param name="serializeMessages">Will be used to serialize and deserialize transport messages.</param>
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineDestination determineDestination, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker)
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
             this.storeSubscriptions = storeSubscriptions;
-            this.determineDestination = determineDestination;
+            this.determineMessageOwnership = determineMessageOwnership;
             this.serializeMessages = serializeMessages;
             this.storeSagaData = storeSagaData;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.errorTracker = errorTracker;
 
-            batch = new RebusBatchOperations(determineDestination, storeSubscriptions, this);
+            batch = new RebusBatchOperations(determineMessageOwnership, storeSubscriptions, this);
             routing = new RebusRouting(this);
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
@@ -117,7 +117,7 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Sends the specified message to the destination as specified by the currently
-        /// used implementation of <see cref="IDetermineDestination"/>.
+        /// used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         public void Send<TCommand>(TCommand message)
         {
@@ -224,7 +224,7 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
-        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         public void Subscribe<TEvent>()
         {
@@ -243,7 +243,7 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
-        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         public void Unsubscribe<TEvent>()
         {
@@ -585,7 +585,7 @@ element)"));
 
         string GetMessageOwnerEndpointFor(Type messageType)
         {
-            return determineDestination.GetEndpointFor(messageType);
+            return determineMessageOwnership.GetEndpointFor(messageType);
         }
 
         void AddWorker()

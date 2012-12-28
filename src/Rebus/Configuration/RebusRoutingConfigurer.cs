@@ -3,7 +3,7 @@ using System;
 namespace Rebus.Configuration
 {
     /// <summary>
-    /// Configurer that allows for configuring which implementation of <see cref="IDetermineDestination"/> that should be used
+    /// Configurer that allows for configuring which implementation of <see cref="IDetermineMessageOwnership"/> that should be used
     /// </summary>
     public class RebusRoutingConfigurer : BaseConfigurer
     {
@@ -13,11 +13,11 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
-        /// Uses the specified implementation of <see cref="IDetermineDestination"/> to determine who owns messages
+        /// Uses the specified implementation of <see cref="IDetermineMessageOwnership"/> to determine who owns messages
         /// </summary>
-        public void Use(IDetermineDestination determineDestination)
+        public void Use(IDetermineMessageOwnership determineMessageOwnership)
         {
-            Backbone.DetermineDestination = determineDestination;
+            Backbone.DetermineMessageOwnership = determineMessageOwnership;
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Rebus.Configuration
         /// </summary>
         public void FromNServiceBusConfiguration()
         {
-            Use(new DetermineDestinationFromNServiceBusEndpointMappings(new StandardAppConfigLoader()));
+            Use(new DetermineMessageOwnershipFromNServiceBusEndpointMappings(new StandardAppConfigLoader()));
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Rebus.Configuration
         /// </summary>
         public void FromRebusConfigurationSection()
         {
-            Use(new DetermineDestinationFromRebusConfigurationSection());
+            Use(new DetermineMessageOwnershipFromRebusConfigurationSection());
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Rebus.Configuration
         /// </summary>
         public void FromRebusConfigurationSectionWithFilter(Func<Type, bool> typeFilter)
         {
-            Use(new DetermineDestinationFromRebusConfigurationSection(typeFilter));
+            Use(new DetermineMessageOwnershipFromRebusConfigurationSection(typeFilter));
         }
     }
 }

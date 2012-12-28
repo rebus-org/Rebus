@@ -12,7 +12,7 @@ namespace Rebus
     {
         /// <summary>
         /// Sends the specified message to the destination as specified by the currently
-        /// used implementation of <see cref="IDetermineDestination"/>.
+        /// used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         void Send<TCommand>(TCommand message);
 
@@ -30,13 +30,13 @@ namespace Rebus
 
         /// <summary>
         /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
-        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         void Subscribe<TEvent>();
 
         /// <summary>
         /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
-        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         void Unsubscribe<TEvent>();
 

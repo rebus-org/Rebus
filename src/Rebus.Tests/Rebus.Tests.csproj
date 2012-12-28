@@ -148,8 +148,8 @@
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
     <Compile Include="Configuration\TestBuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
-    <Compile Include="Configuration\TestDetermineDestinationFromRebusConfigurationSection.cs" />
-    <Compile Include="Configuration\TestDetermineDestinationFromNServiceBusEndpointMappings.cs" />
+    <Compile Include="Configuration\TestDetermineMessageOwnershipFromRebusConfigurationSection.cs" />
+    <Compile Include="Configuration\TestDetermineMessageOwnershipFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\TestRearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />

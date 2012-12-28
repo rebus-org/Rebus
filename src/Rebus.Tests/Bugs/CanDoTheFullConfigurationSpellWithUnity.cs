@@ -28,7 +28,7 @@ namespace Rebus.Tests.Bugs
         public void DoesNotThrow()
         {
             Configure.With(new UnityContainerAdapter(unityContainer))
-                .DetermineEndpoints(d => d.Use(Mock<IDetermineDestination>()))
+                .MessageOwnership(d => d.Use(Mock<IDetermineMessageOwnership>()))
                 .Transport(t =>
                     {
                         t.UseReceiver(Mock<IReceiveMessages>());

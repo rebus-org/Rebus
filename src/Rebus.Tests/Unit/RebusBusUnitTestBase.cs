@@ -8,7 +8,7 @@ namespace Rebus.Tests.Unit
         protected RebusBus bus;
         protected MessageReceiverForTesting receiveMessages;
         protected HandlerActivatorForTesting activateHandlers;
-        protected IDetermineDestination determineDestination;
+        protected IDetermineMessageOwnership determineMessageOwnership;
         protected ISendMessages sendMessages;
         protected JsonMessageSerializer serializeMessages;
         protected IStoreSagaData storeSagaData;
@@ -18,7 +18,7 @@ namespace Rebus.Tests.Unit
         protected override void DoSetUp()
         {
             activateHandlers = new HandlerActivatorForTesting();
-            determineDestination = Mock<IDetermineDestination>();
+            determineMessageOwnership = Mock<IDetermineMessageOwnership>();
             sendMessages = Mock<ISendMessages>();
             serializeMessages = new JsonMessageSerializer();
             storeSagaData = Mock<IStoreSagaData>();
@@ -36,7 +36,7 @@ namespace Rebus.Tests.Unit
                                 receiveMessages,
                                 storeSubscriptions,
                                 storeSagaData,
-                                determineDestination, serializeMessages, inspectHandlerPipeline,
+                                determineMessageOwnership, serializeMessages, inspectHandlerPipeline,
                                 new ErrorTracker("error"));
         }
 

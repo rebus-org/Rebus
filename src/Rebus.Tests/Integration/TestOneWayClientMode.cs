@@ -13,7 +13,7 @@ namespace Rebus.Tests.Integration
 {
     [TestFixture(typeof(MsmqMessageQueueFactory))]
     [TestFixture(typeof(RabbitMqMessageQueueFactory))]
-    public class TestOneWayClientMode<TFactory> : FixtureBase, IDetermineDestination where TFactory : IMessageQueueFactory, new()
+    public class TestOneWayClientMode<TFactory> : FixtureBase, IDetermineMessageOwnership where TFactory : IMessageQueueFactory, new()
     {
         TFactory factory;
         const string ReceiverInputQueueName = "test.oneWayClientMode.receiver";
@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
             // arrange
             var bus = Configure.With(CreateAdapter())
                 .Transport(t => factory.ConfigureOneWayClientMode(t))
-                .DetermineEndpoints(d => d.Use(this))
+                .MessageOwnership(d => d.Use(this))
                 .CreateBus()
                 .Start();
 
@@ -55,7 +55,7 @@ namespace Rebus.Tests.Integration
             // arrange
             var bus = Configure.With(CreateAdapter())
                 .Transport(t => factory.ConfigureOneWayClientMode(t))
-                .DetermineEndpoints(d => d.Use(this))
+                .MessageOwnership(d => d.Use(this))
                 .CreateBus()
                 .Start();
 
@@ -77,7 +77,7 @@ namespace Rebus.Tests.Integration
 
             var bus = Configure.With(CreateAdapter())
                 .Transport(t => factory.ConfigureOneWayClientMode(t))
-                .DetermineEndpoints(d => d.Use(this))
+                .MessageOwnership(d => d.Use(this))
                 .CreateBus()
                 .Start();
 

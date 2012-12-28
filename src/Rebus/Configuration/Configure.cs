@@ -7,7 +7,7 @@
     /// {
     ///     Configure.With(adapter)
     ///         .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-    ///         .DetermineDestination(d => d.FromRebusConfigurationSection())
+    ///         .determineMessageOwnership(d => d.FromRebusConfigurationSection())
     ///         .CreateBus()
     ///         .Start();
     /// 

@@ -6,13 +6,13 @@ namespace Rebus.Bus
 {
     class RebusBatchOperations : IRebusBatchOperations
     {
-        readonly IDetermineDestination determineDestination;
+        readonly IDetermineMessageOwnership determineMessageOwnership;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly RebusBus bus;
 
-        public RebusBatchOperations(IDetermineDestination determineDestination, IStoreSubscriptions storeSubscriptions, RebusBus bus)
+        public RebusBatchOperations(IDetermineMessageOwnership determineMessageOwnership, IStoreSubscriptions storeSubscriptions, RebusBus bus)
         {
-            this.determineDestination = determineDestination;
+            this.determineMessageOwnership = determineMessageOwnership;
             this.storeSubscriptions = storeSubscriptions;
             this.bus = bus;
         }
@@ -75,7 +75,7 @@ namespace Rebus.Bus
         {
             var dict = new Dictionary<string, List<object>>();
             var endpointsByType = messages.Select(m => m.GetType()).Distinct()
-                .Select(t => new KeyValuePair<Type, string>(t, determineDestination.GetEndpointFor(t) ?? ""))
+                .Select(t => new KeyValuePair<Type, string>(t, determineMessageOwnership.GetEndpointFor(t) ?? ""))
                 .ToDictionary(d => d.Key, d => d.Value);
 
             foreach (var message in messages)

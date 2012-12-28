@@ -11,7 +11,7 @@ using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
-    public abstract class RabbitMqFixtureBase : IDetermineDestination
+    public abstract class RabbitMqFixtureBase : IDetermineMessageOwnership
     {
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
