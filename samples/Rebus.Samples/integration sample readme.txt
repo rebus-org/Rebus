@@ -7,3 +7,10 @@ make our lives miserable.
 
 Hiding it behind a wall of asynchronous reliable messaging with retries is
 just infinitely useful in scanrios like this.
+
+In order to run this sample, make the following projects be startup projects:
+
+	IntegrationSample.Client
+	IntegrationSample.IntegrationService
+	IntegrationSample.ExternalWebService
+

@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Timers;
-using Castle.MicroKernel.Registration;
-using Castle.Windsor;
 using Rebus;
-using Rebus.Castle.Windsor;
 using Rebus.Configuration;
 using Rebus.Transports.Msmq;
 using Rebus.Logging;
@@ -12,33 +9,31 @@ namespace TimePrinter
 {
     class Program
     {
-        static WindsorContainer container;
-
         static void Main()
         {
-            container = new WindsorContainer();
+            using (var adapter = new BuiltinContainerAdapter())
+            using (var timer = new Timer())
+            {
+                adapter.Register(() => new PrintDateTime());
 
-            container.Register(Component.For<IHandleMessages<DateTime>>().ImplementedBy<PrintDateTime>());
+                var bus = Configure.With(adapter)
+                                   .Logging(l => l.None())
+                                   .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
+                                   .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                                   .CreateBus()
+                                   .Start();
 
-            var bus = Configure.With(new WindsorContainerAdapter(container))
-                .Logging(l => l.None())
-                .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-                .DetermineEndpoints(d => d.FromRebusConfigurationSection())
-                .CreateBus().Start();
+                timer.Elapsed += delegate { bus.Send(DateTime.Now); };
+                timer.Interval = 1000;
+                timer.Start();
 
-            var timer = new Timer();
-            timer.Elapsed += delegate { bus.Send(DateTime.Now); };
-            timer.Interval = 1000;
-            timer.Start();
-
-            Console.WriteLine("Press enter to quit");
-            Console.ReadLine();
-
-            container.Dispose();
+                Console.WriteLine("Press enter to quit");
+                Console.ReadLine();
+            }
         }
     }
 
-    public class PrintDateTime : IHandleMessages<DateTime>
+    class PrintDateTime : IHandleMessages<DateTime>
     {
         public void Handle(DateTime currentDateTime)
         {
