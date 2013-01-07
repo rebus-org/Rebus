@@ -14,19 +14,28 @@ namespace Rebus.Testing
     /// </summary>
     public class SagaFixture<TSagaData> where TSagaData : class, ISagaData, new()
     {
-        readonly Saga<TSagaData> saga;
         readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
         readonly Dispatcher dispatcher;
         readonly SagaFixtureSagaPersister<TSagaData> persister;
 
         object currentLogicalMessage;
+        TSagaData latestSagaData;
 
         /// <summary>
-        /// Constructs the fixture with the given saga and the given saga data initially available. Saga data
+        /// Constructs the fixture with the given saga handler and the given saga data initially available. Saga data
         /// instances are cloned.
         /// </summary>
         [DebuggerStepThrough]
         public SagaFixture(Saga<TSagaData> saga)
+            : this(new[] { saga })
+        {
+        }
+
+        /// <summary>
+        /// Constructs the fixture with the given saga handlers and the given saga data initially available. Saga data
+        /// instances are cloned.
+        /// </summary>
+        public SagaFixture(IEnumerable<Saga<TSagaData>> sagaInstances)
         {
             persister = new SagaFixtureSagaPersister<TSagaData>(deletedSagaData);
 
@@ -36,17 +45,15 @@ namespace Rebus.Testing
             persister.Deleted += RaiseMarkedAsComplete;
 
             dispatcher = new Dispatcher(persister,
-                                        new SagaFixtureHandlerActivator(saga), new InMemorySubscriptionStorage(),
+                                        new SagaFixtureHandlerActivator(sagaInstances), new InMemorySubscriptionStorage(),
                                         new TrivialPipelineInspector(), null);
-
-            this.saga = saga;
         }
 
         void RaiseMarkedAsComplete(ISagaData sagaData)
         {
             if (MarkedAsComplete != null)
             {
-                MarkedAsComplete(currentLogicalMessage, (TSagaData) sagaData);
+                MarkedAsComplete(currentLogicalMessage, (TSagaData)sagaData);
             }
         }
 
@@ -60,6 +67,8 @@ namespace Rebus.Testing
 
         void RaiseCorrelatedWithExistingSagaData(ISagaData sagaData)
         {
+            latestSagaData = (TSagaData)sagaData;
+
             if (CorrelatedWithExistingSagaData != null)
             {
                 CorrelatedWithExistingSagaData(currentLogicalMessage, (TSagaData)sagaData);
@@ -76,19 +85,16 @@ namespace Rebus.Testing
 
         class SagaFixtureHandlerActivator : IActivateHandlers
         {
-            readonly Saga sagaInstance;
+            readonly IEnumerable<Saga> sagaInstance;
 
-            public SagaFixtureHandlerActivator(Saga sagaInstance)
+            public SagaFixtureHandlerActivator(IEnumerable<Saga<TSagaData>> sagaInstance)
             {
                 this.sagaInstance = sagaInstance;
             }
 
             public IEnumerable<IHandleMessages<TMessage>> GetHandlerInstancesFor<TMessage>()
             {
-                if (sagaInstance is IHandleMessages<TMessage>)
-                    return new[] { (IHandleMessages<TMessage>)sagaInstance };
-
-                return new IHandleMessages<TMessage>[0];
+                return sagaInstance.OfType<IHandleMessages<TMessage>>();
             }
 
             public void Release(IEnumerable handlerInstances)
@@ -121,7 +127,7 @@ namespace Rebus.Testing
         /// Delegate type that can be used to define events of when an incoming message gives rise to a new instance of saga data
         /// </summary>
         public delegate void CreatedNewSagaDataEventHandler<in T>(object message, T sagaData);
-        
+
         /// <summary>
         /// Delegate type that can be used to detect when an incoming message gives rise to a saga data being marked as complete
         /// </summary>
@@ -191,7 +197,7 @@ namespace Rebus.Testing
                     exception = exception.InnerException;
 
                 var exceptionToRethrow = exception.InnerException;
-                
+
                 exceptionToRethrow.PreserveStackTrace();
 
                 if (Exception != null)
@@ -247,7 +253,7 @@ namespace Rebus.Testing
         /// </summary>
         public TSagaData Data
         {
-            get { return saga.Data; }
+            get { return latestSagaData; }
         }
 
         class SagaFixtureSagaPersister<TSagaDataToStore> : IStoreSagaData where TSagaDataToStore : ISagaData
@@ -275,7 +281,7 @@ namespace Rebus.Testing
             public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
             {
                 innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
-                
+
                 if (CreatedNew != null)
                 {
                     CreatedNew(sagaData);
@@ -309,7 +315,7 @@ namespace Rebus.Testing
                         Correlated(result);
                     }
                 }
-                else 
+                else
                 {
                     if (CouldNotCorrelate != null)
                     {
@@ -322,7 +328,7 @@ namespace Rebus.Testing
             public event Action<ISagaData> CreatedNew;
 
             public event Action<ISagaData> Correlated;
-            
+
             public event Action<ISagaData> Deleted;
 
             public event Action CouldNotCorrelate;

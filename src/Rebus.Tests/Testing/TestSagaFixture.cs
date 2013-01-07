@@ -26,7 +26,7 @@ namespace Rebus.Tests.Testing
             fixture.CouldNotCorrelate += message => Console.WriteLine("Could not correlate!");
             fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new!");
             fixture.Exception += (message, exception) => Console.WriteLine("Exception!");
-         
+
             // act
             fixture.Handle(new InitiatingMessage { CorrelationId = justTheSameFrigginId });
             fixture.Handle(new CompletionMessage { CorrelationId = justTheSameFrigginId });
@@ -42,7 +42,7 @@ namespace Rebus.Tests.Testing
         {
             public string CorrelationId { get; set; }
         }
-        
+
         class CompletionMessage
         {
             public string CorrelationId { get; set; }
