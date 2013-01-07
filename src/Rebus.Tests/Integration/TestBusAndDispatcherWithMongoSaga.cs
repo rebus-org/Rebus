@@ -6,6 +6,7 @@ using Rebus.MongoDb;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
+using Rebus.Timeout;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
@@ -34,7 +35,8 @@ namespace Rebus.Tests.Integration
                                null,
                                new JsonMessageSerializer(),
                                new TrivialPipelineInspector(),
-                               new ErrorTracker("error"))
+                               new ErrorTracker("error"),
+                               null)
                 .Start(1);
         }
 

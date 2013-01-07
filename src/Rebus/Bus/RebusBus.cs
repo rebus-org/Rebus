@@ -9,6 +9,7 @@ using System.Linq;
 using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
+using Rebus.Timeout;
 using Rebus.Transports;
 
 namespace Rebus.Bus
@@ -35,6 +36,7 @@ namespace Rebus.Bus
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly List<Worker> workers = new List<Worker>();
         readonly IErrorTracker errorTracker;
+        readonly IStoreTimeouts storeTimeouts;
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
         readonly RebusBatchOperations batch;
@@ -58,7 +60,7 @@ namespace Rebus.Bus
         /// <param name="serializeMessages">Will be used to serialize and deserialize transport messages.</param>
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker)
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -69,6 +71,7 @@ namespace Rebus.Bus
             this.storeSagaData = storeSagaData;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.errorTracker = errorTracker;
+            this.storeTimeouts = storeTimeouts;
 
             batch = new RebusBatchOperations(determineMessageOwnership, storeSubscriptions, this);
             routing = new RebusRouting(this);
@@ -80,10 +83,19 @@ namespace Rebus.Bus
             timeoutManagerAddress = GetTimeoutManagerAddress();
         }
 
-        static string GetTimeoutManagerAddress()
+        string GetTimeoutManagerAddress()
         {
-            return RebusConfigurationSection
-                .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
+            if (storeTimeouts == null)
+            {
+                var timeoutManagerEndpointAddress = RebusConfigurationSection
+                    .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
+
+                log.Info("Using timeout manager with input queue {0}", timeoutManagerEndpointAddress);
+                return timeoutManagerEndpointAddress;
+            }
+
+            log.Info("Using local timeout manager");
+            return receiveMessages.InputQueue;
         }
 
         /// <summary>
@@ -179,7 +191,7 @@ namespace Rebus.Bus
 
                 if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
                 {
-                    var sagaContext = (SagaContext) messageContext.Items[SagaContext.SagaContextItemKey];
+                    var sagaContext = (SagaContext)messageContext.Items[SagaContext.SagaContextItemKey];
 
                     AttachHeader(message, Headers.AutoCorrelationSagaId, sagaContext.Id.ToString());
                 }
@@ -294,20 +306,17 @@ namespace Rebus.Bus
             if (MessageContext.HasCurrent)
             {
                 var messageContext = MessageContext.GetCurrent();
-                
+
                 // if we're in a saga context, be nice and set the saga ID automatically
                 if (messageContext.Items.ContainsKey(SagaContext.SagaContextItemKey))
                 {
-                    var sagaContext = ((SagaContext) messageContext.Items[SagaContext.SagaContextItemKey]);
+                    var sagaContext = ((SagaContext)messageContext.Items[SagaContext.SagaContextItemKey]);
                     timeoutRequest.SagaId = sagaContext.Id;
                 }
             }
 
-            var messages = new List<object>
-                               {
-                                   timeoutRequest
-                               };
-
+            var messages = new List<object> { timeoutRequest };
+            
             InternalSend(timeoutManagerAddress, messages);
         }
 
@@ -546,12 +555,13 @@ element)"));
             }
             catch (Exception e)
             {
-                log.Error(e, "Wanted to move message with id {0} to the error queue, but an exception occurred!", receivedTransportMessage.Id);
+                log.Error(e, "An error occurred while attempting to move message with id {0} to the error queue '{1}'",
+                          receivedTransportMessage.Id, errorTracker.ErrorQueueAddress);
 
                 // what to do? we need to throw again, or the message will not be rolled back and will thus be lost
                 // - but we want to avoid thrashing, so we just log the badness and relax a little bit - that's
                 // probably the best we can do
-                Thread.Sleep(300);
+                Thread.Sleep(TimeSpan.FromSeconds(1));
 
                 throw;
             }
@@ -601,7 +611,8 @@ element)"));
                                         inspectHandlerPipeline,
                                         string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
                                         new DeferredMessageReDispatcher(this),
-                                        new IncomingMessageMutatorPipeline(Events));
+                                        new IncomingMessageMutatorPipeline(Events),
+                                        storeTimeouts);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

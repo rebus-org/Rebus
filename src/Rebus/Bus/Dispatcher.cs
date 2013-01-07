@@ -6,6 +6,7 @@ using Ponder;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
+using Rebus.Timeout;
 
 namespace Rebus.Bus
 {
@@ -22,11 +23,12 @@ namespace Rebus.Bus
         readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
         readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
-        readonly IHandleDeferredMessage handleDeferredMessage;
         readonly IStoreSagaData storeSagaData;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
         readonly string sagaDataIdPropertyName;
+        readonly TimeoutRequestHandler timeoutRequestHandler;
+        readonly TimeoutReplyHandler timeoutReplyHandler;
 
         static Dispatcher()
         {
@@ -42,14 +44,20 @@ namespace Rebus.Bus
                           IActivateHandlers activateHandlers,
                           IStoreSubscriptions storeSubscriptions,
                           IInspectHandlerPipeline inspectHandlerPipeline,
-                          IHandleDeferredMessage handleDeferredMessage)
+                          IHandleDeferredMessage handleDeferredMessage,
+                          IStoreTimeouts storeTimeouts)
         {
             this.storeSagaData = storeSagaData;
             this.activateHandlers = activateHandlers;
             this.storeSubscriptions = storeSubscriptions;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
-            this.handleDeferredMessage = handleDeferredMessage;
             sagaDataIdPropertyName = Reflect.Path<ISagaData>(s => s.Id);
+
+            if (storeTimeouts != null)
+            {
+                timeoutRequestHandler = new TimeoutRequestHandler(storeTimeouts, handleDeferredMessage);
+            }
+            timeoutReplyHandler = new TimeoutReplyHandler(handleDeferredMessage);
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
@@ -187,12 +195,23 @@ namespace Rebus.Bus
         {
             if (typeof(T) == typeof(SubscriptionMessage))
             {
-                return new[] { (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions) };
+                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
+            }
+
+            if (typeof(T) == typeof(TimeoutRequest))
+            {
+                if (timeoutRequestHandler == null)
+                {
+                    throw new InvalidOperationException(string.Format(@"Received a TimeoutRequest, but there is not configured implementation of IStoreTimeouts in this Rebus endpoint.
+
+This most likely indicates that you have configured this Rebus service to use an external timeout manager, but accidentally configured the timeout manager endpoint address to be the same as this endpoint's input queue."));
+                }
+                return new[] {(IHandleMessages<T>) timeoutRequestHandler};
             }
 
             if (typeof(T) == typeof(TimeoutReply))
             {
-                return new[] { (IHandleMessages<T>)new TimeoutReplyHandler(handleDeferredMessage) };
+                return new[] {(IHandleMessages<T>) timeoutReplyHandler};
             }
 
             return new IHandleMessages<T>[0];

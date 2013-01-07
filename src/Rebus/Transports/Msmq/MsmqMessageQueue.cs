@@ -78,7 +78,7 @@ namespace Rebus.Transports.Msmq
 
             var tokens = queueName.Split('@');
 
-            if (tokens.Length == 2 && tokens[1].In(".", "localhost", "127.0.0.1")) return;
+            if (tokens.Length == 2 && tokens[1].In(StringComparison.CurrentCultureIgnoreCase, ".", "localhost", "127.0.0.1")) return;
 
             throw new ArgumentException(string.Format(@"Attempted to use {0} as an input queue, but the input queue must always be local!
 

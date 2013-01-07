@@ -30,7 +30,8 @@ namespace Rebus.Tests.Unit
                                 new InMemorySagaPersister(),
                                 new TrivialPipelineInspector(), "Just some test worker",
                                 new DeferredMessageHandlerForTesting(),
-                                new IncomingMessageMutatorPipelineForTesting());
+                                new IncomingMessageMutatorPipelineForTesting(),
+                                null);
         }
 
         [Test]

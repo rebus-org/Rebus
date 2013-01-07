@@ -125,13 +125,20 @@ create its queues automatically.",
 
         public static void EnsureMessageQueueExists(string path)
         {
-            if (MessageQueue.Exists(path)) return;
+            try
+            {
+                if (MessageQueue.Exists(path)) return;
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(
+                    string.Format("An exception occurred while checking whether the queue with the path {0} exists",
+                                  path), e);
+            }
 
             log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
-            var administratorAccountName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
-                .Translate(typeof(NTAccount))
-                .ToString();
+            var administratorAccountName = GetAdministratorAccountName();
 
             try
             {
@@ -146,7 +153,7 @@ create its queues automatically.",
             catch (Exception e)
             {
                 log.Error(e,
-                          "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
+                          "Could not create message queue {0} and grant FullControl permissions to {1} - will attempt to delete the queue again to avoid dangling queues with broken access rights...",
                           path,
                           administratorAccountName);
                 try
@@ -157,6 +164,25 @@ create its queues automatically.",
                 {
                     log.Error(ex, "Could not delete queue {0}", path);
                 }
+
+                throw;
+            }
+        }
+
+        static string GetAdministratorAccountName()
+        {
+            try
+            {
+                return new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
+                    .Translate(typeof (NTAccount))
+                    .ToString();
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(
+                    string.Format(
+                        "An error occurred while attempting to figure out the name of the local administrators group!"),
+                    e);
             }
         }
     }

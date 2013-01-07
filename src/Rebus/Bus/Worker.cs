@@ -5,6 +5,7 @@ using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
 using System.Linq;
+using Rebus.Timeout;
 
 namespace Rebus.Bus
 {
@@ -58,13 +59,14 @@ namespace Rebus.Bus
             IInspectHandlerPipeline inspectHandlerPipeline,
             string workerThreadName,
             IHandleDeferredMessage handleDeferredMessage,
-            IMutateIncomingMessages mutateIncomingMessages)
+            IMutateIncomingMessages mutateIncomingMessages,
+            IStoreTimeouts storeTimeouts)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.mutateIncomingMessages = mutateIncomingMessages;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };

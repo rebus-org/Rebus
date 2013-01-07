@@ -1,4 +1,5 @@
 using System;
+using Rebus.Messages;
 using Rebus.Shared;
 
 namespace Rebus.Bus
@@ -12,7 +13,7 @@ namespace Rebus.Bus
             this.bus = bus;
         }
 
-        public void Dispatch(object deferredMessage, Guid sagaId)
+        public void DispatchLocal(object deferredMessage, Guid sagaId)
         {
             if (sagaId != Guid.Empty)
             {
@@ -20,6 +21,16 @@ namespace Rebus.Bus
             }
 
             bus.SendLocal(deferredMessage);
+        }
+
+        public void SendReply(string recipient, TimeoutReply reply, Guid sagaId)
+        {
+            if (sagaId != Guid.Empty)
+            {
+                bus.AttachHeader(reply, Headers.AutoCorrelationSagaId, sagaId.ToString());
+            }
+
+            bus.Advanced.Routing.Send(recipient, reply);
         }
     }
 }

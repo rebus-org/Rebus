@@ -2,34 +2,38 @@
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Persistence.InMemory;
-using Rebus.Timeout;
+using Rebus.Tests.Integration.Factories;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture, Category(TestCategories.Integration)]
-    public class TestMessageDeferral : RebusBusMsmqIntegrationTestBase
+    [TestFixture(typeof(InternalTimeoutManagerFactory), typeof(MsmqBusFactory)), Category(TestCategories.Integration)]
+    [TestFixture(typeof(ExternalTimeoutManagerFactory), typeof(MsmqBusFactory)), Category(TestCategories.Integration)]
+    public class TestMessageDeferral<TTimeoutManagerFactory, TBusFactory> : RebusBusMsmqIntegrationTestBase
+        where TTimeoutManagerFactory : ITimeoutManagerFactory, new()
+        where TBusFactory : IBusFactory, new()
     {
-        RebusBus bus;
-        TimeoutService timeoutService;
+        IBus bus;
         HandlerActivatorForTesting handlerActivator;
+        TTimeoutManagerFactory timeoutManagerFactory;
 
         protected override void DoSetUp()
         {
+            timeoutManagerFactory = new TTimeoutManagerFactory();
+            timeoutManagerFactory.Initialize(new TBusFactory());
+
             handlerActivator = new HandlerActivatorForTesting();
-            bus = CreateBus("test.deferral", handlerActivator).Start(1);
-            timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
-            timeoutService.Start();
+            bus = timeoutManagerFactory.CreateBus("test.deferral", handlerActivator);
 
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
+
+            timeoutManagerFactory.StartAll();
         }
 
         protected override void DoTearDown()
         {
-            timeoutService.Stop();
+            timeoutManagerFactory.CleanUp();
         }
 
         [Test]
@@ -43,8 +47,8 @@ namespace Rebus.Tests.Integration
             var acceptedTolerance = 2.Seconds();
 
             // act
-            bus.Defer(10.Seconds(), new MessageWithText {Text = "deferred 10 seconds"});
-            bus.Defer(5.Seconds(), new MessageWithText {Text = "deferred 5 seconds"});
+            bus.Defer(10.Seconds(), new MessageWithText { Text = "deferred 10 seconds" });
+            bus.Defer(5.Seconds(), new MessageWithText { Text = "deferred 5 seconds" });
 
             Thread.Sleep(10.Seconds() + acceptedTolerance + acceptedTolerance);
 
@@ -59,11 +63,6 @@ namespace Rebus.Tests.Integration
             messages[1].Item2.ElapsedSince(timeOfDeferral).ShouldBeLessThan(10.Seconds() + acceptedTolerance);
         }
 
-        class MessageWithText
-        {
-            public string Text { get; set; }
-        }
-
         [Test, Ignore("takes a while")]
         public void WorksReliablyWithMoreTimeouts()
         {
@@ -76,27 +75,32 @@ namespace Rebus.Tests.Integration
 
             // act
             500.Times(() =>
-                          {
-                              var delay = (random.Next(20) + 10).Seconds();
-                              var message = new MessageWithExpectedReturnTime {ExpectedReturnTime = DateTime.UtcNow + delay};
-                              bus.Defer(delay, message);
-                          });
+            {
+                var delay = (random.Next(20) + 10).Seconds();
+                var message = new MessageWithExpectedReturnTime { ExpectedReturnTime = DateTime.UtcNow + delay };
+                bus.Defer(delay, message);
+            });
 
             Thread.Sleep(30.Seconds() + acceptedTolerance + acceptedTolerance);
 
             // assert
             messages.Count.ShouldBe(500);
 
-            foreach(var messageTimes in messages)
+            foreach (var messageTimes in messages)
             {
                 messageTimes.Item2.ShouldBeGreaterThan(messageTimes.Item1 - acceptedTolerance);
                 messageTimes.Item2.ShouldBeLessThan(messageTimes.Item1 + acceptedTolerance);
             }
         }
+    }
 
-        class MessageWithExpectedReturnTime
-        {
-            public DateTime ExpectedReturnTime { get; set; }
-        }
+    public class MessageWithExpectedReturnTime
+    {
+        public DateTime ExpectedReturnTime { get; set; }
+    }
+
+    public class MessageWithText
+    {
+        public string Text { get; set; }
     }
 }

@@ -7,6 +7,7 @@ using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
+using Rebus.Timeout;
 using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit
@@ -68,7 +69,8 @@ namespace Rebus.Tests.Transports.Rabbit
             var bus = new RebusBus(handlerActivator, rabbitMqMessageQueue, rabbitMqMessageQueue,
                                    new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker(inputQueueName + ".error"));
+                                   new ErrorTracker(inputQueueName + ".error"),
+                                   null);
 
             toDispose.Add(bus);
             toDispose.Add(rabbitMqMessageQueue);

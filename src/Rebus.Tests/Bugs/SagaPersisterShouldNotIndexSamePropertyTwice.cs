@@ -21,7 +21,8 @@ namespace Rebus.Tests.Bugs
                                         activator,
                                         new InMemorySubscriptionStorage(),
                                         new RearrangeHandlersPipelineInspector(),
-                                        new DeferredMessageHandlerForTesting());
+                                        new DeferredMessageHandlerForTesting(),
+                                        null);
         }
 
         [Test]

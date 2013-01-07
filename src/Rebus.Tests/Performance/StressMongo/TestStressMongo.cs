@@ -259,7 +259,8 @@ namespace Rebus.Tests.Performance.StressMongo
                                    new MongoDbSubscriptionStorage(ConnectionString, SubscriptionsCollectionName),
                                    sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker("error"));
+                                   new ErrorTracker("error"),
+                                   null);
 
             stuffToDispose.Add(bus);
 

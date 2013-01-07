@@ -10,6 +10,7 @@ namespace Rebus.Bus
     /// </summary>
     interface IHandleDeferredMessage
     {
-        void Dispatch(object deferredMessage, Guid sagaId);
+        void DispatchLocal(object deferredMessage, Guid sagaId);
+        void SendReply(string recipient, TimeoutReply reply, Guid sagaId);
     }
 }

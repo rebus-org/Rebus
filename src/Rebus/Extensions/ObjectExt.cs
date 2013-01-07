@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Rebus.Extensions
@@ -13,6 +14,11 @@ namespace Rebus.Extensions
         public static bool In<T>(this T element, params T[] elements)
         {
             return elements.Any(e => e.Equals(element));
+        }
+
+        public static bool In(this string element, StringComparison comparisonType, params string[] elements)
+        {
+            return elements.Any(e => e.Equals(element, comparisonType));
         }
     }
 }

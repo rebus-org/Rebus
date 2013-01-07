@@ -37,7 +37,7 @@ namespace Rebus.Bus
 
             log.Info("Received timeout reply - sending deferred message to self.");
 
-            handleDeferredMessage.Dispatch(deferredMessage, message.SagaId);
+            handleDeferredMessage.DispatchLocal(deferredMessage, message.SagaId);
         }
 
         object Deserialize(string customData)

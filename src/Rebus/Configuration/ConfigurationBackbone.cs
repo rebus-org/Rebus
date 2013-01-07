@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Timeout;
 
 namespace Rebus.Configuration
 {
@@ -74,6 +75,11 @@ namespace Rebus.Configuration
         /// Determines how Rebus may filter the handler pipeline before the handlers are executed
         /// </summary>
         public IInspectHandlerPipeline InspectHandlerPipeline { get; set; }
+
+        /// <summary>
+        /// Determines how Rebus persists timeouts
+        /// </summary>
+        public IStoreTimeouts StoreTimeouts { get; set; }
 
         /// <summary>
         /// Determines how Rebus and Rebus components do their logging

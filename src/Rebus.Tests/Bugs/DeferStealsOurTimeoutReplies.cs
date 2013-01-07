@@ -20,7 +20,8 @@ namespace Rebus.Tests.Bugs
                                         handlerActivator,
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
-                                        handleDeferredMessage);
+                                        handleDeferredMessage,
+                                        null);
 
             dispatcher.Dispatch(new TimeoutReply
             {
@@ -51,9 +52,14 @@ namespace Rebus.Tests.Bugs
                 get { return dispatchedMessages; }
             }
 
-            public void Dispatch(object deferredMessage, Guid sagaId)
+            public void DispatchLocal(object deferredMessage, Guid sagaId)
             {
                 dispatchedMessages.Add(deferredMessage);
+            }
+
+            public void SendReply(string recipient, TimeoutReply reply, Guid sagaId)
+            {
+                
             }
         }
 

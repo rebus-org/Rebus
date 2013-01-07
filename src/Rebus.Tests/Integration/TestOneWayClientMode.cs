@@ -7,6 +7,7 @@ using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Performance.StressMongo.Factories;
+using Rebus.Timeout;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
@@ -131,7 +132,8 @@ namespace Rebus.Tests.Integration
             var bus = new RebusBus(handlerActivator, queue.Item1, queue.Item2, new InMemorySubscriptionStorage(),
                                    new InMemorySagaPersister(),
                                    this, new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker(inputQueueName + ".error"));
+                                   new ErrorTracker(inputQueueName + ".error"),
+                                   null);
             disposables.Add(bus);
             bus.Start();
         }
