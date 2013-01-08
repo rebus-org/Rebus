@@ -71,7 +71,7 @@ namespace Rebus.Tests.Integration
             var messages = new List<Tuple<DateTime, DateTime>>();
             handlerActivator.Handle<MessageWithExpectedReturnTime>(m => messages.Add(new Tuple<DateTime, DateTime>(m.ExpectedReturnTime, DateTime.UtcNow)));
 
-            var acceptedTolerance = 2.Seconds();
+            var acceptedTolerance = 4.Seconds();
             var random = new Random();
 
             // act
