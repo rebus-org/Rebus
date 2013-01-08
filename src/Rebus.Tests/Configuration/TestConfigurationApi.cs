@@ -20,11 +20,15 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
-        public void InvokingTheSameConfigurerTwiceYeildsAnException()
+        public void InvokingTheSameConfigurerTwiceYieldsAnException()
         {
             Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
                                                             .MessageOwnership(d => d.FromRebusConfigurationSection())
                                                             .MessageOwnership(d => d.FromRebusConfigurationSection()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                                 .Timeouts(d => d.StoreInMemory())
+                                                                 .Timeouts(d => d.StoreInMemory()));
 
             Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
                                                             .Transport(d => d.UseMsmqInOneWayClientMode())
@@ -55,6 +59,28 @@ namespace Rebus.Tests.Configuration
                                                             .Decorators(d => d.AddDecoration(b => {})));
 
 
+        }
+
+        [Test]
+        public void CanConfigureTimeoutManager_External()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var configurer = Configure.With(adapter)
+                                      .Timeouts(t => t.UseExternalTimeoutManager());
+
+            configurer.Backbone.StoreTimeouts.ShouldBe(null);
+        }
+
+        [Test]
+        public void CanConfigureTimeoutManager_InternalWithAppConfig()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var configurer = Configure.With(adapter)
+                                      .Timeouts(t => t.StoreInSqlServer("someConnectionString", "timeouts"));
+
+            configurer.Backbone.StoreTimeouts.ShouldBeTypeOf<SqlServerTimeoutStorage>();
         }
 
         [Test]

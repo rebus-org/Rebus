@@ -10,6 +10,7 @@ namespace Rebus.Tests.Integration
 {
     [TestFixture(typeof(InternalTimeoutManagerFactory), typeof(MsmqBusFactory)), Category(TestCategories.Integration)]
     [TestFixture(typeof(ExternalTimeoutManagerFactory), typeof(MsmqBusFactory)), Category(TestCategories.Integration)]
+    [TestFixture(typeof(InternalTimeoutManagerFactory), typeof(RabbitBusFactory)), Category(TestCategories.Integration)]
     public class TestMessageDeferral<TTimeoutManagerFactory, TBusFactory> : RebusBusMsmqIntegrationTestBase
         where TTimeoutManagerFactory : ITimeoutManagerFactory, new()
         where TBusFactory : IBusFactory, new()
@@ -63,7 +64,7 @@ namespace Rebus.Tests.Integration
             messages[1].Item2.ElapsedSince(timeOfDeferral).ShouldBeLessThan(10.Seconds() + acceptedTolerance);
         }
 
-        [Test, Ignore("takes a while")]
+        [Test]
         public void WorksReliablyWithMoreTimeouts()
         {
             // arrange

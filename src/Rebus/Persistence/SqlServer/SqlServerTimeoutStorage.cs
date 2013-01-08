@@ -53,7 +53,7 @@ namespace Rebus.Persistence.SqlServer
                                 new Tuple<string, object>("reply_to", newTimeout.ReplyTo)
                             };
 
-                    if (newTimeout.CustomData!= null)
+                    if (newTimeout.CustomData != null)
                     {
                         parameters.Add(new Tuple<string, object>("custom_data", newTimeout.CustomData));
                     }
@@ -67,11 +67,11 @@ namespace Rebus.Persistence.SqlServer
                             string.Join(", ", parameters.Select(c => "@" + c.Item1)));
 
                     // set parameters
-                    foreach(var parameter in parameters)
+                    foreach (var parameter in parameters)
                     {
                         command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
                     }
-                    
+
                     try
                     {
                         command.ExecuteNonQuery();
@@ -108,14 +108,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         while (reader.Read())
                         {
-                            var correlationId = (string) reader["correlation_id"];
-                            var sagaId = (Guid) reader["saga_id"];
-                            var replyTo = (string) reader["reply_to"];
-                            var timeToReturn = (DateTime) reader["time_to_return"];
-                            var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
+                            var correlationId = (string)reader["correlation_id"];
+                            var sagaId = (Guid)reader["saga_id"];
+                            var replyTo = (string)reader["reply_to"];
+                            var timeToReturn = (DateTime)reader["time_to_return"];
+                            var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
                             var sqlTimeout = new DueSqlTimeout(replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
-                            
+
                             dueTimeouts.Add(sqlTimeout);
                         }
                     }
@@ -126,12 +126,54 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Creates the necessary timeout storage table if it hasn't already been created. If a table already exists
+        /// with a name that matches the desired table name, no action is performed (i.e. it is assumed that
+        /// the table already exists).
+        /// </summary>
+        public SqlServerTimeoutStorage EnsureTableIsCreated()
+        {
+            using (var connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                var tableNames = connection.GetTableNames();
+
+                if (tableNames.Contains(timeoutsTableName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return this;
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}](
+	[time_to_return] [datetime] NOT NULL,
+	[correlation_id] [nvarchar](200) NOT NULL,
+	[saga_id] [uniqueidentifier] NOT NULL,
+	[reply_to] [nvarchar](200) NOT NULL,
+	[custom_data] [nvarchar](MAX) NULL,
+ CONSTRAINT [PK_timeouts] PRIMARY KEY CLUSTERED 
+(
+	[time_to_return] ASC,
+	[correlation_id] ASC,
+	[reply_to] ASC
+)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
+) ON [PRIMARY]
+", timeoutsTableName);
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            return this;
+        }
+
         class DueSqlTimeout : DueTimeout
         {
             readonly string connectionString;
             readonly string timeoutsTableName;
 
-            public DueSqlTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName) 
+            public DueSqlTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
                 this.connectionString = connectionString;

@@ -26,6 +26,15 @@ namespace Rebus.MongoDb
         }
 
         /// <summary>
+        /// Configures Rebus to store timeouts internally in the given collection in MongoDB, in the database specified by the connection string
+        /// </summary>
+        public static void StoreInMongoDb(this RebusTimeoutsConfigurer configurer, string connectionString,
+                                          string collectionName)
+        {
+            configurer.Use(new MongoDbTimeoutStorage(connectionString, collectionName));
+        }
+
+        /// <summary>
         /// Fluent builder class that forwards calls to the configured saga persister instance
         /// </summary>
         public class MongoDbSagaPersisterConfigurationBuilder

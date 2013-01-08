@@ -1,6 +1,8 @@
 using System;
+using Ponder;
 using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 
@@ -50,6 +52,17 @@ namespace Rebus.Configuration
             AssertIsNull(Backbone.SendMessages, "Transport");
             AssertIsNull(Backbone.ReceiveMessages, "Transport");
             configure(new RebusTransportConfigurer(Backbone));
+            return this;
+        }
+
+        /// <summary>
+        /// Configures how message deferral is handlers - i.e. who will get the <see cref="TimeoutRequest"/> when
+        /// Rebus needs to defer a message to the future
+        /// </summary>
+        public RebusConfigurer Timeouts(Action<RebusTimeoutsConfigurer> configure)
+        {
+            AssertIsNull(Backbone.StoreTimeouts, "Timeouts");
+            configure(new RebusTimeoutsConfigurer(Backbone));
             return this;
         }
 
