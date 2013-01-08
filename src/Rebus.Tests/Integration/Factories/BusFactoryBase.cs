@@ -27,6 +27,7 @@ namespace Rebus.Tests.Integration.Factories
                                    new ErrorTracker(ErrorQueueName),
                                    storeTimeouts);
             startables.Add(bus);
+            disposables.Add(bus);
 
             return bus;
         }
