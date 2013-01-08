@@ -8,7 +8,7 @@ namespace Rebus.Tests.Integration.Factories
         protected override IDuplexTransport CreateTransport(string inputQueueName)
         {
             MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(ErrorQueueName));
-            return new MsmqMessageQueue(inputQueueName);
+            return new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
         }
     }
 }

@@ -1,11 +1,10 @@
-﻿using System;
-using Rebus.Logging;
+﻿using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Timeout;
 
 namespace Rebus.Bus
 {
-    class TimeoutRequestHandler : IHandleMessages<TimeoutRequest>, IDisposable
+    class TimeoutRequestHandler : IHandleMessages<TimeoutRequest>
     {
         static ILog log;
 
@@ -15,12 +14,10 @@ namespace Rebus.Bus
         }
 
         readonly IStoreTimeouts storeTimeouts;
-        readonly DueTimeoutScheduler scheduler;
 
-        public TimeoutRequestHandler(IStoreTimeouts storeTimeouts, IHandleDeferredMessage handleDeferredMessage)
+        public TimeoutRequestHandler(IStoreTimeouts storeTimeouts)
         {
             this.storeTimeouts = storeTimeouts;
-            scheduler = new DueTimeoutScheduler(storeTimeouts, handleDeferredMessage);
         }
 
         public void Handle(TimeoutRequest message)
@@ -36,11 +33,6 @@ namespace Rebus.Bus
             storeTimeouts.Add(newTimeout);
 
             log.Info("Added new timeout: {0}", newTimeout);
-        }
-
-        public void Dispose()
-        {
-            scheduler.Dispose();
         }
     }
 }

@@ -11,8 +11,7 @@ namespace Rebus.Tests.Integration.Factories
         protected override IDuplexTransport CreateTransport(string inputQueueName)
         {
             queuesToDelete.Add(inputQueueName);
-
-            return new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, inputQueueName);
+            return new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, inputQueueName).PurgeInputQueue();
         }
 
         public override void Cleanup()

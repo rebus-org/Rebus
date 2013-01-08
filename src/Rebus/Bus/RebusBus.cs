@@ -40,6 +40,7 @@ namespace Rebus.Bus
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
         readonly RebusBatchOperations batch;
+        readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
 
         static int rebusIdCounter;
@@ -80,22 +81,20 @@ namespace Rebus.Bus
 
             log.Info("Rebus bus created");
 
-            timeoutManagerAddress = GetTimeoutManagerAddress();
-        }
-
-        string GetTimeoutManagerAddress()
-        {
             if (storeTimeouts == null)
             {
                 var timeoutManagerEndpointAddress = RebusConfigurationSection
                     .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
 
                 log.Info("Using timeout manager with input queue {0}", timeoutManagerEndpointAddress);
-                return timeoutManagerEndpointAddress;
+                timeoutManagerAddress = timeoutManagerEndpointAddress;
             }
-
-            log.Info("Using local timeout manager");
-            return receiveMessages.InputQueue;
+            else
+            {
+                log.Info("Using local timeout manager");
+                timeoutManagerAddress = this.receiveMessages.InputQueue;
+                dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
+            }
         }
 
         /// <summary>
@@ -581,7 +580,8 @@ element)"));
             var disposables = new object[]
                 {
                     headerContext, sendMessages, receiveMessages,
-                    storeSubscriptions, storeSagaData
+                    storeSubscriptions, storeSagaData,
+                    dueTimeoutScheduler
                 }
                 .Where(r => !ReferenceEquals(null, r))
                 .OfType<IDisposable>()

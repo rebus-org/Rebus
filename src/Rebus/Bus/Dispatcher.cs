@@ -55,7 +55,7 @@ namespace Rebus.Bus
 
             if (storeTimeouts != null)
             {
-                timeoutRequestHandler = new TimeoutRequestHandler(storeTimeouts, handleDeferredMessage);
+                timeoutRequestHandler = new TimeoutRequestHandler(storeTimeouts);
             }
             timeoutReplyHandler = new TimeoutReplyHandler(handleDeferredMessage);
         }
