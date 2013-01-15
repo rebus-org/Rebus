@@ -17,23 +17,23 @@ namespace Rebus.Bus
     {
         static ILog log;
 
-        readonly IActivateHandlers activateHandlers;
-
-        readonly Dictionary<Type, MethodInfo> activatorMethods = new Dictionary<Type, MethodInfo>();
-        readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
-        readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
-        readonly IInspectHandlerPipeline inspectHandlerPipeline;
-        readonly IStoreSagaData storeSagaData;
-        readonly IStoreSubscriptions storeSubscriptions;
-        readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
-        readonly string sagaDataIdPropertyName;
-        readonly TimeoutRequestHandler timeoutRequestHandler;
-        readonly TimeoutReplyHandler timeoutReplyHandler;
-
         static Dispatcher()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
+
+        readonly Dictionary<Type, string[]> fieldsToIndexForGivenSagaDataType = new Dictionary<Type, string[]>();
+        readonly Dictionary<Type, MethodInfo> activatorMethods = new Dictionary<Type, MethodInfo>();
+        readonly Dictionary<Type, MethodInfo> dispatcherMethods = new Dictionary<Type, MethodInfo>();
+        readonly Dictionary<Type, Type[]> typesToDispatchCache = new Dictionary<Type, Type[]>();
+        readonly IActivateHandlers activateHandlers;
+        readonly IInspectHandlerPipeline inspectHandlerPipeline;
+        readonly IHandleDeferredMessage handleDeferredMessage;
+        readonly IStoreTimeouts storeTimeouts;
+        readonly IStoreSagaData storeSagaData;
+        readonly IStoreSubscriptions storeSubscriptions;
+        readonly string sagaDataIdPropertyName;
+        readonly string sagaDataPropertyName;
 
         /// <summary>
         /// Constructs the dispatcher with the specified instances to store and retrieve saga data,
@@ -51,13 +51,10 @@ namespace Rebus.Bus
             this.activateHandlers = activateHandlers;
             this.storeSubscriptions = storeSubscriptions;
             this.inspectHandlerPipeline = inspectHandlerPipeline;
+            this.handleDeferredMessage = handleDeferredMessage;
+            this.storeTimeouts = storeTimeouts;
             sagaDataIdPropertyName = Reflect.Path<ISagaData>(s => s.Id);
-
-            if (storeTimeouts != null)
-            {
-                timeoutRequestHandler = new TimeoutRequestHandler(storeTimeouts);
-            }
-            timeoutReplyHandler = new TimeoutReplyHandler(handleDeferredMessage);
+            sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
@@ -200,18 +197,18 @@ namespace Rebus.Bus
 
             if (typeof(T) == typeof(TimeoutRequest))
             {
-                if (timeoutRequestHandler == null)
+                if (storeTimeouts == null)
                 {
                     throw new InvalidOperationException(string.Format(@"Received a TimeoutRequest, but there is not configured implementation of IStoreTimeouts in this Rebus endpoint.
 
 This most likely indicates that you have configured this Rebus service to use an external timeout manager, but accidentally configured the timeout manager endpoint address to be the same as this endpoint's input queue."));
                 }
-                return new[] {(IHandleMessages<T>) timeoutRequestHandler};
+                return new[] {(IHandleMessages<T>) new TimeoutRequestHandler(storeTimeouts)};
             }
 
             if (typeof(T) == typeof(TimeoutReply))
             {
-                return new[] {(IHandleMessages<T>) timeoutReplyHandler};
+                return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
             }
 
             return new IHandleMessages<T>[0];
@@ -263,7 +260,7 @@ This most likely indicates that you have configured this Rebus service to use an
                     saga.Complete = false;
                 }
 
-                handler.GetType().GetProperty("Data").SetValue(handler, sagaData, null);
+                handler.GetType().GetProperty(sagaDataPropertyName).SetValue(handler, sagaData, null);
 
                 using (new SagaContext(sagaData.Id))
                 {
@@ -321,7 +318,7 @@ This most likely indicates that you have configured this Rebus service to use an
 
         ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
         {
-            var dataProperty = handler.GetType().GetProperty("Data");
+            var dataProperty = handler.GetType().GetProperty(sagaDataPropertyName);
             var sagaData = (ISagaData)Activator.CreateInstance(dataProperty.PropertyType);
             sagaData.Id = Guid.NewGuid();
             return sagaData;
@@ -329,7 +326,7 @@ This most likely indicates that you have configured this Rebus service to use an
 
         ISagaData GetSagaData<TMessage>(TMessage message, Saga saga)
         {
-            var sagaDataType = saga.GetType().GetProperty("Data").PropertyType;
+            var sagaDataType = saga.GetType().GetProperty(sagaDataPropertyName).PropertyType;
 
             var correlations = saga.Correlations;
 
@@ -356,7 +353,7 @@ This most likely indicates that you have configured this Rebus service to use an
                     var sagaId = messageContext.Headers[Headers.AutoCorrelationSagaId].ToString();
                     var data = GetSagaData(sagaDataType, sagaDataIdPropertyName, sagaId);
 
-                    // if we found the saga, return it - otherwise, fall back to correlating properties, if anything has been set up
+                    // if we found the saga, return it
                     if (data != null) return (ISagaData)data;
                 }
             }

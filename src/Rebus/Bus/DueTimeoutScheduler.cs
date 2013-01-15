@@ -74,6 +74,7 @@ namespace Rebus.Bus
         {
             log.Info("Stopping due timeouts scheduler");
             timer.Stop();
+            timer.Dispose();
         }
     }
 }
