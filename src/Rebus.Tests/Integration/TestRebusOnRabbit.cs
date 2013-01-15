@@ -63,7 +63,7 @@ namespace Rebus.Tests.Integration
                                                              }));
 
             var stopwatch = Stopwatch.StartNew();
-            using (var tx = new TransactionScope())
+            using (var tx = new TransactionScope(TransactionScopeOption.Required, TimeSpan.FromMinutes(5)))
             {
                 var counter = 0;
 
