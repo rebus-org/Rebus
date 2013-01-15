@@ -210,36 +210,6 @@ namespace Rebus.Tests.Transports.Rabbit
             // assert
         }
 
-        [Test, Description("Rabbit will ignore sent messages when they don't match a routing rule, in this case the topic with the same name of a recipient queue. Therefore, in order to avoid losing messages, recipient queues are automatically created.")]
-        public void AutomatiallyCreatesRecipientQueue()
-        {
-            // arrange
-            const string senderInputQueue = "test.autocreate.sender";
-            const string recipientInputQueue = "test.autocreate.recipient";
-            const string someText = "whoa! as if by magic!";
-
-            // ensure recipient queue does not exist
-            DeleteQueue(senderInputQueue);
-            DeleteQueue(recipientInputQueue);
-
-            using (var sender = new RabbitMqMessageQueue(ConnectionString, senderInputQueue))
-            {
-                // act
-                sender.Send(recipientInputQueue, new TransportMessageToSend
-                    {
-                        Body = Encoding.GetBytes(someText)
-                    }, new NoTransaction());
-            }
-
-            using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
-            {
-                // assert
-                var receivedTransportMessage = recipient.ReceiveMessage(new NoTransaction());
-                receivedTransportMessage.ShouldNotBe(null);
-                Encoding.GetString(receivedTransportMessage.Body).ShouldBe(someText);
-            }
-        }
-
         [Test, Description("Experienced that ACK didn't work so the same message would be received over and over")]
         public void DoesNotReceiveTheSameMessageOverAndOver()
         {

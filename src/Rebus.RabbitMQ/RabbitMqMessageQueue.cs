@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using RabbitMQ.Client;
@@ -21,8 +19,6 @@ namespace Rebus.RabbitMQ
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
-
-        readonly ConcurrentBag<string> initializedQueues = new ConcurrentBag<string>();
 
         static RabbitMqMessageQueue()
         {
@@ -62,8 +58,6 @@ namespace Rebus.RabbitMQ
 
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
-            EnsureInitialized(message, destinationQueueName);
-
             try
             {
                 if (!context.IsTransactional)
@@ -312,26 +306,6 @@ namespace Rebus.RabbitMQ
         {
             log.Info("RabbitMQ will manage subscriptions");
             ManagesSubscriptions = true;
-        }
-
-        void EnsureInitialized(TransportMessageToSend message, string queueName)
-        {
-            // don't create recipient queue if multicasting
-            if (message.Headers.ContainsKey(Headers.Multicast))
-            {
-                message.Headers.Remove(Headers.Multicast);
-                return;
-            }
-
-            if (initializedQueues.Contains(queueName)) return;
-
-            lock (initializedQueues)
-            {
-                if (initializedQueues.Contains(queueName)) return;
-
-                InitializeLogicalQueue(queueName);
-                initializedQueues.Add(queueName);
-            }
         }
 
         void InitializeLogicalQueue(string queueName)
