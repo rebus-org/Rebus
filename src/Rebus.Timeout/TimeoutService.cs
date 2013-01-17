@@ -5,6 +5,7 @@ using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
@@ -20,6 +21,7 @@ namespace Rebus.Timeout
         }
 
         public const string DefaultInputQueueName = "rebus.timeout";
+        public const string DefaultErrorQueueName = "rebus.timeout.error";
 
         RebusBus rebusBus;
 
@@ -28,32 +30,36 @@ namespace Rebus.Timeout
                 {
                     typeof (object),
                     typeof (IRebusControlMessage),
-                    typeof(TimeoutRequest)
+                    typeof (TimeoutRequest)
                 };
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
             var msmqMessageQueue = new MsmqMessageQueue(DefaultInputQueueName);
-            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue, DefaultErrorQueueName);
         }
 
-        public TimeoutService(IStoreTimeouts storeTimeouts, string inputQueueName)
+        public TimeoutService(IStoreTimeouts storeTimeouts, string inputQueueName, string errorQueueName)
         {
             var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
-            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue, errorQueueName);
         }
 
         public TimeoutService(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
         {
-            Initialize(storeTimeouts, sendMessages, receiveMessages);
+            Initialize(storeTimeouts, sendMessages, receiveMessages, DefaultErrorQueueName);
         }
 
-        void Initialize(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
+        void Initialize(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages, string errorQueueName)
         {
+            var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
+            MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
+            MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
+
             rebusBus = new RebusBus(this, sendMessages, receiveMessages, null, null, null,
                                     new JsonMessageSerializer(),
                                     new TrivialPipelineInspector(),
-                                    new ErrorTracker(receiveMessages.InputQueueAddress + ".error"),
+                                    new ErrorTracker(errorQueueName),
                                     storeTimeouts);
         }
 

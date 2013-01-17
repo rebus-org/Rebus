@@ -13,13 +13,14 @@ namespace Rebus.Tests.Timeout
     public class TestTimeoutService : RebusBusMsmqIntegrationTestBase
     {
         const string TimeoutServiceInputQueueName = "rebus.timeout.test.input";
+        const string TimeoutServiceErrorQueueName = "rebus.timeout.test.error";
         TimeoutService timeoutService;
         IBus client;
         HandlerActivatorForTesting handlerActivator;
 
         protected override void DoSetUp()
         {
-            timeoutService = new TimeoutService(new InMemoryTimeoutStorage(), TimeoutServiceInputQueueName);
+            timeoutService = new TimeoutService(new InMemoryTimeoutStorage(), TimeoutServiceInputQueueName, TimeoutServiceErrorQueueName);
             timeoutService.Start();
 
             handlerActivator = new HandlerActivatorForTesting();

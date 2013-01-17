@@ -4,7 +4,9 @@
     <section name="timeout" type="Rebus.Timeout.Configuration.TimeoutConfigurationSection, Rebus.Timeout"/>
   </configSections>
 
-  <timeout inputQueue="rebus.timeout.input" storageType="SQL" parameters="server=.;initial catalog=RebusTimeoutManager;integrated security=sspi"/>
+  <timeout inputQueue="rebus.timeout.input" errorQueue="rebus.timeout.error" storageType="SQL" 
+           connectionString="server=.;initial catalog=RebusTimeoutManager;integrated security=sspi"
+           tableName="timeouts" />
 
   <system.web>
     <globalization culture="en-GB" uiCulture="en-GB"/>

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using Rebus.Logging;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -10,6 +11,13 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerSubscriptionStorage : IStoreSubscriptions
     {
+        static ILog log;
+
+        static SqlServerSubscriptionStorage()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         const int PrimaryKeyViolationNumber = 2627;
         readonly string subscriptionsTableName;
 
@@ -161,6 +169,8 @@ namespace Rebus.Persistence.SqlServer
                 {
                     return this;
                 }
+
+                log.Info("Table '{0}' does not exist - it will be created now", subscriptionsTableName);
 
                 using (var command = connection.CreateCommand())
                 {

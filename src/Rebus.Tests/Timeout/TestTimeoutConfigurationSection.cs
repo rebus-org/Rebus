@@ -18,8 +18,10 @@ namespace Rebus.Tests.Timeout
                 var section = TimeoutConfigurationSection.GetSection();
 
                 section.InputQueue.ShouldBe("rebus.timeout.input");
+                section.ErrorQueue.ShouldBe("rebus.timeout.error");
                 section.StorageType.ShouldBe("SQL");
-                section.Parameters.ShouldBe("server=.;initial catalog=RebusTimeoutManager;integrated security=sspi");
+                section.ConnectionString.ShouldBe("server=.;initial catalog=RebusTimeoutManager;integrated security=sspi");
+                section.TableName.ShouldBe("timeouts");
             }
         }
 

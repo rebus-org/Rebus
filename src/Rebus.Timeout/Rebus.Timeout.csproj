@@ -44,6 +44,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Messaging" />
     <Reference Include="System.Transactions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
@@ -53,6 +54,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Rebus\Shared\MsmqUtil.cs">
+      <Link>MsmqUtil.cs</Link>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\TimeoutConfigurationSection.cs" />
@@ -71,6 +75,10 @@
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
       <Name>Rebus.Log4Net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.MongoDb\Rebus.MongoDb.csproj">
+      <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
+      <Name>Rebus.MongoDb</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>

@@ -6,14 +6,23 @@ namespace Rebus.Timeout.Configuration
     {
         const string ConfigSectionName = "timeout";
         const string InputQueueAttributeName = "inputQueue";
+        const string ErrorQueueAttributeName = "errorQueue";
         const string StorageTypeAttributeName = "storageType";
-        const string ParametersAttributeName = "parameters";
+        const string ConnectionStringAttributeName = "connectionString";
+        const string TableNameAttributeName = "tableName";
 
         [ConfigurationProperty(InputQueueAttributeName)]
         public string InputQueue
         {
             get { return (string)this[InputQueueAttributeName]; }
             set { this[InputQueueAttributeName] = value; }
+        }
+
+        [ConfigurationProperty(ErrorQueueAttributeName)]
+        public string ErrorQueue
+        {
+            get { return (string)this[ErrorQueueAttributeName]; }
+            set { this[ErrorQueueAttributeName] = value; }
         }
 
         [ConfigurationProperty(StorageTypeAttributeName)]
@@ -23,11 +32,18 @@ namespace Rebus.Timeout.Configuration
             set { this[StorageTypeAttributeName] = value; }
         }
 
-        [ConfigurationProperty(ParametersAttributeName)]
-        public string Parameters
+        [ConfigurationProperty(ConnectionStringAttributeName)]
+        public string ConnectionString
         {
-            get { return (string)this[ParametersAttributeName]; }
-            set { this[ParametersAttributeName] = value; }
+            get { return (string)this[ConnectionStringAttributeName]; }
+            set { this[ConnectionStringAttributeName] = value; }
+        }
+
+        [ConfigurationProperty(TableNameAttributeName)]
+        public string TableName
+        {
+            get { return (string)this[TableNameAttributeName]; }
+            set { this[TableNameAttributeName] = value; }
         }
 
         public static TimeoutConfigurationSection GetSection()

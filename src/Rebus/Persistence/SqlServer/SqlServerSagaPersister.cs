@@ -4,6 +4,7 @@ using System.Linq;
 using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
+using Rebus.Logging;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -13,6 +14,13 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerSagaPersister : IStoreSagaData
     {
+        static ILog log;
+
+        static SqlServerSagaPersister()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         const int PrimaryKeyViolationNumber = 2627;
         const int MaximumSagaDataTypeNameLength = 40;
 
@@ -359,6 +367,9 @@ saga type name.",
                     {
                         return this;
                     }
+
+                    log.Info("Tables '{0}' and '{1}' do not exist - they will be created now",
+                             SagaTableName, SagaIndexTableName);
 
                     using (var command = connection.CreateCommand())
                     {

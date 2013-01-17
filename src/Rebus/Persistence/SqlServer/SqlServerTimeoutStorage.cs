@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using Rebus.Logging;
 using Rebus.Timeout;
 
 namespace Rebus.Persistence.SqlServer
@@ -11,6 +12,13 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerTimeoutStorage : IStoreTimeouts
     {
+        static ILog log;
+
+        static SqlServerTimeoutStorage()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         const int PrimaryKeyViolationNumber = 2627;
         readonly string connectionString;
         readonly string timeoutsTableName;
@@ -143,6 +151,8 @@ namespace Rebus.Persistence.SqlServer
                 {
                     return this;
                 }
+
+                log.Info("Table '{0}' does not exist - it will be created now", timeoutsTableName);
 
                 using (var command = connection.CreateCommand())
                 {
