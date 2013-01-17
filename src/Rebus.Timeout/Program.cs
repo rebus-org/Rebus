@@ -42,6 +42,8 @@ namespace Rebus.Timeout
                                                                c.WhenStarted(t => t.Start());
                                                                c.WhenStopped(t => t.Stop());
                                                            });
+
+                             s.DependsOnMsmq();
                          });
         }
 
