@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.MessagePatterns;
 using Rebus.Bus;
 using Rebus.Logging;
