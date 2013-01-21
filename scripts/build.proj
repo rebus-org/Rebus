@@ -101,7 +101,7 @@
     <Exec Command="$(NuGet) push %(NuGetPackages.FullPath)" />
   </Target>
 
-  <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;merge_snoop;zip_snoop" />
+  <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;zip_snoop" />
 
   <Target Name="clean_snoop_output_folder">
     <Message Text="Removing old output folder"/>
@@ -109,20 +109,24 @@
   </Target>
   
   <Target Name="compile_snoop">
-    <MSBuild Projects="@(SnoopProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release">
+    <MSBuild Projects="@(SnoopProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release;Platform=AnyCpu">
       <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
     </MSBuild>
   </Target>
 
-  <Target Name="merge_snoop">
+  <!--<Target Name="merge_snoop">
     <Message Text="Merge all the things into Snoop"/>
     <Copy SourceFiles="$(SnoopProjectOutputFolder)\Rebus.Snoop.exe" DestinationFolder="$(SnoopOutputFolder)"/>
-    <Exec Command="$(IlMerge) /out:$(SnoopOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Newtonsoft.Json.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.WPF4.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.Extras.WPF4.dll /targetplatform:v4 /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(SnoopOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Rebus.Snoop.exe $(SnoopProjectOutputFolder)\Newtonsoft.Json.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.WPF4.dll $(SnoopProjectOutputFolder)\GalaSoft.MvvmLight.Extras.WPF4.dll $(SnoopProjectOutputFolder)\System.Windows.Interactivity.dll /targetplatform:v4 "/>
     <Delete Files="$(SnoopOutputFolder)\Rebus.Snoop.pdb"/>
-  </Target>
+  </Target>-->
+
+  <!--<Target Name="zip_snoop">
+    <Exec Command="$(Zip) a $(SnoopOutputFolder)\Rebus.Snoop.zip $(SnoopOutputFolder)\Rebus.Snoop.exe -tZip -mx=9" />
+  </Target>-->
 
   <Target Name="zip_snoop">
-    <Exec Command="$(Zip) a $(SnoopOutputFolder)\Rebus.Snoop.zip $(SnoopOutputFolder)\Rebus.Snoop.exe -tZip -mx=9" />
+    <Exec Command="$(Zip) a $(SnoopOutputFolder)\Rebus.Snoop.zip $(SnoopProjectOutputFolder)\*.* -tZip -mx=9" />
   </Target>
 
   <Target Name="build_timeout" DependsOnTargets="clean_timeout_output_folder;compile_timeout;copy_timeout" />
