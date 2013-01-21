@@ -91,6 +91,9 @@ namespace Rebus.Tests.Transports.Rabbit
             var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add);
             var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher");
 
+            // wait a while to allow queues to be initialized
+            Thread.Sleep(1.Seconds());
+
             sub1.Subscribe<SomeEvent>();
             
             Thread.Sleep(0.5.Seconds());

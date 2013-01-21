@@ -9,6 +9,7 @@ using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
@@ -29,6 +30,68 @@ namespace Rebus.Tests.Transports.Rabbit
         {
             serializer = new JsonMessageSerializer();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        [Test]
+        public void CanCreateAutoDeleteQueue()
+        {
+            const string queueName = "test.autodelete.input";
+            DeleteQueue(queueName);
+
+            // arrange
+            var existedBeforeInstatiation = QueueExists(queueName);
+            bool existedWhileInstantiatedAndInsideTx;
+            bool existedWhileInstantiatedAndOutsideOfTx;
+
+            // act
+            using (var queue = new RabbitMqMessageQueue(ConnectionString, queueName).AutoDeleteInputQueue())
+            {
+                using (var scope = new TransactionScope())
+                {
+                    using (var txBomkarl = new TxBomkarl())
+                    {
+                        var willBeNull = queue.ReceiveMessage(txBomkarl);
+
+                        existedWhileInstantiatedAndInsideTx = QueueExists(queueName);
+                    }
+
+                    existedWhileInstantiatedAndOutsideOfTx = QueueExists(queueName);
+                }
+            }
+
+            var existedAfterDisposal = QueueExists(queueName);
+
+            // assert
+            existedBeforeInstatiation.ShouldBe(false);
+            existedWhileInstantiatedAndInsideTx.ShouldBe(true);
+            existedWhileInstantiatedAndOutsideOfTx.ShouldBe(true);
+            existedAfterDisposal.ShouldBe(false);
+        }
+
+        bool QueueExists(string queueName)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            {
+                using (var model = connection.CreateModel())
+                {
+                    try
+                    {
+                        model.QueueDeclarePassive(queueName);
+
+                        // if the call succeeds, then the queue exists
+                        return true;
+                    }
+                    catch (OperationInterruptedException exception)
+                    {
+                        if (exception.Message.Contains("NOT_FOUND"))
+                        {
+                            return false;
+                        }
+
+                        throw;
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -176,6 +239,9 @@ namespace Rebus.Tests.Transports.Rabbit
             // ensure recipient queue is created...
             using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
             {
+                // force creation of the queue
+                recipient.ReceiveMessage(new NoTransaction());
+
                 // act
                 // send a message with a complex header
                 using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())

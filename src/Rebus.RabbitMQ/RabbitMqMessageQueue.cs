@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 using RabbitMQ.Client.MessagePatterns;
 using Rebus.Bus;
 using Rebus.Logging;
@@ -26,11 +27,13 @@ namespace Rebus.RabbitMQ
         }
 
         readonly string inputQueueName;
-        readonly bool ensureExchangeIsDeclared;
         readonly ConnectionManager connectionManager;
 
         readonly object disposalLock = new object();
         volatile bool disposed;
+
+        bool ensureExchangeIsDeclared = true;
+        bool autoDeleteInputQueue;
 
         [ThreadStatic]
         static IModel threadBoundModel;
@@ -40,20 +43,29 @@ namespace Rebus.RabbitMQ
 
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
 
-        public static RabbitMqMessageQueue Sender(string connectionString, bool ensureExchangeIsDeclared)
+        public static RabbitMqMessageQueue Sender(string connectionString)
         {
-            return new RabbitMqMessageQueue(connectionString, null, ensureExchangeIsDeclared);
+            return new RabbitMqMessageQueue(connectionString, null);
         }
 
-        public RabbitMqMessageQueue(string connectionString, string inputQueueName, bool ensureExchangeIsDeclared = true)
+        public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
             connectionManager = new ConnectionManager(connectionString, inputQueueName);
             if (inputQueueName == null) return;
 
             this.inputQueueName = inputQueueName;
-            this.ensureExchangeIsDeclared = ensureExchangeIsDeclared;
+        }
 
-            InitializeLogicalQueue(inputQueueName);
+        public RabbitMqMessageQueue DontDeclareExchange()
+        {
+            ensureExchangeIsDeclared = false;
+            return this;
+        }
+
+        public RabbitMqMessageQueue AutoDeleteInputQueue()
+        {
+            autoDeleteInputQueue = true;
+            return this;
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
@@ -95,6 +107,8 @@ namespace Rebus.RabbitMQ
                 {
                     using (var localModel = GetConnection().CreateModel())
                     {
+                        InitializeLogicalQueue(inputQueueName, localModel);
+
                         var basicGetResult = localModel.BasicGet(inputQueueName, true);
 
                         if (basicGetResult == null)
@@ -212,6 +226,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
+                    InitializeLogicalQueue(inputQueueName, model);
                     log.Warn("Purging queue {0}", inputQueueName);
                     model.QueuePurge(inputQueueName);
                 }
@@ -268,7 +283,7 @@ namespace Rebus.RabbitMQ
             foreach (var tryResolve in eventNameResolvers)
             {
                 var eventName = tryResolve(messageType);
-                
+
                 if (eventName != null)
                     return eventName;
             }
@@ -308,28 +323,25 @@ namespace Rebus.RabbitMQ
             ManagesSubscriptions = true;
         }
 
-        void InitializeLogicalQueue(string queueName)
+        void InitializeLogicalQueue(string queueName, IModel model)
         {
             try
             {
                 log.Info("Initializing logical queue '{0}'", queueName);
-                using (var model = GetConnection().CreateModel())
+                if (ensureExchangeIsDeclared)
                 {
-                    if (ensureExchangeIsDeclared)
-                    {
-                        log.Debug("Declaring exchange '{0}'", ExchangeName);
-                        model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-                    }
-
-                    var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
-
-                    log.Debug("Declaring queue '{0}'", queueName);
-                    model.QueueDeclare(queueName, durable: true,
-                                       arguments: arguments, autoDelete: false, exclusive: false);
-
-                    log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
-                    model.QueueBind(queueName, ExchangeName, queueName);
+                    log.Debug("Declaring exchange '{0}'", ExchangeName);
+                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
                 }
+
+                var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
+
+                log.Debug("Declaring queue '{0}'", queueName);
+                model.QueueDeclare(queueName, durable: true,
+                                   arguments: arguments, autoDelete: autoDeleteInputQueue, exclusive: false);
+
+                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                model.QueueBind(queueName, ExchangeName, queueName);
             }
             catch (Exception e)
             {
@@ -352,7 +364,7 @@ namespace Rebus.RabbitMQ
                 return;
             }
 
-            var newModel  = GetConnection().CreateModel();
+            var newModel = GetConnection().CreateModel();
             newModel.TxSelect();
 
             context.DoCommit += newModel.TxCommit;
@@ -363,6 +375,8 @@ namespace Rebus.RabbitMQ
 
             // bind it to the thread
             threadBoundModel = newModel;
+
+            InitializeLogicalQueue(inputQueueName, threadBoundModel);
         }
 
         static ReceivedTransportMessage GetReceivedTransportMessage(IBasicProperties basicProperties, byte[] body)
@@ -417,7 +431,7 @@ namespace Rebus.RabbitMQ
                     try
                     {
                         var timeSpan = TimeSpan.Parse(timeToBeReceived);
-                        var milliseconds = (int) timeSpan.TotalMilliseconds;
+                        var milliseconds = (int)timeSpan.TotalMilliseconds;
                         if (milliseconds <= 0)
                         {
                             throw new ArgumentException(

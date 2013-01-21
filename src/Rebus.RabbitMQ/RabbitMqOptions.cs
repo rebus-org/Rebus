@@ -26,6 +26,18 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
+        public RabbitMqOptions DontDeclareExchange()
+        {
+            queue.DontDeclareExchange();
+            return this;
+        }
+
+        public RabbitMqOptions AutoDeleteInputQueue()
+        {
+            queue.AutoDeleteInputQueue();
+            return this;
+        }
+
         public RabbitMqOptions AddEventNameResolver(Func<Type, string> resolver)
         {
             queue.AddEventNameResolver(resolver);
