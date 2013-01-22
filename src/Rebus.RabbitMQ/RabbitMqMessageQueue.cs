@@ -241,8 +241,17 @@ namespace Rebus.RabbitMQ
 
         public bool ManagesSubscriptions { get; private set; }
 
+        readonly HashSet<Type> subscriptions = new HashSet<Type>();
+
         public void Subscribe(Type messageType, string inputQueueAddress)
         {
+            if (autoDeleteInputQueue)
+            {
+                subscriptions.Add(messageType);
+                EstablishSubscriptions(threadBoundModel);
+                return;
+            }
+
             try
             {
                 using (var model = GetConnection().CreateModel())
@@ -259,8 +268,34 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        void EstablishSubscriptions(IModel model)
+        {
+            if (model == null) return;
+
+            foreach (var subscription in subscriptions)
+            {
+                var topic = GetEventName(subscription);
+                log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
+                model.QueueBind(InputQueueAddress, ExchangeName, topic);
+            }
+        }
+
         public void Unsubscribe(Type messageType, string inputQueueAddress)
         {
+            if (autoDeleteInputQueue)
+            {
+                subscriptions.Remove(messageType);
+
+                var model = threadBoundModel;
+                if (model != null)
+                {
+                    var topic = GetEventName(messageType);
+                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
+                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Hashtable());
+                }
+                return;
+            }
+
             try
             {
                 using (var model = GetConnection().CreateModel())
@@ -376,6 +411,8 @@ namespace Rebus.RabbitMQ
             threadBoundModel = newModel;
 
             InitializeLogicalQueue(inputQueueName, threadBoundModel);
+
+            EstablishSubscriptions(threadBoundModel);
         }
 
         static ReceivedTransportMessage GetReceivedTransportMessage(IBasicProperties basicProperties, byte[] body)
