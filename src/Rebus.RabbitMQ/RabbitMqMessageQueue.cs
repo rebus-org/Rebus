@@ -248,7 +248,14 @@ namespace Rebus.RabbitMQ
             if (autoDeleteInputQueue)
             {
                 subscriptions.Add(messageType);
-                EstablishSubscriptions(threadBoundModel);
+
+                var model = threadBoundModel;
+                if (model != null)
+                {
+                    var topic = GetEventName(messageType);
+                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
+                    model.QueueBind(InputQueueAddress, ExchangeName, topic);
+                }
                 return;
             }
 
