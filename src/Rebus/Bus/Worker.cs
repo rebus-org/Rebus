@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
@@ -32,6 +33,7 @@ namespace Rebus.Bus
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
         readonly IMutateIncomingMessages mutateIncomingMessages;
+        readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -45,7 +47,7 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
-        internal event Action<IMessageContext> MessageContextEstablished = delegate { }; 
+        internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -60,11 +62,13 @@ namespace Rebus.Bus
             string workerThreadName,
             IHandleDeferredMessage handleDeferredMessage,
             IMutateIncomingMessages mutateIncomingMessages,
-            IStoreTimeouts storeTimeouts)
+            IStoreTimeouts storeTimeouts,
+            IEnumerable<IUnitOfWorkManager> unitOfWorkManagers)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.mutateIncomingMessages = mutateIncomingMessages;
+            this.unitOfWorkManagers = unitOfWorkManagers;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -241,6 +245,10 @@ namespace Rebus.Bus
 
                 using (var scope = BeginTransaction())
                 {
+                    var unitsOfWork = unitOfWorkManagers.Select(u => u.Create())
+                                                        .Where(u => !ReferenceEquals(null, u))
+                                                        .ToArray(); //< remember to invoke the chain here :)
+
                     var message = serializeMessages.Deserialize(transportMessage);
                     // successfully deserialized the transport message, let's enter a message context
                     context = MessageContext.Establish(message.Headers);
@@ -264,6 +272,18 @@ namespace Rebus.Bus
                         catch (Exception exception)
                         {
                             logicalMessageExceptionOrNull = exception;
+
+                            foreach (var unitOfWork in unitsOfWork)
+                            {
+                                try
+                                {
+                                    unitOfWork.Abort();
+                                }
+                                finally
+                                {
+                                    unitOfWork.Dispose();
+                                }
+                            }
                             throw;
                         }
                         finally
@@ -290,6 +310,18 @@ namespace Rebus.Bus
                             }
 
                             context.ClearLogicalMessage();
+                        }
+                    }
+
+                    foreach (var unitOfWork in unitsOfWork)
+                    {
+                        try
+                        {
+                            unitOfWork.Commit();
+                        }
+                        finally
+                        {
+                            unitOfWork.Dispose();
                         }
                     }
 

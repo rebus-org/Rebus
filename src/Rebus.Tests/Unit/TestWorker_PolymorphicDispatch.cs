@@ -37,7 +37,8 @@ namespace Rebus.Tests.Unit
                                 inspectHandlerPipeline, "Just some test worker",
                                 new DeferredMessageHandlerForTesting(),
                                 new IncomingMessageMutatorPipelineForTesting(),
-                                null);
+                                null,
+                                new IUnitOfWorkManager[0]);
         }
 
         protected override void DoTearDown()
@@ -93,10 +94,10 @@ namespace Rebus.Tests.Unit
 
         class TestHandlerBase<T> : IHandleMessages<T>
         {
-            List<string> calls;
+            readonly List<string> calls;
             readonly string label;
 
-            public TestHandlerBase(List<string> calls, string label)
+            protected TestHandlerBase(List<string> calls, string label)
             {
                 this.calls = calls;
                 this.label = label;

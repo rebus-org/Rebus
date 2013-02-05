@@ -5,6 +5,8 @@ namespace Rebus.Bus
 {
     class RebusEvents : IRebusEvents
     {
+        readonly List<IUnitOfWorkManager> unitOfWorkManagers = new List<IUnitOfWorkManager>();
+
         public RebusEvents()
         {
             MessageMutators = new List<IMutateMessages>();
@@ -27,6 +29,16 @@ namespace Rebus.Bus
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
+
+        public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
+        {
+            unitOfWorkManagers.Add(unitOfWorkManager);
+        }
+
+        internal IEnumerable<IUnitOfWorkManager> UnitOfWorkManagers
+        {
+            get { return unitOfWorkManagers; }
+        }
 
         internal void RaiseMessageContextEstablished(IBus bus, IMessageContext messageContext)
         {

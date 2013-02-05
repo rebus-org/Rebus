@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
@@ -8,6 +9,8 @@ namespace Rebus.Configuration
     /// </summary>
     public class EventsConfigurer : BaseConfigurer, IRebusEvents
     {
+        readonly List<IUnitOfWorkManager> unitOfWorkManagers = new List<IUnitOfWorkManager>();
+
         internal EventsConfigurer(ConfigurationBackbone backbone)
             : base(backbone)
         {
@@ -71,6 +74,14 @@ namespace Rebus.Configuration
         /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
         /// </summary>
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
+
+        /// <summary>
+        /// Adds the specified unit of work manager to the list of managers that get to create units of work for each incoming message
+        /// </summary>
+        public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
+        {
+            unitOfWorkManagers.Add(unitOfWorkManager);
+        }
 
         internal void TransferToBus(IBus bus)
         {
@@ -140,7 +151,7 @@ namespace Rebus.Configuration
                 }
             }
 
-            foreach(var messageMutator in MessageMutators)
+            foreach (var messageMutator in MessageMutators)
             {
                 rebusEvents.MessageMutators.Add(messageMutator);
             }

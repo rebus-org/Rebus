@@ -31,7 +31,8 @@ namespace Rebus.Tests.Unit
                                 new TrivialPipelineInspector(), "Just some test worker",
                                 new DeferredMessageHandlerForTesting(),
                                 new IncomingMessageMutatorPipelineForTesting(),
-                                null);
+                                null,
+                                new IUnitOfWorkManager[0]);
         }
 
         [Test]

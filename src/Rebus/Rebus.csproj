@@ -65,6 +65,7 @@
     <Compile Include="Bus\IMulticastTransport.cs" />
     <Compile Include="Bus\IMutateIncomingMessages.cs" />
     <Compile Include="Bus\IncomingMessageMutatorPipeline.cs" />
+    <Compile Include="Bus\IUnitOfWorkManager.cs" />
     <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />

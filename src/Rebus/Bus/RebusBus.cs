@@ -612,7 +612,8 @@ element)"));
                                         string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
                                         new DeferredMessageReDispatcher(this),
                                         new IncomingMessageMutatorPipeline(Events),
-                                        storeTimeouts);
+                                        storeTimeouts,
+                                        events.UnitOfWorkManagers);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

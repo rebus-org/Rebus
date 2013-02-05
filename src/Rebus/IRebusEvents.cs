@@ -106,5 +106,10 @@ namespace Rebus
         /// and in reverse order when messages are received.
         /// </summary>
         ICollection<IMutateMessages> MessageMutators { get; }
+
+        /// <summary>
+        /// Adds a unit of work manager that will be allowed to create a unit of work for each incoming message
+        /// </summary>
+        void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager);
     }
 }
