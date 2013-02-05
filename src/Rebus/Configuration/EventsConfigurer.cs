@@ -155,6 +155,11 @@ namespace Rebus.Configuration
             {
                 rebusEvents.MessageMutators.Add(messageMutator);
             }
+
+            foreach (var unitOfWorkManager in unitOfWorkManagers)
+            {
+                rebusEvents.AddUnitOfWorkManager(unitOfWorkManager);
+            }
         }
     }
 }

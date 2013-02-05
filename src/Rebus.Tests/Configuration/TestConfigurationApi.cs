@@ -57,8 +57,6 @@ namespace Rebus.Tests.Configuration
             Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
                                                             .Decorators(d => d.AddDecoration(b => {}))
                                                             .Decorators(d => d.AddDecoration(b => {})));
-
-
         }
 
         [Test]
@@ -88,6 +86,7 @@ namespace Rebus.Tests.Configuration
         {
             var adapter = new TestContainerAdapter();
             var raisedEvents = new List<string>();
+            var unitOfWorkManagerInstanceThatCanBeRecognized = Mock<IUnitOfWorkManager>();
 
             var configurer = Configure.With(adapter)
                 .Events(e =>
@@ -103,6 +102,7 @@ namespace Rebus.Tests.Configuration
                         e.UncorrelatedMessage += delegate { raisedEvents.Add("uncorrelated message"); };
 
                         e.MessageContextEstablished += delegate { raisedEvents.Add("message context established"); };
+                        e.AddUnitOfWorkManager(unitOfWorkManagerInstanceThatCanBeRecognized);
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
@@ -126,6 +126,8 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("poison message");
             raisedEvents.ShouldContain("uncorrelated message");
             raisedEvents.ShouldContain("message context established");
+
+            events.UnitOfWorkManagers.ShouldContain(unitOfWorkManagerInstanceThatCanBeRecognized);
         }
 
         [Test]
