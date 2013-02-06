@@ -33,6 +33,20 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
+        /// Configure the number of messages to prefetch/buffer per worker thread.
+        /// </summary>
+        /// <param name="prefetchCount">The number of messages to prefetch per worker thread. The default
+        /// value is 100. A value of 0 will cause all available messages to be prefetched, which may lead
+        /// to suboptimal performance or even crashes, if the queue size exceeds the maximum memory
+        /// allowance for the endpoint application.</param>
+        /// <returns>This <see cref="RabbitMqOptions"/> instance, allowing further configuration.</returns>
+        public RabbitMqOptions PrefetchCount(ushort prefetchCount)
+        {
+            queue.PrefetchCount = prefetchCount;
+            return this;
+        }
+
+        /// <summary>
         /// The RabbitMQ subscriptions storage handles the event where a subscriber is not configured to let
         /// RabbitMQ manage subscriptions. In this case, a <see cref="SubscriptionMessage"/> will be sent to
         /// the publisher, so we just subscribe on the subscriber's behalf.
