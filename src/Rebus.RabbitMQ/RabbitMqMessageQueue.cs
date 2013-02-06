@@ -41,6 +41,8 @@ namespace Rebus.RabbitMQ
         static Subscription threadBoundSubscription;
 
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
+        
+        ushort prefetchCount = 100;
 
         public static RabbitMqMessageQueue Sender(string connectionString)
         {
@@ -192,6 +194,12 @@ namespace Rebus.RabbitMQ
         public string InputQueue { get { return inputQueueName; } }
 
         public string InputQueueAddress { get { return inputQueueName; } }
+
+        public ushort PrefetchCount
+        {
+            get { return prefetchCount; }
+            set { prefetchCount = value; }
+        }
 
         public void Dispose()
         {
@@ -407,6 +415,7 @@ namespace Rebus.RabbitMQ
 
             var newModel = GetConnection().CreateModel();
             newModel.TxSelect();
+            newModel.BasicQos(0, prefetchCount, false);
 
             context.DoCommit += newModel.TxCommit;
             context.DoRollback += newModel.TxRollback;
