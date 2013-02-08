@@ -245,14 +245,14 @@ namespace Rebus.Bus
 
                 using (var scope = BeginTransaction())
                 {
-                    var unitsOfWork = unitOfWorkManagers.Select(u => u.Create())
-                                                        .Where(u => !ReferenceEquals(null, u))
-                                                        .ToArray(); //< remember to invoke the chain here :)
-
                     var message = serializeMessages.Deserialize(transportMessage);
                     // successfully deserialized the transport message, let's enter a message context
                     context = MessageContext.Establish(message.Headers);
                     MessageContextEstablished(context);
+
+                    var unitsOfWork = unitOfWorkManagers.Select(u => u.Create())
+                                    .Where(u => !ReferenceEquals(null, u))
+                                    .ToArray(); //< remember to invoke the chain here :)
 
                     foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                     {
@@ -278,6 +278,11 @@ namespace Rebus.Bus
                                 try
                                 {
                                     unitOfWork.Abort();
+                                }
+                                catch (Exception e)
+                                {
+                                    log.Warn("An error occurred while aborting the unit of work {0}: {1}",
+                                             unitOfWork, e);
                                 }
                                 finally
                                 {
