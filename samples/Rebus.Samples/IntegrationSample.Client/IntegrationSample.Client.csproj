@@ -44,12 +44,13 @@
       <HintPath>..\packages\Castle.Windsor.3.1.0\lib\net40-client\Castle.Windsor.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Rebus">
-      <HintPath>..\packages\Rebus.0.28.1\lib\NET40\Rebus.dll</HintPath>
+    <Reference Include="Rebus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rebus.0.29.4\lib\NET40\Rebus.dll</HintPath>
     </Reference>
-    <Reference Include="Rebus.Castle.Windsor">
-      <HintPath>..\packages\Rebus.Castle.Windsor.0.28.1\lib\NET40\Rebus.Castle.Windsor.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="Rebus.Castle.Windsor, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rebus.Castle.Windsor.0.29.4\lib\NET40\Rebus.Castle.Windsor.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

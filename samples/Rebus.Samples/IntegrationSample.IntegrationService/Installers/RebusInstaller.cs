@@ -1,7 +1,6 @@
 ﻿using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.SubSystems.Configuration;
 using Castle.Windsor;
-using Rebus;
 using Rebus.Castle.Windsor;
 using Rebus.Configuration;
 using Rebus.Transports.Msmq;
@@ -16,7 +15,7 @@ namespace IntegrationSample.IntegrationService.Installers
             Configure.With(new WindsorContainerAdapter(container))
                 .Logging(l => l.Log4Net())
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-                .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                .MessageOwnership(d => d.FromRebusConfigurationSection())
                 .CreateBus().Start();
         }
     }

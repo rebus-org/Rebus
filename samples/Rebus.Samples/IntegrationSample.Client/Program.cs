@@ -23,7 +23,7 @@ namespace IntegrationSample.Client
             var bus = Configure.With(new WindsorContainerAdapter(container))
                 .Logging(l => l.None()) // disable logging to avoid polluting the console
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-                .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                .MessageOwnership(d => d.FromRebusConfigurationSection())
                 .CreateBus().Start();
 
             Console.WriteLine("Press R to request a greeting and Q to quit...");

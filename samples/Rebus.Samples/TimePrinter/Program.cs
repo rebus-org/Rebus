@@ -19,7 +19,7 @@ namespace TimePrinter
                 var bus = Configure.With(adapter)
                                    .Logging(l => l.None())
                                    .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-                                   .DetermineEndpoints(d => d.FromRebusConfigurationSection())
+                                   .MessageOwnership(d => d.FromRebusConfigurationSection())
                                    .CreateBus()
                                    .Start();
 
