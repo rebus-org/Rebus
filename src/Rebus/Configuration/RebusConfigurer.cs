@@ -1,5 +1,4 @@
 using System;
-using Ponder;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;

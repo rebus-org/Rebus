@@ -106,9 +106,10 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       Controls:GridViewSort.AutoSort="True" SelectionChanged="SelectedMessageChanged">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Label" Width="380" DisplayMemberBinding="{Binding Label}" Controls:GridViewSort.PropertyName="Label"/>
+                        <GridViewColumn Header="Label" Width="340" DisplayMemberBinding="{Binding Label}" Controls:GridViewSort.PropertyName="Label"/>
                         <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" Controls:GridViewSort.PropertyName="Time"/>
                         <GridViewColumn Header="Size" Width="80" DisplayMemberBinding="{Binding Bytes, Converter={StaticResource ByteSizeConverter}}" Controls:GridViewSort.PropertyName="Bytes"/>
+                        <GridViewColumn Header="Return address" Width="100" DisplayMemberBinding="{Binding ReturnAddress}" Controls:GridViewSort.PropertyName="Bytes"/>
                     </GridView>
                 </ListView.View>
             </ListView>

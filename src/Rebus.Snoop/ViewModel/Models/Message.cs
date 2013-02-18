@@ -119,5 +119,15 @@ namespace Rebus.Snoop.ViewModel.Models
             get { return couldDeserializeHeaders; }
             set { SetValue(() => CouldDeserializeHeaders, value); }
         }
+
+        public string ReturnAddress
+        {
+            get
+            {
+                return Headers.ContainsKey(Shared.Headers.ReturnAddress)
+                           ? Headers[Shared.Headers.ReturnAddress]
+                           : "";
+            }
+        }
     }
 }
