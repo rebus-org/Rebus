@@ -377,11 +377,6 @@ namespace Rebus.RabbitMQ
             try
             {
                 log.Info("Initializing logical queue '{0}'", queueName);
-                if (ensureExchangeIsDeclared)
-                {
-                    log.Debug("Declaring exchange '{0}'", ExchangeName);
-                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-                }
 
                 var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
 
@@ -389,8 +384,14 @@ namespace Rebus.RabbitMQ
                 model.QueueDeclare(queueName, durable: true,
                                    arguments: arguments, autoDelete: autoDeleteInputQueue, exclusive: false);
 
-                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
-                model.QueueBind(queueName, ExchangeName, queueName);
+                if (ensureExchangeIsDeclared)
+                {
+                    log.Debug("Declaring exchange '{0}'", ExchangeName);
+                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+
+                    log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                    model.QueueBind(queueName, ExchangeName, queueName);
+                }
             }
             catch (Exception e)
             {
