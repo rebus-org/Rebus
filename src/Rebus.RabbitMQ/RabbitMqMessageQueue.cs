@@ -14,8 +14,6 @@ namespace Rebus.RabbitMQ
 {
     public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
     {
-        public const string ExchangeName = "Rebus";
-
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
@@ -31,8 +29,10 @@ namespace Rebus.RabbitMQ
         readonly object disposalLock = new object();
         volatile bool disposed;
 
+        string exchangeName = "Rebus";
         bool ensureExchangeIsDeclared = true;
-        bool autoDeleteInputQueue;
+        bool autoDeleteInputQueue = false;
+        ushort prefetchCount = 100;
 
         [ThreadStatic]
         static IModel threadBoundModel;
@@ -41,8 +41,6 @@ namespace Rebus.RabbitMQ
         static Subscription threadBoundSubscription;
 
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
-        
-        ushort prefetchCount = 100;
 
         public static RabbitMqMessageQueue Sender(string connectionString)
         {
@@ -55,12 +53,6 @@ namespace Rebus.RabbitMQ
             if (inputQueueName == null) return;
 
             this.inputQueueName = inputQueueName;
-        }
-
-        public RabbitMqMessageQueue DontDeclareExchange()
-        {
-            ensureExchangeIsDeclared = false;
-            return this;
         }
 
         public RabbitMqMessageQueue AutoDeleteInputQueue()
@@ -194,6 +186,18 @@ namespace Rebus.RabbitMQ
         public string InputQueue { get { return inputQueueName; } }
 
         public string InputQueueAddress { get { return inputQueueName; } }
+
+        public string ExchangeName
+        {
+            get { return exchangeName; }
+            set { exchangeName = value; }
+        }
+
+        public bool EnsureExchangeIsDeclared
+        {
+            get { return ensureExchangeIsDeclared; }
+            set { ensureExchangeIsDeclared = value; }
+        }
 
         public ushort PrefetchCount
         {

@@ -259,7 +259,7 @@ namespace Rebus.Tests.Transports.Rabbit
                             }
                         };
 
-                    model.BasicPublish(RabbitMqMessageQueue.ExchangeName,
+                    model.BasicPublish(recipient.ExchangeName,
                                        recipientInputQueue,
                                        props,
                                        Encoding.GetBytes(someText));
