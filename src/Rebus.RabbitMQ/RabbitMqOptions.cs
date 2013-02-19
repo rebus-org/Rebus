@@ -26,9 +26,17 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
-        public RabbitMqOptions DontDeclareExchange()
+        /// <summary>
+        /// Configure the exchange through which messages are routed to endpoint queues.
+        /// </summary>
+        /// <param name="exchangeName">The name of the RabbitMQ exchange.</param>
+        /// <param name="ensureExchangeIsDeclared">If true, Rebus will declare the exchange,
+        /// along with relevant bindings, if is does not already exist.</param>
+        /// <returns></returns>
+        public RabbitMqOptions ViaExchange(string exchangeName, bool ensureExchangeIsDeclared)
         {
-            queue.DontDeclareExchange();
+            queue.ExchangeName = exchangeName;
+            queue.EnsureExchangeIsDeclared = ensureExchangeIsDeclared;
             return this;
         }
 
