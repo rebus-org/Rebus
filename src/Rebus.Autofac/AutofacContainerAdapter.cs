@@ -67,8 +67,8 @@ namespace Rebus.Autofac
         public void SaveBusInstances(IBus bus)
         {
             var builder = new ContainerBuilder();
-            builder.RegisterInstance(bus).As<IBus>();
-            builder.Register(a => MessageContext.GetCurrent()).InstancePerDependency();
+            builder.RegisterInstance(bus).As<IBus>().SingleInstance();
+            builder.Register(a => MessageContext.GetCurrent()).ExternallyOwned();
             builder.Update(container);
 
             bus.Advanced.Events.AddUnitOfWorkManager(new AutofacUnitOfWorkManager(container));
