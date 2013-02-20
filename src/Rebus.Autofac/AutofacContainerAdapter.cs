@@ -10,6 +10,8 @@ namespace Rebus.Autofac
 {
     public class AutofacContainerAdapter : IContainerAdapter
     {
+        public static readonly object UnitOfWorkLifetime = "UnitOfWorkLifetime";
+
         const string ContextKey = "AutofacLifetimeScope";
 
         readonly IContainer container;
@@ -58,7 +60,7 @@ namespace Rebus.Autofac
             public IUnitOfWork Create()
             {
                 var context = MessageContext.GetCurrent();
-                var lifetimeScope = container.BeginLifetimeScope();
+                var lifetimeScope = container.BeginLifetimeScope(UnitOfWorkLifetime);
                 context.Items.Add(ContextKey, lifetimeScope);
 
                 return new AutofacUnitOfWork(lifetimeScope);
