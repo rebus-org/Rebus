@@ -11,7 +11,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Rebus is a lean service bus implementation, similar in nature to NServiceBus, MassTransit, Rhino Service Bus etc.</description>
     <copyright>Copyright 2012</copyright>
-    <tags>servicebus msmq cqrs publish subscribe reliable asynchronous</tags>
+    <tags>servicebus msmq rabbitmq cqrs publish subscribe reliable asynchronous messaging esb</tags>
   </metadata>
   <files>
     <file src="..\deploy\**\Rebus.dll" target="lib" />
