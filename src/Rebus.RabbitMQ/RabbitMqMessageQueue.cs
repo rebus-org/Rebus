@@ -31,7 +31,8 @@ namespace Rebus.RabbitMQ
 
         string exchangeName = "Rebus";
         bool ensureExchangeIsDeclared = true;
-        bool autoDeleteInputQueue = false;
+        bool bindDefaultTopicToInputQueue = true;
+        bool autoDeleteInputQueue;
         ushort prefetchCount = 100;
 
         [ThreadStatic]
@@ -197,6 +198,12 @@ namespace Rebus.RabbitMQ
         {
             get { return ensureExchangeIsDeclared; }
             set { ensureExchangeIsDeclared = value; }
+        }
+
+        public bool BindDefaultTopicToInputQueue
+        {
+            get { return bindDefaultTopicToInputQueue; }
+            set { bindDefaultTopicToInputQueue = value; }
         }
 
         public ushort PrefetchCount
@@ -378,29 +385,26 @@ namespace Rebus.RabbitMQ
 
         void InitializeLogicalQueue(string queueName, IModel model)
         {
-            try
+            log.Info("Initializing logical queue '{0}'", queueName);
+
+            var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
+
+            log.Debug("Declaring queue '{0}'", queueName);
+            model.QueueDeclare(queueName, durable: true,
+                               arguments: arguments,
+                               autoDelete: autoDeleteInputQueue,
+                               exclusive: false);
+
+            if (ensureExchangeIsDeclared)
             {
-                log.Info("Initializing logical queue '{0}'", queueName);
-
-                var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
-
-                log.Debug("Declaring queue '{0}'", queueName);
-                model.QueueDeclare(queueName, durable: true,
-                                   arguments: arguments, autoDelete: autoDeleteInputQueue, exclusive: false);
-
-                if (ensureExchangeIsDeclared)
-                {
-                    log.Debug("Declaring exchange '{0}'", ExchangeName);
-                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-
-                    log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
-                    model.QueueBind(queueName, ExchangeName, queueName);
-                }
+                log.Debug("Declaring exchange '{0}'", ExchangeName);
+                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
             }
-            catch (Exception e)
+
+            if (bindDefaultTopicToInputQueue)
             {
-                ErrorOnConnection(e);
-                throw;
+                log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
+                model.QueueBind(queueName, ExchangeName, queueName);
             }
         }
 

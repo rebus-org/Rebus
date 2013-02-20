@@ -15,6 +15,11 @@ namespace Rebus.RabbitMQ
             this.configurer = configurer;
         }
 
+        /// <summary>
+        /// Specifies that Rabbit should be used to route messages when doing multicast. This effectively
+        /// lets Rabbit be the subscription storage, and allows for subscribing to messages without having
+        /// any endpoint mappings at all.
+        /// </summary>
         public RabbitMqOptions ManageSubscriptions()
         {
             queue.ManageSubscriptions();
@@ -30,22 +35,50 @@ namespace Rebus.RabbitMQ
         /// Configure the exchange through which messages are routed to endpoint queues.
         /// </summary>
         /// <param name="exchangeName">The name of the RabbitMQ exchange.</param>
-        /// <param name="ensureExchangeIsDeclared">If true, Rebus will declare the exchange,
-        /// along with relevant bindings, if is does not already exist.</param>
-        /// <returns></returns>
-        public RabbitMqOptions ViaExchange(string exchangeName, bool ensureExchangeIsDeclared)
+        public RabbitMqOptions UseExchange(string exchangeName)
         {
             queue.ExchangeName = exchangeName;
-            queue.EnsureExchangeIsDeclared = ensureExchangeIsDeclared;
             return this;
         }
 
+        /// <summary>
+        /// Disables Rebus' default behavior of (re)declaring the exhange when it first interacts with Rabbit.
+        /// </summary>
+        public RabbitMqOptions DoNotDeclareExchange()
+        {
+            queue.EnsureExchangeIsDeclared = false;
+            return this;
+        }
+
+        /// <summary>
+        /// Disables Rebus' default behavior of creating a binding to the service's input queue from a topic with the same name.
+        /// If this is disabled, the service can not be addressed directly by other services, and the service cannot send
+        /// a message to itself with <see cref="IBus.SendLocal{TCommand}"/>
+        /// </summary>
+        public RabbitMqOptions DoNotBindDefaultTopicToInputQueue()
+        {
+            queue.BindDefaultTopicToInputQueue = false;
+            return this;
+        }
+
+        /// <summary>
+        /// Specifies that the input queue will be created with the auto-delete flag set, which results
+        /// in immediate deletion when we disconnect.
+        /// </summary>
         public RabbitMqOptions AutoDeleteInputQueue()
         {
             queue.AutoDeleteInputQueue();
             return this;
         }
 
+        /// <summary>
+        /// Adds an event name resolver to the list of resolvers that are used each time Rebus must find out
+        /// which topic to publish to, given the type of the published event. You can add multiple resolvers,
+        /// and they will be called in the order they were added until a not-null result is returned, ultimately
+        /// falling back to the default behavior of using a prettified full name of the .NET type as the
+        /// topic. E.g. .NET strings will be published to "System.String", a generic list of time spans will be published
+        /// to "System.Collections.Generic.List&lt;System.TimeSpan&gt;" etc.
+        /// </summary>
         public RabbitMqOptions AddEventNameResolver(Func<Type, string> resolver)
         {
             queue.AddEventNameResolver(resolver);
@@ -60,7 +93,7 @@ namespace Rebus.RabbitMQ
         /// to suboptimal performance or even crashes, if the queue size exceeds the maximum memory
         /// allowance for the endpoint application.</param>
         /// <returns>This <see cref="RabbitMqOptions"/> instance, allowing further configuration.</returns>
-        public RabbitMqOptions PrefetchCount(ushort prefetchCount)
+        public RabbitMqOptions SetPrefetchCount(ushort prefetchCount)
         {
             queue.PrefetchCount = prefetchCount;
             return this;
