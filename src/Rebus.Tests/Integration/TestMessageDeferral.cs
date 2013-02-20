@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Raven.Database.Util;
 using Rebus.Logging;
 using Rebus.Tests.Integration.Factories;
 using Shouldly;
@@ -68,8 +69,13 @@ namespace Rebus.Tests.Integration
         public void WorksReliablyWithManyTimeouts()
         {
             // arrange
-            var messages = new List<Tuple<DateTime, DateTime>>();
-            handlerActivator.Handle<MessageWithExpectedReturnTime>(m => messages.Add(new Tuple<DateTime, DateTime>(m.ExpectedReturnTime, DateTime.UtcNow)));
+            var messageIdCounter = 0;
+            var messages = new ConcurrentSet<Tuple<DateTime, DateTime, int>>();
+            handlerActivator
+                .Handle<MessageWithExpectedReturnTime>(
+                    m => messages.Add(new Tuple<DateTime, DateTime, int>(m.ExpectedReturnTime,
+                                                                         DateTime.UtcNow,
+                                                                         Interlocked.Increment(ref messageIdCounter))));
 
             var acceptedTolerance = 7.Seconds();
             var random = new Random();
@@ -82,15 +88,34 @@ namespace Rebus.Tests.Integration
                 bus.Defer(delay, message);
             });
 
-            Thread.Sleep(30.Seconds() + acceptedTolerance + acceptedTolerance);
+            var acceptedTimeSpan = 30.Seconds() + acceptedTolerance + acceptedTolerance;
+            var startTime = DateTime.Now;
+            
+            while (messages.Count < 500 
+                && DateTime.Now.ElapsedSince(startTime) < acceptedTimeSpan)
+            {
+                Thread.Sleep(100);
+            }
+
+            // wait another short while, in case something causes more than 500 messages to be received
+            Thread.Sleep(1.Seconds());
 
             // assert
             messages.Count.ShouldBe(500);
 
             foreach (var messageTimes in messages)
             {
-                messageTimes.Item2.ShouldBeGreaterThan(messageTimes.Item1 - acceptedTolerance);
-                messageTimes.Item2.ShouldBeLessThan(messageTimes.Item1 + acceptedTolerance);
+                try
+                {
+                    messageTimes.Item2.ShouldBeGreaterThan(messageTimes.Item1 - acceptedTolerance);
+                    messageTimes.Item2.ShouldBeLessThan(messageTimes.Item1 + acceptedTolerance);
+                }
+                catch (Exception e)
+                {
+                    throw new AssertionException(
+                        string.Format("Something was not as it should on message with ID {0}", messageTimes.Item3),
+                        e);
+                }
             }
         }
     }
