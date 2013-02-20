@@ -8,6 +8,11 @@ using Rebus.Configuration;
 
 namespace Rebus.Autofac
 {
+    /// <summary>
+    /// Implements an adapter for the Autofac IoC container, delegating instantiation
+    /// of message handlers and their dependencies to Autofac. Components are resolved
+    /// in a lifetime scope following the unit of work pattern in Rebus.
+    /// </summary>
     public class AutofacContainerAdapter : IContainerAdapter
     {
         public static readonly object UnitOfWorkLifetime = "UnitOfWorkLifetime";
@@ -16,6 +21,11 @@ namespace Rebus.Autofac
 
         readonly IContainer container;
 
+        /// <summary>
+        /// Constructs an adapter for a specific Autofac container instance.
+        /// </summary>
+        /// <param name="container">The container from which message handlers are
+        /// their dependencies will be resolved.</param>
         public AutofacContainerAdapter(IContainer container)
         {
             if (container == null)
@@ -26,6 +36,12 @@ namespace Rebus.Autofac
             this.container = container;
         }
 
+        /// <summary>
+        /// Resolves a sequence of handlers from the container, where each handler
+        /// implements the <see cref="IHandleMessages{T}"/> interface.
+        /// </summary>
+        /// <typeparam name="T">The type of message to get handlers for.</typeparam>
+        /// <returns>Instances of handlers for the specified message type.</returns>
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
             var context = MessageContext.GetCurrent();
@@ -34,10 +50,20 @@ namespace Rebus.Autofac
             return lifetimeScope.Resolve<IEnumerable<IHandleMessages<T>>>().ToArray();
         }
 
+        /// <summary>
+        /// This method is a no-op, since handlers will be released/disposed by
+        /// Autofac at the end of their respective lifetimes.
+        /// </summary>
+        /// <param name="handlerInstances"></param>
         public void Release(IEnumerable handlerInstances)
         {
         }
 
+        /// <summary>
+        /// Registers the specified bus instance in the Autofac container, taking
+        /// responsibility of its disposal when its the right time.
+        /// </summary>
+        /// <param name="bus">The hippie bus.</param>
         public void SaveBusInstances(IBus bus)
         {
             var builder = new ContainerBuilder();
