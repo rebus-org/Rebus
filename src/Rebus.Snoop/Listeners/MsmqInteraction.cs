@@ -5,6 +5,7 @@ using System.Linq;
 using System.Messaging;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
 using Rebus.Shared;
@@ -22,6 +23,7 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (ReloadQueuesRequested request) => LoadQueues(request.Machine));
             Messenger.Default.Register(this, (ReloadMessagesRequested request) => LoadMessages(request.Queue));
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
+            Messenger.Default.Register(this, (MoveMessagesToQueueRequested request) => MoveMessagesToQueue(request.MessagesToMove));
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
             Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
             Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message, request.Queue));
@@ -49,7 +51,7 @@ namespace Rebus.Snoop.Listeners
                                 try
                                 {
                                     var msmqMessage = queue.ReceiveById(message.Id, transaction);
-                                    
+
                                     var newMsmqMessage =
                                         new System.Messaging.Message
                                             {
@@ -88,7 +90,7 @@ namespace Rebus.Snoop.Listeners
                         if (a.Exception != null)
                         {
                             Messenger.Default.Send(NotificationEvent.Fail(a.Exception.ToString(),
-                                                                          "Something went wrong while attempting to update message with ID {0}", 
+                                                                          "Something went wrong while attempting to update message with ID {0}",
                                                                           message.Id));
 
                             return;
@@ -238,7 +240,7 @@ Body:
                                   {
                                       try
                                       {
-                                          MoveMessage(message);
+                                          MoveMessageToSourceQueue(message);
                                           result.Moved.Add(message);
                                       }
                                       catch (Exception e)
@@ -265,6 +267,81 @@ Body:
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
 
+        void MoveMessagesToQueue(List<Message> messagesToMove)
+        {
+            Task.Factory
+                .StartNew(() => messagesToMove)
+                .ContinueWith(t =>
+                    {
+                        var destinationQueue = Prompt("Please enter destination queue (e.g. 'someQueue@someMachine'): ");
+                        return new
+                                   {
+                                       DestinationQueue = destinationQueue,
+                                       Messages = t.Result
+                                   };
+                    }, Context.UiThread)
+                .ContinueWith(t =>
+                    {
+                        var result = new
+                                         {
+                                             Moved = new List<Message>(),
+                                             Failed = new List<Tuple<Message, string>>(),
+                                             DestinationQueue = t.Result.DestinationQueue,
+                                         };
+
+                        if (string.IsNullOrEmpty(t.Result.DestinationQueue))
+                        {
+                            result.Failed.AddRange(t.Result.Messages.Select(m => Tuple.Create(m, "No destination queue entered")));
+                            return result;
+                        }
+
+                        foreach (var message in t.Result.Messages)
+                        {
+                            try
+                            {
+                                MoveMessage(message, t.Result.DestinationQueue);
+                                result.Moved.Add(message);
+                            }
+                            catch (Exception e)
+                            {
+                                result.Failed.Add(new Tuple<Message, string>(message, e.ToString()));
+                            }
+                        }
+
+                        return result;
+                    })
+                .ContinueWith(t =>
+                    {
+                        var result = t.Result;
+
+                        if (result.Failed.Any())
+                        {
+                            var details = string.Join(Environment.NewLine,
+                                                      result.Failed.Select(
+                                                          f => string.Format("Id {0}: {1}", f.Item1.Id, f.Item2)));
+
+                            return NotificationEvent.Fail(details,
+                                                          "{0} messages moved to {1} - {2} move operations failed",
+                                                          result.Moved.Count, result.DestinationQueue,
+                                                          result.Failed.Count);
+                        }
+
+                        return NotificationEvent.Success("{0} messages moved to {1}", result.Moved.Count,
+                                                         result.DestinationQueue);
+                    })
+                .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
+
+        }
+
+        string Prompt(string text)
+        {
+            var dialog = new PromptDialog {PromptText = text};
+
+            dialog.ShowDialog();
+
+            return dialog.ResultText;
+        }
+
         void DeleteMessage(Message message)
         {
             using (var queue = new MessageQueue(message.QueuePath))
@@ -287,17 +364,22 @@ Body:
             Messenger.Default.Send(new MessageDeleted(message));
         }
 
-        void MoveMessage(Message message)
+        void MoveMessageToSourceQueue(Message message)
+        {
+            MoveMessage(message, message.Headers[Headers.SourceQueue]);
+        }
+
+        static void MoveMessage(Message message, string destinationQueueName)
         {
             var sourceQueuePath = message.QueuePath;
-            var destinationQueuePath = MsmqUtil.GetFullPath(message.Headers[Headers.SourceQueue]);
+            var destinationQueuePath = MsmqUtil.GetFullPath(destinationQueueName);
 
             using (var transaction = new MessageQueueTransaction())
             {
                 transaction.Begin();
                 try
                 {
-                    var sourceQueue = new MessageQueue(sourceQueuePath) { MessageReadPropertyFilter = DefaultFilter() };
+                    var sourceQueue = new MessageQueue(sourceQueuePath) {MessageReadPropertyFilter = DefaultFilter()};
                     var destinationQueue = new MessageQueue(destinationQueuePath);
 
                     var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);
@@ -502,8 +584,8 @@ Body:
                                         })
                             .ToArray();
 
-                                  return queues;
-                              })
+                        return queues;
+                    })
                 .ContinueWith(t =>
                                   {
                                       if (!t.IsFaulted)

@@ -109,6 +109,7 @@
     <Compile Include="Events\DeleteMessagesRequested.cs" />
     <Compile Include="Events\DownloadMessagesRequested.cs" />
     <Compile Include="Events\MessageDeleted.cs" />
+    <Compile Include="Events\MoveMessagesToQueueRequested.cs" />
     <Compile Include="Events\NotificationAdded.cs" />
     <Compile Include="Events\NotificationEvent.cs" />
     <Compile Include="Events\ReloadMessagesRequested.cs" />
@@ -119,6 +120,9 @@
     <Compile Include="Events\UpdateMessageRequested.cs" />
     <Compile Include="Links\Stubs.cs" />
     <Compile Include="Msmq\MessageQueueExtensions.cs" />
+    <Compile Include="PromptDialog.xaml.cs">
+      <DependentUpon>PromptDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="ViewModel\Models\EditableDictionary.cs" />
     <Compile Include="ViewModel\Models\EditableKeyValuePair.cs" />
@@ -145,6 +149,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="PromptDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
