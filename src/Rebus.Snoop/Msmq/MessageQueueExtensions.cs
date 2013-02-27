@@ -97,8 +97,8 @@ namespace Rebus.Snoop.Msmq
 
             var newQueue = new MessageQueue(queue.Path);
             newQueue.MessageReadPropertyFilter = flags;
-            return (uint) newQueue.GetAllMessages().Length;
-            
+            return (uint) newQueue.GetAllMessages()
+                                  .Length;
             //return GetCount(queue.Path);
         }
 

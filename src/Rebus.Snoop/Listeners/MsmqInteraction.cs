@@ -490,27 +490,53 @@ Body:
         {
             Task.Factory
                 .StartNew(() =>
-                              {
-                                  var privateQueues = MessageQueue.GetPrivateQueuesByMachine(machine.MachineName);
+                    {
+                        var queues = MessageQueue
+                            .GetPrivateQueuesByMachine(machine.MachineName)
+                            .Concat(new[]
+                                        {
+                                            // don't add non-transactional dead letter queue - wouldn't be safe!
+                                            //new MessageQueue(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DeadLetter", machine.MachineName)),
 
-                                  return privateQueues;
+                                            new MessageQueue(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DeadXact", machine.MachineName)),
+                                        })
+                            .ToArray();
+
+                                  return queues;
                               })
                 .ContinueWith(t =>
                                   {
                                       if (!t.IsFaulted)
                                       {
-                                          var queues = t.Result
-                                              .Select(queue => new Queue(queue));
+                                          try
+                                          {
+                                              var queues = t.Result
+                                                            .Select(queue =>
+                                                                {
+                                                                    try
+                                                                    {
+                                                                        return new Queue(queue);
+                                                                    }
+                                                                    catch (Exception e)
+                                                                    {
+                                                                        throw new ApplicationException(string.Format("An error occurred while loading message queue {0}", queue.Path), e);
+                                                                    }
+                                                                });
 
-                                          machine.SetQueues(queues);
+                                              machine.SetQueues(queues);
 
-                                          return NotificationEvent.Success("{0} queues loaded from {1}",
-                                                                       t.Result.Length,
-                                                                       machine.MachineName);
+                                              return NotificationEvent.Success("{0} queues loaded from {1}",
+                                                                               t.Result.Length,
+                                                                               machine.MachineName);
+                                          }
+                                          catch (Exception e)
+                                          {
+                                              return NotificationEvent.Fail(e.ToString(), "Could not load queues from {0}: {1}",
+                                                                           machine.MachineName, e.Message);
+                                          }
                                       }
 
-                                      var details = t.Exception.ToString();
-                                      return NotificationEvent.Fail(details, "Could not load queues from {0}: {1}",
+                                      return NotificationEvent.Fail(t.Exception.ToString(), "Could not load queues from {0}: {1}",
                                                                    machine.MachineName, t.Exception.Message);
                                   }, Context.UiThread)
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);

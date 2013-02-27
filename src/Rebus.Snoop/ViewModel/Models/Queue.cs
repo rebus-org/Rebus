@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -34,9 +35,30 @@ namespace Rebus.Snoop.ViewModel.Models
         public Queue(MessageQueue queue)
             : this()
         {
-            QueueName = queue.QueueName;
             QueuePath = queue.Path;
-            MessageCount = (int)queue.GetCount();
+            try
+            {
+                QueueName = queue.QueueName;
+            }
+            catch (Exception e)
+            {
+                Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
+                                                              "An error occurred while getting queue name for {0}: {1}",
+                                                              queue.Path, e.Message));
+                QueueName = QueuePath;
+            }
+
+            try
+            {
+                MessageCount = (int)queue.GetCount();
+            }
+            catch (Exception e)
+            {
+                Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
+                                                              "An error occurred while retrieving message count from {0}: {1}",
+                                                              QueueName, e.Message));
+                MessageCount = -1;
+            }
         }
 
         public string QueueName
@@ -84,7 +106,7 @@ namespace Rebus.Snoop.ViewModel.Models
         public void Add(Message message)
         {
             Messages.Add(message);
-            
+
             // in case the queue hasn't been initialized, we need to just increment this number
             MessageCount++;
 
