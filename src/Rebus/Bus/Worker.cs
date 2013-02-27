@@ -375,8 +375,8 @@ namespace Rebus.Bus
 
         void HandlePoisonMessage(string id, ReceivedTransportMessage transportMessage)
         {
-            log.Error("Handling message {0} has failed the maximum number of times", id);
             var errorText = errorTracker.GetErrorText(id);
+            log.Error("Handling message {0} has failed the maximum number of times - details: {1}", id, errorText);
             var poisonMessageInfo = errorTracker.GetPoisonMessageInfo(id);
 
             MessageFailedMaxNumberOfTimes(transportMessage, errorText);
