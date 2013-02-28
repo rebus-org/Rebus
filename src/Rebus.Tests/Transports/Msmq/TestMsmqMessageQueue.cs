@@ -192,6 +192,7 @@ The following addresses were collected:
         /// 
         /// </summary>
         [TestCase(1000)]
+        [TestCase(10000)]
         public void CheckSendPerformance(int count)
         {
             var queue = new MsmqMessageQueue("test.msmq.performance").PurgeInputQueue();

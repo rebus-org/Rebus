@@ -175,9 +175,9 @@ namespace Rebus.Bus
                             SystemException(this, e);
                         }
                     }
-                    catch (Exception e)
+                    catch (Exception ex)
                     {
-                        log.Error(e, "An exception occurred while raising an error event! There's nothing we can do about" +
+                        log.Error(ex, "An exception occurred while raising an error event! There's nothing we can do about" +
                                      " it at this point, except kick back and wait for a while, because we probably don't" +
                                      " want to spam the logs - so we'll sleep for a second before carrying on...");
                         

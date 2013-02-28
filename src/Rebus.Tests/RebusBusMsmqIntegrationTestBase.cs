@@ -8,7 +8,6 @@ using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Tests.Integration;
-using Rebus.Timeout;
 using Rebus.Transports.Msmq;
 using log4net.Config;
 
