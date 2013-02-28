@@ -159,18 +159,29 @@ namespace Rebus.Bus
                 }
                 catch (Exception e)
                 {
-                    // if there's two levels of TargetInvocationExceptions, it's user code that threw...
-                    if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
+                    try
                     {
-                        UserException(this, e.InnerException.InnerException);
+                        // if there's two levels of TargetInvocationExceptions, it's user code that threw...
+                        if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
+                        {
+                            UserException(this, e.InnerException.InnerException);
+                        }
+                        else if (e is TargetInvocationException)
+                        {
+                            UserException(this, e.InnerException);
+                        }
+                        else
+                        {
+                            SystemException(this, e);
+                        }
                     }
-                    else if (e is TargetInvocationException)
+                    catch (Exception e)
                     {
-                        UserException(this, e.InnerException);
-                    }
-                    else
-                    {
-                        SystemException(this, e);
+                        log.Error(e, "An exception occurred while raising an error event! There's nothing we can do about" +
+                                     " it at this point, except kick back and wait for a while, because we probably don't" +
+                                     " want to spam the logs - so we'll sleep for a second before carrying on...");
+                        
+                        Thread.Sleep(TimeSpan.FromSeconds(1));
                     }
                 }
             }
