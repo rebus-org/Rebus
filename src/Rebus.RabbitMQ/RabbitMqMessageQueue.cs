@@ -29,19 +29,23 @@ namespace Rebus.RabbitMQ
         readonly object disposalLock = new object();
         volatile bool disposed;
 
+        readonly HashSet<Type> subscriptions = new HashSet<Type>();
+        readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
+
+        const string CurrentModelKey = "current_model";
+
         string exchangeName = "Rebus";
         bool ensureExchangeIsDeclared = true;
         bool bindDefaultTopicToInputQueue = true;
         bool autoDeleteInputQueue;
         ushort prefetchCount = 100;
+        bool managesSubscriptions;
 
         [ThreadStatic]
         static IModel threadBoundModel;
 
         [ThreadStatic]
         static Subscription threadBoundSubscription;
-
-        readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
 
         public static RabbitMqMessageQueue Sender(string connectionString)
         {
@@ -54,12 +58,6 @@ namespace Rebus.RabbitMQ
             if (inputQueueName == null) return;
 
             this.inputQueueName = inputQueueName;
-        }
-
-        public RabbitMqMessageQueue AutoDeleteInputQueue()
-        {
-            autoDeleteInputQueue = true;
-            return this;
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
@@ -167,50 +165,19 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
-        IModel GetSenderModel(ITransactionContext context)
-        {
-            if (context[CurrentModelKey] != null)
-                return (IModel)context[CurrentModelKey];
-
-            var model = GetConnection().CreateModel();
-            model.TxSelect();
-            context[CurrentModelKey] = model;
-
-            context.DoCommit += model.TxCommit;
-            context.DoRollback += model.TxRollback;
-
-            return model;
-        }
-
-        const string CurrentModelKey = "current_model";
-
         public string InputQueue { get { return inputQueueName; } }
 
         public string InputQueueAddress { get { return inputQueueName; } }
 
-        public string ExchangeName
-        {
-            get { return exchangeName; }
-            set { exchangeName = value; }
-        }
+        public string ExchangeName { get { return exchangeName; } }
 
-        public bool EnsureExchangeIsDeclared
-        {
-            get { return ensureExchangeIsDeclared; }
-            set { ensureExchangeIsDeclared = value; }
-        }
+        public bool EnsureExchangeIsDeclared { get { return ensureExchangeIsDeclared; } }
 
-        public bool BindDefaultTopicToInputQueue
-        {
-            get { return bindDefaultTopicToInputQueue; }
-            set { bindDefaultTopicToInputQueue = value; }
-        }
+        public bool BindDefaultTopicToInputQueue { get { return bindDefaultTopicToInputQueue; } }
 
-        public ushort PrefetchCount
-        {
-            get { return prefetchCount; }
-            set { prefetchCount = value; }
-        }
+        public ushort PrefetchCount { get { return prefetchCount; } }
+
+        public bool ManagesSubscriptions { get { return managesSubscriptions; } }
 
         public void Dispose()
         {
@@ -258,10 +225,6 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        public bool ManagesSubscriptions { get; private set; }
-
-        readonly HashSet<Type> subscriptions = new HashSet<Type>();
-
         public void Subscribe(Type messageType, string inputQueueAddress)
         {
             if (autoDeleteInputQueue)
@@ -291,18 +254,6 @@ namespace Rebus.RabbitMQ
             {
                 ErrorOnConnection(e);
                 throw;
-            }
-        }
-
-        void EstablishSubscriptions(IModel model)
-        {
-            if (model == null) return;
-
-            foreach (var subscription in subscriptions)
-            {
-                var topic = GetEventName(subscription);
-                log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-                model.QueueBind(InputQueueAddress, ExchangeName, topic);
             }
         }
 
@@ -351,6 +302,75 @@ namespace Rebus.RabbitMQ
             return GetPrettyTypeName(messageType);
         }
 
+        public RabbitMqMessageQueue ManageSubscriptions()
+        {
+            log.Info("RabbitMQ will manage subscriptions");
+            managesSubscriptions = true;
+            return this;
+        }
+
+        public RabbitMqMessageQueue DoNotBindDefaultTopicToInputQueue()
+        {
+            log.Info("Will not bind default topic {0} to input queue {1}", inputQueueName, inputQueueName);
+            bindDefaultTopicToInputQueue = false;
+            return this;
+        }
+
+        public RabbitMqMessageQueue DoNotDeclareExchange()
+        {
+            log.Info("Will not automatically (re)declare exchange");
+            ensureExchangeIsDeclared = false;
+            return this;
+        }
+
+        public RabbitMqMessageQueue UseExchange(string exchangeNameToUse)
+        {
+            log.Info("Will use exchanged named {0}", exchangeNameToUse);
+            exchangeName = exchangeNameToUse;
+            return this;
+        }
+
+        public RabbitMqMessageQueue Prefetch(ushort prefetchCountToSet)
+        {
+            log.Info("Will set prefetch count to {0} on new connections", prefetchCountToSet);
+            prefetchCount = prefetchCountToSet;
+            return this;
+        }
+
+        public RabbitMqMessageQueue AutoDeleteInputQueue()
+        {
+            log.Info("Will set the autodelete flag on input queue");
+            autoDeleteInputQueue = true;
+            return this;
+        }
+
+        IModel GetSenderModel(ITransactionContext context)
+        {
+            if (context[CurrentModelKey] != null)
+                return (IModel)context[CurrentModelKey];
+
+            var model = GetConnection().CreateModel();
+            model.TxSelect();
+            context[CurrentModelKey] = model;
+
+            context.DoCommit += model.TxCommit;
+            context.DoRollback += model.TxRollback;
+
+            return model;
+        }
+
+        void EstablishSubscriptions(IModel model)
+        {
+            if (model == null) return;
+
+            foreach (var subscription in subscriptions)
+            {
+                var topic = GetEventName(subscription);
+                log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
+                model.QueueBind(InputQueueAddress, ExchangeName, topic);
+            }
+        }
+
         static string GetPrettyTypeName(Type messageType)
         {
             if (messageType.IsGenericType)
@@ -375,12 +395,6 @@ namespace Rebus.RabbitMQ
                 return builder.ToString();
             }
             return messageType.FullName;
-        }
-
-        public void ManageSubscriptions()
-        {
-            log.Info("RabbitMQ will manage subscriptions");
-            ManagesSubscriptions = true;
         }
 
         void InitializeLogicalQueue(string queueName, IModel model)

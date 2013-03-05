@@ -37,7 +37,7 @@ namespace Rebus.RabbitMQ
         /// <param name="exchangeName">The name of the RabbitMQ exchange.</param>
         public RabbitMqOptions UseExchange(string exchangeName)
         {
-            queue.ExchangeName = exchangeName;
+            queue.UseExchange(exchangeName);
             return this;
         }
 
@@ -46,7 +46,7 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public RabbitMqOptions DoNotDeclareExchange()
         {
-            queue.EnsureExchangeIsDeclared = false;
+            queue.DoNotDeclareExchange();
             return this;
         }
 
@@ -57,7 +57,7 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public RabbitMqOptions DoNotBindDefaultTopicToInputQueue()
         {
-            queue.BindDefaultTopicToInputQueue = false;
+            queue.DoNotBindDefaultTopicToInputQueue();
             return this;
         }
 
@@ -95,7 +95,7 @@ namespace Rebus.RabbitMQ
         /// <returns>This <see cref="RabbitMqOptions"/> instance, allowing further configuration.</returns>
         public RabbitMqOptions SetPrefetchCount(ushort prefetchCount)
         {
-            queue.PrefetchCount = prefetchCount;
+            queue.Prefetch(prefetchCount);
             return this;
         }
 
