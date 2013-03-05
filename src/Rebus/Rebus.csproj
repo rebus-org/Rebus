@@ -88,6 +88,7 @@
     <Compile Include="Guard.cs" />
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
+    <Compile Include="INeedInitializationBeforeStart.cs" />
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="MultipleSagaHandlersException.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />

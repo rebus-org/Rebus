@@ -97,6 +97,21 @@ namespace Rebus.Bus
             }
         }
 
+        IEnumerable<object> InjectedServices()
+        {
+            return new object[]
+                       {
+                           activateHandlers,
+                           headerContext, sendMessages, receiveMessages,
+                           storeSubscriptions, storeSagaData,
+                           dueTimeoutScheduler, determineMessageOwnership,
+                           serializeMessages,
+                           inspectHandlerPipeline,
+                           errorTracker
+                       }
+                .Where(r => !ReferenceEquals(null, r));
+        }
+
         /// <summary>
         /// Starts the bus
         /// </summary>
@@ -315,7 +330,7 @@ namespace Rebus.Bus
             }
 
             var messages = new List<object> { timeoutRequest };
-            
+
             InternalSend(timeoutManagerAddress, messages);
         }
 
@@ -377,12 +392,23 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 busMode = BusMode.OneWayClientMode;
             }
 
+            InitializeServicesThatMustBeInitialized();
+
             log.Info("Initializing bus with {0} workers", numberOfWorkers);
 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
 
             log.Info("Bus started");
+        }
+
+        void InitializeServicesThatMustBeInitialized()
+        {
+            foreach (var mustBeInitialized in InjectedServices().OfType<INeedInitializationBeforeStart>())
+            {
+                log.Info("Initializing {0}", mustBeInitialized.GetType());
+                mustBeInitialized.Initialize();
+            }
         }
 
         internal void InternalReply(List<object> messages)
@@ -577,13 +603,7 @@ element)"));
 
             SetNumberOfWorkers(0);
 
-            var disposables = new object[]
-                {
-                    headerContext, sendMessages, receiveMessages,
-                    storeSubscriptions, storeSagaData,
-                    dueTimeoutScheduler
-                }
-                .Where(r => !ReferenceEquals(null, r))
+            var disposables = InjectedServices()
                 .OfType<IDisposable>()
                 .Distinct();
 
