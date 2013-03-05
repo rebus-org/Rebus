@@ -61,6 +61,7 @@ namespace Rebus.Bus
         /// <param name="serializeMessages">Will be used to serialize and deserialize transport messages.</param>
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
+        /// <param name="storeTimeouts">Optionally provides an internal timeout manager to be used instead of sending timeout requests to an external timeout manager</param>
         public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts)
         {
             this.activateHandlers = activateHandlers;
@@ -79,7 +80,7 @@ namespace Rebus.Bus
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
-            log.Info("Rebus bus created");
+            log.Info("Rebus bus {0} created", rebusId);
 
             if (storeTimeouts == null)
             {
@@ -107,7 +108,8 @@ namespace Rebus.Bus
                            dueTimeoutScheduler, determineMessageOwnership,
                            serializeMessages,
                            inspectHandlerPipeline,
-                           errorTracker
+                           errorTracker,
+                           storeTimeouts
                        }
                 .Where(r => !ReferenceEquals(null, r));
         }
