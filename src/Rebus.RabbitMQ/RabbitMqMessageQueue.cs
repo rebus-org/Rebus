@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -29,7 +30,7 @@ namespace Rebus.RabbitMQ
         readonly object disposalLock = new object();
         volatile bool disposed;
 
-        readonly HashSet<Type> subscriptions = new HashSet<Type>();
+        readonly ConcurrentDictionary<Type, string> subscriptions = new ConcurrentDictionary<Type, string>();
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
 
         const string CurrentModelKey = "current_model";
@@ -229,13 +230,13 @@ namespace Rebus.RabbitMQ
         {
             if (autoDeleteInputQueue)
             {
-                subscriptions.Add(messageType);
+                subscriptions.TryAdd(messageType, "");
 
                 var model = threadBoundModel;
                 if (model != null)
                 {
                     var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
+                    log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
                     model.QueueBind(InputQueueAddress, ExchangeName, topic);
                 }
                 return;
@@ -246,8 +247,8 @@ namespace Rebus.RabbitMQ
                 using (var model = GetConnection().CreateModel())
                 {
                     var topic = GetEventName(messageType);
-                    log.Info("Subscribing {0} to {1}", inputQueueAddress, topic);
-                    model.QueueBind(inputQueueAddress, ExchangeName, topic);
+                    log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
+                    model.QueueBind(InputQueueAddress, ExchangeName, topic);
                 }
             }
             catch (Exception e)
@@ -261,7 +262,8 @@ namespace Rebus.RabbitMQ
         {
             if (autoDeleteInputQueue)
             {
-                subscriptions.Remove(messageType);
+                string dummy;
+                subscriptions.TryRemove(messageType, out dummy);
 
                 var model = threadBoundModel;
                 if (model != null)
@@ -278,8 +280,8 @@ namespace Rebus.RabbitMQ
                 using (var model = GetConnection().CreateModel())
                 {
                     var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", inputQueueAddress, topic);
-                    model.QueueUnbind(inputQueueAddress, ExchangeName, topic, new Hashtable());
+                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
+                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Hashtable());
                 }
             }
             catch (Exception e)
@@ -363,7 +365,7 @@ namespace Rebus.RabbitMQ
         {
             if (model == null) return;
 
-            foreach (var subscription in subscriptions)
+            foreach (var subscription in subscriptions.Keys)
             {
                 var topic = GetEventName(subscription);
                 log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
