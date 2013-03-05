@@ -77,7 +77,7 @@ namespace Rebus.Tests.Integration
                                                                          DateTime.UtcNow,
                                                                          Interlocked.Increment(ref messageIdCounter))));
 
-            var acceptedTolerance = 7.Seconds();
+            var acceptedTolerance = 8.Seconds();
             var random = new Random();
 
             // act
@@ -96,6 +96,13 @@ namespace Rebus.Tests.Integration
             {
                 Thread.Sleep(100);
             }
+
+            if (messages.Count < 500)
+            {
+                Console.WriteLine("Time has gone, only {0} messages have been received!", messages.Count);
+            }
+
+            Console.WriteLine("Waiting one more second...");
 
             // wait another short while, in case something causes more than 500 messages to be received
             Thread.Sleep(1.Seconds());
