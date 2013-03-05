@@ -17,12 +17,13 @@ namespace Rebus.Serialization.Json
     /// </summary>
     public class JsonMessageSerializer : ISerializeMessages
     {
-        static readonly JsonSerializerSettings Settings =
+        readonly JsonSerializerSettings settings = 
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-
-        static readonly CultureInfo SerializationCulture = CultureInfo.InvariantCulture;
-
-        static readonly Encoding Encoding = Encoding.UTF7;
+        
+        readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
+        
+        readonly Encoding encoding = Encoding.UTF7;
+        
         readonly NonDefaultSerializationBinder binder;
 
         /// <summary>
@@ -31,7 +32,7 @@ namespace Rebus.Serialization.Json
         public JsonMessageSerializer()
         {
             binder = new NonDefaultSerializationBinder();
-            Settings.Binder = binder;
+            settings.Binder = binder;
         }
 
         /// <summary>
@@ -39,17 +40,17 @@ namespace Rebus.Serialization.Json
         /// </summary>
         public TransportMessageToSend Serialize(Message message)
         {
-            using (new CultureContext(SerializationCulture))
+            using (new CultureContext(serializationCulture))
             {
-                var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, Settings);
+                var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, settings);
 
                 var headers = message.Headers.Clone();
                 headers[Headers.ContentType] = "text/json";
-                headers[Headers.Encoding] = Encoding.WebName;
+                headers[Headers.Encoding] = encoding.WebName;
 
                 return new TransportMessageToSend
                            {
-                               Body = Encoding.GetBytes(messageAsString),
+                               Body = encoding.GetBytes(messageAsString),
                                Headers = headers,
                                Label = message.GetLabel(),
                            };
@@ -61,9 +62,9 @@ namespace Rebus.Serialization.Json
         /// </summary>
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
-            using (new CultureContext(SerializationCulture))
+            using (new CultureContext(serializationCulture))
             {
-                var messages = (object[])JsonConvert.DeserializeObject(Encoding.GetString(transportMessage.Body), Settings);
+                var messages = (object[])JsonConvert.DeserializeObject(encoding.GetString(transportMessage.Body), settings);
 
                 return new Message
                            {
