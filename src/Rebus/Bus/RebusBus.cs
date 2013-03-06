@@ -606,6 +606,7 @@ element)"));
             SetNumberOfWorkers(0);
 
             var disposables = InjectedServices()
+                .Except(new object[] {activateHandlers})
                 .OfType<IDisposable>()
                 .Distinct();
 
