@@ -7,7 +7,6 @@ using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
-using Rebus.Timeout;
 using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit

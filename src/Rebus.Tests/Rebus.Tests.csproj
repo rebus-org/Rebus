@@ -144,6 +144,7 @@
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
+    <Compile Include="Bugs\DoesNotCrashWhenRunningWithSingleRabbitThread.cs" />
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
     <Compile Include="Configuration\TestBuiltinContainerAdapter.cs" />

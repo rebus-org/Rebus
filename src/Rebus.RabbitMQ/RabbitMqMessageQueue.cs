@@ -13,7 +13,7 @@ using Rebus.Shared;
 
 namespace Rebus.RabbitMQ
 {
-    public class RabbitMqMessageQueue : IMulticastTransport, IDisposable
+    public class RabbitMqMessageQueue : IMulticastTransport, IDisposable, INeedInitializationBeforeStart
     {
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
@@ -421,6 +421,14 @@ namespace Rebus.RabbitMQ
             {
                 log.Debug("Binding topic '{0}' to queue '{1}'", queueName, queueName);
                 model.QueueBind(queueName, ExchangeName, queueName);
+            }
+        }
+
+        public void Initialize()
+        {
+            using (var model = GetConnection().CreateModel())
+            {
+                InitializeLogicalQueue(inputQueueName, model);
             }
         }
 
