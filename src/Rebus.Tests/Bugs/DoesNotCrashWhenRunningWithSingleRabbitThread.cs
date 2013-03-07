@@ -12,7 +12,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture(Ignore = TestCategories.IgnoreLongRunningTests)]
+    [TestFixture(Ignore = TestCategories.IgnoreLongRunningTests), Category(TestCategories.Rabbit)]
     public class DoesNotCrashWhenRunningWithSingleRabbitThread : RabbitMqFixtureBase
     {
         const string InputQueueName1 = "test.workerCount1";
