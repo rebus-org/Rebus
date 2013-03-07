@@ -61,6 +61,8 @@ namespace Rebus.RabbitMQ
             this.inputQueueName = inputQueueName;
         }
 
+        bool SenderOnly { get { return string.IsNullOrEmpty(inputQueueName); } }
+
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             try
@@ -426,6 +428,8 @@ namespace Rebus.RabbitMQ
 
         public void Initialize()
         {
+            if (!SenderOnly) return;
+
             using (var model = GetConnection().CreateModel())
             {
                 InitializeLogicalQueue(inputQueueName, model);
