@@ -21,6 +21,10 @@ namespace Rebus.Tests.Bugs
 
         protected override void DoSetUp()
         {
+            DeleteQueue(InputQueueName1);
+            DeleteQueue(InputQueueName2);
+            DeleteQueue(ErrorQueueName);
+
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true){ShowTimestamps = true};
         }
 
@@ -58,14 +62,14 @@ namespace Rebus.Tests.Bugs
                     {
                         Thread.Sleep(TimeSpan.FromSeconds(2));
 
-                        bus2.Publish(new ThisIsJustSomeRandomTestMessage{WithSomethingInside=string.Format("Message number {0:000}", messageCounter++)});
+                        bus2.Publish(new ThisIsJustSomeRandomTestMessage{WithSomethingInside=string.Format("Message number {0}", messageCounter++)});
                     });
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));
             }
 
             receivedStrings.ShouldBe(Enumerable.Range(1, iterations)
-                                               .Select(i => string.Format("Message number {0:000}", i))
+                                               .Select(i => string.Format("Message number {0}", i))
                                                .ToList());
         }
 

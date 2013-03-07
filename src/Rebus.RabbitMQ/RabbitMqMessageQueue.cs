@@ -428,7 +428,7 @@ namespace Rebus.RabbitMQ
 
         public void Initialize()
         {
-            if (!SenderOnly) return;
+            if (SenderOnly) return;
 
             using (var model = GetConnection().CreateModel())
             {

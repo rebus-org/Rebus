@@ -18,6 +18,8 @@ namespace Rebus.Tests
         public const string ToDo = "todo";
         public const string Performance = "performance";
 
+        public const int AvailableHttpPort = 17834;
+
 #if DEBUG
         public const bool IgnoreLongRunningTests = true;
 #else
