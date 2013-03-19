@@ -141,6 +141,7 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Analysis\TestExceptions.cs" />
+    <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />

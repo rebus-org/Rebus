@@ -95,7 +95,19 @@ namespace Rebus.Shared
                 var tokens = queueName.Split('@');
                 if (tokens.Length != 2)
                 {
-                    throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", queueName));
+                    throw new ArgumentException(string.Format(@"The specified MSMQ input queue is invalid!: {0} - please format destination queues according to one of the following examples:
+
+    someQueue
+
+        in order to send the message to the privte queue named 'someQueue' on the local machine, or
+
+    someQueue@anotherMachine
+
+        in order to send the message to the private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
+
+    someQueue@10.0.1.45
+
+        in order to send the message to the private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
                 }
                 return new QueueInfo {QueueName = tokens[0], MachineName = tokens[1]};
             }
@@ -112,11 +124,11 @@ namespace Rebus.Shared
                         string.Format(
                             @"The queue {0} is NOT transactional!
 
-Everything around Rebus is built with the assumption that queues are transactional,
-so Rebus will malfunction if queues aren't transactional. 
+Everything around Rebus is built with the assumption that queues are transactional, so Rebus will malfunction if queues aren't transactional. 
 
-To remedy this, ensure that any existing queues are transactional, or let Rebus 
-create its queues automatically.",
+To remedy this, ensure that any existing queues are transactional, or let Rebus create its queues automatically.
+
+If Rebus allowed you to work with non-transactional queues, it would not be able to e.g. safely move a received message into an error queue. Also, MSMQ does not behave well when moving messages in/out of transactional/non-transactional queue.",
                             path);
                     throw new InvalidOperationException(message);
                 }
