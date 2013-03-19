@@ -77,6 +77,8 @@ namespace Rebus.Testing
 
         void RaiseCreatedNewSagaData(ISagaData sagaData)
         {
+            latestSagaData = (TSagaData)sagaData;
+
             if (CreatedNewSagaData != null)
             {
                 CreatedNewSagaData(currentLogicalMessage, (TSagaData)sagaData);

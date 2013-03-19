@@ -214,6 +214,36 @@ namespace Rebus.Tests.Testing
         }
 
         [Test]
+        public void GivesEasyAccessToTheMostRecentlyCorrelatedSagaData()
+        {
+            // arrange
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
+
+            fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new saga data");
+            fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated with existing saga data");
+            fixture.CouldNotCorrelate += message => Console.WriteLine("Could not correlate");
+
+            // act
+            fixture.Handle(new SomeMessage { SagaDataId = 10 });
+            var data10Created = fixture.Data;
+
+            fixture.Handle(new SomeMessage { SagaDataId = 10 });
+            var data10Correlated = fixture.Data;
+
+            fixture.Handle(new SomeMessage { SagaDataId = 12 });
+            var data12Created = fixture.Data;
+
+            fixture.Handle(new SomeMessage { SagaDataId = 12 });
+            var data12Correlated = fixture.Data;
+
+            // assert
+            data10Created.SagaDataId.ShouldBe(10);
+            data10Correlated.SagaDataId.ShouldBe(10);
+            data12Created.SagaDataId.ShouldBe(12);
+            data12Correlated.SagaDataId.ShouldBe(12);
+        }
+
+        [Test]
         public void GetsHumanReadableExceptionWhenSomethingGoesWrong()
         {
             // arrange
