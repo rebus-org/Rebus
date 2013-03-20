@@ -15,8 +15,7 @@ namespace Rebus.Autofac
     /// </summary>
     public class AutofacContainerAdapter : IContainerAdapter
     {
-        public static readonly object UnitOfWorkLifetime = "UnitOfWorkLifetime";
-
+        const string UnitOfWorkLifetime = "UnitOfWorkLifetime";
         const string ContextKey = "AutofacLifetimeScope";
 
         readonly IContainer container;

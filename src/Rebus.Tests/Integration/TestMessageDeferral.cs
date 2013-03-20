@@ -69,9 +69,14 @@ namespace Rebus.Tests.Integration
         {
             // arrange
             var messages = new List<Tuple<DateTime, DateTime>>();
-            handlerActivator.Handle<MessageWithExpectedReturnTime>(m => messages.Add(new Tuple<DateTime, DateTime>(m.ExpectedReturnTime, DateTime.UtcNow)));
+            var resetEvent = new ManualResetEvent(false);
+            handlerActivator.Handle<MessageWithExpectedReturnTime>(m =>
+                {
+                    messages.Add(new Tuple<DateTime, DateTime>(m.ExpectedReturnTime, DateTime.UtcNow));
+                    if (messages.Count >= 500) resetEvent.Set();
+                });
 
-            var acceptedTolerance = 6.Seconds();
+            var acceptedTolerance = 8.Seconds();
             var random = new Random();
 
             // act
@@ -82,7 +87,13 @@ namespace Rebus.Tests.Integration
                 bus.Defer(delay, message);
             });
 
-            Thread.Sleep(30.Seconds() + acceptedTolerance + acceptedTolerance);
+            if (!resetEvent.WaitOne(60.Seconds()))
+            {
+                Assert.Fail("Timed out while waiting for 500 messages - only got {0}", messages.Count);
+            }
+
+            // just wait a while, to be sure that more messages are not arriving
+            Thread.Sleep(2000);
 
             // assert
             messages.Count.ShouldBe(500);

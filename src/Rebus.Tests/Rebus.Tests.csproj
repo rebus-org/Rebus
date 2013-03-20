@@ -154,9 +154,11 @@
     <Compile Include="Configuration\TestRebusConfigurationSection.cs" />
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\AutofacContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\BuiltinContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\NinjectContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\UnityContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\IContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
