@@ -71,41 +71,35 @@ namespace Rebus.Tests.Integration
             // arrange
             var messageIdCounter = 0;
             var messages = new ConcurrentSet<Tuple<DateTime, DateTime, int>>();
+            var resetEvent = new ManualResetEvent(false);
             handlerActivator
                 .Handle<MessageWithExpectedReturnTime>(
-                    m => messages.Add(new Tuple<DateTime, DateTime, int>(m.ExpectedReturnTime,
-                                                                         DateTime.UtcNow,
-                                                                         Interlocked.Increment(ref messageIdCounter))));
+                    m =>
+                    {
+                        messages.Add(new Tuple<DateTime, DateTime, int>(m.ExpectedReturnTime,
+                                                                        DateTime.UtcNow,
+                                                                        Interlocked.Increment(ref messageIdCounter)));
+                        if (messages.Count >= 500) resetEvent.Set();
+                    });
 
             var acceptedTolerance = 8.Seconds();
             var random = new Random();
 
             // act
             500.Times(() =>
-            {
-                var delay = (random.Next(20) + 10).Seconds();
-                var message = new MessageWithExpectedReturnTime { ExpectedReturnTime = DateTime.UtcNow + delay };
-                bus.Defer(delay, message);
-            });
+                {
+                    var delay = (random.Next(20) + 10).Seconds();
+                    var message = new MessageWithExpectedReturnTime {ExpectedReturnTime = DateTime.UtcNow + delay};
+                    bus.Defer(delay, message);
+                });
 
-            var acceptedTimeSpan = 30.Seconds() + acceptedTolerance + acceptedTolerance;
-            var startTime = DateTime.Now;
-            
-            while (messages.Count < 500 
-                && DateTime.Now.ElapsedSince(startTime) < acceptedTimeSpan)
+            if (!resetEvent.WaitOne(60.Seconds()))
             {
                 Thread.Sleep(100);
             }
 
-            if (messages.Count < 500)
-            {
-                Console.WriteLine("Time has gone, only {0} messages have been received!", messages.Count);
-            }
-
-            Console.WriteLine("Waiting one more second...");
-
-            // wait another short while, in case something causes more than 500 messages to be received
-            Thread.Sleep(1.Seconds());
+            // just wait a while, to be sure that more messages are not arriving
+            Thread.Sleep(2000);
 
             // assert
             messages.Count.ShouldBe(500);

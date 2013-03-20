@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
@@ -40,10 +42,13 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         {
             // arrange
             factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
-            var firstInstance = adapter.GetHandlerInstancesFor<string>().Single();
+            factory.StartUnitOfWork();
+            var firstInstance = adapter.GetHandlerInstancesFor<string>()
+                                       .Single();
 
             // act
-            var nextInstance = adapter.GetHandlerInstancesFor<string>().Single();
+            var nextInstance = adapter.GetHandlerInstancesFor<string>()
+                                      .Single();
 
             // assert
             nextInstance.ShouldNotBeSameAs(firstInstance);
@@ -54,10 +59,12 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         {
             // arrange
             factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
-            var instances = adapter.GetHandlerInstancesFor<string>();
-
+            factory.StartUnitOfWork();
+            
             // act
+            var instances = adapter.GetHandlerInstancesFor<string>();
             adapter.Release(instances);
+            factory.EndUnitOfWork();
 
             // assert
             SomeDisposableHandler.WasDisposed.ShouldBe(true);
@@ -66,7 +73,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         class SomeDisposableHandler : IHandleMessages<string>, IDisposable
         {
             public static bool WasDisposed { get; private set; }
-            
+
             public void Handle(string message)
             {
             }
@@ -100,6 +107,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         class SomeDisposableSingleton : IBus, IAdvancedBus
         {
             public static bool Disposed { get; set; }
+
+            public SomeDisposableSingleton()
+            {
+                Events = new SomeTestRebusEvents();
+            }
 
             public void Dispose()
             {
@@ -156,16 +168,22 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
+
+            class SomeTestRebusEvents : IRebusEvents
+            {
+                public event BeforeTransportMessageEventHandler BeforeTransportMessage;
+                public event AfterTransportMessageEventHandler AfterTransportMessage;
+                public event PoisonMessageEventHandler PoisonMessage;
+                public event MessageSentEventHandler MessageSent;
+                public event BeforeMessageEventHandler BeforeMessage;
+                public event AfterMessageEventHandler AfterMessage;
+                public event UncorrelatedMessageEventHandler UncorrelatedMessage;
+                public event MessageContextEstablishedEventHandler MessageContextEstablished;
+                public ICollection<IMutateMessages> MessageMutators { get; private set; }
+                public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
+                {
+                }
+            }
         }
-    }
-
-    public interface IContainerAdapterFactory
-    {
-        IContainerAdapter Create();
-        void DisposeInnerContainer();
-
-        void Register<TService, TImplementation>()
-            where TImplementation : TService
-            where TService : class;
     }
 }

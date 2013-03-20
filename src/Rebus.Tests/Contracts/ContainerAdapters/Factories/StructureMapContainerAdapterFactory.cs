@@ -1,5 +1,4 @@
-﻿using System;
-using Rebus.Configuration;
+﻿using Rebus.Configuration;
 using Rebus.StructureMap;
 using StructureMap;
 
@@ -18,6 +17,15 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         public void DisposeInnerContainer()
         {
             container.Dispose();
+        }
+
+        public void StartUnitOfWork()
+        {
+        }
+
+        public void EndUnitOfWork()
+        {
+            
         }
 
         public void Register<TService, TImplementation>() where TService : class where TImplementation : TService
