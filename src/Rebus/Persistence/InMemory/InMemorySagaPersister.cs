@@ -178,7 +178,7 @@ namespace Rebus.Persistence.InMemory
         /// </summary>
         public IEnumerator<ISagaData> GetEnumerator()
         {
-            return dataByType.Values.SelectMany(v => v.Values).ToList().GetEnumerator();
+            return dataByType.Values.SelectMany(v => v.Values).GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()

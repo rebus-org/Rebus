@@ -93,7 +93,7 @@ namespace Rebus.Tests.Integration
                     bus.Defer(delay, message);
                 });
 
-            if (!resetEvent.WaitOne(60.Seconds()))
+            if (!resetEvent.WaitOne(120.Seconds()))
             {
                 Thread.Sleep(100);
             }

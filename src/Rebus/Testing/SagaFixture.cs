@@ -107,7 +107,7 @@ namespace Rebus.Testing
         /// <summary>
         /// Gets a list of all the saga data that is currently persisted
         /// </summary>
-        public IList<TSagaData> AvailableSagaData
+        public IEnumerable<TSagaData> AvailableSagaData
         {
             get { return persister.AvailableSagaData; }
         }
@@ -270,9 +270,9 @@ namespace Rebus.Testing
                 this.deletedSagaData = deletedSagaData;
             }
 
-            public IList<TSagaData> AvailableSagaData
+            public IEnumerable<TSagaData> AvailableSagaData
             {
-                get { return innerPersister.Cast<TSagaData>().ToList(); }
+                get { return innerPersister.Cast<TSagaData>(); }
             }
 
             public void AddSagaData(TSagaData sagaData)

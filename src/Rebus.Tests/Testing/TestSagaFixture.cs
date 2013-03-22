@@ -184,7 +184,7 @@ namespace Rebus.Tests.Testing
 
             // assert
             var availableSagaData = fixture.AvailableSagaData;
-            availableSagaData.Count.ShouldBe(1);
+            availableSagaData.Count().ShouldBe(1);
             var sagaDataClone = availableSagaData.Single(d => d.SagaDataId == 10);
             sagaDataClone.JustSomeText.ShouldBe(recognizableText);
         }
@@ -208,7 +208,7 @@ namespace Rebus.Tests.Testing
 
             // assert
             var availableSagaData = fixture.AvailableSagaData;
-            availableSagaData.Count.ShouldBe(2);
+            availableSagaData.Count().ShouldBe(2);
             availableSagaData.Single(d => d.SagaDataId == 10).ReceivedMessages.ShouldBe(2);
             availableSagaData.Single(d => d.SagaDataId == 12).ReceivedMessages.ShouldBe(3);
         }
