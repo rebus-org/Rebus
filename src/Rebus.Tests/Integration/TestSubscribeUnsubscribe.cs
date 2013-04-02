@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
             Thread.Sleep(1.Seconds());
 
             publisher.Publish(new SomeEvent{EventNumber=1});
-            publisher.Batch.Publish(new SomeEvent {EventNumber = 2}, new SomeEvent {EventNumber = 3});
+            publisher.Batch.Publish(new[] { new SomeEvent { EventNumber = 2 }, new SomeEvent { EventNumber = 3 } });
 
             Thread.Sleep(1.Seconds());
 
@@ -47,7 +47,7 @@ namespace Rebus.Tests.Integration
             Thread.Sleep(1.Seconds());
 
             publisher.Publish(new SomeEvent { EventNumber = 4 });
-            publisher.Batch.Publish(new SomeEvent { EventNumber = 5 }, new SomeEvent { EventNumber = 6 });
+            publisher.Batch.Publish(new[] { new SomeEvent { EventNumber = 5 }, new SomeEvent { EventNumber = 6 } });
 
             Thread.Sleep(200);
 

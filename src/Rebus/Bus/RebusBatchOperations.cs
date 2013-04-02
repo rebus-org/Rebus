@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -17,11 +18,11 @@ namespace Rebus.Bus
             this.bus = bus;
         }
 
-        public void Send(params object[] messages)
+        public void Send(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");
 
-            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
+            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages.Cast<object>().ToArray());
 
             foreach (var batch in groupedByEndpoints)
             {
@@ -29,11 +30,11 @@ namespace Rebus.Bus
             }
         }
 
-        public void Publish(params object[] messages)
+        public void Publish(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");
 
-            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
+            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages.Cast<object>().ToArray());
 
             foreach (var batch in groupedByEndpoints)
             {
@@ -41,11 +42,11 @@ namespace Rebus.Bus
             }
         }
 
-        public void Reply(params object[] messages)
+        public void Reply(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");
 
-            bus.InternalReply(messages.ToList());
+            bus.InternalReply(messages.Cast<object>().ToList());
         }
 
         IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)

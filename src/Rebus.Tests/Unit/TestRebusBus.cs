@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -50,7 +52,7 @@ is just because there was a bug some time when the grouping of the messages was 
             var firstMessage = new FirstMessage();
             var secondMessage = new SecondMessage();
 
-            bus.Batch.Publish(firstMessage, secondMessage);
+            bus.Batch.Publish(new object[] { firstMessage, secondMessage });
 
             // assert
 
@@ -77,7 +79,7 @@ is just because there was a bug some time when the grouping of the messages was 
             determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return(someEndpoint);
 
             // act
-            bus.Batch.Send(firstMessage, secondMessage, thirdMessage);
+            bus.Batch.Send(new object[] { firstMessage, secondMessage, thirdMessage });
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint),
@@ -101,7 +103,7 @@ is just because there was a bug some time when the grouping of the messages was 
             // act
             using (FakeMessageContext.Establish(fakeContext))
             {
-                bus.Batch.Reply(firstMessage, secondMessage, someRandomMessage);
+                bus.Batch.Reply(new object[] { firstMessage, secondMessage, someRandomMessage });
             }
 
             // assert
@@ -123,7 +125,7 @@ is just because there was a bug some time when the grouping of the messages was 
 
             // act
             // assert
-            Assert.DoesNotThrow(() => bus.Batch.Send(someMessage, anotherMessage));
+            Assert.DoesNotThrow(() => bus.Batch.Send(new object[] { someMessage, anotherMessage }));
 
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
                                                      Arg<TransportMessageToSend>.Matches(t => true),
@@ -142,7 +144,7 @@ is just because there was a bug some time when the grouping of the messages was 
 
             // act
             // assert
-            Assert.Throws<InconsistentReturnAddressException>(() => bus.Batch.Send(someMessage, anotherMessage));
+            Assert.Throws<InconsistentReturnAddressException>(() => bus.Batch.Send(new object[] { someMessage, anotherMessage }));
         }
 
         [Test, Description(@"Tests that headers associated with a message don't get deleted after the first time that
@@ -184,7 +186,7 @@ Or should it?")]
             bus.AttachHeader(secondMessage1, "secondMessage1", "foo");
             bus.AttachHeader(secondMessage2, "secondMessage2", "foo");
 
-            bus.Batch.Publish(firstMessage1, secondMessage1, firstMessage2, secondMessage2);
+            bus.Batch.Publish(new object[] { firstMessage1, secondMessage1, firstMessage2, secondMessage2 });
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub1"),
@@ -215,7 +217,7 @@ Or should it?")]
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:10");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -233,7 +235,7 @@ Or should it?")]
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -250,7 +252,7 @@ Or should it?")]
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -300,7 +302,7 @@ Or should it?")]
             var secondMessage = new SomeRandomMessage();
 
             // act
-            bus.Batch.Send(firstMessage, secondMessage);
+            bus.Batch.Send(new object[] { firstMessage, secondMessage });
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("polymorphic message endpoint"),

@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Rebus
 {
     /// <summary>
@@ -10,20 +12,20 @@ namespace Rebus
         /// for individual recipients if necessary. For each recipient, the order
         /// of the messages within the batch is preserved.
         /// </summary>
-        void Send(params object[] messages);
+        void Send(IEnumerable messages);
 
         /// <summary>
         /// Publishes the specified batch of messages, dividing the batch into
         /// batches for individual recipients if necessary. For each subscriber,
         /// the order of the messages within the batch is preserved.
         /// </summary>
-        void Publish(params object[] messages);
+        void Publish(IEnumerable messages);
 
         /// <summary>
         /// Sends a batch of replies back to the sender of the message currently being handled.
         /// Can only be called when a <see cref="MessageContext"/> has been established, which happens
         /// during the handling of an incoming message.
         /// </summary>
-        void Reply(params object[] messages);
+        void Reply(IEnumerable messages);
     }
 }
