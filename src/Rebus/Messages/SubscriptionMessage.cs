@@ -1,9 +1,12 @@
+using System;
+
 namespace Rebus.Messages
 {
     /// <summary>
     /// Control bus message which is used to tell someone that 
     /// the sender wishes to subscribe to a particular message type.
     /// </summary>
+    [Serializable]
     public class SubscriptionMessage : IRebusControlMessage
     {
         /// <summary>
@@ -20,6 +23,7 @@ namespace Rebus.Messages
     /// <summary>
     /// Describes what the subscription message is actually supposed to do.
     /// </summary>
+    [Serializable]
     public enum SubscribeAction
     {
         /// <summary>

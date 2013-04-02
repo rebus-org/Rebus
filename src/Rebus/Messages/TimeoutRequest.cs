@@ -7,6 +7,7 @@ namespace Rebus.Messages
     /// this message, the Timeout Service will calculate the UTC time of when the timeout
     /// should expire, wait, and then reply with a <see cref="TimeoutReply"/>.,
     /// </summary>
+    [Serializable]
     public class TimeoutRequest : IRebusControlMessage
     {
         /// <summary>

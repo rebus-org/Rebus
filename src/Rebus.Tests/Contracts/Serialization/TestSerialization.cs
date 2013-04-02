@@ -22,6 +22,28 @@ namespace Rebus.Tests.Contracts.Serialization
             instance = new TSerializer();
         }
 
+        [TestCase(typeof(TimeoutRequest))]
+        [TestCase(typeof(TimeoutReply))]
+        [TestCase(typeof(SubscriptionMessage))]
+        public void CanSerializeRebusControlMessages(Type controlBusMessageType)
+        {
+            var messageInstance = Activator.CreateInstance(controlBusMessageType);
+
+            var messageToSerialize = new Message
+                                         {
+                                             Headers = new Dictionary<string, object>(),
+                                             Messages = new[] {messageInstance}
+                                         };
+            
+            var transportMessageToSend = instance.Serialize(messageToSerialize);
+            
+            var deserializedMessage = instance.Deserialize(new ReceivedTransportMessage
+                                                               {
+                                                                   Headers = transportMessageToSend.Headers,
+                                                                   Body = transportMessageToSend.Body
+                                                               });
+        }
+
         [Test]
         public void CanSerializeComplexNestedType()
         {
