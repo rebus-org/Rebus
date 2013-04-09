@@ -23,7 +23,8 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (ReloadQueuesRequested request) => LoadQueues(request.Machine));
             Messenger.Default.Register(this, (ReloadMessagesRequested request) => LoadMessages(request.Queue));
             Messenger.Default.Register(this, (MoveMessagesToSourceQueueRequested request) => MoveMessagesToSourceQueues(request.MessagesToMove));
-            Messenger.Default.Register(this, (MoveMessagesToQueueRequested request) => MoveMessagesToQueue(request.MessagesToMove));
+            Messenger.Default.Register(this, (MoveMessagesToQueueRequested request) => MoveMessagesToQueue(request.MessagesToMove, true));
+            Messenger.Default.Register(this, (CopyMessagesToQueueRequested request) => MoveMessagesToQueue(request.MessagesToMove, false));
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
             Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
             Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message, request.Queue));
@@ -267,13 +268,18 @@ Body:
                 .ContinueWith(t => Messenger.Default.Send(t.Result), Context.UiThread);
         }
 
-        void MoveMessagesToQueue(List<Message> messagesToMove)
+        void MoveMessagesToQueue(List<Message> messagesToMove, bool shouldMoveMessages)
         {
             Task.Factory
                 .StartNew(() => messagesToMove)
                 .ContinueWith(t =>
                     {
-                        var destinationQueue = Prompt("Please enter destination queue (e.g. 'someQueue@someMachine'): ");
+                        var promptMessage =
+                            string.Format("{0} {1} message(s) - please enter destination queue (e.g. 'someQueue@someMachine'): ",
+                                shouldMoveMessages ? "Moving" : "Copying", messagesToMove.Count);
+
+                        var destinationQueue = Prompt(promptMessage);
+
                         return new
                                    {
                                        DestinationQueue = destinationQueue,
@@ -299,7 +305,8 @@ Body:
                         {
                             try
                             {
-                                MoveMessage(message, t.Result.DestinationQueue);
+                                var leaveCopyInSourceQueue = !shouldMoveMessages;
+                                MoveMessage(message, t.Result.DestinationQueue, leaveCopyInSourceQueue);
                                 result.Moved.Add(message);
                             }
                             catch (Exception e)
@@ -366,10 +373,10 @@ Body:
 
         void MoveMessageToSourceQueue(Message message)
         {
-            MoveMessage(message, message.Headers[Headers.SourceQueue]);
+            MoveMessage(message, message.Headers[Headers.SourceQueue], false);
         }
 
-        static void MoveMessage(Message message, string destinationQueueName)
+        static void MoveMessage(Message message, string destinationQueueName, bool leaveCopyInSourceQueue)
         {
             var sourceQueuePath = message.QueuePath;
             var destinationQueuePath = MsmqUtil.GetFullPath(destinationQueueName);
@@ -385,6 +392,11 @@ Body:
                     var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);
                     destinationQueue.Send(msmqMessage, transaction);
 
+                    if (leaveCopyInSourceQueue)
+                    {
+                        sourceQueue.Send(msmqMessage, transaction);
+                    }
+
                     transaction.Commit();
                 }
                 catch
@@ -394,7 +406,7 @@ Body:
                 }
             }
 
-            Messenger.Default.Send(new MessageMoved(message, sourceQueuePath, destinationQueuePath));
+            Messenger.Default.Send(new MessageMoved(message, sourceQueuePath, destinationQueuePath, leaveCopyInSourceQueue));
         }
 
         void LoadMessages(Queue queue)

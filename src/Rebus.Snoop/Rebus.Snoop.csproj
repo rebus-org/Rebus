@@ -107,6 +107,7 @@
     <Compile Include="Converters\ByteSizeConverter.cs" />
     <Compile Include="Converters\MessageTimeConverter.cs" />
     <Compile Include="Converters\NullVisibilityConverter.cs" />
+    <Compile Include="Events\CopyMessagesToQueueRequested.cs" />
     <Compile Include="Events\DeleteMessagesRequested.cs" />
     <Compile Include="Events\DownloadMessagesRequested.cs" />
     <Compile Include="Events\MessageDeleted.cs" />

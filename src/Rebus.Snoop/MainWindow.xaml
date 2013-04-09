@@ -95,6 +95,11 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                         IsEnabled="{Binding CanMoveMessages}">
                     Move messages
                 </Button>
+                <Button Padding="2" Margin="2" Command="{Binding CopyToQueueCommand}"
+                        CommandParameter="{Binding ElementName=MessagesList, Path=SelectedItems}"
+                        IsEnabled="{Binding CanCopyMessages}">
+                    Copy messages
+                </Button>
                 <Button Padding="2" Margin="2" Command="{Binding DeleteMessagesCommand}"
                         CommandParameter="{Binding ElementName=MessagesList, Path=SelectedItems}"
                         IsEnabled="{Binding CanDeleteMessages}">

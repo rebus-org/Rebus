@@ -129,5 +129,21 @@ namespace Rebus.Snoop.ViewModel.Models
                            : "";
             }
         }
+
+        public Message Clone()
+        {
+            return new Message
+                       {
+                           Headers = Headers.Clone(),
+                           Body = Body,
+                           Bytes = Bytes,
+                           Id = "(reload queue contents to get id)",
+                           CouldDeserializeBody = CouldDeserializeBody,
+                           CouldDeserializeHeaders = CouldDeserializeHeaders,
+                           QueuePath = QueuePath,
+                           Label = Label,
+                           Time = Time,
+                       };
+        }
     }
 }

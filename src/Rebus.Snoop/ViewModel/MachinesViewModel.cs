@@ -23,6 +23,7 @@ namespace Rebus.Snoop.ViewModel
         bool canDownloadMessages;
         bool canUpdateMessage;
         bool canMoveMessages;
+        bool canCopyMessages;
 #pragma warning restore 649
 
         public MachinesViewModel()
@@ -167,6 +168,12 @@ namespace Rebus.Snoop.ViewModel
             set { SetValue(() => CanMoveMessages, value); }
         }
 
+        public bool CanCopyMessages
+        {
+            get { return canCopyMessages; }
+            set { SetValue(() => CanCopyMessages, value); }
+        }
+
         public bool CanDeleteMessages
         {
             get { return canDeleteMessages; }
@@ -197,6 +204,8 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<IEnumerable> ReturnToSourceQueuesCommand { get; set; }
         
         public RelayCommand<IEnumerable> MoveToQueueCommand { get; set; }
+        
+        public RelayCommand<IEnumerable> CopyToQueueCommand { get; set; }
 
         public RelayCommand<IEnumerable> DeleteMessagesCommand { get; set; }
         
@@ -268,6 +277,7 @@ namespace Rebus.Snoop.ViewModel
                                                        DestinationQueue = destinationQueue,
                                                        DestinationQueuePath = destinationQueuePath,
                                                        TheMessage = theMessage,
+                                                       CopyWasLeftInSourceQueue = messageMoved.CopyWasLeftInSourceQueue,
                                                    };
 
                                   return result;
@@ -279,6 +289,11 @@ namespace Rebus.Snoop.ViewModel
                                       if (result.SourceQueue != null)
                                       {
                                           result.SourceQueue.Remove(result.TheMessage);
+                                          
+                                          if (result.CopyWasLeftInSourceQueue)
+                                          {
+                                              result.SourceQueue.Add(result.TheMessage.Clone());
+                                          }
                                       }
 
                                       if (result.DestinationQueue != null)
@@ -291,11 +306,16 @@ namespace Rebus.Snoop.ViewModel
 
         void HandleMessageSelectionWasMade(MessageSelectionWasMade messageSelectionWasMade)
         {
-            CanMoveMessagesToSourceQueue = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
-            CanMoveMessages = messageSelectionWasMade.SelectedMessages.Any();
-            CanDeleteMessages = messageSelectionWasMade.SelectedMessages.Any();
-            CanDownloadMessages = messageSelectionWasMade.SelectedMessages.Any();
-            CanUpdateMessage = messageSelectionWasMade.SelectedMessages.Count() == 1;
+            var oneOrMoreSelectedMessagesHasSourceQueueHeader = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
+            var oneOrMoreMessagesSelected = messageSelectionWasMade.SelectedMessages.Any();
+            var exactlyOneMessageIsSelected = messageSelectionWasMade.SelectedMessages.Count() == 1;
+
+            CanMoveMessagesToSourceQueue = oneOrMoreSelectedMessagesHasSourceQueueHeader;
+            CanMoveMessages = oneOrMoreMessagesSelected;
+            CanCopyMessages = oneOrMoreMessagesSelected;
+            CanDeleteMessages = oneOrMoreMessagesSelected;
+            CanDownloadMessages = oneOrMoreMessagesSelected;
+            CanUpdateMessage = exactlyOneMessageIsSelected;
         }
 
         void AddNotification(NotificationEvent n)
@@ -311,6 +331,7 @@ namespace Rebus.Snoop.ViewModel
             RemoveMachineCommand = new RelayCommand<Machine>(RemoveMachine);
             ReturnToSourceQueuesCommand = new RelayCommand<IEnumerable>(ReturnToSourceQueues);
             MoveToQueueCommand = new RelayCommand<IEnumerable>(MoveToQueue);
+            CopyToQueueCommand = new RelayCommand<IEnumerable>(CopyToQueue);
             DeleteMessagesCommand = new RelayCommand<IEnumerable>(DeleteMessages);
             DownloadMessagesCommand = new RelayCommand<IEnumerable>(DownloadMessages);
             UpdateMessageCommand = new RelayCommand<IEnumerable>(UpdateMessage);
@@ -352,6 +373,13 @@ namespace Rebus.Snoop.ViewModel
             var messagesToMove = messages.OfType<Message>().ToList();
 
             Messenger.Default.Send(new MoveMessagesToQueueRequested(messagesToMove));
+        }
+
+        void CopyToQueue(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new CopyMessagesToQueueRequested(messagesToMove));
         }
 
         void AddNewMachine(string newMachineName)

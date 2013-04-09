@@ -13,7 +13,7 @@ namespace Rebus.Snoop.ViewModel.Models
         {
         }
 
-        public EditableDictionary(Dictionary<TKey, TValue> headers)
+        public EditableDictionary(IDictionary<TKey, TValue> headers)
         {
             foreach (var kvp in headers)
             {
@@ -52,6 +52,13 @@ namespace Rebus.Snoop.ViewModel.Models
                 if (item == null) Add(key, value);
                 else item.Value = value;
             }
+        }
+
+        public EditableDictionary<TKey, TValue> Clone()
+        {
+            var dictionary = contents.ToDictionary(k => k.Key, v => v.Value);
+            
+            return new EditableDictionary<TKey, TValue>(dictionary);
         }
     }
 }
