@@ -10,7 +10,7 @@ using Rebus.Shared;
 
 namespace Rebus.AzureServiceBus
 {
-    public class AzureServiceBusMessageQueue : ISendMessages, IReceiveMessages
+    public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable
     {
         const string AzureServiceBusMessageQueueContextKey = "AzureServiceBusMessageQueueContextKey";
 
@@ -21,7 +21,7 @@ namespace Rebus.AzureServiceBus
         }
 
         readonly ThreadLocal<Queue<BrokeredMessage>> messagesReceived = new ThreadLocal<Queue<BrokeredMessage>>(() => new Queue<BrokeredMessage>());
-        readonly ThreadLocal<Queue<Tuple<string, BrokeredMessage>>> messagesToSend = new ThreadLocal<Queue<Tuple<string, BrokeredMessage>>>(() => new Queue<Tuple<string, BrokeredMessage>>());
+        readonly ThreadLocal<Dictionary<string, Queue<BrokeredMessage>>> messagesToSend = new ThreadLocal<Dictionary<string, Queue<BrokeredMessage>>>(() => new Dictionary<string, Queue<BrokeredMessage>>());
         readonly MessagingFactory messagingFactory;
         readonly NamespaceManager namespaceManager;
         readonly QueueClient receiverQueueClient;
@@ -34,8 +34,7 @@ namespace Rebus.AzureServiceBus
             if (errorQueueName == null) throw new ArgumentNullException("errorQueueName");
             inputQueueName = inputQueueName.ToLowerInvariant();
             errorQueueName = errorQueueName.ToLowerInvariant();
-            
-            // connectionString = CloudConfigurationManager.GetSetting(connectionStringConfigurationName);
+
             namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
 
             if (!namespaceManager.QueueExists(inputQueueName))
@@ -49,7 +48,7 @@ namespace Rebus.AzureServiceBus
 
             messagingFactory = MessagingFactory.CreateFromConnectionString(connectionString);
             receiverQueueClient = QueueClient.CreateFromConnectionString(connectionString, inputQueueName);
-            
+
             InputQueue = inputQueueName;
             ErrorQueue = errorQueueName;
             InputQueueAddress = inputQueueName;
@@ -64,13 +63,14 @@ namespace Rebus.AzureServiceBus
                     context[AzureServiceBusMessageQueueContextKey + queueSuffix] = true;
                     context.DoCommit += () =>
                     {
-                        if (messagesToSend.Value.Count > 0)
+                        if (messagesToSend.Value != null)
                         {
-                            while (messagesToSend.Value.Count > 0)
+
+                            foreach (KeyValuePair<string, Queue<BrokeredMessage>> queuePair in messagesToSend.Value)
                             {
-                                var destinationAndMessage = messagesToSend.Value.Dequeue();
-                                var client = messagingFactory.CreateQueueClient(destinationAndMessage.Item1);
-                                client.Send(destinationAndMessage.Item2);
+                                var client = messagingFactory.CreateQueueClient(queuePair.Key);
+                                var allMessages = queuePair.Value.ToArray();
+                                client.SendBatch(allMessages);
                             }
 
                         }
@@ -101,11 +101,7 @@ namespace Rebus.AzureServiceBus
                         messagesToSend.Value.Clear();
 
                     };
-                    context.Cleanup += () =>
-                        {
-                            messagingFactory.Close();
-                            
-                        };
+
 
                 }
 
@@ -129,40 +125,50 @@ namespace Rebus.AzureServiceBus
             EnsureTransactionEvents(context, "sender");
 
 
-            using (var memoryStream = new MemoryStream())
+
+            var receivedTransportMessage = new ReceivedTransportMessage
             {
-                var formatter = new BinaryFormatter();
-                var receivedTransportMessage = new ReceivedTransportMessage
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    Headers = message.Headers,
-                    Body = message.Body,
-                    Label = message.Label,
-                };
+                Id = Guid.NewGuid().ToString(),
+                Headers = message.Headers,
+                Body = message.Body,
+                Label = message.Label
 
-                formatter.Serialize(memoryStream, receivedTransportMessage);
-                memoryStream.Position = 0;
+            };
 
-                var brokeredMessage = new BrokeredMessage(memoryStream.ToArray());
-                brokeredMessage.Label = message.Label;
-                brokeredMessage.CorrelationId = receivedTransportMessage.Id;
+            var brokeredMessage = new BrokeredMessage(receivedTransportMessage);
+            brokeredMessage.Label = message.Label;
+            brokeredMessage.CorrelationId = receivedTransportMessage.Id;
 
-                var timeToLive = GetTimeToLive(message);
-                if (timeToLive.HasValue)
-                {
-                    brokeredMessage.TimeToLive = timeToLive.Value;
 
-                }
+            var timeToLive = GetTimeToLive(message);
+            if (timeToLive.HasValue)
+            {
+                brokeredMessage.TimeToLive = timeToLive.Value;
 
-                if (!context.IsTransactional)
-                {
-                    client.Send(brokeredMessage);
-                }
-                else
-                {
-                    messagesToSend.Value.Enqueue(new Tuple<string, BrokeredMessage>(destinationQueueName, brokeredMessage));
-                }
             }
+
+            if (!context.IsTransactional)
+            {
+                client.Send(brokeredMessage);
+            }
+            else
+            {
+                EnqueueInMessageToSendDestinationQueue(destinationQueueName, brokeredMessage);
+
+            }
+
+        }
+
+        void EnqueueInMessageToSendDestinationQueue(string destinationQueueName, BrokeredMessage brokeredMessage)
+        {
+        
+            if (!messagesToSend.Value.ContainsKey(destinationQueueName))
+            {
+                messagesToSend.Value.Add(destinationQueueName, new Queue<BrokeredMessage>());
+
+            }
+
+            messagesToSend.Value[destinationQueueName].Enqueue(brokeredMessage);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -189,30 +195,25 @@ namespace Rebus.AzureServiceBus
                 {
 
 
-                    var rawData = message.GetBody<byte[]>();
+                    var receivedTransportMessage = message.GetBody<ReceivedTransportMessage>();
 
-                    if (rawData == null)
+                    if (receivedTransportMessage == null)
                     {
                         log.Warn("Received message with NULL data - how weird is that?");
                         message.Complete();
                         return null;
                     }
 
-                    using (var memoryStream = new MemoryStream(rawData))
+                    if (!context.IsTransactional)
                     {
-                        var formatter = new BinaryFormatter();
-                        var receivedTransportMessage = (ReceivedTransportMessage)formatter.Deserialize(memoryStream);
-
-                        if (!context.IsTransactional)
-                        {
-                            message.Complete();
-                        }
-                        else
-                        {
-                            messagesReceived.Value.Enqueue(message);
-                        }
-                        return receivedTransportMessage;
+                        message.Complete();
                     }
+                    else
+                    {
+                        messagesReceived.Value.Enqueue(message);
+                    }
+                    return receivedTransportMessage;
+
                 }
                 catch (Exception e)
                 {
@@ -240,6 +241,34 @@ namespace Rebus.AzureServiceBus
             namespaceManager.CreateQueue(InputQueue);
 
             return this;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+        }
+        public void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+
+                if (receiverQueueClient != null)
+                {
+                    receiverQueueClient.Close();
+                }
+                if (messagingFactory != null)
+                {
+                    messagingFactory.Close();
+                }
+            }
+
+
+
+        }
+        ~AzureServiceBusMessageQueue()
+        {
+            Dispose(false);
         }
     }
 }
