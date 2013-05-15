@@ -56,10 +56,12 @@ namespace Rebus.Tests.Unit
 
             public bool CommitShouldFail { get; set; }
 
+            public bool AbortShouldFail { get; set; }
+
             public IUnitOfWork Create()
             {
                 var instanceNumber = uowInstanceCounter++;
-                var unitOfWorkForTesting = new UnitOfWorkForTesting(this, instanceNumber, CommitShouldFail);
+                var unitOfWorkForTesting = new UnitOfWorkForTesting(this, instanceNumber, CommitShouldFail, AbortShouldFail);
                 unitsOfWork.Add(unitOfWorkForTesting);
                 RegisterEvent(string.Format("Unit of work created: {0}", instanceNumber));
                 return unitOfWorkForTesting;
@@ -71,12 +73,14 @@ namespace Rebus.Tests.Unit
             readonly UnitOfWorkManagerForTesting manager;
             readonly int instanceNumber;
             readonly bool commitShouldFail;
+            readonly bool abortShouldFail;
 
-            public UnitOfWorkForTesting(UnitOfWorkManagerForTesting manager, int instanceNumber, bool commitShouldFail)
+            public UnitOfWorkForTesting(UnitOfWorkManagerForTesting manager, int instanceNumber, bool commitShouldFail, bool abortShouldFail)
             {
                 this.manager = manager;
                 this.instanceNumber = instanceNumber;
                 this.commitShouldFail = commitShouldFail;
+                this.abortShouldFail = abortShouldFail;
             }
 
             public void Dispose()
@@ -97,6 +101,11 @@ namespace Rebus.Tests.Unit
             public void Abort()
             {
                 manager.RegisterEvent(string.Format("{0}: aborted", instanceNumber));
+
+                if (abortShouldFail)
+                {
+                    throw new ApplicationException("ABORT FAILED!!");
+                }
             }
         }
 
@@ -172,6 +181,34 @@ namespace Rebus.Tests.Unit
                                                "Unit of work created: 1",
                                                "Handled message: hello there!",
                                                "1: committed",
+                                               "1: aborted",
+                                               "1: disposed",
+                                           });
+        }
+
+        [Test]
+        public void DoesNotChokeIfBothCommitAndAbortFail()
+        {
+            // arrange
+            handlerActivatorForTesting.Handle<string>(str => unitOfWorkManager.RegisterEvent("Handled message: " + str));
+
+            unitOfWorkManager.CommitShouldFail = true;
+            unitOfWorkManager.AbortShouldFail = true;
+
+            // act
+            receiveMessages.Deliver(MessageWith("hello there!"));
+            worker.Start();
+            Thread.Sleep(500);
+            worker.Stop();
+
+            // assert
+            unitOfWorkManager.Events
+                             .ShouldBe(new[]
+                                           {
+                                               "Unit of work created: 1",
+                                               "Handled message: hello there!",
+                                               "1: committed",
+                                               "1: aborted",
                                                "1: disposed",
                                            });
         }

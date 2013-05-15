@@ -9,15 +9,15 @@ namespace Rebus
     /// </summary>
     public class RebusTimeMachine
     {
-        internal static Func<DateTime> OriginalTimeFactoryMethod = () => DateTime.UtcNow;
-        internal static Func<DateTime> TimeFactoryMethod = OriginalTimeFactoryMethod;
+        internal static Func<DateTime> originalTimeFactoryMethod = () => DateTime.UtcNow;
+        internal static Func<DateTime> timeFactoryMethod = originalTimeFactoryMethod;
 
         /// <summary>
         /// Gets the current time in UTC.
         /// </summary>
         public static DateTime Now()
         {
-            return TimeFactoryMethod();
+            return timeFactoryMethod();
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Rebus
         /// </summary>
         public static DateTime Today()
         {
-            return TimeFactoryMethod().Date;
+            return timeFactoryMethod().Date;
         }
     }
 }

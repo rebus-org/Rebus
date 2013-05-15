@@ -17,7 +17,7 @@ namespace Rebus
             {
                 throw new InvalidOperationException(string.Format("Attempted to fake current time in {0} format! Fake time must be UTC.", fakeTime.Kind));
             }
-            RebusTimeMachine.TimeFactoryMethod = () => fakeTime;
+            RebusTimeMachine.timeFactoryMethod = () => fakeTime;
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace Rebus
         /// </summary>
         public static void Reset()
         {
-            RebusTimeMachine.TimeFactoryMethod = RebusTimeMachine.OriginalTimeFactoryMethod;
+            RebusTimeMachine.timeFactoryMethod = RebusTimeMachine.originalTimeFactoryMethod;
         }
     }
 }

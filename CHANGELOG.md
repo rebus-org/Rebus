@@ -11,3 +11,11 @@
 ## 0.31.1
 
 * Made Rebus control bus messages `[Serializable]` because for some reason `BinaryFormatter` just likes it that way - applying the attribute makes instances of the class MUCH more serializable.
+
+## 0.32.0
+
+* Updated RabbitMQ client dependency
+
+## 0.32.1
+
+* Fixed handling of exceptions when committing user-provided unit(s) of work

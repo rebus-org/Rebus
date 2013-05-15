@@ -128,7 +128,6 @@
     <Compile Include="IMessageContext.cs" />
     <Compile Include="InconsistentReturnAddressException.cs" />
     <Compile Include="InconsistentTimeToBeReceivedException.cs" />
-    <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />

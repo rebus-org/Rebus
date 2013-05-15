@@ -180,7 +180,7 @@ namespace Rebus.Bus
                         log.Error(ex, "An exception occurred while raising an error event! There's nothing we can do about" +
                                      " it at this point, except kick back and wait for a while, because we probably don't" +
                                      " want to spam the logs - so we'll sleep for a second before carrying on...");
-                        
+
                         Thread.Sleep(TimeSpan.FromSeconds(1));
                     }
                 }
@@ -265,77 +265,80 @@ namespace Rebus.Bus
                                     .Where(u => !ReferenceEquals(null, u))
                                     .ToArray(); //< remember to invoke the chain here :)
 
-                    foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
+                    try
                     {
-                        context.SetLogicalMessage(logicalMessage);
-
-                        Exception logicalMessageExceptionOrNull = null;
-                        try
+                        foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                         {
-                            BeforeMessage(logicalMessage);
+                            context.SetLogicalMessage(logicalMessage);
 
-                            var typeToDispatch = logicalMessage.GetType();
+                            Exception logicalMessageExceptionOrNull = null;
+                            try
+                            {
+                                BeforeMessage(logicalMessage);
 
-                            log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+                                var typeToDispatch = logicalMessage.GetType();
 
-                            GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
-                        }
-                        catch (Exception exception)
-                        {
-                            logicalMessageExceptionOrNull = exception;
+                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                            foreach (var unitOfWork in unitsOfWork)
+                                GetDispatchMethod(typeToDispatch)
+                                    .Invoke(this, new[] {logicalMessage});
+                            }
+                            catch (Exception exception)
+                            {
+                                logicalMessageExceptionOrNull = exception;
+                                throw;
+                            }
+                            finally
                             {
                                 try
                                 {
-                                    unitOfWork.Abort();
+                                    AfterMessage(logicalMessageExceptionOrNull, logicalMessage);
                                 }
-                                catch (Exception e)
+                                catch (Exception exceptionWhileRaisingEvent)
                                 {
-                                    log.Warn("An error occurred while aborting the unit of work {0}: {1}",
-                                             unitOfWork, e);
+                                    if (logicalMessageExceptionOrNull != null)
+                                    {
+                                        log.Error(
+                                            "An exception occurred while raising the AfterMessage event, and an exception occurred some" +
+                                            " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                                            " AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                            logicalMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                                    }
+                                    else
+                                    {
+                                        log.Error("An exception occurred while raising the AfterMessage event: {0}",
+                                                  exceptionWhileRaisingEvent);
+                                    }
                                 }
-                                finally
-                                {
-                                    unitOfWork.Dispose();
-                                }
-                            }
-                            throw;
-                        }
-                        finally
-                        {
-                            try
-                            {
-                                AfterMessage(logicalMessageExceptionOrNull, logicalMessage);
-                            }
-                            catch (Exception exceptionWhileRaisingEvent)
-                            {
-                                if (logicalMessageExceptionOrNull != null)
-                                {
-                                    log.Error(
-                                        "An exception occurred while raising the AfterMessage event, and an exception occurred some" +
-                                        " time before that as well. The first exception was this: {0}. And then, when raising the" +
-                                        " AfterMessage event (including the details of the first error), this exception occurred: {1}",
-                                        logicalMessageExceptionOrNull, exceptionWhileRaisingEvent);
-                                }
-                                else
-                                {
-                                    log.Error("An exception occurred while raising the AfterMessage event: {0}",
-                                              exceptionWhileRaisingEvent);
-                                }
-                            }
 
-                            context.ClearLogicalMessage();
+                                context.ClearLogicalMessage();
+                            }
                         }
-                    }
 
-                    foreach (var unitOfWork in unitsOfWork)
-                    {
-                        try
+                        foreach (var unitOfWork in unitsOfWork)
                         {
                             unitOfWork.Commit();
                         }
-                        finally
+                    }
+                    catch
+                    {
+                        foreach (var unitOfWork in unitsOfWork)
+                        {
+                            try
+                            {
+                                unitOfWork.Abort();
+                            }
+                            catch (Exception abortException)
+                            {
+                                log.Warn("An error occurred while aborting the unit of work {0}: {1}",
+                                         unitOfWork, abortException);
+                            }
+                        }
+                        throw;
+                    }
+                    finally
+                    {
+                        foreach (var unitOfWork in unitsOfWork)
                         {
                             unitOfWork.Dispose();
                         }
