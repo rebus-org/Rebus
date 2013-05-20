@@ -12,7 +12,7 @@ namespace Rebus.Testing
     /// <summary>
     /// Saga fixture that can help unit testing sagas.
     /// </summary>
-    public class SagaFixture<TSagaData> where TSagaData : class, ISagaData, new()
+    public class SagaFixture<TSagaData> : IEnumerable<TSagaData> where TSagaData : class, ISagaData, new()
     {
         readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
         readonly Dispatcher dispatcher;
@@ -334,6 +334,26 @@ namespace Rebus.Testing
             public event Action<ISagaData> Deleted;
 
             public event Action CouldNotCorrelate;
+        }
+
+        /// <summary>
+        /// Adds the given saga data to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void Add(TSagaData someSagaData)
+        {
+            AddSagaData(someSagaData);
+        }
+
+        IEnumerator<TSagaData> IEnumerable<TSagaData>.GetEnumerator()
+        {
+            return AvailableSagaData.GetEnumerator();
+        }
+
+        public IEnumerator GetEnumerator()
+        {
+            return AvailableSagaData.GetEnumerator();
         }
     }
 }

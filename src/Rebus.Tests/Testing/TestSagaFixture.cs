@@ -106,6 +106,16 @@ namespace Rebus.Tests.Testing
                 });
         }
 
+        [Test]
+        public void AddShouldAddToAvailableSagaData()
+        {
+            var someSagaData = new SomeSagaData { JustSomeText = Guid.NewGuid().ToString()};
+            
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga()) {someSagaData};
+
+            fixture.OfType<SomeSagaData>().First().JustSomeText.ShouldBe(someSagaData.JustSomeText);
+        }
+
         public class CounterpartUpdater : Saga<CounterpartData>,
             IAmInitiatedBy<CounterpartCreated>,
             IAmInitiatedBy<CounterpartUpdated>
