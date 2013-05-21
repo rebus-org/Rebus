@@ -19,3 +19,8 @@
 ## 0.32.1
 
 * Fixed handling of exceptions when committing user-provided unit(s) of work
+
+## 0.32.2
+
+* IEnumerable/Add API on SagaFixture
+* SQL index on saga_id in saga index table
