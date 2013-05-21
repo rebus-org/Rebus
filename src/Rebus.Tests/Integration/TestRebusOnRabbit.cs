@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using RabbitMQ.Client;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
@@ -30,6 +31,21 @@ namespace Rebus.Tests.Integration
                 //var connection = connectionManager.GetConnection();
 
                 // assert
+            }
+        }
+
+        [Test]
+        public void WillCreateInputAndErrorQueue()
+        {
+            var testRabbitQueues = "test.rabbit.queues";
+            CreateBus(testRabbitQueues, new HandlerActivatorForTesting()).Start(1);
+
+
+            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                Assert.DoesNotThrow(() => model.BasicGet(testRabbitQueues, true));
+                Assert.DoesNotThrow(() => model.BasicGet(testRabbitQueues + ".error", true));
             }
         }
 
