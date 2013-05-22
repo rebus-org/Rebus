@@ -401,7 +401,7 @@ namespace Rebus.RabbitMQ
             return messageType.FullName;
         }
 
-        void InitializeLogicalQueue(string queueName, IModel model)
+        void InitializeLogicalQueue(string queueName, IModel model, bool? autoDelete = null)
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
@@ -410,7 +410,7 @@ namespace Rebus.RabbitMQ
             log.Debug("Declaring queue '{0}'", queueName);
             model.QueueDeclare(queueName, durable: true,
                                arguments: arguments,
-                               autoDelete: autoDeleteInputQueue,
+                               autoDelete: autoDelete ?? autoDeleteInputQueue,
                                exclusive: false);
 
             if (ensureExchangeIsDeclared)
@@ -567,6 +567,17 @@ namespace Rebus.RabbitMQ
         IConnection GetConnection()
         {
             return connectionManager.GetConnection();
+        }
+
+        public void CreateQueue(string errorQueueName, bool autoDelete = false)
+        {
+            WithConnection(model => InitializeLogicalQueue(errorQueueName, model, autoDelete));
+        }
+
+        void WithConnection(Action<IModel> action)
+        {
+            using(var model = GetConnection().CreateModel())
+                action(model);
         }
     }
 }
