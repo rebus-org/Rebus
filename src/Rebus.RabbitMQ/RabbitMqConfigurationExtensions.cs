@@ -95,7 +95,8 @@ A more full example configuration snippet can be seen here:
         static RabbitMqOptions DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             var queue = new RabbitMqMessageQueue(connectionString, inputQueueName);
-            
+            queue.CreateQueue(errorQueueName);
+
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));

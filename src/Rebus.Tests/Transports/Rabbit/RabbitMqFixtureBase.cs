@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using RabbitMQ.Client;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
-using Rebus.Persistence.InMemory;
 using Rebus.RabbitMQ;
-using Rebus.Serialization.Json;
 using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit
@@ -60,16 +60,15 @@ namespace Rebus.Tests.Transports.Rabbit
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
         {
             queuesToDelete.Add(inputQueueName);
+            queuesToDelete.Add(inputQueueName + ".error");
 
-            var rabbitMqMessageQueue =
+
+            RabbitMqMessageQueue rabbitMqMessageQueue =
                 new RabbitMqMessageQueue(ConnectionString, inputQueueName)
                     .PurgeInputQueue();
-
-            var bus = new RebusBus(handlerActivator, rabbitMqMessageQueue, rabbitMqMessageQueue,
-                                   new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,
-                                   new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker(inputQueueName + ".error"),
-                                   null);
+            var bus = Configure.With(new FakeContainerAdapter(handlerActivator))
+                               .Transport(x => x.UseRabbitMq(ConnectionString, inputQueueName, inputQueueName + ".error"))
+                               .CreateBus() as RebusBus;
 
             toDispose.Add(bus);
             toDispose.Add(rabbitMqMessageQueue);
@@ -95,6 +94,30 @@ namespace Rebus.Tests.Transports.Rabbit
                 catch
                 {
                 }
+            }
+        }
+
+        class FakeContainerAdapter : IContainerAdapter
+        {
+            readonly IActivateHandlers handlerActivator;
+
+            public FakeContainerAdapter(IActivateHandlers handlerActivator)
+            {
+                this.handlerActivator = handlerActivator;
+            }
+
+            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+            {
+                return handlerActivator.GetHandlerInstancesFor<T>();
+            }
+
+            public void Release(IEnumerable handlerInstances)
+            {
+                handlerActivator.Release(handlerInstances);
+            }
+
+            public void SaveBusInstances(IBus bus)
+            {
             }
         }
     }
