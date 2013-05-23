@@ -102,7 +102,7 @@ namespace Rebus.RabbitMQ
                 {
                     using (var localModel = GetConnection().CreateModel())
                     {
-                        InitializeLogicalQueue(inputQueueName, localModel);
+                        InitializeLogicalQueue(inputQueueName, localModel, autoDeleteInputQueue);
 
                         var basicGetResult = localModel.BasicGet(inputQueueName, true);
 
@@ -214,7 +214,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    InitializeLogicalQueue(inputQueueName, model);
+                    InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
                     log.Warn("Purging queue {0}", inputQueueName);
                     model.QueuePurge(inputQueueName);
                 }
@@ -401,7 +401,7 @@ namespace Rebus.RabbitMQ
             return messageType.FullName;
         }
 
-        void InitializeLogicalQueue(string queueName, IModel model, bool? autoDelete = null)
+        void InitializeLogicalQueue(string queueName, IModel model, bool autoDelete = false)
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
@@ -410,7 +410,7 @@ namespace Rebus.RabbitMQ
             log.Debug("Declaring queue '{0}'", queueName);
             model.QueueDeclare(queueName, durable: true,
                                arguments: arguments,
-                               autoDelete: autoDelete ?? autoDeleteInputQueue,
+                               autoDelete: autoDelete,
                                exclusive: false);
 
             if (ensureExchangeIsDeclared)
@@ -426,13 +426,18 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        internal void CreateQueue(string errorQueueName)
+        {
+            WithConnection(model => InitializeLogicalQueue(errorQueueName, model));
+        }
+
         public void Initialize()
         {
             if (SenderOnly) return;
 
             using (var model = GetConnection().CreateModel())
             {
-                InitializeLogicalQueue(inputQueueName, model);
+                InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
             }
         }
 
@@ -463,7 +468,7 @@ namespace Rebus.RabbitMQ
             // bind it to the thread
             threadBoundModel = newModel;
 
-            InitializeLogicalQueue(inputQueueName, threadBoundModel);
+            InitializeLogicalQueue(inputQueueName, threadBoundModel, autoDeleteInputQueue);
 
             EstablishSubscriptions(threadBoundModel);
         }
@@ -567,11 +572,6 @@ namespace Rebus.RabbitMQ
         IConnection GetConnection()
         {
             return connectionManager.GetConnection();
-        }
-
-        public void CreateQueue(string errorQueueName, bool autoDelete = false)
-        {
-            WithConnection(model => InitializeLogicalQueue(errorQueueName, model, autoDelete));
         }
 
         void WithConnection(Action<IModel> action)

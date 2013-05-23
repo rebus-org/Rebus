@@ -24,3 +24,7 @@
 
 * IEnumerable/Add API on SagaFixture
 * SQL index on saga_id in saga index table
+
+## 0.32.3
+
+* Re-introduced automatic error queue creation when using RabbitMQ
