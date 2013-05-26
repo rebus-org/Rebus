@@ -24,10 +24,10 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="5*"/>
+            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="6*"/>
         </Grid.ColumnDefinitions>
 
         <Grid Grid.Column="0" Grid.Row="0" Margin="1">
@@ -39,12 +39,13 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                       Controls:GridViewSort.AutoSort="True">
                 <ListView.Resources>
                     <DataTemplate x:Key="ReloadTemplate">
-                        <Controls:ReloadButton Command="{Binding ReloadQueuesCommand}" CommandParameter="{Binding}"/>
+                        <Controls:ReloadButton Command="{Binding ReloadQueuesCommand}" CommandParameter="{Binding}"
+                                               ToolTip="Reload queue on machine"/>
                     </DataTemplate>
                 </ListView.Resources>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Machine name" Width="240" DisplayMemberBinding="{Binding MachineName}" Controls:GridViewSort.PropertyName="MachineName"/>
+                        <GridViewColumn Header="Machine name" Width="Auto" DisplayMemberBinding="{Binding MachineName}" Controls:GridViewSort.PropertyName="MachineName"/>
                         <GridViewColumn Width="Auto" CellTemplate="{StaticResource ReloadTemplate}"/>
                     </GridView>
                 </ListView.View>
@@ -66,7 +67,17 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                   Controls:GridViewSort.AutoSort="True" SelectionChanged="SelectedQueueChanged">
             <ListView.Resources>
                 <DataTemplate x:Key="ReloadTemplate">
-                    <Controls:ReloadButton Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}"/>
+                    <Controls:ReloadButton Command="{Binding ReloadMessagesCommand}" CommandParameter="{Binding}"
+                                           ToolTip="Reload queue contents"/>
+                </DataTemplate>
+                <DataTemplate x:Key="PurgeTemplate">
+                    <Controls:PurgeButton Command="{Binding PurgeMessagesCommand}" CommandParameter="{Binding}"
+                                          ToolTip="Purge queue contents"/>
+                </DataTemplate>
+                <DataTemplate x:Key="DeleteTemplate">
+                    <Controls:DeleteButton Command="{Binding DeleteQueueCommand}" CommandParameter="{Binding}"
+                                           ToolTip="Delete the queue"
+                                           Visibility="{Binding CanBeDeleted, Converter={StaticResource ShowIfTrue}}"/>
                 </DataTemplate>
             </ListView.Resources>
             <ListView.View>
@@ -74,6 +85,8 @@ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     <GridViewColumn Header="Queue name" Width="200" DisplayMemberBinding="{Binding QueueName}" Controls:GridViewSort.PropertyName="QueueName"/>
                     <GridViewColumn Header="#" Width="50" DisplayMemberBinding="{Binding MessageCount}" Controls:GridViewSort.PropertyName="MessageCount"/>
                     <GridViewColumn Width="Auto" CellTemplate="{StaticResource ReloadTemplate}"/>
+                    <GridViewColumn Width="Auto" CellTemplate="{StaticResource PurgeTemplate}"/>
+                    <GridViewColumn Width="Auto" CellTemplate="{StaticResource DeleteTemplate}"/>
                 </GridView>
             </ListView.View>
         </ListView>

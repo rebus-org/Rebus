@@ -28,6 +28,115 @@ namespace Rebus.Snoop.Listeners
             Messenger.Default.Register(this, (DeleteMessagesRequested request) => DeleteMessages(request.MessagesToMove));
             Messenger.Default.Register(this, (DownloadMessagesRequested request) => DownloadMessages(request.MessagesToDownload));
             Messenger.Default.Register(this, (UpdateMessageRequested request) => UpdateMessage(request.Message, request.Queue));
+            Messenger.Default.Register(this, (PurgeMessagesRequested request) => PurgeMessages(request.Queue));
+            Messenger.Default.Register(this, (DeleteQueueRequested request) => DeleteQueue(request.Queue));
+        }
+
+        void DeleteQueue(Queue queue)
+        {
+            var isOk = IsOkWithUser("This will DELETE the queue {0} completely - press OK to continue...",
+                                                         queue.QueueName);
+
+            if (!isOk)
+            {
+                return;
+            }
+
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        try
+                        {
+                            MessageQueue.Delete(queue.QueuePath);
+
+                            return new
+                                       {
+                                           Success = true,
+                                           Notification = NotificationEvent.Success("Queue {0} was deleted", queue.QueueName)
+                                       };
+                        }
+                        catch (Exception e)
+                        {
+                            return new
+                                       {
+                                           Success = false,
+                                           Notification = NotificationEvent.Fail(e.ToString(),
+                                                                                 "Something went wrong while attempting to delete queue {0}",
+                                                                                 queue.QueueName),
+                                       };
+                        }
+                    })
+                .ContinueWith(r =>
+                    {
+                        var result = r.Result;
+
+                        Messenger.Default.Send(result.Notification);
+
+                        if (result.Success)
+                        {
+                            Messenger.Default.Send(new QueueDeleted(queue));
+                        }
+                    }, Context.UiThread);
+        }
+
+        void PurgeMessages(Queue queue)
+        {
+            var isOk = IsOkWithUser("This will delete all the messages from the queue {0} - press OK to continue...",
+                                                         queue.QueueName);
+
+            if (!isOk)
+            {
+                return;
+            }
+
+            Task.Factory
+                .StartNew(() =>
+                    {
+                        try
+                        {
+                            using (var msmqQueue = new MessageQueue(queue.QueuePath))
+                            {
+                                msmqQueue.Purge();
+                            }
+
+                            return new
+                                       {
+                                           Notification =
+                                               NotificationEvent.Success("Queue {0} was purged", queue.QueueName),
+                                           Success = true,
+                                       };
+                        }
+                        catch (Exception e)
+                        {
+                            return new
+                                       {
+                                           Notification = NotificationEvent.Fail(e.ToString(),
+                                                                                 "Something went wrong while attempting to purge queue {0}",
+                                                                                 queue.QueueName),
+                                           Success = false,
+                                       };
+                        }
+                    })
+                .ContinueWith(r =>
+                    {
+                        var result = r.Result;
+
+                        Messenger.Default.Send(result.Notification);
+
+                        if (result.Success)
+                        {
+                            Messenger.Default.Send(new QueuePurged(queue));
+                        }
+                    }, Context.UiThread);
+        }
+
+        static bool IsOkWithUser(string question, params object[] objs)
+        {
+            var text = string.Format(question, objs);
+
+            var messageBoxResult = MessageBox.Show(text, "Question", MessageBoxButton.OKCancel);
+
+            return messageBoxResult == MessageBoxResult.OK;
         }
 
         void UpdateMessage(Message message, Queue queueToReload)
@@ -342,7 +451,7 @@ Body:
 
         string Prompt(string text)
         {
-            var dialog = new PromptDialog {PromptText = text};
+            var dialog = new PromptDialog { PromptText = text };
 
             dialog.ShowDialog();
 
@@ -386,7 +495,7 @@ Body:
                 transaction.Begin();
                 try
                 {
-                    var sourceQueue = new MessageQueue(sourceQueuePath) {MessageReadPropertyFilter = DefaultFilter()};
+                    var sourceQueue = new MessageQueue(sourceQueuePath) { MessageReadPropertyFilter = DefaultFilter() };
                     var destinationQueue = new MessageQueue(destinationQueuePath);
 
                     var msmqMessage = sourceQueue.ReceiveById(message.Id, transaction);

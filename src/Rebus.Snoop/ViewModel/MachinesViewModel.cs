@@ -84,6 +84,7 @@ namespace Rebus.Snoop.ViewModel
                                              new Queue {QueueName = "aService.error"},
                                              new Queue {QueueName = "unrelated"},
                                              new Queue {QueueName = "another.unrelated"},
+                                             new Queue {QueueName = "Dead-letter queue", CanBeDeleted = false},
                                              new Queue
                                                  {
                                                      QueueName = "yet.another.unrelated",
@@ -224,7 +225,43 @@ namespace Rebus.Snoop.ViewModel
             Messenger.Default.Register(this, (MessageSelectionWasMade n) => HandleMessageSelectionWasMade(n));
             Messenger.Default.Register(this, (MessageMoved m) => HandleMessageMoved(m));
             Messenger.Default.Register(this, (MessageDeleted m) => HandleMessageDeleted(m));
+            Messenger.Default.Register(this, (QueuePurged m) => HandleQueuePurged(m));
+            Messenger.Default.Register(this, (QueueDeleted m) => HandleQueueDeleted(m));
         }
+
+        void HandleQueueDeleted(QueueDeleted queueDeleted)
+        {
+            var queue = queueDeleted.Queue;
+
+            var machineWhereQueueWasDeleted = Machines.FirstOrDefault(m => m.Queues.Contains(queue));
+            if (machineWhereQueueWasDeleted == null) return;
+
+            Messenger.Default.Send(new ReloadQueuesRequested(machineWhereQueueWasDeleted));
+        }
+
+        void HandleQueuePurged(QueuePurged queuePurged)
+        {
+            var queue = queuePurged.Queue;
+            
+            // reload queue in question
+            Messenger.Default.Send(new ReloadMessagesRequested(queue));
+
+            // if possible, reload dead-letter queue as well
+            var machineWhereQueueWasPurged = Machines.FirstOrDefault(m => m.Queues.Contains(queue));
+            if (machineWhereQueueWasPurged == null) return;
+
+            var deadLetterQueue = machineWhereQueueWasPurged.Queues
+                                                            .FirstOrDefault(q => q.QueuePath.ToLowerInvariant()
+                                                                                  .Contains("deadxact"));
+            // if the purged queue was the dead-letter queue, don't bother :)
+            if (queue == deadLetterQueue)
+            {
+                return;
+            }
+
+            Messenger.Default.Send(new ReloadMessagesRequested(deadLetterQueue));
+        }
+
 
         void HandleMessageDeleted(MessageDeleted messageDeleted)
         {

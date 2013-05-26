@@ -102,18 +102,24 @@
     <Compile Include="..\Rebus\Shared\MsmqUtil.cs">
       <Link>Links\MsmqUtil.cs</Link>
     </Compile>
+    <Compile Include="Controls\DeleteButton.cs" />
     <Compile Include="Controls\GridViewSort.cs" />
+    <Compile Include="Controls\PurgeButton.cs" />
     <Compile Include="Controls\ReloadButton.cs" />
     <Compile Include="Converters\ByteSizeConverter.cs" />
     <Compile Include="Converters\MessageTimeConverter.cs" />
     <Compile Include="Converters\NullVisibilityConverter.cs" />
     <Compile Include="Events\CopyMessagesToQueueRequested.cs" />
     <Compile Include="Events\DeleteMessagesRequested.cs" />
+    <Compile Include="Events\DeleteQueueRequested.cs" />
     <Compile Include="Events\DownloadMessagesRequested.cs" />
     <Compile Include="Events\MessageDeleted.cs" />
     <Compile Include="Events\MoveMessagesToQueueRequested.cs" />
     <Compile Include="Events\NotificationAdded.cs" />
     <Compile Include="Events\NotificationEvent.cs" />
+    <Compile Include="Events\PurgeMessagesRequested.cs" />
+    <Compile Include="Events\QueueDeleted.cs" />
+    <Compile Include="Events\QueuePurged.cs" />
     <Compile Include="Events\ReloadMessagesRequested.cs" />
     <Compile Include="Events\ReloadQueuesRequested.cs" />
     <Compile Include="Events\MessageSelectionWasMade.cs" />
@@ -187,6 +193,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="eye.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\arrow_refresh.png" />
+    <Resource Include="Images\cross.png" />
+    <Resource Include="Images\delete.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />

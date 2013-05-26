@@ -19,11 +19,21 @@ namespace Rebus.Snoop.ViewModel.Models
         string queueName;
         string queuePath;
         bool initialized;
+        bool canBeDeleted;
 #pragma warning restore 649
 
         public Queue()
         {
             ReloadMessagesCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new ReloadMessagesRequested(q)));
+            PurgeMessagesCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new PurgeMessagesRequested(q)));
+            DeleteQueueCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new DeleteQueueRequested(q)));
+            CanBeDeleted = true;
+        }
+
+        public bool CanBeDeleted
+        {
+            get { return canBeDeleted; }
+            set { SetValue(() => CanBeDeleted, value); }
         }
 
         public bool Initialized
@@ -42,10 +52,19 @@ namespace Rebus.Snoop.ViewModel.Models
             }
             catch (Exception e)
             {
-                Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
-                                                              "An error occurred while getting queue name for {0}: {1}",
-                                                              queue.Path, e.Message));
-                QueueName = QueuePath;
+                if (queue.Path.ToLowerInvariant()
+                         .Contains("deadxact"))
+                {
+                    QueueName = "Dead-letter queue (TX)";
+                    CanBeDeleted = false;
+                }
+                else
+                {
+                    Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
+                                                                  "An error occurred while getting queue name for {0}: {1}",
+                                                                  queue.Path, e.Message));
+                    QueueName = QueuePath;
+                }
             }
 
             try
@@ -85,6 +104,10 @@ namespace Rebus.Snoop.ViewModel.Models
         }
 
         public RelayCommand<Queue> ReloadMessagesCommand { get; set; }
+        
+        public RelayCommand<Queue> PurgeMessagesCommand { get; set; }
+        
+        public RelayCommand<Queue> DeleteQueueCommand { get; set; }
 
         public void SetMessages(List<Message> messages)
         {
