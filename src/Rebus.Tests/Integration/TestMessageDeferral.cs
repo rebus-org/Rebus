@@ -78,8 +78,8 @@ namespace Rebus.Tests.Integration
             messages[1].Item2.ElapsedSince(timeOfDeferral).ShouldBeLessThan(10.Seconds() + acceptedTolerance);
         }
 
-        [Test]
-        public void WorksReliablyWithManyTimeouts()
+        [TestCase(500)]
+        public void WorksReliablyWithManyTimeouts(int messageCount)
         {
             // arrange
             var receivedMessages = new ConcurrentList<Tuple<DateTime, DateTime, int>>();
@@ -92,7 +92,7 @@ namespace Rebus.Tests.Integration
                     {
                         receivedMessages.Add(Tuple.Create(m.ExpectedReturnTime, DateTime.UtcNow, m.MessageId));
 
-                        if (receivedMessages.Count >= 500) resetEvent.Set();
+                        if (receivedMessages.Count >= messageCount) resetEvent.Set();
                     });
 
             var acceptedTolerance = 8.Seconds();
@@ -100,7 +100,7 @@ namespace Rebus.Tests.Integration
             var number = 0;
 
             // act
-            500.Times(() =>
+            messageCount.Times(() =>
                 {
                     var delay = (random.Next(20) + 10).Seconds();
                     var message = new MessageWithExpectedReturnTime
@@ -132,12 +132,12 @@ Here they are:
             }
 
             // assert
-            if (receivedMessages.Count != 500)
+            if (receivedMessages.Count != sentMessages.Count)
             {
-                Assert.Fail(@"Expected 500 messages to have been received, but we got {0}!!
+                Assert.Fail(@"Expected {0} messages to have been received, but we got {1}!!
 
 Here they are:
-{1}", receivedMessages.Count, GetMessagesAsText(receivedMessages, sentMessages));
+{1}", sentMessages.Count, receivedMessages.Count, GetMessagesAsText(receivedMessages, sentMessages));
             }
 
             foreach (var messageTimes in receivedMessages)
