@@ -8,7 +8,7 @@ namespace Rebus.NLog
     {
         protected override ILog GetLogger(Type type)
         {
-            return new NLogLogger(LogManager.GetCurrentClassLogger(type));
+            return new NLogLogger(LogManager.GetLogger(type.FullName));
         }
     }
 }

@@ -28,3 +28,7 @@
 ## 0.32.3
 
 * Re-introduced automatic error queue creation when using RabbitMQ
+
+## 0.32.4
+
+* Fixed bug in NLogLoggerFactory that would try to use RebusConfigurer as a logger (?!)
