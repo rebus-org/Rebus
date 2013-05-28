@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Logging;
 using Rebus.Timeout;
 
 namespace Rebus.Persistence.InMemory
@@ -11,6 +12,13 @@ namespace Rebus.Persistence.InMemory
     /// </summary>
     public class InMemoryTimeoutStorage : IStoreTimeouts
     {
+        static ILog log;
+
+        static InMemoryTimeoutStorage()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         readonly object listLock = new object();
         readonly List<Timeout.Timeout> timeouts = new List<Timeout.Timeout>();
 
@@ -19,6 +27,11 @@ namespace Rebus.Persistence.InMemory
         /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
+            log.Debug("Adding timeout {0} -> {1}: {2}",
+                      newTimeout.TimeToReturn,
+                      newTimeout.ReplyTo,
+                      newTimeout.CustomData);
+
             lock (listLock)
             {
                 timeouts.Add(newTimeout);
@@ -26,13 +39,17 @@ namespace Rebus.Persistence.InMemory
         }
 
         /// <summary>
-        /// Destructively retrieves all due timeouts
+        /// Retrieves all due timeouts
         /// </summary>
         public IEnumerable<DueTimeout> GetDueTimeouts()
         {
             lock (listLock)
             {
-                var timeoutsToRemove = timeouts.Where(t => RebusTimeMachine.Now() >= t.TimeToReturn).ToList();
+                var timeoutsToRemove = timeouts
+                    .Where(t => RebusTimeMachine.Now() >= t.TimeToReturn)
+                    .ToList();
+
+                log.Debug("Returning {0} timeouts", timeoutsToRemove.Count);
 
                 return timeoutsToRemove
                     .Select(t => new DueInMemoryTimeout(t.ReplyTo,
@@ -40,7 +57,17 @@ namespace Rebus.Persistence.InMemory
                                                         t.TimeToReturn,
                                                         t.SagaId,
                                                         t.CustomData,
-                                                        () => timeouts.Remove(t)));
+                                                        () =>
+                                                            {
+                                                                lock (listLock)
+                                                                {
+                                                                    log.Debug("Removing timeout {0} -> {1}: {2}",
+                                                                              t.TimeToReturn, t.ReplyTo, t.CustomData);
+
+                                                                    timeouts.Remove(t);
+                                                                }
+                                                            }))
+                    .ToList();
             }
         }
 

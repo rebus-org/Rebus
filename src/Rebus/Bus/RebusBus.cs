@@ -469,9 +469,9 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 Or actually, you _could_ - but it would most likely be an error if you were
 using a bus without starting it... if you mean only to SEND messages, never
 RECEIVE anything, then you're not looking for an unstarted bus, you're looking
-for the ONE-WAY CLIENT MODE of the bus, which is what you automatically get if
+for the ONE-WAY CLIENT MODE of the bus, which is what you get if
 you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
-element)"));
+element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
 
             messages.ForEach(m => events.RaiseMessageSent(this, destination, m));

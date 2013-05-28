@@ -1,11 +1,15 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using NUnit.Framework;
-using Raven.Database.Util;
 using Rebus.Logging;
+using Rebus.Persistence.InMemory;
 using Rebus.Tests.Integration.Factories;
 using Shouldly;
+using System.Linq;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Integration
 {
@@ -28,7 +32,16 @@ namespace Rebus.Tests.Integration
             handlerActivator = new HandlerActivatorForTesting();
             bus = timeoutManagerFactory.CreateBus("test.deferral", handlerActivator);
 
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
+            var logFileName = string.Format("log-{0}-{1}.txt", typeof (TTimeoutManagerFactory).Name, typeof(TBusFactory).Name);
+            var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logFileName);
+
+            if (File.Exists(logFilePath))
+            {
+                File.Delete(logFilePath);
+            }
+
+            RebusLoggerFactory.Current = new GhettoFileLoggerFactory(logFilePath)
+                .WithFilter(m => m.LoggerType == typeof (InMemoryTimeoutStorage));
 
             timeoutManagerFactory.StartAll();
         }
@@ -69,65 +82,154 @@ namespace Rebus.Tests.Integration
         public void WorksReliablyWithManyTimeouts()
         {
             // arrange
-            var messageIdCounter = 0;
-            var messages = new ConcurrentSet<Tuple<DateTime, DateTime, int>>();
+            var receivedMessages = new ConcurrentList<Tuple<DateTime, DateTime, int>>();
+            var sentMessages = new ConcurrentList<MessageWithExpectedReturnTime>();
+
             var resetEvent = new ManualResetEvent(false);
             handlerActivator
                 .Handle<MessageWithExpectedReturnTime>(
                     m =>
                     {
-                        messages.Add(new Tuple<DateTime, DateTime, int>(m.ExpectedReturnTime,
-                                                                        DateTime.UtcNow,
-                                                                        Interlocked.Increment(ref messageIdCounter)));
-                        if (messages.Count >= 500) resetEvent.Set();
+                        receivedMessages.Add(Tuple.Create(m.ExpectedReturnTime, DateTime.UtcNow, m.MessageId));
+
+                        if (receivedMessages.Count >= 500) resetEvent.Set();
                     });
 
             var acceptedTolerance = 8.Seconds();
             var random = new Random();
+            var number = 0;
 
             // act
             500.Times(() =>
                 {
                     var delay = (random.Next(20) + 10).Seconds();
-                    var message = new MessageWithExpectedReturnTime {ExpectedReturnTime = DateTime.UtcNow + delay};
+                    var message = new MessageWithExpectedReturnTime
+                                      {
+                                          ExpectedReturnTime = DateTime.UtcNow + delay,
+                                          MessageId = number++
+                                      };
                     bus.Defer(delay, message);
+                    sentMessages.Add(message);
                 });
 
-            if (!resetEvent.WaitOne(120.Seconds()))
+            using (var timer = new Timer())
             {
-                Thread.Sleep(100);
-            }
+                timer.Elapsed += (o, ea) => Console.WriteLine("{0}: got {1} messages", DateTime.UtcNow, receivedMessages.Count);
+                timer.Interval = 3000;
+                timer.Start();
 
-            // just wait a while, to be sure that more messages are not arriving
-            Thread.Sleep(2000);
+                if (!resetEvent.WaitOne(45.Seconds()))
+                {
+                    Assert.Fail(@"Only {0} messages were received within the 45 s timeout!!
+
+Here they are:
+{1}",
+                                receivedMessages.Count, GetMessagesAsText(receivedMessages, sentMessages));
+                }
+
+                // just wait a while, to be sure that more messages are not arriving
+                Thread.Sleep(1000);
+            }
 
             // assert
-            messages.Count.ShouldBe(500);
-
-            foreach (var messageTimes in messages)
+            if (receivedMessages.Count != 500)
             {
-                try
+                Assert.Fail(@"Expected 500 messages to have been received, but we got {0}!!
+
+Here they are:
+{1}", receivedMessages.Count, GetMessagesAsText(receivedMessages, sentMessages));
+            }
+
+            foreach (var messageTimes in receivedMessages)
+            {
+                if (messageTimes.Item2 <= messageTimes.Item1 - acceptedTolerance
+                    || messageTimes.Item2 >= messageTimes.Item1 + acceptedTolerance)
                 {
-                    messageTimes.Item2.ShouldBeGreaterThan(messageTimes.Item1 - acceptedTolerance);
-                    messageTimes.Item2.ShouldBeLessThan(messageTimes.Item1 + acceptedTolerance);
-                }
-                catch (Exception e)
-                {
-                    throw new AssertionException(
-                        string.Format("Something was not as it should on message with ID {0}", messageTimes.Item3),
-                        e);
+                    Assert.Fail("Something is wrong with message # {0}", messageTimes.Item3);
                 }
             }
+        }
+
+        static string GetMessagesAsText(ConcurrentList<Tuple<DateTime, DateTime, int>> receivedMessages, ConcurrentList<MessageWithExpectedReturnTime> sentMessages)
+        {
+            var receivedMessagesAsText =
+                string.Join(Environment.NewLine,
+                            receivedMessages
+                                .Select(m => string.Join(";",
+                                                         new[]
+                                                             {
+                                                                 m.Item3.ToString(),
+                                                                 m.Item1.ToString(),
+                                                                 m.Item2.ToString(),
+                                                             })));
+
+            var receivedMessageIds = receivedMessages
+                .Select(m => m.Item3)
+                .ToList();
+
+            var sentButNotReceivedMessages = sentMessages
+                .Where(m => !receivedMessageIds.Contains(m.MessageId))
+                .ToList();
+
+            return string.Format(@"Received messages:
+{0}
+
+Sent, but not received messages:
+{1}", receivedMessagesAsText,
+                                 string.Join(Environment.NewLine, sentButNotReceivedMessages.Select(m => m.MessageId)));
         }
     }
 
     public class MessageWithExpectedReturnTime
     {
+        public int MessageId { get; set; }
         public DateTime ExpectedReturnTime { get; set; }
     }
 
     public class MessageWithText
     {
         public string Text { get; set; }
+    }
+
+    public class ConcurrentList<T> : IEnumerable<T>
+    {
+        readonly List<T> innerList = new List<T>();
+        readonly object listAccessLock = new object();
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            List<T> toReturn;
+
+            lock (listAccessLock)
+            {
+                toReturn = innerList.ToList();
+            }
+
+            return toReturn.GetEnumerator();
+        }
+
+        public void Add(T item)
+        {
+            lock (listAccessLock)
+            {
+                innerList.Add(item);
+            }
+        }
+
+        public int Count
+        {
+            get
+            {
+                lock (listAccessLock)
+                {
+                    return innerList.Count;
+                }
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

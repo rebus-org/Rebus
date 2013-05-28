@@ -1,4 +1,6 @@
-﻿using Rebus.Persistence.InMemory;
+﻿using System;
+using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Rebus.Timeout;
 
 namespace Rebus.Tests.Integration.Factories
@@ -10,6 +12,9 @@ namespace Rebus.Tests.Integration.Factories
 
         public void Initialize(IBusFactory busFactoryToUse)
         {
+            Console.WriteLine("Purging {0}, just to be sure", TimeoutService.DefaultInputQueueName);
+            MsmqUtil.PurgeQueue(TimeoutService.DefaultInputQueueName);
+
             timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
             timeoutService.Start();
             busFactory = busFactoryToUse;

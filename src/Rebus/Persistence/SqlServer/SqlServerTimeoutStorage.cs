@@ -80,14 +80,7 @@ namespace Rebus.Persistence.SqlServer
                         command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
                     }
 
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {
-                        if (ex.Number != PrimaryKeyViolationNumber) throw;
-                    }
+                    command.ExecuteNonQuery();
                 }
             }
         }

@@ -12,7 +12,6 @@ namespace Rebus.Timeout
         /// </summary>
         public Timeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData)
         {
-
             ReplyTo = replyTo;
             CorrelationId = correlationId;
             TimeToReturn = timeToReturn;
