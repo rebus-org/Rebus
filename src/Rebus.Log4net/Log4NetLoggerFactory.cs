@@ -12,7 +12,7 @@ namespace Rebus.Log4Net
     public class Log4NetLoggerFactory : AbstractRebusLoggerFactory
     {
         /// <summary>
-        /// Gets a logger for the specified type
+        /// Gets a logger for the specified type - will delegate the call to Log4Net's log manager
         /// </summary>
         protected override ILog GetLogger(Type type)
         {
