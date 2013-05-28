@@ -14,9 +14,7 @@
     <tags>rebus ravendb</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="Newtonsoft.Json" version="4.0.8" />
-      <dependency id="NLog" version="2.0.0.2000" />
-      <dependency id="RavenDB-Client" version="1.0.701" />
+      <dependency id="RavenDB.Client" version="2.0.2370" />
     </dependencies>
   </metadata>
   <files>
