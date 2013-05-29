@@ -15,7 +15,11 @@ namespace Rebus.Tests.Integration.Factories
             Console.WriteLine("Purging {0}, just to be sure", TimeoutService.DefaultInputQueueName);
             MsmqUtil.PurgeQueue(TimeoutService.DefaultInputQueueName);
 
-            timeoutService = new TimeoutService(new InMemoryTimeoutStorage());
+            //var sqlServerTimeoutStorage = new SqlServerTimeoutStorage(SqlServerFixtureBase.ConnectionString, "rebus_timeouts").EnsureTableIsCreated();
+            //var mongoDbTimeoutStorage = new MongoDbTimeoutStorage(MongoDbFixtureBase.ConnectionString, "timeouts");
+            var inMemoryTimeoutStorage = new InMemoryTimeoutStorage();
+
+            timeoutService = new TimeoutService(inMemoryTimeoutStorage);
             timeoutService.Start();
             busFactory = busFactoryToUse;
         }

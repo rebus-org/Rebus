@@ -3,6 +3,7 @@ using System.Timers;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Timeout;
+using System.Linq;
 
 namespace Rebus.Bus
 {
@@ -44,7 +45,11 @@ namespace Rebus.Bus
                 {
                     currentlyChecking = true;
 
-                    foreach (var timeout in storeTimeouts.GetDueTimeouts())
+                    var dueTimeouts = storeTimeouts.GetDueTimeouts().ToList();
+                    if (!dueTimeouts.Any()) return;
+                    
+                    log.Info("Got {0} dues timeouts - will send them now");
+                    foreach (var timeout in dueTimeouts)
                     {
                         log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 

@@ -78,10 +78,10 @@ namespace Rebus.Tests.Integration
             messages[1].Item2.ElapsedSince(timeOfDeferral).ShouldBeLessThan(10.Seconds() + acceptedTolerance);
         }
 
-        [TestCase(200)]
-        [TestCase(500)]
-        [TestCase(1500)]
-        public void WorksReliablyWithManyTimeouts(int messageCount)
+        [TestCase(200, 3)]
+        [TestCase(500, 8)]
+        [TestCase(1500, 12)]
+        public void WorksReliablyWithManyTimeouts(int messageCount, int acceptedToleranceSec)
         {
             // arrange
             var receivedMessages = new ConcurrentList<Tuple<DateTime, DateTime, int>>();
@@ -94,10 +94,16 @@ namespace Rebus.Tests.Integration
                     {
                         receivedMessages.Add(Tuple.Create(m.ExpectedReturnTime, DateTime.UtcNow, m.MessageId));
 
-                        if (receivedMessages.Count >= messageCount) resetEvent.Set();
+                        var currentCount = receivedMessages.Count;
+                        
+                        if (currentCount >= messageCount)
+                        {
+                            Console.WriteLine("Got {0} messages, setting reset event", currentCount);
+                            resetEvent.Set();
+                        }
                     });
 
-            var acceptedTolerance = 8.Seconds();
+            var acceptedTolerance = acceptedToleranceSec.Seconds();
             var random = new Random();
             var number = 0;
 
@@ -120,7 +126,7 @@ namespace Rebus.Tests.Integration
                 timer.Interval = 3000;
                 timer.Start();
 
-                if (!resetEvent.WaitOne(45.Seconds()))
+                if (!resetEvent.WaitOne(150.Seconds()))
                 {
                     Assert.Fail(@"Only {0} messages were received within the 45 s timeout!!
 
@@ -144,10 +150,13 @@ Here they are:
 
             foreach (var messageTimes in receivedMessages)
             {
-                if (messageTimes.Item2 <= messageTimes.Item1 - acceptedTolerance
-                    || messageTimes.Item2 >= messageTimes.Item1 + acceptedTolerance)
+                var lowerBound = messageTimes.Item1 - acceptedTolerance;
+                var upperBound = messageTimes.Item1 + acceptedTolerance;
+
+                if (messageTimes.Item2 <= lowerBound || messageTimes.Item2 >= upperBound)
                 {
-                    Assert.Fail("Something is wrong with message # {0}", messageTimes.Item3);
+                    Assert.Fail("Something is wrong with message # {0} - the time of receiving it ({1}) was outside accepted bounds {2} - {3} - the timeout was set to {4}",
+                        messageTimes.Item3, messageTimes.Item2, lowerBound, upperBound, messageTimes.Item1);
                 }
             }
         }
