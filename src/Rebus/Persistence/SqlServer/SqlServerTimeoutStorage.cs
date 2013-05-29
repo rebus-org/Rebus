@@ -156,7 +156,7 @@ CREATE TABLE [dbo].[{0}](
 	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
 	[custom_data] [nvarchar](MAX) NULL,
- CONSTRAINT [PK_timeouts] PRIMARY KEY CLUSTERED 
+ CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
 (
 	[time_to_return] ASC,
 	[correlation_id] ASC,
