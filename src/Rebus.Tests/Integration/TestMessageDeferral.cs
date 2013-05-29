@@ -78,9 +78,9 @@ namespace Rebus.Tests.Integration
             messages[1].Item2.ElapsedSince(timeOfDeferral).ShouldBeLessThan(10.Seconds() + acceptedTolerance);
         }
 
-        [TestCase(200, 3)]
-        [TestCase(500, 8)]
-        [TestCase(1500, 12)]
+        [TestCase(200, 5)]
+        [TestCase(500, 10)]
+        [TestCase(1500, 15)]
         public void WorksReliablyWithManyTimeouts(int messageCount, int acceptedToleranceSec)
         {
             // arrange
