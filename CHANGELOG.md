@@ -32,3 +32,7 @@
 ## 0.32.4
 
 * Fixed bug in NLogLoggerFactory that would try to use RebusConfigurer as a logger (?!)
+
+## 0.32.5
+
+* Added ability to customize max retries for specific exception types

@@ -80,7 +80,15 @@ namespace Rebus.Persistence.SqlServer
                         command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
                     }
 
-                    command.ExecuteNonQuery();
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (SqlException ex)
+                    {
+                        // if we're violating PK, it's because we're inserting the same timeout again...
+                        if (ex.Number != PrimaryKeyViolationNumber) throw;
+                    }
                 }
             }
         }
