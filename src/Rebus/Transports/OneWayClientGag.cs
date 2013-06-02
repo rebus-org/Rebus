@@ -62,6 +62,14 @@ namespace Rebus.Transports
         /// <summary>
         /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
         /// </summary>
+        public void SetMaxRetriesFor<TException>(int maxRetriesForThisExceptionType) where TException : Exception
+        {
+            throw GagException();
+        }
+
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public void TrackDeliveryFail(string id, Exception exception)
         {
             throw GagException();

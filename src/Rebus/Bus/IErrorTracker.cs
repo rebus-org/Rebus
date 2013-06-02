@@ -49,6 +49,11 @@ namespace Rebus.Bus
         /// Retrieves the poison message information collected so far for the message with the specfied id.
         /// </summary>
         PoisonMessageInfo GetPoisonMessageInfo(string id);
+
+        /// <summary>
+        /// Sets the maximum number of retries for some specific exception type
+        /// </summary>
+        void SetMaxRetriesFor<TException>(int maxRetriesForThisExceptionType) where TException : Exception;
     }
 
     /// <summary>

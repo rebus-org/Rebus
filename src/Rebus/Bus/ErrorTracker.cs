@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading;
 using Rebus.Configuration;
 using Rebus.Extensions;
@@ -22,6 +23,7 @@ namespace Rebus.Bus
         }
 
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
+        readonly ConcurrentQueue<Tuple<Type, int>> maxRetriesForExceptionTypes = new ConcurrentQueue<Tuple<Type, int>>();
         readonly string errorQueueAddress;
 
         TimeSpan timeoutSpan;
@@ -68,7 +70,7 @@ namespace Rebus.Bus
                 .Where(m => m.Value.Expired(timeoutSpan))
                 .Select(m => m.Key)
                 .ToList();
-            
+
             keysOfExpiredMessages.ForEach(key =>
                 {
                     TrackedMessage temp;
@@ -122,7 +124,7 @@ namespace Rebus.Bus
         public string GetErrorText(string id)
         {
             var trackedMessage = GetOrAdd(id);
-            
+
             return trackedMessage.GetErrorMessages();
         }
 
@@ -140,6 +142,14 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Sets the maximum number of retries for some specific exception type
+        /// </summary>
+        public void SetMaxRetriesFor<TException>(int maxRetriesForThisExceptionType) where TException : Exception
+        {
+            maxRetriesForExceptionTypes.Enqueue(Tuple.Create(typeof (TException), maxRetriesForThisExceptionType));
+        }
+
+        /// <summary>
         /// Determines whether the message with the specified ID has failed
         /// "enough time"
         /// </summary>
@@ -148,11 +158,32 @@ namespace Rebus.Bus
         public bool MessageHasFailedMaximumNumberOfTimes(string id)
         {
             var trackedMessage = GetOrAdd(id);
-            return trackedMessage.FailCount >= MaxRetries;
+            return trackedMessage.FailCount >= GetMaxRetriesFor(trackedMessage);
+        }
+
+        int GetMaxRetriesFor(TrackedMessage trackedMessage)
+        {
+            var lastException = trackedMessage.GetLastException();
+
+            if (lastException != null)
+            {
+                while (lastException is TargetInvocationException)
+                    lastException = lastException.InnerException;
+
+                var lastExceptionType = lastException.GetType();
+
+                foreach (var customization in maxRetriesForExceptionTypes)
+                {
+                    if (customization.Item1.IsAssignableFrom(lastExceptionType))
+                        return customization.Item2;
+                }
+            }
+
+            return MaxRetries;
         }
 
         /// <summary>
-        /// Indicates how many times a message will be retried before it is moved to the error queue
+        /// Indicates how many times a message by default will be retried before it is moved to the error queue
         /// </summary>
         public int MaxRetries { get; internal set; }
 
@@ -178,7 +209,7 @@ namespace Rebus.Bus
             }
 
             public string Id { get; private set; }
-            
+
             public DateTime TimeAdded { get; private set; }
 
             public int FailCount
@@ -218,6 +249,13 @@ namespace Rebus.Bus
             public bool Expired(TimeSpan timeout)
             {
                 return TimeAdded.ElapsedUntilNow() >= timeout;
+            }
+
+            public Exception GetLastException()
+            {
+                var last = exceptions.LastOrDefault();
+                
+                return last != null ? last.Value : null;
             }
         }
 

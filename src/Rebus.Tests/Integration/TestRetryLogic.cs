@@ -4,10 +4,13 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
+using Rhino.Mocks.Exceptions;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
@@ -26,6 +29,69 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public void CanConfigureNumberOfRetriesForExceptionTypes()
+        {
+            const string errorQueueName = "error";
+            const string testCustomretrycountInput = "test.customRetryCount.input";
+
+            using (var adapter = new BuiltinContainerAdapter())
+            using (var errorQueue = GetMessageQueue(errorQueueName))
+            {
+                errorQueue.Purge();
+
+                using (var inputQueue = GetMessageQueue(testCustomretrycountInput))
+                {
+                    inputQueue.Purge();
+                }
+
+                var bimCount = 0;
+                var bomCount = 0;
+                var bommelomCount = 0;
+
+                adapter.Handle<string>(str =>
+                    {
+                        if (str == "bim")
+                        {
+                            bimCount++;
+                            throw new InvalidOperationException("bim!");
+                        }
+
+                        if (str == "bom")
+                        {
+                            bomCount++;
+                            throw new ArgumentException("bom!");
+                        }
+
+                        bommelomCount++;
+                        throw new ExpectationViolationException("bommelom!");
+                    });
+
+                var bus = (RebusBus)
+                          Configure.With(adapter)
+                                   .Logging(l => l.None())
+                                   .Transport(t => t.UseMsmq(testCustomretrycountInput, errorQueueName))
+                                   .Behavior(b => b.SetMaxRetriesFor<InvalidOperationException>(9)
+                                                   .SetMaxRetriesFor<ArgumentException>(7))
+                                   .CreateBus();
+
+                bus.Start(1);
+
+                adapter.Bus.SendLocal("bim");
+                adapter.Bus.SendLocal("bom");
+                adapter.Bus.SendLocal("bommelom");
+
+                // dequeue three messages
+                var first = errorQueue.Receive(TimeSpan.FromSeconds(10));
+                var second = errorQueue.Receive(TimeSpan.FromSeconds(1));
+                var third = errorQueue.Receive(TimeSpan.FromSeconds(1));
+
+                bimCount.ShouldBe(9);
+                bomCount.ShouldBe(7);
+                bommelomCount.ShouldBe(5); //< default
+            }
+        }
+
+        [Test]
         public void CanMoveUnserializableMessageToErrorQueue()
         {
             var errorQueue = GetMessageQueue("error");
@@ -34,7 +100,7 @@ namespace Rebus.Tests.Integration
             var receiverQueuePath = PrivateQueueNamed(receiverQueueName);
             EnsureQueueExists(receiverQueuePath);
 
-            var messageQueueOfReceiver = new MessageQueue(receiverQueuePath) {Formatter = new XmlMessageFormatter()};
+            var messageQueueOfReceiver = new MessageQueue(receiverQueuePath) { Formatter = new XmlMessageFormatter() };
             messageQueueOfReceiver.Purge();
 
             CreateBus(receiverQueueName, new HandlerActivatorForTesting()).Start(1);
@@ -89,7 +155,7 @@ namespace Rebus.Tests.Integration
 
             retriedTooManyTimes.ShouldBe(false);
             errorMessage.Messages[0].ShouldBe("HELLO!");
-            
+
             errorMessage.GetHeader(Headers.SourceQueue).ShouldBe(ReceiverQueueName + "@" + Environment.MachineName);
             errorMessage.GetHeader(Headers.ErrorMessage).ShouldContain("System.Exception: oh noes!");
         }
@@ -126,7 +192,7 @@ namespace Rebus.Tests.Integration
         {
             // arrange
             var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start(1);
-            
+
             var errorQueue = GetMessageQueue(ReceiverErrorQueueName);
             var deadLetterQueue = GetMessageQueueFromPath(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DEADLETTER", Environment.MachineName));
             var deadLetterQueue2 = GetMessageQueueFromPath(string.Format(@"FormatName:DIRECT=OS:{0}\SYSTEM$;DEADXACT", Environment.MachineName));
@@ -136,7 +202,7 @@ namespace Rebus.Tests.Integration
                     {
                         throw new OmfgExceptionThisIsBad("whoahhh!");
                     });
-            
+
             CreateBus(ReceiverQueueName, activator, new InMemorySubscriptionStorage(), new SagaDataPersisterForTesting(),
                       ReceiverErrorQueueName).Start(1);
 
@@ -149,9 +215,9 @@ namespace Rebus.Tests.Integration
             ReceivedTransportMessage transportMessage = null;
             try
             {
-                transportMessage = (ReceivedTransportMessage) errorQueue.Receive(3.Seconds()).Body;
+                transportMessage = (ReceivedTransportMessage)errorQueue.Receive(3.Seconds()).Body;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Console.WriteLine(e);
             }
@@ -293,7 +359,8 @@ namespace Rebus.Tests.Integration
             try
             {
                 EnsureQueueExists(queuePath);
-            }catch{}
+            }
+            catch { }
             var queue = new MessageQueue(queuePath)
                 {
                     MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter,
