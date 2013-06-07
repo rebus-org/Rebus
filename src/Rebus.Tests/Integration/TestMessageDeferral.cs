@@ -79,8 +79,8 @@ namespace Rebus.Tests.Integration
         }
 
         [TestCase(200, 5)]
-        [TestCase(500, 10)]
-        [TestCase(1500, 15)]
+        [TestCase(500, 12)]
+        [TestCase(1500, 20)]
         public void WorksReliablyWithManyTimeouts(int messageCount, int acceptedToleranceSec)
         {
             // arrange
