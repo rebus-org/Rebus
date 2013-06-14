@@ -40,3 +40,4 @@
 ## 0.33.0
 
 * Removed (default) transaction scope around message handlers, made it configurable with `.Behavior(b => b.HandleMessagesInsideTransactionScope())`
+* Added hybrid saga persister that can use different concrete persisters depending on the type of saga data

@@ -205,6 +205,7 @@
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
+    <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
