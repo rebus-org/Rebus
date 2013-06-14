@@ -94,19 +94,34 @@ namespace Rebus.ReturnToSourceQueue.Msmq
                 throw HelpException();
             }
 
-            var errorQueueName = args[0];
-            parameters.ErrorQueueName = errorQueueName;
+            var argsNotFlags = args.Where(a => !a.StartsWith("--")).ToList();
 
-            if (args.Length == 2)
+            if (argsNotFlags.Count > 1)
             {
-                var autoMove = args[1].ToLowerInvariant() == "--auto-move";
+                throw new NiceException("Invalid number of unnamed args: {0}", string.Join(" ", argsNotFlags));
+            }
 
-                if (!autoMove)
+            parameters.ErrorQueueName = argsNotFlags.FirstOrDefault();
+
+            var theRestOfTheArguments = args.Except(argsNotFlags)
+                                            .Select(a => a.ToLowerInvariant())
+                                            .ToArray();
+
+            var validArgs = new Dictionary<string, Action<Parameters>> 
+                                {
+                                    {"--auto-move", p => p.AutoMoveAllMessages = true},
+                                    {"--dry", p => p.DryRun = true}
+                                };
+
+            foreach (var arg in theRestOfTheArguments)
+            {
+                if (!validArgs.Keys.Contains(arg))
                 {
-                    throw HelpException();
+                    throw new NiceException("Unknown argument: {0} - invoke with ? to get help", arg);
                 }
 
-                parameters.AutoMoveAllMessages = true;
+                // apply the argument
+                validArgs[arg](parameters);
             }
 
             return parameters;
@@ -114,9 +129,7 @@ namespace Rebus.ReturnToSourceQueue.Msmq
 
         static NiceException HelpException()
         {
-            return new NiceException(@"Rebus Return To Source Queue Tool (MSMQ flavor)
-
-    (-■_■)
+            return new NiceException(@"Rebus Return To Source Queue Tool - MSMQ flavor    (-■_■)
 
 Invoke without any arguments
 
@@ -124,7 +137,12 @@ Invoke without any arguments
 
 to be prompted for each option. Or invoke with the following arguments:
 
-    msmq.retry.exe <errorQueueName> [--auto-move]
+    msmq.retry.exe <errorQueueName> [--auto-move] [--dry]
+
+where the following options are available:
+
+    --auto-move :   Will quickly run through all message, moving those that can be moved
+    --dry       :   Will SIMULATE running, i.e. no messages will actually be moved
 
 e.g. like this:
 
@@ -134,8 +152,11 @@ in order to start processing the messages from 'myErrorQueue', or
 
     msmq.retry myErrorQueue --auto-move
 
-in order to automatically retry all messages that have the '{0}' header set
-", Headers.SourceQueue);
+in order to automatically retry all messages that have the '{0}' header set, or
+
+    msmq.retry myErrorQueue --auto-move --dry
+
+in order to SIMULATE automatically processing all messages (queue transaction will be aborted).", Headers.SourceQueue);
         }
 
         static string Prompt(string question, params object[] objs)
@@ -187,12 +208,6 @@ in order to automatically retry all messages that have the '{0}' header set
 
         static void Run(Parameters parameters)
         {
-            Console.WriteLine(@"Running with
-interactive: {0}
-eror queue: {1}",
-                              parameters.Interactive,
-                              parameters.ErrorQueueName);
-
             if (string.IsNullOrWhiteSpace(parameters.ErrorQueueName))
             {
                 throw new NiceException("Please specify the name of an error queue");
