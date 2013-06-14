@@ -86,6 +86,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{66D86E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.Msmq", "Rebus.ReturnToSourceQueue.Msmq\Rebus.ReturnToSourceQueue.Msmq.csproj", "{3A6809FD-C23D-4B29-AC96-930E289B17F8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{6A31814D-BDA1-4F04-B80E-2479E12A0F5D}"
+	ProjectSection(SolutionItems) = preProject
+		..\build.bat = ..\build.bat
+		..\build_returnToSourceQueue.bat = ..\build_returnToSourceQueue.bat
+		..\build_snoop.bat = ..\build_snoop.bat
+		..\build_timeout.bat = ..\build_timeout.bat
+		..\push_packages.bat = ..\push_packages.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -288,6 +297,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{9A835FA7-6BCF-4A99-B4EC-D9BA8A91A4CA} = {37452F2B-E43B-4A39-9956-E3FB17DA2042}
+		{6A31814D-BDA1-4F04-B80E-2479E12A0F5D} = {37452F2B-E43B-4A39-9956-E3FB17DA2042}
 		{9FAD5BC1-8B70-4E51-816C-CEE718EB5E5C} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{48006958-82E0-46B0-81CB-0A6FC7BA1A75} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{68CCD78A-BFCE-4071-BE9B-C375180375BA} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}

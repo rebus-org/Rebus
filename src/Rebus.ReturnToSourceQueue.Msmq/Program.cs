@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Messaging;
 using System.Transactions;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
@@ -12,6 +14,8 @@ namespace Rebus.ReturnToSourceQueue.Msmq
     {
         static int Main(string[] args)
         {
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+
             try
             {
                 var parameters = PromptArgs(ParseArgs(args));
@@ -133,11 +137,11 @@ namespace Rebus.ReturnToSourceQueue.Msmq
 
 Invoke without any arguments
 
-    msmq.retry.exe
+    returnToSourceQueue.msmq.exe
 
 to be prompted for each option. Or invoke with the following arguments:
 
-    msmq.retry.exe <errorQueueName> [--auto-move] [--dry]
+    returnToSourceQueue.msmq.exe <errorQueueName> [--auto-move] [--dry]
 
 where the following options are available:
 
@@ -146,15 +150,15 @@ where the following options are available:
 
 e.g. like this:
 
-    msmq.retry myErrorQueue
+    returnToSourceQueue.msmq myErrorQueue
 
 in order to start processing the messages from 'myErrorQueue', or
 
-    msmq.retry myErrorQueue --auto-move
+    returnToSourceQueue.msmq myErrorQueue --auto-move
 
 in order to automatically retry all messages that have the '{0}' header set, or
 
-    msmq.retry myErrorQueue --auto-move --dry
+    returnToSourceQueue.msmq myErrorQueue --auto-move --dry
 
 in order to SIMULATE automatically processing all messages (queue transaction will be aborted).", Headers.SourceQueue);
         }
@@ -216,7 +220,13 @@ in order to SIMULATE automatically processing all messages (queue transaction wi
             using (var tx = new TransactionScope())
             {
                 var transactionContext = new AmbientTransactionContext();
-                var msmqMessageQueue = new MsmqMessageQueue(parameters.ErrorQueueName);
+
+                if (!MessageQueue.Exists(MsmqUtil.GetPath(parameters.ErrorQueueName)))
+                {
+                    throw new NiceException("The MSMQ queue '{0}' does not exist!", parameters.ErrorQueueName);
+                }
+
+                var msmqMessageQueue = new MsmqMessageQueue(parameters.ErrorQueueName, allowRemoteQueue: true);
                 var allTheMessages = GetAllTheMessages(msmqMessageQueue, transactionContext);
 
                 foreach (var message in allTheMessages)

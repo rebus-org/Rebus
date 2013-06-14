@@ -24,6 +24,7 @@
     <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
 
     <SnoopProjects Include="..\src\Rebus.Snoop\*.csproj"/>
+    <ReturnToSourceQueueProjects Include="..\src\Rebus.ReturnToSourceQueue.*\*.csproj"/>
     <TimeoutProjects Include="..\src\Rebus.Timeout\*.csproj"/>
   </ItemGroup>
 
@@ -41,6 +42,9 @@
     
     <SnoopOutputFolder>$(BuildOutputFolder)\Snoop</SnoopOutputFolder>
     <SnoopProjectOutputFolder>..\src\Rebus.Snoop\bin\Release</SnoopProjectOutputFolder>
+
+    <ReturnToSourceQueueOutputFolder>$(BuildOutputFolder)\ReturnToSourceQueue</ReturnToSourceQueueOutputFolder>
+    <ReturnToSourceQueueMsmqProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.Msmq\bin\Release</ReturnToSourceQueueMsmqProjectOutputFolder>
     
     <TimeoutOutputFolder>$(BuildOutputFolder)\Timeout</TimeoutOutputFolder>
     <TimeoutProjectOutputFolder>..\src\Rebus.Timeout\bin\Release</TimeoutProjectOutputFolder>
@@ -102,12 +106,14 @@
   </Target>
 
   <Target Name="build_snoop" DependsOnTargets="clean_snoop_output_folder;compile_snoop;zip_snoop" />
+  
+  <Target Name="build_returnToSourceQueue" DependsOnTargets="clean_returnToSourceQueue_output_folder;compile_returnToSourceQueue;zip_returnToSourceQueue" />
 
   <Target Name="clean_snoop_output_folder">
     <Message Text="Removing old output folder"/>
     <RemoveDir Directories="$(SnoopOutputFolder)" ContinueOnError="true"/>
   </Target>
-  
+
   <Target Name="compile_snoop">
     <MSBuild Projects="@(SnoopProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release;Platform=AnyCpu">
       <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
@@ -116,6 +122,21 @@
 
   <Target Name="zip_snoop">
     <Exec Command="$(Zip) a $(SnoopOutputFolder)\Rebus.Snoop.zip $(SnoopProjectOutputFolder)\*.* -tZip -mx=9" />
+  </Target>
+
+  <Target Name="clean_returnToSourceQueue_output_folder">
+    <Message Text="Removing old output folder"/>
+    <RemoveDir Directories="$(ReturnToSourceQueueOutputFolder)" ContinueOnError="true"/>
+  </Target>
+
+  <Target Name="compile_returnToSourceQueue">
+    <MSBuild Projects="@(ReturnToSourceQueueProjects)" Targets="build" StopOnFirstFailure="true" Properties="Configuration=Release;Platform=AnyCpu">
+      <Output TaskParameter="TargetOutputs" ItemName="AssembliesBuilt" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="zip_returnToSourceQueue">
+    <Exec Command="$(Zip) a $(ReturnToSourceQueueOutputFolder)\returnToSourceQueue.msmq.zip $(ReturnToSourceQueueMsmqProjectOutputFolder)\*.* -tZip -mx=9" />
   </Target>
 
   <Target Name="build_timeout" DependsOnTargets="clean_timeout_output_folder;compile_timeout;copy_timeout" />
