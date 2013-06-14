@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Transactions;
 using Rebus.Bus;
-using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
@@ -14,11 +12,10 @@ namespace Rebus.ReturnToSourceQueue.Msmq
     {
         static int Main(string[] args)
         {
-            var parameters = args.Length == 0
-                                 ? PromptArgs()
-                                 : ParseArgs(args);
             try
             {
+                var parameters = PromptArgs(ParseArgs(args));
+
                 Run(parameters);
 
                 return 0;
@@ -37,53 +34,108 @@ namespace Rebus.ReturnToSourceQueue.Msmq
             }
         }
 
-        static Parameters PromptArgs()
+        static Parameters PromptArgs(Parameters parameters)
         {
-            var parameters = new Parameters { Interactive = false };
+            if (!parameters.DryRun.HasValue && parameters.Interactive)
+            {
+                var dryrun = PromptChar(new[] {'d', 'm'}, "Perform a (d)ry dun or actually (m) move messages?");
 
-            var dryrun = PromptChar(new[] { 'd', 'm' }, "Perform a (d)ry dun or actually (m) move messages?");
+                switch (dryrun)
+                {
+                    case 'd':
+                        parameters.DryRun = true;
+                        break;
+                    case 'm':
+                        parameters.DryRun = false;
+                        break;
+                    default:
+                        throw new NiceException(
+                            "Invalid option: {0} - please type (d) to perform a dry run (i.e. don't actually move anything), or (m) to actually move the messages");
+                }
+            }
 
-            if (dryrun == 'd')
+            if (string.IsNullOrWhiteSpace(parameters.ErrorQueueName))
             {
-                parameters.DryRun = true;
-            }
-            else if (dryrun == 'm')
-            {
-                parameters.DryRun = false;
-            }
-            else
-            {
-                throw new NiceException("Invalid option: {0} - please type (d) to perform a dry run (i.e. don't actually move anything), or (m) to actually move the messages");
+                var errorQueueName = Prompt("Please type the name of an error queue");
+                
+                parameters.ErrorQueueName = errorQueueName;
             }
 
-            var errorQueueName = Prompt("Please type the name of an error queue");
-            parameters.ErrorQueueName = errorQueueName;
+            if (!parameters.AutoMoveAllMessages.HasValue)
+            {
+                var mode = PromptChar(new[] {'a', 'p'},
+                                      "Move (a)ll messages back to their source queues or (p)rompt for each message");
 
-            var mode = PromptChar(new[] { 'a', 'p' },
-                                  "Move (a)ll messages back to their source queues or (p)rompt for each message");
+                switch (mode)
+                {
+                    case 'a':
+                        parameters.AutoMoveAllMessages = true;
+                        break;
+                    case 'p':
+                        parameters.AutoMoveAllMessages = false;
+                        break;
+                    default:
+                        throw new NiceException("Invalid option: {0} - please type (a) to move all the messages, or (p) to be prompted for each message", mode);
+                }
+            }
 
-            if (mode == 'a')
-            {
-                parameters.AutoMoveAllMessages = true;
-            }
-            else if (mode == 'p')
-            {
-                parameters.AutoMoveAllMessages = false;
-            }
-            else
-            {
-                throw new NiceException("Invalid option: {0} - please type (a) to move all the messages, or (p) to be prompted for each message", mode);
-            }
 
             return parameters;
         }
 
         static Parameters ParseArgs(string[] args)
         {
-            return new Parameters
-                       {
-                           Interactive = false
-                       };
+            if (args.Length == 0) return new Parameters {Interactive = true};
+
+            var parameters = new Parameters { Interactive = false };
+
+            if (args.Any(a => a.Contains('?')))
+            {
+                throw HelpException();
+            }
+
+            var errorQueueName = args[0];
+            parameters.ErrorQueueName = errorQueueName;
+
+            if (args.Length == 2)
+            {
+                var autoMove = args[1].ToLowerInvariant() == "--auto-move";
+
+                if (!autoMove)
+                {
+                    throw HelpException();
+                }
+
+                parameters.AutoMoveAllMessages = true;
+            }
+
+            return parameters;
+        }
+
+        static NiceException HelpException()
+        {
+            return new NiceException(@"Rebus Return To Source Queue Tool (MSMQ flavor)
+
+    (-■_■)
+
+Invoke without any arguments
+
+    msmq.retry.exe
+
+to be prompted for each option. Or invoke with the following arguments:
+
+    msmq.retry.exe <errorQueueName> [--auto-move]
+
+e.g. like this:
+
+    msmq.retry myErrorQueue
+
+in order to start processing the messages from 'myErrorQueue', or
+
+    msmq.retry myErrorQueue --auto-move
+
+in order to automatically retry all messages that have the '{0}' header set
+", Headers.SourceQueue);
         }
 
         static string Prompt(string question, params object[] objs)
@@ -120,9 +172,9 @@ namespace Rebus.ReturnToSourceQueue.Msmq
 
             public string ErrorQueueName { get; set; }
 
-            public bool AutoMoveAllMessages { get; set; }
+            public bool? AutoMoveAllMessages { get; set; }
 
-            public bool DryRun { get; set; }
+            public bool? DryRun { get; set; }
         }
 
         class NiceException : ApplicationException
@@ -167,7 +219,7 @@ eror queue: {1}",
 
                         var sourceQueue = (string)transportMessageToSend.Headers[Headers.SourceQueue];
 
-                        if (parameters.AutoMoveAllMessages)
+                        if (parameters.AutoMoveAllMessages.GetValueOrDefault())
                         {
                             msmqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
 
@@ -204,25 +256,29 @@ eror queue: {1}",
                     }
                 }
 
-                if (!parameters.DryRun)
-                {
-                    var answer = PromptChar(new[] {'y', 'n'}, "Would you like to commit the queue transaction?");
-
-                    if (answer == 'y')
-                    {
-                        Print("Committing queue transaction");
-
-                        tx.Complete();
-                    }
-                    else
-                    {
-                        Print("Queue transaction aborted");
-                    }
-                }
-                else
+                if (parameters.DryRun.GetValueOrDefault())
                 {
                     Print("Aborting queue transaction");
+                    return;
                 }
+                
+                if (!parameters.Interactive)
+                {
+                    tx.Complete();
+                    return;
+                }
+
+                var commitAnswer = PromptChar(new[] {'y', 'n'}, "Would you like to commit the queue transaction?");
+
+                if (commitAnswer == 'y')
+                {
+                    Print("Committing queue transaction");
+
+                    tx.Complete();
+                    return;
+                }
+
+                Print("Queue transaction aborted");
             }
         }
 

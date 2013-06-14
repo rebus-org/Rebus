@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus.ReturnToSourceQueue.Msmq</RootNamespace>
-    <AssemblyName>Rebus.ReturnToSourceQueue.Msmq</AssemblyName>
+    <AssemblyName>msmq.retry</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
