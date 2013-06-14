@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Transactions;
 using Rebus.Bus;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
+using System.Linq;
 
 namespace Rebus.ReturnToSourceQueue.Msmq
 {
@@ -39,37 +41,38 @@ namespace Rebus.ReturnToSourceQueue.Msmq
         {
             var parameters = new Parameters { Interactive = false };
 
-            var dryrun = Prompt("Perform a (d)ry dun or actually (m) move messages?");
+            var dryrun = PromptChar(new[] { 'd', 'm' }, "Perform a (d)ry dun or actually (m) move messages?");
 
-            if (dryrun.ToLowerInvariant() == "d")
+            if (dryrun == 'd')
             {
                 parameters.DryRun = true;
             }
-            else if (dryrun.ToLowerInvariant() == "m")
+            else if (dryrun == 'm')
             {
                 parameters.DryRun = false;
             }
             else
             {
-                throw new NiceException("Invalid option: {0} - please type D to perform a dry run (i.e. don't actually move anything");
+                throw new NiceException("Invalid option: {0} - please type (d) to perform a dry run (i.e. don't actually move anything), or (m) to actually move the messages");
             }
 
             var errorQueueName = Prompt("Please type the name of an error queue");
             parameters.ErrorQueueName = errorQueueName;
 
-            var mode = Prompt("Move (a)ll messages back to their source queues or (p)rompt for each message");
+            var mode = PromptChar(new[] { 'a', 'p' },
+                                  "Move (a)ll messages back to their source queues or (p)rompt for each message");
 
-            if (mode.ToLowerInvariant() == "a")
+            if (mode == 'a')
             {
                 parameters.AutoMoveAllMessages = true;
             }
-            else if (mode.ToLowerInvariant() == "p")
+            else if (mode == 'p')
             {
                 parameters.AutoMoveAllMessages = false;
             }
             else
             {
-                throw new NiceException("Invalid option: {0} - please type A to move all the messages, or P to be prompted for each message", mode);
+                throw new NiceException("Invalid option: {0} - please type (a) to move all the messages, or (p) to be prompted for each message", mode);
             }
 
             return parameters;
@@ -88,6 +91,22 @@ namespace Rebus.ReturnToSourceQueue.Msmq
             Console.Write(question, objs);
             Console.Write(" > ");
             return Console.ReadLine();
+        }
+
+        static char PromptChar(char[] validChars, string question, params object[] objs)
+        {
+            Console.Write(question, objs);
+            Console.Write(" ({0}) > ", string.Join("/", validChars));
+            char charToReturn;
+
+            do
+            {
+                charToReturn = char.ToLowerInvariant(Console.ReadKey(true).KeyChar);
+            } while (!validChars.Select(char.ToLowerInvariant).Contains(charToReturn));
+
+            Console.WriteLine(charToReturn);
+
+            return charToReturn;
         }
 
         static void Print(string message, params object[] objs)
@@ -139,26 +158,40 @@ eror queue: {1}",
 
                     try
                     {
+                        if (!transportMessageToSend.Headers.ContainsKey(Headers.SourceQueue))
+                        {
+                            throw new NiceException(
+                                "Message {0} does not have a source queue header - it will be moved back to the input queue",
+                                message.Id);
+                        }
+
+                        var sourceQueue = (string)transportMessageToSend.Headers[Headers.SourceQueue];
+
                         if (parameters.AutoMoveAllMessages)
                         {
-                            if (transportMessageToSend.Headers.ContainsKey(Headers.SourceQueue))
-                            {
-                                var sourceQueue = (string) transportMessageToSend.Headers[Headers.SourceQueue];
+                            msmqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
 
+                            Print("Moved {0} to {1}", message.Id, sourceQueue);
+                        }
+                        else
+                        {
+                            var answer = PromptChar(new[] { 'y', 'n' }, "Would you like to move {0} to {1}? (y/n)",
+                                                    message.Id, sourceQueue);
+
+                            if (answer == 'y')
+                            {
                                 msmqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
 
                                 Print("Moved {0} to {1}", message.Id, sourceQueue);
                             }
                             else
                             {
-                                throw new NiceException(
-                                    "Message {0} does not have a source queue header - it will be moved back to the input queue",
-                                    message.Id);
+                                msmqMessageQueue.Send(msmqMessageQueue.InputQueueAddress,
+                                                      transportMessageToSend,
+                                                      transactionContext);
+
+                                Print("Moved {0} to {1}", message.Id, msmqMessageQueue.InputQueueAddress);
                             }
-                        }
-                        else
-                        {
-                            throw new ApplicationException("Prompt mode does not work right now - sorry");
                         }
                     }
                     catch (NiceException e)
@@ -173,7 +206,22 @@ eror queue: {1}",
 
                 if (!parameters.DryRun)
                 {
-                    tx.Complete();
+                    var answer = PromptChar(new[] {'y', 'n'}, "Would you like to commit the queue transaction?");
+
+                    if (answer == 'y')
+                    {
+                        Print("Committing queue transaction");
+
+                        tx.Complete();
+                    }
+                    else
+                    {
+                        Print("Queue transaction aborted");
+                    }
+                }
+                else
+                {
+                    Print("Aborting queue transaction");
                 }
             }
         }
