@@ -25,7 +25,7 @@ namespace Rebus.Tests.Integration.Factories
                                    new JsonMessageSerializer(),
                                    new TrivialPipelineInspector(),
                                    new ErrorTracker(ErrorQueueName),
-                                   storeTimeouts);
+                                   storeTimeouts, new ConfigureAdditionalBehavior());
             startables.Add(bus);
             disposables.Add(bus);
 

@@ -133,7 +133,8 @@ namespace Rebus.Tests.Integration
                                    new InMemorySagaPersister(),
                                    this, new JsonMessageSerializer(), new TrivialPipelineInspector(),
                                    new ErrorTracker(inputQueueName + ".error"),
-                                   null);
+                                   null,
+                                   new ConfigureAdditionalBehavior());
             disposables.Add(bus);
             bus.Start();
         }

@@ -2,11 +2,11 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.MongoDb;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
-using Rebus.Timeout;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
@@ -36,7 +36,8 @@ namespace Rebus.Tests.Integration
                                new JsonMessageSerializer(),
                                new TrivialPipelineInspector(),
                                new ErrorTracker("error"),
-                               null)
+                               null,
+                               new ConfigureAdditionalBehavior())
                 .Start(1);
         }
 

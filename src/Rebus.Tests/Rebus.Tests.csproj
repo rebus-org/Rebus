@@ -191,6 +191,7 @@
     <Compile Include="Integration\TestAutoCorrelation.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
+    <Compile Include="Integration\TestConfigurableTransactionScope.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageMutation.cs" />
     <Compile Include="Integration\TestOneWayClientMode.cs" />
@@ -292,6 +293,7 @@
     <Compile Include="Unit\TestWorker_PolymorphicDispatch.cs" />
     <Compile Include="Unit\TestWorker_MessageContext.cs" />
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
+    <Compile Include="Unit\WorkerFixtureBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Timeout\AppConfigExamples\app.config.01.xml">

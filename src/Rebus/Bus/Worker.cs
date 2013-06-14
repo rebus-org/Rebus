@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
+using Rebus.Configuration;
 using Rebus.Logging;
 using System.Linq;
 using Rebus.Timeout;
@@ -34,6 +35,7 @@ namespace Rebus.Bus
         readonly ISerializeMessages serializeMessages;
         readonly IMutateIncomingMessages mutateIncomingMessages;
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
+        readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -63,12 +65,14 @@ namespace Rebus.Bus
             IHandleDeferredMessage handleDeferredMessage,
             IMutateIncomingMessages mutateIncomingMessages,
             IStoreTimeouts storeTimeouts,
-            IEnumerable<IUnitOfWorkManager> unitOfWorkManagers)
+            IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
+            ConfigureAdditionalBehavior configureAdditionalBehavior)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.mutateIncomingMessages = mutateIncomingMessages;
             this.unitOfWorkManagers = unitOfWorkManagers;
+            this.configureAdditionalBehavior = configureAdditionalBehavior;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -344,7 +348,10 @@ namespace Rebus.Bus
                         }
                     }
 
-                    scope.Complete();
+                    if (scope != null)
+                    {
+                        scope.Complete();
+                    }
                 }
             }
             catch (Exception exception)
@@ -409,6 +416,11 @@ namespace Rebus.Bus
 
         TransactionScope BeginTransaction()
         {
+            if (!configureAdditionalBehavior.HandleMessagesInTransactionScope)
+            {
+                return null;
+            }
+
             var transactionOptions = new TransactionOptions
             {
                 IsolationLevel = IsolationLevel.ReadCommitted,

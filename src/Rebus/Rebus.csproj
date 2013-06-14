@@ -79,6 +79,7 @@
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
+    <Compile Include="Configuration\IConfigureAdditionalBehavior.cs" />
     <Compile Include="Configuration\JsonSerializationOptions.cs" />
     <Compile Include="Configuration\RebusBehaviorConfigurer.cs" />
     <Compile Include="Configuration\RebusTimeoutsConfigurer.cs" />

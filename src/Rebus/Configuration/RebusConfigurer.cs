@@ -152,7 +152,7 @@ namespace Rebus.Configuration
             var bus = new RebusBus(Backbone.ActivateHandlers, Backbone.SendMessages, Backbone.ReceiveMessages,
                                    Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineMessageOwnership,
                                    Backbone.SerializeMessages, Backbone.InspectHandlerPipeline, Backbone.ErrorTracker,
-                                   Backbone.StoreTimeouts);
+                                   Backbone.StoreTimeouts, Backbone.AdditionalBehavior);
 
             Backbone.TransferEvents(bus);
 

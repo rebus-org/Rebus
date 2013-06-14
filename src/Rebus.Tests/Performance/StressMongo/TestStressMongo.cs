@@ -8,6 +8,7 @@ using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Castle.Windsor;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.MongoDb;
@@ -260,7 +261,8 @@ namespace Rebus.Tests.Performance.StressMongo
                                    sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector(),
                                    new ErrorTracker("error"),
-                                   null);
+                                   null,
+                                   new ConfigureAdditionalBehavior());
 
             stuffToDispose.Add(bus);
 

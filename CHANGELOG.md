@@ -36,3 +36,7 @@
 ## 0.32.5
 
 * Added ability to customize max retries for specific exception types
+
+## 0.33.0
+
+* Removed (default) transaction scope around message handlers, made it configurable with `.Behavior(b => b.HandleMessagesInsideTransactionScope())`

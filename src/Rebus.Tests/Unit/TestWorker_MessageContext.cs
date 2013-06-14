@@ -4,7 +4,6 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rhino.Mocks;
 using Shouldly;
@@ -12,7 +11,7 @@ using Shouldly;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestWorker_MessageContext : FixtureBase, IHandleMessages<string>
+    internal class TestWorker_MessageContext : WorkerFixtureBase, IHandleMessages<string>
     {
         Worker worker;
         IActivateHandlers activateHandlers;
@@ -22,17 +21,8 @@ namespace Rebus.Tests.Unit
         {
             activateHandlers = Mock<IActivateHandlers>();
             receiveMessages = new MessageReceiverForTesting(new JsonMessageSerializer());
-            worker = new Worker(new ErrorTracker("error"),
-                                receiveMessages,
-                                activateHandlers,
-                                new InMemorySubscriptionStorage(),
-                                new JsonMessageSerializer(),
-                                new InMemorySagaPersister(),
-                                new TrivialPipelineInspector(), "Just some test worker",
-                                new DeferredMessageHandlerForTesting(),
-                                new IncomingMessageMutatorPipelineForTesting(),
-                                null,
-                                new IUnitOfWorkManager[0]);
+            
+            worker = CreateWorker(receiveMessages, activateHandlers);
         }
 
         [Test]

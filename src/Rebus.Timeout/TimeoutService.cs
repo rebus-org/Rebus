@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
@@ -60,7 +61,7 @@ namespace Rebus.Timeout
                                     new JsonMessageSerializer(),
                                     new TrivialPipelineInspector(),
                                     new ErrorTracker(errorQueueName),
-                                    storeTimeouts);
+                                    storeTimeouts, new ConfigureAdditionalBehavior());
         }
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()

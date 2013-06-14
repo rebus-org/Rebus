@@ -31,7 +31,7 @@ namespace Rebus.Configuration
         /// </summary>
         public void AddDecoration(Action<ConfigurationBackbone> decorationStep)
         {
-            Backbone.AddDecoration(decorationStep);
+            Backbone.AddConfigurationStep(decorationStep);
         }
     }
 }

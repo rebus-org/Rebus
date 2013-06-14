@@ -4,7 +4,6 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Integration;
 using Shouldly;
@@ -12,7 +11,7 @@ using Shouldly;
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestWorker_UnitOfWork : FixtureBase
+    internal class TestWorker_UnitOfWork : WorkerFixtureBase
     {
         MessageReceiverForTesting receiveMessages;
         HandlerActivatorForTesting handlerActivatorForTesting;
@@ -25,17 +24,9 @@ namespace Rebus.Tests.Unit
             handlerActivatorForTesting = new HandlerActivatorForTesting();
 
             unitOfWorkManager = new UnitOfWorkManagerForTesting();
-            worker = new Worker(new ErrorTracker("error") {MaxRetries = 1},
-                                receiveMessages,
-                                handlerActivatorForTesting,
-                                new InMemorySubscriptionStorage(),
-                                new JsonMessageSerializer(),
-                                new InMemorySagaPersister(),
-                                new TrivialPipelineInspector(), "Just some test worker",
-                                new DeferredMessageHandlerForTesting(),
-                                new IncomingMessageMutatorPipelineForTesting(),
-                                null,
-                                new IUnitOfWorkManager[] {unitOfWorkManager});
+            worker = CreateWorker(receiveMessages, handlerActivatorForTesting,
+                                  unitOfWorkManagers: new IUnitOfWorkManager[] {unitOfWorkManager},
+                                  errorTracker: new ErrorTracker("error") {MaxRetries = 1});
         }
 
         class UnitOfWorkManagerForTesting : IUnitOfWorkManager

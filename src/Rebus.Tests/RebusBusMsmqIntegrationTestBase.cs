@@ -75,7 +75,8 @@ namespace Rebus.Tests
                                    storeSubscriptions, storeSagaData,
                                    this, serializer, pipelineInspector,
                                    new ErrorTracker(errorQueueName),
-                                   null);
+                                   null,
+                                   new ConfigureAdditionalBehavior());
             
             EnsureProperDisposal(bus);
             EnsureProperDisposal(messageQueue);

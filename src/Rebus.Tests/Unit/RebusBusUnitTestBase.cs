@@ -1,6 +1,6 @@
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Serialization.Json;
-using Rebus.Timeout;
 
 namespace Rebus.Tests.Unit
 {
@@ -39,7 +39,8 @@ namespace Rebus.Tests.Unit
                                 storeSagaData,
                                 determineMessageOwnership, serializeMessages, inspectHandlerPipeline,
                                 new ErrorTracker("error"),
-                                null);
+                                null,
+                                new ConfigureAdditionalBehavior());
         }
 
         protected override void DoTearDown()

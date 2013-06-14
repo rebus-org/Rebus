@@ -37,6 +37,7 @@ namespace Rebus.Bus
         readonly List<Worker> workers = new List<Worker>();
         readonly IErrorTracker errorTracker;
         readonly IStoreTimeouts storeTimeouts;
+        readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
         readonly RebusBatchOperations batch;
@@ -62,7 +63,8 @@ namespace Rebus.Bus
         /// <param name="inspectHandlerPipeline">Will be called to inspect the pipeline of handlers constructed to handle an incoming message.</param>
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
         /// <param name="storeTimeouts">Optionally provides an internal timeout manager to be used instead of sending timeout requests to an external timeout manager</param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts)
+        /// <param name="configureAdditionalBehavior"></param>
+        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -74,6 +76,7 @@ namespace Rebus.Bus
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.errorTracker = errorTracker;
             this.storeTimeouts = storeTimeouts;
+            this.configureAdditionalBehavior = configureAdditionalBehavior;
 
             batch = new RebusBatchOperations(determineMessageOwnership, storeSubscriptions, this);
             routing = new RebusRouting(this);
@@ -636,7 +639,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         new DeferredMessageReDispatcher(this),
                                         new IncomingMessageMutatorPipeline(Events),
                                         storeTimeouts,
-                                        events.UnitOfWorkManagers);
+                                        events.UnitOfWorkManagers,
+                                        configureAdditionalBehavior);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

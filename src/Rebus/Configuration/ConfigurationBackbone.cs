@@ -29,6 +29,7 @@ namespace Rebus.Configuration
             this.adapter = adapter;
 
             ActivateHandlers = adapter;
+            AdditionalBehavior = new ConfigureAdditionalBehavior();
         }
 
         /// <summary>
@@ -82,6 +83,11 @@ namespace Rebus.Configuration
         public IStoreTimeouts StoreTimeouts { get; set; }
 
         /// <summary>
+        /// Configures additional behavioral elements
+        /// </summary>
+        public ConfigureAdditionalBehavior AdditionalBehavior { get; set; }
+
+        /// <summary>
         /// Determines how Rebus and Rebus components do their logging
         /// </summary>
         public IRebusLoggerFactory LoggerFactory
@@ -108,7 +114,7 @@ namespace Rebus.Configuration
             }
         }
 
-        internal void AddDecoration(Action<ConfigurationBackbone> decorationStep)
+        internal void AddConfigurationStep(Action<ConfigurationBackbone> decorationStep)
         {
             decorationSteps.Add(decorationStep);
         }
