@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
+using Rebus.Bus;
 using Rebus.Logging;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -10,7 +12,7 @@ using Rebus.Shared;
 
 namespace Rebus.AzureServiceBus
 {
-    public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable
+    public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable, IMulticastTransport
     {
         const string AzureServiceBusMessageQueueContextKey = "AzureServiceBusMessageQueueContextKey";
 
@@ -21,6 +23,7 @@ namespace Rebus.AzureServiceBus
         }
 
         readonly ThreadLocal<Queue<BrokeredMessage>> messagesReceived = new ThreadLocal<Queue<BrokeredMessage>>(() => new Queue<BrokeredMessage>());
+        readonly ThreadLocal<Dictionary<string, QueueClient>> queueClients = new ThreadLocal<Dictionary<string, QueueClient>>(() => new Dictionary<string, QueueClient>());
         readonly ThreadLocal<Dictionary<string, Queue<BrokeredMessage>>> messagesToSend = new ThreadLocal<Dictionary<string, Queue<BrokeredMessage>>>(() => new Dictionary<string, Queue<BrokeredMessage>>());
         readonly MessagingFactory messagingFactory;
         readonly NamespaceManager namespaceManager;
@@ -66,11 +69,12 @@ namespace Rebus.AzureServiceBus
                         if (messagesToSend.Value != null)
                         {
 
-                            foreach (KeyValuePair<string, Queue<BrokeredMessage>> queuePair in messagesToSend.Value)
+                            foreach (var queuePair in messagesToSend.Value)
                             {
-                                var client = messagingFactory.CreateQueueClient(queuePair.Key);
+                                var client = GetOrCreateQueueClient(queuePair.Key);
                                 var allMessages = queuePair.Value.ToArray();
                                 client.SendBatch(allMessages);
+                                
                             }
 
                         }
@@ -108,6 +112,24 @@ namespace Rebus.AzureServiceBus
             }
 
         }
+
+        QueueClient GetOrCreateQueueClient(string destinationQueueName)
+        {
+
+            if (queueClients.Value.ContainsKey(destinationQueueName))
+            {
+                return queueClients.Value[destinationQueueName];
+
+            }
+            else
+            {
+                var queueClient = messagingFactory.CreateQueueClient(destinationQueueName);
+                queueClients.Value.Add(destinationQueueName, queueClient);
+                return queueClient;
+            }
+
+        }
+
         private TimeSpan? GetTimeToLive(TransportMessageToSend message)
         {
             if (message.Headers != null && message.Headers.ContainsKey(Headers.TimeToBeReceived))
@@ -161,7 +183,7 @@ namespace Rebus.AzureServiceBus
 
         void EnqueueInMessageToSendDestinationQueue(string destinationQueueName, BrokeredMessage brokeredMessage)
         {
-        
+
             if (!messagesToSend.Value.ContainsKey(destinationQueueName))
             {
                 messagesToSend.Value.Add(destinationQueueName, new Queue<BrokeredMessage>());
@@ -255,11 +277,36 @@ namespace Rebus.AzureServiceBus
 
                 if (receiverQueueClient != null)
                 {
-                    receiverQueueClient.Close();
+                    try
+                    {
+                        receiverQueueClient.Close();
+                    }
+                    catch (Exception exception)
+                    {
+                        log.Error(exception, "error trying to lock receiverqueueclient");
+                    }
+                }
+                if (queueClients != null && queueClients.Value.Count > 0)
+                {
+                    try
+                    {
+                        queueClients.Value.Values.ToList().ForEach(q => q.Close());
+                    }
+                    catch (Exception exception)
+                    {
+                        log.Error(exception, "error trying to lock queueclient");
+                    }
                 }
                 if (messagingFactory != null)
                 {
-                    messagingFactory.Close();
+                    try
+                    {
+                        messagingFactory.Close();
+                    }
+                    catch (Exception exception)
+                    {
+                        log.Error(exception, "error trying to lock messagingFactory");
+                    }
                 }
             }
 
@@ -269,6 +316,23 @@ namespace Rebus.AzureServiceBus
         ~AzureServiceBusMessageQueue()
         {
             Dispose(false);
+        }
+
+        public bool ManagesSubscriptions { get { return true; } }
+
+        public void Subscribe(Type messageType, string inputQueueAddress)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Unsubscribe(Type messageType, string inputQueueAddress)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string GetEventName(Type messageType)
+        {
+            throw new NotImplementedException();
         }
     }
 }
