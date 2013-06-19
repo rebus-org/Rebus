@@ -64,9 +64,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Unity.2.1.505.2\lib\NET35\Microsoft.Practices.Unity.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Configuration, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.ServiceBus, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.1.7.0.3\lib\net35-full\Microsoft.WindowsAzure.Configuration.dll</HintPath>
+      <HintPath>..\packages\WindowsAzure.ServiceBus.2.1.0.0\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAzure.Storage.1.7.0.0\lib\net35-full\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
@@ -129,6 +133,8 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Messaging" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
@@ -254,6 +260,7 @@
     <Compile Include="Persistence\Timeouts\ITimeoutStorageFactory.cs" />
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
+    <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelHelper.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />

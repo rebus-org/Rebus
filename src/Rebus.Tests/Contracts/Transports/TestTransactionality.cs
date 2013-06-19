@@ -7,7 +7,7 @@ using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Contracts.Transports
 {
-    [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Ignore=true)]
+    [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
     [TestFixture(typeof(MsmqTransportFactory))]
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
