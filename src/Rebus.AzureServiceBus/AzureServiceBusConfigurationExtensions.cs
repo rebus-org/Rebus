@@ -60,7 +60,7 @@ A more full example configuration snippet can be seen here:
         static void Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName,
                               string errorQueueName)
         {
-            var azureServiceBusMessageQueue = new AzureServiceBusMessageQueue(connectionString, inputQueueName, errorQueueName);
+            var azureServiceBusMessageQueue = new AzureServiceBusMessageQueue(connectionString, inputQueueName);
             configurer.UseSender(azureServiceBusMessageQueue);
             configurer.UseReceiver(azureServiceBusMessageQueue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
