@@ -14,8 +14,8 @@
     <tags>rebus azure queue messaging service bus</tags>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="1.8.0.0"  />
-      <dependency id="WindowsAzure.ServiceBus" version="2.0.0-beta" />
+      <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="2.0.1.0" />
+      <dependency id="WindowsAzure.ServiceBus" version="2.1.0.0" />
     </dependencies>
   </metadata>
   <files>
