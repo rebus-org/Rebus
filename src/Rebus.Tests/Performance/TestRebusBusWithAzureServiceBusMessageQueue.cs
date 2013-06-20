@@ -47,8 +47,8 @@ namespace Rebus.Tests.Performance
 
         [TestCase(10)]
         [TestCase(100)]
-        [TestCase(1000)]
-        [TestCase(10000)]
+        [TestCase(1000, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveManyMessagesReliably(int numberOfMessages)
         {
             var messages = Enumerable.Range(1, numberOfMessages)
