@@ -49,6 +49,7 @@ namespace Rebus.Tests.Performance
         [TestCase(100)]
         [TestCase(1000, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(10000, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(20000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveManyMessagesReliably(int numberOfMessages)
         {
             var messages = Enumerable.Range(1, numberOfMessages)
@@ -97,7 +98,7 @@ namespace Rebus.Tests.Performance
             Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/s",
                               numberOfMessages, totalSeconds, numberOfMessages/totalSeconds);
 
-            var timeout = TimeSpan.FromSeconds(15 + numberOfMessages/40.0);
+            var timeout = TimeSpan.FromSeconds(15 + numberOfMessages/200.0);
             Console.WriteLine("Waiting with {0} timeout", timeout);
             if (!resetEvent.WaitOne(timeout))
             {
