@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.AzureServiceBus;
-using Rebus.Tests.Configuration;
 using Rebus.Tests.Contracts.Transports.Factories;
 using Rebus.Tests.Integration;
 using Shouldly;
 using Rebus.Logging;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Performance
 {
@@ -19,30 +21,35 @@ namespace Rebus.Tests.Performance
     {
         const string QueueName1 = "perftest.bus1";
         const string QueueName2 = "perftest.bus2";
-        
+
         BuiltinContainerAdapter adapter1;
         BuiltinContainerAdapter adapter2;
 
         protected override void DoSetUp()
         {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
+
             PurgeQueue(QueueName1);
             PurgeQueue(QueueName2);
 
             adapter1 = new BuiltinContainerAdapter();
 
             Configure.With(adapter1)
-                     .Logging(l => l.Console(minLevel: LogLevel.Warn))
                      .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName1, "error"))
                      .CreateBus()
                      .Start();
 
             adapter2 = new BuiltinContainerAdapter();
 
-            Configure.With(adapter2)
-                     .Logging(l => l.Console(minLevel: LogLevel.Warn))
-                     .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName2, "error"))
-                     .CreateBus()
-                     .Start();
+            var receiverBus =
+                (RebusBus)Configure
+                               .With(adapter2)
+                               .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName2, "error"))
+                               .CreateBus();
+
+            receiverBus.Start(10);
+
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
         }
 
         [TestCase(10)]
@@ -52,76 +59,123 @@ namespace Rebus.Tests.Performance
         [TestCase(20000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveManyMessagesReliably(int numberOfMessages)
         {
-            var messages = Enumerable.Range(1, numberOfMessages)
-                                     .Select(n => new SomeNumberedMessage
-                                                      {
-                                                          Id = Guid.NewGuid(),
-                                                          Text = string.Format("Message # {0}", n)
-                                                      })
-                                     .ToList();
-
-            var receivedMessages = new ConcurrentList<SomeNumberedMessage>();
-            var resetEvent = new ManualResetEvent(false);
-            var sentMessageIds = new ConcurrentList<Guid>();
-
-            adapter2.Handle<SomeNumberedMessage>(msg =>
-                {
-                    receivedMessages.Add(msg);
-
-                    if (receivedMessages.Count%1000 == 0)
-                    {
-                        Console.WriteLine("Received {0} messages", receivedMessages.Count);
-                    }
-
-                    if (receivedMessages.Count >= numberOfMessages)
-                    {
-                        resetEvent.Set();
-                    }
-                });
-
-            var rebusRouting = adapter1.Bus.Advanced.Routing;
-            var stopwatch = Stopwatch.StartNew();
-
-            foreach (var msg in messages)
+            using (var statusTimer = new Timer())
             {
-                rebusRouting.Send(QueueName2, msg);
+                var messages = Enumerable.Range(1, numberOfMessages)
+                                         .Select(n => new SomeNumberedMessage
+                                                          {
+                                                              Id = Guid.NewGuid(),
+                                                              Text = string.Format("Message # {0}", n)
+                                                          })
+                                         .ToList();
 
-                sentMessageIds.Add(msg.Id);
+                var receivedMessages = new ConcurrentList<SomeNumberedMessage>();
+                var resetEvent = new ManualResetEvent(false);
+                var sentMessageIds = new ConcurrentList<Guid>();
 
-                if (sentMessageIds.Count%1000 == 0)
+                statusTimer.Elapsed += delegate
+                    {
+                        Console.WriteLine("Sent {0} messages, received {1} messages",
+                                          sentMessageIds.Count, receivedMessages.Count);
+                    };
+                statusTimer.Interval = 2000;
+                statusTimer.Start();
+
+                adapter2.Handle<SomeNumberedMessage>(msg =>
+                    {
+                        receivedMessages.Add(msg);
+
+                        if (receivedMessages.Count >= numberOfMessages)
+                        {
+                            resetEvent.Set();
+                        }
+                    });
+
+                var rebusRouting = adapter1.Bus.Advanced.Routing;
+                var stopwatch = Stopwatch.StartNew();
+
+                // send first half as batch
+                var batchSize = messages.Count/2;
+
+                var firstBatch = messages.Take(batchSize)
+                                         .ToList();
+
+                var theRest = messages.Skip(batchSize)
+                                      .ToList();
+
+                foreach (var msgBatch in firstBatch.Partition(100))
                 {
-                    Console.WriteLine("Sent {0} messages", sentMessageIds.Count);
+                    Console.WriteLine("Sending batch of {0} messages", msgBatch.Count());
+
+                    var complete = false;
+                    var attempts = 0;
+
+                    do
+                    {
+                        try
+                        {
+                            using (var scope = new TransactionScope())
+                            {
+                                foreach (var msg in msgBatch)
+                                {
+                                    rebusRouting.Send(QueueName2, msg);
+
+                                    sentMessageIds.Add(msg.Id);
+                                }
+
+                                scope.Complete();
+                            }
+
+                            complete = true;
+                        }
+                        catch (Exception e)
+                        {
+                            attempts++;
+
+                            if (attempts >= 5)
+                            {
+                                throw;
+                            }
+                        }
+                    } while (!complete);
                 }
-            }
 
-            var totalSeconds = stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/s",
-                              numberOfMessages, totalSeconds, numberOfMessages/totalSeconds);
+                foreach (var msg in theRest)
+                {
+                    rebusRouting.Send(QueueName2, msg);
 
-            var timeout = TimeSpan.FromSeconds(15 + numberOfMessages/200.0);
-            Console.WriteLine("Waiting with {0} timeout", timeout);
-            if (!resetEvent.WaitOne(timeout))
-            {
-                Assert.Fail(@"Did not receive all {0} messages within {1} timeout
+                    sentMessageIds.Add(msg.Id);
+                }
 
-{2}",
-                            numberOfMessages, timeout, FormatReport(sentMessageIds, receivedMessages));
-            }
+                var totalSeconds = stopwatch.Elapsed.TotalSeconds;
+                Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/s",
+                                  numberOfMessages, totalSeconds, numberOfMessages/totalSeconds);
 
-            // wait and see if we have duplicates
-            Thread.Sleep(1000);
-
-            receivedMessages.Count.ShouldBe(numberOfMessages);
-
-            foreach (var id in sentMessageIds)
-            {
-                var messagesWithThatId = receivedMessages.Count(m => m.Id == id);
-
-                Assert.That(messagesWithThatId, Is.EqualTo(1),
-                            @"Expected exactly 1 message with ID {0}, but there was {1}!!
+                var timeout = TimeSpan.FromSeconds(15 + numberOfMessages/10.0);
+                Console.WriteLine("Waiting with {0} timeout", timeout);
+                if (!resetEvent.WaitOne(timeout))
+                {
+                    Assert.Fail(@"Did not receive all {0} messages within {1} timeout
 
 {2}",
-                            id, messagesWithThatId, FormatReport(sentMessageIds, receivedMessages));
+                                numberOfMessages, timeout, FormatReport(sentMessageIds, receivedMessages));
+                }
+
+                // wait and see if we have duplicates
+                Thread.Sleep(2.Seconds());
+
+                receivedMessages.Count.ShouldBe(numberOfMessages);
+
+                foreach (var id in sentMessageIds)
+                {
+                    var messagesWithThatId = receivedMessages.Count(m => m.Id == id);
+
+                    Assert.That(messagesWithThatId, Is.EqualTo(1),
+                                @"Expected exactly 1 message with ID {0}, but there was {1}!!
+
+{2}",
+                                id, messagesWithThatId, FormatReport(sentMessageIds, receivedMessages));
+                }
             }
         }
 
@@ -158,6 +212,29 @@ The following received messages were duplicated: {2}
         void PurgeQueue(string queueName)
         {
             new AzureServiceBusMessageQueue(AzureServiceBusMessageQueueFactory.ConnectionString, queueName).Purge();
+        }
+    }
+
+    public static class Ex
+    {
+        public static IEnumerable<IEnumerable<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
+        {
+            IEnumerable<T> batch;
+            var skip = 0;
+
+            do
+            {
+                batch = items.Skip(skip)
+                             .Take(partitionSize)
+                             .ToList();
+
+                if (batch.Any())
+                {
+                    yield return batch;
+                }
+
+                skip += partitionSize;
+            } while (batch.Any());
         }
     }
 }
