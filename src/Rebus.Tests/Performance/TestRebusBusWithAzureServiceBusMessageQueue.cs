@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Timers;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -73,11 +74,8 @@ namespace Rebus.Tests.Performance
                 var resetEvent = new ManualResetEvent(false);
                 var sentMessageIds = new ConcurrentList<Guid>();
 
-                statusTimer.Elapsed += delegate
-                    {
-                        Console.WriteLine("Sent {0} messages, received {1} messages",
-                                          sentMessageIds.Count, receivedMessages.Count);
-                    };
+                statusTimer.Elapsed += (sender, args) => Console.WriteLine("Sent {0} messages, received {1} messages",
+                                                                           sentMessageIds.Count, receivedMessages.Count);
                 statusTimer.Interval = 2000;
                 statusTimer.Start();
 
@@ -105,7 +103,7 @@ namespace Rebus.Tests.Performance
 
                 foreach (var msgBatch in firstBatch.Partition(100))
                 {
-                    Console.WriteLine("Sending batch of {0} messages", msgBatch.Count());
+                    Console.WriteLine("Sending batch of {0} messages", msgBatch.Count);
 
                     var complete = false;
                     var attempts = 0;
@@ -153,6 +151,7 @@ namespace Rebus.Tests.Performance
 
                 var timeout = TimeSpan.FromSeconds(15 + numberOfMessages/10.0);
                 Console.WriteLine("Waiting with {0} timeout", timeout);
+                
                 if (!resetEvent.WaitOne(timeout))
                 {
                     Assert.Fail(@"Did not receive all {0} messages within {1} timeout
@@ -217,16 +216,17 @@ The following received messages were duplicated: {2}
 
     public static class Ex
     {
-        public static IEnumerable<IEnumerable<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
+        public static IEnumerable<List<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
         {
-            IEnumerable<T> batch;
+            List<T> batch;
             var skip = 0;
+            var allItems = items.ToList();
 
             do
             {
-                batch = items.Skip(skip)
-                             .Take(partitionSize)
-                             .ToList();
+                batch = allItems.Skip(skip)
+                                .Take(partitionSize)
+                                .ToList();
 
                 if (batch.Any())
                 {
