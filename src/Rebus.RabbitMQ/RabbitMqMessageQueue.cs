@@ -478,7 +478,7 @@ namespace Rebus.RabbitMQ
             return new ReceivedTransportMessage
                 {
                     Id = basicProperties != null
-                             ? basicProperties.MessageId
+                             ? basicProperties.MessageId ?? "(null)"
                              : "(unknown)",
                     Headers = basicProperties != null
                                   ? GetHeaders(basicProperties)
