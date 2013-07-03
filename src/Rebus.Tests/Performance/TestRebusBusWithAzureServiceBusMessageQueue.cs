@@ -128,6 +128,9 @@ namespace Rebus.Tests.Performance
                         }
                         catch (Exception e)
                         {
+                            Console.WriteLine("An error occurred while sending batch of {0} msgs: {1}",
+                                              msgBatch.Count, e);
+
                             attempts++;
 
                             if (attempts >= 5)
