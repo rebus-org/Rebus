@@ -242,5 +242,10 @@ Sent, but not received messages:
         {
             return GetEnumerator();
         }
+
+        public T this[int index]
+        {
+            get { return innerList[index]; }
+        }
     }
 }
