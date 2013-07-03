@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.ServiceModel;
 using System.Threading;
 using System.Transactions;
 using Microsoft.ServiceBus;
@@ -58,7 +59,7 @@ namespace Rebus.AzureServiceBus
 
             log.Info("Creating topic client");
             topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
-
+            
             log.Info("Creating subscription client");
             subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue);
         }
@@ -79,7 +80,7 @@ namespace Rebus.AzureServiceBus
                                                         Label = message.Label,
                                                     };
 
-                var backoffTimes = new[] { 0.1, 0.2, 0.5, 1, 2, 3, 5, 8, 13, 21 }
+                var backoffTimes = new[] { 0.1, 0.2, 0.5, 1, 2, 3, 5, 8, 13, 21, 30, 30, 30, 30 }
                     .Select(TimeSpan.FromSeconds)
                     .ToArray();
 
@@ -168,24 +169,31 @@ namespace Rebus.AzureServiceBus
                                 }
                             };
                     }
-                    else
+
+                    try
                     {
-                        brokeredMessage.Complete();
+                        var envelope = brokeredMessage.GetBody<Envelope>();
+
+                        return new ReceivedTransportMessage
+                                   {
+                                       Id = messageId,
+                                       Headers = envelope.Headers == null
+                                                     ? new Dictionary<string, object>()
+                                                     : envelope
+                                                           .Headers
+                                                           .ToDictionary(e => e.Key, e => (object) e.Value),
+                                       Body = envelope.Body,
+                                       Label = envelope.Label
+                                   };
                     }
-
-                    var envelope = brokeredMessage.GetBody<Envelope>();
-
-                    return new ReceivedTransportMessage
-                               {
-                                   Id = messageId,
-                                   Headers = envelope.Headers == null
-                                                 ? new Dictionary<string, object>()
-                                                 : envelope
-                                                       .Headers
-                                                       .ToDictionary(e => e.Key, e => (object)e.Value),
-                                   Body = envelope.Body,
-                                   Label = envelope.Label
-                               };
+                    finally
+                    {
+                        if (!context.IsTransactional)
+                        {
+                            brokeredMessage.Complete();
+                            brokeredMessage.Dispose();
+                        }
+                    }
                 }
                 catch (Exception receiveException)
                 {
@@ -206,6 +214,10 @@ namespace Rebus.AzureServiceBus
                 }
             }
             catch (TimeoutException)
+            {
+                return null;
+            }
+            catch (CommunicationObjectFaultedException)
             {
                 return null;
             }

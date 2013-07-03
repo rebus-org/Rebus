@@ -137,15 +137,39 @@ namespace Rebus.Tests.Performance
                             {
                                 throw;
                             }
+
+                            Thread.Sleep(1.Seconds());
                         }
                     } while (!complete);
                 }
 
                 foreach (var msg in theRest)
                 {
-                    rebusRouting.Send(QueueName2, msg);
+                    var attempts = 0;
+                    var complete = false;
 
-                    sentMessageIds.Add(msg.Id);
+                    do
+                    {
+                        try
+                        {
+                            rebusRouting.Send(QueueName2, msg);
+                            sentMessageIds.Add(msg.Id);
+                            complete = true;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("An error occurred while attempting to send single message");
+
+                            attempts++;
+
+                            if (attempts >= 5)
+                            {
+                                throw;
+                            }
+
+                            Thread.Sleep(1.Seconds());
+                        }
+                    } while (!complete);
                 }
 
                 var totalSeconds = stopwatch.Elapsed.TotalSeconds;
@@ -162,6 +186,8 @@ namespace Rebus.Tests.Performance
 {2}",
                                 numberOfMessages, timeout, FormatReport(sentMessageIds, receivedMessages));
                 }
+
+                Console.WriteLine("Waiting some extra time for possible duplicates to arrive");
 
                 // wait and see if we have duplicates
                 Thread.Sleep(2.Seconds());
