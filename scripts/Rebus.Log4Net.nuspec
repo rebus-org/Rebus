@@ -12,6 +12,7 @@
     <description>Provides the ability for Rebus to log with Log4Net</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus log4net</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
       <dependency id="log4net" version="2.0.0" />

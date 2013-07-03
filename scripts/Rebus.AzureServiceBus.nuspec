@@ -12,6 +12,7 @@
     <description>Provides an Azure Service Bus-based transport implementation for Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus azure queue messaging service bus</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
       <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="2.0.1.0" />
