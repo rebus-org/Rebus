@@ -204,17 +204,17 @@ namespace Rebus.Tests.Performance
 
                 Console.WriteLine("Checking {0} messages", sentMessageIds.Count);
 
-                for (var index = 0; index <  sentMessageIds.Count; index++)
-                {
-                    var id = sentMessageIds[index];
+                var formattedReport = FormatReport(sentMessageIds, receivedMessages);
 
+                foreach (var id in sentMessageIds)
+                {
                     var messagesWithThatId = receivedMessages.Count(m => m.Id == id);
 
                     Assert.That(messagesWithThatId, Is.EqualTo(1),
                                 @"Expected exactly 1 message with ID {0}, but there was {1}!!
 
 {2}",
-                                id, messagesWithThatId, FormatReport(sentMessageIds, receivedMessages));
+                                id, messagesWithThatId, formattedReport);
                 }
 
                 Console.WriteLine("All done!");
