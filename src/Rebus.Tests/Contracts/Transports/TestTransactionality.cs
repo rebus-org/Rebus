@@ -93,7 +93,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         [TestCase(true, Description = "Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]
         [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
-        public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
+            public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
             sender.Send(receiver.InputQueueAddress, MessageWith("hello"), new NoTransaction());
 

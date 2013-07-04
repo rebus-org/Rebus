@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Timers;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Bus;
