@@ -45,3 +45,4 @@
 ## 0.34.0
 
 * Added (finally!) an icon for NuGet to display along with all Rebus packages
+* New and improved Azure Service Bus topic-based transport implementation
