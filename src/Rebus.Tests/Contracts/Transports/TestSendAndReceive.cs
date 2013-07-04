@@ -11,6 +11,7 @@ namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
     [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
+    [TestFixture(typeof(AzureServiceBusMessageQueueFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
     public class TestSendAndReceive<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
