@@ -4,9 +4,12 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Testing;
+using Rebus.Transports;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -354,6 +357,21 @@ Or should it?")]
 
             handler.FirstMessageHandled.ShouldBe(true);
             handler.SecondMessageHandled.ShouldBe(true);
+        }
+
+        [Test]
+        public void ThrowsWhenUsingDeferInOneWayMode()
+        {
+            IBus bus = CreateBusInOneWayMode().Start();
+            TimeSpan deferTime = TimeSpan.FromMinutes(5);
+
+            Assert.That(() => bus.Defer(deferTime, new {msg = "foo"}), Throws.InvalidOperationException);
+        }
+
+        RebusBus CreateBusInOneWayMode()
+        {
+            return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(), storeSubscriptions, storeSagaData, determineMessageOwnership,
+                serializeMessages, inspectHandlerPipeline, new ErrorTracker("error"), null, new ConfigureAdditionalBehavior());
         }
 
         class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>
