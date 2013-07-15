@@ -312,6 +312,9 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
+            if (busMode == BusMode.OneWayClientMode)
+                throw new InvalidOperationException("Defer cannot be used when the bus is in OneWayClientMode, since there " +
+                                                    "would be no destination for the TimeoutService to return to.");
 
             var customData = TimeoutReplyHandler.Serialize(message);
 
