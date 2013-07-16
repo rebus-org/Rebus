@@ -46,3 +46,7 @@
 
 * Added (finally!) an icon for NuGet to display along with all Rebus packages
 * New and improved Azure Service Bus topic-based transport implementation
+
+## 0.34.1
+
+* Better error handling when deferring messages
