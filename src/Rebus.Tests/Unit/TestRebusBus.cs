@@ -368,6 +368,17 @@ Or should it?")]
             Assert.That(() => bus.Defer(deferTime, new {msg = "foo"}), Throws.InvalidOperationException);
         }
 
+        [Test]
+        public void AccepsDeferInOneWayModeWhenReturnAddressHasBeenManuallySpecified()
+        {
+            var bus = CreateBusInOneWayMode().Start();
+            var deferTime = TimeSpan.FromMinutes(5);
+            var message = new { msg = "foo" };
+            bus.AttachHeader(message, Headers.ReturnAddress, "this is not really an endpoint, but who cares :)");
+
+            Assert.That(() => bus.Defer(deferTime, message), Throws.Nothing);
+        }
+
         RebusBus CreateBusInOneWayMode()
         {
             return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(), storeSubscriptions, storeSagaData, determineMessageOwnership,

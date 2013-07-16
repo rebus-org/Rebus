@@ -312,9 +312,12 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
-            if (busMode == BusMode.OneWayClientMode)
+            
+            if (busMode == BusMode.OneWayClientMode && !HasReturnAddressHeader(message))
+            {
                 throw new InvalidOperationException("Defer cannot be used when the bus is in OneWayClientMode, since there " +
                                                     "would be no destination for the TimeoutService to return to.");
+            }
 
             var customData = TimeoutReplyHandler.Serialize(message);
 
@@ -340,6 +343,11 @@ namespace Rebus.Bus
             var messages = new List<object> { timeoutRequest };
 
             InternalSend(timeoutManagerAddress, messages);
+        }
+
+        bool HasReturnAddressHeader(object message)
+        {
+            return headerContext.GetHeadersFor(message).ContainsKey(Headers.ReturnAddress);
         }
 
         /// <summary>
@@ -612,7 +620,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             SetNumberOfWorkers(0);
 
             var disposables = InjectedServices()
-                .Except(new object[] {activateHandlers})
+                .Except(new object[] { activateHandlers })
                 .OfType<IDisposable>()
                 .Distinct();
 
