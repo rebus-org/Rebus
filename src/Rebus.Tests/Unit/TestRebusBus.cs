@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -369,7 +367,7 @@ Or should it?")]
         }
 
         [Test]
-        public void AccepsDeferInOneWayModeWhenReturnAddressHasBeenManuallySpecified()
+        public void AcceptsDeferInOneWayModeWhenReturnAddressHasBeenManuallySpecified()
         {
             var bus = CreateBusInOneWayMode().Start();
             var deferTime = TimeSpan.FromMinutes(5);
