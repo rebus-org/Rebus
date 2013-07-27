@@ -50,3 +50,4 @@
 ## 0.34.1
 
 * Better error handling when deferring messages
+* Fixed bug with RabbitMQ transport that would result in exchange and error queue declaration too early, thus not adhering to customizations made by calling on the Rabbit MQ options
