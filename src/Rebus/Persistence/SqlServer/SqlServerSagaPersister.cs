@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Reflection;
 using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
@@ -20,6 +22,8 @@ namespace Rebus.Persistence.SqlServer
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
+
+        static readonly PropertyInfo ConnectionInfo = typeof(SqlConnection).GetProperty("InnerConnection", BindingFlags.NonPublic | BindingFlags.Instance);
 
         const int PrimaryKeyViolationNumber = 2627;
         const int MaximumSagaDataTypeNameLength = 40;
@@ -97,6 +101,8 @@ namespace Rebus.Persistence.SqlServer
                 // next insert the saga
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+                    
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
 
@@ -129,6 +135,8 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
+                        AssignTransactionIfNecessary(connection, command);
+
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
@@ -178,6 +186,8 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
@@ -186,6 +196,8 @@ namespace Rebus.Persistence.SqlServer
                 // next, update or insert the saga
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
 
@@ -215,6 +227,8 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
+                        AssignTransactionIfNecessary(connection, command);
+
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
@@ -260,6 +274,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
@@ -272,6 +288,8 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
@@ -294,6 +312,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     if (sagaDataPropertyPath == idPropertyName)
                     {
                         command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
@@ -373,6 +393,8 @@ saga type name.",
 
                     using (var command = connection.CreateCommand())
                     {
+                        AssignTransactionIfNecessary(connection, command);
+
                         command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
 	[id] [uniqueidentifier] NOT NULL,
@@ -390,6 +412,8 @@ CREATE TABLE [dbo].[{0}](
 
                     using (var command = connection.CreateCommand())
                     {
+                        AssignTransactionIfNecessary(connection, command);
+
                         command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
 	[saga_type] [nvarchar](40) NOT NULL,
@@ -419,6 +443,54 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
                 releaseConnection(connection);
             }
             return this;
+        }
+
+        void AssignTransactionIfNecessary(SqlConnection connection, SqlCommand command)
+        {
+            var transactionOrNull = GetTransactionOrNull(connection);
+            if (transactionOrNull == null) return;
+
+            // LOOOOOOOOOOOOOOOOLOOOOOOOOOOOOOOOLOL SILLY ADO.NET WHY U NO DO THIS YOUR FUCKING SELF WHEN GIVING ME THE COMMAND???!?!?!?
+            command.Transaction = transactionOrNull;
+        }
+
+        /// <summary>
+        /// BAM!1 get current transaction by applying a few select reflection spells
+        /// </summary>
+        SqlTransaction GetTransactionOrNull(IDbConnection conn)
+        {
+            try
+            {
+                var internalConn = ConnectionInfo.GetValue(conn, null);
+                var currentTransactionProperty = internalConn.GetType().GetProperty("CurrentTransaction", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (currentTransactionProperty == null)
+                {
+                    throw new ApplicationException(string.Format("Failed to retrieve the CurrentTransaction property of the current connection of type {0}", internalConn.GetType()));
+                }
+
+                var currentTransaction = currentTransactionProperty.GetValue(internalConn, null);
+                if (currentTransaction == null)
+                {
+                    return null;
+                }
+
+                var realTransactionProperty = currentTransaction.GetType().GetProperty("Parent", BindingFlags.NonPublic | BindingFlags.Instance);
+                if (realTransactionProperty == null)
+                {
+                    throw new ApplicationException(string.Format("Failed to retrieve the Parent property of the current internal transaction of type {0}", currentTransaction.GetType()));
+                }
+
+                var realTransaction = realTransactionProperty.GetValue(currentTransaction, null);
+
+                return (SqlTransaction)realTransaction;
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(string.Format("An error occurred while attempting to retrieve the current transaction from {0}." +
+                                                             " Be warned that this way of retrieving the transaction might be brittle with respect" +
+                                                             " to the evolution of ADO.NET - who knows, one day the current transaction might not" +
+                                                             " be accessed this easily..... </sarcasm>", conn), e);
+            }
         }
     }
 }
