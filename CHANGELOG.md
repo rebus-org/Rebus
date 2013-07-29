@@ -55,3 +55,7 @@
 ## 0.34.2
 
 * Fixed bug in SQL saga persister and SQL subscription storage because SqlConnection is not nice enough to set the Transaction property when creating commands
+
+## 0.34.3
+
+* Fixed bug in `InMemorySagaPersister` that would not use the proper JSON serializer settings when deserializing

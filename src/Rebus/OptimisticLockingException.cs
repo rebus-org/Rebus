@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace Rebus
 {
@@ -25,6 +26,15 @@ namespace Rebus
             : base(string.Format(@"Could not update saga of type {0} with _id {1} _rev {2} because someone else beat us to it",
             sagaData.GetType(), sagaData.Id, sagaData.Revision), innerException)
         {
+        }
+
+        /// <summary>
+        /// Ctor necessary for serialization
+        /// </summary>
+        public OptimisticLockingException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+            : base(serializationInfo, streamingContext)
+        {
+
         }
     }
 }

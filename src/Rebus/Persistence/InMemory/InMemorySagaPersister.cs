@@ -191,7 +191,8 @@ namespace Rebus.Persistence.InMemory
         static ISagaData Clone(ISagaData sagaData)
         {
             var jsonObject = JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings);
-            return (ISagaData) JsonConvert.DeserializeObject(jsonObject, sagaData.GetType());
+            
+            return (ISagaData) JsonConvert.DeserializeObject(jsonObject, sagaData.GetType(), Settings);
         }
 
         ConcurrentDictionary<Guid, ISagaData> GetData(Type type)

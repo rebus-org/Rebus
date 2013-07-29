@@ -218,6 +218,7 @@
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
+    <Compile Include="Testing\TestSagaFixtureAndSerializationCornerCases.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
     <Compile Include="Timeout\TestTimeoutService.cs" />
     <Compile Include="Logging\TestRebusLoggerFactory.cs" />
