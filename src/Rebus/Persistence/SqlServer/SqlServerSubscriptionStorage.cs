@@ -9,7 +9,7 @@ namespace Rebus.Persistence.SqlServer
     /// <summary>
     /// Implements a subscriotion storage for Rebus that will store subscriptions in an SQL Server.
     /// </summary>
-    public class SqlServerSubscriptionStorage : IStoreSubscriptions
+    public class SqlServerSubscriptionStorage : SqlServerMagic, IStoreSubscriptions
     {
         static ILog log;
 
@@ -72,6 +72,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"insert into [{0}] 
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
@@ -105,6 +107,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"delete from [{0}]
                                                 where message_type = @message_type
                                                 and endpoint = @endpoint", subscriptionsTableName);
@@ -131,6 +135,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"select endpoint from [{0}]
                                                 where message_type = @message_type", subscriptionsTableName);
 
@@ -174,6 +180,8 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
+                    AssignTransactionIfNecessary(connection, command);
+
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
 	[message_type] [nvarchar](200) NOT NULL,

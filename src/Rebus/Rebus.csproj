@@ -96,6 +96,7 @@
     <Compile Include="MultipleSagaHandlersException.cs" />
     <Compile Include="Persistence\HybridSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
     <Compile Include="SagaContext.cs" />
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Testing\FakeBus.cs" />

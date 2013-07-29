@@ -51,3 +51,7 @@
 
 * Better error handling when deferring messages
 * Fixed bug with RabbitMQ transport that would result in exchange and error queue declaration too early, thus not adhering to customizations made by calling on the Rabbit MQ options
+
+## 0.34.2
+
+* Fixed bug in SQL saga persister and SQL subscription storage because SqlConnection is not nice enough to set the Transaction property when creating commands

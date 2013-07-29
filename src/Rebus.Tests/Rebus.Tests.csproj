@@ -211,8 +211,9 @@
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
-    <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister2.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="TestHelpers.cs" />
