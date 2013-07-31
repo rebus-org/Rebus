@@ -69,6 +69,27 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public void HandlesTimeoutAsWell()
+        {
+            adapter.Handle<SomeRequest>(req =>
+                {
+                    // hah! just ignore it
+                });
+
+            var resetEvent = new ManualResetEvent(false);
+
+            adapter.Bus.Send(new SomeRequest {Message = "hello there!"},
+                             (SomeReply reply) => Assert.Fail("we should not receive any reply!"),
+                             TimeSpan.FromSeconds(2),
+                             () => resetEvent.Set());
+
+            if (!resetEvent.WaitOne(3.Seconds()))
+            {
+                Assert.Fail("Did not receive timeout callback within 3 seconds of waiting!");
+            }
+        }
+
+        [Test]
         public void DoesNotReceiveMultipleCallbacks()
         {
             adapter.Handle<SomeRequest>(s => bus.Reply(new SomeReply { Message = "Thank you sir!" }));

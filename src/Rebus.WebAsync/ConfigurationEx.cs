@@ -2,22 +2,33 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Shared;
 using System.Linq;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.WebAsync
 {
     public static class ConfigurationEx
     {
         static internal ConcurrentDictionary<string, ReplyCallback> registeredReplyHandlers = new ConcurrentDictionary<string, ReplyCallback>();
+        static readonly TimeSpan DefaultMaxCallbackAge = TimeSpan.FromHours(1);
 
         internal class ReplyCallback
         {
             public Delegate Callback { get; set; }
             public DateTime RegistrationTime { get; set; }
+            public Action TimeoutCallback { get; set; }
+            public TimeSpan MaxCallbackAge { get; set; }
+
+            public void TimeOut()
+            {
+                if (TimeoutCallback == null) return;
+
+                TimeoutCallback();
+            }
         }
 
         public static RebusConfigurer EnableWebCallbacks(this RebusConfigurer configurer)
@@ -31,10 +42,26 @@ namespace Rebus.WebAsync
 
         public static void Send<TReply>(this IBus bus, object message, Action<TReply> replyHandler)
         {
+            InnerSend(bus, message, replyHandler, DefaultMaxCallbackAge);
+        }
+
+        public static void Send<TReply>(this IBus bus, object message, Action<TReply> replyHandler, TimeSpan timeout, Action timeoutAction)
+        {
+            InnerSend(bus, message, replyHandler, timeout, timeoutAction);
+        }
+
+        static void InnerSend<TReply>(IBus bus, object message, Action<TReply> replyHandler, TimeSpan timeout, Action timeoutAction = null)
+        {
             var correlationId = Guid.NewGuid().ToString();
             bus.AttachHeader(message, Headers.CorrelationId, correlationId);
-            
-            var replyCallback = new ReplyCallback {Callback = replyHandler, RegistrationTime = DateTime.UtcNow};
+
+            var replyCallback = new ReplyCallback
+                                    {
+                                        Callback = replyHandler, 
+                                        RegistrationTime = DateTime.UtcNow,
+                                        MaxCallbackAge = timeout,
+                                        TimeoutCallback = timeoutAction,
+                                    };
             var key = GetKey(correlationId, typeof (TReply));
 
             if (TransactionContext.Current != null)
@@ -57,13 +84,23 @@ namespace Rebus.WebAsync
 
         class CorrelationHandlerInjector : IActivateHandlers, IDisposable
         {
-            static readonly TimeSpan MaxCallbackAge = TimeSpan.FromHours(1);
+            static ILog log;
+
+            static CorrelationHandlerInjector()
+            {
+                RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+            }
+
+            readonly Timer cleanupTimer = new Timer();
             readonly IActivateHandlers innerActivator;
-            int callCounter;
 
             public CorrelationHandlerInjector(IActivateHandlers innerActivator)
             {
                 this.innerActivator = innerActivator;
+
+                cleanupTimer.Elapsed += (o, ea) => DoCleanup();
+                cleanupTimer.Interval = TimeSpan.FromSeconds(1).TotalMilliseconds;
+                cleanupTimer.Start();
             }
 
             public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
@@ -95,27 +132,28 @@ namespace Rebus.WebAsync
                 }
 
                 // otherwise, we may add our special callback handler
+                log.Info("Adding in-mem callback handler for {0}", replyCallback.Callback);
                 handlerInstancesToReturn.Add(new ReplyMessageHandler<T>(replyCallback, correlationId));
-
-                PossiblyTriggerCleanup();
 
                 return handlerInstancesToReturn;
             }
 
-            void PossiblyTriggerCleanup()
+            void DoCleanup()
             {
-                var currentValue = Interlocked.Increment(ref callCounter);
-
-                if (currentValue%100 != 0) return;
-
                 var keys = registeredReplyHandlers.Keys.ToList();
 
                 foreach (var key in keys)
                 {
                     ReplyCallback replyHandler;
                     if (!registeredReplyHandlers.TryGetValue(key, out replyHandler)) continue;
-                    if ((DateTime.UtcNow - replyHandler.RegistrationTime) < MaxCallbackAge) continue;
-                    registeredReplyHandlers.TryRemove(key, out replyHandler);
+                    var maxCallbackAgeForThisCallback = replyHandler.MaxCallbackAge;
+
+                    if ((DateTime.UtcNow - replyHandler.RegistrationTime) < maxCallbackAgeForThisCallback) continue;
+
+                    if (!registeredReplyHandlers.TryRemove(key, out replyHandler)) continue;
+
+                    log.Warn("Registered callback {0} exceeded max age of {1}", replyHandler.Callback, maxCallbackAgeForThisCallback);
+                    replyHandler.TimeOut();
                 }
             }
 
@@ -126,6 +164,9 @@ namespace Rebus.WebAsync
 
             public void Dispose()
             {
+                cleanupTimer.Stop();
+                cleanupTimer.Dispose();
+
                 var activator = innerActivator as IDisposable;
                 if (activator == null) return;
                 
