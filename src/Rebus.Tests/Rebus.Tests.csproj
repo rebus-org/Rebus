@@ -200,6 +200,7 @@
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestConfigurableTransactionScope.cs" />
     <Compile Include="Integration\TestCorrelationId.cs" />
+    <Compile Include="Integration\TestCorrelation.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageMutation.cs" />
     <Compile Include="Integration\TestOneWayClientMode.cs" />
@@ -209,6 +210,7 @@
     <Compile Include="Integration\TestResilientRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
+    <Compile Include="Integration\TestWebCallbacks.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
@@ -387,6 +389,10 @@
     <ProjectReference Include="..\Rebus.Unity\Rebus.Unity.csproj">
       <Project>{93AEA3E2-F995-427A-BAF4-F2EBD271E818}</Project>
       <Name>Rebus.Unity</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.WebAsync\Rebus.WebAsync.csproj">
+      <Project>{C1329E61-51E1-4724-A020-4D515FEB78A4}</Project>
+      <Name>Rebus.WebAsync</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>

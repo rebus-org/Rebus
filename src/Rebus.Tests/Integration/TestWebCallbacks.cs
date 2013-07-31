@@ -6,81 +6,133 @@ using Rebus.Configuration;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Rebus.WebAsync;
+using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestWebCallbacks : FixtureBase, IDetermineMessageOwnership
     {
+        BuiltinContainerAdapter adapter;
+        IBus bus;
         const string QueueName = "test.webcallbacks.input1";
 
-        [Test]
-        public void ItWorks()
+        protected override void DoSetUp()
         {
-            using (var adapter = new BuiltinContainerAdapter())
+            DeleteQueueIfExists();
+
+            adapter = new BuiltinContainerAdapter();
+
+            Configure.With(adapter)
+                     .Transport(t => t.UseMsmq(QueueName, "error"))
+                     .MessageOwnership(o => o.Use(this))
+                     .EnableWebCallbacks()
+                     .CreateBus()
+                     .Start();
+
+            bus = adapter.Bus;
+        }
+
+        protected override void DoTearDown()
+        {
+            adapter.Dispose();
+
+            DeleteQueueIfExists();
+        }
+
+        static void DeleteQueueIfExists()
+        {
+            if (MessageQueue.Exists(MsmqUtil.GetPath(QueueName)))
             {
-                Configure.With(adapter)
-                         .Transport(t => t.UseMsmq(QueueName, "error"))
-                         .MessageOwnership(o => o.Use(this))
-                         .AllowWebCallbacks()
-                         .CreateBus()
-                         .Start();
-
-                var bus = adapter.Bus;
-                adapter.Handle<string>(s => bus.Reply("Thank you sir!"));
-
-                var resetEvent = new ManualResetEvent(false);
-
-                adapter.Bus.Send("hello there!", (string reply) =>
-                    {
-                        Console.WriteLine("Got reply in callback: {0} - YAY!", reply);
-                        resetEvent.Set();
-                    });
-
-                if (!resetEvent.WaitOne(2.Seconds()))
-                {
-                    Assert.Fail("Did not receive reply withing 2 seconds of waiting!");
-                }
+                MsmqUtil.Delete(QueueName);
             }
+        }
+
+        [Test]
+        public void BasicThingWorks()
+        {
+            adapter.Handle<SomeRequest>(req => bus.Reply(new SomeReply { Message = "Thank you sir!" }));
+
+            var resetEvent = new ManualResetEvent(false);
+
+            adapter.Bus.Send(new SomeRequest {Message = "hello there!"},
+                             (SomeReply reply) =>
+                                 {
+                                     Console.WriteLine("Got reply in callback: {0} - YAY!", reply.Message);
+                                     resetEvent.Set();
+                                 });
+
+            if (!resetEvent.WaitOne(2.Seconds()))
+            {
+                Assert.Fail("Did not receive reply within 2 seconds of waiting!");
+            }
+        }
+
+        [Test]
+        public void DoesNotReceiveMultipleCallbacks()
+        {
+            adapter.Handle<SomeRequest>(s => bus.Reply(new SomeReply { Message = "Thank you sir!" }));
+
+            var callbackCounter = 0;
+
+            var resetEvent = new ManualResetEvent(false);
+
+            adapter.Bus.Send(new SomeRequest {Message = "hello there!"},
+                             (SomeReply reply) =>
+                                 {
+                                     Console.WriteLine("Got reply in callback: {0} - YAY!", reply.Message);
+                                     Interlocked.Increment(ref callbackCounter);
+                                     resetEvent.Set();
+                                 });
+
+            if (!resetEvent.WaitOne(2.Seconds()))
+            {
+                Assert.Fail("Did not receive reply within 2 seconds of waiting!");
+            }
+
+            // allow for possible additional callbacks to happen...
+            Thread.Sleep(1.Seconds());
+
+            callbackCounter.ShouldBe(1);
         }
 
         [Test]
         public void HandlesTypeMismatchGracefully()
         {
-            using (var adapter = new BuiltinContainerAdapter())
-            {
-                Configure.With(adapter)
-                         .Transport(t => t.UseMsmq(QueueName, "error"))
-                         .MessageOwnership(o => o.Use(this))
-                         .AllowWebCallbacks()
-                         .CreateBus()
-                         .Start();
-
-                var bus = adapter.Bus;
-                adapter.Handle<string>(s => bus.Reply("Thank you sir!"));
-
-                var resetEvent = new ManualResetEvent(false);
-
-                adapter.Bus.Send("hello there!", (DateTime reply) =>
-                    {
-                        resetEvent.Set();
-                    });
-
-                if (!resetEvent.WaitOne(2.Seconds()))
+            adapter.Handle<SomeRequest>(req =>
                 {
-                    Assert.Fail("Did not receive reply withing 2 seconds of waiting!");
-                }
+                    Console.WriteLine("Got request: {0}. Will send reply", req.Message);
+                    bus.Reply(new SomeReply { Message = "Thank you sir!" });
+                });
+
+            var resetEvent = new ManualResetEvent(false);
+
+            adapter.Bus.Send(new SomeRequest {Message = "hello there!"},
+                             (DateTime reply) =>
+                                 {
+                                     Console.WriteLine("Whoa! Got reply: {0}", reply);
+                                     resetEvent.Set();
+                                 });
+
+            if (resetEvent.WaitOne(2.Seconds()))
+            {
+                Assert.Fail("Received reply within 2 seconds of waiting in spite of a type mismatch");
             }
         }
 
-        protected override void DoTearDown()
+        class SomeRequest
         {
-            MessageQueue.Delete(MsmqUtil.GetPath(QueueName));
+            public string Message { get; set; }
+        }
+
+        class SomeReply
+        {
+            public string Message { get; set; }
         }
 
         public string GetEndpointFor(Type messageType)
         {
-            if (messageType == typeof (string))
+            if (messageType == typeof(SomeRequest))
                 return QueueName;
 
             throw new ArgumentException(string.Format("Don't know where to send {0}", messageType));

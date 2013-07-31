@@ -463,6 +463,12 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.AutoCorrelationSagaId, messageContext.Headers[Headers.AutoCorrelationSagaId].ToString());
             }
 
+            // transfer ordinary correlation id to reply if it is present in the current message context
+            if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+            {
+                AttachHeader(messages.First(), Headers.CorrelationId, messageContext.Headers[Headers.CorrelationId].ToString());
+            }
+
             InternalSend(returnAddress, messages);
         }
 

@@ -88,6 +88,11 @@ namespace Rebus.Shared
             public string QueueName { get; set; }
         }
 
+        public static void Delete(string queueName)
+        {
+            MessageQueue.Delete(GetPath(queueName));
+        }
+
         static QueueInfo Parse(string queueName)
         {
             if (queueName.Contains("@"))
