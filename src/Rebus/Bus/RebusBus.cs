@@ -512,10 +512,22 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
         internal void InternalSend(string destination, Message messageToSend)
         {
-            log.Info("Sending {0} to {1}", string.Join("+", messageToSend.Messages), destination);
-            var transportMessage = serializeMessages.Serialize(messageToSend);
+            log.Info("Sending {0} to {1}", messageToSend, destination);
 
-            sendMessages.Send(destination, transportMessage, GetTransactionContext());
+            var transactionContext = GetTransactionContext();
+
+            try
+            {
+                var transportMessage = serializeMessages.Serialize(messageToSend);
+                
+                sendMessages.Send(destination, transportMessage, transactionContext);
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(string.Format(
+                    "An exception occurred while attempting to send {0} to {1} (context: {2})",
+                    messageToSend, destination, transactionContext));
+            }
         }
 
         ITransactionContext GetTransactionContext()

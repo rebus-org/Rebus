@@ -59,3 +59,7 @@
 ## 0.34.3
 
 * Fixed bug in `InMemorySagaPersister` that would not use the proper JSON serializer settings when deserializing
+
+## 0.34.4
+
+* Improved error reporting in case of exceptions while attempting to send all kinds of messages

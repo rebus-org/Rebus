@@ -82,5 +82,17 @@ namespace Rebus.Messages
         {
             return new string(line.Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c)).ToArray()).Trim();
         }
+
+        public override string ToString()
+        {
+            try
+            {
+                return GetLabel();
+            }
+            catch (Exception e)
+            {
+                return string.Format("Message (ERROR: {0})", e.Message);
+            }
+        }
     }
 }
