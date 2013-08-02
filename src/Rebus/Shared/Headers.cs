@@ -78,5 +78,10 @@ namespace Rebus.Shared
         /// message in order to support auto-correlating replies back to the requesting saga.
         /// </summary>
         public const string AutoCorrelationSagaId = "rebus-autocorrelation-saga-id";
+
+        /// <summary>
+        /// Special header that will flow through message handlers and be automatically transferred to all outgoing messages.
+        /// </summary>
+        public const string CorrelationId = "rebus-correlation-id";
     }
 }

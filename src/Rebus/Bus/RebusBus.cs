@@ -492,11 +492,24 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
             var headers = MergeHeaders(messageToSend);
+            
+            // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
                 if (busMode != BusMode.OneWayClientMode)
                 {
                     headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                }
+            }
+
+            // if we're currently handling a message with a correlation ID, make sure it flows...
+            if (MessageContext.HasCurrent && !headers.ContainsKey(Headers.CorrelationId))
+            {
+                var messageContext = MessageContext.GetCurrent();
+                
+                if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                {
+                    headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
                 }
             }
 

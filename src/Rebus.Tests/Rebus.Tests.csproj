@@ -199,6 +199,7 @@
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestConfigurableTransactionScope.cs" />
+    <Compile Include="Integration\TestCorrelationId.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageMutation.cs" />
     <Compile Include="Integration\TestOneWayClientMode.cs" />
