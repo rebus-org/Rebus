@@ -63,3 +63,7 @@
 ## 0.34.4
 
 * Improved error reporting in case of exceptions while attempting to send all kinds of messages
+
+## 0.34.5
+
+* Added ability to let a special correlation ID header automatically flow to all outgoing messages when it is present
