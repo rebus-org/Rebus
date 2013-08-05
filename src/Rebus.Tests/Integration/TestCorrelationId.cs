@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Messaging;
-using System.ServiceModel.Dispatcher;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -79,6 +78,21 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public void AutomaticallyProvidesCorrelationIdWhenOneHasNotBeenProvided()
+        {
+            adapter.Handle<Request>(req =>
+                {
+                    SetCorrelationIdIfPossible();
+                    SignalResetEvent();
+                });
+
+            bus.SendLocal(new Request());
+            BlockOnResetEvent(2.Seconds());
+
+            correlationId.ShouldNotContain("has not been set");
+        }
+
+        [Test]
         public void WorksWhenReplying()
         {
             adapter.Handle<Request>(req => bus.Reply(new Reply()));
@@ -86,7 +100,7 @@ namespace Rebus.Tests.Integration
             adapter.Handle<Reply>(rep =>
                 {
                     SetCorrelationIdIfPossible();
-                    resetEvent.Set();
+                    SignalResetEvent();
                 });
 
             var request = new Request();
@@ -106,7 +120,7 @@ namespace Rebus.Tests.Integration
             adapter.Handle<Event>(evt =>
                 {
                     SetCorrelationIdIfPossible();
-                    resetEvent.Set();
+                    SignalResetEvent();
                 });
 
             var request = new Request();
@@ -126,7 +140,7 @@ namespace Rebus.Tests.Integration
             adapter.Handle<AnotherRequest>(anotherReq =>
                 {
                     SetCorrelationIdIfPossible();
-                    resetEvent.Set();
+                    SignalResetEvent();
                 });
 
             var request = new Request();
@@ -146,7 +160,7 @@ namespace Rebus.Tests.Integration
             adapter.Handle<AnotherRequest>(anotherReq =>
                 {
                     SetCorrelationIdIfPossible();
-                    resetEvent.Set();
+                    SignalResetEvent();
                 });
 
             var request = new Request();
@@ -156,6 +170,11 @@ namespace Rebus.Tests.Integration
             BlockOnResetEvent(2.Seconds());
 
             correlationId.ShouldBe("super-unique!!!!111");
+        }
+
+        void SignalResetEvent()
+        {
+            resetEvent.Set();
         }
 
         void BlockOnResetEvent(TimeSpan timeout)

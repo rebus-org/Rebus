@@ -312,7 +312,7 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
-            
+
             if (busMode == BusMode.OneWayClientMode && !HasReturnAddressHeader(message))
             {
                 throw new InvalidOperationException("Defer cannot be used when the bus is in OneWayClientMode, since there " +
@@ -492,7 +492,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
             var headers = MergeHeaders(messageToSend);
-            
+
             // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
@@ -506,11 +506,17 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             if (MessageContext.HasCurrent && !headers.ContainsKey(Headers.CorrelationId))
             {
                 var messageContext = MessageContext.GetCurrent();
-                
+
                 if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
                 {
                     headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
                 }
+            }
+
+            // if, at this point, there's no correlation ID in a header, just provide one
+            if (!headers.ContainsKey(Headers.CorrelationId))
+            {
+                headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
             }
 
             messageToSend.Headers = headers;
@@ -535,7 +541,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             try
             {
                 var transportMessage = serializeMessages.Serialize(messageToSend);
-                
+
                 sendMessages.Send(destination, transportMessage, transactionContext);
             }
             catch (Exception e)

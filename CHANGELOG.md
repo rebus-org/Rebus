@@ -67,3 +67,7 @@
 ## 0.34.5
 
 * Added ability to let a special correlation ID header automatically flow to all outgoing messages when it is present
+
+## 0.34.6
+
+* Added ability to provide correlation ID on all outgoing messages automatically in cases where none was supplied from elsewhere ('elsewhere' being either explicitly specified or flowing from the current message context)
