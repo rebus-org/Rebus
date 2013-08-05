@@ -21,7 +21,7 @@ namespace Rebus.Configuration
             this.backbone = backbone;
         }
 
-        internal ConfigurationBackbone Backbone
+        public ConfigurationBackbone Backbone
         {
             get { return backbone; }
         }
