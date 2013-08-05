@@ -71,3 +71,7 @@
 ## 0.34.6
 
 * Added ability to provide correlation ID on all outgoing messages automatically in cases where none was supplied from elsewhere ('elsewhere' being either explicitly specified or flowing from the current message context)
+
+## 0.34.7
+
+* Added configuration extension for Log4Net that will automatically set the correlation ID property on the ThreadContext
