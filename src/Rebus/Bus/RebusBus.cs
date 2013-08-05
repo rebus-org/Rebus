@@ -523,6 +523,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return Events.MessageMutators.Aggregate(msg, (current, mutator) => mutator.MutateOutgoing(current));
         }
 
+        /// <summary>
+        /// Internal send method - this one must not change the headers!
+        /// </summary>
         internal void InternalSend(string destination, Message messageToSend)
         {
             log.Info("Sending {0} to {1}", messageToSend, destination);
