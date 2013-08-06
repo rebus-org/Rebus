@@ -211,6 +211,9 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        /// <summary>
+        /// Deletes all messages in the input queue.
+        /// </summary>
         public RabbitMqMessageQueue PurgeInputQueue()
         {
             try

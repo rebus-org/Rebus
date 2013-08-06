@@ -107,9 +107,9 @@ namespace Rebus.RabbitMQ
                     currentConnection.Dispose();
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                log.Warn("Error while disposing connection: {0}", e);
+                // ignore errors while disposing
             }
             finally
             {
