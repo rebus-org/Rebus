@@ -348,6 +348,11 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
+        public void SetConnectionFailureTolerance(TimeSpan connectionFailureTolerance)
+        {
+            connectionManager.SetConnectionFailureTolerance(connectionFailureTolerance);
+        }
+
         IModel GetSenderModel(ITransactionContext context)
         {
             if (context[CurrentModelKey] != null)
@@ -566,7 +571,7 @@ namespace Rebus.RabbitMQ
 
         void ErrorOnConnection(Exception exception)
         {
-            connectionManager.ErrorOnConnection();
+            connectionManager.ErrorOnConnection(exception);
         }
 
         IConnection GetConnection()

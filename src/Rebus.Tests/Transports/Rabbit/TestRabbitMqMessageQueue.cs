@@ -199,13 +199,13 @@ namespace Rebus.Tests.Transports.Rabbit
             const string recipientInputQueueName = "test.expiration.recipient";
             const string senderInputQueueName = "test.expiration.sender";
 
-            using(var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
             using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
             {
                 senderQueue.Send(recipientInputQueueName,
                                  serializer.Serialize(new Message
                                                           {
-                                                              Messages = new object[] {"HELLO WORLD!"},
+                                                              Messages = new object[] { "HELLO WORLD!" },
                                                               Headers =
                                                                   new Dictionary<string, object>
                                                                       {

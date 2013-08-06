@@ -100,6 +100,16 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
+        /// Sets how long we can accept connection failure. Defaults to 5 minutes after which connection failures
+        /// will be logged with the ERROR level. Until then, connection failures will be logged using the WARN level.
+        /// </summary>
+        public RabbitMqOptions SetConnectionFailureTolerance(TimeSpan connectionFailureTolerance)
+        {
+            queue.SetConnectionFailureTolerance(connectionFailureTolerance);
+            return this;
+        }
+
+        /// <summary>
         /// The RabbitMQ subscriptions storage handles the event where a subscriber is not configured to let
         /// RabbitMQ manage subscriptions. In this case, a <see cref="SubscriptionMessage"/> will be sent to
         /// the publisher, so we just subscribe on the subscriber's behalf.

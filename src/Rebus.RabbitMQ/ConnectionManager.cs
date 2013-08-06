@@ -11,20 +11,24 @@ namespace Rebus.RabbitMQ
 {
     internal class ConnectionManager : IDisposable
     {
-        readonly string inputQueueName;
         static ILog log;
+
+        static readonly DateTime EndpointStartupTime;
 
         static ConnectionManager()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-            endpointStartupTime = DateTime.Now;
+            EndpointStartupTime = DateTime.Now;
         }
 
+        readonly string inputQueueName;
         readonly List<ConnectionFactory> connectionFactories;
 
         IConnection currentConnection;
         int currentConnectionIndex;
-        static readonly DateTime endpointStartupTime;
+
+        TimeSpan connectionFailureTolerance = TimeSpan.FromMinutes(5);
+        DateTime connectionFailureStreakStartTime;
 
         public ConnectionManager(string connectionString, string inputQueueName)
         {
@@ -45,7 +49,8 @@ namespace Rebus.RabbitMQ
 
         ConnectionFactory CreateConnectionFactory(string s)
         {
-            return new ConnectionFactory
+            return
+                new ConnectionFactory
                        {
                            Uri = s,
                            ClientProperties =
@@ -53,7 +58,7 @@ namespace Rebus.RabbitMQ
                                    {
                                        {"Machine name", Environment.MachineName},
                                        {"User account", string.Format("{0}\\{1}", Environment.UserDomainName, Environment.UserName)},
-                                       {"Startup time", endpointStartupTime.ToString(CultureInfo.InvariantCulture)},
+                                       {"Startup time", EndpointStartupTime.ToString(CultureInfo.InvariantCulture)},
                                        {"Application command line", Environment.CommandLine},
                                        {"Client", "Rebus endpoint"},
                                        {"Input queue", string.IsNullOrEmpty(inputQueueName) ? "(none)" : inputQueueName},
@@ -70,7 +75,7 @@ namespace Rebus.RabbitMQ
                     return currentConnection;
                 }
 
-                ErrorOnConnection();
+                ErrorOnConnection(null);
             }
 
             log.Info("Opening RabbitMQ connection ({0})", currentConnectionIndex);
@@ -78,12 +83,43 @@ namespace Rebus.RabbitMQ
             connectionFactoryToUse.ClientProperties["Connected time"] = DateTime.Now.ToString(CultureInfo.InvariantCulture);
             currentConnection = connectionFactoryToUse.CreateConnection();
 
+            // it went well - break failure streak
+            connectionFailureStreakStartTime = DateTime.MinValue;
+
             return currentConnection;
         }
 
-        public void ErrorOnConnection()
+        public void ErrorOnConnection(Exception exception)
         {
-            log.Warn("Rabbit connection {0} failed!", currentConnectionIndex);
+            if (connectionFailureStreakStartTime == DateTime.MinValue)
+            {
+                connectionFailureStreakStartTime = DateTime.UtcNow;
+            }
+
+            var failureToleranceExceeded = (DateTime.UtcNow - connectionFailureStreakStartTime) >= connectionFailureTolerance;
+
+            if (exception != null)
+            {
+                if (failureToleranceExceeded)
+                {
+                    log.Error("Rabbit connection {0} failed: {1}", currentConnectionIndex, exception);
+                }
+                else
+                {
+                    log.Warn("Rabbit connection {0} failed: {1}", currentConnectionIndex, exception);
+                }
+            }
+            else
+            {
+                if (failureToleranceExceeded)
+                {
+                    log.Error("Rabbit connection {0} failed!", currentConnectionIndex);
+                }
+                else
+                {
+                    log.Warn("Rabbit connection {0} failed!", currentConnectionIndex);
+                }
+            }
 
             try
             {
@@ -100,7 +136,7 @@ namespace Rebus.RabbitMQ
             }
             catch (Exception e)
             {
-                log.Error(e, "Error while disposing connection!");
+                log.Warn("Error while disposing connection: {0}", e);
             }
             finally
             {
@@ -118,6 +154,17 @@ namespace Rebus.RabbitMQ
             {
                 currentConnection.Dispose();
             }
+        }
+
+        public void SetConnectionFailureTolerance(TimeSpan newConnectionFailureTolerance)
+        {
+            if (newConnectionFailureTolerance < TimeSpan.FromSeconds(0))
+            {
+                throw new ArgumentException(string.Format("Invalid connection failure tolerance: {0} - the connection failure tolerance must be a non-negative time interval",
+                                                          newConnectionFailureTolerance));
+            }
+
+            connectionFailureTolerance = newConnectionFailureTolerance;
         }
     }
 }
