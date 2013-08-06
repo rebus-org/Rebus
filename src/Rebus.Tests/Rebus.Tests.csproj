@@ -334,6 +334,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.Async\Rebus.Async.csproj">
+      <Project>{C1329E61-51E1-4724-A020-4D515FEB78A4}</Project>
+      <Name>Rebus.Async</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.Autofac\Rebus.Autofac.csproj">
       <Project>{539812E2-0F65-49ED-8F26-1736CF6CBFDA}</Project>
       <Name>Rebus.Autofac</Name>
@@ -389,10 +393,6 @@
     <ProjectReference Include="..\Rebus.Unity\Rebus.Unity.csproj">
       <Project>{93AEA3E2-F995-427A-BAF4-F2EBD271E818}</Project>
       <Name>Rebus.Unity</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Rebus.WebAsync\Rebus.WebAsync.csproj">
-      <Project>{C1329E61-51E1-4724-A020-4D515FEB78A4}</Project>
-      <Name>Rebus.WebAsync</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{F57A06FA-F471-49C8-A92D-85D5A27055C4}</Project>
