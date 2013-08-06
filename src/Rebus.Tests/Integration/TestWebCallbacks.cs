@@ -2,10 +2,10 @@
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Async;
 using Rebus.Configuration;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
-using Rebus.WebAsync;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
@@ -26,7 +26,7 @@ namespace Rebus.Tests.Integration
             Configure.With(adapter)
                      .Transport(t => t.UseMsmq(QueueName, "error"))
                      .MessageOwnership(o => o.Use(this))
-                     .EnableWebCallbacks()
+                     .EnableInlineReplyHandlers()
                      .CreateBus()
                      .Start();
 

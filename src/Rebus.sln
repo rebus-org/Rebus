@@ -95,9 +95,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{6A31
 		..\push_packages.bat = ..\push_packages.bat
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "web", "web", "{EB3B369C-B510-43B1-8157-BEB87873CB7A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "async", "async", "{EB3B369C-B510-43B1-8157-BEB87873CB7A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.WebAsync", "Rebus.WebAsync\Rebus.WebAsync.csproj", "{C1329E61-51E1-4724-A020-4D515FEB78A4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Async", "Rebus.Async\Rebus.Async.csproj", "{C1329E61-51E1-4724-A020-4D515FEB78A4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

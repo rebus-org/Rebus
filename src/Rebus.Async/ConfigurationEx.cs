@@ -2,15 +2,18 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Timers;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using System.Linq;
-using Timer = System.Timers.Timer;
 
-namespace Rebus.WebAsync
+namespace Rebus.Async
 {
+    /// <summary>
+    /// Configuration extensions for configuring inline registration of inline reply handler callback
+    /// </summary>
     public static class ConfigurationEx
     {
         static internal ConcurrentDictionary<string, ReplyCallback> registeredReplyHandlers = new ConcurrentDictionary<string, ReplyCallback>();
@@ -31,7 +34,14 @@ namespace Rebus.WebAsync
             }
         }
 
-        public static RebusConfigurer EnableWebCallbacks(this RebusConfigurer configurer)
+        /// <summary>
+        /// Enables the ability to handle replies inline - i.e. when Rebus is configured with this option, you can go
+        /// <code>
+        /// bus.Send(new SomeRequest{...}, (SomeReply reply) => // do something);
+        /// </code>
+        /// and more.
+        /// </summary>
+        public static RebusConfigurer EnableInlineReplyHandlers(this RebusConfigurer configurer)
         {
             configurer.AddDecoration(b =>
                 {
@@ -40,11 +50,24 @@ namespace Rebus.WebAsync
             return configurer;
         }
 
+        /// <summary>
+        /// Sends the specified <see cref="message"/> with an assigned correlation ID and stores the given 
+        /// <see cref="replyHandler"/> to be invoked if/when a reply is returned. The default timeout of
+        /// 1 hour applies, which causes the registered callback to be removed at that time in order to
+        /// avoid leaking registered reply handlers.
+        /// </summary>
         public static void Send<TReply>(this IBus bus, object message, Action<TReply> replyHandler)
         {
             InnerSend(bus, message, replyHandler, DefaultMaxCallbackAge);
         }
 
+        /// <summary>
+        /// Sends the specified <see cref="message"/> with an assigned correlation ID and stores the given 
+        /// <see cref="replyHandler"/> to be invoked if/when a reply is returned. The timeout specified
+        /// by <see cref="timeout"/> applies, which causes the registered callback to be removed at that time in order to
+        /// avoid leaking registered reply handlers. When the timeout occurs, <see cref="timeoutAction"/>
+        /// is invoked.
+        /// </summary>
         public static void Send<TReply>(this IBus bus, object message, Action<TReply> replyHandler, TimeSpan timeout, Action timeoutAction)
         {
             InnerSend(bus, message, replyHandler, timeout, timeoutAction);
@@ -52,6 +75,10 @@ namespace Rebus.WebAsync
 
         static void InnerSend<TReply>(IBus bus, object message, Action<TReply> replyHandler, TimeSpan timeout, Action timeoutAction = null)
         {
+            if (bus == null) throw new ArgumentNullException("bus", "You cannot call these methods without a bus instance");
+            if (message == null) throw new ArgumentNullException("message", "You cannot call these methods without a message");
+            if (replyHandler == null) throw new ArgumentNullException("replyHandler", "Please specify a reply handler");
+
             var correlationId = Guid.NewGuid().ToString();
             bus.AttachHeader(message, Headers.CorrelationId, correlationId);
 
