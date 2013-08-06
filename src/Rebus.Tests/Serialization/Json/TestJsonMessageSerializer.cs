@@ -27,11 +27,19 @@ namespace Rebus.Tests.Serialization.Json
         [TestCase("utf-7")]
         [TestCase("utf-8")]
         [TestCase("utf-16")]
+        [TestCase("utf-32")]
+        [TestCase("unicode")]
+        [TestCase("utf-16be", Description = "Big endian unicode")]
         public void CorrectlyHandlesDeserializationWhenAlternativeEncodingIsUsed(string encodingWebName)
         {
             // arrange
             var encoding = Encoding.GetEncoding(encodingWebName);
             var bytes = encoding.GetBytes(SerializedMessage);
+            
+            Console.WriteLine(@"This is how it looks as ASCII:
+
+{0}", Encoding.ASCII.GetString(bytes));
+
             var receivedTransportMessage =
                 new ReceivedTransportMessage
                     {
