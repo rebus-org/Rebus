@@ -78,5 +78,4 @@
 
 ## 0.35.0
 
-* Added configurable connection failure tolerance for the RabbitMQ transport
 * Made JSON serializer handle encoding properly when deserializing messages
