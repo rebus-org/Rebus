@@ -14,7 +14,7 @@ namespace Rebus.Async
     /// <summary>
     /// Configuration extensions for configuring inline registration of inline reply handler callback
     /// </summary>
-    public static class ConfigurationEx
+    public static class AsyncConfigurationExtensions
     {
         static internal ConcurrentDictionary<string, ReplyCallback> registeredReplyHandlers = new ConcurrentDictionary<string, ReplyCallback>();
         static readonly TimeSpan DefaultMaxCallbackAge = TimeSpan.FromHours(1);
