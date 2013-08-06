@@ -1,9 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 using NUnit.Framework;
+using Raven.Imports.Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Shouldly;
+using System.Linq;
 
 namespace Rebus.Tests.Serialization.Json
 {
@@ -15,6 +19,43 @@ namespace Rebus.Tests.Serialization.Json
         protected override void DoSetUp()
         {
             serializer = new JsonMessageSerializer();
+        }
+
+        const string SerializedMessage =
+            @"{""$type"":""System.Object[], mscorlib"",""$values"":[{""$type"":""Rebus.Tests.Serialization.Json.TestJsonMessageSerializer+SomeComplexObjectThatRequïresÜnicódeToWørk, Rebus.Tests"",""ThisIsÜnicøde"":""thiß ís jüst tæxt""}]}";
+
+        [TestCase("utf-7")]
+        [TestCase("utf-8")]
+        [TestCase("utf-16")]
+        public void CorrectlyHandlesDeserializationWhenAlternativeEncodingIsUsed(string encodingWebName)
+        {
+            // arrange
+            var encoding = Encoding.GetEncoding(encodingWebName);
+            var bytes = encoding.GetBytes(SerializedMessage);
+            var receivedTransportMessage =
+                new ReceivedTransportMessage
+                    {
+                        Headers = new Dictionary<string, object>
+                                      {
+                                          {Headers.ContentType, "text/json"},
+                                          {Headers.Encoding, encodingWebName},
+                                      },
+                        Body = bytes,
+                    };
+
+            // act
+            var deserializedMessage = serializer.Deserialize(receivedTransportMessage);
+
+            // assert
+            deserializedMessage.Messages.Length.ShouldBe(1);
+            var message = deserializedMessage.Messages.Single();
+            message.ShouldBeTypeOf<SomeComplexObjectThatRequïresÜnicódeToWørk>();
+            ((SomeComplexObjectThatRequïresÜnicódeToWørk)message).ThisIsÜnicøde.ShouldBe("thiß ís jüst tæxt");
+        }
+
+        class SomeComplexObjectThatRequïresÜnicódeToWørk
+        {
+            public string ThisIsÜnicøde { get; set; }
         }
 
         [Test]

@@ -17,12 +17,14 @@ namespace Rebus.Serialization.Json
     /// </summary>
     public class JsonMessageSerializer : ISerializeMessages
     {
+        const string JsonContentTypeName = "text/json";
+
+        static readonly Encoding DefaultEncoding = Encoding.UTF7;
+
         readonly JsonSerializerSettings settings = 
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
-        
-        readonly Encoding encoding = Encoding.UTF7;
         
         readonly NonDefaultSerializationBinder binder;
 
@@ -45,12 +47,12 @@ namespace Rebus.Serialization.Json
                 var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, settings);
 
                 var headers = message.Headers.Clone();
-                headers[Headers.ContentType] = "text/json";
-                headers[Headers.Encoding] = encoding.WebName;
+                headers[Headers.ContentType] = JsonContentTypeName;
+                headers[Headers.Encoding] = DefaultEncoding.WebName;
 
                 return new TransportMessageToSend
                            {
-                               Body = encoding.GetBytes(messageAsString),
+                               Body = DefaultEncoding.GetBytes(messageAsString),
                                Headers = headers,
                                Label = message.GetLabel(),
                            };
@@ -64,13 +66,67 @@ namespace Rebus.Serialization.Json
         {
             using (new CultureContext(serializationCulture))
             {
-                var messages = (object[])JsonConvert.DeserializeObject(encoding.GetString(transportMessage.Body), settings);
+                var headers = transportMessage.Headers.Clone();
+                var encodingToUse = GetEncodingOrThrow(headers);
 
-                return new Message
-                           {
-                               Headers = transportMessage.Headers.Clone(),
-                               Messages = messages
-                           };
+                var serializedTransportMessage = encodingToUse.GetString(transportMessage.Body);
+                try
+                {
+                    var messages = (object[]) JsonConvert.DeserializeObject(serializedTransportMessage, settings);
+
+                    return new Message
+                               {
+                                   Headers = headers,
+                                   Messages = messages
+                               };
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException(
+                        string.Format(
+                            "An error occurred while attempting to deserialize JSON text '{0}' into an object[]",
+                            serializedTransportMessage), e);
+                }
+            }
+        }
+
+        Encoding GetEncodingOrThrow(IDictionary<string, object> headers)
+        {
+            if (!headers.ContainsKey(Headers.ContentType))
+            {
+                throw new ArgumentException(
+                    string.Format("Received message does not have a proper '{0}' header defined!",
+                                  Headers.ContentType));
+            }
+
+            var contentType = (headers[Headers.ContentType] ?? "").ToString();
+            if (!JsonContentTypeName.Equals(contentType, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ArgumentException(
+                    string.Format(
+                        "Received message has content type header with '{0}' which is not supported by the JSON serializer!",
+                        contentType));
+            }
+
+            if (!headers.ContainsKey(Headers.Encoding))
+            {
+                throw new ArgumentException(
+                    string.Format(
+                        "Received message has content type '{0}', but the corresponding '{1}' header was not present!",
+                        contentType, Headers.Encoding));
+            }
+
+            var encodingWebName = (headers[Headers.Encoding] ?? "").ToString();
+
+            try
+            {
+                return Encoding.GetEncoding(encodingWebName);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException(
+                    string.Format("An error occurred while attempting to treat '{0}' as a proper text encoding",
+                                  encodingWebName), e);
             }
         }
 
