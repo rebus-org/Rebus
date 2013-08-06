@@ -8,8 +8,7 @@ using Rebus.Extensions;
 namespace Rebus.Transports.Msmq
 {
     /// <summary>
-    /// MSMQ implementation of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>. Will
-    /// enlist in ambient transaction during send and receive if one is present.
+    /// MSMQ implementation of <see cref="IDuplexTransport"/> (i.e. both <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>).
     /// </summary>
     public class MsmqMessageQueue : IDuplexTransport, IDisposable
     {

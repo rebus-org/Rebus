@@ -13,6 +13,9 @@ using Rebus.Shared;
 
 namespace Rebus.RabbitMQ
 {
+    /// <summary>
+    /// RabbitMQ transport implementation that adds (optional) multicast capabilities to <see cref="IDuplexTransport"/>.
+    /// </summary>
     public class RabbitMqMessageQueue : IMulticastTransport, IDisposable, INeedInitializationBeforeStart
     {
         static readonly Encoding Encoding = Encoding.UTF8;
@@ -346,11 +349,6 @@ namespace Rebus.RabbitMQ
             log.Info("Will set the autodelete flag on input queue");
             autoDeleteInputQueue = true;
             return this;
-        }
-
-        public void SetConnectionFailureTolerance(TimeSpan connectionFailureTolerance)
-        {
-            connectionManager.SetConnectionFailureTolerance(connectionFailureTolerance);
         }
 
         IModel GetSenderModel(ITransactionContext context)

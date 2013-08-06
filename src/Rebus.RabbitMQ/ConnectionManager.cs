@@ -27,9 +27,6 @@ namespace Rebus.RabbitMQ
         IConnection currentConnection;
         int currentConnectionIndex;
 
-        TimeSpan connectionFailureTolerance = TimeSpan.FromMinutes(5);
-        DateTime connectionFailureStreakStartTime;
-
         public ConnectionManager(string connectionString, string inputQueueName)
         {
             this.inputQueueName = inputQueueName;
@@ -83,42 +80,18 @@ namespace Rebus.RabbitMQ
             connectionFactoryToUse.ClientProperties["Connected time"] = DateTime.Now.ToString(CultureInfo.InvariantCulture);
             currentConnection = connectionFactoryToUse.CreateConnection();
 
-            // it went well - break failure streak
-            connectionFailureStreakStartTime = DateTime.MinValue;
-
             return currentConnection;
         }
 
         public void ErrorOnConnection(Exception exception)
         {
-            if (connectionFailureStreakStartTime == DateTime.MinValue)
-            {
-                connectionFailureStreakStartTime = DateTime.UtcNow;
-            }
-
-            var failureToleranceExceeded = (DateTime.UtcNow - connectionFailureStreakStartTime) >= connectionFailureTolerance;
-
             if (exception != null)
             {
-                if (failureToleranceExceeded)
-                {
-                    log.Error("Rabbit connection {0} failed: {1}", currentConnectionIndex, exception);
-                }
-                else
-                {
-                    log.Warn("Rabbit connection {0} failed: {1}", currentConnectionIndex, exception);
-                }
+                log.Warn("Rabbit connection {0} failed: {1}", currentConnectionIndex, exception);
             }
             else
             {
-                if (failureToleranceExceeded)
-                {
-                    log.Error("Rabbit connection {0} failed!", currentConnectionIndex);
-                }
-                else
-                {
-                    log.Warn("Rabbit connection {0} failed!", currentConnectionIndex);
-                }
+                log.Warn("Rabbit connection {0} failed!", currentConnectionIndex);
             }
 
             try
@@ -154,17 +127,6 @@ namespace Rebus.RabbitMQ
             {
                 currentConnection.Dispose();
             }
-        }
-
-        public void SetConnectionFailureTolerance(TimeSpan newConnectionFailureTolerance)
-        {
-            if (newConnectionFailureTolerance < TimeSpan.FromSeconds(0))
-            {
-                throw new ArgumentException(string.Format("Invalid connection failure tolerance: {0} - the connection failure tolerance must be a non-negative time interval",
-                                                          newConnectionFailureTolerance));
-            }
-
-            connectionFailureTolerance = newConnectionFailureTolerance;
         }
     }
 }

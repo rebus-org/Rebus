@@ -4,12 +4,15 @@ using Rebus.Messages;
 
 namespace Rebus.RabbitMQ
 {
+    /// <summary>
+    /// Fluent options setter that allows for configuring various aspects of the RabbitMQ transport
+    /// </summary>
     public class RabbitMqOptions
     {
         readonly RabbitMqMessageQueue queue;
         readonly RebusTransportConfigurer configurer;
 
-        public RabbitMqOptions(RabbitMqMessageQueue queue, RebusTransportConfigurer configurer)
+        internal RabbitMqOptions(RabbitMqMessageQueue queue, RebusTransportConfigurer configurer)
         {
             this.queue = queue;
             this.configurer = configurer;
@@ -96,16 +99,6 @@ namespace Rebus.RabbitMQ
         public RabbitMqOptions SetPrefetchCount(ushort prefetchCount)
         {
             queue.Prefetch(prefetchCount);
-            return this;
-        }
-
-        /// <summary>
-        /// Sets how long we can accept connection failure. Defaults to 5 minutes after which connection failures
-        /// will be logged with the ERROR level. Until then, connection failures will be logged using the WARN level.
-        /// </summary>
-        public RabbitMqOptions SetConnectionFailureTolerance(TimeSpan connectionFailureTolerance)
-        {
-            queue.SetConnectionFailureTolerance(connectionFailureTolerance);
             return this;
         }
 
