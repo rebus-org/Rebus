@@ -89,6 +89,15 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
+        /// Immediately deletes all messages currently in the queue.
+        /// </summary>
+        public RabbitMqOptions PurgeInputQueue()
+        {
+            queue.PurgeInputQueue();
+            return this;
+        }
+
+        /// <summary>
         /// Configure the number of messages to prefetch/buffer per worker thread.
         /// </summary>
         /// <param name="prefetchCount">The number of messages to prefetch per worker thread. The default
