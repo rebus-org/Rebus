@@ -16,6 +16,7 @@
     <RebusProjects Include="..\src\Rebus.AzureServiceBus\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.Ninject\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.NLog\*.csproj"/>
+    <RebusProjects Include="..\src\Rebus.Async\*.csproj"/>
 
     <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />

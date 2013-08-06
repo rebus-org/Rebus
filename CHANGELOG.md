@@ -79,3 +79,4 @@
 ## 0.35.0
 
 * Made JSON serializer handle encoding properly when deserializing messages
+* Added Rebus.Async that extends Rebus with the ability to register reply handlers inline
