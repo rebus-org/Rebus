@@ -37,11 +37,7 @@ namespace Rebus.Tests.Contracts.Serialization
             
             var transportMessageToSend = instance.Serialize(messageToSerialize);
             
-            var deserializedMessage = instance.Deserialize(new ReceivedTransportMessage
-                                                               {
-                                                                   Headers = transportMessageToSend.Headers,
-                                                                   Body = transportMessageToSend.Body
-                                                               });
+            var deserializedMessage = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
         }
 
         [Test]
@@ -76,11 +72,7 @@ namespace Rebus.Tests.Contracts.Serialization
                             }
                     });
 
-            var message = instance.Deserialize(new ReceivedTransportMessage
-                {
-                    Body = transportMessageToSend.Body,
-                    Headers = transportMessageToSend.Headers,
-                });
+            var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
 
             message.Headers.ShouldContainKeyAndValue("some_key", "some_value");
             message.Headers.ShouldContainKeyAndValue("another_key", "another_value");
@@ -111,7 +103,7 @@ namespace Rebus.Tests.Contracts.Serialization
                         }
                 };
             var transportMessageToSend = instance.Serialize(new Message { Messages = new object[] { person } });
-            var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+            var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
             var deserializedPerson = (Person)message.Messages[0];
 
             deserializedPerson.Address.ShouldBeTypeOf<ForeignAddress>();
@@ -140,7 +132,7 @@ namespace Rebus.Tests.Contracts.Serialization
             for (; (elapsedSeconds = stopwatch.Elapsed.TotalSeconds) < window; iterations++)
             {
                 var transportMessageToSend = instance.Serialize(new Message { Messages = new object[] { site } });
-                var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+                var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
                 var deserializedSite = (Site)message.Messages[0];
                 deserializedSite.LocalUnits.Length.ShouldBe(site.LocalUnits.Length);
             }

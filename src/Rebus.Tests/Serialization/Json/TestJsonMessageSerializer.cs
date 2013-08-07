@@ -124,12 +124,8 @@ namespace Rebus.Tests.Serialization.Json
 
         object RoundtripMessage(object message)
         {
-            var transportMessageToSend = serializer.Serialize(new Message {Messages = new object[] {message}});
-            var message2 = serializer.Deserialize(new ReceivedTransportMessage
-                                                      {
-                                                          Headers = transportMessageToSend.Headers,
-                                                          Body = transportMessageToSend.Body,
-                                                      });
+            var transportMessageToSend = serializer.Serialize(new Message {Messages = new[] {message}});
+            var message2 = serializer.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
             return message2.Messages[0];
         }
 

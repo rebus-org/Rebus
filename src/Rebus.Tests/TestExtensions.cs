@@ -36,5 +36,17 @@ namespace Rebus.Tests
         {
             return someTime - somePastTime;
         }
+
+        public static ReceivedTransportMessage ToReceivedTransportMessage(this TransportMessageToSend message)
+        {
+            return new ReceivedTransportMessage
+                       {
+                           Headers = message.Headers,
+                           Body = message.Body,
+                           Label = message.Label,
+                           Id = Guid.NewGuid()
+                                    .ToString()
+                       };
+        }
     }
 }

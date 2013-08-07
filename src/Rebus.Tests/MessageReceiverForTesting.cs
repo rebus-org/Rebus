@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Threading;
 using Rebus.Messages;
-using Rebus.Extensions;
 
 namespace Rebus.Tests
 {
@@ -22,13 +21,7 @@ namespace Rebus.Tests
         public void Deliver(Message message)
         {
             var transportMessageToSend = serializer.Serialize(message);
-            var receivedTransportMessage = new ReceivedTransportMessage
-                                               {
-                                                   Id = NewMessageId(),
-                                                   Body = transportMessageToSend.Body,
-                                                   Label = transportMessageToSend.Label,
-                                                   Headers = transportMessageToSend.Headers.Clone(),
-                                               };
+            var receivedTransportMessage = transportMessageToSend.ToReceivedTransportMessage();
 
             messageQueue.Enqueue(receivedTransportMessage);
         }

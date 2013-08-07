@@ -63,14 +63,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             localInstance.Send("test", toSend, new NoTransaction());
 
-            var sentMessage = sender.SentMessage;
-            var receivedTransportMessage = new ReceivedTransportMessage
-            {
-                Id = Guid.NewGuid().ToString(),
-                Label = sentMessage.Label,
-                Headers = sentMessage.Headers,
-                Body = sentMessage.Body
-            };
+            var receivedTransportMessage = sender.SentMessage.ToReceivedTransportMessage();
 
             receiver.SetUpReceive(receivedTransportMessage);
 
@@ -186,14 +179,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             transport.Send("test", toSend, new NoTransaction());
 
-            var sentMessage = sender.SentMessage;
-            var receivedTransportMessage = new ReceivedTransportMessage
-                                               {
-                                                   Id = Guid.NewGuid().ToString(),
-                                                   Label = sentMessage.Label,
-                                                   Headers = sentMessage.Headers,
-                                                   Body = sentMessage.Body
-                                               };
+            var receivedTransportMessage = sender.SentMessage.ToReceivedTransportMessage();
 
             receiver.SetUpReceive(receivedTransportMessage);
 
