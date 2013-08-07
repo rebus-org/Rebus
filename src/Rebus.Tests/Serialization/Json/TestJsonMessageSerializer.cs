@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
-using Raven.Imports.Newtonsoft.Json;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -126,7 +125,11 @@ namespace Rebus.Tests.Serialization.Json
         object RoundtripMessage(object message)
         {
             var transportMessageToSend = serializer.Serialize(new Message {Messages = new object[] {message}});
-            var message2 = serializer.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+            var message2 = serializer.Deserialize(new ReceivedTransportMessage
+                                                      {
+                                                          Headers = transportMessageToSend.Headers,
+                                                          Body = transportMessageToSend.Body,
+                                                      });
             return message2.Messages[0];
         }
 
