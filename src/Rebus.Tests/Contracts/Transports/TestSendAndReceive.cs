@@ -10,6 +10,7 @@ using Shouldly;
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
+    [TestFixture(typeof(SqlServerTransportFactory))]
     [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(AzureServiceBusMessageQueueFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
@@ -65,7 +66,12 @@ namespace Rebus.Tests.Contracts.Transports
             headers.ShouldContainKeyAndValue("key1", "value1");
             headers.ShouldContainKeyAndValue("key2", "value2");
 
-            5.Times(() => receiver.ReceiveMessage(new NoTransaction()).ShouldBe(null));
+            5.Times(() =>
+                {
+                    var receivedMessage = receiver.ReceiveMessage(new NoTransaction());
+                    
+                    receivedMessage.ShouldBe(null);
+                });
         }
 
         [Test]

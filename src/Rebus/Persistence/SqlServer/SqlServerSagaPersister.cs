@@ -21,7 +21,6 @@ namespace Rebus.Persistence.SqlServer
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        const int PrimaryKeyViolationNumber = 2627;
         const int MaximumSagaDataTypeNameLength = 40;
 
         static readonly JsonSerializerSettings Settings =

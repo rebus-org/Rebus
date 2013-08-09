@@ -178,6 +178,7 @@
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="Transports\OneWayClientGag.cs" />
+    <Compile Include="Transports\Sql\SqlServerMessageQueue.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />

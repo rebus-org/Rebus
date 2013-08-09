@@ -9,6 +9,8 @@ namespace Rebus.Persistence.SqlServer
     {
         static readonly PropertyInfo ConnectionInfo = typeof(SqlConnection).GetProperty("InnerConnection", BindingFlags.NonPublic | BindingFlags.Instance);
 
+        protected const int PrimaryKeyViolationNumber = 2627;
+
         protected void AssignTransactionIfNecessary(SqlConnection connection, SqlCommand command)
         {
             var transactionOrNull = GetTransactionOrNull(connection);

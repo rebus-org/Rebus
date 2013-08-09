@@ -18,7 +18,6 @@ namespace Rebus.Persistence.SqlServer
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        const int PrimaryKeyViolationNumber = 2627;
         readonly string subscriptionsTableName;
 
         readonly Func<SqlConnection> getConnection;
