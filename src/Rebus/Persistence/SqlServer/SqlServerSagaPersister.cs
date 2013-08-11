@@ -12,7 +12,7 @@ namespace Rebus.Persistence.SqlServer
     /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
     /// and correlation properties in an index table on the side.
     /// </summary>
-    public class SqlServerSagaPersister : SqlServerMagic, IStoreSagaData
+    public class SqlServerSagaPersister : IStoreSagaData
     {
         static ILog log;
 
@@ -96,7 +96,7 @@ namespace Rebus.Persistence.SqlServer
                 // next insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
                     
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
@@ -130,7 +130,7 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
-                        AssignTransactionIfNecessary(connection, command);
+                        connection.AssignTransactionIfNecessary(command);
 
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
@@ -152,7 +152,7 @@ namespace Rebus.Persistence.SqlServer
                         }
                         catch (SqlException sqlException)
                         {
-                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                             {
                                 throw new OptimisticLockingException(sagaData, sqlException);
                             }
@@ -181,7 +181,7 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
@@ -191,7 +191,7 @@ namespace Rebus.Persistence.SqlServer
                 // next, update or insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
@@ -222,7 +222,7 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
-                        AssignTransactionIfNecessary(connection, command);
+                        connection.AssignTransactionIfNecessary(command);
 
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
@@ -243,7 +243,7 @@ namespace Rebus.Persistence.SqlServer
                         }
                         catch (SqlException sqlException)
                         {
-                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                             {
                                 throw new OptimisticLockingException(sagaData, sqlException);
                             }
@@ -269,7 +269,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
@@ -283,7 +283,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
@@ -307,7 +307,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     if (sagaDataPropertyPath == idPropertyName)
                     {
@@ -388,7 +388,7 @@ saga type name.",
 
                     using (var command = connection.CreateCommand())
                     {
-                        AssignTransactionIfNecessary(connection, command);
+                        connection.AssignTransactionIfNecessary(command);
 
                         command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
@@ -407,7 +407,7 @@ CREATE TABLE [dbo].[{0}](
 
                     using (var command = connection.CreateCommand())
                     {
-                        AssignTransactionIfNecessary(connection, command);
+                        connection.AssignTransactionIfNecessary(command);
 
                         command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](

@@ -9,7 +9,7 @@ namespace Rebus.Persistence.SqlServer
     /// <summary>
     /// Implements a subscriotion storage for Rebus that will store subscriptions in an SQL Server.
     /// </summary>
-    public class SqlServerSubscriptionStorage : SqlServerMagic, IStoreSubscriptions
+    public class SqlServerSubscriptionStorage : IStoreSubscriptions
     {
         static ILog log;
 
@@ -71,7 +71,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"insert into [{0}] 
                                                 (message_type, endpoint) 
@@ -86,7 +86,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                     catch (SqlException ex)
                     {
-                        if (ex.Number != PrimaryKeyViolationNumber) throw;
+                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
                     }
                 }
             }
@@ -106,7 +106,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"delete from [{0}]
                                                 where message_type = @message_type
@@ -134,7 +134,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"select endpoint from [{0}]
                                                 where message_type = @message_type", subscriptionsTableName);
@@ -179,7 +179,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](

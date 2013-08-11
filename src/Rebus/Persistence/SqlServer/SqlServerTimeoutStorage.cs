@@ -10,7 +10,7 @@ namespace Rebus.Persistence.SqlServer
     /// <summary>
     /// Implementaion of <see cref="IStoreTimeouts"/> that uses an SQL Server to store the timeouts
     /// </summary>
-    public class SqlServerTimeoutStorage : SqlServerMagic, IStoreTimeouts
+    public class SqlServerTimeoutStorage : IStoreTimeouts
     {
         static ILog log;
 
@@ -86,7 +86,7 @@ namespace Rebus.Persistence.SqlServer
                     catch (SqlException ex)
                     {
                         // if we're violating PK, it's because we're inserting the same timeout again...
-                        if (ex.Number != PrimaryKeyViolationNumber) throw;
+                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
                     }
                 }
             }

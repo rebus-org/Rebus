@@ -7,8 +7,12 @@ using Rebus.Serialization;
 
 namespace Rebus.Transports.Sql
 {
-    public class SqlServerMessageQueue : SqlServerMagic, IDuplexTransport, IDisposable
+    /// <summary>
+    /// http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/
+    /// </summary>
+    public class SqlServerMessageQueue : IDuplexTransport, IDisposable
     {
+        const string ConnectionKey = "sql-server-message-queue-current-connection";
         static ILog log;
 
         static SqlServerMessageQueue()
@@ -23,6 +27,8 @@ namespace Rebus.Transports.Sql
 
         readonly Func<SqlConnection> getConnection;
         readonly Action<SqlConnection> releaseConnection;
+        readonly Action<SqlConnection> commitAction;
+        readonly Action<SqlConnection> rollbackAction;
 
         public SqlServerMessageQueue(string connectionString, string messageTableName, string inputQueueName)
             : this(messageTableName, inputQueueName)
@@ -31,9 +37,35 @@ namespace Rebus.Transports.Sql
                 {
                     var connection = new SqlConnection(connectionString);
                     connection.Open();
+                    Console.WriteLine("BEGIN TRAN");
+                    connection.BeginTransaction();
                     return connection;
                 };
-            releaseConnection = c => c.Dispose();
+            commitAction = c =>
+                {
+                    var t = c.GetTransactionOrNull();
+                    if (t == null) return;
+                    using (t)
+                    {
+                        Console.WriteLine("COMMIT TRAN");
+                        t.Commit();
+                    }
+                };
+            rollbackAction = c =>
+                {
+                    var t = c.GetTransactionOrNull();
+                    if (t == null) return;
+                    using (t)
+                    {
+                        Console.WriteLine("ROLLBACK TRAN");
+                        t.Rollback();
+                    }
+                };
+            releaseConnection = c =>
+                {
+                    Console.WriteLine("DISPOSE CONNECTION");
+                    c.Dispose();
+                };
         }
 
         public SqlServerMessageQueue(Func<SqlConnection> connectionFactoryMethod, string messageTableName, string inputQueueName)
@@ -41,6 +73,8 @@ namespace Rebus.Transports.Sql
         {
             getConnection = connectionFactoryMethod;
             releaseConnection = c => { };
+            commitAction = c => { };
+            rollbackAction = c => { };
         }
 
         SqlServerMessageQueue(string messageTableName, string inputQueueName)
@@ -51,12 +85,13 @@ namespace Rebus.Transports.Sql
 
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
-            var connection = getConnection();
+            var connection = GetConnectionPossiblyFromContext(context);
+
             try
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"insert into [{0}] 
                                                 ([id], [headers], [label], [body], [recipient]) 
@@ -72,24 +107,32 @@ namespace Rebus.Transports.Sql
 
                     command.ExecuteNonQuery();
                 }
+
+                if (!context.IsTransactional)
+                {
+                    commitAction(connection);
+                }
             }
             finally
             {
-                releaseConnection(connection);
+                if (!context.IsTransactional)
+                {
+                    releaseConnection(connection);
+                }
             }
-
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            var connection = getConnection();
+            var connection = GetConnectionPossiblyFromContext(context);
+
             try
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
-                    command.CommandText = string.Format(@"select top 1 [id], headers, label, body from [{0}] where recipient = @recipient",
+                    command.CommandText = string.Format(@"select top 1 [id], [headers], [label], [body] from [{0}] where recipient = @recipient",
                                                         messageTableName);
 
                     command.Parameters.AddWithValue("recipient", inputQueueName);
@@ -102,26 +145,67 @@ namespace Rebus.Transports.Sql
                                 new ReceivedTransportMessage
                                     {
                                         Id = (reader["id"]).ToString(),
-                                        Label = (string) reader["label"],
-                                        Headers = DictionarySerializer.Deserialize((string) reader["headers"]),
-                                        Body = (byte[]) reader["body"],
+                                        Label = (string)reader["label"],
+                                        Headers = DictionarySerializer.Deserialize((string)reader["headers"]),
+                                        Body = (byte[])reader["body"],
                                     };
                         }
                     }
                 }
+
+                if (!context.IsTransactional)
+                {
+                    commitAction(connection);
+                }
             }
             finally
             {
-                releaseConnection(connection);
+                if (!context.IsTransactional)
+                {
+                    releaseConnection(connection);
+                }
             }
 
             return null;
+        }
+
+        SqlConnection GetConnectionPossiblyFromContext(ITransactionContext context)
+        {
+            if (!context.IsTransactional) return getConnection();
+
+            if (context[ConnectionKey] != null) return (SqlConnection)context[ConnectionKey];
+
+            Console.WriteLine("Calling GET action");
+            var sqlConnection = getConnection();
+
+            context.DoCommit += () =>
+                {
+                    Console.WriteLine("Calling COMMIT action");
+                    commitAction(sqlConnection);
+                };
+            context.DoRollback += () =>
+                {
+                    Console.WriteLine("Calling ROLLBACK action");
+                    rollbackAction(sqlConnection);
+                };
+            context.Cleanup += () =>
+                {
+                    Console.WriteLine("Calling RELEASE action");
+                    releaseConnection(sqlConnection);
+                };
+
+            context[ConnectionKey] = sqlConnection;
+
+            return sqlConnection;
         }
 
         public string InputQueue { get { return inputQueueName; } }
 
         public string InputQueueAddress { get { return inputQueueName; } }
 
+        /// <summary>
+        /// Creates the message table if a table with that name does not already exist
+        /// </summary>
         public SqlServerMessageQueue EnsureTableIsCreated()
         {
             var connection = getConnection();
@@ -138,7 +222,7 @@ namespace Rebus.Transports.Sql
 
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
@@ -159,7 +243,7 @@ CREATE TABLE [dbo].[{0}](
 
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"
 CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
@@ -170,6 +254,8 @@ CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
 
                     command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -182,6 +268,9 @@ CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
         {
         }
 
+        /// <summary>
+        /// Deletes all the messages from the message table that have the current input queue specified as the recipient
+        /// </summary>
         public SqlServerMessageQueue PurgeInputQueue()
         {
             log.Warn("Purging queue {0} in table {1}", inputQueueName, messageTableName);
@@ -191,7 +280,7 @@ CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
             {
                 using (var command = connection.CreateCommand())
                 {
-                    AssignTransactionIfNecessary(connection, command);
+                    connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"delete from [{0}]
                                                 where recipient = @recipient",
@@ -201,6 +290,8 @@ CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
 
                     command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {

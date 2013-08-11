@@ -1,17 +1,40 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Reflection;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class SqlServerMagic
+    internal static class SqlServerMagic
     {
         static readonly PropertyInfo ConnectionInfo = typeof(SqlConnection).GetProperty("InnerConnection", BindingFlags.NonPublic | BindingFlags.Instance);
 
-        protected const int PrimaryKeyViolationNumber = 2627;
+        public const int PrimaryKeyViolationNumber = 2627;
 
-        protected void AssignTransactionIfNecessary(SqlConnection connection, SqlCommand command)
+        public static List<string> GetTableNames(this SqlConnection connection)
+        {
+            var tableNames = new List<string>();
+
+            using (var command = connection.CreateCommand())
+            {
+                AssignTransactionIfNecessary(connection, command);
+
+                command.CommandText = "select * from sys.Tables";
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        tableNames.Add(reader["name"].ToString());
+                    }
+                }
+            }
+
+            return tableNames;
+        }
+
+        public static void AssignTransactionIfNecessary(this SqlConnection connection, SqlCommand command)
         {
             var transactionOrNull = GetTransactionOrNull(connection);
             if (transactionOrNull == null) return;
@@ -23,7 +46,7 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// BAM!1 get current transaction by applying a few select reflection spells
         /// </summary>
-        SqlTransaction GetTransactionOrNull(IDbConnection conn)
+        public static SqlTransaction GetTransactionOrNull(this IDbConnection conn)
         {
             try
             {
