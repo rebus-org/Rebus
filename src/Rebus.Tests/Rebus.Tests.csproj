@@ -211,6 +211,7 @@
     <Compile Include="Integration\TestRebusOnRabbit.cs" />
     <Compile Include="Integration\TestResilientRabbit.cs" />
     <Compile Include="Integration\TestSagas.cs" />
+    <Compile Include="Integration\TestSimpleSqlSetup.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Integration\TestWebCallbacks.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />

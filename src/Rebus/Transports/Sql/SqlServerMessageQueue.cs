@@ -154,7 +154,7 @@ namespace Rebus.Transports.Sql
 
                     selectCommand.CommandText =
                         string.Format(
-                            @"select top 1 [id], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient ",
+                            @"select top 1 [id], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient order by [seq] asc",
                             messageTableName);
 
                     selectCommand.Parameters.AddWithValue("recipient", inputQueueName);
@@ -267,6 +267,7 @@ CREATE TABLE [dbo].[{0}](
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
+	[seq] [bigint] IDENTITY(1,1) NOT NULL,
  CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
 (
 	[id] ASC
@@ -288,7 +289,8 @@ CREATE TABLE [dbo].[{0}](
                     command.CommandText = string.Format(@"
 CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
 (
-	[recipient] ASC
+	[recipient] ASC,
+    [seq] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ", indexName, messageTableName);
 

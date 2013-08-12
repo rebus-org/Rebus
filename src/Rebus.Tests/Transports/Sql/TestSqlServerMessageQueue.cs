@@ -7,14 +7,14 @@ using Rebus.Persistence.SqlServer;
 namespace Rebus.Tests.Transports.Sql
 {
     [TestFixture, Category(TestCategories.MsSql)]
-    public class TestSqlServerMessageQueue : FixtureBase
+    public class TestSqlServerMessageQueue : SqlServerFixtureBase
     {
         [Test]
         public void CanDoItManually()
         {
             string id = null;
 
-            using (var connection = new SqlConnection(SqlServerFixtureBase.ConnectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 connection.Open();
                 connection.BeginTransaction();
@@ -30,10 +30,10 @@ namespace Rebus.Tests.Transports.Sql
                           .Commit();
             }
 
-            using (var tx = new TransactionScope())
+            using (new TransactionScope())
             {
                 var tx2 = new TransactionScope(TransactionScopeOption.Suppress);
-                using (var connection = new SqlConnection(SqlServerFixtureBase.ConnectionString))
+                using (var connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();
                     connection.BeginTransaction();
@@ -53,7 +53,7 @@ namespace Rebus.Tests.Transports.Sql
                               .Commit();
                 }
 
-                using (var connection = new SqlConnection(SqlServerFixtureBase.ConnectionString))
+                using (var connection = new SqlConnection(ConnectionString))
                 {
                     connection.Open();
                     connection.BeginTransaction();
