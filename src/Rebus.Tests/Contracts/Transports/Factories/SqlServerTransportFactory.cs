@@ -26,6 +26,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
         public void CleanUp()
         {
             disposables.ForEach(d => d.Dispose());
+            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
         }
 
         public IReceiveMessages CreateReceiver(string queueName)

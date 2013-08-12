@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -31,6 +30,8 @@ namespace Rebus.Tests.Integration
 
         protected override void DoSetUp()
         {
+            ExecuteCommand(string.Format("drop table [{0}]", SqlServerMessageQueueConfigurationExtension.DefaultMessagesTableName));
+
             adapter1 = new BuiltinContainerAdapter();
             adapter2 = new BuiltinContainerAdapter();
 
@@ -92,7 +93,7 @@ namespace Rebus.Tests.Integration
 
                     lock (locker)
                     {
-                        messageTracker[msg.Id] = true;
+                        messageTracker.TryUpdate(msg.Id, true, false);
                     }
 
                     if (result == numberOfMessages)
@@ -114,7 +115,7 @@ namespace Rebus.Tests.Integration
                               bus1.Send(message);
                               lock (locker)
                               {
-                                  messageTracker[message.Id] = false;
+                                  messageTracker.TryAdd(message.Id, false);
                               }
                           });
 
