@@ -30,6 +30,11 @@ namespace Rebus.Transports.Sql
         readonly Action<SqlConnection> commitAction;
         readonly Action<SqlConnection> rollbackAction;
 
+        /// <summary>
+        /// Constructs the SQL Server-based Rebus transport using the specified <see cref="connectionString"/> to connect to a database,
+        /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
+        /// when receiving messages.
+        /// </summary>
         public SqlServerMessageQueue(string connectionString, string messageTableName, string inputQueueName)
             : this(messageTableName, inputQueueName)
         {
@@ -68,10 +73,17 @@ namespace Rebus.Transports.Sql
                 };
         }
 
+        /// <summary>
+        /// Constructs the SQL Server-based Rebus transport using the specified factory method to obtain a connection to a database,
+        /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
+        /// when receiving messages.
+        /// </summary>
         public SqlServerMessageQueue(Func<SqlConnection> connectionFactoryMethod, string messageTableName, string inputQueueName)
             : this(messageTableName, inputQueueName)
         {
             getConnection = connectionFactoryMethod;
+
+            // everything else is handed over to whoever provided the connection
             releaseConnection = c => { };
             commitAction = c => { };
             rollbackAction = c => { };
@@ -128,27 +140,52 @@ namespace Rebus.Transports.Sql
 
             try
             {
-                using (var command = connection.CreateCommand())
+                ReceivedTransportMessage receivedTransportMessage = null;
+
+                using (var selectCommand = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
+                    connection.AssignTransactionIfNecessary(selectCommand);
 
-                    command.CommandText = string.Format(@"select top 1 [id], [headers], [label], [body] from [{0}] where recipient = @recipient",
-                                                        messageTableName);
+                    selectCommand.CommandText =
+                        string.Format(
+                            @"select top 1 [id], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient ",
+                            messageTableName);
 
-                    command.Parameters.AddWithValue("recipient", inputQueueName);
+                    selectCommand.Parameters.AddWithValue("recipient", inputQueueName);
 
-                    using (var reader = command.ExecuteReader())
+                    var messageId = Guid.Empty;
+
+                    using (var reader = selectCommand.ExecuteReader())
                     {
-                        while (reader.Read())
+                        if (reader.Read())
                         {
-                            return
-                                new ReceivedTransportMessage
-                                    {
-                                        Id = (reader["id"]).ToString(),
-                                        Label = (string)reader["label"],
-                                        Headers = DictionarySerializer.Deserialize((string)reader["headers"]),
-                                        Body = (byte[])reader["body"],
-                                    };
+                            messageId = (Guid)reader["id"];
+                            var headers = reader["headers"];
+                            var label = reader["label"];
+                            var body = reader["body"];
+
+                            var headersDictionary = DictionarySerializer.Deserialize((string)headers);
+
+                            receivedTransportMessage = new ReceivedTransportMessage
+                                                           {
+                                                               Id = messageId.ToString(),
+                                                               Label = (string)label,
+                                                               Headers = headersDictionary,
+                                                               Body = (byte[])body,
+                                                           };
+                        }
+                    }
+
+                    if (receivedTransportMessage != null)
+                    {
+                        using (var deleteCommand = connection.CreateCommand())
+                        {
+                            connection.AssignTransactionIfNecessary(deleteCommand);
+
+                            deleteCommand.CommandText = string.Format("delete from [{0}] where [id] = @id",
+                                                                      messageTableName);
+                            deleteCommand.Parameters.AddWithValue("id", messageId);
+                            deleteCommand.ExecuteNonQuery();
                         }
                     }
                 }
@@ -157,6 +194,8 @@ namespace Rebus.Transports.Sql
                 {
                     commitAction(connection);
                 }
+
+                return receivedTransportMessage;
             }
             finally
             {
@@ -215,6 +254,9 @@ namespace Rebus.Transports.Sql
 
                 if (tableNames.Contains(messageTableName, StringComparer.OrdinalIgnoreCase))
                 {
+                    log.Info("Database already contains a table named '{0}' - will not create anything",
+                             messageTableName);
+                    commitAction(connection);
                     return this;
                 }
 
@@ -241,16 +283,20 @@ CREATE TABLE [dbo].[{0}](
                     command.ExecuteNonQuery();
                 }
 
+                var indexName = string.Format("IX_{0}", messageTableName);
+
+                log.Info("Creating index '{0}' on '{1}'", indexName, messageTableName);
+
                 using (var command = connection.CreateCommand())
                 {
                     connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"
-CREATE NONCLUSTERED INDEX [IX_{0}] ON [dbo].[{0}]
+CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
 (
 	[recipient] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-", messageTableName);
+", indexName, messageTableName);
 
                     command.ExecuteNonQuery();
                 }
