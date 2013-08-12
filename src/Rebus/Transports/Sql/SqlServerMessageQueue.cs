@@ -41,7 +41,8 @@ namespace Rebus.Transports.Sql
         {
             getConnection = () =>
                 {
-                    using (var suppressAmbientTransaction = new TransactionScope(TransactionScopeOption.Suppress))
+                    // avoid enlisting in ambient tx because we handle this stuff on our own!
+                    using (new TransactionScope(TransactionScopeOption.Suppress))
                     {
                         var connection = new SqlConnection(connectionString);
                         connection.Open();
@@ -139,6 +140,8 @@ namespace Rebus.Transports.Sql
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
+            AssertNotInOneWayClientMode();
+
             var connection = GetConnectionPossiblyFromContext(context);
 
             try
@@ -310,6 +313,8 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
         /// </summary>
         public SqlServerMessageQueue PurgeInputQueue()
         {
+            AssertNotInOneWayClientMode();
+
             log.Warn("Purging queue '{0}' in table '{1}'", inputQueueName, messageTableName);
 
             var connection = getConnection();
@@ -335,6 +340,20 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
             }
 
             return this;
+        }
+
+        public static SqlServerMessageQueue Sender(string connectionString, string messageTableName)
+        {
+            return new SqlServerMessageQueue(connectionString, messageTableName, null);
+        }
+
+        void AssertNotInOneWayClientMode()
+        {
+            if (string.IsNullOrWhiteSpace(inputQueueName))
+            {
+                throw new InvalidOperationException(
+                    "This SQL Server message queue is running in one-way client mode - it doesn't have an input queue, so it cannot receive messages and it cannot purge its input queue");
+            }
         }
     }
 }
