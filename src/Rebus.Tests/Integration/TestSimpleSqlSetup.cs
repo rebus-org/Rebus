@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -19,7 +20,7 @@ namespace Rebus.Tests.Integration
         const string InputQueueName1 = "test.input1";
         
         const LogLevel MinLogLevel = LogLevel.Warn;
-        const int NumberOfWorkers = 1;
+        const int NumberOfWorkers = 15;
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
         
@@ -73,14 +74,26 @@ namespace Rebus.Tests.Integration
             // set up handler that counts the received messages
             var signalWhenAllMessagesHaveBeenReceived = new ManualResetEvent(false);
             var receivedMessages = 0;
-            var messageTracker = new ConcurrentDictionary<Guid, bool>();
+            var locker = new object();
+            var messageTracker = new ConcurrentDictionary<int, bool>();
 
             adapter2.Handle<MyMessage>(msg =>
                 {
-                    Console.WriteLine("Got message : {0}", msg.Label);
                     var result = Interlocked.Increment(ref receivedMessages);
 
-                    messageTracker[msg.Id] = true;
+                    if (result < 1000)
+                    {
+                        Console.WriteLine("Got message : {0}", msg.Label);
+                    }
+                    else if (result%200 == 0)
+                    {
+                        Console.WriteLine("Got {0} messages now...", result);
+                    }
+
+                    lock (locker)
+                    {
+                        messageTracker[msg.Id] = true;
+                    }
 
                     if (result == numberOfMessages)
                     {
@@ -92,29 +105,38 @@ namespace Rebus.Tests.Integration
             Enumerable.Range(0, numberOfMessages)
                       .Select(i => new MyMessage
                                        {
-                                           Id = Guid.NewGuid(),
+                                           Id = i + 1,
                                            Label = string.Format("Message # {0}", i)
                                        })
                       .ToList()
                       .ForEach(message =>
                           {
                               bus1.Send(message);
-                              messageTracker[message.Id] = false;
+                              lock (locker)
+                              {
+                                  messageTracker[message.Id] = false;
+                              }
                           });
 
-            var timeout = TimeSpan.FromMilliseconds(numberOfMessages) + TimeSpan.FromSeconds(5);
+            var timeout = TimeSpan.FromMilliseconds(numberOfMessages*2) + TimeSpan.FromSeconds(5);
             if (!signalWhenAllMessagesHaveBeenReceived.WaitOne(timeout))
             {
                 Assert.Fail("Did not receive expected {0} messages within {1} timeout",
                             numberOfMessages, timeout);
             }
 
+            Console.WriteLine("Waiting 2 seconds...");
             // give additional messages a chance to arrive (which shouldn't happen, but let's just see if it does...)
-            Thread.Sleep(1.Seconds());
+            Thread.Sleep(2.Seconds());
 
             messageTracker.Count.ShouldBe(numberOfMessages);
-            messageTracker.All(t => t.Value)
-                          .ShouldBe(true);
+            
+            if (messageTracker.Values.Any(v => !v))
+            {
+                Assert.Fail("Did not receive the following messages: {0}",
+                            string.Join(", ", messageTracker.Where(kvp => !kvp.Value)
+                                                            .Select(kvp => kvp.Key)));
+            }
         }
 
         protected override void DoTearDown()
@@ -140,7 +162,7 @@ namespace Rebus.Tests.Integration
         class MyMessage
         {
             public string Label { get; set; }
-            public Guid Id { get; set; }
+            public int Id { get; set; }
         }
     }
 }

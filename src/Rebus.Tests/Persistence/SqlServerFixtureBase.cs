@@ -66,7 +66,7 @@ namespace Rebus.Tests.Persistence
             return tableNames;
         }
 
-        protected void ExecuteCommand(string commandText)
+        public static void ExecuteCommand(string commandText)
         {
             using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {

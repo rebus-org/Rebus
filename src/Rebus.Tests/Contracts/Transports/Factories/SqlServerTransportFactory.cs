@@ -7,7 +7,13 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 {
     public class SqlServerTransportFactory : ITransportFactory
     {
+        const string MessageTableName = "messages2";
         readonly List<IDisposable> disposables = new List<IDisposable>();
+
+        public SqlServerTransportFactory()
+        {
+            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
+        }
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
@@ -31,7 +37,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         IDuplexTransport GetQueue(string inputQueueName)
         {
-            var queue = new SqlServerMessageQueue(SqlServerFixtureBase.ConnectionString, "messages2", inputQueueName)
+            var queue = new SqlServerMessageQueue(SqlServerFixtureBase.ConnectionString, MessageTableName, inputQueueName)
                 .EnsureTableIsCreated()
                 .PurgeInputQueue();
             
