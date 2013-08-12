@@ -1,3 +1,4 @@
+using System;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Testing;
@@ -16,10 +17,12 @@ namespace Rebus.Tests
         [SetUp]
         public void SetUp()
         {
+            Console.WriteLine("---BEGIN SETUP---------------------------------------------");
             TimeMachine.Reset();
             FakeMessageContext.Reset();
             RebusLoggerFactory.Reset();
             DoSetUp();
+            Console.WriteLine("---DONE SETTING UP-----------------------------------------");
         }
 
         protected virtual void DoSetUp()
@@ -29,7 +32,9 @@ namespace Rebus.Tests
         [TearDown]
         public void TearDown()
         {
+            Console.WriteLine("---BEGIN TEARDOWN------------------------------------------");
             DoTearDown();
+            Console.WriteLine("---DONE TEARING DOWN---------------------------------------");
         }
 
         protected virtual void DoTearDown()

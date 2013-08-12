@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data.SqlClient;
+using System.Transactions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using System.Linq;
@@ -40,35 +41,34 @@ namespace Rebus.Transports.Sql
         {
             getConnection = () =>
                 {
-                    var connection = new SqlConnection(connectionString);
-                    connection.Open();
-                    Console.WriteLine("BEGIN TRAN");
-                    connection.BeginTransaction();
-                    return connection;
+                    using (var suppressAmbientTransaction = new TransactionScope(TransactionScopeOption.Suppress))
+                    {
+                        var connection = new SqlConnection(connectionString);
+                        connection.Open();
+                        log.Debug("Starting new transaction");
+                        connection.BeginTransaction();
+                        return connection;
+                    }
                 };
             commitAction = c =>
                 {
                     var t = c.GetTransactionOrNull();
                     if (t == null) return;
-                    using (t)
-                    {
-                        Console.WriteLine("COMMIT TRAN");
-                        t.Commit();
-                    }
+
+                    log.Debug("Committing!");
+                    t.Commit();
                 };
             rollbackAction = c =>
                 {
                     var t = c.GetTransactionOrNull();
                     if (t == null) return;
-                    using (t)
-                    {
-                        Console.WriteLine("ROLLBACK TRAN");
-                        t.Rollback();
-                    }
+
+                    log.Debug("Rolling back!");
+                    t.Rollback();
                 };
             releaseConnection = c =>
                 {
-                    Console.WriteLine("DISPOSE CONNECTION");
+                    log.Debug("Disposing connection");
                     c.Dispose();
                 };
         }
@@ -111,6 +111,9 @@ namespace Rebus.Transports.Sql
                                                         messageTableName);
 
                     var id = Guid.NewGuid();
+
+                    log.Debug("Sending message with ID {0} to {1}", id, destinationQueueName);
+
                     command.Parameters.AddWithValue("id", id);
                     command.Parameters.AddWithValue("headers", DictionarySerializer.Serialize(message.Headers));
                     command.Parameters.AddWithValue("label", message.Label ?? id.ToString());
@@ -166,13 +169,16 @@ namespace Rebus.Transports.Sql
 
                             var headersDictionary = DictionarySerializer.Deserialize((string)headers);
 
-                            receivedTransportMessage = new ReceivedTransportMessage
-                                                           {
-                                                               Id = messageId.ToString(),
-                                                               Label = (string)label,
-                                                               Headers = headersDictionary,
-                                                               Body = (byte[])body,
-                                                           };
+                            receivedTransportMessage =
+                                new ReceivedTransportMessage
+                                    {
+                                        Id = messageId.ToString(),
+                                        Label = (string)label,
+                                        Headers = headersDictionary,
+                                        Body = (byte[])body,
+                                    };
+
+                            log.Debug("Received message with ID {0} from {1}", messageId, inputQueueName);
                         }
                     }
 
@@ -204,8 +210,6 @@ namespace Rebus.Transports.Sql
                     releaseConnection(connection);
                 }
             }
-
-            return null;
         }
 
         SqlConnection GetConnectionPossiblyFromContext(ITransactionContext context)
@@ -214,24 +218,11 @@ namespace Rebus.Transports.Sql
 
             if (context[ConnectionKey] != null) return (SqlConnection)context[ConnectionKey];
 
-            Console.WriteLine("Calling GET action");
             var sqlConnection = getConnection();
 
-            context.DoCommit += () =>
-                {
-                    Console.WriteLine("Calling COMMIT action");
-                    commitAction(sqlConnection);
-                };
-            context.DoRollback += () =>
-                {
-                    Console.WriteLine("Calling ROLLBACK action");
-                    rollbackAction(sqlConnection);
-                };
-            context.Cleanup += () =>
-                {
-                    Console.WriteLine("Calling RELEASE action");
-                    releaseConnection(sqlConnection);
-                };
+            context.DoCommit += () => commitAction(sqlConnection);
+            context.DoRollback += () => rollbackAction(sqlConnection);
+            context.Cleanup += () => releaseConnection(sqlConnection);
 
             context[ConnectionKey] = sqlConnection;
 
@@ -319,7 +310,7 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
         /// </summary>
         public SqlServerMessageQueue PurgeInputQueue()
         {
-            log.Warn("Purging queue {0} in table {1}", inputQueueName, messageTableName);
+            log.Warn("Purging queue '{0}' in table '{1}'", inputQueueName, messageTableName);
 
             var connection = getConnection();
             try
@@ -328,8 +319,7 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
                 {
                     connection.AssignTransactionIfNecessary(command);
 
-                    command.CommandText = string.Format(@"delete from [{0}]
-                                                where recipient = @recipient",
+                    command.CommandText = string.Format(@"delete from [{0}] where recipient = @recipient",
                                                         messageTableName);
 
                     command.Parameters.AddWithValue("recipient", inputQueueName);
