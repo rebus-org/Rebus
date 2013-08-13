@@ -43,7 +43,7 @@ namespace Rebus.Tests.Persistence
             ExecuteCommand("delete from " + tableName);
         }
 
-        protected List<string> GetTableNames()
+        public static List<string> GetTableNames()
         {
             var tableNames = new List<string>();
             using(var conn = new SqlConnection(ConnectionStrings.SqlServer))

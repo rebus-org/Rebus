@@ -12,7 +12,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         public SqlServerTransportFactory()
         {
-            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
+            DropMessageTableIfItExists();
         }
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
@@ -26,7 +26,8 @@ namespace Rebus.Tests.Contracts.Transports.Factories
         public void CleanUp()
         {
             disposables.ForEach(d => d.Dispose());
-            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
+
+            DropMessageTableIfItExists();
         }
 
         public IReceiveMessages CreateReceiver(string queueName)
@@ -36,14 +37,21 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             return receiver;
         }
 
+        static void DropMessageTableIfItExists()
+        {
+            if (!SqlServerFixtureBase.GetTableNames().Contains(MessageTableName)) return;
+
+            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
+        }
+
         IDuplexTransport GetQueue(string inputQueueName)
         {
             var queue = new SqlServerMessageQueue(SqlServerFixtureBase.ConnectionString, MessageTableName, inputQueueName)
                 .EnsureTableIsCreated()
                 .PurgeInputQueue();
-            
+
             disposables.Add(queue);
-            
+
             return queue;
         }
     }
