@@ -31,11 +31,7 @@ namespace Rebus.Tests.Integration
 
         protected override void DoSetUp()
         {
-            if (GetTableNames().Contains(SqlServerMessageQueueConfigurationExtension.DefaultMessagesTableName))
-            {
-                ExecuteCommand(string.Format("drop table [{0}]",
-                                             SqlServerMessageQueueConfigurationExtension.DefaultMessagesTableName));
-            }
+            DropMessageTable();
 
             adapter1 = new BuiltinContainerAdapter();
             adapter2 = new BuiltinContainerAdapter();
@@ -159,6 +155,16 @@ namespace Rebus.Tests.Integration
         {
             adapter1.Dispose();
             adapter2.Dispose();
+        }
+
+        void DropMessageTable()
+        {
+            if (GetTableNames()
+                .Contains(SqlServerMessageQueueConfigurationExtension.DefaultMessagesTableName))
+            {
+                ExecuteCommand(string.Format("drop table [{0}]",
+                                             SqlServerMessageQueueConfigurationExtension.DefaultMessagesTableName));
+            }
         }
 
         public string GetEndpointFor(Type messageType)
