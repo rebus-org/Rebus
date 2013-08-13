@@ -9,7 +9,7 @@ namespace Rebus.Tests.Transports.Sql
     [TestFixture, Category(TestCategories.MsSql)]
     public class TestSqlServerMessageQueue : SqlServerFixtureBase
     {
-        [Test]
+        [Test, Ignore("Was only used to demonstrate that the approach taken in SqlServerMessageQueue was viable")]
         public void CanDoItManually()
         {
             string id = null;
