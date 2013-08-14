@@ -80,3 +80,7 @@
 
 * Made JSON serializer handle encoding properly when deserializing messages
 * Added Rebus.Async that extends Rebus with the ability to register reply handlers inline
+
+## 0.35.1
+
+* 1st go at implementing a SQL Server-based transport - can be used if you don't have MSMQ available on your machines
