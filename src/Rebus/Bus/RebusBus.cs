@@ -550,11 +550,11 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
                 sendMessages.Send(destination, transportMessage, transactionContext);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
                 throw new ApplicationException(string.Format(
                     "An exception occurred while attempting to send {0} to {1} (context: {2})",
-                    messageToSend, destination, transactionContext));
+                    messageToSend, destination, transactionContext), exception);
             }
         }
 
