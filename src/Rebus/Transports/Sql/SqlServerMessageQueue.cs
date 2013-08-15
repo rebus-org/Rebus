@@ -5,11 +5,15 @@ using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using System.Linq;
 using Rebus.Serialization;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Transports.Sql
 {
     /// <summary>
-    /// http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/
+    /// SQL Server-based message queue that uses one single table to store all messages. Messages are received in the
+    /// way described here: <see cref="http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/"/>
+    /// (which means that the table is queried with a <code>top 1 ... with (updlock, readpast)</code>, allowing for many concurent reads without
+    /// unintentional locking).
     /// </summary>
     public class SqlServerMessageQueue : IDuplexTransport, IDisposable
     {
@@ -47,7 +51,7 @@ namespace Rebus.Transports.Sql
                         var connection = new SqlConnection(connectionString);
                         connection.Open();
                         log.Debug("Starting new transaction");
-                        connection.BeginTransaction();
+                        connection.BeginTransaction(IsolationLevel.ReadCommitted);
                         return connection;
                     }
                 };
@@ -107,19 +111,18 @@ namespace Rebus.Transports.Sql
                     connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"insert into [{0}] 
-                                                ([id], [headers], [label], [body], [recipient]) 
-                                                values (@id, @headers, @label, @body, @recipient)",
+                                                            ([recipient], [headers], [label], [body]) 
+                                                            values (@recipient, @headers, @label, @body)",
                                                         messageTableName);
 
                     var id = Guid.NewGuid();
 
                     log.Debug("Sending message with ID {0} to {1}", id, destinationQueueName);
 
-                    command.Parameters.AddWithValue("id", id);
+                    command.Parameters.AddWithValue("recipient", destinationQueueName);
                     command.Parameters.AddWithValue("headers", DictionarySerializer.Serialize(message.Headers));
                     command.Parameters.AddWithValue("label", message.Label ?? id.ToString());
                     command.Parameters.AddWithValue("body", message.Body);
-                    command.Parameters.AddWithValue("recipient", destinationQueueName);
 
                     command.ExecuteNonQuery();
                 }
@@ -154,28 +157,29 @@ namespace Rebus.Transports.Sql
 
                     selectCommand.CommandText =
                         string.Format(
-                            @"select top 1 [id], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient order by [seq] asc",
+                            @"select top 1 [seq], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient order by [seq] asc",
                             messageTableName);
 
                     selectCommand.Parameters.AddWithValue("recipient", inputQueueName);
 
-                    var messageId = Guid.Empty;
+                    var seq = 0L;
 
                     using (var reader = selectCommand.ExecuteReader())
                     {
                         if (reader.Read())
                         {
-                            messageId = (Guid)reader["id"];
                             var headers = reader["headers"];
                             var label = reader["label"];
                             var body = reader["body"];
+                            seq = (long)reader["seq"];
 
                             var headersDictionary = DictionarySerializer.Deserialize((string)headers);
+                            var messageId = string.Format("{0}/{1}", inputQueueName, seq);
 
                             receivedTransportMessage =
                                 new ReceivedTransportMessage
                                     {
-                                        Id = messageId.ToString(),
+                                        Id = messageId,
                                         Label = (string)label,
                                         Headers = headersDictionary,
                                         Body = (byte[])body,
@@ -191,9 +195,11 @@ namespace Rebus.Transports.Sql
                         {
                             connection.AssignTransactionIfNecessary(deleteCommand);
 
-                            deleteCommand.CommandText = string.Format("delete from [{0}] where [id] = @id",
-                                                                      messageTableName);
-                            deleteCommand.Parameters.AddWithValue("id", messageId);
+                            deleteCommand.CommandText =
+                                string.Format("delete from [{0}] where [recipient] = @recipient and [seq] = @seq",
+                                              messageTableName);
+                            deleteCommand.Parameters.AddWithValue("recipient", inputQueueName);
+                            deleteCommand.Parameters.AddWithValue("seq", seq);
                             deleteCommand.ExecuteNonQuery();
                         }
                     }
@@ -262,40 +268,40 @@ namespace Rebus.Transports.Sql
 
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
-	[id] [uniqueidentifier] NOT NULL,
+	[recipient] [nvarchar](200) NOT NULL,
+	[seq] [bigint] IDENTITY(1,1) NOT NULL,
 	[label] [nvarchar](max) NOT NULL,
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
-	[recipient] [nvarchar](200) NOT NULL,
-	[seq] [bigint] IDENTITY(1,1) NOT NULL,
  CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
 (
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[recipient] ASC,
+	[seq] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 ", messageTableName);
 
                     command.ExecuteNonQuery();
                 }
 
-                var indexName = string.Format("IX_{0}", messageTableName);
+//                var indexName = string.Format("IX_{0}", messageTableName);
 
-                log.Info("Creating index '{0}' on '{1}'", indexName, messageTableName);
+//                log.Info("Creating index '{0}' on '{1}'", indexName, messageTableName);
 
-                using (var command = connection.CreateCommand())
-                {
-                    connection.AssignTransactionIfNecessary(command);
+//                using (var command = connection.CreateCommand())
+//                {
+//                    connection.AssignTransactionIfNecessary(command);
 
-                    command.CommandText = string.Format(@"
-CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
-(
-	[recipient] ASC,
-    [seq] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-", indexName, messageTableName);
+//                    command.CommandText = string.Format(@"
+//CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
+//(
+//	[recipient] ASC,
+//    [seq] ASC
+//)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
+//", indexName, messageTableName);
 
-                    command.ExecuteNonQuery();
-                }
+//                    command.ExecuteNonQuery();
+//                }
 
                 commitAction(connection);
             }
