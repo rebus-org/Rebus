@@ -170,7 +170,7 @@ because there would be remote calls involved when you wanted to receive a messag
                 Thread.Sleep(1000);
                 
                 throw new ApplicationException(
-                    string.Format("An error occurred while attempting to receive a message from {0}",
+                    string.Format("An error occurred while attempting to receive a message from {0} - after resolving the error, you might need to restart the bus.",
                                   inputQueuePath), exception);
             }
             catch (Exception exception)

@@ -85,3 +85,7 @@
 
 * 1st go at implementing a SQL Server-based transport - can be used if you don't have MSMQ available on your machines
 * Fixed glitch in error handling while doing any kind of send that threw an exception _without including the inner exception_
+
+## 0.35.2
+
+* Better handling of errors (i.e. DON'T IGNORE ERRORS) when MSMQ receive fails
