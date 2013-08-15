@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Data.SqlClient;
 using System.Transactions;
 using Rebus.Logging;
@@ -119,10 +120,10 @@ namespace Rebus.Transports.Sql
 
                     log.Debug("Sending message with ID {0} to {1}", id, destinationQueueName);
 
-                    command.Parameters.AddWithValue("recipient", destinationQueueName);
-                    command.Parameters.AddWithValue("headers", DictionarySerializer.Serialize(message.Headers));
-                    command.Parameters.AddWithValue("label", message.Label ?? id.ToString());
-                    command.Parameters.AddWithValue("body", message.Body);
+                    command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationQueueName;
+                    command.Parameters.Add("headers", SqlDbType.NVarChar).Value = DictionarySerializer.Serialize(message.Headers);
+                    command.Parameters.Add("label", SqlDbType.NVarChar).Value = message.Label ?? id.ToString();
+                    command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
 
                     command.ExecuteNonQuery();
                 }
@@ -198,8 +199,9 @@ namespace Rebus.Transports.Sql
                             deleteCommand.CommandText =
                                 string.Format("delete from [{0}] where [recipient] = @recipient and [seq] = @seq",
                                               messageTableName);
-                            deleteCommand.Parameters.AddWithValue("recipient", inputQueueName);
-                            deleteCommand.Parameters.AddWithValue("seq", seq);
+                            deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
+                            deleteCommand.Parameters.Add("seq", SqlDbType.BigInt).Value = seq;
+
                             deleteCommand.ExecuteNonQuery();
                         }
                     }

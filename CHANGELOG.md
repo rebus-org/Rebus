@@ -89,3 +89,4 @@
 ## 0.35.2
 
 * Better handling of errors (i.e. DON'T IGNORE ERRORS) when MSMQ receive fails
+* Optimization of SQL Server transport
