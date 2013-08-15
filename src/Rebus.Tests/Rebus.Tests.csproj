@@ -157,6 +157,7 @@
     <Compile Include="Bugs\SendAndPublishAutomaticallyEnlistInAmbientTransaction.cs" />
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
+    <Compile Include="AppConfig.cs" />
     <Compile Include="Configuration\TestBuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
     <Compile Include="Configuration\TestDetermineMessageOwnershipFromRebusConfigurationSection.cs" />
@@ -315,6 +316,7 @@
     <Compile Include="Unit\TestWorker_MessageContext.cs" />
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
     <Compile Include="Unit\WorkerFixtureBase.cs" />
+    <Compile Include="UserIdentityContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Timeout\AppConfigExamples\app.config.01.xml">

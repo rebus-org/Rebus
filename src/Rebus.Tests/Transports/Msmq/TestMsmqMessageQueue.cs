@@ -78,6 +78,14 @@ namespace Rebus.Tests.Transports.Msmq
                     {
                         msmqMessageQueue.DeleteInputQueue();
                     }
+                    var messageQueue = d as MessageQueue;
+                    if (messageQueue != null)
+                    {
+                        if (MessageQueue.Exists(messageQueue.Path))
+                        {
+                            MessageQueue.Delete(messageQueue.Path);
+                        }
+                    }
                     d.Dispose();
                 });
         }
@@ -244,8 +252,8 @@ The following addresses were collected:
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                  {
-                                     Messages = new object[] {"HELLO WORLD!"},
-                                     Headers = new Dictionary<string, object> {{Headers.TimeToBeReceived, timeToBeReceived}},
+                                     Messages = new object[] { "HELLO WORLD!" },
+                                     Headers = new Dictionary<string, object> { { Headers.TimeToBeReceived, timeToBeReceived } },
                                  }),
                              new NoTransaction());
 
@@ -294,7 +302,7 @@ The following addresses were collected:
             senderQueue.Send(destinationQueueName,
                              serializer.Serialize(new Message
                                  {
-                                     Messages = new object[] {"W00t!"},
+                                     Messages = new object[] { "W00t!" },
                                      Headers = headers
                                  }),
                              new NoTransaction());
@@ -337,7 +345,7 @@ The following addresses were collected:
             }
         }
 
-        [TestCase(true, Description="Asserts that, when a TransactionScope completes the ambient tx, all messages are committed atomically to multiple queues")]
+        [TestCase(true, Description = "Asserts that, when a TransactionScope completes the ambient tx, all messages are committed atomically to multiple queues")]
         [TestCase(false, Description = "Asserts that, when a TransactionScope does not complete the ambient tx, no messages are sent to any of the involved queues")]
         public void MultipleSendOperationsToMultipleQueuesAreEnlistedInTheSameTransaction(bool commitTransactionAndExpectMessagesToBeThere)
         {
@@ -372,7 +380,7 @@ The following addresses were collected:
             if (commitTransactionAndExpectMessagesToBeThere)
             {
                 allMessages.Count.ShouldBe(4);
-                
+
                 var receivedMessages = allMessages.Select(m => encoding.GetString(m.Body)).ToList();
                 receivedMessages.ShouldContain("yo dawg 1!");
                 receivedMessages.ShouldContain("yo dawg 2!");

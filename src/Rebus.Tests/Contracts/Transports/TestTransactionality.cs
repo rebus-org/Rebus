@@ -13,7 +13,7 @@ namespace Rebus.Tests.Contracts.Transports
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
-        static readonly Encoding Encoding = Encoding.UTF8;
+        readonly Encoding encoding = Encoding.UTF8;
 
         TFactory factory;
         ISendMessages sender;
@@ -69,7 +69,7 @@ namespace Rebus.Tests.Contracts.Transports
             if (commitTransactionAndExpectMessagesToBeThere)
             {
                 Assert.That(msg1, Is.Not.Null);
-                Assert.That(Encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
+                Assert.That(encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
 
                 using (new TransactionScope())
                 {
@@ -87,7 +87,7 @@ namespace Rebus.Tests.Contracts.Transports
                     var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
-                    Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
+                    Assert.That(encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }
             }
         }
@@ -131,10 +131,10 @@ namespace Rebus.Tests.Contracts.Transports
             if (commitTransactionAndExpectMessagesToBeThere)
             {
                 Assert.That(msg1, Is.Not.Null);
-                Assert.That(Encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
+                Assert.That(encoding.GetString(msg1.Body), Is.EqualTo("hello mr. 1"));
 
                 Assert.That(msg2, Is.Not.Null);
-                Assert.That(Encoding.GetString(msg2.Body), Is.EqualTo("hello mr. 2"));
+                Assert.That(encoding.GetString(msg2.Body), Is.EqualTo("hello mr. 2"));
 
                 using (new TransactionScope())
                 {
@@ -153,14 +153,14 @@ namespace Rebus.Tests.Contracts.Transports
                     var ctx = new AmbientTransactionContext();
                     var receivedTransportMessage = receiver.ReceiveMessage(ctx);
                     Assert.That(receivedTransportMessage, Is.Not.Null);
-                    Assert.That(Encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
+                    Assert.That(encoding.GetString(receivedTransportMessage.Body), Is.EqualTo("hello"));
                 }
             }
         }
 
         TransportMessageToSend MessageWith(string text)
         {
-            return new TransportMessageToSend { Body = Encoding.GetBytes(text) };
+            return new TransportMessageToSend { Body = encoding.GetBytes(text) };
         }
     }
 }

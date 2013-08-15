@@ -1,9 +1,11 @@
 using System;
 using System.Messaging;
+using System.Threading;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Extensions;
+using System.Linq;
 
 namespace Rebus.Transports.Msmq
 {
@@ -26,6 +28,12 @@ namespace Rebus.Transports.Msmq
         readonly string inputQueuePath;
         readonly string inputQueueName;
         readonly string machineAddress;
+
+        static readonly MessageQueueErrorCode[] AcceptedErrorCodes =
+            new[]
+                {
+                    MessageQueueErrorCode.IOTimeout,
+                };
 
         /// <summary>
         /// Constructs a special send-only instance of <see cref="MsmqMessageQueue"/>. This instance is
@@ -151,14 +159,28 @@ because there would be remote calls involved when you wanted to receive a messag
                     return transportMessage;
                 }
             }
-            catch (MessageQueueException)
+            catch (MessageQueueException exception)
             {
-                return null;
+                if (AcceptedErrorCodes.Contains(exception.MessageQueueErrorCode))
+                {
+                    return null;
+                }
+
+                // could not get message - there's no need to hurry now
+                Thread.Sleep(1000);
+                
+                throw new ApplicationException(
+                    string.Format("An error occurred while attempting to receive a message from {0}",
+                                  inputQueuePath), exception);
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                log.Error(e, "An error occurred while receiving message from {0}", inputQueuePath);
-                throw;
+                // could not get message - there's no need to hurry now
+                Thread.Sleep(1000);
+
+                throw new ApplicationException(
+                    string.Format("An error occurred while receiving message from {0}", inputQueuePath),
+                    exception);
             }
         }
 
