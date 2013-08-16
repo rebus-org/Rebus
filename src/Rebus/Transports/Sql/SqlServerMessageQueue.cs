@@ -20,6 +20,7 @@ namespace Rebus.Transports.Sql
     public class SqlServerMessageQueue : IDuplexTransport, IDisposable
     {
         const string ConnectionKey = "sql-server-message-queue-current-connection";
+        const int Max = -1;
         static ILog log;
 
         static SqlServerMessageQueue()
@@ -145,9 +146,9 @@ namespace Rebus.Transports.Sql
                     var label = message.Label ?? "(no label)";
 
                     command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationQueueName;
-                    command.Parameters.Add("headers", SqlDbType.NVarChar).Value = DictionarySerializer.Serialize(message.Headers);
-                    command.Parameters.Add("label", SqlDbType.NVarChar).Value = label;
-                    command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
+                    command.Parameters.Add("headers", SqlDbType.NVarChar, Max).Value = DictionarySerializer.Serialize(message.Headers);
+                    command.Parameters.Add("label", SqlDbType.NVarChar, Max).Value = label;
+                    command.Parameters.Add("body", SqlDbType.VarBinary, Max).Value = message.Body;
 
                     command.ExecuteNonQuery();
                 }
@@ -187,7 +188,7 @@ namespace Rebus.Transports.Sql
                                 where recipient = @recipient order by [seq] asc",
                             messageTableName);
 
-                    selectCommand.Parameters.AddWithValue("recipient", inputQueueName);
+                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
 
                     var seq = 0L;
 
@@ -228,7 +229,7 @@ namespace Rebus.Transports.Sql
                                               messageTableName);
 
                             deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
-                            deleteCommand.Parameters.Add("seq", SqlDbType.BigInt).Value = seq;
+                            deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8).Value = seq;
 
                             var rowsAffected = deleteCommand.ExecuteNonQuery();
 
