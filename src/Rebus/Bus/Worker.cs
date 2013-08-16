@@ -225,15 +225,31 @@ namespace Rebus.Bus
             }
         }
 
+        int successiveNullMessagesReceived = 0;
+
+        readonly TimeSpan[] nullMessageSleepTimes =
+            Enumerable.Empty<TimeSpan>()
+                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(20), 10)) // first 200 ms
+                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(50), 10)) // next 500 ms
+                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // next 2 s
+                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 1)) // the rest of the time
+                      .ToArray();
+
         void DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
             if (transportMessage == null)
             {
-                Thread.Sleep(20);
+                // to back off and relax then there's no messages to process, we do this
+                successiveNullMessagesReceived++;
+                var sleepTimeIndex = Math.Min(nullMessageSleepTimes.Length - 1, successiveNullMessagesReceived);
+                var timeToSleep = nullMessageSleepTimes[sleepTimeIndex];
+                Thread.Sleep(timeToSleep);
                 return;
             }
+
+            successiveNullMessagesReceived = 0;
 
             var id = transportMessage.Id;
             var label = transportMessage.Label;

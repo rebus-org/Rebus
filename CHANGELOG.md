@@ -90,3 +90,4 @@
 
 * Better handling of errors (i.e. DON'T IGNORE ERRORS) when MSMQ receive fails
 * Optimization of SQL Server transport
+* Fixed hard-to-find bug in how `SqlServerMessageQueue` would associate commands with the ongoing `SqlTransaction`

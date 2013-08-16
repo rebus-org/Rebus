@@ -20,7 +20,7 @@ namespace Rebus.Tests.Integration
         const string InputQueueName1 = "test.input1";
 
         const LogLevel MinLogLevel = LogLevel.Warn;
-        const int NumberOfWorkers = 15;
+        const int NumberOfWorkers = 10;
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 
@@ -28,7 +28,8 @@ namespace Rebus.Tests.Integration
         BuiltinContainerAdapter adapter2;
         IBus bus1;
         IBus bus2;
-
+        RebusBus rebus2;
+        
         protected override void DoSetUp()
         {
             DropMessageTable();
@@ -44,17 +45,18 @@ namespace Rebus.Tests.Integration
                                                 .EnsureTableIsCreated()
                                                 .PurgeInputQueue())
                                .MessageOwnership(o => o.Use(this))
+                               .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
                                .CreateBus();
 
-            var rebus2 =
-                (RebusBus)Configure
-                               .With(adapter2)
-                               .Logging(l => l.ColoredConsole(MinLogLevel))
-                               .Transport(t => t.UseSqlServer(ConnectionString, InputQueueName2, "error")
-                                                .EnsureTableIsCreated()
-                                                .PurgeInputQueue())
-                               .MessageOwnership(o => o.Use(this))
-                               .CreateBus();
+            rebus2 = (RebusBus)Configure
+                                   .With(adapter2)
+                                   .Logging(l => l.ColoredConsole(MinLogLevel))
+                                   .Transport(t => t.UseSqlServer(ConnectionString, InputQueueName2, "error")
+                                                    .EnsureTableIsCreated()
+                                                    .PurgeInputQueue())
+                                   .MessageOwnership(o => o.Use(this))
+                                   .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
+                                   .CreateBus();
 
             rebus1.Start(NumberOfWorkers);
             rebus2.Start(NumberOfWorkers);
@@ -63,11 +65,13 @@ namespace Rebus.Tests.Integration
             bus2 = adapter2.Bus;
         }
 
+        [TestCase(2)]
         [TestCase(10)]
+        [TestCase(40)]
         [TestCase(100)]
         [TestCase(1000)]
         [TestCase(10000)]
-        [TestCase(100000)]
+        [TestCase(100000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendMessagesFromOneToAnother(int numberOfMessages)
         {
             // bus2 owns System.String
@@ -77,11 +81,13 @@ namespace Rebus.Tests.Integration
             var signalWhenAllMessagesHaveBeenReceived = new ManualResetEvent(false);
             var receivedMessages = 0;
             var locker = new object();
-            var messageTracker = new Dictionary<int, bool>();
+            var messageTracker = new Dictionary<int, int>();
 
             adapter2.Handle<MyMessage>(msg =>
                 {
                     var result = Interlocked.Increment(ref receivedMessages);
+
+                    var id = msg.Id;
 
                     if (result < 200)
                     {
@@ -94,17 +100,12 @@ namespace Rebus.Tests.Integration
 
                     lock (locker)
                     {
-                        if (!messageTracker.ContainsKey(msg.Id))
+                        if (!messageTracker.ContainsKey(id))
                         {
-                            throw new ArgumentException(string.Format("Oh noes! Could not find ID {0} in dictionary", msg.Id));
+                            throw new ArgumentException(string.Format("Oh noes! Could not find ID {0} in dictionary", id));
                         }
 
-                        if (messageTracker[msg.Id])
-                        {
-                            throw new ArgumentException(string.Format("Oh noes! ID {0} already received!", msg.Id));
-                        }
-
-                        messageTracker[msg.Id] = true;
+                        messageTracker[id]++;
                     }
 
                     if (result == numberOfMessages)
@@ -115,22 +116,37 @@ namespace Rebus.Tests.Integration
 
             // use bus1 to send appropriate number of messages
             Enumerable.Range(0, numberOfMessages)
-                      .Select(i => new MyMessage
-                                       {
-                                           Id = i + 1,
-                                           Label = string.Format("Message # {0}", i)
-                                       })
+                      .Select(i =>
+                          {
+                              var id = i + 1;
+                              return
+                                  new MyMessage
+                                      {
+                                          Id = id,
+                                          Label = string.Format("Message # {0}", id)
+                                      };
+                          })
                       .ToList()
                       .ForEach(message =>
                           {
                               lock (locker)
                               {
+                                  if (message.Id < 200)
+                                  {
+                                      Console.WriteLine("Sending message {0}", message.Id);
+                                  }
+                                  else if (message.Id % 200 == 0)
+                                  {
+                                      Console.WriteLine("Sent {0} messages now...", message.Id);
+                                  }
                                   bus1.Send(message);
-                                  messageTracker.Add(message.Id, false);
+                                  messageTracker.Add(message.Id, 0);
                               }
                           });
 
-            var timeout = TimeSpan.FromMilliseconds(numberOfMessages * 2) + TimeSpan.FromSeconds(5);
+            var timeout = TimeSpan.FromMilliseconds(numberOfMessages*2) + TimeSpan.FromSeconds(5)
+                + 10000.Seconds();
+
             if (!signalWhenAllMessagesHaveBeenReceived.WaitOne(timeout))
             {
                 Assert.Fail("Did not receive expected {0} messages within {1} timeout",
@@ -143,11 +159,11 @@ namespace Rebus.Tests.Integration
 
             messageTracker.Count.ShouldBe(numberOfMessages);
 
-            if (messageTracker.Values.Any(v => !v))
+            if (messageTracker.Values.Any(v => v != 1))
             {
-                Assert.Fail("Did not receive the following messages: {0}",
-                            string.Join(", ", messageTracker.Where(kvp => !kvp.Value)
-                                                            .Select(kvp => kvp.Key)));
+                Assert.Fail(@"Not all messages were received exactly once!
+
+{0}", string.Join(", ", messageTracker.Where(kvp => kvp.Value != 1).Select(kvp => string.Format("{0}: {1}", kvp.Key, kvp.Value))));
             }
         }
 
