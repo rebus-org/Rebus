@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showdown.Core", "Rebus.Transports.Showdown.Core\Rebus.Transports.Showdown.Core.csproj", "{FEA9F7D9-1B00-4535-AC4D-BF3934A7B913}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", "{70E2BA9B-C9C0-4F7D-9EB8-F38286B9787E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showndown.Msmq", "Rebus.Transports.Showndown.Msmq\Rebus.Transports.Showndown.Msmq.csproj", "{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FEA9F7D9-1B00-4535-AC4D-BF3934A7B913}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FEA9F7D9-1B00-4535-AC4D-BF3934A7B913}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FEA9F7D9-1B00-4535-AC4D-BF3934A7B913}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FEA9F7D9-1B00-4535-AC4D-BF3934A7B913}.Release|Any CPU.Build.0 = Release|Any CPU
+		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7} = {70E2BA9B-C9C0-4F7D-9EB8-F38286B9787E}
+	EndGlobalSection
+EndGlobal
