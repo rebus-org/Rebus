@@ -34,32 +34,9 @@ namespace Rebus.Transports.Sql
         readonly string inputQueueName;
 
         readonly Func<ConnectionHolder> getConnection;
-        readonly Action<SqlConnection> releaseConnection;
-        readonly Action<SqlTransaction> commitAction;
-        readonly Action<SqlTransaction> rollbackAction;
-
-        class ConnectionHolder
-        {
-            public ConnectionHolder(SqlConnection connection, SqlTransaction transaction)
-            {
-                Connection = connection;
-                Transaction = transaction;
-            }
-
-            public SqlConnection Connection { get; private set; }
-            
-            public SqlTransaction Transaction { get; private set; }
-            
-            public SqlCommand CreateCommand()
-            {
-                var sqlCommand = Connection.CreateCommand();
-                if (Transaction != null)
-                {
-                    sqlCommand.Transaction = Transaction;
-                }
-                return sqlCommand;
-            }
-        }
+        readonly Action<ConnectionHolder> releaseConnection;
+        readonly Action<ConnectionHolder> commitAction;
+        readonly Action<ConnectionHolder> rollbackAction;
 
         /// <summary>
         /// Constructs the SQL Server-based Rebus transport using the specified <see cref="connectionString"/> to connect to a database,
@@ -78,25 +55,27 @@ namespace Rebus.Transports.Sql
                         connection.Open();
                         log.Debug("Starting new transaction");
                         var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                        return new ConnectionHolder(connection, transaction);
+                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
                     }
                 };
-            commitAction = t =>
+            commitAction = h =>
                 {
-                    if (t == null) return;
+                    var transaction = h.Transaction;
+                    if (transaction == null) return;
                     log.Debug("Committing!");
-                    t.Commit();
+                    transaction.Commit();
                 };
-            rollbackAction = t =>
+            rollbackAction = h =>
                 {
-                    if (t == null) return;
+                    var transaction = h.Transaction;
+                    if (transaction == null) return;
                     log.Debug("Rolling back!");
-                    t.Rollback();
+                    transaction.Rollback();
                 };
-            releaseConnection = c =>
+            releaseConnection = h =>
                 {
                     log.Debug("Disposing connection");
-                    c.Dispose();
+                    h.Dispose();
                 };
         }
 
@@ -105,15 +84,10 @@ namespace Rebus.Transports.Sql
         /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
         /// when receiving messages.
         /// </summary>
-        public SqlServerMessageQueue(Func<Tuple<SqlConnection, SqlTransaction>> connectionFactoryMethod, string messageTableName, string inputQueueName)
+        public SqlServerMessageQueue(Func<ConnectionHolder> connectionFactoryMethod, string messageTableName, string inputQueueName)
             : this(messageTableName, inputQueueName)
         {
-            getConnection = () =>
-                {
-                    var connectionAndTransaction = connectionFactoryMethod();
-                    
-                    return new ConnectionHolder(connectionAndTransaction.Item1, connectionAndTransaction.Item2);
-                };
+            getConnection = connectionFactoryMethod;
 
             // everything else is handed over to whoever provided the connection
             releaseConnection = c => { };
@@ -140,8 +114,6 @@ namespace Rebus.Transports.Sql
                                                             values (@recipient, @headers, @label, @body)",
                                                         messageTableName);
 
-                    var id = Guid.NewGuid();
-
                     log.Debug("Sending message with label {0} to {1}", destinationQueueName);
                     var label = message.Label ?? "(no label)";
 
@@ -155,14 +127,14 @@ namespace Rebus.Transports.Sql
 
                 if (!context.IsTransactional)
                 {
-                    commitAction(connection.Transaction);
+                    commitAction(connection);
                 }
             }
             finally
             {
                 if (!context.IsTransactional)
                 {
-                    releaseConnection(connection.Connection);
+                    releaseConnection(connection);
                 }
             }
         }
@@ -246,7 +218,7 @@ namespace Rebus.Transports.Sql
 
                 if (!context.IsTransactional)
                 {
-                    commitAction(connection.Transaction);
+                    commitAction(connection);
                 }
 
                 return receivedTransportMessage;
@@ -255,7 +227,7 @@ namespace Rebus.Transports.Sql
             {
                 if (!context.IsTransactional)
                 {
-                    releaseConnection(connection.Connection);
+                    releaseConnection(connection);
                 }
             }
         }
@@ -269,17 +241,15 @@ namespace Rebus.Transports.Sql
 
             if (context[ConnectionKey] != null) return (ConnectionHolder)context[ConnectionKey];
 
-            var connectionAndTransaction = getConnection();
+            var connection = getConnection();
 
-            var sqlConnection = connectionAndTransaction.Connection;
+            context.DoCommit += () => commitAction(connection);
+            context.DoRollback += () => rollbackAction(connection);
+            context.Cleanup += () => releaseConnection(connection);
 
-            context.DoCommit += () => commitAction(connectionAndTransaction.Transaction);
-            context.DoRollback += () => rollbackAction(connectionAndTransaction.Transaction);
-            context.Cleanup += () => releaseConnection(sqlConnection);
+            context[ConnectionKey] = connection;
 
-            context[ConnectionKey] = connectionAndTransaction;
-
-            return connectionAndTransaction;
+            return connection;
         }
 
         public string InputQueue { get { return inputQueueName; } }
@@ -300,7 +270,7 @@ namespace Rebus.Transports.Sql
                 {
                     log.Info("Database already contains a table named '{0}' - will not create anything",
                              messageTableName);
-                    commitAction(connection.Transaction);
+                    commitAction(connection);
                     return this;
                 }
 
@@ -328,11 +298,11 @@ CREATE TABLE [dbo].[{0}](
                     command.ExecuteNonQuery();
                 }
 
-                commitAction(connection.Transaction);
+                commitAction(connection);
             }
             finally
             {
-                releaseConnection(connection.Connection);
+                releaseConnection(connection);
             }
             return this;
         }
@@ -365,11 +335,11 @@ CREATE TABLE [dbo].[{0}](
                     command.ExecuteNonQuery();
                 }
 
-                commitAction(connection.Transaction);
+                commitAction(connection);
             }
             finally
             {
-                releaseConnection(connection.Connection);
+                releaseConnection(connection);
             }
 
             return this;

@@ -9,7 +9,7 @@ namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
     [TestFixture(typeof(MsmqTransportFactory))]
-    [TestFixture(typeof(SqlServerTransportFactory))]
+    [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {

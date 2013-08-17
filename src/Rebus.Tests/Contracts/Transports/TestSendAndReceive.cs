@@ -10,7 +10,7 @@ using Shouldly;
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
-    [TestFixture(typeof(SqlServerTransportFactory))]
+    [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(AzureServiceBusMessageQueueFactory)), Category(TestCategories.Azure)]
     [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
