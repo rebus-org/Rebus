@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Logging;
 
 namespace Rebus.Transports.Showdown.Core
 {
@@ -19,6 +20,8 @@ namespace Rebus.Transports.Showdown.Core
 
         public ShowdownRunner(string testShowdownReceiverInputQueue)
         {
+            // default to no logging
+            RebusLoggerFactory.Current = new NullLoggerFactory();
             this.testShowdownReceiverInputQueue = testShowdownReceiverInputQueue;
         }
 

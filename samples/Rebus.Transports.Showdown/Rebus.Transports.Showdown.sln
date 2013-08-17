@@ -7,6 +7,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showndown.Msmq", "Rebus.Transports.Showndown.Msmq\Rebus.Transports.Showndown.Msmq.csproj", "{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showndown.RabbitMq", "Rebus.Transports.Showndown.RabbitMq\Rebus.Transports.Showndown.RabbitMq.csproj", "{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showdown.SqlServer", "Rebus.Transports.Showdown.SqlServer\Rebus.Transports.Showdown.SqlServer.csproj", "{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,11 +25,21 @@ Global
 		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{321B2EB1-3E2F-4987-993C-4E6BA2AF92D7} = {70E2BA9B-C9C0-4F7D-9EB8-F38286B9787E}
+		{B6B36DD1-9B9F-46BD-B705-6BC36C60D28D} = {70E2BA9B-C9C0-4F7D-9EB8-F38286B9787E}
+		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE} = {70E2BA9B-C9C0-4F7D-9EB8-F38286B9787E}
 	EndGlobalSection
 EndGlobal
