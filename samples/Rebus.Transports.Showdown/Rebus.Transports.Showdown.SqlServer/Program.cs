@@ -5,7 +5,7 @@ using Rebus.Transports.Sql;
 
 namespace Rebus.Transports.Showdown.SqlServer
 {
-    class Program
+    public class Program
     {
         const string SenderInputQueue = "test.showdown.sender";
         const string ReceiverInputQueue = "test.showdown.receiver";
@@ -14,7 +14,7 @@ namespace Rebus.Transports.Showdown.SqlServer
         const string MessageTableName = SqlServerMessageQueueConfigurationExtension
             .DefaultMessagesTableName;
 
-        static void Main()
+        public static void Main()
         {
             using (var runner = new ShowdownRunner(ReceiverInputQueue))
             {

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -39,6 +40,11 @@ namespace Rebus.Transports.Showdown.Core
         {
             try
             {
+                Print(@"----------------------------------------------------------------------
+Running showdown: {0}
+----------------------------------------------------------------------",
+                                                                       Assembly.GetCallingAssembly().GetName().Name);
+
                 var receivedMessageIds = new ConcurrentDictionary<int, int>();
                 var receivedMessages = 0;
 

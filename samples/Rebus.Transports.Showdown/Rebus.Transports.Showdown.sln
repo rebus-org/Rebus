@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showndown.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showdown.SqlServer", "Rebus.Transports.Showdown.SqlServer\Rebus.Transports.Showdown.SqlServer.csproj", "{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Transports.Showdown.RunAll", "Rebus.Transports.Showdown.RunAll\Rebus.Transports.Showdown.RunAll.csproj", "{FC0575E5-CD9E-4F2A-9B01-D2C0BB66B2C9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59714F9C-7D9A-4EAC-9D66-4500E0A6B9AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC0575E5-CD9E-4F2A-9B01-D2C0BB66B2C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC0575E5-CD9E-4F2A-9B01-D2C0BB66B2C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC0575E5-CD9E-4F2A-9B01-D2C0BB66B2C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC0575E5-CD9E-4F2A-9B01-D2C0BB66B2C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

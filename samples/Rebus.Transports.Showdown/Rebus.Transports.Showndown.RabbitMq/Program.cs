@@ -5,13 +5,13 @@ using Rebus.RabbitMQ;
 
 namespace Rebus.Transports.Showndown.RabbitMq
 {
-    class Program
+    public class Program
     {
         const string SenderInputQueue = "test.showdown.sender";
         const string ReceiverInputQueue = "test.showdown.receiver";
         const string RabbitMqConnectionString = "amqp://localhost";
 
-        static void Main()
+        public static void Main()
         {
             using (var runner = new ShowdownRunner(ReceiverInputQueue))
             {

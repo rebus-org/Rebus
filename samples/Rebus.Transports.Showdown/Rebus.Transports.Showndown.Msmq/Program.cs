@@ -5,12 +5,12 @@ using Rebus.Logging;
 
 namespace Rebus.Transports.Showndown.Msmq
 {
-    class Program
+    public class Program
     {
         const string SenderInputQueue = "test.showdown.sender";
         const string ReceiverInputQueue = "test.showdown.receiver";
 
-        static void Main()
+        public static void Main()
         {
             using (var runner = new ShowdownRunner(ReceiverInputQueue))
             {
