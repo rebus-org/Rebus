@@ -16,6 +16,7 @@ namespace Rebus.Transports.Sql
     /// way described here: <see cref="http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/"/>
     /// (which means that the table is queried with a <code>top 1 ... with (updlock, readpast)</code>, allowing for many concurent reads without
     /// unintentional locking).
+    /// (alternative implementation: http://stackoverflow.com/questions/10820105/t-sql-delete-except-top-1)
     /// </summary>
     public class SqlServerMessageQueue : IDuplexTransport, IDisposable
     {
@@ -156,14 +157,15 @@ namespace Rebus.Transports.Sql
                     selectCommand.CommandText =
                         string.Format(
                             @"
-                                ;WITH msg AS (
+                                ;with msg as (
 	                                select top 1 [seq], [headers], [label], [body]
 		                                from [{0}]
+                                        with (updlock, readpast, rowlock)
 		                                where [recipient] = @recipient
 		                                order by [seq] asc
 	                                )
                                 delete msg
-                                output DELETED.seq, DELETED.headers, DELETED.body, DELETED.label
+                                output deleted.seq, deleted.headers, deleted.body, deleted.label
 ",
                             messageTableName);
 
