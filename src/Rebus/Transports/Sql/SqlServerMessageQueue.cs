@@ -154,22 +154,32 @@ namespace Rebus.Transports.Sql
                 {
                     selectCommand.Transaction = connection.Transaction;
 
+//                    selectCommand.CommandText =
+//                        string.Format(
+//                            @"
+//                                ;with msg as (
+//	                                select top 1 [seq], [headers], [label], [body]
+//		                                from [{0}]
+//                                        with (updlock, readpast, rowlock)
+//		                                where [recipient] = @recipient
+//		                                order by [seq] asc
+//	                                )
+//                                delete msg
+//                                output deleted.seq, deleted.headers, deleted.body, deleted.label
+//",
+//                            messageTableName);
                     selectCommand.CommandText =
-                        string.Format(
-                            @"
-                                ;with msg as (
-	                                select top 1 [seq], [headers], [label], [body]
+                        string.Format(@"
+                                    select top 1 [seq], [headers], [label], [body]
 		                                from [{0}]
                                         with (updlock, readpast, rowlock)
 		                                where [recipient] = @recipient
 		                                order by [seq] asc
-	                                )
-                                delete msg
-                                output deleted.seq, deleted.headers, deleted.body, deleted.label
-",
-                            messageTableName);
+", messageTableName);
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
+
+                    var seq = 0L;
 
                     using (var reader = selectCommand.ExecuteReader())
                     {
@@ -178,8 +188,8 @@ namespace Rebus.Transports.Sql
                             var headers = reader["headers"];
                             var label = reader["label"];
                             var body = reader["body"];
-                            var seq = (long)reader["seq"];
-                            
+                            seq = (long)reader["seq"];
+
                             var headersDictionary = DictionarySerializer.Deserialize((string)headers);
                             var messageId = seq.ToString(CultureInfo.InvariantCulture);
 
@@ -197,30 +207,30 @@ namespace Rebus.Transports.Sql
                         }
                     }
 
-                    //if (receivedTransportMessage != null)
-                    //{
-                    //    using (var deleteCommand = connection.Connection.CreateCommand())
-                    //    {
-                    //        deleteCommand.Transaction = connection.Transaction;
+                    if (receivedTransportMessage != null)
+                    {
+                        using (var deleteCommand = connection.Connection.CreateCommand())
+                        {
+                            deleteCommand.Transaction = connection.Transaction;
 
-                    //        deleteCommand.CommandText =
-                    //            string.Format("delete from [{0}] where [recipient] = @recipient and [seq] = @seq",
-                    //                          messageTableName);
+                            deleteCommand.CommandText =
+                                string.Format("delete from [{0}] where [recipient] = @recipient and [seq] = @seq",
+                                              messageTableName);
 
-                    //        deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
-                    //        deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8).Value = seq;
+                            deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
+                            deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8).Value = seq;
 
-                    //        var rowsAffected = deleteCommand.ExecuteNonQuery();
+                            var rowsAffected = deleteCommand.ExecuteNonQuery();
 
-                    //        if (rowsAffected != 1)
-                    //        {
-                    //            throw new ApplicationException(
-                    //                string.Format(
-                    //                    "Attempted to delete message with recipient = '{0}' and seq = {1}, but {2} rows were affected!",
-                    //                    inputQueueName, seq, rowsAffected));
-                    //        }
-                    //    }
-                    //}
+                            if (rowsAffected != 1)
+                            {
+                                throw new ApplicationException(
+                                    string.Format(
+                                        "Attempted to delete message with recipient = '{0}' and seq = {1}, but {2} rows were affected!",
+                                        inputQueueName, seq, rowsAffected));
+                            }
+                        }
+                    }
                 }
 
                 if (!context.IsTransactional)
