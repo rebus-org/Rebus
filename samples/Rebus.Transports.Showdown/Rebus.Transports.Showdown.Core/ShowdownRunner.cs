@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -12,18 +13,41 @@ namespace Rebus.Transports.Showdown.Core
 {
     public class ShowdownRunner : IDisposable, IDetermineMessageOwnership
     {
-        const int MessageCount = 10000;
-        const int NumberOfWorkers = 10;
+        const int MessageCount = 1000000;
+        const int NumberOfWorkers = 15;
 
         readonly string testShowdownReceiverInputQueue;
         readonly BuiltinContainerAdapter senderAdapter = new BuiltinContainerAdapter();
         readonly BuiltinContainerAdapter receiverAdapter = new BuiltinContainerAdapter();
+        readonly string resultsFileName;
 
         public ShowdownRunner(string testShowdownReceiverInputQueue)
         {
             // default to no logging
             RebusLoggerFactory.Current = new NullLoggerFactory();
             this.testShowdownReceiverInputQueue = testShowdownReceiverInputQueue;
+            resultsFileName = GenerateFileName();
+            EnsureDirectoryExists(resultsFileName);
+        }
+
+        void EnsureDirectoryExists(string fileName)
+        {
+            var dir = Path.GetDirectoryName(fileName);
+            if (Directory.Exists(dir)) return;
+            Directory.CreateDirectory(dir);
+        }
+
+        string GenerateFileName()
+        {
+            string potentialFileName;
+            var counter = 1;
+            do
+            {
+                potentialFileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "results",
+                                                 string.Format("output-{0}.txt", counter++));
+            } while (File.Exists(potentialFileName));
+
+            return potentialFileName;
         }
 
         public BuiltinContainerAdapter SenderAdapter
@@ -105,6 +129,7 @@ Running showdown: {0}
         void Print(string message, params object[] objs)
         {
             Console.WriteLine(message, objs);
+            File.AppendAllText(resultsFileName, string.Format(message, objs) + Environment.NewLine);
         }
 
         public void Dispose()
