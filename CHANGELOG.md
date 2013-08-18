@@ -95,3 +95,7 @@
 ## 0.35.3
 
 * Added transport performance showdown
+
+## 0.35.4
+
+* Only one SQL roundtrip to receive a message
