@@ -183,7 +183,7 @@ namespace Rebus.Transports.Sql
 //delete top(1) from [{0}] 
 //output deleted.seq, deleted.headers, deleted.body, deleted.label
 //where [seq] = (
-//    select min([seq]) from [{0}] with (xlock, readpast) where recipient = @recipient
+//    select min([seq]) from [{0}] with (readpast, holdlock) where recipient = @recipient
 //)
 //", messageTableName);
 

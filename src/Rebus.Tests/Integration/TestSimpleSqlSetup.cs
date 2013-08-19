@@ -144,8 +144,7 @@ namespace Rebus.Tests.Integration
                               }
                           });
 
-            var timeout = TimeSpan.FromMilliseconds(numberOfMessages*2) + TimeSpan.FromSeconds(5)
-                + 10000.Seconds();
+            var timeout = TimeSpan.FromMilliseconds(numberOfMessages*2) + TimeSpan.FromSeconds(5);
 
             if (!signalWhenAllMessagesHaveBeenReceived.WaitOne(timeout))
             {
