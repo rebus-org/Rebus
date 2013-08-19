@@ -168,6 +168,7 @@ namespace Rebus.Transports.Sql
 //                                output deleted.seq, deleted.headers, deleted.body, deleted.label
 //",
 //                            messageTableName);
+
                     selectCommand.CommandText =
                         string.Format(@"
                                     select top 1 [seq], [headers], [label], [body]
@@ -176,6 +177,15 @@ namespace Rebus.Transports.Sql
 		                                where [recipient] = @recipient
 		                                order by [seq] asc
 ", messageTableName);
+
+//                    selectCommand.CommandText =
+//                        string.Format(@"
+//delete top(1) from [{0}] 
+//output deleted.seq, deleted.headers, deleted.body, deleted.label
+//where [seq] = (
+//    select min([seq]) from [{0}] with (xlock, readpast) where recipient = @recipient
+//)
+//", messageTableName);
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
 

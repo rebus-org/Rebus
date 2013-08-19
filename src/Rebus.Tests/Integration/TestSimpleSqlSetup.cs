@@ -20,7 +20,7 @@ namespace Rebus.Tests.Integration
         const string InputQueueName1 = "test.input1";
 
         const LogLevel MinLogLevel = LogLevel.Warn;
-        const int NumberOfWorkers = 10;
+        const int NumberOfWorkers = 1;
 
         readonly ConcurrentDictionary<Type, string> endpointMappings = new ConcurrentDictionary<Type, string>();
 
