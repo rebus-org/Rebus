@@ -19,6 +19,28 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
+        /// Configures whether or not outgoing messages of this type (including derived types) should have
+        /// their 'persistent' flag set in the message properties.
+        /// </summary>
+        public RabbitMqOptions ConfigurePersistenceFor<TMessage>(bool persistent)
+        {
+            configurer
+                .Backbone
+                .ConfigureEvents(e =>
+                    {
+                        e.MessageSent += (bus, destination, message) =>
+                            {
+                                if (!(message is TMessage)) return;
+
+                                bus.AttachHeader(message,
+                                                 RabbitMqMessageQueue.InternalHeaders.MessageDurability,
+                                                 persistent.ToString());
+                            };
+                    });
+            return this;
+        }
+
+        /// <summary>
         /// Specifies that Rabbit should be used to route messages when doing multicast. This effectively
         /// lets Rabbit be the subscription storage, and allows for subscribing to messages without having
         /// any endpoint mappings at all.

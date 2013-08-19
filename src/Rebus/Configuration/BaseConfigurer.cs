@@ -21,6 +21,9 @@ namespace Rebus.Configuration
             this.backbone = backbone;
         }
 
+        /// <summary>
+        /// Accesses the backbone that this configurer is currently applying its configurations to
+        /// </summary>
         public ConfigurationBackbone Backbone
         {
             get { return backbone; }

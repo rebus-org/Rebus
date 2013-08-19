@@ -99,3 +99,4 @@
 ## 0.35.4
 
 * Only one SQL roundtrip to receive a message
+* API to configure whether outgoing RabbitMQ messages should be persistent

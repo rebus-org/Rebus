@@ -18,6 +18,11 @@ namespace Rebus.RabbitMQ
     /// </summary>
     public class RabbitMqMessageQueue : IMulticastTransport, IDisposable, INeedInitializationBeforeStart
     {
+        public static class InternalHeaders
+        {
+            public const string MessageDurability = "rmq-msg-durability";
+        }
+
         static readonly Encoding Encoding = Encoding.UTF8;
         static readonly TimeSpan BackoffTime = TimeSpan.FromMilliseconds(500);
         static ILog log;
@@ -506,6 +511,8 @@ namespace Rebus.RabbitMQ
         {
             var props = modelToUse.CreateBasicProperties();
 
+            var persistentMessage = true;
+
             if (message.Headers != null)
             {
                 props.Headers = message.Headers
@@ -548,10 +555,27 @@ namespace Rebus.RabbitMQ
                             timeToBeReceived), e);
                     }
                 }
+
+                if (message.Headers.ContainsKey(InternalHeaders.MessageDurability))
+                {
+                    var durableMessages = (message.Headers[InternalHeaders.MessageDurability] ?? "").ToString();
+
+                    bool result;
+                    if (bool.TryParse(durableMessages, out result))
+                    {
+                        persistentMessage = result;
+                    }
+                    else
+                    {
+                        throw new ArgumentException(
+                            string.Format("Could not parse the value '{0}' from the '{1}' header into a proper bool",
+                                          durableMessages, InternalHeaders.MessageDurability));
+                    }
+                }
             }
 
             props.MessageId = Guid.NewGuid().ToString();
-            props.SetPersistent(true);
+            props.SetPersistent(persistentMessage);
 
             return props;
         }

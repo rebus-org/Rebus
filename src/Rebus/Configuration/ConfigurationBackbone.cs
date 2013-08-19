@@ -33,6 +33,14 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Configures events
+        /// </summary>
+        public void ConfigureEvents(Action<IRebusEvents> configure)
+        {
+            configure(new EventsConfigurer(this));
+        }
+
+        /// <summary>
         /// Determines how Rebus will send messages
         /// </summary>
         public ISendMessages SendMessages { get; set; }
