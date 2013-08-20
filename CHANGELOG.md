@@ -104,3 +104,7 @@
 ## 0.35.5
 
 * Special username header will flow like correlation ID if it is present
+
+## 0.35.6
+
+* Behavior option to allow for impersonating a proper user when the user name header is present on handled messages

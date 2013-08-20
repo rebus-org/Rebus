@@ -1,5 +1,8 @@
 using System;
+using System.Security.Principal;
+using System.Threading;
 using System.Transactions;
+using Rebus.Shared;
 
 namespace Rebus.Configuration
 {
@@ -35,6 +38,38 @@ namespace Rebus.Configuration
         public RebusBehaviorConfigurer HandleMessagesInsideTransactionScope()
         {
             Backbone.AddConfigurationStep(b => b.AdditionalBehavior.HandleMessagesInTransactionScope = true);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures Rebus to establish an <see cref="IPrincipal"/> and set it on <see cref="Thread.CurrentPrincipal"/>
+        /// if the special <see cref="Headers.UserName"/> header is present. It will only be set if the user name header
+        /// is present and if the value does in fact contain something.
+        /// </summary>
+        public RebusBehaviorConfigurer SetCurrentPrincipalWhenUserNameHeaderIsPresent()
+        {
+            Backbone.ConfigureEvents(e =>
+                {
+                    e.MessageContextEstablished +=
+                        (bus, context) =>
+                            {
+                                // if no user name header is present, just bail out
+                                if (!context.Headers.ContainsKey(Headers.UserName)) return;
+                                
+                                var userName = context.Headers[Headers.UserName].ToString();
+                                
+                                // only accept user name if it does in fact contain something
+                                if (string.IsNullOrWhiteSpace(userName)) return;
+
+                                // be sure to store the current principal to be able to restore it later
+                                var currentPrincipal = Thread.CurrentPrincipal;
+                                context.Disposed += () => Thread.CurrentPrincipal = currentPrincipal;
+
+                                // now set the principal for the duration of the message context
+                                var principalForThisUser = new GenericPrincipal(new GenericIdentity(userName), new string[0]);
+                                Thread.CurrentPrincipal = principalForThisUser;
+                            };
+                });
             return this;
         }
     }
