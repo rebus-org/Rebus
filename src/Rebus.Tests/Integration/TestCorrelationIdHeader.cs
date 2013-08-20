@@ -13,7 +13,7 @@ using Rebus.Logging;
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.Integration)]
-    public class TestCorrelationId : FixtureBase, IDetermineMessageOwnership, IStoreSubscriptions
+    public class TestCorrelationIdHeader : FixtureBase, IDetermineMessageOwnership, IStoreSubscriptions
     {
         const string InputQueueName = "test.correlationId.flow.input";
 

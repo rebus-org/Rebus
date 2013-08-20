@@ -469,6 +469,12 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.CorrelationId, messageContext.Headers[Headers.CorrelationId].ToString());
             }
 
+            // transfer username to reply if it is present in the current message context
+            if (messageContext.Headers.ContainsKey(Headers.UserName))
+            {
+                AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
+            }
+
             InternalSend(returnAddress, messages);
         }
 
@@ -508,14 +514,26 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
             }
 
-            // if we're currently handling a message with a correlation ID, make sure it flows...
-            if (MessageContext.HasCurrent && !headers.ContainsKey(Headers.CorrelationId))
+            if (MessageContext.HasCurrent)
             {
                 var messageContext = MessageContext.GetCurrent();
 
-                if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                // if we're currently handling a message with a correlation ID, make sure it flows...
+                if (!headers.ContainsKey(Headers.CorrelationId))
                 {
-                    headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                    if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                    {
+                        headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                    }
+                }
+
+                // if we're currently handling a message with a user name, make sure it flows...
+                if (!headers.ContainsKey(Headers.UserName))
+                {
+                    if (messageContext.Headers.ContainsKey(Headers.UserName))
+                    {
+                        headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
+                    }
                 }
             }
 

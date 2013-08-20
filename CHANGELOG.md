@@ -100,3 +100,7 @@
 
 * Only one SQL roundtrip to receive a message
 * API to configure whether outgoing RabbitMQ messages should be persistent
+
+## 0.35.5
+
+* Special username header will flow like correlation ID if it is present

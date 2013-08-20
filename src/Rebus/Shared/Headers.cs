@@ -81,7 +81,15 @@ namespace Rebus.Shared
 
         /// <summary>
         /// Special header that will flow through message handlers and be automatically transferred to all outgoing messages.
+        /// Will automatically be set to a globally unique ID if it is not present on an outgoing message. Thus it may be
+        /// used to track cause/effect in messaging-based solutions.
         /// </summary>
         public const string CorrelationId = "rebus-correlation-id";
+       
+        /// <summary>
+        /// Special header that will flow though message handlers like <see cref="CorrelationId"/>, provided that it is present.
+        /// If not, nothing happens. Thus it may be used to authenticate messages and establish a user context within message handlers.
+        /// </summary>
+        public const string UserName = "rebus-username";
     }
 }

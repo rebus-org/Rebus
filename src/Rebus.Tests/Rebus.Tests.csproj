@@ -189,6 +189,7 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestUserNameHeader.cs" />
     <Compile Include="Integration\Factories\BusFactoryBase.cs" />
     <Compile Include="Integration\Factories\ExternalTimeoutManagerFactory.cs" />
     <Compile Include="Integration\Factories\IBusFactory.cs" />
@@ -202,7 +203,7 @@
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
     <Compile Include="Integration\TestConfigurableTransactionScope.cs" />
-    <Compile Include="Integration\TestCorrelationId.cs" />
+    <Compile Include="Integration\TestCorrelationIdHeader.cs" />
     <Compile Include="Integration\TestCorrelation.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageMutation.cs" />
