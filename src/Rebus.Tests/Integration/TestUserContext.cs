@@ -35,6 +35,39 @@ namespace Rebus.Tests.Integration
             adapter.Dispose();
         }
 
+        [Test, Description("Just to be sure that the right Thread.CurrentPrincipal is available when the container must resolve the handlers")]
+        public void PrincipalHasBeenEstablishedAtTheTimeWhenHandlersAreResolved()
+        {
+            // arrange
+            adapter.Register(typeof(JustAHandlerThatCanSnatchThePrincipal));
+
+            var message = new SomeMessage();
+            bus.AttachHeader(message, Headers.UserName, "joe");
+
+            // act
+            bus.SendLocal(message);
+            Thread.Sleep(1.Seconds());
+
+            // assert
+            var snatchedPrincipal = JustAHandlerThatCanSnatchThePrincipal.CurrentPrincipal;
+            snatchedPrincipal.ShouldNotBe(null);
+            snatchedPrincipal.Identity.Name.ShouldBe("joe");
+        }
+
+        class JustAHandlerThatCanSnatchThePrincipal : IHandleMessages<SomeMessage>
+        {
+            public JustAHandlerThatCanSnatchThePrincipal()
+            {
+                CurrentPrincipal = Thread.CurrentPrincipal;
+            }
+
+            public static IPrincipal CurrentPrincipal { get; private set; }
+
+            public void Handle(SomeMessage message)
+            {
+            }
+        }
+
         [Test]
         public void EstablishesCurrentPrincipalWhenHandledMessageHasUserName()
         {
