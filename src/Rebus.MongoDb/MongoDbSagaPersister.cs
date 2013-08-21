@@ -8,6 +8,7 @@ using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
 using System.Linq;
+using Ponder;
 using Rebus.Logging;
 
 namespace Rebus.MongoDb
@@ -21,7 +22,7 @@ namespace Rebus.MongoDb
     {
         const string IdElementName = "_id";
 
-        static readonly SagaDataElementNameConvention ElementNameConventions;
+        //static readonly SagaDataElementNameConvention ElementNameConventions;
         static readonly string RevisionMemberName;
         static ILog log;
 
@@ -30,12 +31,45 @@ namespace Rebus.MongoDb
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
 
             // try to use our own naming convention
-            var namingConvention = new SagaDataElementNameConvention();
-            RevisionMemberName = namingConvention.RevisionMemberName;
-            ElementNameConventions = namingConvention;
+            //var namingConvention = new SagaDataElementNameConvention();
+            //ElementNameConventions = namingConvention;
 
-            var conventionProfile = new ConventionProfile().SetElementNameConvention(ElementNameConventions);
-            BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
+            //var conventionProfile = new ConventionProfile().SetElementNameConvention(ElementNameConventions);
+            //BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
+            RevisionMemberName = namingConvention.RevisionMemberName;
+            ConventionRegistry.Register("SagaDataConventionPack",
+                                        namingConvention,
+                                        t => typeof (ISagaData).IsAssignableFrom(t));
+        }
+
+        class SagaDataNamingConvention : IConventionPack, IMemberMapConvention
+        {
+            public SagaDataNamingConvention()
+            {
+                RevisionMemberName = Reflect.Path<ISagaData>(d => d.Revision);
+            }
+
+            public IEnumerable<IConvention> Conventions
+            {
+                get { yield return this; }
+            }
+
+            public string Name { get; private set; }
+
+            public string RevisionMemberName { get; private set; }
+
+            public void Apply(BsonMemberMap memberMap)
+            {
+                int a = 2;
+                //memberMap.n
+            }
+
+            public string GetElementName(PropertyInfo propertyInfo)
+            {
+                return propertyInfo.Name == RevisionMemberName
+                           ? "_rev"
+                           : propertyInfo.Name;
+            }
         }
 
         readonly Dictionary<Type, string> collectionNames = new Dictionary<Type, string>();
@@ -50,6 +84,7 @@ namespace Rebus.MongoDb
         readonly object indexEnsuredRecentlyLock = new object();
 
         bool allowAutomaticSagaCollectionNames;
+        static readonly SagaDataNamingConvention namingConvention = new SagaDataNamingConvention();
 
         /// <summary>
         /// Constructs the persister which will connect to the Mongo database pointed to by the connection string.
@@ -83,7 +118,7 @@ namespace Rebus.MongoDb
         /// </summary>
         public MongoDbSagaPersister SetCollectionName<TSagaData>(string collectionName) where TSagaData : ISagaData
         {
-            var sagaDataType = typeof (TSagaData);
+            var sagaDataType = typeof(TSagaData);
 
             if (collectionNames.ContainsKey(sagaDataType))
             {
@@ -93,14 +128,14 @@ namespace Rebus.MongoDb
                                   " this is most likely be an indication that some initialization part of your code is" +
                                   " running twice, which could have unintended consequences",
                                   sagaDataType, collectionName, collectionNames[sagaDataType]);
-                
+
                 throw new InvalidOperationException(errorMessage);
             }
 
             log.Info("Saga data of type {0} will be stored in collection named {1}", sagaDataType, collectionName);
 
             collectionNames.Add(sagaDataType, collectionName);
-            
+
             return this;
         }
 
@@ -355,7 +390,7 @@ which will make the persister use the type of the saga to come up with collectio
             if (propertyInfo == null)
                 return sagaDataPropertyPath;
 
-            return ElementNameConventions.GetElementName(propertyInfo);
+            return namingConvention.GetElementName(propertyInfo);
         }
 
         void EnsureResultIsGood(WriteConcernResult writeConcernResult, string message, int expectedNumberOfAffectedDocuments, params object[] objs)
