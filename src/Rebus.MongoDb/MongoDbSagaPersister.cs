@@ -33,6 +33,7 @@ namespace Rebus.MongoDb
             var namingConvention = new SagaDataElementNameConvention();
             RevisionMemberName = namingConvention.RevisionMemberName;
             ElementNameConventions = namingConvention;
+
             var conventionProfile = new ConventionProfile().SetElementNameConvention(ElementNameConventions);
             BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
         }
