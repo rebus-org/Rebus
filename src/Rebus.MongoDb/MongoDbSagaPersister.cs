@@ -22,7 +22,6 @@ namespace Rebus.MongoDb
     {
         const string IdElementName = "_id";
 
-        //static readonly SagaDataElementNameConvention ElementNameConventions;
         static readonly string RevisionMemberName;
         static ILog log;
 
@@ -31,12 +30,8 @@ namespace Rebus.MongoDb
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
 
             // try to use our own naming convention
-            //var namingConvention = new SagaDataElementNameConvention();
-            //ElementNameConventions = namingConvention;
-
-            //var conventionProfile = new ConventionProfile().SetElementNameConvention(ElementNameConventions);
-            //BsonClassMap.RegisterConventions(conventionProfile, t => typeof(ISagaData).IsAssignableFrom(t));
             RevisionMemberName = namingConvention.RevisionMemberName;
+            
             ConventionRegistry.Register("SagaDataConventionPack",
                                         namingConvention,
                                         t => typeof (ISagaData).IsAssignableFrom(t));
