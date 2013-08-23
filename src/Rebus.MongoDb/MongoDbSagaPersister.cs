@@ -55,8 +55,10 @@ namespace Rebus.MongoDb
 
             public void Apply(BsonMemberMap memberMap)
             {
-                int a = 2;
-                //memberMap.n
+                if (memberMap.MemberName == RevisionMemberName)
+                {
+                    memberMap.SetElementName("_rev");
+                }
             }
 
             public string GetElementName(PropertyInfo propertyInfo)
