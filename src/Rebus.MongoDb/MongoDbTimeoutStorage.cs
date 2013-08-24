@@ -59,18 +59,22 @@ namespace Rebus.MongoDb
 
             return result
                 .Select(r => new DueMongoTimeout(r[ReplyToProperty].AsString,
-                                                 r.Contains(CorrIdProperty)
-                                                     ? r[CorrIdProperty].AsString
-                                                     : "",
-                                                 r[TimeProperty].AsDateTime,
-                                                 r.Contains(SagaIdProperty)
-                                                     ? r[SagaIdProperty].AsGuid
-                                                     : Guid.Empty,
-                                                 r.Contains(DataProperty)
-                                                     ? r[DataProperty].AsString
-                                                     : "",
+                                                 GetString(r, CorrIdProperty),
+                                                 r[TimeProperty].ToUniversalTime(),
+                                                 GetGuid(r, SagaIdProperty),
+                                                 GetString(r, DataProperty),
                                                  collection,
                                                  (ObjectId) r[IdProperty]));
+        }
+
+        static Guid GetGuid(BsonDocument doc, string propertyName)
+        {
+            return doc.Contains(propertyName) ? doc[propertyName].AsGuid : Guid.Empty;
+        }
+
+        static string GetString(BsonDocument doc, string propertyName)
+        {
+            return doc.Contains(propertyName) ? doc[propertyName].AsString : "";
         }
 
         class DueMongoTimeout : DueTimeout
