@@ -112,3 +112,7 @@
 ## 0.36.0
 
 * Updated Mongo stuff to use 1.8.1 driver and no deprecated APIs
+
+## 0.36.1
+
+* Update Mongo to 1.8.2 because that's the most recent version of the driver... duh!

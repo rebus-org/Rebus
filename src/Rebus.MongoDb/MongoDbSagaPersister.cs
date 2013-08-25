@@ -309,7 +309,7 @@ which will make the persister use the type of the saga to come up with collectio
                     {
                         log.Info("Re-declaring indexes with unique constraints for the following paths: {0}", string.Join(", ", sagaDataPropertyPathsToIndex));
 
-                        collection.ResetIndexCache();
+                        //collection.ResetIndexCache();
 
                         //                        var indexes = collection.GetIndexes();
 
