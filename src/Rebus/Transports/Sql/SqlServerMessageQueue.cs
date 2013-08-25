@@ -13,12 +13,12 @@ namespace Rebus.Transports.Sql
 {
     /// <summary>
     /// SQL Server-based message queue that uses one single table to store all messages. Messages are received in the
-    /// way described here: <see cref="http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/"/>
+    /// way described here: http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/
     /// (which means that the table is queried with a <code>top 1 ... with (updlock, readpast)</code>, allowing for many concurent reads without
     /// unintentional locking).
     /// (alternative implementation: http://stackoverflow.com/questions/10820105/t-sql-delete-except-top-1)
     /// </summary>
-    public class SqlServerMessageQueue : IDuplexTransport, IDisposable
+    public class SqlServerMessageQueue : IDuplexTransport
     {
         const string ConnectionKey = "sql-server-message-queue-current-connection";
         const int Max = -1;
@@ -40,8 +40,8 @@ namespace Rebus.Transports.Sql
         readonly Action<ConnectionHolder> rollbackAction;
 
         /// <summary>
-        /// Constructs the SQL Server-based Rebus transport using the specified <see cref="connectionString"/> to connect to a database,
-        /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
+        /// Constructs the SQL Server-based Rebus transport using the specified <paramref name="connectionString"/> to connect to a database,
+        /// storing messages in the table with the specified name, using <paramref cref="inputQueueName"/> as the logical input queue name
         /// when receiving messages.
         /// </summary>
         public SqlServerMessageQueue(string connectionString, string messageTableName, string inputQueueName)
@@ -102,6 +102,11 @@ namespace Rebus.Transports.Sql
             this.inputQueueName = inputQueueName;
         }
 
+        /// <summary>
+        /// Sends the specified <see cref="TransportMessageToSend"/> to the logical queue specified by <paramref name="destinationQueueName"/>.
+        /// What actually happens, is that a row is inserted into the messages table, setting the 'recipient' column to the specified
+        /// queue.
+        /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var connection = GetConnectionPossiblyFromContext(context);
@@ -140,6 +145,10 @@ namespace Rebus.Transports.Sql
             }
         }
 
+        /// <summary>
+        /// Receives a message from the logical queue specified as this instance's input queue. What actually
+        /// happens, is that a row is read and locked in the messages table, whereafter it is deleted.
+        /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             AssertNotInOneWayClientMode();
@@ -279,8 +288,16 @@ namespace Rebus.Transports.Sql
             return connection;
         }
 
+        /// <summary>
+        /// Gets the name of this receiver's input queue - i.e. this is the queue that this receiver
+        /// will pull messages from.
+        /// </summary>
         public string InputQueue { get { return inputQueueName; } }
 
+        /// <summary>
+        /// Gets the globally accessible adddress of this receiver's input queue - i.e. this would probably
+        /// be the input queue in some form, possible qualified by machine name or something similar.
+        /// </summary>
         public string InputQueueAddress { get { return inputQueueName; } }
 
         /// <summary>
@@ -334,10 +351,6 @@ CREATE TABLE [dbo].[{0}](
             return this;
         }
 
-        public void Dispose()
-        {
-        }
-
         /// <summary>
         /// Deletes all the messages from the message table that have the current input queue specified as the recipient
         /// </summary>
@@ -372,6 +385,9 @@ CREATE TABLE [dbo].[{0}](
             return this;
         }
 
+        /// <summary>
+        /// Creates a <see cref="SqlServerMessageQueue"/> that is capable of sending only.
+        /// </summary>
         public static SqlServerMessageQueue Sender(string connectionString, string messageTableName)
         {
             return new SqlServerMessageQueue(connectionString, messageTableName, null);

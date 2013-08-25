@@ -61,6 +61,9 @@ namespace Rebus.Transports.Sql
             return sqlCommand;
         }
 
+        /// <summary>
+        /// Ensures that the ongoing transaction is disposed and the held connection is disposed
+        /// </summary>
         public void Dispose()
         {
             if (Transaction != null)

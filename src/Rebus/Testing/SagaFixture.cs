@@ -346,12 +346,15 @@ namespace Rebus.Testing
             AddSagaData(someSagaData);
         }
 
-        IEnumerator<TSagaData> IEnumerable<TSagaData>.GetEnumerator()
+        /// <summary>
+        /// Enumerates all persistent saga data
+        /// </summary>
+        public IEnumerator GetEnumerator()
         {
             return AvailableSagaData.GetEnumerator();
         }
 
-        public IEnumerator GetEnumerator()
+        IEnumerator<TSagaData> IEnumerable<TSagaData>.GetEnumerator()
         {
             return AvailableSagaData.GetEnumerator();
         }

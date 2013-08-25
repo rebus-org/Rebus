@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
+using Rhino.Mocks;
 using Shouldly;
 using System.Linq;
 
@@ -110,7 +109,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
 
             public SomeDisposableSingleton()
             {
-                Events = new SomeTestRebusEvents();
+                Events = MockRepository.GenerateMock<IRebusEvents>();
             }
 
             public void Dispose()
@@ -168,22 +167,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
-
-            class SomeTestRebusEvents : IRebusEvents
-            {
-                public event BeforeTransportMessageEventHandler BeforeTransportMessage;
-                public event AfterTransportMessageEventHandler AfterTransportMessage;
-                public event PoisonMessageEventHandler PoisonMessage;
-                public event MessageSentEventHandler MessageSent;
-                public event BeforeMessageEventHandler BeforeMessage;
-                public event AfterMessageEventHandler AfterMessage;
-                public event UncorrelatedMessageEventHandler UncorrelatedMessage;
-                public event MessageContextEstablishedEventHandler MessageContextEstablished;
-                public ICollection<IMutateMessages> MessageMutators { get; private set; }
-                public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
-                {
-                }
-            }
         }
     }
 }

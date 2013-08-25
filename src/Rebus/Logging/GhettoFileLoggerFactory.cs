@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Timers;
 using System.Linq;
@@ -40,12 +41,20 @@ namespace Rebus.Logging
             return this;
         }
 
+        /// <summary>
+        /// Ensure, in the most hackish way possible, that the buffer is flushed to disk and that the background flush timer is stopped
+        /// </summary>
         ~GhettoFileLoggerFactory()
         {
-            Flush();
-
-            flushTimer.Stop();
-            flushTimer.Dispose();
+            try
+            {
+                flushTimer.Stop();
+                flushTimer.Dispose();
+            }
+            finally
+            {
+                Flush();
+            }
         }
 
         void Flush()
@@ -72,8 +81,9 @@ namespace Rebus.Logging
                     currentBatchToBeWritten.Clear();
                 }
             }
-            catch
+            catch (Exception)
             {
+                // nothing to do at this point - just don't emit any errors...
             }
         }
 
@@ -82,21 +92,27 @@ namespace Rebus.Logging
             return string.Join("|",
                                new[]
                                    {
-                                       message.Time.ToString(),
+                                       message.Time.ToString(CultureInfo.InvariantCulture),
                                        message.Level.ToString(),
                                        message.LoggerType.Name,
                                        message.Message
                                    });
         }
 
+        /// <summary>
+        /// Gets a <see cref="CrudeFileLogger"/> to log yo stuff good
+        /// </summary>
         protected override ILog GetLogger(Type type)
         {
             return new CrudeFileLogger(type, logMessages, messageFilters);
         }
 
+        /// <summary>
+        /// Model of a log message that has been queued to be flushed to disk later
+        /// </summary>
         public class LogMessage
         {
-            public LogMessage(Type loggerType, string message, LogLevel level)
+            internal LogMessage(Type loggerType, string message, LogLevel level)
             {
                 LoggerType = loggerType;
                 Time = DateTime.Now;
@@ -104,12 +120,24 @@ namespace Rebus.Logging
                 Level = level;
             }
 
+            /// <summary>
+            /// Indicates the type from which the logger that created the log message was created
+            /// </summary>
             public Type LoggerType { get; private set; }
 
+            /// <summary>
+            /// The time when this log message was emitted
+            /// </summary>
             public DateTime Time { get; private set; }
 
+            /// <summary>
+            /// The log message
+            /// </summary>
             public string Message { get; private set; }
 
+            /// <summary>
+            /// The log level
+            /// </summary>
             public LogLevel Level { get; private set; }
         }
 

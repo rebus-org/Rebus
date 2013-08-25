@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Sql;
 
@@ -8,7 +7,6 @@ namespace Rebus.Tests.Contracts.Transports.Factories
     public class SqlServerTransportFactory : ITransportFactory
     {
         const string MessageTableName = "messages2";
-        readonly List<IDisposable> disposables = new List<IDisposable>();
 
         public SqlServerTransportFactory()
         {
@@ -25,8 +23,6 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         public void CleanUp()
         {
-            disposables.ForEach(d => d.Dispose());
-
             DropMessageTableIfItExists();
         }
 
@@ -49,8 +45,6 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             var queue = new SqlServerMessageQueue(SqlServerFixtureBase.ConnectionString, MessageTableName, inputQueueName)
                 .EnsureTableIsCreated()
                 .PurgeInputQueue();
-
-            disposables.Add(queue);
 
             return queue;
         }

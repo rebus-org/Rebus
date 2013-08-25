@@ -49,6 +49,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 
             public void Dispose()
             {
+                Disposed();
             }
 
             public string ReturnAddress { get; private set; }
@@ -58,7 +59,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             {
             }
 
-            public event Action Disposed;
+            public event Action Disposed = delegate { };
             public object CurrentMessage { get; private set; }
             public IDictionary<string, object> Headers { get; private set; }
             public string StackTrace { get; private set; }
