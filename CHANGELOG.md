@@ -116,3 +116,7 @@
 ## 0.36.1
 
 * Update Mongo to 1.8.2 because that's the most recent version of the driver... duh!
+
+## 0.37.0
+
+* Added to `SqlServerMessageQueue` the ability to receive messages in prioritized order.
