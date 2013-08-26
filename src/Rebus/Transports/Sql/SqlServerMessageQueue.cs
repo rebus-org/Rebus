@@ -54,7 +54,6 @@ namespace Rebus.Transports.Sql
                     {
                         var connection = new SqlConnection(connectionString);
                         connection.Open();
-                        log.Debug("Starting new transaction");
                         var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
                         return ConnectionHolder.ForTransactionalWork(connection, transaction);
                     }
@@ -63,19 +62,16 @@ namespace Rebus.Transports.Sql
                 {
                     var transaction = h.Transaction;
                     if (transaction == null) return;
-                    log.Debug("Committing!");
                     transaction.Commit();
                 };
             rollbackAction = h =>
                 {
                     var transaction = h.Transaction;
                     if (transaction == null) return;
-                    log.Debug("Rolling back!");
                     transaction.Rollback();
                 };
             releaseConnection = h =>
                 {
-                    log.Debug("Disposing connection");
                     h.Dispose();
                 };
         }
@@ -120,8 +116,8 @@ namespace Rebus.Transports.Sql
                                                             values (@recipient, @headers, @label, @body)",
                                                         messageTableName);
 
-                    log.Debug("Sending message with label {0} to {1}", destinationQueueName);
                     var label = message.Label ?? "(no label)";
+                    log.Debug("Sending message with label {0} to {1}", label, destinationQueueName);
 
                     command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationQueueName;
                     command.Parameters.Add("headers", SqlDbType.NVarChar, Max).Value = DictionarySerializer.Serialize(message.Headers);
