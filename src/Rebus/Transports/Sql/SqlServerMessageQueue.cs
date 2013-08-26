@@ -20,6 +20,17 @@ namespace Rebus.Transports.Sql
     /// </summary>
     public class SqlServerMessageQueue : IDuplexTransport
     {
+        /// <summary>
+        /// The default priority that messages will have if the priority has not explicitly been set to something else
+        /// </summary>
+        public const int DefaultMessagePriority = 128;
+
+        /// <summary>
+        /// Special header key that can be used to set the priority of a sent transport message. Please note that the
+        /// priority must be an integer value in the range [0;255] since it is mapped to a tinyint in the database.
+        /// </summary>
+        public const string PriorityHeaderKey = "rebus-sql-message-priority";
+
         const string ConnectionKey = "sql-server-message-queue-current-connection";
         const int Max = -1;
         static ILog log;
@@ -112,17 +123,20 @@ namespace Rebus.Transports.Sql
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"insert into [{0}] 
-                                                            ([recipient], [headers], [label], [body]) 
-                                                            values (@recipient, @headers, @label, @body)",
+                                                            ([recipient], [headers], [label], [body], [priority]) 
+                                                            values (@recipient, @headers, @label, @body, @priority)",
                                                         messageTableName);
 
                     var label = message.Label ?? "(no label)";
                     log.Debug("Sending message with label {0} to {1}", label, destinationQueueName);
 
+                    var priority = GetMessagePriority(message);
+
                     command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationQueueName;
                     command.Parameters.Add("headers", SqlDbType.NVarChar, Max).Value = DictionarySerializer.Serialize(message.Headers);
                     command.Parameters.Add("label", SqlDbType.NVarChar, Max).Value = label;
                     command.Parameters.Add("body", SqlDbType.VarBinary, Max).Value = message.Body;
+                    command.Parameters.Add("priority", SqlDbType.TinyInt, 1).Value = priority;
 
                     command.ExecuteNonQuery();
                 }
@@ -138,6 +152,33 @@ namespace Rebus.Transports.Sql
                 {
                     releaseConnection(connection);
                 }
+            }
+        }
+
+        static int GetMessagePriority(TransportMessageToSend message)
+        {
+            if (!message.Headers.ContainsKey(PriorityHeaderKey))
+                return DefaultMessagePriority;
+
+            var priorityAsString = message.Headers[PriorityHeaderKey].ToString();
+
+            try
+            {
+                var priority = int.Parse(priorityAsString);
+
+                if (priority < 0 || priority > 255)
+                {
+                    throw new ArgumentException(string.Format("Message priority out of range: {0}", priority));
+                }
+
+                return priority;
+            }
+            catch (Exception exception)
+            {
+                throw new FormatException(
+                    string.Format(
+                        "Could not decode message priority '{0}' - message priority must be an integer value in the [0;255] range",
+                        priorityAsString), exception);
             }
         }
 
@@ -176,11 +217,11 @@ namespace Rebus.Transports.Sql
 
                     selectCommand.CommandText =
                         string.Format(@"
-                                    select top 1 [seq], [headers], [label], [body]
+                                    select top 1 [seq], [headers], [label], [body], [priority]
 		                                from [{0}]
                                         with (updlock, readpast, rowlock)
 		                                where [recipient] = @recipient
-		                                order by [seq] asc
+		                                order by [priority] asc, [seq] asc
 ", messageTableName);
 
 //                    selectCommand.CommandText =
@@ -195,6 +236,7 @@ namespace Rebus.Transports.Sql
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
 
                     var seq = 0L;
+                    var priority = -1;
 
                     using (var reader = selectCommand.ExecuteReader())
                     {
@@ -204,6 +246,7 @@ namespace Rebus.Transports.Sql
                             var label = reader["label"];
                             var body = reader["body"];
                             seq = (long)reader["seq"];
+                            priority = (byte) reader["priority"];
 
                             var headersDictionary = DictionarySerializer.Deserialize((string)headers);
                             var messageId = seq.ToString(CultureInfo.InvariantCulture);
@@ -229,11 +272,12 @@ namespace Rebus.Transports.Sql
                             deleteCommand.Transaction = connection.Transaction;
 
                             deleteCommand.CommandText =
-                                string.Format("delete from [{0}] where [recipient] = @recipient and [seq] = @seq",
+                                string.Format("delete from [{0}] where [recipient] = @recipient and [priority] = @priority and [seq] = @seq",
                                               messageTableName);
 
                             deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
                             deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8).Value = seq;
+                            deleteCommand.Parameters.Add("priority", SqlDbType.TinyInt, 1).Value = priority;
 
                             var rowsAffected = deleteCommand.ExecuteNonQuery();
 
@@ -324,12 +368,14 @@ namespace Rebus.Transports.Sql
 CREATE TABLE [dbo].[{0}](
 	[recipient] [nvarchar](200) NOT NULL,
 	[seq] [bigint] IDENTITY(1,1) NOT NULL,
+	[priority] [tinyint] NOT NULL,
 	[label] [nvarchar](max) NOT NULL,
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
  CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
 (
 	[recipient] ASC,
+	[priority] ASC,
 	[seq] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]

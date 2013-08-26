@@ -54,16 +54,17 @@ namespace Rebus.Tests.Transports.Sql
 
         TransportMessageToSend MessageWith(string contents, int priority)
         {
-            return new TransportMessageToSend
-                       {
-                           Body = Encoding.UTF8.GetBytes(contents),
-                           Headers =
-                               new Dictionary<string, object>
-                                   {
-
-                                   },
-                           Label = contents
-                       };
+            return
+                new TransportMessageToSend
+                    {
+                        Body = Encoding.UTF8.GetBytes(contents),
+                        Headers =
+                            new Dictionary<string, object>
+                                {
+                                    {SqlServerMessageQueue.PriorityHeaderKey, priority}
+                                },
+                        Label = contents
+                    };
         }
 
         [Test, Ignore("Was only used to demonstrate that the approach taken in SqlServerMessageQueue was viable")]
