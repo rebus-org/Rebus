@@ -9,46 +9,47 @@ namespace Rebus.Log4Net
     /// </summary>
     public static class Log4NetLoggingExtension
     {
+        static string correlationIdPropertyKey = "CorrelationId";
+
         /// <summary>
         /// Configures Rebus to use Log4net for all of its internal logging
         /// </summary>
         public static void Log4Net(this LoggingConfigurer configurer)
         {
             configurer.Use(new Log4NetLoggerFactory());
+
+            SetUpEventHandler(configurer);
         }
 
         /// <summary>
-        /// Installs a hook that automatically transfers the correlation ID of incoming messages to the Log4Net
-        /// <see cref="ThreadContext"/>, allowing it to be included in the logging output. <see cref="propertyKey"/>
-        /// specifies the key under which the correlation ID will be set.
+        /// Configures Rebus to use Log4net for all of its internal logging
         /// </summary>
-        public static RebusConfigurer TransferCorrelationIdToLog4NetThreadContext(this RebusConfigurer configurer, string propertyKey)
+        public static void Log4Net(this LoggingConfigurer configurer, string correlationIdPropertyKey)
         {
-            configurer.Events(e => SetLoggerPropertiesWhenAvailable(e, propertyKey));
+            configurer.Use(new Log4NetLoggerFactory());
 
-            return configurer;
+            SetUpEventHandler(configurer, correlationIdPropertyKey);
         }
 
-        /// <summary>
-        /// Installs a hook that automatically transfers the correlation ID of incoming messages to the Log4Net
-        /// <see cref="ThreadContext"/> under the default key 'CorrelationId', allowing it to be included in the logging output.
-        /// </summary>
-        public static RebusConfigurer TransferCorrelationIdToLog4NetThreadContext(this RebusConfigurer configurer)
+        static void SetUpEventHandler(BaseConfigurer configurer, string overriddenCorrelationIdPropertyKey = null)
         {
-            return TransferCorrelationIdToLog4NetThreadContext(configurer, "CorrelationId");
-        }
+            if (!string.IsNullOrWhiteSpace(overriddenCorrelationIdPropertyKey))
+            {
+                correlationIdPropertyKey = overriddenCorrelationIdPropertyKey;
+            }
 
-        static void SetLoggerPropertiesWhenAvailable(IRebusEvents e, string propertyKey)
-        {
-            e.BeforeTransportMessage +=
-                (bus, message) =>
+            configurer.Backbone.ConfigureEvents(e =>
                 {
-                    var correlationid = message.Headers.ContainsKey(Headers.CorrelationId)
-                                            ? message.Headers[Headers.CorrelationId]
-                                            : null;
+                    e.BeforeTransportMessage +=
+                        (bus, message) =>
+                            {
+                                var correlationid = message.Headers.ContainsKey(Headers.CorrelationId)
+                                                        ? message.Headers[Headers.CorrelationId]
+                                                        : null;
 
-                    ThreadContext.Properties[propertyKey] = correlationid;
-                };
+                                ThreadContext.Properties[correlationIdPropertyKey] = correlationid;
+                            };
+                });
         }
     }
 }
