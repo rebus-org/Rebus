@@ -120,3 +120,8 @@
 ## 0.37.0
 
 * Added to `SqlServerMessageQueue` the ability to receive messages in prioritized order.
+
+## 0.38.0
+
+* Broke the Log4Net configuration API - sorry! But now it just adds the correlation ID to the thread context by default (i mean, why would you NOT do that?)
+* Fixed constantly generated warning in timeout manager

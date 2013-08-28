@@ -9,35 +9,36 @@ namespace Rebus.Log4Net
     /// </summary>
     public static class Log4NetLoggingExtension
     {
-        static string correlationIdPropertyKey = "CorrelationId";
+        /// <summary>
+        /// Default Log4Net thread context key to use for setting the correlation ID of the message currently being handled.
+        /// </summary>
+        public const string DefaultCorrelationIdPropertyKey = "CorrelationId";
 
         /// <summary>
-        /// Configures Rebus to use Log4net for all of its internal logging
+        /// Configures Rebus to use Log4net for all of its internal logging. Will automatically add a 'CorrelationId' variable to the Log4Net
+        /// thread context when handling messages, allowing log output to include that.
         /// </summary>
         public static void Log4Net(this LoggingConfigurer configurer)
         {
             configurer.Use(new Log4NetLoggerFactory());
 
-            SetUpEventHandler(configurer);
+            SetUpEventHandler(configurer, DefaultCorrelationIdPropertyKey);
         }
 
         /// <summary>
-        /// Configures Rebus to use Log4net for all of its internal logging
+        /// Configures Rebus to use Log4net for all of its internal logging. Will automatically add a correlation ID variable to the Log4Net
+        /// thread context under the key specified by <paramref name="overriddenCorrelationIdPropertyKey"/> when handling messages, 
+        /// allowing log output to include that.
         /// </summary>
-        public static void Log4Net(this LoggingConfigurer configurer, string correlationIdPropertyKey)
+        public static void Log4Net(this LoggingConfigurer configurer, string overriddenCorrelationIdPropertyKey)
         {
             configurer.Use(new Log4NetLoggerFactory());
 
-            SetUpEventHandler(configurer, correlationIdPropertyKey);
+            SetUpEventHandler(configurer, overriddenCorrelationIdPropertyKey);
         }
 
-        static void SetUpEventHandler(BaseConfigurer configurer, string overriddenCorrelationIdPropertyKey = null)
+        static void SetUpEventHandler(BaseConfigurer configurer, string correlationIdPropertyKey)
         {
-            if (!string.IsNullOrWhiteSpace(overriddenCorrelationIdPropertyKey))
-            {
-                correlationIdPropertyKey = overriddenCorrelationIdPropertyKey;
-            }
-
             configurer.Backbone.ConfigureEvents(e =>
                 {
                     e.BeforeTransportMessage +=
