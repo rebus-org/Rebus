@@ -48,7 +48,7 @@ namespace Rebus.Bus
                     var dueTimeouts = storeTimeouts.GetDueTimeouts().ToList();
                     if (!dueTimeouts.Any()) return;
                     
-                    log.Info("Got {0} dues timeouts - will send them now");
+                    log.Info("Got {0} dues timeouts - will send them now", dueTimeouts.Count);
                     foreach (var timeout in dueTimeouts)
                     {
                         log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
