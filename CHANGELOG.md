@@ -124,4 +124,7 @@
 ## 0.38.0
 
 * Broke the Log4Net configuration API - sorry! But now it just adds the correlation ID to the thread context by default (i mean, why would you NOT do that?)
+
+## 0.38.1
+
 * Fixed constantly generated warning in timeout manager
