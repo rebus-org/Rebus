@@ -128,3 +128,7 @@
 ## 0.38.1
 
 * Fixed constantly generated warning in timeout manager
+
+## 0.39.0
+
+* Added ability to compress message bodies as well.
