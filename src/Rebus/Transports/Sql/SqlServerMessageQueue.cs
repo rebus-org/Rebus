@@ -2,6 +2,7 @@
 using System;
 using System.Data.SqlClient;
 using System.Globalization;
+using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
@@ -188,35 +189,37 @@ namespace Rebus.Transports.Sql
         /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            AssertNotInOneWayClientMode();
-
-            var connection = GetConnectionPossiblyFromContext(context);
-
             try
             {
-                ReceivedTransportMessage receivedTransportMessage = null;
+                AssertNotInOneWayClientMode();
 
-                using (var selectCommand = connection.Connection.CreateCommand())
+                var connection = GetConnectionPossiblyFromContext(context);
+
+                try
                 {
-                    selectCommand.Transaction = connection.Transaction;
+                    ReceivedTransportMessage receivedTransportMessage = null;
 
-//                    selectCommand.CommandText =
-//                        string.Format(
-//                            @"
-//                                ;with msg as (
-//	                                select top 1 [seq], [headers], [label], [body]
-//		                                from [{0}]
-//                                        with (updlock, readpast, rowlock)
-//		                                where [recipient] = @recipient
-//		                                order by [seq] asc
-//	                                )
-//                                delete msg
-//                                output deleted.seq, deleted.headers, deleted.body, deleted.label
-//",
-//                            messageTableName);
+                    using (var selectCommand = connection.Connection.CreateCommand())
+                    {
+                        selectCommand.Transaction = connection.Transaction;
 
-                    selectCommand.CommandText =
-                        string.Format(@"
+                        //                    selectCommand.CommandText =
+                        //                        string.Format(
+                        //                            @"
+                        //                                ;with msg as (
+                        //	                                select top 1 [seq], [headers], [label], [body]
+                        //		                                from [{0}]
+                        //                                        with (updlock, readpast, rowlock)
+                        //		                                where [recipient] = @recipient
+                        //		                                order by [seq] asc
+                        //	                                )
+                        //                                delete msg
+                        //                                output deleted.seq, deleted.headers, deleted.body, deleted.label
+                        //",
+                        //                            messageTableName);
+
+                        selectCommand.CommandText =
+                            string.Format(@"
                                     select top 1 [seq], [headers], [label], [body], [priority]
 		                                from [{0}]
                                         with (updlock, readpast, rowlock)
@@ -224,87 +227,102 @@ namespace Rebus.Transports.Sql
 		                                order by [priority] asc, [seq] asc
 ", messageTableName);
 
-//                    selectCommand.CommandText =
-//                        string.Format(@"
-//delete top(1) from [{0}] 
-//output deleted.seq, deleted.headers, deleted.body, deleted.label
-//where [seq] = (
-//    select min([seq]) from [{0}] with (readpast, holdlock) where recipient = @recipient
-//)
-//", messageTableName);
+                        //                    selectCommand.CommandText =
+                        //                        string.Format(@"
+                        //delete top(1) from [{0}] 
+                        //output deleted.seq, deleted.headers, deleted.body, deleted.label
+                        //where [seq] = (
+                        //    select min([seq]) from [{0}] with (readpast, holdlock) where recipient = @recipient
+                        //)
+                        //", messageTableName);
 
-                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
+                        selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200)
+                                     .Value = inputQueueName;
 
-                    var seq = 0L;
-                    var priority = -1;
+                        var seq = 0L;
+                        var priority = -1;
 
-                    using (var reader = selectCommand.ExecuteReader())
-                    {
-                        if (reader.Read())
+                        using (var reader = selectCommand.ExecuteReader())
                         {
-                            var headers = reader["headers"];
-                            var label = reader["label"];
-                            var body = reader["body"];
-                            seq = (long)reader["seq"];
-                            priority = (byte) reader["priority"];
-
-                            var headersDictionary = DictionarySerializer.Deserialize((string)headers);
-                            var messageId = seq.ToString(CultureInfo.InvariantCulture);
-
-                            receivedTransportMessage =
-                                new ReceivedTransportMessage
-                                    {
-                                        Id = messageId,
-                                        Label = (string)label,
-                                        Headers = headersDictionary,
-                                        Body = (byte[])body,
-                                    };
-
-                            log.Debug("Received message with ID {0} from logical queue {1}.{2}",
-                                      messageId, messageTableName, inputQueueName);
-                        }
-                    }
-
-                    if (receivedTransportMessage != null)
-                    {
-                        using (var deleteCommand = connection.Connection.CreateCommand())
-                        {
-                            deleteCommand.Transaction = connection.Transaction;
-
-                            deleteCommand.CommandText =
-                                string.Format("delete from [{0}] where [recipient] = @recipient and [priority] = @priority and [seq] = @seq",
-                                              messageTableName);
-
-                            deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
-                            deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8).Value = seq;
-                            deleteCommand.Parameters.Add("priority", SqlDbType.TinyInt, 1).Value = priority;
-
-                            var rowsAffected = deleteCommand.ExecuteNonQuery();
-
-                            if (rowsAffected != 1)
+                            if (reader.Read())
                             {
-                                throw new ApplicationException(
+                                var headers = reader["headers"];
+                                var label = reader["label"];
+                                var body = reader["body"];
+                                seq = (long) reader["seq"];
+                                priority = (byte) reader["priority"];
+
+                                var headersDictionary = DictionarySerializer.Deserialize((string) headers);
+                                var messageId = seq.ToString(CultureInfo.InvariantCulture);
+
+                                receivedTransportMessage =
+                                    new ReceivedTransportMessage
+                                        {
+                                            Id = messageId,
+                                            Label = (string) label,
+                                            Headers = headersDictionary,
+                                            Body = (byte[]) body,
+                                        };
+
+                                log.Debug("Received message with ID {0} from logical queue {1}.{2}",
+                                          messageId, messageTableName, inputQueueName);
+                            }
+                        }
+
+                        if (receivedTransportMessage != null)
+                        {
+                            using (var deleteCommand = connection.Connection.CreateCommand())
+                            {
+                                deleteCommand.Transaction = connection.Transaction;
+
+                                deleteCommand.CommandText =
                                     string.Format(
-                                        "Attempted to delete message with recipient = '{0}' and seq = {1}, but {2} rows were affected!",
-                                        inputQueueName, seq, rowsAffected));
+                                        "delete from [{0}] where [recipient] = @recipient and [priority] = @priority and [seq] = @seq",
+                                        messageTableName);
+
+                                deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200)
+                                             .Value = inputQueueName;
+                                deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8)
+                                             .Value = seq;
+                                deleteCommand.Parameters.Add("priority", SqlDbType.TinyInt, 1)
+                                             .Value = priority;
+
+                                var rowsAffected = deleteCommand.ExecuteNonQuery();
+
+                                if (rowsAffected != 1)
+                                {
+                                    throw new ApplicationException(
+                                        string.Format(
+                                            "Attempted to delete message with recipient = '{0}' and seq = {1}, but {2} rows were affected!",
+                                            inputQueueName, seq, rowsAffected));
+                                }
                             }
                         }
                     }
-                }
 
-                if (!context.IsTransactional)
+                    if (!context.IsTransactional)
+                    {
+                        commitAction(connection);
+                    }
+
+                    return receivedTransportMessage;
+                }
+                finally
                 {
-                    commitAction(connection);
+                    if (!context.IsTransactional)
+                    {
+                        releaseConnection(connection);
+                    }
                 }
-
-                return receivedTransportMessage;
             }
-            finally
+            catch (Exception exception)
             {
-                if (!context.IsTransactional)
-                {
-                    releaseConnection(connection);
-                }
+                // if we end up here, something bas has happened - no need to hurry, so we sleep
+                Thread.Sleep(2000);
+
+                throw new ApplicationException(
+                    string.Format("An error occurred while receiving message from {0}", inputQueueName),
+                    exception);
             }
         }
 
