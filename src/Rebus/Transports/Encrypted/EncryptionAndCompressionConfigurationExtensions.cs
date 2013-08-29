@@ -51,14 +51,7 @@ namespace Rebus.Transports.Encrypted
                     decorator.EnableEncryption(keyBase64);
 
                     b.SendMessages = decorator;
-
-                    // if we're in one-way client mode, we skip the decorator - otherwise RebusBus would not
-                    // be able to detect one-way client mode - we should definitely make this more explicit
-                    // somehow
-                    if (!(b.ReceiveMessages is OneWayClientGag))
-                    {
-                        b.ReceiveMessages = decorator;
-                    }
+                    b.ReceiveMessages = decorator;
                 });
         }
 
