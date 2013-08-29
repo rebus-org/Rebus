@@ -101,7 +101,7 @@
     <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="TimedExtensions.cs" />
     <Compile Include="Transports\Encrypted\GZipHelper.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />
     <Compile Include="Configuration\LoggingConfigurer.cs" />
