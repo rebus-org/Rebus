@@ -172,7 +172,7 @@
     <Compile Include="Timeout\Timeout.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />

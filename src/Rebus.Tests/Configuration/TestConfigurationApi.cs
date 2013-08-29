@@ -139,8 +139,8 @@ namespace Rebus.Tests.Configuration
 
             configurer.CreateBus();
 
-            configurer.Backbone.SendMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
-            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+            configurer.Backbone.SendMessages.ShouldBeTypeOf<EncryptionAndCompressionTransportDecorator>();
+            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<EncryptionAndCompressionTransportDecorator>();
         }
 
         [Test]

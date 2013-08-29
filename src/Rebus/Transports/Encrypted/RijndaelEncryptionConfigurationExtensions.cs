@@ -5,7 +5,7 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 namespace Rebus.Transports.Encrypted
 {
     /// <summary>
-    /// Configuration extensions for configuring the transport decorator <see cref="RijndaelEncryptionTransportDecorator"/>
+    /// Configuration extensions for configuring the transport decorator <see cref="EncryptionAndCompressionTransportDecorator"/>
     /// </summary>
     public static class RijndaelEncryptionConfigurationExtensions
     {
@@ -31,7 +31,7 @@ namespace Rebus.Transports.Encrypted
                     var decorator = configurer
                         .Backbone
                         .LoadFromRegistry(
-                            () => new RijndaelEncryptionTransportDecorator(b.SendMessages, b.ReceiveMessages));
+                            () => new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages));
 
                     decorator.EnableCompression(compressionThresholdBytes);
                 });
@@ -46,7 +46,7 @@ namespace Rebus.Transports.Encrypted
                 {
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(() => new RijndaelEncryptionTransportDecorator(b.SendMessages, b.ReceiveMessages));
+                        .LoadFromRegistry(() => new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages));
 
                     decorator.EnableEncryption(keyBase64);
 
@@ -137,7 +137,7 @@ again if you don't believe me.
 
 The key has been generated with the biggest valid size, so it should be pretty secure.
 ",
-                    RijndaelEncryptionTransportDecorator.GenerateKeyBase64());
+                    EncryptionAndCompressionTransportDecorator.GenerateKeyBase64());
         }
     }
 }
