@@ -30,8 +30,13 @@ namespace Rebus.Transports.Encrypted
                 {
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(
-                            () => new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages));
+                        .LoadFromRegistry(() =>
+                            {
+                                var instance = new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages);
+                                b.SendMessages = instance;
+                                b.ReceiveMessages = instance;
+                                return instance;
+                            });
 
                     decorator.EnableCompression(compressionThresholdBytes);
                 });
@@ -46,12 +51,15 @@ namespace Rebus.Transports.Encrypted
                 {
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(() => new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages));
+                        .LoadFromRegistry(() =>
+                            {
+                                var instance = new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages);
+                                b.SendMessages = instance;
+                                b.ReceiveMessages = instance;
+                                return instance;
+                            });
 
                     decorator.EnableEncryption(keyBase64);
-
-                    b.SendMessages = decorator;
-                    b.ReceiveMessages = decorator;
                 });
         }
 
