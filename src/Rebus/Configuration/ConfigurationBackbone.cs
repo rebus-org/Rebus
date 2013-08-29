@@ -35,28 +35,21 @@ namespace Rebus.Configuration
 
         /// <summary>
         /// Attempts to load from the registry the instance stored with the given type key.
-        /// Returns null if none such instance is found.
+        /// If no instance is found, the given factory method is invoked, whereafter the
+        /// returned object is stored under the key. This mechanism allows different configurers
+        /// to cooperate and possibly configure the same instances, even though an instance might
+        /// be sitting somewhere as a decorator.
         /// </summary>
-        public TKey LoadFromRegistry<TKey>()
+        public TKey LoadFromRegistry<TKey>(Func<TKey> factoryMethod)
         {
-            return registry.ContainsKey(typeof(TKey))
-                       ? (TKey)registry[typeof(TKey)]
-                       : default(TKey);
-        }
-
-        /// <summary>
-        /// Stores the given instance under the type key specified by <typeparamref name="TKey"/>. Can be used for
-        /// different configurers to cooperate and work on the same instances and/or abstractions
-        /// </summary>
-        public void SaveToRegistry<TKey, TInstance>(TInstance instance) where TInstance : TKey
-        {
-            if (registry.ContainsKey(typeof(TKey)))
+            if (registry.ContainsKey(typeof (TKey)))
             {
-                throw new ArgumentException(string.Format("Attempted to overwrite an already registered {0}",
-                                                          typeof(TKey)));
+                return (TKey) registry[typeof (TKey)];
             }
 
-            registry[typeof(TKey)] = instance;
+            var instance = factoryMethod();
+            registry[typeof (TKey)] = instance;
+            return instance;
         }
 
         /// <summary>

@@ -12,19 +12,19 @@ namespace Rebus.Transports.Encrypted
     /// </summary>
     public class RijndaelEncryptionTransportDecorator : ISendMessages, IReceiveMessages, IDisposable
     {
-        readonly RijndaelHelper helper;
         readonly ISendMessages innerSendMessages;
         readonly IReceiveMessages innerReceiveMessages;
+
+        RijndaelHelper helper;
 
         /// <summary>
         /// Constructs the decorator with the specified implementations of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>,
         /// storing the specified base 64-encoded key to be used when encrypting/decrypting messages
         /// </summary>
-        public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages, string keyBase64)
+        public RijndaelEncryptionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages)
         {
             this.innerSendMessages = innerSendMessages;
             this.innerReceiveMessages = innerReceiveMessages;
-            helper = new RijndaelHelper(keyBase64);
         }
 
         /// <summary>
@@ -33,6 +33,12 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
+            if (helper == null)
+            {
+                innerSendMessages.Send(destinationQueueName, message, context);
+                return;
+            }
+
             var iv = helper.GenerateNewIv();
 
             var transportMessageToSend = new TransportMessageToSend
@@ -57,6 +63,11 @@ namespace Rebus.Transports.Encrypted
             var receivedTransportMessage = innerReceiveMessages.ReceiveMessage(context);
 
             if (receivedTransportMessage == null) return null;
+
+            if (helper == null)
+            {
+                return receivedTransportMessage;
+            }
 
             byte[] body;
             var headers = receivedTransportMessage.Headers.Clone();
@@ -117,6 +128,15 @@ namespace Rebus.Transports.Encrypted
 
             var disposableMessageReceiver = innerReceiveMessages as IDisposable;
             if (disposableMessageReceiver != null) disposableMessageReceiver.Dispose();
+        }
+
+        /// <summary>
+        /// Configures the encryption decorator to actually encrypt messages using the specified key
+        /// </summary>
+        public RijndaelEncryptionTransportDecorator EnableEncryption(string keyBase64)
+        {
+            helper = new RijndaelHelper(keyBase64);
+            return this;
         }
     }
 }

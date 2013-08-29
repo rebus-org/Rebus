@@ -19,7 +19,11 @@ namespace Rebus.Transports.Encrypted
                     var sendMessages = b.SendMessages;
                     var receiveMessages = b.ReceiveMessages;
 
-                    var decorator = new RijndaelEncryptionTransportDecorator(sendMessages, receiveMessages, keyBase64);
+                    var decorator = configurer
+                        .Backbone
+                        .LoadFromRegistry(() => new RijndaelEncryptionTransportDecorator(sendMessages, receiveMessages));
+
+                    decorator.EnableEncryption(keyBase64);
 
                     b.SendMessages = decorator;
 

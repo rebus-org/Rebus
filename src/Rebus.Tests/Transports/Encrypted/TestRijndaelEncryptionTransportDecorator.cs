@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Shared;
 using Rebus.Transports.Encrypted;
-using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
 using Rebus.Extensions;
@@ -25,7 +24,8 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             sender = new Sender();
             receiver = new Receiver();
-            transport = new RijndaelEncryptionTransportDecorator(sender, receiver, KeyBase64);
+            transport = new RijndaelEncryptionTransportDecorator(sender, receiver)
+                .EnableEncryption(KeyBase64);
 
             Console.WriteLine(RijndaelHelper.GenerateNewKey());
         }
@@ -49,7 +49,8 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             var key = RijndaelEncryptionTransportDecorator.GenerateKeyBase64();
 
-            var localInstance = new RijndaelEncryptionTransportDecorator(sender, receiver, key);
+            var localInstance = new RijndaelEncryptionTransportDecorator(sender, receiver)
+                .EnableEncryption(key);
 
             var toSend = new TransportMessageToSend
             {
