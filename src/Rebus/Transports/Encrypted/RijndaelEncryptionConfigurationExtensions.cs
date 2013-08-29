@@ -10,18 +10,32 @@ namespace Rebus.Transports.Encrypted
     public static class RijndaelEncryptionConfigurationExtensions
     {
         /// <summary>
+        /// Configures that message bodies should be compressed in the event that the body size exceeds the specified 
+        /// threshold in bytes.
+        /// </summary>
+        public static void CompressMessageBodies(this DecoratorsConfigurer configurer, int compressionThresholdBytes)
+        {
+            configurer.AddDecoration(b =>
+                {
+                    var decorator = configurer
+                        .Backbone
+                        .LoadFromRegistry(
+                            () => new RijndaelEncryptionTransportDecorator(b.SendMessages, b.ReceiveMessages));
+
+                    decorator.EnableCompression(compressionThresholdBytes);
+                });
+        }
+
+        /// <summary>
         /// Configures that message bodies should be encrypted/decrypted with the specified base 64-encoded key
         /// </summary>
         public static void EncryptMessageBodies(this DecoratorsConfigurer configurer, string keyBase64)
         {
             configurer.AddDecoration(b =>
                 {
-                    var sendMessages = b.SendMessages;
-                    var receiveMessages = b.ReceiveMessages;
-
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(() => new RijndaelEncryptionTransportDecorator(sendMessages, receiveMessages));
+                        .LoadFromRegistry(() => new RijndaelEncryptionTransportDecorator(b.SendMessages, b.ReceiveMessages));
 
                     decorator.EnableEncryption(keyBase64);
 

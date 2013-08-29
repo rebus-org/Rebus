@@ -7,7 +7,7 @@ namespace Rebus.Transports.Encrypted
     /// Encryption helper that encapsulated the Rijndael-specified stuff. Basically just
     /// gives <see cref="RijndaelManaged"/> a decent API.
     /// </summary>
-    public class RijndaelHelper
+    class RijndaelHelper
     {
         readonly byte[] key;
 

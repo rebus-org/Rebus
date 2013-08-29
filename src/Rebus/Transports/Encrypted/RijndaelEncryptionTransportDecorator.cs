@@ -15,7 +15,8 @@ namespace Rebus.Transports.Encrypted
         readonly ISendMessages innerSendMessages;
         readonly IReceiveMessages innerReceiveMessages;
 
-        RijndaelHelper helper;
+        RijndaelHelper encryptionHelper;
+        GZipHelper compressionHelper;
 
         /// <summary>
         /// Constructs the decorator with the specified implementations of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>,
@@ -33,25 +34,32 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
-            if (helper == null)
+            var clone = new TransportMessageToSend
+                            {
+                                Headers = message.Headers.Clone(),
+                                Label = message.Label,
+                                Body = message.Body,
+                            };
+
+            if (compressionHelper != null)
             {
-                innerSendMessages.Send(destinationQueueName, message, context);
-                return;
+                var compresssionResult = compressionHelper.Compress(clone.Body);
+                if (compresssionResult.Item1)
+                {
+                    clone.Headers[Headers.Compression] = Headers.CompressionTypes.GZip;
+                }
+                clone.Body = compresssionResult.Item2;
             }
 
-            var iv = helper.GenerateNewIv();
+            if (encryptionHelper != null)
+            {
+                var iv = encryptionHelper.GenerateNewIv();
+                clone.Body = encryptionHelper.Encrypt(clone.Body, iv);
+                clone.Headers[Headers.Encrypted] = null;
+                clone.Headers[Headers.EncryptionSalt] = iv;
+            }
 
-            var transportMessageToSend = new TransportMessageToSend
-                                             {
-                                                 Headers = message.Headers.Clone(),
-                                                 Label = message.Label,
-                                                 Body = helper.Encrypt(message.Body, iv),
-                                             };
-
-            transportMessageToSend.Headers[Headers.Encrypted] = null;
-            transportMessageToSend.Headers[Headers.EncryptionSalt] = iv;
-
-            innerSendMessages.Send(destinationQueueName, transportMessageToSend, context);
+            innerSendMessages.Send(destinationQueueName, clone, context);
         }
 
         /// <summary>
@@ -60,38 +68,56 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            var receivedTransportMessage = innerReceiveMessages.ReceiveMessage(context);
+            var message = innerReceiveMessages.ReceiveMessage(context);
 
-            if (receivedTransportMessage == null) return null;
+            if (message == null) return null;
 
-            if (helper == null)
+            var clone = new ReceivedTransportMessage
+                            {
+                                Body = message.Body,
+                                Headers = message.Headers.Clone(),
+                                Label = message.Label,
+                                Id = message.Id
+                            };
+
+            var headers = clone.Headers;
+
+            if (encryptionHelper != null)
             {
-                return receivedTransportMessage;
+                if (headers.ContainsKey(Headers.Encrypted))
+                {
+                    var iv = clone.GetStringHeader(Headers.EncryptionSalt);
+                    clone.Body = encryptionHelper.Decrypt(clone.Body, iv);
+
+                    headers.Remove(Headers.EncryptionSalt);
+                    headers.Remove(Headers.Encrypted);
+                }
             }
 
-            byte[] body;
-            var headers = receivedTransportMessage.Headers.Clone();
-
-            if (headers.ContainsKey(Headers.Encrypted))
+            if (compressionHelper != null)
             {
-                var iv = receivedTransportMessage.GetStringHeader(Headers.EncryptionSalt);
-                body = helper.Decrypt(receivedTransportMessage.Body, iv);
+                if (headers.ContainsKey(Headers.Compression))
+                {
+                    var compressionType = (headers[Headers.Compression] ?? "").ToString();
 
-                headers.Remove(Headers.EncryptionSalt);
-                headers.Remove(Headers.Encrypted);
-            }
-            else
-            {
-                body = receivedTransportMessage.Body;
+                    headers.Remove(Headers.Compression);
+
+                    switch (compressionType)
+                    {
+                        case Headers.CompressionTypes.GZip:
+                            clone.Body = compressionHelper.Decompress(clone.Body);
+                            break;
+
+                        default:
+                            throw new ArgumentException(
+                                string.Format(
+                                    "Received message has the {0} header, but the compression type is set to {1} which cannot be handled",
+                                    Headers.Compression, compressionType));
+                    }
+                }
             }
 
-            return new ReceivedTransportMessage
-                       {
-                           Id = receivedTransportMessage.Id,
-                           Headers = headers,
-                           Label = receivedTransportMessage.Label,
-                           Body = body,
-                       };
+            return clone;
         }
 
         /// <summary>
@@ -135,7 +161,17 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public RijndaelEncryptionTransportDecorator EnableEncryption(string keyBase64)
         {
-            helper = new RijndaelHelper(keyBase64);
+            encryptionHelper = new RijndaelHelper(keyBase64);
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the encryption decorator to compress message bodies if their size exceeds the
+        /// specified number of bytes.
+        /// </summary>
+        public RijndaelEncryptionTransportDecorator EnableCompression(int compressionThresholdBytes)
+        {
+            compressionHelper = new GZipHelper(compressionThresholdBytes);
             return this;
         }
     }

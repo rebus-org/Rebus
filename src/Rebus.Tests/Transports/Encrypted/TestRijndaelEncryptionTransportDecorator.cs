@@ -15,6 +15,7 @@ namespace Rebus.Tests.Transports.Encrypted
     public class TestRijndaelEncryptionTransportDecorator : FixtureBase
     {
         const string KeyBase64 = "0Y67WrbVDnZurwljr9nI7RuWMiNtctEU3CMZ71NcKuA=";
+        const int CompressionThresholdBytes = 2048;
 
         RijndaelEncryptionTransportDecorator transport;
         Sender sender;
@@ -24,16 +25,58 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             sender = new Sender();
             receiver = new Receiver();
-            transport = new RijndaelEncryptionTransportDecorator(sender, receiver)
-                .EnableEncryption(KeyBase64);
+            transport = new RijndaelEncryptionTransportDecorator(sender, receiver);
 
             Console.WriteLine(RijndaelHelper.GenerateNewKey());
+        }
+
+        void EnableEncryption()
+        {
+            transport.EnableEncryption(KeyBase64);
+        }
+
+        void EnableCompression()
+        {
+            transport.EnableCompression(CompressionThresholdBytes);
+        }
+
+        [TestCase(100, false)]
+        [TestCase(CompressionThresholdBytes, false)]
+        [TestCase(CompressionThresholdBytes + 1, true)]
+        [TestCase(10 * CompressionThresholdBytes, true)]
+        public void CanCompressMessageWhenTheSizeExceedsThreshold(int messageSizeBytes, bool expectSentMessageToBeCompressed)
+        {
+            // arrange
+            EnableCompression();
+
+            // act
+            var bodyBytes = Enumerable.Range(0, messageSizeBytes)
+                                      .Select(i => (byte) (i%256))
+                                      .ToArray();
+
+            transport.Send("wherever",
+                           new TransportMessageToSend
+                               {
+                                   Body = bodyBytes
+                               },
+                           new NoTransaction());
+
+            // assert
+            if (expectSentMessageToBeCompressed)
+            {
+                sender.SentMessage.Body.Length.ShouldBeLessThan(bodyBytes.Length);
+            }
+            else
+            {
+                sender.SentMessage.Body.Length.ShouldBe(bodyBytes.Length);
+            }
         }
 
         [Test]
         public void DoesNotDieWhenReturnedMessageIsNull()
         {
             // arrange
+            EnableEncryption();
             receiver.SetUpReceive(null);
 
             // act
@@ -41,7 +84,6 @@ namespace Rebus.Tests.Transports.Encrypted
 
             // assert
             receivedTransportMessage.ShouldBe(null);
-
         }
 
         [Test]
@@ -80,6 +122,7 @@ namespace Rebus.Tests.Transports.Encrypted
         public void AddsHeaderToEncryptedMessage()
         {
             // arrange
+            EnableEncryption();
             var transportMessageToSend = new TransportMessageToSend { Body = new byte[] { 123, 125 } };
 
             // act
@@ -93,6 +136,7 @@ namespace Rebus.Tests.Transports.Encrypted
         public void DoesntDecryptIfEncrypedHeaderIsNotPresent()
         {
             // arrange
+            EnableEncryption();
             var messageWithoutEncryptedHeader = new ReceivedTransportMessage { Body = new byte[] { 128 } };
             receiver.MessageToReceive = messageWithoutEncryptedHeader;
 
@@ -107,6 +151,7 @@ namespace Rebus.Tests.Transports.Encrypted
         public void CanEncryptStuff()
         {
             // arrange
+            EnableEncryption();
             var transportMessageToSend = new TransportMessageToSend
                                              {
                                                  Headers = new Dictionary<string, object> { { "test", "blah!" } },
@@ -135,6 +180,7 @@ namespace Rebus.Tests.Transports.Encrypted
         public void CanDecryptStuff()
         {
             // arrange
+            EnableEncryption();
             var encryptedHelloWorldBytes = new byte[]
                 {
                     52, 37, 104, 93, 201, 121, 244, 71, 165, 73, 194, 144, 35, 150, 157, 139, 16, 142, 170, 196, 248,
@@ -165,31 +211,73 @@ namespace Rebus.Tests.Transports.Encrypted
             Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("Hello world!");
         }
 
-        [Test]
-        public void ItsSymmetric()
+        [TestCase(1)]
+        [TestCase(100)]
+        [TestCase(10000)]
+        [TestCase(100000)]
+        public void ItsSymmetric(int howManyGuidsToSend)
         {
-            var toSend = new TransportMessageToSend
+            EnableEncryption();
+            EnableCompression();
+
+            var semiRandomBytes = Enumerable
+                .Repeat(Guid.NewGuid(), howManyGuidsToSend)
+                .SelectMany(guid => guid.ToByteArray())
+                .ToArray();
+
+            var someCustomHeaders =
+                new Dictionary<string, object>
+                    {
+                        {"some random header", Guid.NewGuid().ToString()},
+                        {"another random header", Guid.NewGuid().ToString()}
+                    };
+
+            var messageToSend =
+                new TransportMessageToSend
                              {
                                  Label = Guid.NewGuid().ToString(),
-                                 Headers = new Dictionary<string, object>
-                                               {
-                                                   {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()}
-                                               },
-                                 Body = Guid.NewGuid().ToByteArray(),
+                                 Headers = someCustomHeaders,
+                                 Body = semiRandomBytes
                              };
+            transport.Send("test", messageToSend, new NoTransaction());
 
-            transport.Send("test", toSend, new NoTransaction());
-
-            var receivedTransportMessage = sender.SentMessage.ToReceivedTransportMessage();
+            var wireMessage = sender.SentMessage;
+            var receivedTransportMessage = wireMessage.ToReceivedTransportMessage();
 
             receiver.SetUpReceive(receivedTransportMessage);
-
             var receivedMessage = transport.ReceiveMessage(new NoTransaction());
 
-            receivedMessage.Label.ShouldBe(toSend.Label);
-            var expectedHeaders = toSend.Headers.Clone();
+            Console.WriteLine(@"
+Transport message to send:
+    headers: {1}
+    body size: {0}
+
+Wire transport message:
+    headers: {3}
+    body size: {2}
+
+Received transport message:
+    headers: {5}
+    body size: {4}
+",
+                              messageToSend.Body.Length,
+                              FormatHeaders(messageToSend.Headers),
+
+                              wireMessage.Body.Length,
+                              FormatHeaders(wireMessage.Headers),
+
+                              receivedMessage.Body.Length,
+                              FormatHeaders(receivedMessage.Headers));
+
+            receivedMessage.Label.ShouldBe(messageToSend.Label);
+            var expectedHeaders = messageToSend.Headers.Clone();
             receivedMessage.Headers.ShouldBe(expectedHeaders);
-            receivedMessage.Body.ShouldBe(toSend.Body);
+            receivedMessage.Body.ShouldBe(messageToSend.Body);
+        }
+
+        static string FormatHeaders(IEnumerable<KeyValuePair<string, object>> headers)
+        {
+            return string.Join(", ", headers.Select(kvp => string.Format("{0}: {1}", kvp.Key, kvp.Value)));
         }
 
         class Sender : ISendMessages
@@ -224,11 +312,6 @@ namespace Rebus.Tests.Transports.Encrypted
             }
 
             public string InputQueueAddress
-            {
-                get { throw new NotImplementedException(); }
-            }
-
-            public string ErrorQueue
             {
                 get { throw new NotImplementedException(); }
             }

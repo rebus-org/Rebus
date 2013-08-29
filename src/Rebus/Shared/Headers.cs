@@ -91,5 +91,12 @@ namespace Rebus.Shared
         /// If not, nothing happens. Thus it may be used to authenticate messages and establish a user context within message handlers.
         /// </summary>
         public const string UserName = "rebus-username";
+
+        public const string Compression = "rebus-compression";
+
+        public class CompressionTypes
+        {
+            public const string GZip = "gzip";
+        }
     }
 }
