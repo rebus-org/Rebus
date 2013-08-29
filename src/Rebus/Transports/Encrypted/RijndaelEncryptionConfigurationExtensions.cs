@@ -9,6 +9,17 @@ namespace Rebus.Transports.Encrypted
     /// </summary>
     public static class RijndaelEncryptionConfigurationExtensions
     {
+        const int DefaultCompressionThresholdBytes = 2048;
+
+        /// <summary>
+        /// Configures that message bodies should be compressed in the event that the body size exceeds the default
+        /// threshold of 2048 bytes.
+        /// </summary>
+        public static void CompressMessageBodies(this DecoratorsConfigurer configurer)
+        {
+            CompressMessageBodies(configurer, DefaultCompressionThresholdBytes);
+        }
+
         /// <summary>
         /// Configures that message bodies should be compressed in the event that the body size exceeds the specified 
         /// threshold in bytes.
