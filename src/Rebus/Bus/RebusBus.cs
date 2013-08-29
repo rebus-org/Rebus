@@ -10,7 +10,6 @@ using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
 using Rebus.Timeout;
-using Rebus.Transports;
 
 namespace Rebus.Bus
 {
@@ -48,7 +47,7 @@ namespace Rebus.Bus
         readonly int rebusId;
         readonly string timeoutManagerAddress;
         bool started;
-        BusMode busMode;
+        //BusMode busMode;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -168,7 +167,12 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
 
-            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                throw new InvalidOperationException(
+                    "You cannot SendLocal when running in one-way client mode, because" +
+                    " there's no way for the bus to receive the message you're sending.");
+            }
 
             var destinationEndpoint = receiveMessages.InputQueue;
 
@@ -313,10 +317,15 @@ namespace Rebus.Bus
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
 
-            if (busMode == BusMode.OneWayClientMode && !HasReturnAddressHeader(message))
+            if (configureAdditionalBehavior.OneWayClientMode && !HasReturnAddressHeader(message))
             {
-                throw new InvalidOperationException("Defer cannot be used when the bus is in OneWayClientMode, since there " +
-                                                    "would be no destination for the TimeoutService to return to.");
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Defer cannot be used when the bus is in OneWayClientMode, since there would be no" +
+                        " destination for the TimeoutService to return to. You CAN defer messages in one-way" +
+                        " mode though, if you explicitly specify a return address on the message with the" +
+                        " {0} header",
+                        Headers.ReturnAddress));
             }
 
             var customData = TimeoutReplyHandler.Serialize(message);
@@ -380,8 +389,12 @@ namespace Rebus.Bus
 
         internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
         {
-            EnsureBusModeIsNot(BusMode.OneWayClientMode,
-                               "You cannot Subscribe/Unsubscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                throw new InvalidOperationException(
+                    "You cannot Subscribe/Unsubscribe when running in one-way client mode, because" +
+                    " there's no way for the bus to receive anything from the publisher.");
+            }
 
             var message = new SubscriptionMessage
                 {
@@ -401,11 +414,10 @@ namespace Rebus.Bus
 Not that it actually matters, I mean we _could_ just ignore subsequent calls to Start() if we wanted to - but if you're calling Start() multiple times it's most likely a sign that something is wrong, i.e. you might be running you app initialization code more than once, etc."));
             }
 
-            if (receiveMessages is OneWayClientGag)
+            if (configureAdditionalBehavior.OneWayClientMode)
             {
                 log.Info("Rebus {0} will be started in one-way client mode", rebusId);
                 numberOfWorkers = 0;
-                busMode = BusMode.OneWayClientMode;
             }
 
             InitializeServicesThatMustBeInitialized();
@@ -508,7 +520,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
-                if (busMode != BusMode.OneWayClientMode)
+                if (!configureAdditionalBehavior.OneWayClientMode)
                 {
                     headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
                 }
@@ -794,13 +806,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         void LogUserException(Worker worker, Exception exception)
         {
             log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
-        }
-
-        void EnsureBusModeIsNot(BusMode busModeToAvoid, string message, params object[] objs)
-        {
-            if (busMode != busModeToAvoid) return;
-
-            throw new InvalidOperationException(string.Format(message, objs));
         }
 
         internal class HeaderContext

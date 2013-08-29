@@ -379,8 +379,10 @@ Or should it?")]
 
         RebusBus CreateBusInOneWayMode()
         {
+            var behavior = new ConfigureAdditionalBehavior();
+            behavior.EnterOneWayClientMode();
             return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(), storeSubscriptions, storeSagaData, determineMessageOwnership,
-                serializeMessages, inspectHandlerPipeline, new ErrorTracker("error"), null, new ConfigureAdditionalBehavior());
+                serializeMessages, inspectHandlerPipeline, new ErrorTracker("error"), null, behavior);
         }
 
         class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>

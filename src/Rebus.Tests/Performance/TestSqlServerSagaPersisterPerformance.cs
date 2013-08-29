@@ -11,9 +11,11 @@ namespace Rebus.Tests.Performance
 
         protected override void DoSetUp()
         {
-            persister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, "saga_index", "sagas");
-            DeleteRows("sagas");
-            DeleteRows("saga_index");
+            DropTable("sagas");
+            DropTable("saga_index");
+
+            persister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, "saga_index", "sagas")
+                .EnsureTablesAreCreated();
         }
 
         /// <summary>

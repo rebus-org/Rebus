@@ -1,4 +1,5 @@
 using Rebus.Bus;
+using Rebus.Transports;
 
 namespace Rebus.Configuration
 {
@@ -30,6 +31,13 @@ namespace Rebus.Configuration
         public void UseReceiver(IReceiveMessages receiveMessages)
         {
             Backbone.ReceiveMessages = receiveMessages;
+
+            // if we see the OneWayClientGag, the bus will not be able to receive messages
+            // - therefore, we configure the behavior
+            if (receiveMessages is OneWayClientGag)
+            {
+                Backbone.AddConfigurationStep(s => s.AdditionalBehavior.EnterOneWayClientMode());
+            }
         }
 
         /// <summary>

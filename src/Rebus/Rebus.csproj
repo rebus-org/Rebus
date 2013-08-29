@@ -55,7 +55,6 @@
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
     <Compile Include="Bus\AmbientTransactionContext.cs" />
-    <Compile Include="Bus\BusMode.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\DueTimeoutScheduler.cs" />
