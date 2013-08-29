@@ -100,8 +100,6 @@ namespace Rebus.Transports.Encrypted
                 {
                     var compressionType = (headers[Headers.Compression] ?? "").ToString();
 
-                    headers.Remove(Headers.Compression);
-
                     switch (compressionType)
                     {
                         case Headers.CompressionTypes.GZip:
@@ -114,6 +112,8 @@ namespace Rebus.Transports.Encrypted
                                     "Received message has the {0} header, but the compression type is set to {1} which cannot be handled",
                                     Headers.Compression, compressionType));
                     }
+
+                    headers.Remove(Headers.Compression);
                 }
             }
 

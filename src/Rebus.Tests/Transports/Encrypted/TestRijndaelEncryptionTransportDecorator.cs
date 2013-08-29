@@ -211,6 +211,33 @@ namespace Rebus.Tests.Transports.Encrypted
             Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldBe("Hello world!");
         }
 
+        /// <summary>
+        /// 100000 (bytes -> compression -> encryption):
+        /// Transport message to send:
+        ///     headers: some random header: b270caeb-43ad-4f0c-b154-6f5dfdd41cc9, another random header: 4a7e7ffe-0426-46cc-80ba-831663d9a537
+        ///     body size: 1600000
+        /// Wire transport message:
+        ///     headers: some random header: b270caeb-43ad-4f0c-b154-6f5dfdd41cc9, another random header: 4a7e7ffe-0426-46cc-80ba-831663d9a537, rebus-compression: gzip, rebus-encrypted: , rebus-salt: zN++MFD+mRuRp6KTSldMQg==
+        ///     body size: 3168
+        /// Received transport message:
+        ///     headers: some random header: b270caeb-43ad-4f0c-b154-6f5dfdd41cc9, another random header: 4a7e7ffe-0426-46cc-80ba-831663d9a537
+        ///     body size: 1600000
+        /// 
+        /// 100000 (bytes -> encryption -> compression):
+        /// Transport message to send:
+        ///    headers: some random header: fd5a4d0a-4723-4866-a9a3-d271bc90c23e, another random header: d17fa3e9-4fdd-4eca-801e-75d926d1a123
+        ///    body size: 1600000
+        ///
+        /// Wire transport message:
+        ///    headers: some random header: fd5a4d0a-4723-4866-a9a3-d271bc90c23e, another random header: d17fa3e9-4fdd-4eca-801e-75d926d1a123, rebus-encrypted: , rebus-salt: 6fjLnwkOwAVOO7dOp86mdQ==, rebus-compression: gzip
+        ///    body size: 1600524
+        ///
+        /// Received transport message:
+        ///    headers: some random header: fd5a4d0a-4723-4866-a9a3-d271bc90c23e, another random header: d17fa3e9-4fdd-4eca-801e-75d926d1a123
+        ///    body size: 1600000
+        /// 
+        /// CONCLUSION: FIRST, we compress. THEN we encrypt.
+        /// </summary>
         [TestCase(1)]
         [TestCase(100)]
         [TestCase(10000)]
