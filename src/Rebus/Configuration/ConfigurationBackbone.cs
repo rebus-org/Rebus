@@ -13,6 +13,7 @@ namespace Rebus.Configuration
     {
         readonly List<EventsConfigurer> eventsConfigurers = new List<EventsConfigurer>();
         readonly List<Action<ConfigurationBackbone>> decorationSteps = new List<Action<ConfigurationBackbone>>();
+        readonly Dictionary<Type, object> registry = new Dictionary<Type, object>();
         readonly IContainerAdapter adapter;
 
         /// <summary>
@@ -30,6 +31,32 @@ namespace Rebus.Configuration
 
             ActivateHandlers = adapter;
             AdditionalBehavior = new ConfigureAdditionalBehavior();
+        }
+
+        /// <summary>
+        /// Attempts to load from the registry the instance stored with the given type key.
+        /// Returns null if none such instance is found.
+        /// </summary>
+        public TKey LoadFromRegistry<TKey>()
+        {
+            return registry.ContainsKey(typeof(TKey))
+                       ? (TKey)registry[typeof(TKey)]
+                       : default(TKey);
+        }
+
+        /// <summary>
+        /// Stores the given instance under the type key specified by <typeparamref name="TKey"/>. Can be used for
+        /// different configurers to cooperate and work on the same instances and/or abstractions
+        /// </summary>
+        public void SaveToRegistry<TKey, TInstance>(TInstance instance) where TInstance : TKey
+        {
+            if (registry.ContainsKey(typeof(TKey)))
+            {
+                throw new ArgumentException(string.Format("Attempted to overwrite an already registered {0}",
+                                                          typeof(TKey)));
+            }
+
+            registry[typeof(TKey)] = instance;
         }
 
         /// <summary>
