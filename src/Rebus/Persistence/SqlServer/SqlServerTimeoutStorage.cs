@@ -107,7 +107,7 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText =
                         string.Format(
-                            @"select time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
+                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
                             timeoutsTableName);
 
                     command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
@@ -116,13 +116,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         while (reader.Read())
                         {
+                            var id = (long)reader["id"];
                             var correlationId = (string)reader["correlation_id"];
                             var sagaId = (Guid)reader["saga_id"];
                             var replyTo = (string)reader["reply_to"];
                             var timeToReturn = (DateTime)reader["time_to_return"];
                             var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            var sqlTimeout = new DueSqlTimeout(replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
+                            var sqlTimeout = new DueSqlTimeout(id, replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
 
                             dueTimeouts.Add(sqlTimeout);
                         }
@@ -158,19 +159,26 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
+    [id] [bigint] IDENTITY(1,1) NOT NULL,
 	[time_to_return] [datetime2](7) NOT NULL,
 	[correlation_id] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
-	[custom_data] [nvarchar](MAX) NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+	[custom_data] [nvarchar](MAX) NULL CONSTRAINT [PK_{0}] PRIMARY KEY NONCLUSTERED 
 (
-	[time_to_return] ASC,
-	[correlation_id] ASC,
-	[reply_to] ASC
+	[id] ASC
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 ", timeoutsTableName);
+                    command.ExecuteNonQuery();
+                }
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
+(
+	[time_to_return] ASC
+)", timeoutsTableName);
                     command.ExecuteNonQuery();
                 }
             }
@@ -182,10 +190,12 @@ CREATE TABLE [dbo].[{0}](
         {
             readonly string connectionString;
             readonly string timeoutsTableName;
+            readonly long id;
 
-            public DueSqlTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
+            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
+                this.id = id;
                 this.connectionString = connectionString;
                 this.timeoutsTableName = timeoutsTableName;
             }
@@ -198,17 +208,9 @@ CREATE TABLE [dbo].[{0}](
 
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText =
-                            string.Format(
-                                @"delete from [{0}] 
-                          where time_to_return = @time_to_return 
-                            and reply_to = @reply_to
-                            and correlation_id = @correlation_id",
-                                timeoutsTableName);
+                        command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
 
-                        command.Parameters.Add("time_to_return", SqlDbType.DateTime2).Value = TimeToReturn;
-                        command.Parameters.Add("correlation_id", SqlDbType.NVarChar).Value = CorrelationId;
-                        command.Parameters.Add("reply_to", SqlDbType.NVarChar).Value = ReplyTo;
+                        command.Parameters.Add("id", SqlDbType.BigInt).Value = this.id;
 
                         var executeNonQuery = command.ExecuteNonQuery();
 
