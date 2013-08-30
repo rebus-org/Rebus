@@ -99,7 +99,7 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText =
                         string.Format(
-                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
+                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time order by time_to_return asc",
                             timeoutsTableName);
 
                     command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
