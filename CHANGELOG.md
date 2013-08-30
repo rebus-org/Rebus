@@ -127,7 +127,7 @@
 
 ## 0.38.1
 
-* Fixed constantly generated warning in timeout manager - thx @hagbarddenstore
+* Fixed constantly generated warning in timeout manager - thx [hagbarddenstore](/hagbarddenstore)
 
 ## 0.39.0
 
@@ -135,4 +135,4 @@
 
 ## 0.40.0
 
-* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx @krivin
+* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx [krivin](/krivin)
