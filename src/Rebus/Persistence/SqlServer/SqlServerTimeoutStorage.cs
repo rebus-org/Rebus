@@ -79,15 +79,7 @@ namespace Rebus.Persistence.SqlServer
                         command.Parameters.Add(parameter.Item1, parameter.Item3).Value = parameter.Item2;
                     }
 
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {
-                        // if we're violating PK, it's because we're inserting the same timeout again...
-                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
-                    }
+                    command.ExecuteNonQuery();
                 }
             }
         }
@@ -212,15 +204,7 @@ CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
 
                         command.Parameters.Add("id", SqlDbType.BigInt).Value = this.id;
 
-                        var executeNonQuery = command.ExecuteNonQuery();
-
-                        if (executeNonQuery == 0)
-                        {
-                            throw new InvalidOperationException(
-                                string.Format(
-                                    "Stale state! Attempted to delete {0} from {1}, but it was already deleted!",
-                                    this, timeoutsTableName));
-                        }
+                        command.ExecuteNonQuery();
                     }
                 }
             }
