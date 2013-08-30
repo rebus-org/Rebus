@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Rebus.Logging;
@@ -52,19 +53,18 @@ namespace Rebus.Persistence.SqlServer
                 using (var command = connection.CreateCommand())
                 {
                     var parameters =
-                        new List<Tuple<string, object>>
+                        new List<Tuple<string, object, SqlDbType>>
                             {
-                                new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn),
-                                new Tuple<string, object>("correlation_id", newTimeout.CorrelationId),
-                                new Tuple<string, object>("saga_id", newTimeout.SagaId),
-                                new Tuple<string, object>("reply_to", newTimeout.ReplyTo)
+                                Tuple.Create("time_to_return", (object)newTimeout.TimeToReturn, SqlDbType.DateTime2),
+                                Tuple.Create("correlation_id", (object)newTimeout.CorrelationId, SqlDbType.NVarChar),
+                                Tuple.Create("saga_id", (object)newTimeout.SagaId, SqlDbType.UniqueIdentifier),
+                                Tuple.Create("reply_to", (object)newTimeout.ReplyTo, SqlDbType.NVarChar),
                             };
 
                     if (newTimeout.CustomData != null)
                     {
-                        parameters.Add(new Tuple<string, object>("custom_data", newTimeout.CustomData));
+                        parameters.Add(Tuple.Create("custom_data", (object)newTimeout.CustomData, SqlDbType.NVarChar));
                     }
-
                     // generate sql with necessary columns including matching sql parameter names
                     command.CommandText =
                         string.Format(
@@ -76,18 +76,10 @@ namespace Rebus.Persistence.SqlServer
                     // set parameters
                     foreach (var parameter in parameters)
                     {
-                        command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
+                        command.Parameters.Add(parameter.Item1, parameter.Item3).Value = parameter.Item2;
                     }
 
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {
-                        // if we're violating PK, it's because we're inserting the same timeout again...
-                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
-                    }
+                    command.ExecuteNonQuery();
                 }
             }
         }
@@ -107,7 +99,7 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText =
                         string.Format(
-                            @"select time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time",
+                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time order by time_to_return asc",
                             timeoutsTableName);
 
                     command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
@@ -116,13 +108,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         while (reader.Read())
                         {
+                            var id = (long)reader["id"];
                             var correlationId = (string)reader["correlation_id"];
                             var sagaId = (Guid)reader["saga_id"];
                             var replyTo = (string)reader["reply_to"];
                             var timeToReturn = (DateTime)reader["time_to_return"];
                             var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            var sqlTimeout = new DueSqlTimeout(replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
+                            var sqlTimeout = new DueSqlTimeout(id, replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
 
                             dueTimeouts.Add(sqlTimeout);
                         }
@@ -158,19 +151,26 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
-	[time_to_return] [datetime] NOT NULL,
+    [id] [bigint] IDENTITY(1,1) NOT NULL,
+	[time_to_return] [datetime2](7) NOT NULL,
 	[correlation_id] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
-	[custom_data] [nvarchar](MAX) NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+	[custom_data] [nvarchar](MAX) NULL CONSTRAINT [PK_{0}] PRIMARY KEY NONCLUSTERED 
 (
-	[time_to_return] ASC,
-	[correlation_id] ASC,
-	[reply_to] ASC
+	[id] ASC
 )WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 ", timeoutsTableName);
+                    command.ExecuteNonQuery();
+                }
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
+(
+	[time_to_return] ASC
+)", timeoutsTableName);
                     command.ExecuteNonQuery();
                 }
             }
@@ -182,10 +182,12 @@ CREATE TABLE [dbo].[{0}](
         {
             readonly string connectionString;
             readonly string timeoutsTableName;
+            readonly long id;
 
-            public DueSqlTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
+            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
+                this.id = id;
                 this.connectionString = connectionString;
                 this.timeoutsTableName = timeoutsTableName;
             }
@@ -198,27 +200,11 @@ CREATE TABLE [dbo].[{0}](
 
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText =
-                            string.Format(
-                                @"delete from [{0}] 
-                          where time_to_return = @time_to_return 
-                            and reply_to = @reply_to
-                            and correlation_id = @correlation_id",
-                                timeoutsTableName);
+                        command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
 
-                        command.Parameters.AddWithValue("time_to_return", TimeToReturn);
-                        command.Parameters.AddWithValue("correlation_id", CorrelationId);
-                        command.Parameters.AddWithValue("reply_to", ReplyTo);
+                        command.Parameters.Add("id", SqlDbType.BigInt).Value = this.id;
 
-                        var executeNonQuery = command.ExecuteNonQuery();
-
-                        if (executeNonQuery == 0)
-                        {
-                            throw new InvalidOperationException(
-                                string.Format(
-                                    "Stale state! Attempted to delete {0} from {1}, but it was already deleted!",
-                                    this, timeoutsTableName));
-                        }
+                        command.ExecuteNonQuery();
                     }
                 }
             }
