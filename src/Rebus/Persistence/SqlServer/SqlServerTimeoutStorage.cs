@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Rebus.Logging;
@@ -52,19 +53,18 @@ namespace Rebus.Persistence.SqlServer
                 using (var command = connection.CreateCommand())
                 {
                     var parameters =
-                        new List<Tuple<string, object>>
+                        new List<Tuple<string, object, SqlDbType>>
                             {
-                                new Tuple<string, object>("time_to_return", newTimeout.TimeToReturn),
-                                new Tuple<string, object>("correlation_id", newTimeout.CorrelationId),
-                                new Tuple<string, object>("saga_id", newTimeout.SagaId),
-                                new Tuple<string, object>("reply_to", newTimeout.ReplyTo)
+                                Tuple.Create("time_to_return", (object)newTimeout.TimeToReturn, SqlDbType.DateTime2),
+                                Tuple.Create("correlation_id", (object)newTimeout.CorrelationId, SqlDbType.NVarChar),
+                                Tuple.Create("saga_id", (object)newTimeout.SagaId, SqlDbType.UniqueIdentifier),
+                                Tuple.Create("reply_to", (object)newTimeout.ReplyTo, SqlDbType.NVarChar),
                             };
 
                     if (newTimeout.CustomData != null)
                     {
-                        parameters.Add(new Tuple<string, object>("custom_data", newTimeout.CustomData));
+                        parameters.Add(Tuple.Create("custom_data", (object)newTimeout.CustomData, SqlDbType.NVarChar));
                     }
-
                     // generate sql with necessary columns including matching sql parameter names
                     command.CommandText =
                         string.Format(
@@ -76,7 +76,7 @@ namespace Rebus.Persistence.SqlServer
                     // set parameters
                     foreach (var parameter in parameters)
                     {
-                        command.Parameters.AddWithValue(parameter.Item1, parameter.Item2);
+                        command.Parameters.Add(parameter.Item1, parameter.Item3).Value = parameter.Item2;
                     }
 
                     try
@@ -158,7 +158,7 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
-	[time_to_return] [datetime] NOT NULL,
+	[time_to_return] [datetime2](7) NOT NULL,
 	[correlation_id] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
@@ -206,9 +206,9 @@ CREATE TABLE [dbo].[{0}](
                             and correlation_id = @correlation_id",
                                 timeoutsTableName);
 
-                        command.Parameters.AddWithValue("time_to_return", TimeToReturn);
-                        command.Parameters.AddWithValue("correlation_id", CorrelationId);
-                        command.Parameters.AddWithValue("reply_to", ReplyTo);
+                        command.Parameters.Add("time_to_return", SqlDbType.DateTime2).Value = TimeToReturn;
+                        command.Parameters.Add("correlation_id", SqlDbType.NVarChar).Value = CorrelationId;
+                        command.Parameters.Add("reply_to", SqlDbType.NVarChar).Value = ReplyTo;
 
                         var executeNonQuery = command.ExecuteNonQuery();
 
