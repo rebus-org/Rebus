@@ -202,7 +202,7 @@ CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
                     {
                         command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
 
-                        command.Parameters.Add("id", SqlDbType.BigInt).Value = this.id;
+                        command.Parameters.Add("id", SqlDbType.BigInt).Value = id;
 
                         command.ExecuteNonQuery();
                     }

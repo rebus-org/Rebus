@@ -13,8 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         protected override void DoSetUp()
         {
             // ensure the two tables are dropped
-            try { ExecuteCommand("drop table " + TimeoutsTableName); }
-            catch { }
+            DropTable(TimeoutsTableName);
 
             storage = new SqlServerTimeoutStorage(ConnectionStrings.SqlServer, TimeoutsTableName);
         }

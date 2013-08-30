@@ -127,8 +127,12 @@
 
 ## 0.38.1
 
-* Fixed constantly generated warning in timeout manager
+* Fixed constantly generated warning in timeout manager - thx @hagbarddenstore
 
 ## 0.39.0
 
 * Added ability to compress message bodies as well.
+
+## 0.40.0
+
+* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx @krivin
