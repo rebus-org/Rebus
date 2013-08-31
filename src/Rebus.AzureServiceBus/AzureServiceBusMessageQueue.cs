@@ -263,7 +263,7 @@ namespace Rebus.AzureServiceBus
                             }
                         });
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 try
                 {

@@ -92,10 +92,19 @@ namespace Rebus.Shared
         /// </summary>
         public const string UserName = "rebus-username";
 
+        /// <summary>
+        /// This header indicates that the body is currently compressed. The type of the compression is specified by the value.
+        /// </summary>
         public const string Compression = "rebus-compression";
 
+        /// <summary>
+        /// Contains the available compression types.
+        /// </summary>
         public class CompressionTypes
         {
+            /// <summary>
+            /// Indicates that the body has been compressed using GZip
+            /// </summary>
             public const string GZip = "gzip";
         }
     }
