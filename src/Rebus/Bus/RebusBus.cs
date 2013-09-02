@@ -116,22 +116,29 @@ namespace Rebus.Bus
                 .Where(r => !ReferenceEquals(null, r));
         }
 
-        /// <summary>
-        /// Starts the bus
-        /// </summary>
-        public IBus Start()
+        private static int GetConfiguredNumberOfWorkers()
         {
             const int defaultNumberOfWorkers = 1;
 
-            var numberOfWorkers = RebusConfigurationSection
+            return RebusConfigurationSection
                 .GetConfigurationValueOrDefault(s => s.Workers, defaultNumberOfWorkers)
                 .GetValueOrDefault(defaultNumberOfWorkers);
-
-            InternalStart(numberOfWorkers);
-
-            return this;
         }
 
+        /// <summary>
+        /// Starts the bus
+        /// </summary>
+        public RebusBus Start()
+        {
+            InternalStart(GetConfiguredNumberOfWorkers());
+            return this;
+        }
+        IBus IStartableBus.Start()
+        {
+            InternalStart(GetConfiguredNumberOfWorkers());
+            return this;
+        }
+ 
         /// <summary>
         /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
         /// </summary>
@@ -144,6 +151,14 @@ namespace Rebus.Bus
             return this;
         }
 
+        IBus IStartableBus.Start(int numberOfWorkers)
+        {
+            Guard.GreaterThanOrEqual(numberOfWorkers, 0, "numberOfWorkers");
+
+            InternalStart(numberOfWorkers);
+
+            return this;
+        }
 
         /// <summary>
         /// Sends the specified message to the destination as specified by the currently
@@ -847,5 +862,5 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 cleanupTimer.Dispose();
             }
         }
-    }
+   }
 }
