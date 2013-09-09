@@ -65,6 +65,30 @@ namespace Rebus.Tests.Serialization.Json
             public string ThisIsÜnicøde { get; set; }
         }
 
+        [TestCase("utf-7")]
+        [TestCase("utf-8")]
+        [TestCase("utf-16")]
+        [TestCase("utf-32")]
+        public void WorksWithCustomEncodingAsWell(string encodingWebName)
+        {
+            // arrange
+            var encoding = Encoding.GetEncoding(encodingWebName);
+            serializer.SpecifyEncoding(encoding);
+            
+            // act
+            var transportMessageToSend = serializer.Serialize(new Message {Messages = new object[] {"hej!"}});
+
+            // assert
+            transportMessageToSend.Headers.ShouldContainKeyAndValue(Headers.Encoding, encoding.WebName);
+            transportMessageToSend.Headers.ShouldContainKeyAndValue(Headers.ContentType, "text/json");
+
+            encoding.GetString(transportMessageToSend.Body)
+                .Replace("\r", "")
+                .Replace("\n", "")
+                .Replace(" ", "")
+                .ShouldBe(@"{""$type"":""System.Object[],mscorlib"",""$values"":[""hej!""]}");
+        }
+
         [Test]
         public void IncludesContentTypeAndEncodingInProperHeaderWhenSerializing()
         {

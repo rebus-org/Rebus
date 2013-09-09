@@ -138,5 +138,6 @@
 * Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx [krivin](https://github.com/krivin)
 * `IStartableBus` API extended with the ability to specify number of workers - thx [krivin](https://github.com/krivin)
 
+## 0.40.1
 
-
+* Added ability to use custom encoding with the built-in JSON serializer

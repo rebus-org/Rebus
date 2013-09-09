@@ -1,3 +1,5 @@
+using Rebus.Bus;
+
 namespace Rebus
 {
     /// <summary>

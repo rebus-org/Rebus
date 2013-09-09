@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration
@@ -34,6 +35,18 @@ namespace Rebus.Configuration
         public JsonSerializationOptions AddTypeResolver(Func<TypeDescriptor, Type> resolve)
         {
             jsonMessageSerializer.AddTypeResolver(resolve);
+            return this;
+        }
+
+        /// <summary>
+        /// Overrides the default UTF-7 encoding and uses the specified encoding instead when serializing. The used encoding
+        /// is put in a header, so you don't necessarily need to specify the same encoding in order to be able to deserialize
+        /// properly.
+        /// </summary>
+        public JsonSerializationOptions SpecifyEncoding(Encoding encoding)
+        {
+            if (encoding == null) throw new ArgumentNullException("encoding");
+            jsonMessageSerializer.SpecifyEncoding(encoding);
             return this;
         }
     }

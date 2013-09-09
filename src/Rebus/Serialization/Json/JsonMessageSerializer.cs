@@ -45,6 +45,8 @@ namespace Rebus.Serialization.Json
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
         
         readonly NonDefaultSerializationBinder binder;
+        
+        Encoding customEncoding;
 
         /// <summary>
         /// Constructs the serializer
@@ -63,14 +65,15 @@ namespace Rebus.Serialization.Json
             using (new CultureContext(serializationCulture))
             {
                 var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, settings);
+                var encodingToUse = customEncoding ?? DefaultEncoding;
 
                 var headers = message.Headers.Clone();
                 headers[Headers.ContentType] = JsonContentTypeName;
-                headers[Headers.Encoding] = DefaultEncoding.WebName;
+                headers[Headers.Encoding] = encodingToUse.WebName;
 
                 return new TransportMessageToSend
                            {
-                               Body = DefaultEncoding.GetBytes(messageAsString),
+                               Body = encodingToUse.GetBytes(messageAsString),
                                Headers = headers,
                                Label = message.GetLabel(),
                            };
@@ -244,6 +247,16 @@ namespace Rebus.Serialization.Json
         public void AddTypeResolver(Func<TypeDescriptor, Type> resolver)
         {
             binder.Add(resolver);
+        }
+
+        /// <summary>
+        /// Overrides the default UTF-7 encoding and uses the specified encoding instead when serializing. The used encoding
+        /// is put in a header, so you don't necessarily need to specify the same encoding in order to be able to deserialize
+        /// properly.
+        /// </summary>
+        public void SpecifyEncoding(Encoding encoding)
+        {
+            customEncoding = encoding;
         }
     }
 }
