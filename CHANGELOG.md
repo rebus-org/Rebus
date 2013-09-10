@@ -141,3 +141,7 @@
 ## 0.40.1
 
 * Added ability to use custom encoding with the built-in JSON serializer
+
+## 0.41.0
+
+* Upgraded RabbitMQ client dependency to 3.1
