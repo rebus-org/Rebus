@@ -1,13 +1,4 @@
-﻿
-
-
-
-
-
-
-
-
-using System;
+﻿using System;
 using Ninject.Activation;
 using Ninject.Infrastructure.Disposal;
 using Ninject.Syntax;
