@@ -10,6 +10,7 @@ namespace Rebus
     /// </summary>
     public class MessageContext : IMessageContext
     {
+        const string DispatchMessageToHandlersKey = "rebus-DispatchMessageToHandlers";
         readonly IDictionary<string, object> headers;
         static ILog log;
 
@@ -81,7 +82,6 @@ Stacktrace of when the current message context was created:
         {
             this.headers = headers;
 
-            DispatchMessageToHandlers = true;
             Items = new Dictionary<string, object>();
 
 #if DEBUG
@@ -142,10 +142,16 @@ Stacktrace of when the current message context was created:
         /// </summary>
         public static bool MessageDispatchAborted
         {
-            get { return HasCurrent && !((MessageContext)current).DispatchMessageToHandlers; }
-        }
+            get
+            {
+                if (!HasCurrent) return false;
 
-        internal bool DispatchMessageToHandlers { get; set; }
+                var messageContext = GetCurrent();
+
+                return messageContext.Items.ContainsKey(DispatchMessageToHandlersKey)
+                       && !(bool) messageContext.Items[DispatchMessageToHandlersKey];
+            }
+        }
 
         /// <summary>
         /// Aborts processing the current message - i.e., after exiting from the
@@ -155,7 +161,7 @@ Stacktrace of when the current message context was created:
         public void Abort()
         {
             log.Debug("Abort was called - will stop dispatching message to handlers");
-            DispatchMessageToHandlers = false;
+            Items[DispatchMessageToHandlersKey] = false;
         }
 
         /// <summary>

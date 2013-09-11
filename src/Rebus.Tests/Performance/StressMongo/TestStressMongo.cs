@@ -62,7 +62,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
                 {
-                    MinLevel = LogLevel.Debug,
+                    MinLevel = LogLevel.Warn,
                     Filters = {l => true}
                 };
 

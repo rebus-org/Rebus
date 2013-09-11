@@ -4,7 +4,6 @@ using Autofac;
 using Rebus.Autofac;
 using Rebus.Configuration;
 using Rebus.Testing;
-using Rhino.Mocks;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {
@@ -29,7 +28,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 
         public void StartUnitOfWork()
         {
-            testMessageContext = new TestMessageContext();
+            testMessageContext = new TestMessageContext {Headers = new Dictionary<string, object>()};
             testMessageContext.Items["AutofacLifetimeScope"] = container.BeginLifetimeScope("UnitOfWorkLifetime");
             disposables.Add(FakeMessageContext.Establish(testMessageContext));
         }
