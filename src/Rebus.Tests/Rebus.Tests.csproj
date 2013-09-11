@@ -153,11 +153,13 @@
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
     <Compile Include="Bugs\DoesNotCrashWhenRunningWithSingleRabbitThread.cs" />
     <Compile Include="Bugs\DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq.cs" />
+    <Compile Include="Bugs\DoesNotThrowNullReferenceExceptionWhenFakingTheMessageContext.cs" />
     <Compile Include="Bugs\RabbitMqConnectionDoesNotChokeOnSingleTooLargeMessage.cs" />
     <Compile Include="Bugs\SendAndPublishAutomaticallyEnlistInAmbientTransaction.cs" />
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />
     <Compile Include="AppConfig.cs" />
+    <Compile Include="Bugs\TestingWorksWithMockedMessageContextAlsoWhenAborting.cs" />
     <Compile Include="Configuration\TestBuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\TestConfigurationApi.cs" />
     <Compile Include="Configuration\TestDetermineMessageOwnershipFromRebusConfigurationSection.cs" />

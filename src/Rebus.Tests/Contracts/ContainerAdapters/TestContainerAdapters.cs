@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
+using Rebus.Shared;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
 using Rhino.Mocks;
 using Shouldly;
 using System.Linq;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
@@ -28,6 +31,71 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             factory = new TFactory();
             adapter = factory.Create();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false);
+        }
+
+        [Test]
+        public void CanInjectMessageContext()
+        {
+            // since the built-in container adapter does not support ctor injection, we can't test this
+            if (typeof(TFactory) == typeof(BuiltinContainerAdapterFactory)) return;
+
+            SomeHandler.Reset();
+
+            factory.Register<IHandleMessages<string>, SomeHandler>();
+
+            try
+            {
+                using (var bus = Configure.With(adapter)
+                                          .Logging(l => l.ColoredConsole(LogLevel.Warn))
+                                          .Transport(t => t.UseMsmq("test.containeradapter.input", "error"))
+                                          .CreateBus()
+                                          .Start())
+                {
+                    bus.SendLocal("hello there!");
+
+                    var timeout = 5.Seconds();
+                    if (!SomeHandler.WaitieThingie.WaitOne(timeout))
+                    {
+                        Assert.Fail("Did not receive message within {0} timeout", timeout);
+                    }
+
+                    SomeHandler.HadContext.ShouldBe(true);
+                }
+            }
+            finally
+            {
+                MsmqUtil.Delete("test.containeradapter.input");
+            }
+        }
+
+        class SomeHandler : IHandleMessages<string>
+        {
+            public static bool HadContext { get; private set; }
+
+            public static ManualResetEvent WaitieThingie { get; private set; }
+
+            public static void Reset()
+            {
+                HadContext = false;
+                WaitieThingie = new ManualResetEvent(false);
+            }
+
+            readonly IMessageContext context;
+
+            public SomeHandler(IMessageContext context)
+            {
+                this.context = context;
+            }
+
+            public void Handle(string message)
+            {
+                if (context != null)
+                {
+                    HadContext = true;
+                }
+
+                WaitieThingie.Set();
+            }
         }
 
         [Test]
@@ -59,7 +127,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             // arrange
             factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
             factory.StartUnitOfWork();
-            
+
             // act
             var instances = adapter.GetHandlerInstancesFor<string>();
             adapter.Release(instances);

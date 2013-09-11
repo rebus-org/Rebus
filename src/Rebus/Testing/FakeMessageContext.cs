@@ -18,6 +18,24 @@ namespace Rebus.Testing
         /// </summary>
         public static IDisposable Establish(IMessageContext messageContext)
         {
+            if (messageContext == null) throw new ArgumentNullException("messageContext");
+
+            if (messageContext.Headers == null)
+            {
+                throw new ArgumentException(string.Format(
+                    "Passed-in message context {0} has null as the Headers property! Please make sure"
+                    + " that your faked message context has a proper Headers dictionary in place,"
+                    + " otherwise stuff would not work.", messageContext));
+            }
+            
+            if (messageContext.Items == null)
+            {
+                throw new ArgumentException(string.Format(
+                    "Passed-in message context {0} has null as the Items property! Please make sure"
+                    + " that your faked message context has a proper Items dictionary in place,"
+                    + " otherwise stuff would not work.", messageContext));
+            }
+
             MessageContext.current = messageContext;
             
             return new MessageContextResetter(messageContext);
