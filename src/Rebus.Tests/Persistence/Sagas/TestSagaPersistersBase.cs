@@ -38,8 +38,8 @@ namespace Rebus.Tests.Persistence.Sagas
         protected void EnterAFakeMessageContext()
         {
             var fakeConcurrentMessageContext = Mock<IMessageContext>();
-            var otherItems = new Dictionary<string, object>();
-            fakeConcurrentMessageContext.Stub(x => x.Items).Return(otherItems);
+            fakeConcurrentMessageContext.Stub(x => x.Headers).Return(new Dictionary<string, object>());
+            fakeConcurrentMessageContext.Stub(x => x.Items).Return(new Dictionary<string, object>());
             FakeMessageContext.Establish(fakeConcurrentMessageContext);
         }
 

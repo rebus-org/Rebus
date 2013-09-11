@@ -28,7 +28,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 
         public void StartUnitOfWork()
         {
-            testMessageContext = new TestMessageContext {Headers = new Dictionary<string, object>()};
+            testMessageContext = new TestMessageContext();
             testMessageContext.Items["AutofacLifetimeScope"] = container.BeginLifetimeScope("UnitOfWorkLifetime");
             disposables.Add(FakeMessageContext.Establish(testMessageContext));
         }
@@ -43,6 +43,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             public TestMessageContext()
             {
+                Headers = new Dictionary<string, object>();
                 Items = new Dictionary<string, object>();
             }
 
