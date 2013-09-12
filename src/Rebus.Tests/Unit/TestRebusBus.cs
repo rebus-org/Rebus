@@ -100,6 +100,7 @@ is just because there was a bug some time when the grouping of the messages was 
             var fakeContext = Mock<IMessageContext>();
             fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
             fakeContext.Stub(s => s.Headers).Return(new Dictionary<string, object>());
+            fakeContext.Stub(s => s.Items).Return(new Dictionary<string, object>());
 
             // act
             using (FakeMessageContext.Establish(fakeContext))
