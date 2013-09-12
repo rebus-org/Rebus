@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
 using NUnit.Framework;
-using Rebus.Gateway.Http.Inbound;
+using Rebus.HttpGateway.Inbound;
 using Shouldly;
 
-namespace Rebus.Tests.Gateway.Http
+namespace Rebus.Tests.HttpGateway.Http
 {
     [TestFixture]
     public class TestInboundService : FixtureBase

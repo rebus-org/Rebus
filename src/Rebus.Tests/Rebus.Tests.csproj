@@ -186,6 +186,9 @@
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
+    <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
+    <Compile Include="HttpGateway\Http\TestInboundService.cs" />
+    <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
