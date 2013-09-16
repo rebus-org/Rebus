@@ -145,3 +145,7 @@
 ## 0.41.0
 
 * Upgraded RabbitMQ client dependency to 3.1
+
+## 0.42.0
+
+* Fixed logging when unit of work commit fails - should always be logged as a USER exception
