@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Integration;
 using Shouldly;
+using System.Linq;
 
 namespace Rebus.Tests.Unit
 {
@@ -20,6 +22,8 @@ namespace Rebus.Tests.Unit
 
         protected override void DoSetUp()
         {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) {MinLevel = LogLevel.Info};
+
             receiveMessages = new MessageReceiverForTesting(new JsonMessageSerializer());
             handlerActivatorForTesting = new HandlerActivatorForTesting();
 
@@ -104,7 +108,7 @@ namespace Rebus.Tests.Unit
         public void CanProperlyCommitUnitOfWork()
         {
             // arrange
-            handlerActivatorForTesting.Handle<string>(str => unitOfWorkManager.RegisterEvent("Handled message: " + str));
+            handlerActivatorForTesting.Handle<TextMessage>(msg => unitOfWorkManager.RegisterEvent("Handled message: " + msg.Text));
 
             // act
             receiveMessages.Deliver(MessageWith("hello there!"));
@@ -128,9 +132,9 @@ namespace Rebus.Tests.Unit
         {
             // arrange
             handlerActivatorForTesting
-                .Handle<string>(str =>
+                .Handle<TextMessage>(msg =>
                     {
-                        unitOfWorkManager.RegisterEvent("Handled message: " + str);
+                        unitOfWorkManager.RegisterEvent("Handled message: " + msg.Text);
                         throw new OmfgExceptionThisIsBad("wut?!");
                     });
 
@@ -155,7 +159,7 @@ namespace Rebus.Tests.Unit
         public void WillTryToRollBackIfUowCommitFails()
         {
             // arrange
-            handlerActivatorForTesting.Handle<string>(str => unitOfWorkManager.RegisterEvent("Handled message: " + str));
+            handlerActivatorForTesting.Handle<TextMessage>(msg => unitOfWorkManager.RegisterEvent("Handled message: " + msg.Text));
 
             unitOfWorkManager.CommitShouldFail = true;
 
@@ -178,10 +182,55 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
+        public void WhenUowCommitFailsItIsConsideredToBeAUserException()
+        {
+            // arrange
+            RebusLoggerFactory.Current = new NullLoggerFactory();
+            var exceptions = new List<Tuple<string, Exception>>();
+            worker.UserException += (w, e) =>
+                {
+                    Console.WriteLine("USER exception: {0}", e.Message);
+                    exceptions.Add(Tuple.Create("USER", e));
+                };
+            worker.SystemException += (w, e) =>
+                {
+                    Console.WriteLine("SYSTEM exception: {0}", e.Message);
+                    exceptions.Add(Tuple.Create("SYSTEM", e));
+                };
+
+            worker.PoisonMessage += (m, info) =>
+                {
+                    var lastException = info.Exceptions.Last().Value;
+                    Console.WriteLine("POISON message: {0}", lastException.Message);
+                    exceptions.Add(Tuple.Create("POISON", lastException));
+                };
+
+            handlerActivatorForTesting.Handle<TextMessage>(str => { });
+
+            unitOfWorkManager.CommitShouldFail = true;
+
+            // act
+            receiveMessages.Deliver(MessageWith("hello there!"));
+            worker.Start();
+            Thread.Sleep(2.Seconds());
+            worker.Stop();
+
+            // assert
+            CollectionAssert.AreEquivalent(new[] {"USER", "POISON"},
+                                           exceptions.Select(e => e.Item1).ToArray(),
+                                           @"Expected a USER followed by a POISON because:
+
+    1) Attempt to deliver => Commit fails => BAM!!1 USER EXCEPTION
+    2) Attempt to deliver => MaxRetries reached => BAM!1 POISON
+
+");
+        }
+
+        [Test]
         public void DoesNotChokeIfBothCommitAndAbortFail()
         {
             // arrange
-            handlerActivatorForTesting.Handle<string>(str => unitOfWorkManager.RegisterEvent("Handled message: " + str));
+            handlerActivatorForTesting.Handle<TextMessage>(msg => unitOfWorkManager.RegisterEvent("Handled message: " + msg.Text));
 
             unitOfWorkManager.CommitShouldFail = true;
             unitOfWorkManager.AbortShouldFail = true;
@@ -204,9 +253,18 @@ namespace Rebus.Tests.Unit
                                            });
         }
 
-        Message MessageWith(object contents)
+        Message MessageWith(string text)
         {
-            return new Message { Headers = new Dictionary<string, object>(), Messages = new[] { contents } };
+            return new Message
+                       {
+                           Headers = new Dictionary<string, object>(),
+                           Messages = new object[] {new TextMessage {Text = text}}
+                       };
+        }
+
+        class TextMessage
+        {
+            public string Text { get; set; }
         }
     }
 }

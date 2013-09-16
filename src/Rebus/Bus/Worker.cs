@@ -174,6 +174,10 @@ namespace Rebus.Bus
                         {
                             UserException(this, e.InnerException);
                         }
+                        else if (e is UnitOfWorkCommitException)
+                        {
+                            UserException(this, e);
+                        }
                         else
                         {
                             SystemException(this, e);
@@ -301,7 +305,7 @@ namespace Rebus.Bus
                                 log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
                                 GetDispatchMethod(typeToDispatch)
-                                    .Invoke(this, new[] {logicalMessage});
+                                    .Invoke(this, new[] { logicalMessage });
                             }
                             catch (Exception exception)
                             {
@@ -337,7 +341,14 @@ namespace Rebus.Bus
 
                         foreach (var unitOfWork in unitsOfWork)
                         {
-                            unitOfWork.Commit();
+                            try
+                            {
+                                unitOfWork.Commit();
+                            }
+                            catch (Exception exception)
+                            {
+                                throw new UnitOfWorkCommitException(exception, unitOfWork);
+                            }
                         }
                     }
                     catch
