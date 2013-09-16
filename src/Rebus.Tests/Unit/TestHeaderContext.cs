@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Shouldly;
@@ -51,6 +52,23 @@ namespace Rebus.Tests.Unit
             GC.Collect();
             GC.WaitForPendingFinalizers();
             c.Tick();
+
+            // assert
+            c.headers.Count.ShouldBe(0);
+        }
+
+        [Test]
+        public void CleansUpPeriodically()
+        {
+            // arrange
+            var someObject = new object();
+            c.AttachHeader(someObject, "header1", "value1");
+
+            // act
+            someObject = null;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(2000);
 
             // assert
             c.headers.Count.ShouldBe(0);

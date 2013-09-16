@@ -10,6 +10,7 @@ using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
 using Rebus.Timeout;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Bus
 {
@@ -826,12 +827,13 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         internal class HeaderContext
         {
             internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
-            internal readonly System.Timers.Timer cleanupTimer;
+            internal readonly Timer cleanupTimer;
 
             public HeaderContext()
             {
-                cleanupTimer = new System.Timers.Timer { Interval = TimeSpan.FromSeconds(1).TotalMilliseconds };
+                cleanupTimer = new Timer { Interval = TimeSpan.FromSeconds(1).TotalMilliseconds };
                 cleanupTimer.Elapsed += (o, ea) => headers.RemoveDeadReferences();
+                cleanupTimer.Start();
             }
 
             public void AttachHeader(object message, string key, string value)

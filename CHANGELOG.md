@@ -149,3 +149,4 @@
 ## 0.42.0
 
 * Fixed logging when unit of work commit fails - should always be logged as a USER exception
+* Fixed bug where adding custom headers could result in leaking memory in the form of numerous (dead) weak references
