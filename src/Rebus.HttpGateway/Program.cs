@@ -17,7 +17,8 @@ namespace Rebus.HttpGateway
                 .Run(s =>
                 {
                     const string text = "Rebus Gateway Service";
-
+                    
+                    s.UseLog4Net();
                     s.SetDescription("Rebus Gateway Service - Install named instance by adding '/instance:\"myInstance\"' when installing.");
                     s.SetDisplayName(text);
                     s.SetInstanceName("default");

@@ -31,6 +31,7 @@ namespace Rebus.Timeout
                          {
                              const string text = "Rebus Timeout Service";
 
+                             s.UseLog4Net();
                              s.SetDescription("Rebus Timeout Service - Install named instance by adding '/instance:\"myInstance\"' when installing.");
                              s.SetDisplayName(text);
                              s.SetInstanceName("default");
