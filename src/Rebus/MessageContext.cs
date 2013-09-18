@@ -92,7 +92,7 @@ Stacktrace of when the current message context was created:
         /// <summary>
         /// Gets the message ID from the transport message headers
         /// </summary>
-        public string TransportMessageId
+        public string RebusTransportMessageId
         {
             get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }

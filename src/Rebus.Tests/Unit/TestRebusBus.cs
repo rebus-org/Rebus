@@ -378,6 +378,54 @@ Or should it?")]
             Assert.That(() => bus.Defer(deferTime, message), Throws.Nothing);
         }
 
+        [Test]
+        public void AttachesRebusMessageIdOnVirginMessage()
+        {
+            bus.Send(new FirstMessage());
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
+                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.MessageId)),
+                                                     Arg<ITransactionContext>.Is.Anything));
+        }
+
+        [Test]
+        public void TransfersMessageIdToDeferredMessage()
+        {
+            var headers = new Dictionary<string, object>
+            {
+                {Headers.MessageId, "Oh the uniqueness"}
+            };
+
+            var message = new FirstMessage();
+
+            using (MessageContext.Establish(headers))
+            {
+                bus.Defer(TimeSpan.Zero, message);
+            }
+
+            bus.GetHeaderFor(message, Headers.MessageId).ShouldBe("Oh the uniqueness");
+        }
+
+        [Test]
+        public void UserCanOverwriteMessageIdOnDeferredMessages()
+        {
+            var headers = new Dictionary<string, object>
+            {
+                {Headers.MessageId, "Oh the uniqueness"}
+            };
+
+            var message = new FirstMessage();
+
+            using (MessageContext.Establish(headers))
+            {
+                bus.AttachHeader(message, Headers.MessageId, "I know what it is");
+                bus.Defer(TimeSpan.Zero, message);
+            }
+
+            bus.GetHeaderFor(message, Headers.MessageId).ShouldBe("I know what it is");
+        }
+
+
         RebusBus CreateBusInOneWayMode()
         {
             var behavior = new ConfigureAdditionalBehavior();

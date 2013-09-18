@@ -53,7 +53,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             }
 
             public string ReturnAddress { get; private set; }
-            public string TransportMessageId { get; private set; }
+            public string RebusTransportMessageId { get; private set; }
             public IDictionary<string, object> Items { get; private set; }
             public void Abort()
             {

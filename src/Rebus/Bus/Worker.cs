@@ -7,6 +7,7 @@ using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
 using System.Linq;
+using Rebus.Shared;
 using Rebus.Timeout;
 
 namespace Rebus.Bus
@@ -254,6 +255,12 @@ namespace Rebus.Bus
             }
 
             successiveNullMessagesReceived = 0;
+
+            // Populate rebus-msg-id, if not set, from transport-level-id, if such id is available.
+            if (!transportMessage.Headers.ContainsKey(Headers.MessageId) && transportMessage.Id != null)
+            {
+                transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
+            }
 
             var id = transportMessage.Id;
             var label = transportMessage.Label;

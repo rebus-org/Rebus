@@ -14,9 +14,10 @@ namespace Rebus
         string ReturnAddress { get; }
 
         /// <summary>
-        /// Gets the ID of the message that is currently being handled.
+        /// Gets the ID of the message that is currently being handled. This ID is normally provided by 
+        /// Rebus and follows the message if it's forwarded
         /// </summary>
-        string TransportMessageId { get; }
+        string RebusTransportMessageId { get; }
 
         /// <summary>
         /// Gets the dictionary of objects associated with this message context. This collection can be used to store stuff
