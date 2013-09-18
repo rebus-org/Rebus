@@ -279,8 +279,8 @@ namespace Rebus.Bus
             {
                 BeforeTransportMessage(transportMessage);
 
-                // Populate rebus-msg-id, if not set, from transport-level-id, if such id is available.
-                if (!transportMessage.Headers.ContainsKey(Headers.MessageId) && transportMessage.Id != null)
+                // Populate rebus-msg-id, if not set, from transport-level-id
+                if (!transportMessage.Headers.ContainsKey(Headers.MessageId))
                 {
                     transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
                 }
