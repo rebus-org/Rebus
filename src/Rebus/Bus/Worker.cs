@@ -256,12 +256,6 @@ namespace Rebus.Bus
 
             successiveNullMessagesReceived = 0;
 
-            // Populate rebus-msg-id, if not set, from transport-level-id, if such id is available.
-            if (!transportMessage.Headers.ContainsKey(Headers.MessageId) && transportMessage.Id != null)
-            {
-                transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
-            }
-
             var id = transportMessage.Id;
             var label = transportMessage.Label;
 
@@ -284,6 +278,12 @@ namespace Rebus.Bus
             try
             {
                 BeforeTransportMessage(transportMessage);
+
+                // Populate rebus-msg-id, if not set, from transport-level-id, if such id is available.
+                if (!transportMessage.Headers.ContainsKey(Headers.MessageId) && transportMessage.Id != null)
+                {
+                    transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
+                }
 
                 using (var scope = BeginTransaction())
                 {
