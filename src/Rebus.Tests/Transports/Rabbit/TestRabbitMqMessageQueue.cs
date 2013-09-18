@@ -456,6 +456,39 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedTransportMessagesFromSecondRecipient.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
         }
 
+        [Test]
+        public void TransportLevelMessageIdIsPreserved()
+        {
+            const string recipientInputQueueName = "test.tlid.recipient";
+            const string senderInputQueueName = "test.tlid.sender";
+
+            using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
+            {
+                var id = Guid.NewGuid();
+                senderQueue.Send(recipientInputQueueName,
+                                 serializer.Serialize(new Message
+                                 {
+                                     Messages = new object[] { "HELLO WORLD!" },
+                                     Headers =
+                                         new Dictionary<string, object> { 
+                                            { Headers.MessageId, id.ToString() }
+                                         },
+                                 }),
+                                 new NoTransaction());
+
+                // act
+                Thread.Sleep(2.Seconds() + 1.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipientQueue.ReceiveMessage(new NoTransaction());
+                Assert.That(receivedTransportMessage, Is.Not.Null);
+                Assert.That(receivedTransportMessage.Headers, Is.Not.Null);
+                Assert.That(receivedTransportMessage.Headers.ContainsKey(Headers.MessageId), Is.True);
+                Assert.That(receivedTransportMessage.Headers[Headers.MessageId], Is.EqualTo(id.ToString()));
+            }
+        }
+
         static List<ReceivedTransportMessage> GetAllMessages(RabbitMqMessageQueue recipient)
         {
             var timesNullReceived = 0;
