@@ -154,3 +154,8 @@
 ## 0.43.0
 
 * Updated RabbitMQ dep to 3.1.5
+
+## vNext
+
+* Rebus now always adds a unique Rebus Transport ID in the headers upon sending a message. This ID will stay the same when message is deferred, forwarded or sent to error queue.
+* RabbitMQ transport uses the Rebus Transport ID as it's message ID, if it is not set otherwise
