@@ -407,22 +407,9 @@ Or should it?")]
         }
 
         [Test]
-        public void UserCanOverwriteMessageIdOnDeferredMessages()
+        public void UserCannotOverwriteRebusMessageId()
         {
-            var headers = new Dictionary<string, object>
-            {
-                {Headers.MessageId, "Oh the uniqueness"}
-            };
-
-            var message = new FirstMessage();
-
-            using (MessageContext.Establish(headers))
-            {
-                bus.AttachHeader(message, Headers.MessageId, "I know what it is");
-                bus.Defer(TimeSpan.Zero, message);
-            }
-
-            bus.GetHeaderFor(message, Headers.MessageId).ShouldBe("I know what it is");
+            Should.Throw<ArgumentException>(() => bus.AttachHeader(new object(), Headers.MessageId, "anything"));
         }
 
 

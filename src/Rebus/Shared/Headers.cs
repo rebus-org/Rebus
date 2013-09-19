@@ -16,7 +16,7 @@ namespace Rebus.Shared
         public const string EncryptionSalt = "rebus-salt";
 
         /// <summary>
-        /// Key of header that contains the unique ID of the message.
+        /// Key of header that contains the unique Rebus transport message ID.
         /// </summary>
         public const string MessageId = "rebus-msg-id";
 

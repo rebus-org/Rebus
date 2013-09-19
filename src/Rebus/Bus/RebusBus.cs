@@ -369,7 +369,7 @@ namespace Rebus.Bus
                 {
                     if (messageContext.Headers.ContainsKey(Headers.MessageId))
                     {
-                        AttachHeader(message, Headers.MessageId, messageContext.RebusTransportMessageId);
+                        headerContext.AttachHeader(message, Headers.MessageId, messageContext.RebusTransportMessageId);
                     }
                 }
             }
@@ -388,6 +388,9 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
             Guard.NotNull(key, "key");
+
+            if (key == Headers.MessageId)
+                throw new ArgumentException("The Rebus transport message ID can not be overwritten.");
 
             headerContext.AttachHeader(message, key, value);
         }
@@ -875,7 +878,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             public void AttachHeader(object message, string key, string value)
             {
                 var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
-
                 headerDictionary[key] = value;
             }
 

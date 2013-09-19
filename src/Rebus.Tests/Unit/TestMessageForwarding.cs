@@ -2,6 +2,7 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 
@@ -48,6 +49,30 @@ namespace Rebus.Tests.Unit
                                              Arg<ITransactionContext>.Is.Anything));
         }
 
+
+        [Test]
+        public void TransfersMessageIdToForwardedMessage()
+        {
+            var headers = new Dictionary<string, object>
+            {
+                {Headers.MessageId, "Oh the uniqueness"}
+            };
+
+            using (var context = MessageContext.Establish(headers))
+            {
+                context.SetLogicalMessage(new JustSomeMessage());
+                bus.Advanced.Routing.ForwardCurrentMessage("somewhere");
+            }
+
+            sendMessages.AssertWasCalled(s =>
+                s.Send(Arg<string>.Is.Anything,
+                    Arg<TransportMessageToSend>.Matches(m => m.Headers[Headers.MessageId] == "Oh the uniqueness"),
+                    Arg<ITransactionContext>.Is.Anything));
+        }
+
+
         class JustSomeMessage {}
     }
+
+
 }
