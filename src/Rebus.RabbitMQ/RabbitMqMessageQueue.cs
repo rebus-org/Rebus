@@ -241,6 +241,16 @@ namespace Rebus.RabbitMQ
 
         public void Subscribe(Type messageType, string inputQueueAddress)
         {
+            if (SenderOnly)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Attempted to subscribe to {0}, but the transport is configured to work in one-way client mode which implies that messages can only be sent/published and not received",
+                        messageType));
+            }
+
+            EnsureInputQueueInitialized(inputQueueAddress);
+
             if (autoDeleteInputQueue)
             {
                 subscriptions.TryAdd(messageType, "");
@@ -271,8 +281,30 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        void EnsureInputQueueInitialized(string inputQueueNameToInitialize)
+        {
+            if (threadBoundModel != null)
+            {
+                InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, autoDeleteInputQueue);
+            }
+            else
+            {
+                WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, autoDeleteInputQueue));
+            }
+        }
+
         public void Unsubscribe(Type messageType, string inputQueueAddress)
         {
+            if (SenderOnly)
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Attempted to subscribe to {0}, but the transport is configured to work in one-way client mode which implies that messages can only be sent/published and not received",
+                        messageType));
+            }
+
+            EnsureInputQueueInitialized(inputQueueAddress);
+
             if (autoDeleteInputQueue)
             {
                 string dummy;
