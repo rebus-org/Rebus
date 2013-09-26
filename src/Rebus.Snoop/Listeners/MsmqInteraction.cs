@@ -600,15 +600,16 @@ Body:
                 var couldDeserializeHeaders = TryDeserializeHeaders(message, out headers);
 
                 string body;
-                var couldDecodeBody = TryDecodeBody(message, headers, out body);
+                int bodySize;
+                var couldDecodeBody = TryDecodeBody(message, headers, out body, out bodySize);
 
                 return new Message
                            {
                                Label = message.Label,
                                Time = message.ArrivedTime,
                                Headers = couldDeserializeHeaders ? new EditableDictionary<string, string>(headers) : new EditableDictionary<string, string>(),
-                               Bytes = TryDetermineMessageSize(message),
-                               Body = couldDecodeBody ? body : "(message encoding not specified)",
+                               Bytes = bodySize,
+                               Body = body,
                                Id = message.Id,
                                QueuePath = queuePath,
 
@@ -627,18 +628,6 @@ Body:
             }
         }
 
-        int TryDetermineMessageSize(System.Messaging.Message message)
-        {
-            try
-            {
-                return (int)message.BodyStream.Length;
-            }
-            catch (Exception)
-            {
-                return -1;
-            }
-        }
-
         void EncodeBody(System.Messaging.Message message, Message messageModel)
         {
             var headers = messageModel.Headers;
@@ -653,10 +642,24 @@ Body:
             }
         }
 
-        bool TryDecodeBody(System.Messaging.Message message, Dictionary<string, string> headers, out string body)
+        bool TryDecodeBody(System.Messaging.Message message, Dictionary<string, string> headers, out string body, out int bodySize)
         {
-            if (headers.ContainsKey(Headers.Encoding))
+            try
             {
+                if (headers == null)
+                {
+                    body = "Message has no headers that can be understood by Rebus";
+                    bodySize = GetLengthFromStreamIfPossible(message);
+                    return false;
+                }
+
+                if (!headers.ContainsKey(Headers.Encoding))
+                {
+                    body = string.Format("Message headers don't contain an element with the '{0}' key", Headers.Encoding);
+                    bodySize = GetLengthFromStreamIfPossible(message);
+                    return false;
+                }
+
                 var encoding = headers[Headers.Encoding];
                 var encoder = Encoding.GetEncoding(encoding);
 
@@ -665,12 +668,28 @@ Body:
                     var bytes = reader.ReadBytes((int)message.BodyStream.Length);
                     var str = encoder.GetString(bytes);
                     body = str;
+                    bodySize = bytes.Length;
                     return true;
                 }
             }
+            catch (Exception e)
+            {
+                body = string.Format("An error occurred while decoding the body: {0}", e);
+                bodySize = GetLengthFromStreamIfPossible(message);
+                return false;
+            }
+        }
 
-            body = null;
-            return false;
+        static int GetLengthFromStreamIfPossible(System.Messaging.Message message)
+        {
+            try
+            {
+                return (int) message.BodyStream.Length;
+            }
+            catch
+            {
+                return -1;
+            }
         }
 
         bool TryDeserializeHeaders(System.Messaging.Message message, out Dictionary<string, string> dictionary)
