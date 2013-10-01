@@ -161,6 +161,6 @@
 * RabbitMQ transport uses the Rebus Transport ID as it's message ID, if it is not set otherwise
 * RabbitMQ transport now initializes the input queue when subscribing - relevant if subscribe is called before receive
 
-## vNext
+## 0.44.0
 
-* 
+* Updated Log4Net dependency to 2.0.1 (BEWARE: It appears that the Log4Net public key has changed since previous version!!)
