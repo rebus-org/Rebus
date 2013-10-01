@@ -35,7 +35,7 @@ I encourage you, however, to configure endpoint mappings by putting all messages
 You can achieve this by configuring the bus like so:
 
     var bus = Configure.With(someContainerAdapter)
-                .DetermineEndpoint(d => d.FromRebusConfigurationSection())
+                .MessageOwnership(d => d.FromRebusConfigurationSection())
                 (....)
                 .CreateBus()
 
