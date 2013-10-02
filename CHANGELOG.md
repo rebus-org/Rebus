@@ -164,3 +164,4 @@
 ## 0.44.0
 
 * Updated Log4Net dependency to 2.0.1 (BEWARE: It appears that the Log4Net public key has changed since previous version!!)
+* Azure transport can now be configured in one-way client mode
