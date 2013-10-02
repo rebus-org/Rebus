@@ -35,6 +35,11 @@ namespace Rebus.Tests.Performance
                      .Start();
         }
 
+        protected override void DoTearDown()
+        {
+            stuffToDispose.ForEach(d => d.Dispose());
+        }
+
         [Test]
         public void YesItWorks()
         {

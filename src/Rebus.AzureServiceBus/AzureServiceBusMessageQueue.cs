@@ -457,8 +457,11 @@ namespace Rebus.AzureServiceBus
             {
                 try
                 {
-                    log.Info("Closing subscription client");
-                    subscriptionClient.Close();
+                    if (subscriptionClient != null)
+                    {
+                        log.Info("Closing subscription client");
+                        subscriptionClient.Close();
+                    }
                 }
                 catch (Exception e)
                 {
