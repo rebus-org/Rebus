@@ -23,45 +23,68 @@ namespace Rebus.AzureServiceBus
         const string TopicName = "Rebus";
         const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
+
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
 
         readonly NamespaceManager namespaceManager;
+
         readonly TopicDescription topicDescription;
+
         readonly TopicClient topicClient;
+
         readonly SubscriptionClient subscriptionClient;
 
         bool disposed;
 
+        public static AzureServiceBusMessageQueue Sender(string connectionString)
+        {
+            return new AzureServiceBusMessageQueue(connectionString, null);
+        }
+
         public AzureServiceBusMessageQueue(string connectionString, string inputQueue)
         {
-            log.Info("Initializing Azure Service Bus transport with logical input queue '{0}'", inputQueue);
-
-            namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
-
-            InputQueue = inputQueue;
-
-            log.Info("Ensuring that topic '{0}' exists", TopicName);
-            if (!namespaceManager.TopicExists(TopicName))
+            try
             {
-                try
+                log.Info("Initializing Azure Service Bus transport with logical input queue '{0}'", inputQueue);
+
+                namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
+
+                InputQueue = inputQueue;
+
+                log.Info("Ensuring that topic '{0}' exists", TopicName);
+                if (!namespaceManager.TopicExists(TopicName))
                 {
-                    namespaceManager.CreateTopic(TopicName);
+                    try
+                    {
+                        namespaceManager.CreateTopic(TopicName);
+                    }
+                    catch
+                    {
+                        // just assume the call failed because the topic already exists - if GetTopic below
+                        // fails, then something must be wrong, and then we just want to fail immediately
+                    }
                 }
-                catch
-                {
-                    // just assume the call failed because the topic already exists - if GetTopic below
-                    // fails, then something must be wrong, and then we just want to fail immediately
-                }
+
+                topicDescription = namespaceManager.GetTopic(TopicName);
+
+                log.Info("Creating topic client");
+                topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
+
+                // if we're in one-way mode, just quit here
+                if (inputQueue == null) return;
+                
+                GetOrCreateSubscription(InputQueue);
+
+                log.Info("Creating subscription client");
+                subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue);
             }
-
-            topicDescription = namespaceManager.GetTopic(TopicName);
-            GetOrCreateSubscription(InputQueue);
-
-            log.Info("Creating topic client");
-            topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
-            
-            log.Info("Creating subscription client");
-            subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue);
+            catch (Exception e)
+            {
+                throw new ApplicationException(
+                    string.Format(
+                        "An error occurred while initializing Azure Service Bus with logical input queue '{0}'",
+                        inputQueue), e);
+            }
         }
 
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)

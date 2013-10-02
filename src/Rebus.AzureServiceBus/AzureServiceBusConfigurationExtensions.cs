@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Transports;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.AzureServiceBus
@@ -10,6 +11,17 @@ namespace Rebus.AzureServiceBus
         public static void UseAzureServiceBus(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             Configure(configurer, connectionString, inputQueueName, errorQueueName);
+        }
+
+        public static void UseAzureServiceBusInOneWayClientMode(this RebusTransportConfigurer configurer,
+                                                                string connectionString)
+        {
+            var sender = AzureServiceBusMessageQueue.Sender(connectionString);
+
+            configurer.UseSender(sender);
+            var gag = new OneWayClientGag();
+            configurer.UseReceiver(gag);
+            configurer.UseErrorTracker(gag);
         }
 
         public static void UseAzureServiceBusAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)

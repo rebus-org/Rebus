@@ -223,6 +223,7 @@
     <Compile Include="Integration\TestSimpleSqlSetup.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Integration\TestWebCallbacks.cs" />
+    <Compile Include="Performance\TestRebusBusWithAzureServiceBusAndOneWayClient.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
