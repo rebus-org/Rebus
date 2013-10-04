@@ -256,7 +256,7 @@ namespace Rebus.RabbitMQ
                 subscriptions.TryAdd(eventType, "");
                 EstablishSubscriptions(threadBoundModel);
                 
-                // if we have the connection now, make sure the subscription is established - otherwise, just wait - it will happen when the connection is established
+                // if we have the connection now, make sure the subscription is established on that
                 var model = threadBoundModel;
                 if (model != null)
                 {
@@ -265,6 +265,8 @@ namespace Rebus.RabbitMQ
                 else
                 {
                     // in case we have already established a connection on another thread, we must ensure the binding happens
+                    // - if the connection has not been established, this will end up as a temporarily visible queue with
+                    // one binding, which disappears immediately
                     WithConnection(m => EstablishSubscription(m, eventType));
                 }
                 return;
