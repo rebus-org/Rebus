@@ -126,6 +126,7 @@ namespace Rebus.RabbitMQ
             if (currentConnection != null)
             {
                 currentConnection.Dispose();
+                currentConnection = null;
             }
         }
     }

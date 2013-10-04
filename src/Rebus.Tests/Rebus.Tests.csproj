@@ -155,6 +155,7 @@
     <Compile Include="Bugs\DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq.cs" />
     <Compile Include="Bugs\DoesNotThrowNullReferenceExceptionWhenFakingTheMessageContext.cs" />
     <Compile Include="Bugs\RabbitMqConnectionDoesNotChokeOnSingleTooLargeMessage.cs" />
+    <Compile Include="Bugs\RabbitMqDoesNotHaveRaceConditionWhenSubscribingOnAutoDeleteQueue.cs" />
     <Compile Include="Bugs\SendAndPublishAutomaticallyEnlistInAmbientTransaction.cs" />
     <Compile Include="Bugs\SentMessagesContainGlobalInputQueueNameAsReturnAddress.cs" />
     <Compile Include="Bugs\WindsorContainerAdapterDoesNotReleaseCorrectly.cs" />

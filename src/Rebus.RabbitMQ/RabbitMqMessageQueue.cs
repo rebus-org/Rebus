@@ -262,6 +262,11 @@ namespace Rebus.RabbitMQ
                 {
                     EstablishSubscription(model, eventType);
                 }
+                else
+                {
+                    // in case we have already established a connection on another thread, we must ensure the binding happens
+                    WithConnection(m => EstablishSubscription(m, eventType));
+                }
                 return;
             }
 
