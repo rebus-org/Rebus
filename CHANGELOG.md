@@ -173,3 +173,7 @@
 ## 0.44.2
 
 * Added ability for RabbitMQ transport to NOT create the error queue. This way, the Rebus errorQueue setting just becomes the topic under which failed messages will be published.
+
+## 0.44.3
+
+* Fixed race condition bug when using RabbitMQ auto-delete input queue and subscribing on another thread after having started the bus
