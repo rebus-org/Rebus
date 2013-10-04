@@ -11,6 +11,7 @@ using NUnit.Framework;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
@@ -30,6 +31,24 @@ namespace Rebus.Tests.Transports.Rabbit
         {
             serializer = new JsonMessageSerializer();
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        [Test]
+        public void CanSkipCreatingTheErrorQueue()
+        {
+            using (var adapter = new BuiltinContainerAdapter())
+            {
+                const string errorTopic = "this_is_just_a_topic_now_not_a_queue";
+                DeleteQueue(errorTopic);
+
+                Configure.With(adapter)
+                         .Transport(t => t.UseRabbitMq(ConnectionString, "test.input", errorTopic)
+                                          .DoNotCreateErrorQueue())
+                         .CreateBus()
+                         .Start();
+
+                Assert.That(QueueExists(errorTopic), Is.False, "Did not expect a queue to exist with the name '{0}'", errorTopic);
+            }
         }
 
         [Test]

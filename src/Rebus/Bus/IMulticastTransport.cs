@@ -17,7 +17,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Subscribes the specified input queue address to messages of the specified type
         /// </summary>
-        void Subscribe(Type messageType, string inputQueueAddress);
+        void Subscribe(Type eventType, string inputQueueAddress);
 
         /// <summary>
         /// Unsubscribes the specified input queue address from messages of the specified type

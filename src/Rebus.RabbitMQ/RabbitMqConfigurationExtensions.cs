@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Transports;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
@@ -8,6 +9,13 @@ namespace Rebus.RabbitMQ
 {
     public static class RabbitMqConfigurationExtensions
     {
+        static ILog log;
+        
+        static RabbitMqConfigurationExtensions()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         /// <summary>
         /// Configures the bus to use RabbitMQ as a send-only transport - i.e. the bus will only be able to send messages, and if RabbitMQ manages
         /// subscriptions it will be able to publish as well. Will connect to the Rabbit server specified by the supplied connection string.
@@ -95,14 +103,27 @@ A more full example configuration snippet can be seen here:
         static RabbitMqOptions DoIt(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             var queue = new RabbitMqMessageQueue(connectionString, inputQueueName);
+            var options = new RabbitMqOptions(queue, configurer);
 
-            configurer.AddDecoration(d => queue.CreateQueue(errorQueueName));
+            configurer.AddDecoration(d =>
+                {
+                    if (options.CreateErrorQueue)
+                    {
+                        queue.CreateQueue(errorQueueName);
+                    }
+                    else
+                    {
+                        log.Info(
+                            "Error queue matching topic '{0}' will NOT be created - please ensure that you have bound this topic to something, otherwise failed messages ARE LOST",
+                            errorQueueName);
+                    }
+                });
 
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
-            
-            return new RabbitMqOptions(queue, configurer);
+
+            return options;
         }
     }
 }

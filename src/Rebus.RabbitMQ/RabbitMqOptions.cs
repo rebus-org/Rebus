@@ -11,11 +11,20 @@ namespace Rebus.RabbitMQ
     {
         readonly RabbitMqMessageQueue queue;
         readonly RebusTransportConfigurer configurer;
+        bool createErrorQueue = true;
 
         internal RabbitMqOptions(RabbitMqMessageQueue queue, RebusTransportConfigurer configurer)
         {
             this.queue = queue;
             this.configurer = configurer;
+        }
+
+        /// <summary>
+        /// Indicates whether the Rabbit options dictate that an error queue should be created
+        /// </summary>
+        public bool CreateErrorQueue
+        {
+            get { return createErrorQueue; }
         }
 
         /// <summary>
@@ -83,6 +92,17 @@ namespace Rebus.RabbitMQ
         public RabbitMqOptions DoNotBindDefaultTopicToInputQueue()
         {
             queue.DoNotBindDefaultTopicToInputQueue();
+            return this;
+        }
+
+        /// <summary>
+        /// Disables automatic creation of the error queue. This means that the Rebus error queue setting merely becomes the
+        /// topic under which failed messages will be published, thus allowing you to route failed messages wherever you want.
+        /// WARNING: It also means that failed messages ARE LOST if no queue exists that is bound to the topic.
+        /// </summary>
+        public RabbitMqOptions DoNotCreateErrorQueue()
+        {
+            createErrorQueue = false;
             return this;
         }
 

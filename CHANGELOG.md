@@ -169,3 +169,7 @@
 ## 0.44.1
 
 * Avoid warning when disposing one-way Azure transport
+
+## 0.44.2
+
+* Added ability for RabbitMQ transport to NOT create the error queue. This way, the Rebus errorQueue setting just becomes the topic under which failed messages will be published.

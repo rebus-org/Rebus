@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
@@ -41,21 +40,20 @@ namespace Rebus.Tests.Bugs
                 adapter1.Handle<ThisIsJustSomeRandomTestMessage>(msg => receivedStrings.Add(msg.WithSomethingInside));
 
                 var bus1 =
-                    (RebusBus) Configure.With(adapter1)
-                                        .Transport(x => x.UseRabbitMq(ConnectionString, InputQueueName1, ErrorQueueName)
-                                                         .ManageSubscriptions())
-                                        .CreateBus();
+                    Configure.With(adapter1)
+                             .Transport(x => x.UseRabbitMq(ConnectionString, InputQueueName1, ErrorQueueName)
+                                              .ManageSubscriptions())
+                             .CreateBus()
+                             .Start(workers);
 
-                bus1.Start(workers);
                 bus1.Subscribe<ThisIsJustSomeRandomTestMessage>();
 
                 var bus2 =
-                    (RebusBus) Configure.With(adapter2)
-                                        .Transport(x => x.UseRabbitMq(ConnectionString, InputQueueName2, ErrorQueueName)
-                                                         .ManageSubscriptions())
-                                        .CreateBus();
-
-                bus2.Start(1);
+                    Configure.With(adapter2)
+                             .Transport(x => x.UseRabbitMq(ConnectionString, InputQueueName2, ErrorQueueName)
+                                              .ManageSubscriptions())
+                             .CreateBus()
+                             .Start(1);
 
                 var messageCounter = 1;
                 iterations.Times(() =>
