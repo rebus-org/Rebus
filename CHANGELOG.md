@@ -177,3 +177,7 @@
 ## 0.44.3
 
 * Fixed race condition bug when using RabbitMQ auto-delete input queue and subscribing on another thread after having started the bus
+
+## 0.44.4
+
+* Added ability for Azure Service Bus transport to actually use MSMQ when connection string is `UseDevelopmentStorage=true`

@@ -1,13 +1,24 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Transports;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
+using Rebus.Transports.Msmq;
+using System.Linq;
 
 namespace Rebus.AzureServiceBus
 {
     public static class AzureServiceBusConfigurationExtensions
     {
+        static ILog log;
+
+        static AzureServiceBusConfigurationExtensions()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         public static void UseAzureServiceBus(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             Configure(configurer, connectionString, inputQueueName, errorQueueName);
@@ -16,9 +27,17 @@ namespace Rebus.AzureServiceBus
         public static void UseAzureServiceBusInOneWayClientMode(this RebusTransportConfigurer configurer,
                                                                 string connectionString)
         {
-            var sender = AzureServiceBusMessageQueue.Sender(connectionString);
+            if (ShouldEmulateAzureEnvironment(connectionString))
+            {
+                var sender = MsmqMessageQueue.Sender();
+                configurer.UseSender(sender);
+            }
+            else
+            {
+                var sender = AzureServiceBusMessageQueue.Sender(connectionString);
+                configurer.UseSender(sender);
+            }
 
-            configurer.UseSender(sender);
             var gag = new OneWayClientGag();
             configurer.UseReceiver(gag);
             configurer.UseErrorTracker(gag);
@@ -72,10 +91,52 @@ A more full example configuration snippet can be seen here:
         static void Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName,
                               string errorQueueName)
         {
+            if (connectionString == null)
+            {
+                throw new ArgumentNullException("connectionString", "You need to specify a connection string in order to configure Rebus to use Azure Service Bus as the transport. If you want to simulate Azure Service Bus by using MSMQ, you may use 'UseDevelopmentStorage=true' as the connection string.");
+            }
+
+            if (ShouldEmulateAzureEnvironment(connectionString))
+            {
+                log.Info("Azure Service Bus configuration has detected that development storage should be used - for the");
+                configurer.UseMsmq(inputQueueName, errorQueueName);
+                return;
+            }
+
             var azureServiceBusMessageQueue = new AzureServiceBusMessageQueue(connectionString, inputQueueName);
             configurer.UseSender(azureServiceBusMessageQueue);
             configurer.UseReceiver(azureServiceBusMessageQueue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
+        }
+
+        static bool ShouldEmulateAzureEnvironment(string connectionString)
+        {
+            var variablePairs = connectionString.Split(';');
+
+            foreach (var pair in variablePairs)
+            {
+                var tokens = pair.Split('=')
+                                 .Select(t => t.Trim())
+                                 .ToArray();
+
+                if (tokens.Length == 2)
+                {
+                    if (tokens[0].Equals("UseDevelopmentStorage", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        try
+                        {
+                            return bool.Parse(tokens[1]);
+                        }
+                        catch (Exception e)
+                        {
+                            throw new FormatException(
+                                string.Format("Could not interpret {0} as a proper bool", tokens[1]), e);
+                        }
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }

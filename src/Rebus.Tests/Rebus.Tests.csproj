@@ -285,6 +285,7 @@
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueFactory.cs" />
+    <Compile Include="Transports\Azure\TestDevelopmentStorageTransport.cs" />
     <Compile Include="Transports\Encrypted\TestEncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelHelper.cs" />
     <Compile Include="ListLoggerFactory.cs" />
