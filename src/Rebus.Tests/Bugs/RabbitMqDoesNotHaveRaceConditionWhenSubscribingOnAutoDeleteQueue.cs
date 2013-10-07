@@ -8,7 +8,7 @@ using Rebus.RabbitMQ;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Rabbit)]
     public class RabbitMqDoesNotHaveRaceConditionWhenSubscribingOnAutoDeleteQueue : RabbitMqFixtureBase
     {
         readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
