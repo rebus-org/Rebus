@@ -9,7 +9,7 @@ using Rebus.RabbitMQ;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Rabbit)]
     public class DoesNotLeakChannelsWhenCombiningRabbitWithMsmq : RabbitMqFixtureBase
     {
         const string InputQueueName = "test.rabbitleak.input";
@@ -35,6 +35,11 @@ namespace Rebus.Tests.Bugs
                                       .ManageSubscriptions())
                      .CreateBus()
                      .Start(1);
+        }
+
+        protected override void DoTearDown()
+        {
+            stuffToDispose.ForEach(d => d.Dispose());
         }
 
         [Test, Ignore("This test can't really assert that no channels are leaked, which is why it should only be run manually (and then you have 30 seconds to see the leaked channels in the Rabbit console)")]
