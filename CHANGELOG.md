@@ -181,3 +181,7 @@
 ## 0.44.4
 
 * Added ability for Azure Service Bus transport to actually use MSMQ when connection string is `UseDevelopmentStorage=true`
+
+## 0.44.5
+
+* Fixed bug where RabbitMQ transport would leak channels when used e.g. in combination with MSMQ in order to "bridge" from a MSMQ bus environment to a RabbitMQ environment
