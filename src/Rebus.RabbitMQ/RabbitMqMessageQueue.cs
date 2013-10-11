@@ -404,7 +404,9 @@ namespace Rebus.RabbitMQ
         IModel GetSenderModel(ITransactionContext context)
         {
             if (context[CurrentModelKey] != null)
+            {
                 return (IModel)context[CurrentModelKey];
+            }
 
             var model = GetConnection().CreateModel();
             model.TxSelect();
@@ -412,6 +414,7 @@ namespace Rebus.RabbitMQ
 
             context.DoCommit += model.TxCommit;
             context.DoRollback += model.TxRollback;
+            context.Cleanup += model.Dispose;
 
             return model;
         }

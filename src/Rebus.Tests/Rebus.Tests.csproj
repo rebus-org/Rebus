@@ -153,6 +153,7 @@
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
     <Compile Include="Bugs\DoesNotCrashWhenRunningWithSingleRabbitThread.cs" />
     <Compile Include="Bugs\DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq.cs" />
+    <Compile Include="Bugs\DoesNotLeakChannelsWhenCombiningRabbitWithMsmq.cs" />
     <Compile Include="Bugs\DoesNotThrowNullReferenceExceptionWhenFakingTheMessageContext.cs" />
     <Compile Include="Bugs\RabbitMqConnectionDoesNotChokeOnSingleTooLargeMessage.cs" />
     <Compile Include="Bugs\RabbitMqDoesNotHaveRaceConditionWhenSubscribingOnAutoDeleteQueue.cs" />
