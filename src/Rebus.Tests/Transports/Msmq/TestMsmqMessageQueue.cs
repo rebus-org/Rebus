@@ -90,6 +90,38 @@ namespace Rebus.Tests.Transports.Msmq
                 });
         }
 
+        [Test, Ignore("Only works in RELEASE mode because otherwise object references are held on to for the duration of the method")]
+        public void DoesNotLeakMessages()
+        {
+            // arrange
+            const string inputQueueName = "test.leak.input";
+            var queue = new MsmqMessageQueue(inputQueueName);
+            disposables.Add(queue);
+
+            var body = Encoding.UTF8.GetBytes(new string('*', 32768));
+            var message = new TransportMessageToSend
+                            {
+                                Headers = new Dictionary<string, object> { { Headers.MessageId, "msg-1" } },
+                                Body = body
+                            };
+            
+            var weakMessageRef = new WeakReference(message);
+            var weakBodyRef = new WeakReference(body);
+
+
+            // act
+            queue.Send(inputQueueName, message, new NoTransaction());
+            message = null;
+            body = null;
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // assert
+            Assert.That(weakMessageRef.IsAlive, Is.False, "Expected the message to have been collected");
+            Assert.That(weakBodyRef.IsAlive, Is.False, "Expected the body bytes to have been collected");
+        }
+
         [Test]
         public void CanSendAndReceiveMessageToQueueOnSpecificMachine()
         {
