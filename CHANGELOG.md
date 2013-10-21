@@ -185,3 +185,7 @@
 ## 0.44.5
 
 * Fixed bug where RabbitMQ transport would leak channels when used e.g. in combination with MSMQ in order to "bridge" from a MSMQ bus environment to a RabbitMQ environment
+
+## 0.45.0
+
+* Azure Service Bus transport now automatically creates the error queue
