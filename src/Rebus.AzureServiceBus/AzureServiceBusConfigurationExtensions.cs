@@ -107,6 +107,7 @@ A more full example configuration snippet can be seen here:
             configurer.UseSender(azureServiceBusMessageQueue);
             configurer.UseReceiver(azureServiceBusMessageQueue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
+            azureServiceBusMessageQueue.GetOrCreateSubscription(errorQueueName);
         }
 
         static bool ShouldEmulateAzureEnvironment(string connectionString)

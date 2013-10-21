@@ -20,8 +20,9 @@ namespace Rebus.AzureServiceBus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        const string TopicName = "Rebus";
-        const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
+        public const string TopicName = "Rebus";
+        public const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
+        
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
@@ -428,7 +429,7 @@ namespace Rebus.AzureServiceBus
             }
         }
 
-        void GetOrCreateSubscription(string logicalQueueName)
+        public void GetOrCreateSubscription(string logicalQueueName)
         {
             if (namespaceManager.SubscriptionExists(topicDescription.Path, logicalQueueName)) return;
 
