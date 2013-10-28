@@ -14,6 +14,15 @@ namespace Rebus.Tests
         }
 
         [DebuggerStepThrough]
+        public static int CountOcurrencesOf(this string input, string pattern)
+        {
+            if (input == null) throw new ArgumentNullException("input", "Cannot count occurrences in a null string");
+            if (pattern == null) throw new ArgumentNullException("pattern", string.Format("Cannot count occurrences of (null) in the string {0}", input));
+
+            return input.Split(new[] {pattern}, StringSplitOptions.None).Length - 1;
+        }
+
+        [DebuggerStepThrough]
         public static TimeSpan Milliseconds(this int seconds)
         {
             return TimeSpan.FromMilliseconds(seconds);
