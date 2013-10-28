@@ -30,10 +30,9 @@ namespace Rebus.Transports.Msmq
         readonly string machineAddress;
 
         static readonly MessageQueueErrorCode[] AcceptedErrorCodes =
-            new[]
-                {
-                    MessageQueueErrorCode.IOTimeout,
-                };
+        {
+            MessageQueueErrorCode.IOTimeout,
+        };
 
         /// <summary>
         /// Constructs a special send-only instance of <see cref="MsmqMessageQueue"/>. This instance is
@@ -120,25 +119,27 @@ because there would be remote calls involved when you wanted to receive a messag
             {
                 if (!context.IsTransactional)
                 {
-                    var transaction = new MessageQueueTransaction();
-                    transaction.Begin();
-                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
-                    if (message == null)
+                    using (var transaction = new MessageQueueTransaction())
                     {
-                        log.Warn("Received NULL message - how weird is that?");
+                        transaction.Begin();
+                        var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
+                        if (message == null)
+                        {
+                            log.Warn("Received NULL message - how weird is that?");
+                            transaction.Commit();
+                            return null;
+                        }
+                        var body = message.Body;
+                        if (body == null)
+                        {
+                            log.Warn("Received message with NULL body - how weird is that?");
+                            transaction.Commit();
+                            return null;
+                        }
+                        var transportMessage = (ReceivedTransportMessage) body;
                         transaction.Commit();
-                        return null;
+                        return transportMessage;
                     }
-                    var body = message.Body;
-                    if (body == null)
-                    {
-                        log.Warn("Received message with NULL body - how weird is that?");
-                        transaction.Commit();
-                        return null;
-                    }
-                    var transportMessage = (ReceivedTransportMessage)body;
-                    transaction.Commit();
-                    return transportMessage;
                 }
                 else
                 {
@@ -233,13 +234,14 @@ because there would be remote calls involved when you wanted to receive a messag
             if (transaction != null) return transaction;
 
             transaction = new MessageQueueTransaction();
-            context[CurrentTransactionKey] = transaction;
 
             context.DoCommit += transaction.Commit;
             context.DoRollback += transaction.Abort;
             context.Cleanup += transaction.Dispose;
 
             transaction.Begin();
+
+            context[CurrentTransactionKey] = transaction;
 
             return transaction;
         }
