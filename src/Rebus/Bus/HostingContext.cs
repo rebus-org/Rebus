@@ -72,6 +72,9 @@ namespace Rebus.Bus
         {
             get
             {
+                if (OperationContext.Current == null)
+                    return null;
+
                 var context = OperationContext.Current.Extensions.Find<WcfOperationContext>();
                 if (context == null)
                 {
