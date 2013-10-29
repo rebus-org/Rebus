@@ -243,6 +243,10 @@ because there would be remote calls involved when you wanted to receive a messag
 
             context[CurrentTransactionKey] = transaction;
 
+            if (transaction.Status != MessageQueueTransactionStatus.Pending)
+                throw new InvalidOperationException(
+                    "MSMQ transaction has not been started. MSQM will throw messages into the deadletter queue if this transaction is used to send without any warning or exception!");
+
             return transaction;
         }
 
