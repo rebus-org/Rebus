@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Transactions;
+using System.Web;
 
 namespace Rebus.Bus
 {
@@ -9,18 +10,38 @@ namespace Rebus.Bus
     /// </summary>
     public class AmbientTransactionContext : IEnlistmentNotification, ITransactionContext
     {
+        readonly IContext httpContext;
+        readonly IContext operationContext;
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
         /// <summary>
         /// Constructs the context, enlists it in the ambient transaction, and sets itself as the current context in <see cref="TransactionContext"/>.
+        /// This contructor is only present to avoid using a IoC container
         /// </summary>
         public AmbientTransactionContext()
+            : this(new RebusHttpContext(), new RebusOperationContext())
         {
+        }
+
+        /// <summary>
+        /// Constructs the context, enlists it in the ambient transaction, and sets itself as the current context in <see cref="TransactionContext"/>.
+        /// </summary>
+        /// <param name="httpContext">Interface to HttpContext.Current</param>
+        /// <param name="operationContext">Interface to OperationContext.Current</param>
+        public AmbientTransactionContext(IContext httpContext, IContext operationContext)
+        {
+            if (httpContext == null) throw new ArgumentNullException("httpContext");
+            if (operationContext == null) throw new ArgumentNullException("operationContext");
+
             if (Transaction.Current == null)
             {
                 throw new InvalidOperationException("There's currently no ambient transaction associated with this thread." +
                                                     " You can only instantiate this class within a TransactionScope.");
             }
+
+            this.httpContext = httpContext;
+            this.operationContext = operationContext;
+            
             Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
             TransactionContext.Set(this);
         }
@@ -57,12 +78,12 @@ namespace Rebus.Bus
         public bool IsTransactional { get { return true; } }
 
         /// <summary>
-        /// Gives access to a dictionary of stuff that will be kept for the duration of the transaction.
+        /// Gives access to a dictionary of stuff that will be kept for the duration of the transaction. Uses HttpContext or OperationContext when needed
         /// </summary>
         public object this[string key]
         {
-            get { return items.ContainsKey(key) ? items[key] : null; }
-            set { items[key] = value; }
+            get { return GetContextItem(key); }
+            set { SetContextItem(key, value); }
         }
 
         /// <summary>
@@ -101,6 +122,33 @@ namespace Rebus.Bus
         public void InDoubt(Enlistment enlistment)
         {
             enlistment.Done();
+        }
+
+        void SetContextItem(string key, object value)
+        {
+            if (httpContext.InContext)
+            {
+                httpContext.Items[key] = value;
+            }
+            else if (operationContext.InContext)
+            {
+                operationContext.Items[key] = value;
+            }
+            else
+            {
+                items[key] = value;    
+            }
+        }
+
+        object GetContextItem(string key)
+        {
+            if (httpContext.InContext)
+                return httpContext.Items[key];
+
+            if (operationContext.InContext)
+                return operationContext.Items[key];
+
+            return items.ContainsKey(key) ? items[key] : null;
         }
     }
 }

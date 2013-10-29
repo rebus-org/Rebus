@@ -44,9 +44,11 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
@@ -177,6 +179,7 @@
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
+    <Compile Include="Bus\HostingContext.cs" />
     <Compile Include="Transports\OneWayClientGag.cs" />
     <Compile Include="Transports\Sql\ConnectionHolder.cs" />
     <Compile Include="Transports\Sql\SqlServerMessageQueueConfigurationExtension.cs" />
