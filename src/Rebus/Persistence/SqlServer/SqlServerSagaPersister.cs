@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Transactions;
@@ -116,14 +117,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
-                var propertiesToIndex = sagaDataPropertyPathsToIndex
-                    .Select(path => new
-                                        {
-                                            Key = path,
-                                            Value = (Reflect.Value(sagaData, path) ?? "").ToString()
-                                        })
-                    .Where(a => !string.IsNullOrEmpty(a.Value))
-                    .ToList();
+                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex);
 
                 if (propertiesToIndex.Any())
                 {
@@ -208,14 +202,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
-                var propertiesToIndex = sagaDataPropertyPathsToIndex
-                    .Select(path => new
-                    {
-                        Key = path,
-                        Value = (Reflect.Value(sagaData, path) ?? "").ToString()
-                    })
-                    .Where(a => a.Value != null)
-                    .ToList();
+                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex);
 
                 if (propertiesToIndex.Any())
                 {
@@ -340,6 +327,18 @@ namespace Rebus.Persistence.SqlServer
             {
                 releaseConnection(connection);
             }
+        }
+
+        List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        {
+            return sagaDataPropertyPathsToIndex
+                .Select(path =>
+                {
+                    var value = Reflect.Value(sagaData, path);
+
+                    return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
+                })
+                .ToList();
         }
 
         string GetSagaTypeName(Type sagaDataType)

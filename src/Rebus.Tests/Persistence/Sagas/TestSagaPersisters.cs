@@ -13,6 +13,44 @@ namespace Rebus.Tests.Persistence.Sagas
     public class TestSagaPersisters<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]
+        public void EnsuresUniquenessAlsoOnCorrelationPropertyWithNull()
+        {
+            var propertyName = Reflect.Path<SomePieceOfSagaData>(d => d.PropertyThatCanBeNull);
+            var dataWithIndexedNullProperty = new SomePieceOfSagaData { SomeValueWeCanRecognize = "hello" };
+            var anotherPieceOfDataWithIndexedNullProperty = new SomePieceOfSagaData { SomeValueWeCanRecognize = "hello" };
+
+            persister.Insert(dataWithIndexedNullProperty, new[] { propertyName });
+
+            Assert.Throws<OptimisticLockingException>(() => persister.Insert(dataWithIndexedNullProperty, new[] {propertyName}));
+        }
+
+        [Test]
+        public void CanFindAndUpdateSagaDataByCorrelationPropertyWithNull()
+        {
+            var propertyName = Reflect.Path<SomePieceOfSagaData>(d => d.PropertyThatCanBeNull);
+            var dataWithIndexedNullProperty = new SomePieceOfSagaData {SomeValueWeCanRecognize = "hello"};
+
+            persister.Insert(dataWithIndexedNullProperty, new[] {propertyName});
+            var sagaDataFoundViaNullProperty = persister.Find<SomePieceOfSagaData>(propertyName, null);
+            Assert.That(sagaDataFoundViaNullProperty, Is.Not.Null, "Could not find saga data with (null) on the correlation property {0}", propertyName);
+            Assert.That(sagaDataFoundViaNullProperty.SomeValueWeCanRecognize, Is.EqualTo("hello"));
+
+            sagaDataFoundViaNullProperty.SomeValueWeCanRecognize = "hwello there!!1";
+            persister.Update(sagaDataFoundViaNullProperty, new[] {propertyName});
+            var sagaDataFoundAgainViaNullProperty = persister.Find<SomePieceOfSagaData>(propertyName, null);
+            Assert.That(sagaDataFoundAgainViaNullProperty, Is.Not.Null, "Could not find saga data with (null) on the correlation property {0} after having updated it", propertyName);
+            Assert.That(sagaDataFoundAgainViaNullProperty.SomeValueWeCanRecognize, Is.EqualTo("hwello there!!1"));
+        }
+
+        class SomePieceOfSagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string PropertyThatCanBeNull { get; set; }
+            public string SomeValueWeCanRecognize { get; set; }
+        }
+
+        [Test]
         public void PersisterCanFindSagaByPropertiesWithDifferentDataTypes()
         {
             TestFindSagaByPropertyWithType("Hello worlds!!");
