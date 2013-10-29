@@ -189,3 +189,8 @@
 ## 0.45.0
 
 * Azure Service Bus transport now automatically creates the error queue
+
+## 0.46.0
+
+* Changed order of operations in MsmqMessageQueue that could lead to using an invalid transaction in rare circumstances
+* Made all saga persisters treat `null` as a proper value, thus ensuring that saga data can be inserted, updated, and found with `null` in a correlation property
