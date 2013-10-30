@@ -124,6 +124,12 @@ namespace Rebus.Bus
             enlistment.Done();
         }
 
+        public void Dispose()
+        {
+            httpContext.Dispose();
+            operationContext.Dispose();
+        }
+
         void SetContextItem(string key, object value)
         {
             if (httpContext.InContext)

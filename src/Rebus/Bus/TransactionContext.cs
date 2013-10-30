@@ -36,6 +36,8 @@ It does not make sense because a non-transactional transaction context does not 
         /// </summary>
         public static void Clear()
         {
+            if (current != null)
+                current.Dispose();
             current = null;
         }
     }

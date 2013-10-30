@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ServiceModel;
@@ -8,7 +9,7 @@ namespace Rebus.Bus
     /// <summary>
     /// An abstraction for HttpContext and OperationContext
     /// </summary>
-    public interface IContext
+    public interface IContext : IDisposable
     {
         /// <summary>
         /// The collection of objects i context
@@ -23,17 +24,37 @@ namespace Rebus.Bus
 
     internal class RebusHttpContext : IContext
     {
+        const string RebusHttpTransactionContextKey = "RebusHttpTransactionContext";
+
         public IDictionary Items
         {
             get
             {
-                return HttpContext.Current == null ? null : HttpContext.Current.Items;
+                if(HttpContext.Current == null)
+                    return null;
+
+                var items = HttpContext.Current.Items[RebusHttpTransactionContextKey] as IDictionary;
+                if (items == null)
+                {
+                    items = new Dictionary<string, object>();
+                    HttpContext.Current.Items[RebusHttpTransactionContextKey] = items;
+                }
+
+                return items;
             }
         }
 
         public bool InContext
         {
             get { return HttpContext.Current != null; }
+        }
+
+        public void Dispose()
+        {
+            if (HttpContext.Current != null)
+            {
+                HttpContext.Current.Items.Remove(RebusHttpTransactionContextKey);
+            }
         }
     }
 
@@ -51,6 +72,11 @@ namespace Rebus.Bus
         {
             get { return WcfOperationContext.Current != null; }
         }
+
+        public void Dispose()
+        {
+            WcfOperationContext.Clear();
+        }
     }
 
     // http://stackoverflow.com/questions/1895732/where-to-store-data-for-current-wcf-call-is-threadstatic-safe
@@ -60,7 +86,7 @@ namespace Rebus.Bus
 
         private WcfOperationContext()
         {
-            items = new Dictionary<string,object>();
+            items = new Dictionary<string, object>();
         }
 
         public IDictionary Items
@@ -87,5 +113,17 @@ namespace Rebus.Bus
 
         public void Attach(OperationContext owner) { }
         public void Detach(OperationContext owner) { }
+
+        public static void Clear()
+        {
+            if (OperationContext.Current != null)
+            {
+                var context = OperationContext.Current.Extensions.Find<WcfOperationContext>();
+                if (context != null)
+                {
+                    OperationContext.Current.Extensions.Remove(context);
+                }
+            }
+        }
     }
 }

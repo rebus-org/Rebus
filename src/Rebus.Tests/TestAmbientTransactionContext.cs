@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Transactions;
+using System.Web.Configuration;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rhino.Mocks;
@@ -105,7 +106,7 @@ namespace Rebus.Tests
         public void ShouldSetObjectInAndGetObjectFromInternalContextWhenNoHostingContextPresent()
         {
             // Arrange
-            
+
             // Act
             object actual;
             using (new TransactionScope())
@@ -117,8 +118,25 @@ namespace Rebus.Tests
 
             // Assert
             Assert.That(actual, Is.EqualTo(testObject));
-            httpContext.AssertWasNotCalled(c=>c.Items);
+            httpContext.AssertWasNotCalled(c => c.Items);
             operationContext.AssertWasNotCalled(c => c.Items);
+        }
+
+        [Test]
+        public void ShouldDisposeContexts()
+        {
+            // Arrange
+            
+            // Act
+            using (new TransactionScope())
+            {
+                var ambientTransactionContext = new AmbientTransactionContext(httpContext, operationContext);
+                ambientTransactionContext.Dispose();
+            }
+
+            // Assert
+            httpContext.AssertWasCalled(c => c.Dispose());
+            operationContext.AssertWasCalled(c => c.Dispose());
         }
     }
 }
