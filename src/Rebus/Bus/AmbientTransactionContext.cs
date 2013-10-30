@@ -78,10 +78,16 @@ namespace Rebus.Bus
         /// </summary>
         public void Commit(Enlistment enlistment)
         {
-            BeforeCommit();
-            DoCommit();
-            TransactionContext.Clear();
-            enlistment.Done();
+            try
+            {
+                BeforeCommit();
+                DoCommit();
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
 
         /// <summary>
@@ -89,10 +95,16 @@ namespace Rebus.Bus
         /// </summary>
         public void Rollback(Enlistment enlistment)
         {
-            DoRollback();
-            enlistment.Done();
-            TransactionContext.Clear();
-            AfterRollback();
+            try
+            {
+                DoRollback();
+                AfterRollback();
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
 
         /// <summary>
@@ -100,7 +112,14 @@ namespace Rebus.Bus
         /// </summary>
         public void InDoubt(Enlistment enlistment)
         {
-            enlistment.Done();
+            try
+            {
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
     }
 }
