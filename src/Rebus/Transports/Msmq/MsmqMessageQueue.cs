@@ -231,17 +231,23 @@ because there would be remote calls involved when you wanted to receive a messag
         static MessageQueueTransaction GetTransaction(ITransactionContext context)
         {
             var transaction = context[CurrentTransactionKey] as MessageQueueTransaction;
-            if (transaction != null) return transaction;
+            if (transaction == null)
+            {
 
-            transaction = new MessageQueueTransaction();
+                transaction = new MessageQueueTransaction();
 
-            context.DoCommit += transaction.Commit;
-            context.DoRollback += transaction.Abort;
-            context.Cleanup += transaction.Dispose;
+                context.DoCommit += transaction.Commit;
+                context.DoRollback += transaction.Abort;
+                context.Cleanup += transaction.Dispose;
 
-            transaction.Begin();
+                transaction.Begin();
 
-            context[CurrentTransactionKey] = transaction;
+                context[CurrentTransactionKey] = transaction;
+            }
+
+            if (transaction.Status != MessageQueueTransactionStatus.Pending)
+                throw new InvalidOperationException(
+                    "MSMQ transaction has not been started. MSQM will throw messages into the deadletter queue if this transaction is used to send without any warning or exception!");
 
             return transaction;
         }
