@@ -237,7 +237,6 @@
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
-    <Compile Include="TestAmbientTransactionContext.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Testing\TestSagaFixtureAndSerializationCornerCases.cs" />

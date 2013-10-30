@@ -6,74 +6,85 @@ using System.Web;
 
 namespace Rebus.Bus
 {
-    /// <summary>
-    /// An abstraction for HttpContext and OperationContext
-    /// </summary>
-    public interface IContext : IDisposable
+    internal static class RebusHttpContext 
     {
-        /// <summary>
-        /// The collection of objects i context
-        /// </summary>
-        IDictionary Items { get; }
+        const string RebusTransactionContextKey = "RebusTransactionContext";
+        const string RebusHttpContextKey = "RebusHttpContext";
 
-        /// <summary>
-        /// Indicating whether this context is present
-        /// </summary>
-        bool InContext { get; }
-    }
+        public static bool InContext
+        {
+            get { return HttpContext.Current != null; }
+        }
 
-    internal class RebusHttpContext : IContext
-    {
-        const string RebusHttpTransactionContextKey = "RebusHttpTransactionContext";
-
-        public IDictionary Items
+        public static ITransactionContext TransactionContext
         {
             get
             {
-                if(HttpContext.Current == null)
+                if (!InContext)
+                    throw new InvalidOperationException("Trying to access HttpContext in a non-HttpContext");
+                return Items[RebusTransactionContextKey] as ITransactionContext;
+            }
+            set
+            {
+                if (!InContext)
+                    throw new InvalidOperationException("Trying to access HttpContext in a non-HttpContext");
+                Items[RebusTransactionContextKey] = value;
+            }
+        }
+
+        public static void Clear()
+        {
+            if (HttpContext.Current != null)
+            {
+                HttpContext.Current.Items.Remove(RebusHttpContextKey);
+            }
+        }
+
+        private static IDictionary Items
+        {
+            get
+            {
+                if (HttpContext.Current == null)
                     return null;
 
-                var items = HttpContext.Current.Items[RebusHttpTransactionContextKey] as IDictionary;
+                var items = HttpContext.Current.Items[RebusHttpContextKey] as IDictionary;
                 if (items == null)
                 {
                     items = new Dictionary<string, object>();
-                    HttpContext.Current.Items[RebusHttpTransactionContextKey] = items;
+                    HttpContext.Current.Items[RebusHttpContextKey] = items;
                 }
 
                 return items;
             }
         }
-
-        public bool InContext
-        {
-            get { return HttpContext.Current != null; }
-        }
-
-        public void Dispose()
-        {
-            if (HttpContext.Current != null)
-            {
-                HttpContext.Current.Items.Remove(RebusHttpTransactionContextKey);
-            }
-        }
     }
 
-    internal class RebusOperationContext : IContext
+    internal static class RebusOperationContext
     {
-        public IDictionary Items
+        const string RebusTransactionContextKey = "RebusTransactionContext";
+
+        public static ITransactionContext TransactionContext
         {
             get
             {
-                return WcfOperationContext.Current == null ? null : WcfOperationContext.Current.Items;
+                if (!InContext)
+                    throw new InvalidOperationException("Trying to access OperationContext in a non-OperationContext"); 
+                return WcfOperationContext.Current.Items[RebusTransactionContextKey] as ITransactionContext;
+            }
+            set
+            {
+                if (!InContext)
+                    throw new InvalidOperationException("Trying to access OperationContext in a non-OperationContext");
+                WcfOperationContext.Current.Items[RebusTransactionContextKey] = value;
             }
         }
 
-        public bool InContext
+        public static bool InContext
         {
             get { return WcfOperationContext.Current != null; }
         }
 
-        public void Dispose()
+        public static void Clear()
         {
             WcfOperationContext.Clear();
         }
@@ -116,13 +127,12 @@ namespace Rebus.Bus
 
         public static void Clear()
         {
-            if (OperationContext.Current != null)
+            if (OperationContext.Current == null) return;
+
+            var context = OperationContext.Current.Extensions.Find<WcfOperationContext>();
+            if (context != null)
             {
-                var context = OperationContext.Current.Extensions.Find<WcfOperationContext>();
-                if (context != null)
-                {
-                    OperationContext.Current.Extensions.Remove(context);
-                }
+                OperationContext.Current.Extensions.Remove(context);
             }
         }
     }

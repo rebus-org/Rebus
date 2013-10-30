@@ -7,7 +7,7 @@ namespace Rebus.Bus
     /// Transaction context that really means "no transaction". Sort of a null object implementation
     /// of a transaction context.
     /// </summary>
-    public class NoTransaction : ITransactionContext
+    public class NoTransaction : ITransactionContext, IDisposable
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
