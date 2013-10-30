@@ -194,3 +194,7 @@
 
 * Changed order of operations in MsmqMessageQueue that could lead to using an invalid transaction in rare circumstances
 * Made all saga persisters treat `null` as a proper value, thus ensuring that saga data can be inserted, updated, and found with `null` in a correlation property
+
+## 0.47.0
+
+* Use hybrid stash model for transaction context, allowing it to overcome thread discontinuity in ASP.NET and WCF - thanks [jasperdk](https://github.com/jasperdk)
