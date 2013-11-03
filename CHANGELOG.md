@@ -198,3 +198,4 @@
 ## 0.47.0
 
 * Use hybrid stash model for transaction context, allowing it to overcome thread discontinuity in ASP.NET and WCF - thanks [jasperdk](https://github.com/jasperdk)
+* Optimized data structure for attached headers by doing a hash code-based pre-lookup before searching for `WeakReference` target match
