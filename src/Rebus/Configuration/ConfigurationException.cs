@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace Rebus.Configuration
 {
@@ -8,6 +9,13 @@ namespace Rebus.Configuration
     [Serializable]
     public class ConfigurationException : ApplicationException
     {
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected ConfigurationException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+
         /// <summary>
         /// Constructs the exception with the specified message.
         /// </summary>

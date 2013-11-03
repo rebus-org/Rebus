@@ -9,7 +9,11 @@ namespace Rebus.Bus
     [Serializable]
     public class UnitOfWorkCommitException : ApplicationException
     {
-        protected UnitOfWorkCommitException(SerializationInfo info, StreamingContext context) : base(info, context)
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected UnitOfWorkCommitException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
         {
         }
 
@@ -20,7 +24,6 @@ namespace Rebus.Bus
         public UnitOfWorkCommitException(Exception innerException, IUnitOfWork unitOfWork)
             : base(string.Format("An exception occurred while attempting to commit the unit of work {0}", unitOfWork), innerException)
         {
-
         }
     }
 }

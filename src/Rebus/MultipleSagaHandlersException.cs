@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace Rebus
 {
@@ -13,6 +14,14 @@ namespace Rebus
     {
         readonly object messageThatCouldBeHandledByMultipleSagaHandlers;
         readonly Type[] sagaHandlerTypes;
+
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected MultipleSagaHandlersFoundException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
 
         /// <summary>
         /// Constructs the exception with a reference to the message that could be handled by multiple saga handlers

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using Rebus.Shared;
 
 namespace Rebus
@@ -10,6 +11,14 @@ namespace Rebus
     [Serializable]
     public class InconsistentReturnAddressException : ApplicationException
     {
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected InconsistentReturnAddressException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
         internal InconsistentReturnAddressException(string message, params object[] objs)
             : base(string.Format(@"When specifying the {0} header, it must be consistent across messages within one batch!
 
@@ -20,7 +29,7 @@ That means that if you specify the return address for one message in a batch, yo
 
 {1}", Headers.ReturnAddress, string.Format(message, objs)))
         {
-            
+
         }
     }
 }

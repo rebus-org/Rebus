@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.Serialization;
 
 namespace Rebus
 {
@@ -11,6 +12,14 @@ namespace Rebus
     public class UnhandledMessageException : ApplicationException
     {
         readonly object unhandledMessage;
+
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected UnhandledMessageException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
 
         /// <summary>
         /// Constructs the exception with a reference to the message that could not be handled

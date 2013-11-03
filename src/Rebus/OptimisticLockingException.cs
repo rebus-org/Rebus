@@ -34,7 +34,6 @@ namespace Rebus
         public OptimisticLockingException(SerializationInfo serializationInfo, StreamingContext streamingContext)
             : base(serializationInfo, streamingContext)
         {
-
         }
     }
 }

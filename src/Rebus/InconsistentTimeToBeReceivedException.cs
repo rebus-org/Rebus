@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.Serialization;
 using Rebus.Shared;
 
 namespace Rebus
@@ -10,6 +11,14 @@ namespace Rebus
     [Serializable]
     public class InconsistentTimeToBeReceivedException : ApplicationException
     {
+        /// <summary>
+        /// Mandatory exception ctor
+        /// </summary>
+        protected InconsistentTimeToBeReceivedException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+        }
+
         internal InconsistentTimeToBeReceivedException(string message, params object[] objs)
             : base(string.Format(@"When specifying the {0} header, it must be consistent across messages within one batch!
 
@@ -17,7 +26,7 @@ Otherwise, messages might either get deleted before they actually expire, or not
 
 {1}", Headers.TimeToBeReceived, string.Format(message, objs)))
         {
-            
+
         }
     }
 }
