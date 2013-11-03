@@ -67,6 +67,14 @@ namespace Rebus.Configuration
         /// </summary>
         public void SaveBusInstances(IBus bus)
         {
+            if (!ReferenceEquals(null, Bus))
+            {
+                throw new InvalidOperationException(
+                    string.Format(
+                        "You can't call SaveBusInstances twice on the container adapter! Already have bus instance {0} when you tried to overwrite it with {1}",
+                        Bus, bus));
+            }
+
             Bus = bus;
         }
 

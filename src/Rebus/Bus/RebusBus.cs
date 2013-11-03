@@ -44,11 +44,12 @@ namespace Rebus.Bus
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
 
+        readonly object workerCountAdjustmentLock = new object();
+
         static int rebusIdCounter;
         readonly int rebusId;
         readonly string timeoutManagerAddress;
         bool started;
-        //BusMode busMode;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -313,14 +314,18 @@ namespace Rebus.Bus
 
         /// <summary>
         /// Sets the number of workers in this <see cref="RebusBus"/> to the specified
-        /// number. The number of workers must be greater than or equal to 0.
+        /// number. The number of workers must be greater than or equal to 0. Blocks
+        /// until the number of workers has been set to <see cref="newNumberOfWorkers"/>.
         /// </summary>
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
             Guard.GreaterThanOrEqual(newNumberOfWorkers, 0, "newNumberOfWorkers");
 
-            while (workers.Count < newNumberOfWorkers) AddWorker();
-            while (workers.Count > newNumberOfWorkers) RemoveWorker();
+            lock (workerCountAdjustmentLock)
+            {
+                while (workers.Count < newNumberOfWorkers) AddWorker();
+                while (workers.Count > newNumberOfWorkers) RemoveWorker();
+            }
         }
 
         /// <summary>
@@ -740,6 +745,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         public void Dispose()
         {
             // redundant optimization: just tell all workers to stop at the same time
+            // (because it makes all the workers stop in parallel)
             workers.AsParallel().ForAll(w => w.Stop());
 
             SetNumberOfWorkers(0);
@@ -753,6 +759,14 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 disposable.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Formats this bus instance as "Rebus n", where n is the instance number during the lifetime of this AppDomain
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("Rebus {0}", rebusId);
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)
