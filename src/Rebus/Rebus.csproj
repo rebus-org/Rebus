@@ -61,7 +61,6 @@
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\DueTimeoutScheduler.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
-    <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
     <Compile Include="Bus\IMulticastTransport.cs" />
     <Compile Include="Bus\IMutateIncomingMessages.cs" />

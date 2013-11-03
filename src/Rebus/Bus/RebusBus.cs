@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Timers;
 using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -140,7 +143,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
- 
+
         /// <summary>
         /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
         /// </summary>
@@ -412,7 +415,7 @@ namespace Rebus.Bus
             if (!headerContext.GetHeadersFor(message).TryGetValue(key, out value))
                 return null;
 
-            return (string) value;
+            return (string)value;
         }
 
         /// <summary>
@@ -879,36 +882,95 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
         internal class HeaderContext
         {
-            internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
+            internal readonly ConcurrentDictionary<int, List<HeaderItem>> headers = new ConcurrentDictionary<int, List<HeaderItem>>();
             internal readonly Timer cleanupTimer;
+
+            internal class HeaderItem
+            {
+                readonly WeakReference weakReference;
+                readonly Dictionary<string, object> headers;
+
+                public HeaderItem(object target)
+                {
+                    weakReference = new WeakReference(target);
+                    headers = new Dictionary<string, object>();
+                }
+
+                public object Target { get { return weakReference.Target; } }
+
+                public Dictionary<string, object> Headers { get { return headers; } }
+                public bool IsDead { get { return !weakReference.IsAlive; } }
+            }
 
             public HeaderContext()
             {
                 cleanupTimer = new Timer { Interval = TimeSpan.FromSeconds(1).TotalMilliseconds };
-                cleanupTimer.Elapsed += (o, ea) => headers.RemoveDeadReferences();
+                cleanupTimer.Elapsed += (o, ea) => RemoveDeadHeaderItems();
                 cleanupTimer.Start();
             }
 
             public void AttachHeader(object message, string key, string value)
             {
-                var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
-                headerDictionary[key] = value;
+                if (message == null) throw new ArgumentNullException("message", string.Format("Can't add header {0}={1} to null message!", key, value));
+
+                var hashCode = message.GetHashCode();
+                var items = headers.GetOrAdd(hashCode, c => new List<HeaderItem>());
+
+                lock (items)
+                {
+                    var headerItemForThisMessage = items.FirstOrDefault(i => i.Target == message);
+                    if (headerItemForThisMessage == null)
+                    {
+                        headerItemForThisMessage = new HeaderItem(message);
+                        items.Add(headerItemForThisMessage);
+                    }
+                    headerItemForThisMessage.Headers[key] = value;
+                }
+            }
+
+            void RemoveDeadHeaderItems()
+            {
+                foreach (var kvp in headers)
+                {
+                    var items = kvp.Value;
+                    lock (items)
+                    {
+                        var headerItemsToRemove = items.Where(i => i.IsDead).ToList();
+                        
+                        foreach (var itemToRemove in headerItemsToRemove)
+                        {
+                            items.Remove(itemToRemove);
+                        }
+                    }
+                }
             }
 
             public Dictionary<string, object> GetHeadersFor(object message)
             {
-                Dictionary<string, object> temp;
+                if (message == null) throw new ArgumentNullException("message", "Can't get headers for null message!");
 
-                var headersForThisMessage = headers.TryGetValue(message, out temp)
-                                                ? temp
-                                                : new Dictionary<string, object>();
+                var hashCode = message.GetHashCode();
+                List<HeaderItem> items;
 
-                return headersForThisMessage;
+                if (headers.TryGetValue(hashCode, out items))
+                {
+                    lock (items)
+                    {
+                        var headerItemForThisMessage = items.FirstOrDefault(i => i.Target == message);
+
+                        if (headerItemForThisMessage != null)
+                        {
+                            return headerItemForThisMessage.Headers;
+                        }
+                    }
+                }
+
+                return new Dictionary<string, object>();
             }
 
             public void Tick()
             {
-                headers.RemoveDeadReferences();
+                RemoveDeadHeaderItems();
             }
 
             public void Dispose()
@@ -916,5 +978,5 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 cleanupTimer.Dispose();
             }
         }
-   }
+    }
 }

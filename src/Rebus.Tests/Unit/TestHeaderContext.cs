@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -18,6 +19,43 @@ namespace Rebus.Tests.Unit
             c = new RebusBus.HeaderContext();
         }
 
+        /// <summary>
+        /// Starting point:
+        ///     1000 + 1000 took 10,6 s
+        /// 
+        /// Pre-lookup by object hash code:
+        ///     1000 + 1000 took 0,4 s
+        /// </summary>
+        [TestCase(1000,1000)]
+        [TestCase(100,1000)]
+        [TestCase(1000,100)]
+        [TestCase(100,100)]
+        public void TestPerformance(int addIterations, int getIterations)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var messages = new List<object>();
+
+            addIterations.Times(() =>
+            {
+                var message = new object();
+                messages.Add(message);
+
+                c.AttachHeader(message, "whatever", "some value");
+            });
+
+            getIterations.Times(() =>
+            {
+                foreach (var message in messages)
+                {
+                    var customHeaders = c.GetHeadersFor(message);
+
+                    customHeaders.ShouldContainKeyAndValue("whatever", "some value");
+                }
+            });
+
+            Console.WriteLine("{0} + {1} took {2:0.0} s", addIterations, getIterations, stopwatch.Elapsed.TotalSeconds);
+        }
+
         [Test]
         public void AssociatesHeadersWithObjects()
         {
@@ -31,9 +69,9 @@ namespace Rebus.Tests.Unit
             c.AttachHeader(secondObject, "second-header", "first-value");
 
             // assert
-            c.headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header1", "first-value");
-            c.headers.Single(s => s.Item1.Target == firstObject).ShouldContainKeyAndValue("first-header2", "first-value");
-            c.headers.Single(s => s.Item1.Target == secondObject).ShouldContainKeyAndValue("second-header", "first-value");
+            c.headers[firstObject.GetHashCode()].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header1", "first-value");
+            c.headers[firstObject.GetHashCode()].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header2", "first-value");
+            c.headers[secondObject.GetHashCode()].Single(s => s.Target == secondObject).Headers.ShouldContainKeyAndValue("second-header", "first-value");
         }
 
         [Test]
@@ -45,7 +83,7 @@ namespace Rebus.Tests.Unit
             c.AttachHeader(someObject, "header2", "value2");
 
             // just check that the dictionary is there
-            c.headers.Count.ShouldBe(1);
+            c.headers.First().Value.Count.ShouldBe(1);
 
             // act
             someObject = null;
@@ -54,7 +92,7 @@ namespace Rebus.Tests.Unit
             c.Tick();
 
             // assert
-            c.headers.Count.ShouldBe(0);
+            c.headers.First().Value.Count.ShouldBe(0);
         }
 
         [Test]
@@ -64,6 +102,8 @@ namespace Rebus.Tests.Unit
             var someObject = new object();
             c.AttachHeader(someObject, "header1", "value1");
 
+            c.headers.First().Value.Count.ShouldBe(1);
+
             // act
             someObject = null;
             GC.Collect();
@@ -71,7 +111,7 @@ namespace Rebus.Tests.Unit
             Thread.Sleep(2000);
 
             // assert
-            c.headers.Count.ShouldBe(0);
+            c.headers.First().Value.Count.ShouldBe(0);
         }
     }
 
