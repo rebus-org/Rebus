@@ -20,11 +20,16 @@ namespace Rebus.Tests.Unit
             c = new RebusBus.HeaderContext();
         }
 
-        [Test, Ignore("takes a long time")]
-        public void IsReliableAlsoWhenUsedByManyThreads()
+        [TestCase(20, 20000)]
+        [TestCase(30, 50000)]
+        [TestCase(40, 50000, Ignore = true)]
+        [TestCase(40, 200000, Ignore = true)]
+        public void IsReliableAlsoWhenUsedByManyThreads(int howManyThreads, int numberOfIterations)
         {
             var reads = 0;
             var writes = 0;
+            var headersAttached = 0;
+            var headersActuallyFound = 0;
 
             Action printStats = () => Console.WriteLine("Reads: {0}. Writes: {1}. Buckets: {2}.", reads, writes, c.headers.Count);
 
@@ -35,20 +40,21 @@ namespace Rebus.Tests.Unit
                 printTimer.Start();
 
                 var threads = Enumerable
-                    .Range(1, 40)
+                    .Range(1, howManyThreads)
                     .Select(no => string.Format("Thread#{0}", no))
                     .Select(name => new Thread(() =>
                     {
                         var random = new Random();
                         var messages = new List<object>();
 
-                        for (var count = 0; count < 200000; count++)
+                        for (var count = 0; count < numberOfIterations; count++)
                         {
                             if (random.Next(2) == 0)
                             {
                                 var message = new object();
                                 messages.Add(message);
                                 c.AttachHeader(message, name + ".key", "some value");
+                                Interlocked.Increment(ref headersAttached);
                                 Interlocked.Increment(ref writes);
                             }
                             else
@@ -62,9 +68,15 @@ namespace Rebus.Tests.Unit
                                     randomKey = name + ".random." + random.Next(10000);
                                 } while (headers.ContainsKey(randomKey));
 
+                                Interlocked.Increment(ref headersAttached);
                                 c.AttachHeader(randomMessage, randomKey, "RANDOOOOM!");
                                 Interlocked.Increment(ref reads);
                             }
+                        }
+
+                        foreach (var message in messages)
+                        {
+                            Interlocked.Add(ref headersActuallyFound, c.GetHeadersFor(message).Count);
                         }
                     }))
                     .ToList();
@@ -74,6 +86,7 @@ namespace Rebus.Tests.Unit
             }
 
             printStats();
+            Console.WriteLine("Expected total of {0} headers - found {1}", headersAttached, headersActuallyFound);
         }
 
         /// <summary>
