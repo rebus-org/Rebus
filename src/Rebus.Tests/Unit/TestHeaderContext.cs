@@ -6,6 +6,7 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Shouldly;
 using System.Linq;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Unit
 {
@@ -19,17 +20,85 @@ namespace Rebus.Tests.Unit
             c = new RebusBus.HeaderContext();
         }
 
+        [Test, Ignore("takes a long time")]
+        public void IsReliableAlsoWhenUsedByManyThreads()
+        {
+            var reads = 0;
+            var writes = 0;
+
+            Action printStats = () => Console.WriteLine("Reads: {0}. Writes: {1}. Buckets: {2}.", reads, writes, c.headers.Count);
+
+            using (var printTimer = new Timer())
+            {
+                printTimer.Interval = 2000;
+                printTimer.Elapsed += (s, a) => printStats();
+                printTimer.Start();
+
+                var threads = Enumerable
+                    .Range(1, 40)
+                    .Select(no => string.Format("Thread#{0}", no))
+                    .Select(name => new Thread(() =>
+                    {
+                        var random = new Random();
+                        var messages = new List<object>();
+
+                        for (var count = 0; count < 200000; count++)
+                        {
+                            if (random.Next(2) == 0)
+                            {
+                                var message = new object();
+                                messages.Add(message);
+                                c.AttachHeader(message, name + ".key", "some value");
+                                Interlocked.Increment(ref writes);
+                            }
+                            else
+                            {
+                                var randomMessage = messages[random.Next(messages.Count)];
+                                var headers = c.GetHeadersFor(randomMessage);
+
+                                string randomKey;
+                                do
+                                {
+                                    randomKey = name + ".random." + random.Next(10000);
+                                } while (headers.ContainsKey(randomKey));
+
+                                c.AttachHeader(randomMessage, randomKey, "RANDOOOOM!");
+                                Interlocked.Increment(ref reads);
+                            }
+                        }
+                    }))
+                    .ToList();
+
+                threads.ForEach(t => t.Start());
+                threads.ForEach(t => t.Join());
+            }
+
+            printStats();
+        }
+
         /// <summary>
         /// Starting point:
         ///     1000 + 1000 took 10,6 s
         /// 
         /// Pre-lookup by object hash code:
         ///     1000 + 1000 took 0,4 s
+        /// 
+        /// Max # buckets = 256 (modulo on hash code)
+        ///     1000 + 1000 took 0,4 s
+        /// 
+        /// Max # buckets = 512
+        ///     1000 + 1000 took 0,3 s
+        /// 
+        /// Max # buckets = 1024
+        ///     1000 + 1000 took 0,5 s
+        ///
+        /// Max # buckets = 8192 
+        ///     1000 + 1000 took 1,2 s
         /// </summary>
-        [TestCase(1000,1000)]
-        [TestCase(100,1000)]
-        [TestCase(1000,100)]
-        [TestCase(100,100)]
+        [TestCase(1000, 1000)]
+        [TestCase(100, 1000)]
+        [TestCase(1000, 100)]
+        [TestCase(100, 100)]
         public void TestPerformance(int addIterations, int getIterations)
         {
             var stopwatch = Stopwatch.StartNew();
@@ -69,9 +138,9 @@ namespace Rebus.Tests.Unit
             c.AttachHeader(secondObject, "second-header", "first-value");
 
             // assert
-            c.headers[firstObject.GetHashCode()].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header1", "first-value");
-            c.headers[firstObject.GetHashCode()].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header2", "first-value");
-            c.headers[secondObject.GetHashCode()].Single(s => s.Target == secondObject).Headers.ShouldContainKeyAndValue("second-header", "first-value");
+            c.headers[RebusBus.HeaderContext.GetHashCodeFromMessage(firstObject)].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header1", "first-value");
+            c.headers[RebusBus.HeaderContext.GetHashCodeFromMessage(firstObject)].Single(s => s.Target == firstObject).Headers.ShouldContainKeyAndValue("first-header2", "first-value");
+            c.headers[RebusBus.HeaderContext.GetHashCodeFromMessage(secondObject)].Single(s => s.Target == secondObject).Headers.ShouldContainKeyAndValue("second-header", "first-value");
         }
 
         [Test]

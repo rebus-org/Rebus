@@ -882,6 +882,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
         internal class HeaderContext
         {
+            const int MaxBucketCount = 512;
             internal readonly ConcurrentDictionary<int, List<HeaderItem>> headers = new ConcurrentDictionary<int, List<HeaderItem>>();
             internal readonly Timer cleanupTimer;
 
@@ -913,7 +914,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 if (message == null) throw new ArgumentNullException("message", string.Format("Can't add header {0}={1} to null message!", key, value));
 
-                var hashCode = message.GetHashCode();
+                var hashCode = GetHashCodeFromMessage(message);
                 var items = headers.GetOrAdd(hashCode, c => new List<HeaderItem>());
 
                 lock (items)
@@ -926,6 +927,34 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     }
                     headerItemForThisMessage.Headers[key] = value;
                 }
+            }
+
+            public Dictionary<string, object> GetHeadersFor(object message)
+            {
+                if (message == null) throw new ArgumentNullException("message", "Can't get headers for null message!");
+
+                var hashCode = GetHashCodeFromMessage(message);
+                List<HeaderItem> items;
+
+                if (headers.TryGetValue(hashCode, out items))
+                {
+                    lock (items)
+                    {
+                        var headerItemForThisMessage = items.FirstOrDefault(i => i.Target == message);
+
+                        if (headerItemForThisMessage != null)
+                        {
+                            return headerItemForThisMessage.Headers;
+                        }
+                    }
+                }
+
+                return new Dictionary<string, object>();
+            }
+
+            public static int GetHashCodeFromMessage(object message)
+            {
+                return message.GetHashCode() % MaxBucketCount;
             }
 
             void RemoveDeadHeaderItems()
@@ -943,29 +972,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                         }
                     }
                 }
-            }
-
-            public Dictionary<string, object> GetHeadersFor(object message)
-            {
-                if (message == null) throw new ArgumentNullException("message", "Can't get headers for null message!");
-
-                var hashCode = message.GetHashCode();
-                List<HeaderItem> items;
-
-                if (headers.TryGetValue(hashCode, out items))
-                {
-                    lock (items)
-                    {
-                        var headerItemForThisMessage = items.FirstOrDefault(i => i.Target == message);
-
-                        if (headerItemForThisMessage != null)
-                        {
-                            return headerItemForThisMessage.Headers;
-                        }
-                    }
-                }
-
-                return new Dictionary<string, object>();
             }
 
             public void Tick()
