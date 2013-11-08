@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using Raven.Client.Extensions;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
-using Shouldly;
 
 namespace Rebus.Tests.Bugs
 {
@@ -50,6 +48,7 @@ namespace Rebus.Tests.Bugs
             MakeUnitOfWorkThrowOnCommit = true;
 
             adapter.Bus.SendLocal("you'll throw now!");
+            
             var timeout = 5.Seconds();
             Assert.That(resetEvent.WaitOne(timeout), Is.True, "Did not receive PoisonMessage event within {0} timeout", timeout);
 
