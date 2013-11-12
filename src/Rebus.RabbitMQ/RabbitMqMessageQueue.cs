@@ -182,12 +182,6 @@ namespace Rebus.RabbitMQ
 
         public string ExchangeName { get { return exchangeName; } }
 
-        public bool EnsureExchangeIsDeclared { get { return ensureExchangeIsDeclared; } }
-
-        public bool BindDefaultTopicToInputQueue { get { return bindDefaultTopicToInputQueue; } }
-
-        public ushort PrefetchCount { get { return prefetchCount; } }
-
         public bool ManagesSubscriptions { get { return managesSubscriptions; } }
 
         public void Dispose()
