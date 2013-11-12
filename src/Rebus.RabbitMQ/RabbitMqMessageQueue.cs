@@ -170,19 +170,50 @@ namespace Rebus.RabbitMQ
             }
         }
 
+        /// <summary>
+        /// Adds a function to the list of functions that will be asked to resolve the topic for a given type
+        /// </summary>
         public RabbitMqMessageQueue AddEventNameResolver(Func<Type, string> resolver)
         {
             eventNameResolvers.Add(resolver);
             return this;
         }
 
-        public string InputQueue { get { return inputQueueName; } }
+        /// <summary>
+        /// Gets name of the input queue. Returns the same as <see cref="InputQueueAddress"/>
+        /// because all queues are global with RabbitMQ.
+        /// </summary>
+        public string InputQueue
+        {
+            get { return inputQueueName; }
+        }
 
-        public string InputQueueAddress { get { return inputQueueName; } }
+        /// <summary>
+        /// Gets the globally accessible name of the input queue. Returns the same as <see cref="InputQueue"/>
+        /// because all queues are global with RabbitMQ.
+        /// </summary>
+        public string InputQueueAddress
+        {
+            get { return inputQueueName; }
+        }
 
-        public string ExchangeName { get { return exchangeName; } }
+        /// <summary>
+        /// Gets the name of the exchange that messages are published to
+        /// </summary>
+        public string ExchangeName
+        {
+            get { return exchangeName; }
+        }
 
-        public bool ManagesSubscriptions { get { return managesSubscriptions; } }
+        /// <summary>
+        /// Indicates whether subscriptions are managed by RabbitMQ. This means that a subscription corresponds to
+        /// a binding made from a topic with a .NET type name in RabbitMQ, and a <see cref="IBus.Publish{TEvent}"/>
+        /// correponds to publishing the given message with the type name as topic.
+        /// </summary>
+        public bool ManagesSubscriptions
+        {
+            get { return managesSubscriptions; }
+        }
 
         public void Dispose()
         {
