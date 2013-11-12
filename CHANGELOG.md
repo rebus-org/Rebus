@@ -203,3 +203,4 @@
 ## 0.48.0
 
 * Queue transaction failures are now properly caught and will be waited out when possible
+* Increased Azure transport backoff times when throttling is detected
