@@ -104,8 +104,8 @@ namespace Rebus.AzureServiceBus
                                                         Label = message.Label,
                                                     };
 
-                var backoffTimes = new[] { 0.1, 0.2, 0.5, 1, 2, 3, 5, 8, 13, 21, 30, 30, 30, 30 }
-                    .Select(TimeSpan.FromSeconds)
+                var backoffTimes = new[] { 1, 2, 5, 10, 10, 10, 10, 10, 20, 20, 20, 30, 30, 30, 30 }
+                    .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
                 new Retrier(backoffTimes)
@@ -263,8 +263,8 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var backoffTimes = new[] {0.1, 0.2, 0.5, 1, 2, 3, 5, 8, 13}
-                    .Select(TimeSpan.FromSeconds)
+                var backoffTimes = new[] {1, 2, 5, 10, 10, 10}
+                    .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
                 new Retrier(backoffTimes)
