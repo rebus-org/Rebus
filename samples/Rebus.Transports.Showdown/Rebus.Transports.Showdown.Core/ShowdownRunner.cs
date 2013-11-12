@@ -69,7 +69,7 @@ namespace Rebus.Transports.Showdown.Core
                 {
                     var sentMessagesCount = 0;
                     var receivedMessagesCount = 0;
-                    printTimer.Interval = 5000;
+                    printTimer.Interval = 10000;
                     printTimer.Elapsed +=
                         delegate
                         {
