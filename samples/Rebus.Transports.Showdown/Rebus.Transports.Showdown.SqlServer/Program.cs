@@ -41,12 +41,11 @@ namespace Rebus.Transports.Showdown.SqlServer
 
         static void PurgeInputQueue(string inputQueueName)
         {
-            using (var queue = new SqlServerMessageQueue(SqlServerConnectionString,
-                                                         MessageTableName,
-                                                         inputQueueName))
-            {
-                queue.PurgeInputQueue();
-            }
+            var queue = new SqlServerMessageQueue(SqlServerConnectionString,
+                MessageTableName,
+                inputQueueName);
+            
+            queue.PurgeInputQueue();
         }
     }
 }
