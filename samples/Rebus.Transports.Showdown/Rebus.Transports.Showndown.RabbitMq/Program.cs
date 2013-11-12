@@ -16,20 +16,20 @@ namespace Rebus.Transports.Showndown.RabbitMq
             using (var runner = new ShowdownRunner(ReceiverInputQueue))
             {
                 Configure.With(runner.SenderAdapter)
-                         .Logging(l => l.ColoredConsole(LogLevel.Warn))
-                         .Transport(t => t.UseRabbitMq(RabbitMqConnectionString, SenderInputQueue, "error")
-                                          .PurgeInputQueue())
-                         .MessageOwnership(o => o.Use(runner))
-                         .CreateBus()
-                         .Start();
+                    .Logging(l => l.ColoredConsole(LogLevel.Warn))
+                    .Transport(t => t.UseRabbitMq(RabbitMqConnectionString, SenderInputQueue, "error")
+                        .PurgeInputQueue())
+                    .MessageOwnership(o => o.Use(runner))
+                    .CreateBus()
+                    .Start();
 
                 Configure.With(runner.ReceiverAdapter)
-                         .Logging(l => l.ColoredConsole(LogLevel.Warn))
-                         .Transport(t => t.UseRabbitMq(RabbitMqConnectionString, ReceiverInputQueue, "error")
-                                          .PurgeInputQueue())
-                         .MessageOwnership(o => o.Use(runner))
-                         .CreateBus()
-                         .Start();
+                    .Logging(l => l.ColoredConsole(LogLevel.Warn))
+                    .Transport(t => t.UseRabbitMq(RabbitMqConnectionString, ReceiverInputQueue, "error")
+                        .PurgeInputQueue())
+                    .MessageOwnership(o => o.Use(runner))
+                    .CreateBus()
+                    .Start();
 
                 runner.Run();
             }
