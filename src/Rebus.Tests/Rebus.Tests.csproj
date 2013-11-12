@@ -155,6 +155,7 @@
     <Compile Include="Bugs\DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq.cs" />
     <Compile Include="Bugs\DoesNotLeakChannelsWhenCombiningRabbitWithMsmq.cs" />
     <Compile Include="Bugs\DoesNotThrowNullReferenceExceptionWhenFakingTheMessageContext.cs" />
+    <Compile Include="Bugs\QueueCommitFailIsLoggedAsWarning.cs" />
     <Compile Include="Bugs\RabbitMqConnectionDoesNotChokeOnSingleTooLargeMessage.cs" />
     <Compile Include="Bugs\RabbitMqDoesNotHaveRaceConditionWhenSubscribingOnAutoDeleteQueue.cs" />
     <Compile Include="Bugs\SendAndPublishAutomaticallyEnlistInAmbientTransaction.cs" />
@@ -315,6 +316,7 @@
     <Compile Include="Bugs\SagaPersisterShouldNotIndexSamePropertyTwice.cs" />
     <Compile Include="Transports\Rabbit\TestRabbitSubscriptions.cs" />
     <Compile Include="Transports\Sql\TestSqlServerMessageQueue.cs" />
+    <Compile Include="Unit\TestBackoffHelper.cs" />
     <Compile Include="Unit\TestRebusMessageScoping.cs" />
     <Compile Include="Unit\RebusBusUnitTestBase.cs" />
     <Compile Include="Unit\TestDispatcher.cs" />

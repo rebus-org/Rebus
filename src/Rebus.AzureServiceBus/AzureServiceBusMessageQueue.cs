@@ -179,17 +179,20 @@ namespace Rebus.AzureServiceBus
                             {
                                 try
                                 {
-                                    brokeredMessage.Abandon();
+                                    try
+                                    {
+                                        brokeredMessage.Abandon();
+                                    }
+                                    finally
+                                    {
+                                        brokeredMessage.Dispose();
+                                    }
                                 }
                                 catch (Exception e)
                                 {
                                     log.Warn(
                                         "An exception occurred while attempting to abandon received message {0}: {1}",
                                         messageId, e);
-                                }
-                                finally
-                                {
-                                    brokeredMessage.Dispose();
                                 }
                             };
                     }

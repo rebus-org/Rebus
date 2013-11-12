@@ -10,7 +10,7 @@ using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Description("Verifies that an exception on uow commit is logged as a warning")]
     public class UnitOfWorkCommitFailIsLoggedAsWarning : FixtureBase, IUnitOfWorkManager
     {
         const string RecognizableErrorMessage = "BAM!!!!1111";

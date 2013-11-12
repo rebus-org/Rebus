@@ -25,6 +25,35 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Helps with waiting an appropriate amount of time when no message is received
+        /// </summary>
+        readonly BackoffHelper nullMessageReceivedBackoffHelper =
+            new BackoffHelper(Enumerable.Empty<TimeSpan>()
+                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // first 2 s
+                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 10)) // next 10 s
+                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(5000), 1))) // keep waiting for 5 s each time
+            {
+                LoggingDisabled = true
+            };
+
+        /// <summary>
+        /// Helps with waiting an appropriate amount of time when something is wrong that makes us unable to do
+        /// useful work
+        /// </summary>
+        readonly BackoffHelper errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper =
+            new BackoffHelper(new[]
+                              {
+                                  TimeSpan.FromSeconds(1),
+                                  TimeSpan.FromSeconds(2),
+                                  TimeSpan.FromSeconds(3),
+                                  TimeSpan.FromSeconds(5),
+                                  TimeSpan.FromSeconds(8),
+                                  TimeSpan.FromSeconds(13),
+                                  TimeSpan.FromSeconds(21),
+                                  TimeSpan.FromSeconds(30),
+                              });
+
+        /// <summary>
         /// Caching of dispatcher methods
         /// </summary>
         readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
@@ -161,6 +190,8 @@ namespace Rebus.Bus
                 try
                 {
                     TryProcessIncomingMessage();
+
+                    errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper.Reset();
                 }
                 catch (Exception e)
                 {
@@ -178,6 +209,19 @@ namespace Rebus.Bus
                         else if (e is UnitOfWorkCommitException)
                         {
                             UserException(this, e);
+                        }
+                        else if (e is QueueCommitException)
+                        {
+                            UserException(this, e);
+
+                            // when the queue cannot commit, we can't get the message into the error queue either - basically,
+                            // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
+                            errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper
+                                .Wait(waitTime => log.Warn(
+                                    "Caught an exception when interacting with the queue system - there's basically no meaningful" +
+                                    " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
+                                    " wait and hope that the situation gets better... current wait time is {0}",
+                                    waitTime));
                         }
                         else
                         {
@@ -212,7 +256,15 @@ namespace Rebus.Bus
                 try
                 {
                     DoTry();
-                    context.RaiseDoCommit();
+
+                    try
+                    {
+                        context.RaiseDoCommit();
+                    }
+                    catch (Exception commitException)
+                    {
+                        throw new QueueCommitException(commitException);
+                    }
                 }
                 catch
                 {
@@ -230,31 +282,18 @@ namespace Rebus.Bus
             }
         }
 
-        int successiveNullMessagesReceived = 0;
-
-        readonly TimeSpan[] nullMessageSleepTimes =
-            Enumerable.Empty<TimeSpan>()
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(20), 10)) // first 200 ms
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(50), 10)) // next 500 ms
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // next 2 s
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 1)) // the rest of the time
-                      .ToArray();
-
         void DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
             if (transportMessage == null)
             {
-                // to back off and relax then there's no messages to process, we do this
-                successiveNullMessagesReceived++;
-                var sleepTimeIndex = Math.Min(nullMessageSleepTimes.Length - 1, successiveNullMessagesReceived);
-                var timeToSleep = nullMessageSleepTimes[sleepTimeIndex];
-                Thread.Sleep(timeToSleep);
+                // to back off and relax when there's no messages to process, we do this
+                nullMessageReceivedBackoffHelper.Wait();
                 return;
             }
-
-            successiveNullMessagesReceived = 0;
+            
+            nullMessageReceivedBackoffHelper.Reset();
 
             var id = transportMessage.Id;
             var label = transportMessage.Label;

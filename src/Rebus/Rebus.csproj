@@ -57,6 +57,7 @@
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
     <Compile Include="Bus\AmbientTransactionContext.cs" />
+    <Compile Include="Bus\BackoffHelper.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\DueTimeoutScheduler.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="Bus\IUnitOfWork.cs" />
     <Compile Include="Bus\IUnitOfWorkManager.cs" />
     <Compile Include="Bus\NoTransaction.cs" />
+    <Compile Include="Bus\QueueCommitException.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
