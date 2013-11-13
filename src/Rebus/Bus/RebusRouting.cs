@@ -39,7 +39,7 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Sends the message currently being handled to the specified endpoint, preserving all
+        /// Sends the logical message currently being handled to the specified endpoint, preserving all
         /// of the transport level headers.
         /// </summary>
         public void ForwardCurrentMessage(string destinationEndpoint)

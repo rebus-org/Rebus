@@ -72,5 +72,16 @@ namespace Rebus.Configuration
                 });
             return this;
         }
+
+        /// <summary>
+        /// Enables message audit to the specified queue name. This means that all successfully handled messages and all published messages
+        /// will be copied to the given queue. The messages will have the <see cref="Headers.AuditReason"/> header added, and the value will
+        /// be <see cref="Headers.AuditReasons.Handled"/> or <see cref="Headers.AuditReasons.Published"/>, depending on the reason why it
+        /// was copied.
+        /// </summary>
+        public void EnableMessageAudit(string auditQueueName)
+        {
+            Backbone.AdditionalBehavior.PerformMessageAudit(auditQueueName);
+        }
     }
 }

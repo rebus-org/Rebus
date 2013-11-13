@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Timers;
 using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -579,7 +577,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 if (!configureAdditionalBehavior.OneWayClientMode)
                 {
-                    headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                    headers[Headers.ReturnAddress] = GetInputQueueAddress();
                 }
             }
 
@@ -623,6 +621,11 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             InternalSend(destination, messageToSend);
         }
 
+        internal string GetInputQueueAddress()
+        {
+            return receiveMessages.InputQueueAddress;
+        }
+
         object MutateOutgoing(object msg)
         {
             return Events.MessageMutators.Aggregate(msg, (current, mutator) => mutator.MutateOutgoing(current));
@@ -641,7 +644,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 var transportMessage = serializeMessages.Serialize(messageToSend);
 
-                sendMessages.Send(destination, transportMessage, transactionContext);
+                InternalSend(destination, transportMessage, transactionContext);
             }
             catch (Exception exception)
             {
@@ -649,6 +652,11 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     "An exception occurred while attempting to send {0} to {1} (context: {2})",
                     messageToSend, destination, transactionContext), exception);
             }
+        }
+
+        internal void InternalSend(string destination, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            sendMessages.Send(destination, transportMessage, transactionContext);
         }
 
         ITransactionContext GetTransactionContext()

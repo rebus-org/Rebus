@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Shared;
 using Rebus.Timeout;
 
 namespace Rebus.Configuration
@@ -42,13 +43,13 @@ namespace Rebus.Configuration
         /// </summary>
         public TKey LoadFromRegistry<TKey>(Func<TKey> factoryMethod)
         {
-            if (registry.ContainsKey(typeof (TKey)))
+            if (registry.ContainsKey(typeof(TKey)))
             {
-                return (TKey) registry[typeof (TKey)];
+                return (TKey)registry[typeof(TKey)];
             }
 
             var instance = factoryMethod();
-            registry[typeof (TKey)] = instance;
+            registry[typeof(TKey)] = instance;
             return instance;
         }
 
@@ -152,6 +153,77 @@ namespace Rebus.Configuration
             foreach (var applyDecorationStep in decorationSteps)
             {
                 applyDecorationStep(this);
+            }
+        }
+
+        internal void FinishConfiguration(RebusBus bus)
+        {
+            var rebusEvents = bus.Events;
+
+            SetUpAudit(rebusEvents);
+
+            Adapter.SaveBusInstances(bus);
+        }
+
+        void SetUpAudit(IRebusEvents rebusEvents)
+        {
+            if (!AdditionalBehavior.AuditMessages) return;
+
+            new MessageAuditor()
+                .Configure(rebusEvents, AdditionalBehavior.AuditQueueName);
+        }
+    }
+
+    class MessageAuditor
+    {
+        static ILog log;
+        static MessageAuditor()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
+        public void Configure(IRebusEvents rebusEvents, string auditQueueName)
+        {
+            log.Info("Configuring Rebus to copy successfully processed messages to {0}", auditQueueName);
+
+            rebusEvents.AfterTransportMessage +=
+                (bus, exceptionOrNull, message) =>
+                    PossiblyCopyToAuditQueue(auditQueueName, exceptionOrNull, bus, message);
+        }
+
+        static void PossiblyCopyToAuditQueue(string auditQueueName, Exception exceptionOrNull, IBus bus, ReceivedTransportMessage message)
+        {
+            // if an error occurred, don't do anything
+            if (exceptionOrNull != null) return;
+
+            // this one will always be non-null - but still
+            if (TransactionContext.Current == null)
+            {
+                log.Warn("Auditor called outside of a proper transaction context!!! This must be an error.");
+                return;
+            }
+
+            var rebusBus = bus as RebusBus;
+            if (rebusBus == null)
+            {
+                log.Warn("Current IBus is not a RebusBus, it's a {0} - cannot use {0} for auditing", bus.GetType().Name);
+                return;
+            }
+
+            var forwardableMessage = message.ToForwardableMessage();
+
+            forwardableMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
+            forwardableMessage.Headers[Headers.AuditSourceQueue] = rebusBus.GetInputQueueAddress();
+            forwardableMessage.Headers[Headers.AuditMessageProcessedTime] = RebusTimeMachine.Now().ToString("u");
+
+            try
+            {
+                rebusBus.InternalSend(auditQueueName, forwardableMessage, TransactionContext.Current);
+            }
+            catch (Exception exception)
+            {
+                log.Warn("An error occurred while attempting to copy message with ID {0} to {1}: {2}",
+                    message.Id, auditQueueName, exception);
             }
         }
     }

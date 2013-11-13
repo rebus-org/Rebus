@@ -24,6 +24,8 @@ namespace Rebus.Tests
 
             foreach(var messageQueue in messageQueues)
             {
+                Console.WriteLine("Deleting {0}...", messageQueue.QueueName);
+
                 Assert.DoesNotThrow(() => MessageQueue.Delete(messageQueue.Path),
                                     "Something bad happened while attempting to delete {0}", messageQueue.Path);
             }

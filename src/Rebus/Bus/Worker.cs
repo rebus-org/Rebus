@@ -456,7 +456,11 @@ namespace Rebus.Bus
                     }
                 }
 
-                if (context != null) context.Dispose(); //< dispose it if we entered
+                if (context != null)
+                {
+                    // dispose it if we entered
+                    context.Dispose();
+                }
             }
 
             errorTracker.StopTracking(id);

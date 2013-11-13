@@ -88,6 +88,11 @@ namespace Rebus.Shared
             public string QueueName { get; set; }
         }
 
+        public static bool QueueExists(string queueName)
+        {
+            return MessageQueue.Exists(GetPath(queueName));
+        }
+
         public static void Delete(string queueName)
         {
             MessageQueue.Delete(GetPath(queueName));
