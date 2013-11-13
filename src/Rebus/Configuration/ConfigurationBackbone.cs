@@ -216,15 +216,15 @@ namespace Rebus.Configuration
             forwardableMessage.Headers[Headers.AuditSourceQueue] = rebusBus.GetInputQueueAddress();
             forwardableMessage.Headers[Headers.AuditMessageProcessedTime] = RebusTimeMachine.Now().ToString("u");
 
-            try
-            {
+            //try
+            //{
                 rebusBus.InternalSend(auditQueueName, forwardableMessage, TransactionContext.Current);
-            }
-            catch (Exception exception)
-            {
-                log.Warn("An error occurred while attempting to copy message with ID {0} to {1}: {2}",
-                    message.Id, auditQueueName, exception);
-            }
+            //}
+            //catch (Exception exception)
+            //{
+            //    log.Warn("An error occurred while attempting to copy message with ID {0} to {1}: {2}",
+            //        message.Id, auditQueueName, exception);
+            //}
         }
     }
 }
