@@ -32,7 +32,11 @@ namespace Rebus.Tests.Integration
                 .Start(1);
 
             MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(AuditQueueName));
-            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath("bimmelimAudit2"));
+        }
+
+        static string InputQueueAddress
+        {
+            get { return InputQueueName + "@" + Environment.MachineName; }
         }
 
         [Test]
@@ -47,9 +51,6 @@ namespace Rebus.Tests.Integration
             // act
             adapter.Bus.SendLocal("yo!");
             
-            var timeout = 3.Seconds();
-            Assert.That(resetEvent.WaitOne(timeout), Is.True, "Did not receive message withing {0} timeout", timeout);
-
             // assert
             var message = GetMessageFrom(AuditQueueName);
             
@@ -62,7 +63,34 @@ namespace Rebus.Tests.Integration
             logicalMessages[0].ShouldBe("yo!");
 
             headers.ShouldContainKeyAndValue(Headers.AuditReason, Headers.AuditReasons.Handled);
-            headers.ShouldContainKeyAndValue(Headers.AuditMessageProcessedTime, fakeTime.ToString("u"));
+            headers.ShouldContainKeyAndValue(Headers.AuditMessageCopyTime, fakeTime.ToString("u"));
+            headers.ShouldContainKeyAndValue(Headers.AuditSourceQueue, InputQueueAddress);
+        }
+
+        [Test]
+        public void CanCopyPublishedMessageToAuditQueue()
+        {
+            // arrange
+            var fakeTime = DateTime.UtcNow;
+            TimeMachine.FixTo(fakeTime);
+
+            // act
+            adapter.Bus.Publish("yo!");
+            
+            // assert
+            var message = GetMessageFrom(AuditQueueName);
+            
+            message.ShouldNotBe(null);
+
+            var logicalMessages = message.Messages;
+            var headers = message.Headers;
+
+            logicalMessages.Length.ShouldBe(1);
+            logicalMessages[0].ShouldBe("yo!");
+
+            headers.ShouldContainKeyAndValue(Headers.AuditReason, Headers.AuditReasons.Published);
+            headers.ShouldContainKeyAndValue(Headers.AuditMessageCopyTime, fakeTime.ToString("u"));
+            headers.ShouldContainKeyAndValue(Headers.AuditSourceQueue, InputQueueAddress);
         }
 
         protected override void DoTearDown()

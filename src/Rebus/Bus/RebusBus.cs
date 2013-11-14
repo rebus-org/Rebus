@@ -638,25 +638,24 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         {
             log.Info("Sending {0} to {1}", messageToSend, destination);
 
-            var transactionContext = GetTransactionContext();
+            var transportMessage = serializeMessages.Serialize(messageToSend);
 
+            InternalSend(destination, transportMessage);
+        }
+
+        internal void InternalSend(string destination, TransportMessageToSend transportMessage)
+        {
+            var transactionContext = GetTransactionContext();
             try
             {
-                var transportMessage = serializeMessages.Serialize(messageToSend);
-
-                InternalSend(destination, transportMessage, transactionContext);
+                sendMessages.Send(destination, transportMessage, transactionContext);
             }
             catch (Exception exception)
             {
                 throw new ApplicationException(string.Format(
-                    "An exception occurred while attempting to send {0} to {1} (context: {2})",
-                    messageToSend, destination, transactionContext), exception);
+                    "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
+                    transportMessage, destination, transactionContext), exception);
             }
-        }
-
-        internal void InternalSend(string destination, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
-        {
-            sendMessages.Send(destination, transportMessage, transactionContext);
         }
 
         ITransactionContext GetTransactionContext()
@@ -973,7 +972,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     lock (items)
                     {
                         var headerItemsToRemove = items.Where(i => i.IsDead).ToList();
-                        
+
                         foreach (var itemToRemove in headerItemsToRemove)
                         {
                             items.Remove(itemToRemove);

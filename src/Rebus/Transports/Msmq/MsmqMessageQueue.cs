@@ -58,7 +58,7 @@ namespace Rebus.Transports.Msmq
                 inputQueuePath = MsmqUtil.GetPath(inputQueueName);
                 MsmqUtil.EnsureMessageQueueExists(inputQueuePath);
                 MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
-                
+
                 if (!allowRemoteQueue)
                 {
                     EnsureMessageQueueIsLocal(inputQueueName);
@@ -129,6 +129,7 @@ because there would be remote calls involved when you wanted to receive a messag
                             transaction.Commit();
                             return null;
                         }
+
                         var body = message.Body;
                         if (body == null)
                         {
@@ -136,7 +137,7 @@ because there would be remote calls involved when you wanted to receive a messag
                             transaction.Commit();
                             return null;
                         }
-                        var transportMessage = (ReceivedTransportMessage) body;
+                        var transportMessage = (ReceivedTransportMessage)body;
                         transaction.Commit();
                         return transportMessage;
                     }
@@ -150,6 +151,7 @@ because there would be remote calls involved when you wanted to receive a messag
                         log.Warn("Received NULL message - how weird is that?");
                         return null;
                     }
+
                     var body = message.Body;
                     if (body == null)
                     {
@@ -169,7 +171,7 @@ because there would be remote calls involved when you wanted to receive a messag
 
                 // could not get message - there's no need to hurry now
                 Thread.Sleep(1000);
-                
+
                 throw new ApplicationException(
                     string.Format("An error occurred while attempting to receive a message from {0} - after resolving the error, you might need to restart the bus.",
                                   inputQueuePath), exception);
@@ -233,7 +235,6 @@ because there would be remote calls involved when you wanted to receive a messag
             var transaction = context[CurrentTransactionKey] as MessageQueueTransaction;
             if (transaction == null)
             {
-
                 transaction = new MessageQueueTransaction();
 
                 context.DoCommit += transaction.Commit;

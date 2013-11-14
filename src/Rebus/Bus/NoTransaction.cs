@@ -27,6 +27,14 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Formats itself as 'no transaction'
+        /// </summary>
+        public override string ToString()
+        {
+            return "no tx";
+        }
+
+        /// <summary>
         /// Gives access to a dictionary of stuff that will be kept for the duration of the transaction.
         /// </summary>
         public object this[string key]

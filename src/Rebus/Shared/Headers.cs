@@ -138,8 +138,8 @@ namespace Rebus.Shared
         public const string AuditSourceQueue = "rebus-audit-source-queue";
         
         /// <summary>
-        /// UTC time of when the message finished processing
+        /// UTC time of when the message was copied to the audit queue
         /// </summary>
-        public const string AuditMessageProcessedTime = "rebus-audit-processed-time";
+        public const string AuditMessageCopyTime = "rebus-audit-copy-time";
     }
 }
