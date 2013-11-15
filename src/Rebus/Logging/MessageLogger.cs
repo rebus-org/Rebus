@@ -11,7 +11,7 @@
 
         public void LogSend(string destination, object messageToSend)
         {
-            log.Debug("Sending {0} to {1}", messageToSend, destination);
+            log.Debug("Sending {0} to {1}", messageToSend.ToString(), destination);
         }
 
         public void LogReceive(string id, object receivedMessage)
