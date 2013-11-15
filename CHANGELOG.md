@@ -210,3 +210,7 @@
 * When delivery tracking (i.e. the tracking of message IDs across multiple delivery attempts) times out, a WARN used to be logged. That is now an INFO because this scenario will be very common when running a set of workers as [competing consumers](http://www.eaipatterns.com/CompetingConsumers.html)
 * Catch-and-rethrow `TargetInvocationException`s in message dispatch, and do some trickery to preserve the stack trace.
 * The new catch-and-rethrow strategy allowed for properly including message IDs in the new `MessageHandleException` which is raised when a message cannot be handled.
+
+## 0.50.0
+
+* Sent messages are no longer logged at INFO level. Both sent and received messages are now logged with ToString on the logical message by a logger called `MessageLogger`
