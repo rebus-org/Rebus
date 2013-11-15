@@ -204,3 +204,7 @@
 
 * Queue transaction failures are now properly caught and will be waited out when possible
 * Increased Azure transport backoff times when throttling is detected
+
+## 0.48.1
+
+* When delivery tracking (i.e. the tracking of message IDs across multiple delivery attempts) times out, a WARN used to be logged. That is now an INFO because this scenario will be very common when running a set of workers as [competing consumers](http://www.eaipatterns.com/CompetingConsumers.html)

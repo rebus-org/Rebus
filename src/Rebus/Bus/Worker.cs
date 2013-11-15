@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.ServiceModel;
 using System.Threading;
 using System.Transactions;
 using Rebus.Configuration;
@@ -193,37 +194,58 @@ namespace Rebus.Bus
 
                     errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper.Reset();
                 }
+                catch (MessageHandleException exception)
+                {
+                    UserException(this, exception);
+                }
+                catch (UnitOfWorkCommitException exception)
+                {
+                    UserException(this, exception);
+                }
+                catch (QueueCommitException exception)
+                {
+                    UserException(this, exception);
+
+                    // when the queue cannot commit, we can't get the message into the error queue either - basically,
+                    // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
+                    errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper
+                        .Wait(waitTime => log.Warn(
+                            "Caught an exception when interacting with the queue system - there's basically no meaningful" +
+                            " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
+                            " wait and hope that the situation gets better... current wait time is {0}",
+                            waitTime));
+                }
                 catch (Exception e)
                 {
                     try
                     {
-                        // if there's two levels of TargetInvocationExceptions, it's user code that threw...
-                        if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
-                        {
-                            UserException(this, e.InnerException.InnerException);
-                        }
-                        else if (e is TargetInvocationException)
-                        {
-                            UserException(this, e.InnerException);
-                        }
-                        else if (e is UnitOfWorkCommitException)
-                        {
-                            UserException(this, e);
-                        }
-                        else if (e is QueueCommitException)
-                        {
-                            UserException(this, e);
+                        //// if there's two levels of TargetInvocationExceptions, it's user code that threw...
+                        //if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
+                        //{
+                        //    UserException(this, e.InnerException.InnerException);
+                        //}
+                        //else if (e is TargetInvocationException)
+                        //{
+                        //    UserException(this, e.InnerException);
+                        //}
+                        //else if (e is UnitOfWorkCommitException)
+                        //{
+                        //    UserException(this, e);
+                        //}
+                        //else if (e is QueueCommitException)
+                        //{
+                        //    UserException(this, e);
 
-                            // when the queue cannot commit, we can't get the message into the error queue either - basically,
-                            // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
-                            errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper
-                                .Wait(waitTime => log.Warn(
-                                    "Caught an exception when interacting with the queue system - there's basically no meaningful" +
-                                    " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
-                                    " wait and hope that the situation gets better... current wait time is {0}",
-                                    waitTime));
-                        }
-                        else
+                        //    // when the queue cannot commit, we can't get the message into the error queue either - basically,
+                        //    // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
+                        //    errorThatBlocksOutAbilityToDoUsefulWorkBackoffHelper
+                        //        .Wait(waitTime => log.Warn(
+                        //            "Caught an exception when interacting with the queue system - there's basically no meaningful" +
+                        //            " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
+                        //            " wait and hope that the situation gets better... current wait time is {0}",
+                        //            waitTime));
+                        //}
+                        //else
                         {
                             SystemException(this, e);
                         }
@@ -350,8 +372,17 @@ namespace Rebus.Bus
 
                                 log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
 
-                                GetDispatchMethod(typeToDispatch)
-                                    .Invoke(this, new[] { logicalMessage });
+                                try
+                                {
+                                    GetDispatchMethod(typeToDispatch)
+                                        .Invoke(this, new[] {logicalMessage});
+                                }
+                                catch (TargetInvocationException tie)
+                                {
+                                    var exception = tie.InnerException;
+                                    exception.PreserveStackTrace();
+                                    throw exception;
+                                }
                             }
                             catch (Exception exception)
                             {
@@ -430,9 +461,9 @@ namespace Rebus.Bus
             catch (Exception exception)
             {
                 transportMessageExceptionOrNull = exception;
-                log.Debug("Handling message {0} ({1}) has failed", label, id);
+                log.Debug("Handling message {0} with ID {1} has failed", label, id);
                 errorTracker.TrackDeliveryFail(id, exception);
-                throw;
+                throw new MessageHandleException(id, exception);
             }
             finally
             {

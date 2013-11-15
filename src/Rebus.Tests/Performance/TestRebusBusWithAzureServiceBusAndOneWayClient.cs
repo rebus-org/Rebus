@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.AzureServiceBus;
@@ -12,17 +10,14 @@ namespace Rebus.Tests.Performance
     public class TestRebusBusWithAzureServiceBusAndOneWayClient : FixtureBase
     {
         const string RecipientInputQueueName = "test.oneway.recipient";
-        readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
         BuiltinContainerAdapter recipientAdapter;
         BuiltinContainerAdapter senderAdapter;
 
         protected override void DoSetUp()
         {
-            recipientAdapter = new BuiltinContainerAdapter();
-            stuffToDispose.Add(recipientAdapter);
+            recipientAdapter = TrackDisposable(new BuiltinContainerAdapter());
 
-            senderAdapter = new BuiltinContainerAdapter();
-            stuffToDispose.Add(senderAdapter);
+            senderAdapter = TrackDisposable(new BuiltinContainerAdapter());
 
             Configure.With(recipientAdapter)
                      .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, RecipientInputQueueName, "error"))
@@ -33,11 +28,6 @@ namespace Rebus.Tests.Performance
                      .Transport(t => t.UseAzureServiceBusInOneWayClientMode(AzureServiceBusMessageQueueFactory.ConnectionString))
                      .CreateBus()
                      .Start();
-        }
-
-        protected override void DoTearDown()
-        {
-            stuffToDispose.ForEach(d => d.Dispose());
         }
 
         [Test]

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Testing;
@@ -34,7 +35,19 @@ namespace Rebus.Tests
         {
             Console.WriteLine("---BEGIN TEARDOWN------------------------------------------");
             DoTearDown();
+            CleanUpTrackedDisposables();
             Console.WriteLine("---DONE TEARING DOWN---------------------------------------");
+        }
+
+        protected T TrackDisposable<T>(T instanceToTrack) where T : IDisposable
+        {
+            DisposableTracker.TrackDisposable(instanceToTrack);
+            return instanceToTrack;
+        }
+
+        protected void CleanUpTrackedDisposables()
+        {
+            DisposableTracker.DisposeTheDisposables();
         }
 
         protected virtual void DoTearDown()

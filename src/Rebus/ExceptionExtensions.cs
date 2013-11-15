@@ -10,9 +10,9 @@ namespace Rebus
     public static class ExceptionExtensions
     {
         /// <summary>
-        /// Modifies the specified exception's _remoteStackTraceString. I have no idea
-        /// how this works, but it allows for unpacking a re-throwable inner exception
-        /// from a caught <see cref="TargetInvocationException"/>.
+        /// Modifies the specified exception's _remoteStackTraceString. I have no idea how this works, but it allows 
+        /// for unpacking a re-throwable inner exception from a caught <see cref="TargetInvocationException"/>.
+        /// Read <see cref="http://stackoverflow.com/a/2085364/6560"/> for more information.
         /// </summary>
         public static void PreserveStackTrace(this Exception exception)
         {

@@ -91,6 +91,7 @@
     <Compile Include="Configuration\SqlServerTimeoutStorageFluentConfigurer.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
+    <Compile Include="MessageHandleException.cs" />
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
     <Compile Include="INeedInitializationBeforeStart.cs" />

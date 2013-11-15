@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
@@ -13,15 +12,13 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(TestCategories.Integration)]
     public class TestEncryptionAndCompression : FixtureBase, IDetermineMessageOwnership
     {
-        readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
-
         const string SenderQueueName = "test.encryptionAndCompression.sender";
         const string ReceiverQueueName = "test.encryptionAndCompression.receiver";
         const string ErrorQueueName = "error";
 
         protected override void DoTearDown()
         {
-            stuffToDispose.ForEach(d => d.Dispose());
+            CleanUpTrackedDisposables();
 
             MsmqUtil.Delete(SenderQueueName);
             MsmqUtil.Delete(ReceiverQueueName);
@@ -99,7 +96,7 @@ namespace Rebus.Tests.Integration
 
         BuiltinContainerAdapter GetBus(string inputQueueName, bool encryption, bool compression)
         {
-            var adapter = new BuiltinContainerAdapter();
+            var adapter = TrackDisposable(new BuiltinContainerAdapter());
 
             MsmqUtil.PurgeQueue(inputQueueName);
 
@@ -124,8 +121,6 @@ namespace Rebus.Tests.Integration
                          })
                      .CreateBus()
                      .Start();
-
-            stuffToDispose.Add(adapter);
 
             return adapter;
         }

@@ -16,15 +16,13 @@ namespace Rebus.Tests.Bugs
         const string RecognizableErrorMessage = "BAM!!!!1111";
         const string InputQueueName = "test.uow.commit.logging";
         BuiltinContainerAdapter adapter;
-        List<IDisposable> disposables;
         List<string> emittedLogStatements;
         ManualResetEvent resetEvent;
 
         protected override void DoSetUp()
         {
             emittedLogStatements = new List<string>();
-            adapter = new BuiltinContainerAdapter();
-            disposables = new List<IDisposable> { adapter };
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
             resetEvent = new ManualResetEvent(false);
             Configure.With(adapter)
                 .Logging(l => l.Use(new ListLoggerFactory(emittedLogStatements)))
@@ -37,7 +35,7 @@ namespace Rebus.Tests.Bugs
 
         protected override void DoTearDown()
         {
-            disposables.ForEach(d => d.Dispose());
+            CleanUpTrackedDisposables();
             MsmqUtil.Delete(InputQueueName);
         }
 

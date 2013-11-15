@@ -529,7 +529,7 @@ namespace Rebus.Tests.Transports.Rabbit
         {
             queuesToDelete.Add(queueName);
             var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
-            toDispose.Add(queue);
+            DisposableTracker.TrackDisposable(queue);
             return queue.PurgeInputQueue();
         }
     }

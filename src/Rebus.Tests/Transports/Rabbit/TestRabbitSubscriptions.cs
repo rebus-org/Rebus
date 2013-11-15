@@ -12,18 +12,6 @@ namespace Rebus.Tests.Transports.Rabbit
     [TestFixture, Category(TestCategories.Rabbit), Description("Verifies that RabbitMQ can be used to implement pub/sub, thus using it to store subscriptions")]
     public class TestRabbitSubscriptions : RabbitMqFixtureBase
     {
-        readonly List<IDisposable> disposables = new List<IDisposable>();
-
-        protected override void DoSetUp()
-        {
-            disposables.Clear();
-        }
-
-        protected override void DoTearDown()
-        {
-            disposables.ForEach(d => d.Dispose());
-        }
-
         [Test]
         public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThem()
         {
@@ -122,7 +110,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 .Transport(t => t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions())
                 .CreateBus().Start();
 
-            disposables.Add(adapter);
+            TrackDisposable(adapter);
 
             return adapter.Bus;
         }

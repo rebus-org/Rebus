@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ponder;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
@@ -105,7 +106,17 @@ namespace Rebus.Bus
 
                     foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
+                        try
+                        {
+                            GetDispatcherMethod(typeToDispatch)
+                                .Invoke(this, new object[] {message, handler});
+                        }
+                        catch (TargetInvocationException tie)
+                        {
+                            var exception = tie.InnerException;
+                            exception.PreserveStackTrace();
+                            throw exception;
+                        }
 
                         if (MessageContext.MessageDispatchAborted) break;
                     }
