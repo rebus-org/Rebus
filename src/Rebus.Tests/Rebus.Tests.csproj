@@ -202,6 +202,7 @@
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
+    <Compile Include="Integration\TestMaxRetriesConfiguration.cs" />
     <Compile Include="Integration\TestUserContext.cs" />
     <Compile Include="Integration\TestUserNameHeader.cs" />
     <Compile Include="Integration\Factories\BusFactoryBase.cs" />
