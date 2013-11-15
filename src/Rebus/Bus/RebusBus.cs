@@ -43,6 +43,7 @@ namespace Rebus.Bus
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
+        readonly MessageLogger messageLogger = new MessageLogger();
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
@@ -633,14 +634,13 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// </summary>
         internal void InternalSend(string destination, Message messageToSend)
         {
-            log.Info("Sending {0} to {1}", messageToSend, destination);
+            messageLogger.LogSend(destination, messageToSend);
 
             var transactionContext = GetTransactionContext();
 
             try
             {
                 var transportMessage = serializeMessages.Serialize(messageToSend);
-
                 sendMessages.Send(destination, transportMessage, transactionContext);
             }
             catch (Exception exception)
@@ -793,7 +793,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         new IncomingMessageMutatorPipeline(Events),
                                         storeTimeouts,
                                         events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior);
+                                        configureAdditionalBehavior,
+                                        messageLogger);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

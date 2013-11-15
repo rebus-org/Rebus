@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using System.ServiceModel;
 using System.Threading;
 using System.Transactions;
 using Rebus.Configuration;
@@ -67,6 +66,7 @@ namespace Rebus.Bus
         readonly IMutateIncomingMessages mutateIncomingMessages;
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
+        readonly MessageLogger messageLogger;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -97,13 +97,15 @@ namespace Rebus.Bus
             IMutateIncomingMessages mutateIncomingMessages,
             IStoreTimeouts storeTimeouts,
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
-            ConfigureAdditionalBehavior configureAdditionalBehavior)
+            ConfigureAdditionalBehavior configureAdditionalBehavior,
+            MessageLogger messageLogger)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.mutateIncomingMessages = mutateIncomingMessages;
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
+            this.messageLogger = messageLogger;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -341,12 +343,13 @@ namespace Rebus.Bus
 
                                 var typeToDispatch = logicalMessage.GetType();
 
-                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+                                messageLogger.LogReceive(id, logicalMessage);
 
                                 try
                                 {
-                                    GetDispatchMethod(typeToDispatch)
-                                        .Invoke(this, new[] { logicalMessage });
+                                    var dispatchMethod = GetDispatchMethod(typeToDispatch);
+                                    var parameters = new[] { logicalMessage };
+                                    dispatchMethod.Invoke(this, parameters);
                                 }
                                 catch (TargetInvocationException tie)
                                 {
