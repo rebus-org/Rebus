@@ -215,3 +215,7 @@
 
 * Sent messages are no longer logged at INFO level. Both sent and received messages are now logged at DEBUG level by calling ToString on the logical message in a logger called `MessageLogger`
 * Dispose MSMQ messages after use - thanks [dev4ce](https://github.com/dev4ce)
+
+## 0.50.1
+
+* Fix that makes changelog 0.50.0 around ToString actually true
