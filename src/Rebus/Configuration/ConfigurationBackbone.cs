@@ -218,5 +218,10 @@ namespace Rebus.Configuration
 
             rebusBus.InternalSend(auditQueueName, forwardableMessage);
         }
+
+        public void MessagePublished(IBus bus, object message, string auditQueueName, Dictionary<string, object> headers)
+        {
+            
+        }
     }
 }

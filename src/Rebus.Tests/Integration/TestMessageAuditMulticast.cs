@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Messaging;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.RabbitMQ;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
-using Rebus.Transports.Msmq;
+using Rebus.Tests.Transports.Rabbit;
 using Shouldly;
 using Message = Rebus.Messages.Message;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
-    public class TestMessageAudit : FixtureBase
+    [TestFixture, Description("Since publishing works differently when using a multicast-capable transport, we need to ensure that multicast is covered as well")]
+    public class TestMessageAuditMulticast : FixtureBase
     {
         const string InputQueueName = "test.audit.input";
         const string AuditQueueName = "test.audit.audit";
@@ -23,21 +25,20 @@ namespace Rebus.Tests.Integration
         protected override void DoSetUp()
         {
             adapter = new BuiltinContainerAdapter();
-            disposables = new List<IDisposable> {adapter};
+            disposables = new List<IDisposable> { adapter };
 
             Configure.With(adapter)
-                .Transport(t => t.UseMsmq(InputQueueName, "error"))
+                .Transport(t => t.UseRabbitMq(RabbitMqFixtureBase.ConnectionString, InputQueueName, "error"))
                 .Behavior(b => b.EnableMessageAudit(AuditQueueName))
                 .CreateBus()
                 .Start(1);
 
-            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(AuditQueueName));
-            MsmqUtil.PurgeQueue(AuditQueueName);
+            RabbitMqFixtureBase.DeleteQueue(AuditQueueName);
         }
 
         static string InputQueueAddress
         {
-            get { return InputQueueName + "@" + Environment.MachineName; }
+            get { return InputQueueName; }
         }
 
         [Test]
@@ -51,10 +52,10 @@ namespace Rebus.Tests.Integration
 
             // act
             adapter.Bus.SendLocal("yo!");
-            
+
             // assert
             var message = GetMessageFrom(AuditQueueName);
-            
+
             message.ShouldNotBe(null);
 
             var logicalMessages = message.Messages;
@@ -77,10 +78,10 @@ namespace Rebus.Tests.Integration
 
             // act
             adapter.Bus.Publish("yo!");
-            
+
             // assert
             var message = GetMessageFrom(AuditQueueName);
-            
+
             message.ShouldNotBe(null);
 
             var logicalMessages = message.Messages;
@@ -97,42 +98,30 @@ namespace Rebus.Tests.Integration
         protected override void DoTearDown()
         {
             disposables.ForEach(d => d.Dispose());
-
-            DeleteQueue(InputQueueName);
-            DeleteQueue(AuditQueueName);
         }
 
         Message GetMessageFrom(string queueName)
         {
-            using (var queue = new MessageQueue(MsmqUtil.GetPath(queueName)))
+            var timer = Stopwatch.StartNew();
+            using (var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName))
             {
-                queue.Formatter = new RebusTransportMessageFormatter();
-                queue.MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter;
+                ReceivedTransportMessage receivedTransportMessage = null;
 
-                try
+                var timeout = 2.Seconds();
+                do
                 {
-                    var receivedTransportMessage = (ReceivedTransportMessage) queue.Receive(3.Seconds()).Body;
-                    var serializer = new JsonMessageSerializer();
+                    receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
+                } while (receivedTransportMessage == null && timer.Elapsed < timeout);
 
-                    return serializer.Deserialize(receivedTransportMessage);
-                }
-                catch (MessageQueueException exception)
+                if (receivedTransportMessage == null)
                 {
-                    if (exception.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
-                    {
-                        return null;
-                    }
-
-                    throw;
+                    throw new TimeoutException(string.Format("No message was received within {0} timeout", timeout));
                 }
+
+                var serializer = new JsonMessageSerializer();
+
+                return serializer.Deserialize(receivedTransportMessage);
             }
-        }
-
-        static void DeleteQueue(string queueName)
-        {
-            if (!MsmqUtil.QueueExists(queueName)) return;
-
-            MsmqUtil.Delete(queueName);
         }
     }
 }

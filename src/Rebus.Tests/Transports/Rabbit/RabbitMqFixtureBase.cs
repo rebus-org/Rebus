@@ -83,8 +83,7 @@ namespace Rebus.Tests.Transports.Rabbit
 
         public static void DeleteQueue(string queueName)
         {
-            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
-            using (var model = connection.CreateModel())
+            WithModel(model =>
             {
                 // just ignore if it fails...
                 try
@@ -94,6 +93,16 @@ namespace Rebus.Tests.Transports.Rabbit
                 catch
                 {
                 }
+
+            });
+        }
+
+        public static void WithModel(Action<IModel> modelCallback)
+        {
+            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                modelCallback(model);
             }
         }
 

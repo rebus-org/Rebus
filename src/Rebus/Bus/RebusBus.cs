@@ -208,6 +208,11 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
 
+            if (configureAdditionalBehavior.AuditMessages)
+            {
+                AttachHeader(message, "published-message-must-be-copied", "");
+            }
+
             var multicastTransport = sendMessages as IMulticastTransport;
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
@@ -648,7 +653,21 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             var transactionContext = GetTransactionContext();
             try
             {
+                var publishedMessageMustBeAudited = transportMessage.Headers.ContainsKey("published-message-must-be-copied");
+                if (publishedMessageMustBeAudited)
+                {
+                    transportMessage.Headers.Remove("published-message-must-be-copied");
+                }
                 sendMessages.Send(destination, transportMessage, transactionContext);
+
+                if (publishedMessageMustBeAudited)
+                {
+                    transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
+                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                    transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
+
+                    sendMessages.Send(configureAdditionalBehavior.AuditQueueName, transportMessage, transactionContext);
+                }
             }
             catch (Exception exception)
             {
