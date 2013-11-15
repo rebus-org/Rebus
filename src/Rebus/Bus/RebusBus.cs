@@ -318,7 +318,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Sets the number of workers in this <see cref="RebusBus"/> to the specified
         /// number. The number of workers must be greater than or equal to 0. Blocks
-        /// until the number of workers has been set to <see cref="newNumberOfWorkers"/>.
+        /// until the number of workers has been set to <seealso cref="newNumberOfWorkers"/>.
         /// </summary>
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
