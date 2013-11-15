@@ -34,6 +34,7 @@ namespace Rebus.Tests.Persistence
         public void TearDown()
         {
             DoTearDown();
+            CleanUpTrackedDisposables();
         }
 
         protected virtual void DoTearDown()
@@ -91,6 +92,17 @@ namespace Rebus.Tests.Persistence
                     command.ExecuteNonQuery();
                 }
             }
+        }
+
+        protected T TrackDisposable<T>(T disposable) where T : IDisposable
+        {
+            DisposableTracker.TrackDisposable(disposable);
+            return disposable;
+        }
+
+        protected void CleanUpTrackedDisposables()
+        {
+            DisposableTracker.DisposeTheDisposables();
         }
     }
 }
