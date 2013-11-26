@@ -219,3 +219,7 @@
 ## 0.50.1
 
 * Fix that makes changelog 0.50.0 around ToString actually true
+
+## 0.51.0
+
+* Made timeout manager log internal errors properly - first as warnings, and if the problem persists for 1 minute it will be logged as an error
