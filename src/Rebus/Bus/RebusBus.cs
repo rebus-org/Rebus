@@ -95,12 +95,12 @@ namespace Rebus.Bus
                 var timeoutManagerEndpointAddress = RebusConfigurationSection
                     .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
 
-                log.Info("Using timeout manager with input queue {0}", timeoutManagerEndpointAddress);
+                log.Info("Using external timeout manager with input queue '{0}'", timeoutManagerEndpointAddress);
                 timeoutManagerAddress = timeoutManagerEndpointAddress;
             }
             else
             {
-                log.Info("Using local timeout manager");
+                log.Info("Using internal timeout manager");
                 timeoutManagerAddress = this.receiveMessages.InputQueue;
                 dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
             }

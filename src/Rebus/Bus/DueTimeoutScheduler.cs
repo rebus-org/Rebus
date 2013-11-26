@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Timers;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -7,6 +8,10 @@ using System.Linq;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Responsible for periodically checking the timeout storage for due timeouts in the given implementation of <see cref="IStoreTimeouts"/>.
+    /// Due timeouts will result in a <see cref="TimeoutReply"/> which will be dispatched using the given implementation of <see cref="IHandleDeferredMessage"/>.
+    /// </summary>
     class DueTimeoutScheduler : IDisposable
     {
         static ILog log;
@@ -16,11 +21,16 @@ namespace Rebus.Bus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        static readonly TimeSpan MaxAcceptedFailureTimeBeforeLogLevelEscalation = TimeSpan.FromMinutes(1);
+
         readonly IStoreTimeouts storeTimeouts;
         readonly IHandleDeferredMessage handleDeferredMessage;
         readonly Timer timer = new Timer();
-        volatile bool currentlyChecking;
+
         readonly object checkLock = new object();
+        volatile bool currentlyChecking;
+
+        DateTime lastSuccess;
 
         public DueTimeoutScheduler(IStoreTimeouts storeTimeouts, IHandleDeferredMessage handleDeferredMessage)
         {
@@ -45,33 +55,84 @@ namespace Rebus.Bus
                 {
                     currentlyChecking = true;
 
-                    var dueTimeouts = storeTimeouts.GetDueTimeouts().ToList();
+                    var dueTimeouts = GetDueTimeouts();
                     if (!dueTimeouts.Any()) return;
-                    
+
                     log.Info("Got {0} dues timeouts - will send them now", dueTimeouts.Count);
                     foreach (var timeout in dueTimeouts)
                     {
                         log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
-                        var sagaId = timeout.SagaId;
-
                         var reply = new TimeoutReply
                         {
-                            SagaId = sagaId,
+                            SagaId = timeout.SagaId,
                             CorrelationId = timeout.CorrelationId,
                             DueTime = timeout.TimeToReturn,
                             CustomData = timeout.CustomData,
                         };
 
-                        handleDeferredMessage.SendReply(timeout.ReplyTo, reply, sagaId);
+                        SendReply(timeout, reply);
 
-                        timeout.MarkAsProcessed();
+                        MarkAsProcessed(timeout);
+                    }
+
+                    lastSuccess = DateTime.UtcNow;
+                }
+                catch (Exception exception)
+                {
+                    var timeSinceLastSuccess = DateTime.UtcNow-lastSuccess;
+
+                    if (timeSinceLastSuccess > MaxAcceptedFailureTimeBeforeLogLevelEscalation)
+                    {
+                        log.Error(exception, "An error occurred while attempting to retrieve due timeouts and send timeout replies! The situation has been going on for {0}", timeSinceLastSuccess);
+                    }
+                    else
+                    {
+                        log.Warn(
+                            "An error occurred while attempting to retrieve due timeouts and send timeout replies: {0} - if the situation persists for more than {1}, the log level will escalate from WARN to ERROR",
+                            exception, MaxAcceptedFailureTimeBeforeLogLevelEscalation);
                     }
                 }
                 finally
                 {
                     currentlyChecking = false;
                 }
+            }
+        }
+
+        void MarkAsProcessed(DueTimeout timeout)
+        {
+            try
+            {
+                timeout.MarkAsProcessed();
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException(string.Format("Could not mark timeout {0} as processed!", timeout), exception);
+            }
+        }
+
+        void SendReply(DueTimeout timeout, TimeoutReply reply)
+        {
+            try
+            {
+                handleDeferredMessage.SendReply(timeout.ReplyTo, reply, timeout.SagaId);
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException(string.Format("An error occurred while attempting to send reply for {0}", timeout), exception);
+            }
+        }
+
+        List<DueTimeout> GetDueTimeouts()
+        {
+            try
+            {
+                return storeTimeouts.GetDueTimeouts().ToList();
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException("Could not retrieve due timeouts!", exception);
             }
         }
 
