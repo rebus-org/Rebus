@@ -150,27 +150,34 @@ namespace Rebus.Persistence.SqlServer
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"
+
 CREATE TABLE [dbo].[{0}](
     [id] [bigint] IDENTITY(1,1) NOT NULL,
 	[time_to_return] [datetime2](7) NOT NULL,
 	[correlation_id] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
 	[reply_to] [nvarchar](200) NOT NULL,
-	[custom_data] [nvarchar](MAX) NULL CONSTRAINT [PK_{0}] PRIMARY KEY NONCLUSTERED 
-(
-	[id] ASC
-)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
-) ON [PRIMARY]
+	[custom_data] [nvarchar](MAX) NULL
+    CONSTRAINT [PK_{0}] PRIMARY KEY NONCLUSTERED 
+    (
+	    [id] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
+
 ", timeoutsTableName);
                     command.ExecuteNonQuery();
                 }
+
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"
+
 CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
 (
 	[time_to_return] ASC
-)", timeoutsTableName);
+)
+
+", timeoutsTableName);
                     command.ExecuteNonQuery();
                 }
             }

@@ -390,15 +390,16 @@ saga type name.",
                         connection.AssignTransactionIfNecessary(command);
 
                         command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}](
+CREATE TABLE [dbo].[{0}] (
 	[id] [uniqueidentifier] NOT NULL,
 	[revision] [int] NOT NULL,
 	[data] [nvarchar](max) NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-(
-	[id] ASC
-)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
-) ON [PRIMARY]
+
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [id] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
 
 ", SagaTableName);
                         command.ExecuteNonQuery();
@@ -409,22 +410,24 @@ CREATE TABLE [dbo].[{0}](
                         connection.AssignTransactionIfNecessary(command);
 
                         command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}](
+CREATE TABLE [dbo].[{0}] (
 	[saga_type] [nvarchar](40) NOT NULL,
 	[key] [nvarchar](200) NOT NULL,
 	[value] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-(
-	[key] ASC,
-	[value] ASC,
-	[saga_type] ASC
-)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
-) ON [PRIMARY]
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [key] ASC,
+	    [value] ASC,
+	    [saga_type] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
+
 CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
 (
 	[saga_id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
 ", SagaIndexTableName);
                         command.ExecuteNonQuery();
                     }

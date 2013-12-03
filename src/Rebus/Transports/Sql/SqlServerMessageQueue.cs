@@ -390,13 +390,13 @@ CREATE TABLE [dbo].[{0}](
 	[label] [nvarchar](max) NOT NULL,
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-(
-	[recipient] ASC,
-	[priority] ASC,
-	[seq] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [recipient] ASC,
+	    [priority] ASC,
+	    [seq] ASC
+    ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF)
+)
 ", messageTableName);
 
                     command.ExecuteNonQuery();

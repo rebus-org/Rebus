@@ -182,15 +182,15 @@ namespace Rebus.Persistence.SqlServer
                     connection.AssignTransactionIfNecessary(command);
 
                     command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}](
+CREATE TABLE [dbo].[{0}] (
 	[message_type] [nvarchar](200) NOT NULL,
 	[endpoint] [nvarchar](200) NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-(
-	[message_type] ASC,
-	[endpoint] ASC
-)WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON) ON [PRIMARY]
-) ON [PRIMARY]
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [message_type] ASC,
+	    [endpoint] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
 ", subscriptionsTableName);
                     command.ExecuteNonQuery();
                 }
