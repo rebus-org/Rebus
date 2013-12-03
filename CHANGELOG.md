@@ -223,4 +223,4 @@
 ## 0.51.0
 
 * Made timeout manager log internal errors properly - first as warnings, and if the problem persists for 1 minute it will be logged as an error
-
+* Removed useless ON [PRIMARY] file group directives from SQL schema generation scripts
