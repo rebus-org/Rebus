@@ -224,3 +224,7 @@
 
 * Made timeout manager log internal errors properly - first as warnings, and if the problem persists for 1 minute it will be logged as an error
 * Removed useless ON [PRIMARY] file group directives from SQL schema generation scripts
+
+## 0.51.1
+
+* Catch exception occurring while attempting to preserve the stack trace of a caught exception inside a `TargetInvocationException`. This will most likely be caused by the absence of a proper exception serialization constructor, which is really dumb -  oh, and thanks to the Unity container crew for making me realize how silly the need for serialization constructors is
