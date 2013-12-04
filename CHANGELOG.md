@@ -228,3 +228,7 @@
 ## 0.51.1
 
 * Catch exception occurring while attempting to preserve the stack trace of a caught exception inside a `TargetInvocationException`. This will most likely be caused by the absence of a proper exception serialization constructor, which is really dumb -  oh, and thanks to the Unity container crew for making me realize how silly the need for serialization constructors is
+
+## 0.52.0
+
+* Updated NLog to 2.1.0
