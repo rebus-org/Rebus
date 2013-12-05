@@ -155,6 +155,7 @@
     <Compile Include="Bugs\DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq.cs" />
     <Compile Include="Bugs\DoesNotLeakChannelsWhenCombiningRabbitWithMsmq.cs" />
     <Compile Include="Bugs\DoesNotThrowNullReferenceExceptionWhenFakingTheMessageContext.cs" />
+    <Compile Include="Bugs\MaxRetriesIsControlledByRebusWhenUsingAzureServiceBus.cs" />
     <Compile Include="Bugs\QueueCommitFailIsLoggedAsWarning.cs" />
     <Compile Include="Bugs\RabbitMqConnectionDoesNotChokeOnSingleTooLargeMessage.cs" />
     <Compile Include="Bugs\RabbitMqDoesNotHaveRaceConditionWhenSubscribingOnAutoDeleteQueue.cs" />

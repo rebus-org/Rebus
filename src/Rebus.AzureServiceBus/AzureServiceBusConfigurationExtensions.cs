@@ -31,6 +31,19 @@ namespace Rebus.AzureServiceBus
             {
                 var sender = MsmqMessageQueue.Sender();
                 configurer.UseSender(sender);
+
+                // when we're emulating with MSMQ, we make this noop action available to allow user code to pretend to renew the peek lock
+                configurer
+                    .Backbone
+                    .ConfigureEvents(e =>
+                    {
+                        e.MessageContextEstablished += (bus, context) =>
+                        {
+                            var noop = (Action) (() => log.Info("Azure Service Bus message peek lock would be renewed at this time"));
+
+                            context.Items[AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction] = noop;
+                        };
+                    });
             }
             else
             {
@@ -88,8 +101,7 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static void Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName,
-                              string errorQueueName)
+        static void Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             if (connectionString == null)
             {

@@ -22,7 +22,9 @@ namespace Rebus.AzureServiceBus
 
         public const string TopicName = "Rebus";
         public const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
-        
+
+        public const string AzureServiceBusRenewLeaseAction = "AzureServiceBusRenewLeaseAction (invoke in order to renew the peek lock on the current message)";
+
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
@@ -73,11 +75,11 @@ namespace Rebus.AzureServiceBus
 
                 // if we're in one-way mode, just quit here
                 if (inputQueue == null) return;
-                
+
                 GetOrCreateSubscription(InputQueue);
 
                 log.Info("Creating subscription client");
-                subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue);
+                subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue, ReceiveMode.PeekLock);
             }
             catch (Exception e)
             {
@@ -168,33 +170,49 @@ namespace Rebus.AzureServiceBus
                     {
                         if (context[AzureServiceBusMessageBatch] != null)
                         {
-                            throw new InvalidOperationException(
-                                @"Attempted to receive message withing transaction where one or more messages were already sent - that cannot be done, sorry!");
+                            throw new InvalidOperationException(@"Attempted to receive message within transaction where one or more messages were already sent - that cannot be done, sorry!");
                         }
 
                         context[AzureServiceBusReceivedMessage] = brokeredMessage;
                         context[AzureServiceBusMessageBatch] = new List<BrokeredMessage>();
+                        
+                        // inject method into message context to allow for long-running message handling operations to have their lock renewed
+                        context[AzureServiceBusRenewLeaseAction] = (Action)(() =>
+                        {
+                            try
+                            {
+                                log.Info("Renewing lock on message {0}", messageId);
+                                
+                                brokeredMessage.RenewLock();
+                            }
+                            catch (Exception exception)
+                            {
+                                throw new ApplicationException(string.Format("An error occurred while attempting to renew the lock on message {0}", messageId), exception);
+                            }
+                        });
                         context.DoCommit += () => DoCommit(context);
                         context.DoRollback += () =>
+                        {
+                            try
                             {
-                                try
-                                {
-                                    try
-                                    {
-                                        brokeredMessage.Abandon();
-                                    }
-                                    finally
-                                    {
-                                        brokeredMessage.Dispose();
-                                    }
-                                }
-                                catch (Exception e)
-                                {
-                                    log.Warn(
-                                        "An exception occurred while attempting to abandon received message {0}: {1}",
-                                        messageId, e);
-                                }
-                            };
+                                brokeredMessage.Abandon();
+                            }
+                            catch (Exception e)
+                            {
+                                log.Warn("An exception occurred while attempting to abandon received message {0}: {1}", messageId, e);
+                            }
+                        };
+                        context.Cleanup += () =>
+                        {
+                            try
+                            {
+                                brokeredMessage.Dispose();
+                            }
+                            catch (Exception e)
+                            {
+                                log.Warn("An exception occurred while attempting to dispose received message {0}: {1}", messageId, e);
+                            }
+                        };
                     }
 
                     try
@@ -208,7 +226,7 @@ namespace Rebus.AzureServiceBus
                                                      ? new Dictionary<string, object>()
                                                      : envelope
                                                            .Headers
-                                                           .ToDictionary(e => e.Key, e => (object) e.Value),
+                                                           .ToDictionary(e => e.Key, e => (object)e.Value),
                                        Body = envelope.Body,
                                        Label = envelope.Label
                                    };
@@ -263,7 +281,7 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var backoffTimes = new[] {1, 2, 5, 10, 10, 10}
+                var backoffTimes = new[] { 1, 2, 5, 10, 10, 10 }
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
@@ -439,8 +457,17 @@ namespace Rebus.AzureServiceBus
             try
             {
                 log.Info("Establishing subscription '{0}'", logicalQueueName);
-                var filter = new SqlFilter(string.Format("LogicalDestinationQueue = '{0}'", logicalQueueName));
-                namespaceManager.CreateSubscription(topicDescription.Path, logicalQueueName, filter);
+                var filter = new SqlFilter(string.Format("LogicalDestinationQueue='{0}'", logicalQueueName));
+
+                var newSubscription = namespaceManager.CreateSubscription(topicDescription.Path, logicalQueueName, filter);
+
+                // effectively disable Azure Service Bus' own dead lettering
+                newSubscription.MaxDeliveryCount = 1000;
+                newSubscription.EnableDeadLetteringOnMessageExpiration = false;
+                newSubscription.LockDuration = TimeSpan.FromMinutes(5);
+                newSubscription.UserMetadata = string.Format("Created by Rebus: {0}", DateTime.UtcNow.ToString("u"));
+
+                namespaceManager.UpdateSubscription(newSubscription);
             }
             catch (MessagingEntityAlreadyExistsException)
             {
