@@ -232,3 +232,9 @@
 ## 0.52.0
 
 * Updated NLog to 2.1.0
+
+## 0.53.0
+
+* Azure Service Bus transport: Set MaxDeliveryCount to 1000 to effectively disable built-in dead-lettering (because Rebus handles poison messages)
+* Azure Service Bus transport: Peek lock defaults to 5 minutes (which is max)
+* Azure Service Bus transport: Make an `Action` available in the message context under the `AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction` key to allow for renewing the peek lock when performing long-running operations
