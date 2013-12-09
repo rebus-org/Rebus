@@ -161,16 +161,23 @@ namespace Rebus.Logging
                 var typeName = type.FullName;
                 try
                 {
-                    Console.WriteLine(logLineFormatString,
-                                      DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"),
-                                      typeName,
-                                      levelString,
-                                      threadName,
-                                      string.Format(message, objs));
+                    var renderedMessage = string.Format(message, objs);
+                    var timeFormat = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+
+                    try
+                    {
+                        Console.WriteLine(logLineFormatString,
+                            timeFormat,
+                            typeName,
+                            levelString,
+                            threadName,
+                            renderedMessage);
+                    }
+                    catch { } //< nothing to do about it if this part fails
                 }
                 catch
                 {
-                    Warn("Could not render output string: {0}", message);
+                    Warn("Could not render output string: '{0}' with args: {1}", message, string.Join(", ", objs));
                 }
             }
         }
