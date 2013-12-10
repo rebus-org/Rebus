@@ -10,7 +10,6 @@ using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Contracts.Transports.Factories;
 using Rebus.Tests.Persistence;
-using Rebus.Tests.Unit;
 
 namespace Rebus.Tests.Bugs
 {
@@ -59,9 +58,8 @@ namespace Rebus.Tests.Bugs
         [TestCase(20)]
         [TestCase(50)]
         [TestCase(100)]
-        [TestCase(150)]
-        [TestCase(200)]
-        [TestCase(500)]
+        [TestCase(150, Ignore = true, Description="Max batch size within tx=100")]
+        [TestCase(200, Ignore = true, Description="Max batch size within tx=100")]
         public void RunIt(int requestCount)
         {
             // arrange

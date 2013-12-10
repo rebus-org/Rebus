@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Transports.Sql
 {
@@ -92,6 +94,14 @@ namespace Rebus.Transports.Sql
             if (Transaction == null) return;
 
             Transaction.Rollback();
+        }
+
+        /// <summary>
+        /// Queries sys.Tables in the current DB
+        /// </summary>
+        public List<string> GetTableNames()
+        {
+            return Connection.GetTableNames(Transaction);
         }
     }
 }

@@ -353,7 +353,7 @@ namespace Rebus.Transports.Sql
             var connection = getConnection();
             try
             {
-                var tableNames = connection.Connection.GetTableNames();
+                var tableNames = connection.GetTableNames();
 
                 if (tableNames.Contains(messageTableName, StringComparer.OrdinalIgnoreCase))
                 {

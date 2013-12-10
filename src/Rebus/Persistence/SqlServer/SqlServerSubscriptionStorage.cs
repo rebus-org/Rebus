@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Rebus.Logging;
+using Rebus.Transports.Sql;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -20,8 +22,10 @@ namespace Rebus.Persistence.SqlServer
 
         readonly string subscriptionsTableName;
 
-        readonly Func<SqlConnection> getConnection;
-        readonly Action<SqlConnection> releaseConnection;
+        readonly Func<ConnectionHolder> getConnection;
+        readonly Action<ConnectionHolder> commitAction;
+        readonly Action<ConnectionHolder> rollbackAction;
+        readonly Action<ConnectionHolder> releaseConnection;
 
         /// <summary>
         /// Constructs the storage with the ability to create connections to SQL Server using the specified connection string.
@@ -35,8 +39,11 @@ namespace Rebus.Persistence.SqlServer
                 {
                     var connection = new SqlConnection(connectionString);
                     connection.Open();
-                    return connection;
+                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
                 };
+            commitAction = h => h.Commit();
+            rollbackAction = h => h.RollBack();
             releaseConnection = c => c.Dispose();
         }
 
@@ -45,11 +52,13 @@ namespace Rebus.Persistence.SqlServer
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the storage will assume
         /// that someone else manages the connection's lifetime.
         /// </summary>
-        public SqlServerSubscriptionStorage(Func<SqlConnection> connectionFactoryMethod, string subscriptionsTableName)
+        public SqlServerSubscriptionStorage(Func<ConnectionHolder> connectionFactoryMethod, string subscriptionsTableName)
         {
             this.subscriptionsTableName = subscriptionsTableName;
 
             getConnection = connectionFactoryMethod;
+            commitAction = h => { };
+            rollbackAction = h => { };
             releaseConnection = c => { };
         }
 
@@ -71,8 +80,6 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"insert into [{0}] 
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
@@ -89,6 +96,8 @@ namespace Rebus.Persistence.SqlServer
                         if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
                     }
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -106,8 +115,6 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"delete from [{0}]
                                                 where message_type = @message_type
                                                 and endpoint = @endpoint", subscriptionsTableName);
@@ -117,6 +124,8 @@ namespace Rebus.Persistence.SqlServer
 
                     command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -134,8 +143,6 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"select endpoint from [{0}]
                                                 where message_type = @message_type", subscriptionsTableName);
 
@@ -179,8 +186,6 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}] (
 	[message_type] [nvarchar](200) NOT NULL,
@@ -194,6 +199,8 @@ CREATE TABLE [dbo].[{0}] (
 ", subscriptionsTableName);
                     command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {

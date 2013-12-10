@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
+using Rebus.Transports.Sql;
 using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
@@ -32,14 +33,19 @@ namespace Rebus.Tests.Persistence.SqlServer
             currentConnection = null;
         }
 
-        SqlConnection GetOrCreateConnection()
+        ConnectionHolder GetOrCreateConnection()
         {
-            if (currentConnection != null) return currentConnection;
+            if (currentConnection != null)
+            {
+                return currentTransaction == null
+                    ? ConnectionHolder.ForNonTransactionalWork(currentConnection)
+                    : ConnectionHolder.ForTransactionalWork(currentConnection, currentTransaction);
+            }
 
             var newConnection = new SqlConnection(ConnectionStrings.SqlServer);
             newConnection.Open();
             currentConnection = newConnection;
-            return newConnection;
+            return ConnectionHolder.ForNonTransactionalWork(newConnection);
         }
 
         void BeginTransaction()
@@ -48,7 +54,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             {
                 throw new InvalidOperationException("Cannot begin new transaction when a transaction has already been started!");
             }
-            currentTransaction = GetOrCreateConnection().BeginTransaction();
+            currentTransaction = GetOrCreateConnection().Connection.BeginTransaction();
         }
 
         void CommitTransaction()

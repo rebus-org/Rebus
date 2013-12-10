@@ -380,7 +380,7 @@ saga type name.",
             var connection = getConnection();
             try
             {
-                var tableNames = connection.Connection.GetTableNames();
+                var tableNames = connection.GetTableNames();
 
                 // bail out if there's already a table in the database with one of the names
                 if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)

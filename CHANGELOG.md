@@ -242,3 +242,10 @@
 ## 0.53.1
 
 * Avoid ending up overflowing the stack if `Console.WriteLine` fails
+
+## 0.54.0
+
+* Change `SqlServerSagaPersister` and `SqlServerSubscriptionStorage` to use the same `ConnectionHolder` as `SqlServerMessageQueue`
+* Removed the hack that could automatically dig the `SqlTransaction` out of a `SqlConnection` (because it did not work all the time)
+* Clean up a few things inside `AzureServiceBusMessageQueue`
+* Added test to verify a scenario involving `AzureServiceBusMessageQueue` and `SqlServerSagaPersister`
