@@ -41,7 +41,7 @@ namespace Rebus.Tests.Persistence
         {
         }
 
-        protected void DropTable(string tableName)
+        public static void DropTable(string tableName)
         {
             if (!GetTableNames()
                      .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
@@ -49,7 +49,7 @@ namespace Rebus.Tests.Persistence
             ExecuteCommand("drop table " + tableName);
         }
 
-        protected void DeleteRows(string tableName)
+        public static void DeleteRows(string tableName)
         {
             if (!GetTableNames()
                      .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;

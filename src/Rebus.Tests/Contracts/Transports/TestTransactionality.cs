@@ -96,10 +96,10 @@ namespace Rebus.Tests.Contracts.Transports
         [TestCase(false, Description = "Rolls back the transaction and verifies that none of the receiver have got a message, and also that the handled message has been returned to the input queue")]
         public void CanReceiveAndDoMultipleSendsAtomically(bool commitTransactionAndExpectMessagesToBeThere)
         {
-            sender.Send(receiver.InputQueueAddress, MessageWith("hello"), new NoTransaction());
-
             var destination1 = factory.CreateReceiver("destination1");
             var destination2 = factory.CreateReceiver("destination2");
+
+            sender.Send(receiver.InputQueueAddress, MessageWith("hello"), new NoTransaction());
 
             Thread.Sleep(300.Milliseconds());
 

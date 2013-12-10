@@ -260,7 +260,7 @@ This most likely indicates that you have configured this Rebus service to use an
                     }
                     else
                     {
-                        log.Warn("No saga data was found for {0}", handler);
+                        log.Warn("No saga data was found for {0}/{1}", message, handler);
                         UncorrelatedMessage(message, saga);
                         return;
                     }

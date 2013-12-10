@@ -6,6 +6,8 @@ using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
 using Rebus.Logging;
+using Rebus.Transports.Sql;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -30,8 +32,11 @@ namespace Rebus.Persistence.SqlServer
         readonly string sagaIndexTableName;
         readonly string sagaTableName;
 
-        readonly Func<SqlConnection> getConnection;
-        readonly Action<SqlConnection> releaseConnection;
+        readonly Func<ConnectionHolder> getConnection;
+        readonly Action<ConnectionHolder> commitAction;
+        readonly Action<ConnectionHolder> rollbackAction;
+        readonly Action<ConnectionHolder> releaseConnection;
+
         readonly string idPropertyName;
 
         SqlServerSagaPersister(string sagaIndexTableName, string sagaTableName)
@@ -50,10 +55,13 @@ namespace Rebus.Persistence.SqlServer
         {
             getConnection = () =>
                 {
-                    var sqlConnection = new SqlConnection(connectionString);
-                    sqlConnection.Open();
-                    return sqlConnection;
+                    var connection = new SqlConnection(connectionString);
+                    connection.Open();
+                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
                 };
+            commitAction = h => h.Commit();
+            rollbackAction = h => h.RollBack();
             releaseConnection = c => c.Dispose();
         }
 
@@ -62,11 +70,15 @@ namespace Rebus.Persistence.SqlServer
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the perister will assume
         /// that someone else manages the connection's lifetime.
         /// </summary>
-        public SqlServerSagaPersister(Func<SqlConnection> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
+        public SqlServerSagaPersister(Func<ConnectionHolder> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
             : this(sagaIndexTableName, sagaTableName)
         {
             getConnection = connectionFactoryMethod;
-            releaseConnection = c => { };
+
+            // everything else is handed over to whoever provided the connection
+            releaseConnection = h => { };
+            commitAction = h => { };
+            rollbackAction = h => { };
         }
 
         /// <summary>
@@ -97,8 +109,6 @@ namespace Rebus.Persistence.SqlServer
                 // next insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-                    
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
 
@@ -124,8 +134,6 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
-                        connection.AssignTransactionIfNecessary(command);
-
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
@@ -156,6 +164,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
+                commitAction(connection);
             }
             finally
             {
@@ -175,8 +184,6 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
@@ -185,8 +192,6 @@ namespace Rebus.Persistence.SqlServer
                 // next, update or insert the saga
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
 
@@ -209,8 +214,6 @@ namespace Rebus.Persistence.SqlServer
                     // lastly, generate new index
                     using (var command = connection.CreateCommand())
                     {
-                        connection.AssignTransactionIfNecessary(command);
-
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
@@ -239,6 +242,8 @@ namespace Rebus.Persistence.SqlServer
                         }
                     }
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -256,8 +261,6 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
@@ -270,12 +273,12 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -287,15 +290,13 @@ namespace Rebus.Persistence.SqlServer
         /// Queries the underlying SQL table for the saga whose correlation field has a value
         /// that matches the given field from the incoming message.
         /// </summary>
-        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+        public TSagaData Find<TSagaData>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaData : class, ISagaData
         {
             var connection = getConnection();
             try
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     if (sagaDataPropertyPath == idPropertyName)
                     {
                         command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
@@ -310,17 +311,25 @@ namespace Rebus.Persistence.SqlServer
                                                         and i.value = @value", sagaTableName, sagaIndexTableName);
 
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
-                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(T)));
+                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
                     }
 
                     command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
 
                     var value = (string)command.ExecuteScalar();
 
-                    if (value == null)
-                        return null;
+                    if (value == null) return null;
 
-                    return (T)JsonConvert.DeserializeObject(value, Settings);
+                    try
+                    {
+                        return (TSagaData)JsonConvert.DeserializeObject(value, Settings);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new ApplicationException(
+                            string.Format("An error occurred while attempting to deserialize '{0}' into a {1}",
+                                value, typeof(TSagaData)), exception);
+                    }
                 }
             }
             finally
@@ -371,25 +380,21 @@ saga type name.",
             var connection = getConnection();
             try
             {
-                using (var tx = new TransactionScope())
+                var tableNames = connection.Connection.GetTableNames();
+
+                // bail out if there's already a table in the database with one of the names
+                if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
+                    || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
                 {
-                    var tableNames = connection.GetTableNames();
+                    return this;
+                }
 
-                    // bail out if there's already a table in the database with one of the names
-                    if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
-                        || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
-                    {
-                        return this;
-                    }
+                log.Info("Tables '{0}' and '{1}' do not exist - they will be created now",
+                         SagaTableName, SagaIndexTableName);
 
-                    log.Info("Tables '{0}' and '{1}' do not exist - they will be created now",
-                             SagaTableName, SagaIndexTableName);
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        connection.AssignTransactionIfNecessary(command);
-
-                        command.CommandText = string.Format(@"
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}] (
 	[id] [uniqueidentifier] NOT NULL,
 	[revision] [int] NOT NULL,
@@ -402,14 +407,12 @@ CREATE TABLE [dbo].[{0}] (
 )
 
 ", SagaTableName);
-                        command.ExecuteNonQuery();
-                    }
+                    command.ExecuteNonQuery();
+                }
 
-                    using (var command = connection.CreateCommand())
-                    {
-                        connection.AssignTransactionIfNecessary(command);
-
-                        command.CommandText = string.Format(@"
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}] (
 	[saga_type] [nvarchar](40) NOT NULL,
 	[key] [nvarchar](200) NOT NULL,
@@ -429,11 +432,10 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
 ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
 
 ", SagaIndexTableName);
-                        command.ExecuteNonQuery();
-                    }
-
-                    tx.Complete();
+                    command.ExecuteNonQuery();
                 }
+
+                commitAction(connection);
             }
             finally
             {
