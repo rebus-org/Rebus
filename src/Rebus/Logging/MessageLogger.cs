@@ -11,12 +11,12 @@
 
         public void LogSend(string destination, object messageToSend)
         {
-            log.Debug("Sending {0} to {1}", messageToSend.ToString(), destination);
+            log.Debug("Sending {0} to {1}", messageToSend, destination);
         }
 
         public void LogReceive(string id, object receivedMessage)
         {
-            log.Debug("Dispatching message {0}: {1}", id, receivedMessage.ToString());
+            log.Debug("Dispatching message {0}: {1}", id, receivedMessage);
         }
     }
 }

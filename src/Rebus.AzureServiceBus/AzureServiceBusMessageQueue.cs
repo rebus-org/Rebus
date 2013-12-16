@@ -259,16 +259,19 @@ namespace Rebus.AzureServiceBus
                     throw new ApplicationException(message, receiveException);
                 }
             }
-            catch (TimeoutException)
+            catch (TimeoutException exception)
             {
+                Console.WriteLine("TimeoutException: {0}", exception);
                 return null;
             }
-            catch (CommunicationObjectFaultedException)
+            catch (CommunicationObjectFaultedException exception)
             {
+                Console.WriteLine("CommunicationObjectFaultedException: {0}", exception);
                 return null;
             }
             catch (MessagingCommunicationException e)
             {
+                Console.WriteLine("MessagingCommunicationException: {0}", e);
                 if (!e.IsTransient)
                 {
                     log.Warn("Caught exception while receiving message from logical queue '{0}': {1}", InputQueue, e);
@@ -278,6 +281,7 @@ namespace Rebus.AzureServiceBus
             }
             catch (Exception e)
             {
+                Console.WriteLine("Exception: {0}", e);
                 log.Warn("Caught exception while receiving message from logical queue '{0}': {1}", InputQueue, e);
 
                 return null;

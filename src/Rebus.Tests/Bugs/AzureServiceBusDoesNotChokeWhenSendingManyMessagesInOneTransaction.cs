@@ -13,7 +13,7 @@ using Rebus.Tests.Persistence;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.Azure)]
     public class AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction : FixtureBase
     {
         const string SagaTable = "many_msg_sagas";
