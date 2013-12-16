@@ -11,8 +11,8 @@ namespace Rebus.Tests.Transports.Azure
     [TestFixture, Category(TestCategories.Azure)]
     public class TestAzureServiceBusMessageQueueFactory
     {
-        const string subscriptionName1 = "Sub1";
-        const string subscriptionName2 = "Sub2";
+        const string SubscriptionName1 = "Sub1";
+        const string SubscriptionName2 = "Sub2";
         const string TopicName = "Rebus";
         
         readonly string connectionString = AzureServiceBusMessageQueueFactory.ConnectionString;
@@ -37,21 +37,21 @@ namespace Rebus.Tests.Transports.Azure
             Console.WriteLine("Creating topic {0}", TopicName);
             var topicDescription = namespaceManager.GetOrCreateTopic(TopicName);
 
-            Console.WriteLine("Creating subscription {0}", subscriptionName1);
-            namespaceManager.GetOrCreateSubscription(topicDescription, subscriptionName1);
+            Console.WriteLine("Creating subscription {0}", SubscriptionName1);
+            namespaceManager.GetOrCreateSubscription(topicDescription, SubscriptionName1);
 
-            Console.WriteLine("Creating subscription {0}", subscriptionName2);
-            namespaceManager.GetOrCreateSubscription(topicDescription, subscriptionName2);
+            Console.WriteLine("Creating subscription {0}", SubscriptionName2);
+            namespaceManager.GetOrCreateSubscription(topicDescription, SubscriptionName2);
 
             // act
             Console.WriteLine("Creating topic client");
             var topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
-            topicClient.Send(CreateMessage("hello world! 1", subscriptionName1));
-            topicClient.Send(CreateMessage("hello world! 2", subscriptionName2));
+            topicClient.Send(CreateMessage("hello world! 1", SubscriptionName1));
+            topicClient.Send(CreateMessage("hello world! 2", SubscriptionName2));
 
             Console.WriteLine("Creating subscription clients");
-            var sub1client = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, subscriptionName1);
-            var sub2client = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, subscriptionName2);
+            var sub1client = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, SubscriptionName1);
+            var sub2client = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, SubscriptionName2);
 
             var envelope1 = Encoding.UTF8.GetString(sub1client.Receive().GetBody<Envelope>().Body);
             var envelope2 = Encoding.UTF8.GetString(sub2client.Receive().GetBody<Envelope>().Body);

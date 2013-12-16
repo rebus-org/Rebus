@@ -146,6 +146,24 @@ namespace Rebus.AzureServiceBus
             var messagesToSend = (List<Tuple<string, Envelope>>)context[AzureServiceBusMessageBatch];
 
             messagesToSend.Add(Tuple.Create(destinationQueueName, envelope));
+
+            if (messagesToSend.Count > 100)
+            {
+                var errorMessage = string.Format("Cannot send more than 100 messages in one transaction with Azure Service Bus." +
+                                                 " This is a limitation in the service bus that you must handle in the way you're" +
+                                                 " using Rebus with Azure Service Bus, possibly by introducting a way of batching" +
+                                                 " work in another way.");
+
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            if (messagesToSend.Count > 90)
+            {
+                log.Warn("Currently carrying {0} messages that will be sent with the batch API when the transaction is" +
+                         " committed - this is pretty close to 100 which the absolute maximum number of messages that" +
+                         " can be sent in one single transaction with Azure Service Bus. At the moment, there's no other" +
+                         " workaround than handling this in the way you're using Rebus with Azure Service Bus.", messagesToSend.Count);
+            }
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -167,7 +185,8 @@ namespace Rebus.AzureServiceBus
                     {
                         if (context[AzureServiceBusMessageBatch] != null)
                         {
-                            throw new InvalidOperationException(@"Attempted to receive message within transaction where one or more messages were already sent - that cannot be done, sorry!");
+                            throw new InvalidOperationException(
+                                @"Attempted to receive message within transaction where one or more messages were already sent - that cannot be done, sorry!");
                         }
 
                         context[AzureServiceBusReceivedMessage] = brokeredMessage;
@@ -186,7 +205,10 @@ namespace Rebus.AzureServiceBus
                             }
                             catch (Exception exception)
                             {
-                                throw new ApplicationException(string.Format("An error occurred while attempting to renew the lock on message {0}", messageId), exception);
+                                throw new ApplicationException(
+                                    string.Format(
+                                        "An error occurred while attempting to renew the lock on message {0}", messageId),
+                                    exception);
                             }
                         });
                         context.DoCommit += () => DoCommit(context);
@@ -199,16 +221,16 @@ namespace Rebus.AzureServiceBus
                         var envelope = brokeredMessage.GetBody<Envelope>();
 
                         return new ReceivedTransportMessage
-                                   {
-                                       Id = messageId,
-                                       Headers = envelope.Headers == null
-                                                     ? new Dictionary<string, object>()
-                                                     : envelope
-                                                           .Headers
-                                                           .ToDictionary(e => e.Key, e => (object)e.Value),
-                                       Body = envelope.Body,
-                                       Label = envelope.Label
-                                   };
+                        {
+                            Id = messageId,
+                            Headers = envelope.Headers == null
+                                ? new Dictionary<string, object>()
+                                : envelope
+                                    .Headers
+                                    .ToDictionary(e => e.Key, e => (object)e.Value),
+                            Body = envelope.Body,
+                            Label = envelope.Label
+                        };
                     }
                     finally
                     {
@@ -222,7 +244,7 @@ namespace Rebus.AzureServiceBus
                 catch (Exception receiveException)
                 {
                     var message = string.Format("An exception occurred while handling brokered message {0}",
-                                                messageId);
+                        messageId);
 
                     try
                     {
@@ -243,6 +265,15 @@ namespace Rebus.AzureServiceBus
             }
             catch (CommunicationObjectFaultedException)
             {
+                return null;
+            }
+            catch (MessagingCommunicationException e)
+            {
+                if (!e.IsTransient)
+                {
+                    log.Warn("Caught exception while receiving message from logical queue '{0}': {1}", InputQueue, e);
+                }
+
                 return null;
             }
             catch (Exception e)
@@ -284,7 +315,7 @@ namespace Rebus.AzureServiceBus
         {
             // the message will be null when doing tx send outside of a message handler
             var receivedMessageOrNull = context[AzureServiceBusReceivedMessage] as BrokeredMessage;
-            var messagesToSend = (List<Tuple<string, Envelope>>) context[AzureServiceBusMessageBatch];
+            var messagesToSend = (List<Tuple<string, Envelope>>)context[AzureServiceBusMessageBatch];
 
             try
             {
@@ -301,25 +332,19 @@ namespace Rebus.AzureServiceBus
                         {
                             using (var scope = new TransactionScope(TransactionScopeOption.RequiresNew))
                             {
+                                var brokeredMessagesToSend = new List<BrokeredMessage>();
+
                                 if (messagesToSend.Any())
                                 {
-                                    var brokeredMessagesToSend = messagesToSend
+                                    brokeredMessagesToSend.AddRange(messagesToSend
                                         .Select(tuple =>
                                         {
                                             var brokeredMessage = new BrokeredMessage(tuple.Item2);
                                             brokeredMessage.Properties[LogicalQueuePropertyKey] = tuple.Item1;
                                             return brokeredMessage;
-                                        })
-                                        .ToList();
+                                        }));
 
-                                    try
-                                    {
-                                        topicClient.SendBatch(brokeredMessagesToSend);
-                                    }
-                                    finally
-                                    {
-                                        brokeredMessagesToSend.ForEach(b => b.Dispose());
-                                    }
+                                    topicClient.SendBatch(brokeredMessagesToSend);
                                 }
 
                                 if (receivedMessageOrNull != null)
@@ -328,6 +353,12 @@ namespace Rebus.AzureServiceBus
                                 }
 
                                 scope.Complete();
+
+                                try
+                                {
+                                    brokeredMessagesToSend.ForEach(m => m.Dispose());
+                                }
+                                catch{}
                             }
                         });
             }
