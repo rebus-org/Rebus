@@ -249,3 +249,8 @@
 * Removed the hack that could automatically dig the `SqlTransaction` out of a `SqlConnection` (because it did not work all the time)
 * Clean up a few things inside `AzureServiceBusMessageQueue`
 * Added test to verify a scenario involving `AzureServiceBusMessageQueue` and `SqlServerSagaPersister`
+
+## 0.54.1
+
+* Nudged order of disposal and logging inside Azure Service Bus transport
+* Warning when sending > 90 messages with Azure Service Bus transport + `InvalidOperationException` when > 100 (because of a limitation in Azure Service bus)
