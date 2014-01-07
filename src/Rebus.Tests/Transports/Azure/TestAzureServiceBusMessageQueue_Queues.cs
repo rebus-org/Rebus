@@ -6,8 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.AzureServiceBus;
-using Rebus.AzureServiceBus.SingleTopic;
+using Rebus.AzureServiceBus.Queues;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -16,7 +15,7 @@ using Rebus.Tests.Contracts.Transports.Factories;
 namespace Rebus.Tests.Transports.Azure
 {
     [TestFixture, Category(TestCategories.Azure)]
-    public class TestAzureServiceBusMessageQueue : FixtureBase
+    public class TestAzureServiceBusMessageQueue_Queues : FixtureBase
     {
         const string InputQueueName = "test_competing_input";
 
