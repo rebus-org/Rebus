@@ -118,7 +118,6 @@ A more full example configuration snippet can be seen here:
             configurer.UseSender(azureServiceBusMessageQueue);
             configurer.UseReceiver(azureServiceBusMessageQueue);
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
-            azureServiceBusMessageQueue.GetOrCreateSubscription(errorQueueName);
 
             // transfer renew-peek-lock-action from transaction context to message context
             configurer

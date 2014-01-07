@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -13,6 +14,7 @@ namespace Rebus.AzureServiceBus.Queues
 {
     public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable
     {
+        readonly string connectionString;
         static ILog log;
 
         static AzureServiceBusMessageQueue()
@@ -20,7 +22,6 @@ namespace Rebus.AzureServiceBus.Queues
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public const string TopicName = "Rebus";
         public const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
 
         public const string AzureServiceBusRenewLeaseAction = "AzureServiceBusRenewLeaseAction (invoke in order to renew the peek lock on the current message)";
@@ -31,11 +32,8 @@ namespace Rebus.AzureServiceBus.Queues
 
         readonly NamespaceManager namespaceManager;
 
-        readonly TopicDescription topicDescription;
-
-        readonly TopicClient topicClient;
-
-        readonly SubscriptionClient subscriptionClient;
+        readonly ConcurrentDictionary<string, QueueClient> sendClients = new ConcurrentDictionary<string, QueueClient>();
+        readonly QueueClient receiveClient;
 
         bool disposed;
 
@@ -46,20 +44,24 @@ namespace Rebus.AzureServiceBus.Queues
 
         public AzureServiceBusMessageQueue(string connectionString, string inputQueue)
         {
+            this.connectionString = connectionString;
             try
             {
                 log.Info("Initializing Azure Service Bus transport with logical input queue '{0}'", inputQueue);
 
                 namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
-
+                
                 InputQueue = inputQueue;
 
-                log.Info("Ensuring that topic '{0}' exists", TopicName);
-                if (!namespaceManager.TopicExists(TopicName))
+                // if we're in one-way mode, just quit here
+                if (inputQueue == null) return;
+
+                log.Info("Ensuring that queue '{0}' exists", inputQueue);
+                if (!namespaceManager.QueueExists(inputQueue))
                 {
                     try
                     {
-                        namespaceManager.CreateTopic(TopicName);
+                        namespaceManager.CreateQueue(inputQueue);
                     }
                     catch
                     {
@@ -68,18 +70,7 @@ namespace Rebus.AzureServiceBus.Queues
                     }
                 }
 
-                topicDescription = namespaceManager.GetTopic(TopicName);
-
-                log.Info("Creating topic client");
-                topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
-
-                // if we're in one-way mode, just quit here
-                if (inputQueue == null) return;
-
-                GetOrCreateSubscription(InputQueue);
-
-                log.Info("Creating subscription client");
-                subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue, ReceiveMode.PeekLock);
+                receiveClient = GetClientFor(inputQueue);
             }
             catch (Exception e)
             {
@@ -119,8 +110,7 @@ namespace Rebus.AzureServiceBus.Queues
                         {
                             using (var messageToSendImmediately = new BrokeredMessage(envelopeToSendImmediately))
                             {
-                                messageToSendImmediately.Properties[LogicalQueuePropertyKey] = destinationQueueName;
-                                topicClient.Send(messageToSendImmediately);
+                                GetClientFor(destinationQueueName).Send(messageToSendImmediately);
                             }
                         });
 
@@ -166,11 +156,16 @@ namespace Rebus.AzureServiceBus.Queues
             }
         }
 
+        QueueClient GetClientFor(string destinationQueueName)
+        {
+            return QueueClient.CreateFromConnectionString(connectionString, destinationQueueName);
+        }
+
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             try
             {
-                var brokeredMessage = subscriptionClient.Receive(TimeSpan.FromSeconds(1));
+                var brokeredMessage = receiveClient.Receive(TimeSpan.FromSeconds(1));
 
                 if (brokeredMessage == null)
                 {
@@ -336,19 +331,17 @@ namespace Rebus.AzureServiceBus.Queues
                         {
                             using (var scope = new TransactionScope(TransactionScopeOption.RequiresNew))
                             {
-                                var brokeredMessagesToSend = new List<BrokeredMessage>();
+                                var brokeredMessagesToSend = new List<Tuple<string, BrokeredMessage>>();
 
                                 if (messagesToSend.Any())
                                 {
                                     brokeredMessagesToSend.AddRange(messagesToSend
-                                        .Select(tuple =>
-                                        {
-                                            var brokeredMessage = new BrokeredMessage(tuple.Item2);
-                                            brokeredMessage.Properties[LogicalQueuePropertyKey] = tuple.Item1;
-                                            return brokeredMessage;
-                                        }));
+                                        .Select(tuple => Tuple.Create(tuple.Item1, new BrokeredMessage(tuple.Item2))));
 
-                                    topicClient.SendBatch(brokeredMessagesToSend);
+                                    foreach (var group in brokeredMessagesToSend.GroupBy(m => m.Item1))
+                                    {
+                                        GetClientFor(group.Key).SendBatch(group.Select(g => g.Item2));
+                                    }
                                 }
 
                                 if (receivedMessageOrNull != null)
@@ -360,9 +353,9 @@ namespace Rebus.AzureServiceBus.Queues
 
                                 try
                                 {
-                                    brokeredMessagesToSend.ForEach(m => m.Dispose());
+                                    brokeredMessagesToSend.ForEach(m => m.Item2.Dispose());
                                 }
-                                catch{}
+                                catch { }
                             }
                         });
             }
@@ -404,10 +397,10 @@ namespace Rebus.AzureServiceBus.Queues
 
         public AzureServiceBusMessageQueue Purge()
         {
-            log.Warn("Purging logical queue {0}", InputQueue);
+            log.Warn("Purging queue {0}", InputQueue);
 
-            namespaceManager.DeleteSubscription(topicDescription.Path, InputQueue);
-            GetOrCreateSubscription(InputQueue);
+            namespaceManager.DeleteQueue(InputQueue);
+            namespaceManager.CreateQueue(InputQueue);
 
             return this;
         }
@@ -505,31 +498,6 @@ namespace Rebus.AzureServiceBus.Queues
                 return false;
             }
         }
-
-        public void GetOrCreateSubscription(string logicalQueueName)
-        {
-            if (namespaceManager.SubscriptionExists(topicDescription.Path, logicalQueueName)) return;
-
-            try
-            {
-                log.Info("Establishing subscription '{0}'", logicalQueueName);
-                var filter = new SqlFilter(string.Format("LogicalDestinationQueue='{0}'", logicalQueueName));
-
-                var newSubscription = namespaceManager.CreateSubscription(topicDescription.Path, logicalQueueName, filter);
-
-                // effectively disable Azure Service Bus' own dead lettering
-                newSubscription.MaxDeliveryCount = 1000;
-                newSubscription.EnableDeadLetteringOnMessageExpiration = false;
-                newSubscription.LockDuration = TimeSpan.FromMinutes(5);
-                newSubscription.UserMetadata = string.Format("Created by Rebus: {0}", DateTime.UtcNow.ToString("u"));
-
-                namespaceManager.UpdateSubscription(newSubscription);
-            }
-            catch (MessagingEntityAlreadyExistsException)
-            {
-            }
-        }
-
         public void Dispose()
         {
             Dispose(true);
@@ -544,25 +512,15 @@ namespace Rebus.AzureServiceBus.Queues
             {
                 try
                 {
-                    if (subscriptionClient != null)
+                    if (receiveClient != null)
                     {
-                        log.Info("Closing subscription client");
-                        subscriptionClient.Close();
+                        log.Info("Closing queue client");
+                        receiveClient.Close();
                     }
                 }
                 catch (Exception e)
                 {
                     log.Warn("An exception occurred while closing the subscription client: {0}", e);
-                }
-
-                try
-                {
-                    log.Info("Closing topic client");
-                    topicClient.Close();
-                }
-                catch (Exception e)
-                {
-                    log.Warn("An exception occurred while closing the topic client: {0}", e);
                 }
             }
 
