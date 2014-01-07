@@ -4,6 +4,7 @@ using System.Threading;
 using Castle.MicroKernel.Facilities;
 using NUnit.Framework;
 using Rebus.AzureServiceBus;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports.Factories;

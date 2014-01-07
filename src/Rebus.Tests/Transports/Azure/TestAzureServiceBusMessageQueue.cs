@@ -7,6 +7,7 @@ using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.AzureServiceBus;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;

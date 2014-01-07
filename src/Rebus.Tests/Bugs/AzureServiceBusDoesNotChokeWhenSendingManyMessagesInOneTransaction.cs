@@ -5,6 +5,7 @@ using System.Threading;
 using NUnit.Framework;
 using Ponder;
 using Rebus.AzureServiceBus;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;

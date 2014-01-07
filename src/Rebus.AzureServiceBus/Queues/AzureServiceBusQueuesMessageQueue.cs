@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.ServiceModel;
 using System.Threading;
 using System.Transactions;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
-using System.Linq;
 using Rebus.Logging;
 
-namespace Rebus.AzureServiceBus
+namespace Rebus.AzureServiceBus.Queues
 {
     public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable
     {

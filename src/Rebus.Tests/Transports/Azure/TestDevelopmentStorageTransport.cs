@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using NUnit.Framework;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Configuration;
 using Rebus.AzureServiceBus;
 using Rebus.Shared;

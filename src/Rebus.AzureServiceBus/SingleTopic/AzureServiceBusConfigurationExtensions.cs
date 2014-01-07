@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Configuration;
+using System.Linq;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Transports;
-using ConfigurationException = Rebus.Configuration.ConfigurationException;
 using Rebus.Transports.Msmq;
-using System.Linq;
+using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
-namespace Rebus.AzureServiceBus
+namespace Rebus.AzureServiceBus.SingleTopic
 {
     public static class AzureServiceBusConfigurationExtensions
     {

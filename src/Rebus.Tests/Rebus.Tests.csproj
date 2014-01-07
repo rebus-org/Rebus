@@ -184,6 +184,7 @@
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueQueuesFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />

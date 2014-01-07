@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.AzureServiceBus;

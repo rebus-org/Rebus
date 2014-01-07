@@ -8,6 +8,7 @@ using Rebus.Tests.Contracts.Transports.Factories;
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
+    [TestFixture(typeof(AzureServiceBusMessageQueueQueuesFactory), Category = TestCategories.Azure)]
     [TestFixture(typeof(MsmqTransportFactory))]
     [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]

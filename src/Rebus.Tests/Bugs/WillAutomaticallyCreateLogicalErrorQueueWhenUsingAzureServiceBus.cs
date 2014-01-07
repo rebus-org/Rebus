@@ -2,6 +2,7 @@
 using System.Threading;
 using Microsoft.ServiceBus;
 using NUnit.Framework;
+using Rebus.AzureServiceBus.SingleTopic;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.AzureServiceBus;
