@@ -27,8 +27,10 @@ using Shouldly;
 
 namespace Rebus.Tests.Performance.StressMongo
 {
-    [TestFixture(typeof(MsmqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo)]
-    [TestFixture(typeof(RabbitMqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo), Category(TestCategories.Rabbit)]
+    [Category(TestCategories.Mongo)]
+    [Category(TestCategories.Integration)]
+    [TestFixture(typeof(MsmqMessageQueueFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(RabbitMqMessageQueueFactory), Category = TestCategories.Rabbit)]
     public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineMessageOwnership, IFlowLog where TFactory : IMessageQueueFactory, new()
     {
         const string CreditSagasCollectionName = "check_credit_sagas";
@@ -63,7 +65,7 @@ namespace Rebus.Tests.Performance.StressMongo
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
                 {
                     MinLevel = LogLevel.Warn,
-                    Filters = {l => true}
+                    Filters = { l => true }
                 };
 
             crm = CreateBus("crm", ContainerAdapterWith("crm"));

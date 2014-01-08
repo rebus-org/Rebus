@@ -484,6 +484,9 @@ namespace Rebus.Tests.Transports.Rabbit
             using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
             using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
             {
+                recipientQueue.PurgeInputQueue();
+                senderQueue.PurgeInputQueue();
+
                 var id = Guid.NewGuid();
                 senderQueue.Send(recipientInputQueueName,
                                  serializer.Serialize(new Message

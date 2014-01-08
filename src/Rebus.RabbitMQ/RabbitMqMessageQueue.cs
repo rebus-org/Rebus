@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
+using System.IO;
 using System.Text;
 using System.Threading;
 using RabbitMQ.Client;
@@ -177,6 +179,22 @@ namespace Rebus.RabbitMQ
                 // wtf??
                 if (ea == null)
                 {
+                    log.Warn("End-of-stream detected - will reset subscription and underlying model");
+                    
+                    // just "forget" this one
+                    threadBoundSubscription = null;
+
+                    // if we have this one, make sure to dispose it
+                    if (threadBoundModel != null)
+                    {
+                        threadBoundModel.Dispose();
+                        threadBoundModel = null;
+                    }
+
+                    // if the connection manager's connection survived, we should be good the next time we 
+                    // EnsureThreadBoundModelIsInitialized ... otherwise, the initialization will throw,
+                    // which will cause the connection manager to throw out the connection and attempt
+                    // to re-connect
                     return null;
                 }
 
