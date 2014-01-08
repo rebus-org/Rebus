@@ -254,3 +254,7 @@
 
 * Nudged order of disposal and logging inside Azure Service Bus transport
 * Warning when sending > 90 messages with Azure Service Bus transport + `InvalidOperationException` when > 100 (because of a limitation in Azure Service bus)
+
+## 054.2
+
+* `XmlSubscriptionStorage` automatically creates directory pointed to by the subscription XML file path - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
