@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 
@@ -7,6 +9,27 @@ namespace Rebus.Tests
 {
     public static class TestExtensions
     {
+        public static IEnumerable<List<T>> Partition<T>(this IEnumerable<T> items, int partitionSize)
+        {
+            List<T> batch;
+            var skip = 0;
+            var allItems = items.ToList();
+
+            do
+            {
+                batch = allItems.Skip(skip)
+                                .Take(partitionSize)
+                                .ToList();
+
+                if (batch.Any())
+                {
+                    yield return batch;
+                }
+
+                skip += partitionSize;
+            } while (batch.Any());
+        }
+        
         public static void Times(this int count, Action action)
         {
             for (var counter = 0; counter < count; counter++)
