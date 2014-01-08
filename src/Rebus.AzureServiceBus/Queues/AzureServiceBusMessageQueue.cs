@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.Timers;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
@@ -23,6 +24,8 @@ namespace Rebus.AzureServiceBus.Queues
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
+        
+        const string AzureServiceBusReceivedMessageTime = "AzureServiceBusReceivedMessageTime";
 
         /// <summary>
         /// Will be used to cache queue clients for each queue that we need to communicate with
@@ -125,7 +128,19 @@ namespace Rebus.AzureServiceBus.Queues
 
         QueueClient GetClientFor(string destinationQueueName)
         {
-            return queueClients.GetOrAdd(destinationQueueName, _ => QueueClient.CreateFromConnectionString(connectionString, destinationQueueName));
+            var client = queueClients.GetOrAdd(destinationQueueName, CreateNewClient);
+
+            if (!client.IsClosed) return client;
+
+            client = CreateNewClient(destinationQueueName);
+            queueClients[destinationQueueName] = client;
+
+            return client;
+        }
+
+        QueueClient CreateNewClient(string queueName)
+        {
+            return QueueClient.CreateFromConnectionString(connectionString, queueName);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -152,6 +167,7 @@ namespace Rebus.AzureServiceBus.Queues
                         }
 
                         context[AzureServiceBusReceivedMessage] = brokeredMessage;
+                        context[AzureServiceBusReceivedMessageTime] = DateTime.UtcNow;
                         context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
 
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
@@ -292,7 +308,14 @@ namespace Rebus.AzureServiceBus.Queues
         void DoCommit(ITransactionContext context)
         {
             // the message will be null when doing tx send outside of a message handler
+            var stuffToDispose = new List<IDisposable>();
             var receivedMessageOrNull = context[AzureServiceBusReceivedMessage] as BrokeredMessage;
+            
+            if (receivedMessageOrNull != null)
+            {
+                stuffToDispose.Add(receivedMessageOrNull);
+            }
+
             var messagesToSend = (List<Tuple<string, Envelope>>)context[AzureServiceBusMessageBatch];
 
             try
@@ -301,33 +324,64 @@ namespace Rebus.AzureServiceBus.Queues
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
-                new Retrier(backoffTimes)
-                    .RetryOn<ServerBusyException>()
-                    .RetryOn<MessagingCommunicationException>()
-                    .RetryOn<TimeoutException>()
-                    .TolerateInnerExceptionsAsWell()
-                    .Do(() =>
+                try
+                {
+                    if (messagesToSend.Any())
+                    {
+                        // if we have received a message, ensure that we keep the message alive for the duration of the commit phase
+                        if (receivedMessageOrNull != null)
                         {
-                            var brokeredMessagesToSend = new List<Tuple<string, BrokeredMessage>>();
+                            var renewLeaseTimer = new Timer();
+                            stuffToDispose.Add(renewLeaseTimer);
+                            renewLeaseTimer.Interval = 40000;
+                            renewLeaseTimer.Elapsed += (o, ea) => RenewLease(context);
+                            renewLeaseTimer.Start();
 
-                            if (messagesToSend.Any())
+                            var receiveTime = (DateTime)context[AzureServiceBusReceivedMessageTime];
+
+                            // if we've already spent a significant amount of time running the handler, make sure to renew the message right away
+                            if (DateTime.UtcNow - receiveTime > TimeSpan.FromSeconds(15))
                             {
-                                brokeredMessagesToSend.AddRange(messagesToSend
-                                    .Select(tuple => Tuple.Create(tuple.Item1, new BrokeredMessage(tuple.Item2))));
-
-                                foreach (var group in brokeredMessagesToSend.GroupBy(m => m.Item1))
-                                {
-                                    GetClientFor(group.Key).SendBatch(group.Select(g => g.Item2));
-                                }
+                                RenewLease(context);
                             }
+                        }
 
-                            if (receivedMessageOrNull != null)
+                        var messagesForEachRecipient = messagesToSend
+                            .GroupBy(g => g.Item1)
+                            .ToList();
+
+                        foreach (var group in messagesForEachRecipient)
+                        {
+                            var destinationQueueName = group.Key;
+                            var messagesForThisRecipient = group.Select(g => g.Item2).ToList();
+
+                            foreach (var batch in messagesForThisRecipient.Partition(100))
                             {
-                                receivedMessageOrNull.Complete();
-                            }
+                                var brokeredMessages = batch
+                                    .Select(envelope => new BrokeredMessage(envelope))
+                                    .ToList();
 
-                            brokeredMessagesToSend.ForEach(m => m.Item2.Dispose());
-                        });
+                                stuffToDispose.AddRange(brokeredMessages);
+
+                                new Retrier(backoffTimes)
+                                    .RetryOn<ServerBusyException>()
+                                    .RetryOn<MessagingCommunicationException>()
+                                    .RetryOn<TimeoutException>()
+                                    .TolerateInnerExceptionsAsWell()
+                                    .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessages));
+                            }
+                        }
+                    }
+
+                    if (receivedMessageOrNull != null)
+                    {
+                        receivedMessageOrNull.Complete();
+                    }
+                }
+                finally
+                {
+                    stuffToDispose.ForEach(d => d.Dispose());
+                }
             }
             catch (Exception)
             {
@@ -351,6 +405,21 @@ namespace Rebus.AzureServiceBus.Queues
                 {
                     receivedMessageOrNull.Dispose();
                 }
+            }
+        }
+
+        void RenewLease(ITransactionContext context)
+        {
+            var renewLeaseAction = context[AzureServiceBusRenewLeaseAction] as Action;
+            if (renewLeaseAction == null) return;
+
+            try
+            {
+                renewLeaseAction();
+            }
+            catch (Exception exception)
+            {
+                log.Warn("An error occurred while attempting to auto-renew the lease during commit: {0}", exception);
             }
         }
 

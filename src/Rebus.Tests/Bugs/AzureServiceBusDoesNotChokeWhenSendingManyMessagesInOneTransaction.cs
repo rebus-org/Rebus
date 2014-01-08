@@ -4,8 +4,7 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Ponder;
-using Rebus.AzureServiceBus;
-using Rebus.AzureServiceBus.SingleTopic;
+using Rebus.AzureServiceBus.Queues;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
@@ -14,6 +13,7 @@ using Rebus.Tests.Persistence;
 
 namespace Rebus.Tests.Bugs
 {
+    [TestFixture, Category(TestCategories.Azure)]
     [TestFixture, Category(TestCategories.Azure)]
     public class AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction : FixtureBase
     {
@@ -47,7 +47,7 @@ namespace Rebus.Tests.Bugs
             sagaPersister = new SqlServerSagaPersister(sqlConnection, SagaIndex, SagaTable).EnsureTablesAreCreated();
 
             Configure.With(TrackDisposable(adapter))
-                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
+                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Error))
                 .Transport(t => t.UseAzureServiceBus(busConnection, InputQueueName, "error"))
                 .Sagas(s => s.Use(sagaPersister))
                 .CreateBus()
@@ -56,11 +56,10 @@ namespace Rebus.Tests.Bugs
 
         [TestCase(1)]
         [TestCase(10)]
-        [TestCase(20)]
-        [TestCase(50)]
         [TestCase(100)]
-        [TestCase(150, Ignore = true, Description="Max batch size within tx=100")]
-        [TestCase(200, Ignore = true, Description="Max batch size within tx=100")]
+        [TestCase(150, Description="Max batch size within tx=100")]
+        [TestCase(200, Description="Max batch size within tx=100")]
+        [TestCase(1000, Description="Max batch size within tx=100")]
         public void RunIt(int requestCount)
         {
             // arrange
@@ -134,8 +133,13 @@ namespace Rebus.Tests.Bugs
 
             public void Handle(SomeReply message)
             {
-                Console.WriteLine("Got reply for request ID {0}", message.RequestId);
                 Data.Requests[message.RequestId]++;
+
+                var numberOfReceivedReplies = Data.Requests.Count(r => r.Value > 0);
+                if (numberOfReceivedReplies % 100 == 0)
+                {
+                    Console.WriteLine("Got {0} replies", numberOfReceivedReplies);    
+                }
 
                 if (Data.Requests.All(kvp => kvp.Value > 0))
                 {

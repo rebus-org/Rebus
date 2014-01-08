@@ -54,7 +54,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Queues\AzureServiceBusQueuesMessageQueue.cs" />
+    <Compile Include="Ex.cs" />
+    <Compile Include="Queues\AzureServiceBusMessageQueue.cs" />
     <Compile Include="Queues\AzureServiceBusQueuesConfigurationExtensions.cs" />
     <Compile Include="Envelope.cs" />
     <Compile Include="SingleTopic\AzureServiceBusConfigurationExtensions.cs" />
