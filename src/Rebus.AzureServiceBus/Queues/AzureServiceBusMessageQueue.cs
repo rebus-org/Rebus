@@ -324,63 +324,56 @@ namespace Rebus.AzureServiceBus.Queues
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
-                try
+                if (messagesToSend.Any())
                 {
-                    if (messagesToSend.Any())
-                    {
-                        // if we have received a message, ensure that we keep the message alive for the duration of the commit phase
-                        if (receivedMessageOrNull != null)
-                        {
-                            var renewLeaseTimer = new Timer();
-                            stuffToDispose.Add(renewLeaseTimer);
-                            renewLeaseTimer.Interval = 40000;
-                            renewLeaseTimer.Elapsed += (o, ea) => RenewLease(context);
-                            renewLeaseTimer.Start();
-
-                            var receiveTime = (DateTime)context[AzureServiceBusReceivedMessageTime];
-
-                            // if we've already spent a significant amount of time running the handler, make sure to renew the message right away
-                            if (DateTime.UtcNow - receiveTime > TimeSpan.FromSeconds(15))
-                            {
-                                RenewLease(context);
-                            }
-                        }
-
-                        var messagesForEachRecipient = messagesToSend
-                            .GroupBy(g => g.Item1)
-                            .ToList();
-
-                        foreach (var group in messagesForEachRecipient)
-                        {
-                            var destinationQueueName = group.Key;
-                            var messagesForThisRecipient = group.Select(g => g.Item2).ToList();
-
-                            foreach (var batch in messagesForThisRecipient.Partition(100))
-                            {
-                                var brokeredMessages = batch
-                                    .Select(envelope => new BrokeredMessage(envelope))
-                                    .ToList();
-
-                                stuffToDispose.AddRange(brokeredMessages);
-
-                                new Retrier(backoffTimes)
-                                    .RetryOn<ServerBusyException>()
-                                    .RetryOn<MessagingCommunicationException>()
-                                    .RetryOn<TimeoutException>()
-                                    .TolerateInnerExceptionsAsWell()
-                                    .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessages));
-                            }
-                        }
-                    }
-
+                    // if we have received a message, ensure that we keep the message alive for the duration of the commit phase
                     if (receivedMessageOrNull != null)
                     {
-                        receivedMessageOrNull.Complete();
+                        var renewLeaseTimer = new Timer();
+                        stuffToDispose.Add(renewLeaseTimer);
+                        renewLeaseTimer.Interval = 40000;
+                        renewLeaseTimer.Elapsed += (o, ea) => RenewLease(context);
+                        renewLeaseTimer.Start();
+
+                        var receiveTime = (DateTime)context[AzureServiceBusReceivedMessageTime];
+
+                        // if we've already spent a significant amount of time running the handler, make sure to renew the message right away
+                        if (DateTime.UtcNow - receiveTime > TimeSpan.FromSeconds(15))
+                        {
+                            RenewLease(context);
+                        }
+                    }
+
+                    var messagesForEachRecipient = messagesToSend
+                        .GroupBy(g => g.Item1)
+                        .ToList();
+
+                    foreach (var group in messagesForEachRecipient)
+                    {
+                        var destinationQueueName = @group.Key;
+                        var messagesForThisRecipient = @group.Select(g => g.Item2).ToList();
+
+                        foreach (var batch in messagesForThisRecipient.Partition(100))
+                        {
+                            var brokeredMessages = batch
+                                .Select(envelope => new BrokeredMessage(envelope))
+                                .ToList();
+
+                            stuffToDispose.AddRange(brokeredMessages);
+
+                            new Retrier(backoffTimes)
+                                .RetryOn<ServerBusyException>()
+                                .RetryOn<MessagingCommunicationException>()
+                                .RetryOn<TimeoutException>()
+                                .TolerateInnerExceptionsAsWell()
+                                .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessages));
+                        }
                     }
                 }
-                finally
+
+                if (receivedMessageOrNull != null)
                 {
-                    stuffToDispose.ForEach(d => d.Dispose());
+                    receivedMessageOrNull.Complete();
                 }
             }
             catch (Exception)
@@ -401,10 +394,7 @@ namespace Rebus.AzureServiceBus.Queues
             }
             finally
             {
-                if (receivedMessageOrNull != null)
-                {
-                    receivedMessageOrNull.Dispose();
-                }
+                stuffToDispose.ForEach(d => d.Dispose());
             }
         }
 
