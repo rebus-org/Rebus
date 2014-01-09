@@ -25,7 +25,7 @@ namespace Rebus.AzureServiceBus.Queues
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
         
-        const string AzureServiceBusReceivedMessageTime = "AzureServiceBusReceivedMessageTime";
+        const string AzureServiceBusReceivedMessagePeekLockRenewedTime = "AzureServiceBusReceivedMessageTime";
 
         /// <summary>
         /// Will be used to cache queue clients for each queue that we need to communicate with
@@ -167,8 +167,8 @@ namespace Rebus.AzureServiceBus.Queues
                         }
 
                         context[AzureServiceBusReceivedMessage] = brokeredMessage;
-                        context[AzureServiceBusReceivedMessageTime] = DateTime.UtcNow;
                         context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
+                        context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
 
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
                         context[AzureServiceBusRenewLeaseAction] = (Action)(() =>
@@ -180,6 +180,8 @@ namespace Rebus.AzureServiceBus.Queues
                                 log.Info("Renewing lock on message {0}", messageId);
 
                                 messageToRenew.RenewLock();
+
+                                context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
                             }
                             catch (Exception exception)
                             {
@@ -335,10 +337,10 @@ namespace Rebus.AzureServiceBus.Queues
                         renewLeaseTimer.Elapsed += (o, ea) => RenewLease(context);
                         renewLeaseTimer.Start();
 
-                        var receiveTime = (DateTime)context[AzureServiceBusReceivedMessageTime];
+                        var lastRenewalTime = (DateTime)context[AzureServiceBusReceivedMessagePeekLockRenewedTime];
 
                         // if we've already spent a significant amount of time running the handler, make sure to renew the message right away
-                        if (DateTime.UtcNow - receiveTime > TimeSpan.FromSeconds(15))
+                        if (DateTime.UtcNow - lastRenewalTime > TimeSpan.FromSeconds(15))
                         {
                             RenewLease(context);
                         }
