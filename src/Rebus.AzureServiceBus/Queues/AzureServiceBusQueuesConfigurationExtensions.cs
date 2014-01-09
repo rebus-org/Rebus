@@ -19,31 +19,37 @@ namespace Rebus.AzureServiceBus.Queues
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public static void UseAzureServiceBus(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
+        public static IAsbOptions UseAzureServiceBus(this RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
-            Configure(configurer, connectionString, inputQueueName, errorQueueName);
+            return Configure(configurer, connectionString, inputQueueName, errorQueueName);
         }
 
-        public static void UseAzureServiceBusInOneWayClientMode(this RebusTransportConfigurer configurer,
+        public static IAsbOptions UseAzureServiceBusInOneWayClientMode(this RebusTransportConfigurer configurer,
                                                                 string connectionString)
         {
+            IAsbOptions asbOptionsToReturn;
+
             if (ShouldEmulateAzureEnvironment(connectionString))
             {
                 var sender = MsmqMessageQueue.Sender();
                 configurer.UseSender(sender);
+                asbOptionsToReturn = new NoopAsbOptions();
             }
             else
             {
                 var sender = AzureServiceBusMessageQueue.Sender(connectionString);
                 configurer.UseSender(sender);
+                asbOptionsToReturn = new AsbOptions(sender);
             }
 
             var gag = new OneWayClientGag();
             configurer.UseReceiver(gag);
             configurer.UseErrorTracker(gag);
+
+            return asbOptionsToReturn;
         }
 
-        public static void UseAzureServiceBusAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
+        public static IAsbOptions UseAzureServiceBusAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
         {
             try
             {
@@ -55,7 +61,7 @@ namespace Rebus.AzureServiceBus.Queues
                 var inputQueueName = section.InputQueue;
                 var errorQueueName = section.ErrorQueue;
 
-                Configure(configurer, connectionString, inputQueueName, errorQueueName);
+                return Configure(configurer, connectionString, inputQueueName, errorQueueName);
             }
             catch (ConfigurationErrorsException e)
             {
@@ -88,7 +94,7 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static void Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
+        static IAsbOptions Configure(RebusTransportConfigurer configurer, string connectionString, string inputQueueName, string errorQueueName)
         {
             if (connectionString == null)
             {
@@ -111,7 +117,7 @@ A more full example configuration snippet can be seen here:
                             context.Items[AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction] = noop;
                         };
                     });
-                return;
+                return new NoopAsbOptions();
             }
 
             var azureServiceBusMessageQueue = new AzureServiceBusMessageQueue(connectionString, inputQueueName);
@@ -131,6 +137,8 @@ A more full example configuration snippet can be seen here:
                         context.Items[AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction] = renewAction;
                     };
                 });
+
+            return new AsbOptions(azureServiceBusMessageQueue);
         }
 
         static bool ShouldEmulateAzureEnvironment(string connectionString)
