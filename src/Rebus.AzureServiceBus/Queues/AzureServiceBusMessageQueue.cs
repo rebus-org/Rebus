@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting;
 using System.ServiceModel;
-using System.Timers;
+using System.Threading;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.AzureServiceBus.Queues
 {
@@ -25,9 +26,9 @@ namespace Rebus.AzureServiceBus.Queues
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
-        
+
         const string AzureServiceBusReceivedMessagePeekLockRenewalTimer = "AzureServiceBusReceivedMessagePeekLockRenewalTimer";
-        
+
         const string AzureServiceBusReceivedMessagePeekLockRenewedTime = "AzureServiceBusReceivedMessagePeekLockRenewedTime";
 
         /// <summary>
@@ -37,7 +38,7 @@ namespace Rebus.AzureServiceBus.Queues
         readonly NamespaceManager namespaceManager;
         readonly string connectionString;
 
-        TimeSpan peekLockRenewalInterval = TimeSpan.FromSeconds(55);
+        TimeSpan peekLockRenewalInterval = TimeSpan.FromSeconds(50);
 
         bool disposed;
 
@@ -175,26 +176,7 @@ namespace Rebus.AzureServiceBus.Queues
                         context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
 
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
-                        var peekLockRenewalAction = (Action)(() =>
-                        {
-                            try
-                            {
-                                var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
-
-                                log.Info("Renewing lock on message {0}", messageId);
-
-                                messageToRenew.RenewLock();
-
-                                context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
-                            }
-                            catch (Exception exception)
-                            {
-                                throw new ApplicationException(
-                                    string.Format(
-                                        "An error occurred while attempting to renew the lock on message {0}", messageId),
-                                    exception);
-                            }
-                        });
+                        var peekLockRenewalAction = (Action)(() => RenewPeekLock(context, messageId));
 
                         context[AzureServiceBusRenewLeaseAction] = peekLockRenewalAction;
 
@@ -263,6 +245,42 @@ namespace Rebus.AzureServiceBus.Queues
 
                 return null;
             }
+        }
+
+        void RenewPeekLock(ITransactionContext context, string messageId)
+        {
+            var peekLockRenewalBackoffTimes = new[] {2, 3, 4}
+                .Select(s => TimeSpan.FromSeconds(s))
+                .ToArray();
+
+            var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
+            
+            try
+            {
+                new Retrier(peekLockRenewalBackoffTimes)
+                    .RetryOn<Exception>()
+                    .TolerateInnerExceptionsAsWell()
+                    .DoNotRetryOn<MessageLockLostException>()
+                    .OnRetryException((exception, delay, faultNumber) => log.Warn("Attempt no. {0} to renew the peek lock on message {1} failed: {2} - will wait {3} before trying again", 
+                        faultNumber, messageId, exception, delay))
+                    .Do(messageToRenew.RenewLock);
+
+                context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
+
+                log.Info("Peek lock renewed on message {0} - current lease is {1:0.0} seconds old", messageId,
+                    TimeSinceLastLockRenewal(context).TotalSeconds);
+            }
+            catch (Exception exception)
+            {
+                log.Warn("Could not renew peek lock on message {0}: {1}", messageId, exception);
+            }
+        }
+
+        static TimeSpan TimeSinceLastLockRenewal(ITransactionContext context)
+        {
+            var timeOfLastRenewal = (DateTime)context[AzureServiceBusReceivedMessagePeekLockRenewedTime];
+            var timeSinceLastRenewal = DateTime.UtcNow - timeOfLastRenewal;
+            return timeSinceLastRenewal;
         }
 
         Timer ScheduleInvocation(Action actionToCall, TimeSpan interval)
@@ -347,24 +365,6 @@ namespace Rebus.AzureServiceBus.Queues
 
                 if (messagesToSend.Any())
                 {
-                    // if we have received a message, ensure that we keep the message alive for the duration of the commit phase
-                    if (receivedMessageOrNull != null)
-                    {
-                        var renewLeaseTimer = new Timer();
-                        stuffToDispose.Add(renewLeaseTimer);
-                        renewLeaseTimer.Interval = 40000;
-                        renewLeaseTimer.Elapsed += (o, ea) => RenewLease(context);
-                        renewLeaseTimer.Start();
-
-                        var lastRenewalTime = (DateTime)context[AzureServiceBusReceivedMessagePeekLockRenewedTime];
-
-                        // if we've already spent a significant amount of time running the handler, make sure to renew the message right away
-                        if (DateTime.UtcNow - lastRenewalTime > TimeSpan.FromSeconds(15))
-                        {
-                            RenewLease(context);
-                        }
-                    }
-
                     var messagesForEachRecipient = messagesToSend
                         .GroupBy(g => g.Item1)
                         .ToList();
@@ -376,18 +376,20 @@ namespace Rebus.AzureServiceBus.Queues
 
                         foreach (var batch in messagesForThisRecipient.Partition(100))
                         {
-                            var brokeredMessages = batch
+                            var brokeredMessagesInThisBatch = batch
                                 .Select(envelope => new BrokeredMessage(envelope))
                                 .ToList();
 
-                            stuffToDispose.AddRange(brokeredMessages);
+                            stuffToDispose.AddRange(brokeredMessagesInThisBatch);
 
                             new Retrier(backoffTimes)
                                 .RetryOn<ServerBusyException>()
                                 .RetryOn<MessagingCommunicationException>()
                                 .RetryOn<TimeoutException>()
                                 .TolerateInnerExceptionsAsWell()
-                                .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessages));
+                                .OnRetryException((exception, delay, faultNumber) => log.Warn("An exception occurred while making attempt no. {0} to send batch of {1} messages to {2} (out of a total of {3} messages): {4} - will wait {5} and try again",
+                                    faultNumber, brokeredMessagesInThisBatch.Count, destinationQueueName, messagesToSend.Count, exception, delay))
+                                .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessagesInThisBatch));
                         }
                     }
                 }
@@ -416,21 +418,6 @@ namespace Rebus.AzureServiceBus.Queues
             finally
             {
                 stuffToDispose.ForEach(d => d.Dispose());
-            }
-        }
-
-        void RenewLease(ITransactionContext context)
-        {
-            var renewLeaseAction = context[AzureServiceBusRenewLeaseAction] as Action;
-            if (renewLeaseAction == null) return;
-
-            try
-            {
-                renewLeaseAction();
-            }
-            catch (Exception exception)
-            {
-                log.Warn("An error occurred while attempting to auto-renew the lease during commit: {0}", exception);
             }
         }
 

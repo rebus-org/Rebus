@@ -57,9 +57,9 @@ namespace Rebus.Tests.Bugs
         [TestCase(1)]
         [TestCase(10)]
         [TestCase(100)]
-        [TestCase(150, Description="Max batch size within tx=100")]
-        [TestCase(200, Description="Max batch size within tx=100")]
-        [TestCase(1000, Description="Max batch size within tx=100")]
+        [TestCase(150, Description = "Max batch size within tx=100")]
+        [TestCase(200, Description = "Max batch size within tx=100")]
+        [TestCase(1000, Description = "Max batch size within tx=100")]
         public void RunIt(int requestCount)
         {
             // arrange

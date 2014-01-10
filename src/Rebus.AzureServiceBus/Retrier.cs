@@ -9,6 +9,8 @@ namespace Rebus.AzureServiceBus
     {
         readonly TimeSpan[] backoffTimes;
         readonly List<Type> toleratedExceptionTypes = new List<Type>();
+        readonly List<Type> nonToleratedExceptionTypes = new List<Type>();
+        readonly List<Action<Exception, TimeSpan, int>> retryExceptionCallbacks = new List<Action<Exception, TimeSpan, int>>();
         bool scanInnerExceptions;
 
         public Retrier(params TimeSpan[] backoffTimes)
@@ -22,9 +24,21 @@ namespace Rebus.AzureServiceBus
             return this;
         }
 
+        public Retrier DoNotRetryOn<TException>() where TException : Exception
+        {
+            nonToleratedExceptionTypes.Add(typeof(TException));
+            return this;
+        }
+
         public Retrier RetryOn<TException>() where TException : Exception
         {
             toleratedExceptionTypes.Add(typeof(TException));
+            return this;
+        }
+
+        public Retrier OnRetryException(Action<Exception, TimeSpan, int> exceptionCallback)
+        {
+            retryExceptionCallbacks.Add(exceptionCallback);
             return this;
         }
 
@@ -52,12 +66,21 @@ namespace Rebus.AzureServiceBus
 
                     if (ExceptionCanBeTolerated(e))
                     {
-                        Thread.Sleep(backoffTimes[backoffIndex++]);
+                        var timeToSleep = backoffTimes[backoffIndex++];
+
+                        retryExceptionCallbacks.ForEach(c => c(e, timeToSleep, backoffIndex));
+
+                        Thread.Sleep(timeToSleep);
                     }
                     else
                     {
-                        throw new AggregateException(String.Format("Operation did not complete within {0} retries which resulted in exceptions at the following times: {1}",
-                            backoffTimes.Length, String.Join(", ", caughtExceptions.Select(c => c.Time))), caughtExceptions.Select(c => c.Value));
+                        if (caughtExceptions.Count <= 1) throw;
+                        
+                        var message =
+                            string.Format("Operation did not complete within {0} retries which resulted in exceptions at the following times: {1}",
+                                backoffTimes.Length, String.Join(", ", caughtExceptions.Select(c => c.Time)));
+
+                        throw new AggregateException(message, caughtExceptions.Select(c => c.Value));
                     }
                 }
             }
@@ -69,8 +92,14 @@ namespace Rebus.AzureServiceBus
             {
                 var exceptionType = exceptionToCheck.GetType();
 
-                // if the exception can be tolerated...
-                if (toleratedExceptionTypes.Contains(exceptionType))
+                // non-tolerated exception types are concrete and cannot be tolerated
+                if (nonToleratedExceptionTypes.Contains(exceptionType))
+                {
+                    return false;
+                }
+
+                // "toleratable" exceptions can be inherited - accept those as well
+                if (toleratedExceptionTypes.Any(type => type.IsAssignableFrom(exceptionType)))
                 {
                     return true;
                 }
@@ -81,7 +110,7 @@ namespace Rebus.AzureServiceBus
                     : null;
             }
 
-            // exception cannot be tolerated
+            // exception could not be tolerated
             return false;
         }
     }
