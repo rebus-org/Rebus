@@ -2,9 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting;
 using System.ServiceModel;
-using System.Threading;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
@@ -38,7 +36,7 @@ namespace Rebus.AzureServiceBus.Queues
         readonly NamespaceManager namespaceManager;
         readonly string connectionString;
 
-        TimeSpan peekLockRenewalInterval = TimeSpan.FromSeconds(50);
+        TimeSpan peekLockRenewalInterval = TimeSpan.FromMinutes(4.5);
 
         bool disposed;
 
@@ -81,14 +79,23 @@ namespace Rebus.AzureServiceBus.Queues
 
             try
             {
-                log.Info("Queue '{0}' does not exist - it will be created now", queueName);
 
-                namespaceManager.CreateQueue(queueName);
+                var lockDuration = TimeSpan.FromMinutes(5);
+                var maxDeliveryCount = 10;
+
+                log.Info("Queue '{0}' does not exist - it will be created now (with lockDuration={1} and maxDeliveryCount={2})",
+                    queueName, lockDuration, maxDeliveryCount);
+
+                namespaceManager.CreateQueue(new QueueDescription(queueName)
+                {
+                    LockDuration = lockDuration,
+                    MaxDeliveryCount = maxDeliveryCount,
+                    UserMetadata = string.Format("Queue created by Rebus {0}", DateTime.Now)
+                });
             }
             catch
             {
-                // just assume the call failed because the topic already exists - if GetTopic below
-                // fails, then something must be wrong, and then we just want to fail immediately
+                // just assume the call failed because the queue already exists
             }
         }
 
@@ -215,10 +222,7 @@ namespace Rebus.AzureServiceBus.Queues
                         log.Info("Will attempt to abandon message {0}", messageId);
                         brokeredMessage.Abandon();
                     }
-                    catch (Exception abandonException)
-                    {
-                        log.Warn("Got exception while abandoning message: {0}", abandonException);
-                    }
+                    catch { }
 
                     throw new ApplicationException(message, receiveException);
                 }
@@ -250,30 +254,44 @@ namespace Rebus.AzureServiceBus.Queues
 
         void RenewPeekLock(ITransactionContext context, string messageId)
         {
-            var peekLockRenewalBackoffTimes = new[] {2, 3, 4}
-                .Select(s => TimeSpan.FromSeconds(s))
-                .ToArray();
+            if (context["currently-renewing-the-peek-lock"] != null) return;
 
-            var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
-            
             try
             {
-                new Retrier(peekLockRenewalBackoffTimes)
-                    .RetryOn<Exception>()
-                    .TolerateInnerExceptionsAsWell()
-                    .DoNotRetryOn<MessageLockLostException>()
-                    .OnRetryException((exception, delay, faultNumber) => log.Warn("Attempt no. {0} to renew the peek lock on message {1} failed: {2} - will wait {3} before trying again", 
-                        faultNumber, messageId, exception, delay))
-                    .Do(messageToRenew.RenewLock);
+                context["currently-renewing-the-peek-lock"] = true;
 
-                context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
+                var peekLockRenewalBackoffTimes = new[] { 1, 2, 5, 10, 10, 10 }
+                    .Select(s => TimeSpan.FromSeconds(s))
+                    .ToArray();
 
-                log.Info("Peek lock renewed on message {0} - current lease is {1:0.0} seconds old", messageId,
-                    TimeSinceLastLockRenewal(context).TotalSeconds);
+                var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
+
+                try
+                {
+                    new Retrier(peekLockRenewalBackoffTimes)
+                        .RetryOn<Exception>()
+                        .TolerateInnerExceptionsAsWell()
+                        .DoNotRetryOn<MessageLockLostException>()
+                        .OnRetryException(
+                            (exception, delay, faultNumber) =>
+                                log.Warn(
+                                    "Attempt no. {0} to renew the peek lock on message {1} failed: {2} - will wait {3} before trying again",
+                                    faultNumber, messageId, exception, delay))
+                        .Do(messageToRenew.RenewLock);
+
+                    context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
+
+                    log.Info("Peek lock renewed on message {0} - current lease is {1:0.0} seconds old", messageId,
+                        TimeSinceLastLockRenewal(context).TotalSeconds);
+                }
+                catch (Exception exception)
+                {
+                    log.Warn("Could not renew peek lock on message {0}: {1}", messageId, exception);
+                }
             }
-            catch (Exception exception)
+            finally
             {
-                log.Warn("Could not renew peek lock on message {0}: {1}", messageId, exception);
+                context["currently-renewing-the-peek-lock"] = null;
             }
         }
 
