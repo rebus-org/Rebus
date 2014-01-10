@@ -178,6 +178,7 @@ namespace Rebus.AzureServiceBus.Queues
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
                         var peekLockRenewalAction = (Action)(() => RenewPeekLock(context, messageId));
 
+                        context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
                         context[AzureServiceBusRenewLeaseAction] = peekLockRenewalAction;
 
                         if (peekLockRenewalInterval > TimeSpan.FromSeconds(1))
