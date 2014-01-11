@@ -259,3 +259,7 @@
 
 * `XmlSubscriptionStorage` automatically creates directory pointed to by the subscription XML file path - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
 * Made the Rabbit transport throw out its subscription and underlying model when an end-of-stream is detected
+
+## 0.54.4
+
+* Nothing changed - pushed new version because NuGet.org had a seisure the other day and 0.54.3 wasn't properly uploaded
