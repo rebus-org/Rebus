@@ -175,7 +175,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -196,7 +196,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -208,25 +208,18 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
 
-            if (configureAdditionalBehavior.AuditMessages)
-            {
-                AttachHeader(message, "published-message-must-be-copied", "");
-            }
-
             var multicastTransport = sendMessages as IMulticastTransport;
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
+                var eventName = multicastTransport.GetEventName(message.GetType());
+                InternalSend(new List<string> { eventName }, new List<object> { message }, published: true);
                 return;
             }
 
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
-            foreach (var subscriberInputQueue in subscriberEndpoints)
-            {
-                InternalSend(subscriberInputQueue, new List<object> { message });
-            }
+            InternalSend(subscriberEndpoints.ToList(), new List<object> { message }, published: true);
         }
 
         internal void PossiblyAttachSagaIdToRequest<TCommand>(TCommand message)
@@ -387,7 +380,7 @@ namespace Rebus.Bus
 
             var messages = new List<object> { timeoutRequest };
 
-            InternalSend(timeoutManagerAddress, messages);
+            InternalSend(new List<string> { timeoutManagerAddress }, messages);
         }
 
         /// <summary>
@@ -462,7 +455,7 @@ namespace Rebus.Bus
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> { message });
+            InternalSend(new List<string> { destinationQueue }, new List<object> { message });
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -547,7 +540,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
             }
 
-            InternalSend(returnAddress, messages);
+            InternalSend(new List<string> { returnAddress }, messages);
         }
 
         /// <summary>
@@ -556,7 +549,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        internal void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(List<string> destinations, List<object> messages, bool published = false)
         {
             if (!started)
             {
@@ -572,7 +565,10 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
 
-            messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+            foreach (var destination in destinations)
+            {
+                messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+            }
 
             var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
             var headers = MergeHeaders(messageToSend);
@@ -623,7 +619,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             messageToSend.Headers = headers;
 
-            InternalSend(destination, messageToSend);
+            InternalSend(destinations, messageToSend, published);
         }
 
         internal string GetInputQueueAddress()
@@ -639,41 +635,41 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// <summary>
         /// Internal send method - this one must not change the headers!
         /// </summary>
-        internal void InternalSend(string destination, Message messageToSend)
+        internal void InternalSend(List<string> destinations, Message messageToSend, bool published = false)
         {
-            log.Info("Sending {0} to {1}", messageToSend, destination);
+            log.Info("Sending {0} to {1}", messageToSend, string.Join(", ", destinations));
 
             var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            InternalSend(destination, transportMessage);
+            InternalSend(destinations, transportMessage);
+
+            if (configureAdditionalBehavior.AuditMessages && published)
+            {
+                transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
+                transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
+
+                var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+                InternalSend(new List<string>{auditQueueName}, transportMessage);
+            }
         }
 
-        internal void InternalSend(string destination, TransportMessageToSend transportMessage)
+        internal void InternalSend(List<string> destinations, TransportMessageToSend transportMessage)
         {
             var transactionContext = GetTransactionContext();
-            try
-            {
-                var publishedMessageMustBeAudited = transportMessage.Headers.ContainsKey("published-message-must-be-copied");
-                if (publishedMessageMustBeAudited)
-                {
-                    transportMessage.Headers.Remove("published-message-must-be-copied");
-                }
-                sendMessages.Send(destination, transportMessage, transactionContext);
 
-                if (publishedMessageMustBeAudited)
-                {
-                    transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
-                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
-                    transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
-
-                    sendMessages.Send(configureAdditionalBehavior.AuditQueueName, transportMessage, transactionContext);
-                }
-            }
-            catch (Exception exception)
+            foreach (var destination in destinations)
             {
-                throw new ApplicationException(string.Format(
-                    "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
-                    transportMessage, destination, transactionContext), exception);
+                try
+                {
+                    sendMessages.Send(destination, transportMessage, transactionContext);
+                }
+                catch (Exception exception)
+                {
+                    throw new ApplicationException(string.Format(
+                        "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
+                        transportMessage, destination, transactionContext), exception);
+                }
             }
         }
 

@@ -210,13 +210,13 @@ namespace Rebus.Configuration
                 return;
             }
 
-            var forwardableMessage = message.ToForwardableMessage();
+            var messageCopy = message.ToForwardableMessage();
 
-            forwardableMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
-            forwardableMessage.Headers[Headers.AuditSourceQueue] = rebusBus.GetInputQueueAddress();
-            forwardableMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
+            messageCopy.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
+            messageCopy.Headers[Headers.AuditSourceQueue] = rebusBus.GetInputQueueAddress();
+            messageCopy.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
 
-            rebusBus.InternalSend(auditQueueName, forwardableMessage);
+            rebusBus.InternalSend(new List<string> { auditQueueName }, messageCopy);
         }
 
         public void MessagePublished(IBus bus, object message, string auditQueueName, Dictionary<string, object> headers)
