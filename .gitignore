@@ -18,3 +18,6 @@ _ReSharper.*
 ~$*
 
 src/Rebus.Tests/azure_connection_string.txt
+*.ncrunchproject
+
+*.ncrunchsolution
