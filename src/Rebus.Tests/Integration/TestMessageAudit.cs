@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
@@ -13,7 +15,7 @@ using Message = Rebus.Messages.Message;
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
-    public class TestMessageAudit : FixtureBase
+    public class TestMessageAudit : FixtureBase, IDetermineMessageOwnership
     {
         const string InputQueueName = "test.audit.input";
         const string AuditQueueName = "test.audit.audit";
@@ -25,19 +27,38 @@ namespace Rebus.Tests.Integration
             adapter = new BuiltinContainerAdapter();
             disposables = new List<IDisposable> {adapter};
 
+            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(AuditQueueName));
+            MsmqUtil.PurgeQueue(AuditQueueName);
+            MsmqUtil.PurgeQueue(InputQueueName);
+
             Configure.With(adapter)
+                .Logging(l => l.ColoredConsole(minLevel:LogLevel.Warn))
                 .Transport(t => t.UseMsmq(InputQueueName, "error"))
                 .Behavior(b => b.EnableMessageAudit(AuditQueueName))
                 .CreateBus()
                 .Start(1);
-
-            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(AuditQueueName));
-            MsmqUtil.PurgeQueue(AuditQueueName);
         }
 
         static string InputQueueAddress
         {
             get { return InputQueueName + "@" + Environment.MachineName; }
+        }
+
+        void SetUpSubscriberThatDoesNotAuditMessages(string inputQueueName)
+        {
+            var adapter = new BuiltinContainerAdapter();
+            disposables.Add(adapter);
+
+            adapter.Handle<string>(s => { });
+
+            var bus = Configure.With(adapter)
+                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
+                .Transport(t => t.UseMsmq(inputQueueName, "error"))
+                .MessageOwnership(o => o.Use(this))
+                .CreateBus()
+                .Start();
+
+            bus.Subscribe<string>();
         }
 
         [Test]
@@ -53,7 +74,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.SendLocal("yo!");
             
             // assert
-            var message = GetMessageFrom(AuditQueueName);
+            var message = GetMessagesFrom(AuditQueueName).Single();
             
             message.ShouldNotBe(null);
 
@@ -75,11 +96,13 @@ namespace Rebus.Tests.Integration
             var fakeTime = DateTime.UtcNow;
             TimeMachine.FixTo(fakeTime);
 
+            Thread.Sleep(1.Seconds());
+
             // act
             adapter.Bus.Publish("yo!");
             
             // assert
-            var message = GetMessageFrom(AuditQueueName);
+            var message = GetMessagesFrom(AuditQueueName).Single();
             
             message.ShouldNotBe(null);
 
@@ -94,6 +117,32 @@ namespace Rebus.Tests.Integration
             headers.ShouldContainKeyAndValue(Headers.AuditSourceQueue, InputQueueAddress);
         }
 
+        [Test]
+        public void PublishedMessageIsCopiedOnlyOnceRegardlessOfNumberOfSubscribers()
+        {
+            // arrange
+            var fakeTime = DateTime.UtcNow;
+            TimeMachine.FixTo(fakeTime);
+
+            SetUpSubscriberThatDoesNotAuditMessages("test.audit.subscriber1");
+            SetUpSubscriberThatDoesNotAuditMessages("test.audit.subscriber2");
+            SetUpSubscriberThatDoesNotAuditMessages("test.audit.subscriber3");
+
+            // act
+            adapter.Bus.Publish("yo!");
+            
+            // assert
+            var messages = GetMessagesFrom(AuditQueueName).ToList();
+
+            Console.WriteLine(string.Join(Environment.NewLine, messages));
+
+            messages.Count.ShouldBe(4);
+
+            var stringMessages = messages.Where(m => m.Messages[0] is string).ToList();
+
+            Assert.That(stringMessages.Count, Is.EqualTo(1), "We should have only one single copy of the published messages!");
+        }
+
         protected override void DoTearDown()
         {
             disposables.ForEach(d => d.Dispose());
@@ -102,29 +151,50 @@ namespace Rebus.Tests.Integration
             DeleteQueue(AuditQueueName);
         }
 
-        Message GetMessageFrom(string queueName)
+        IEnumerable<Message> GetMessagesFrom(string queueName)
         {
             using (var queue = new MessageQueue(MsmqUtil.GetPath(queueName)))
             {
                 queue.Formatter = new RebusTransportMessageFormatter();
                 queue.MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter;
 
-                try
-                {
-                    var receivedTransportMessage = (ReceivedTransportMessage) queue.Receive(3.Seconds()).Body;
-                    var serializer = new JsonMessageSerializer();
+                var gotMessage = true;
 
-                    return serializer.Deserialize(receivedTransportMessage);
-                }
-                catch (MessageQueueException exception)
+                do
                 {
-                    if (exception.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
+                    Message messageToReturn = null;
+                    try
                     {
-                        return null;
+                        var msmqMessage = queue.Receive(3.Seconds());
+                        if (msmqMessage == null)
+                        {
+                            yield break;
+                        }
+                        var receivedTransportMessage = (ReceivedTransportMessage) msmqMessage.Body;
+                        var serializer = new JsonMessageSerializer();
+
+                        messageToReturn = serializer.Deserialize(receivedTransportMessage);
+                    }
+                    catch (MessageQueueException exception)
+                    {
+                        if (exception.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
+                        {
+                            yield break;
+                        }
+
+                        throw;
                     }
 
-                    throw;
-                }
+                    if (messageToReturn != null)
+                    {
+                        gotMessage = true;
+                        yield return messageToReturn;
+                    }
+                    else
+                    {
+                        gotMessage = false;
+                    }
+                } while (gotMessage);
             }
         }
 
@@ -133,6 +203,11 @@ namespace Rebus.Tests.Integration
             if (!MsmqUtil.QueueExists(queueName)) return;
 
             MsmqUtil.Delete(queueName);
+        }
+
+        public string GetEndpointFor(Type messageType)
+        {
+            return InputQueueName;
         }
     }
 }
