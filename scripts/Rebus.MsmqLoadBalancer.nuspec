@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.MsmqLoadBalancer</id>
+    <version>0.0.1</version>
+    <title>Rebus.MsmqLoadBalancer</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides in implementation of a simple round-robin style load balancer for Rebus on MSMQ. Solves the same problem as the various "distributors" around, but with way less moving parts.</description>
+    <copyright>Copyright 2014</copyright>
+    <tags>rebus distributor load-balancing</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.MsmqLoadBalancer.dll" target="lib" />
+  </files>
+</package>
