@@ -279,3 +279,7 @@
 ## 0.54.8
 
 * Made `ConsoleLoggerFactory` public so it can be used e.g. from processes hosting the load balancer
+
+## 0.55.0
+
+* RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
