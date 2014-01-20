@@ -5,7 +5,6 @@ using System.Threading;
 using System.Transactions;
 using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.MsmqLoadBalancer
@@ -55,6 +54,11 @@ namespace Rebus.MsmqLoadBalancer
 
         public LoadBalancerService Start()
         {
+            if (!destinationQueueNames.Any())
+            {
+                throw new InvalidOperationException("Cannot start load balancer without adding at least one worker input queue!");
+            }
+
             log.Info("Starting load balancer");
 
             queue = new MsmqMessageQueue(inputQueueName);
