@@ -39,7 +39,9 @@ namespace Rebus.Tests.LoadBalancer
 
         protected override void DoTearDown()
         {
-            //queuesToReset.ForEach(MsmqUtil.Delete);
+            CleanUpTrackedDisposables();
+            
+            queuesToReset.ForEach(MsmqUtil.Delete);
         }
 
         [Test]
