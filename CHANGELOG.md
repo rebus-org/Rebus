@@ -275,3 +275,7 @@
 ## 0.54.7
 
 * Fixed logging in load balancer
+
+## 0.54.8
+
+* Made `ConsoleLoggerFactory` public so it can be used e.g. from processes hosting the load balancer
