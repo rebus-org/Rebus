@@ -263,3 +263,7 @@
 ## 0.54.4
 
 * Nothing changed - pushed new version because NuGet.org had a seisure the other day and 0.54.3 wasn't properly uploaded
+
+## 0.54.5
+
+* Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk](https://github.com/jasperdk)
