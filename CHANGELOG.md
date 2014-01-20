@@ -283,3 +283,7 @@
 ## 0.55.0
 
 * RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.55.1
+
+* Fixed Rabbit transport nuspec
