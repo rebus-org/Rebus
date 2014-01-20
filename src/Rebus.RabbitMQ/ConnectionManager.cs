@@ -51,7 +51,7 @@ namespace Rebus.RabbitMQ
                        {
                            Uri = s,
                            ClientProperties =
-                               new Hashtable
+                               new Dictionary<string, object>
                                    {
                                        {"Machine name", Environment.MachineName},
                                        {"User account", string.Format("{0}\\{1}", Environment.UserDomainName, Environment.UserName)},
