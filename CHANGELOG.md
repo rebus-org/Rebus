@@ -271,3 +271,7 @@
 ## 0.54.6
 
 * Added load balancer NuGet package
+
+## 0.54.7
+
+* Fixed logging in load balancer
