@@ -45,7 +45,7 @@ namespace Rebus.MsmqLoadBalancer
             this.numberOfWorkers = numberOfWorkers;
         }
 
-        public LoadBalancerService WithDestinationQueue(string destinationQueueName)
+        public LoadBalancerService AddDestinationQueue(string destinationQueueName)
         {
             log.Info("Adding '{0}' as a worker destination", destinationQueueName);
             destinationQueueNames.Add(destinationQueueName);
@@ -141,7 +141,7 @@ namespace Rebus.MsmqLoadBalancer
 
                             var destinationForThisMessage = getNextDestination();
 
-                            log.Debug("Received message {0} will be forwarded to {2}", message.Id, destinationForThisMessage);
+                            log.Debug("Received message {0} will be forwarded to {1}", message.Id, destinationForThisMessage);
 
                             queue.Send(destinationForThisMessage, message.ToForwardableMessage(), transactionContext);
 

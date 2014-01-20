@@ -73,7 +73,7 @@ namespace Rebus.Tests.LoadBalancer
             {
                 StartWorkerBus(queueName, workDone);
 
-                service.WithDestinationQueue(queueName);
+                service.AddDestinationQueue(queueName);
 
                 queuesToReset.Add(queueName);
             }
