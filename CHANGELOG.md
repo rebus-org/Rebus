@@ -267,3 +267,7 @@
 ## 0.54.5
 
 * Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk](https://github.com/jasperdk)
+
+## 0.54.6
+
+* Added load balancer NuGet package
