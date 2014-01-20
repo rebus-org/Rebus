@@ -5,12 +5,8 @@ using System.Linq;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.Logging;
-using Rebus.Persistence.InMemory;
 using Rebus.Persistence.SqlServer;
-using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Msmq;
@@ -28,8 +24,6 @@ namespace Rebus.Tests.Bugs
 
         List<IDisposable> toDispose;
 
-        protected RearrangeHandlersPipelineInspector pipelineInspector = new RearrangeHandlersPipelineInspector();
-
         protected override void DoSetUp()
         {
             toDispose = new List<IDisposable>();
@@ -39,37 +33,38 @@ namespace Rebus.Tests.Bugs
         protected override void DoTearDown()
         {
             toDispose.ForEach(b => b.Dispose());
+            toDispose.Clear();
         }
 
         [Test]
         public void CanPublishWithinTransactionScopeWhenProvidingTransactionLessConnectionHolder()
         {
             // arrange
-            var subscriptions = new SqlServerSubscriptionStorage(() =>
+            var subscriptionStorage = new SqlServerSubscriptionStorage(() =>
             {
                 var sqlConnection = new SqlConnection(ConnectionString);
                 sqlConnection.Open();
                 return ConnectionHolder.ForNonTransactionalWork(sqlConnection);
-            }
-                , SubscriptionsTableName)
-                .EnsureTableIsCreated();
+            }, SubscriptionsTableName);
 
-            var publisher = CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptions).Start(1);
+            subscriptionStorage.EnsureTableIsCreated();
+
+            var publisher = CreateBus(PublisherInputQueueName, subscriptionStorage);
 
             var subReceivedEvents = new List<int>();
 
-            var sub = CreateBus(SubscriberInputQueueName,
-                                 new HandlerActivatorForTesting()
-                                     .Handle<SomeEvent>(e => subReceivedEvents.Add(e.EventNumber)),
-                                     subscriptions).Start(1);
-            sub.Subscribe<SomeEvent>();
+            var sub = CreateBus(SubscriberInputQueueName, subscriptionStorage)
+                .Handle<SomeEvent>(e => subReceivedEvents.Add(e.EventNumber));
+
+            sub.Bus.Subscribe<SomeEvent>();
 
             // act
             Thread.Sleep(1.Seconds());
 
             using (var scope = new TransactionScope())
             {
-                publisher.Publish(new SomeEvent { EventNumber = 1 });
+                publisher.Bus.Publish(new SomeEvent { EventNumber = 1 });
+                
                 scope.Complete();
             }
 
@@ -83,23 +78,26 @@ namespace Rebus.Tests.Bugs
         public void CanPublishWithinTransactionScopeWhenProvidingDefaultConnectionHolder()
         {
             // arrange
-            var subscriptionStorage = new SqlServerSubscriptionStorage(ConnectionString, SubscriptionsTableName).EnsureTableIsCreated();
-            var publisher = CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage).Start(1);
+            var subscriptionStorage = new SqlServerSubscriptionStorage(ConnectionString, SubscriptionsTableName);
+
+            subscriptionStorage.EnsureTableIsCreated();
+
+            var publisher = CreateBus(PublisherInputQueueName, subscriptionStorage);
 
             var subReceivedEvents = new List<int>();
 
-            var sub = CreateBus(SubscriberInputQueueName,
-                                 new HandlerActivatorForTesting()
-                                     .Handle<SomeEvent>(e => subReceivedEvents.Add(e.EventNumber)),
-                                     subscriptionStorage).Start(1);
-            sub.Subscribe<SomeEvent>();
+            var sub = CreateBus(SubscriberInputQueueName, subscriptionStorage)
+                .Handle<SomeEvent>(e => subReceivedEvents.Add(e.EventNumber));
+
+            sub.Bus.Subscribe<SomeEvent>();
 
             // act
             Thread.Sleep(1.Seconds());
 
             using (var scope = new TransactionScope())
             {
-                publisher.Publish(new SomeEvent { EventNumber = 1 });
+                publisher.Bus.Publish(new SomeEvent { EventNumber = 1 });
+                
                 scope.Complete();
             }
 
@@ -109,23 +107,22 @@ namespace Rebus.Tests.Bugs
             subReceivedEvents.ShouldBe(new[] { 1 }.ToList());
         }
 
-        protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions)
+        protected BuiltinContainerAdapter CreateBus(string inputQueueName, IStoreSubscriptions subscriptionStorage)
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false);
-            var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
+            MsmqUtil.PurgeQueue(inputQueueName);
             MsmqUtil.PurgeQueue("error");
-            var serializer = new JsonMessageSerializer();
-            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
-                                   storeSubscriptions, new InMemorySagaPersister(),
-                                   this, serializer, pipelineInspector,
-                                   new ErrorTracker("error"),
-                                   null,
-                                   new ConfigureAdditionalBehavior());
 
-            EnsureProperDisposal(bus);
-            EnsureProperDisposal(messageQueue);
+            var adapter = new BuiltinContainerAdapter();
+            
+            EnsureProperDisposal(adapter);
+            
+            Configure.With(adapter)
+                .Transport(t => t.UseMsmq(inputQueueName, "error"))
+                .MessageOwnership(o => o.Use(this))
+                .CreateBus()
+                .Start(1);
 
-            return bus;
+            return adapter;
         }
 
         protected void EnsureProperDisposal(IDisposable bus)
