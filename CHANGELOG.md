@@ -263,3 +263,23 @@
 ## 0.54.4
 
 * Nothing changed - pushed new version because NuGet.org had a seisure the other day and 0.54.3 wasn't properly uploaded
+
+## 0.54.5
+
+* Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk](https://github.com/jasperdk)
+
+## 0.54.6
+
+* Added load balancer NuGet package
+
+## 0.54.7
+
+* Fixed logging in load balancer
+
+## 0.54.8
+
+* Made `ConsoleLoggerFactory` public so it can be used e.g. from processes hosting the load balancer
+
+## 0.55.0
+
+* RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)

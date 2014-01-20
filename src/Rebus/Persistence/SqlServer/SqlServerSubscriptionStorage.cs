@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Transactions;
 using Rebus.Logging;
 using Rebus.Transports.Sql;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -39,8 +40,13 @@ namespace Rebus.Persistence.SqlServer
                 {
                     var connection = new SqlConnection(connectionString);
                     connection.Open();
-                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
+
+                    if (Transaction.Current == null)
+                    {
+                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
+                    }
+                    return ConnectionHolder.ForNonTransactionalWork(connection);
                 };
             commitAction = h => h.Commit();
             rollbackAction = h => h.RollBack();

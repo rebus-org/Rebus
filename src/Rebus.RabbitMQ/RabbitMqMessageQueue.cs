@@ -15,6 +15,8 @@ using Rebus.Shared;
 
 namespace Rebus.RabbitMQ
 {
+    using System.Linq;
+
     /// <summary>
     /// RabbitMQ transport implementation that adds (optional) multicast capabilities to <see cref="IDuplexTransport"/>.
     /// </summary>
@@ -399,7 +401,7 @@ namespace Rebus.RabbitMQ
                 {
                     var topic = GetEventName(messageType);
                     log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Hashtable());
+                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
                 }
                 return;
             }
@@ -410,7 +412,7 @@ namespace Rebus.RabbitMQ
                 {
                     var topic = GetEventName(messageType);
                     log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Hashtable());
+                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
                 }
             }
             catch (Exception e)
@@ -583,7 +585,7 @@ namespace Rebus.RabbitMQ
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
-            var arguments = new Hashtable { { "x-ha-policy", "all" } }; //< enable queue mirroring
+            var arguments = new Dictionary<string, object>() { { "x-ha-policy", "all" } }; //< enable queue mirroring
 
             log.Debug("Declaring queue '{0}'", queueName);
             model.QueueDeclare(queueName, durable: true,
@@ -690,7 +692,7 @@ namespace Rebus.RabbitMQ
             if (message.Headers != null)
             {
                 props.Headers = message.Headers
-                    .ToHashtable(kvp => kvp.Key, kvp => PossiblyEncode(kvp.Value));
+                    .ToDictionary(kvp => kvp.Key, kvp => PossiblyEncode(kvp.Value));
 
                 if (message.Headers.ContainsKey(Headers.MessageId))
                 {

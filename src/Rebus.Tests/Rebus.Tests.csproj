@@ -150,6 +150,7 @@
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
+    <Compile Include="Bugs\TestUsingTransactionScope.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
     <Compile Include="Bugs\DoesNotCrashWhenRunningWithSingleRabbitThread.cs" />
@@ -234,6 +235,7 @@
     <Compile Include="Integration\TestSimpleSqlSetup.cs" />
     <Compile Include="Integration\TestSubscribeUnsubscribe.cs" />
     <Compile Include="Integration\TestWebCallbacks.cs" />
+    <Compile Include="LoadBalancer\TestMsmqLoadBalancer.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusAndOneWayClient.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
@@ -398,6 +400,10 @@
     <ProjectReference Include="..\Rebus.MongoDb\Rebus.MongoDb.csproj">
       <Project>{81686CC0-5387-4990-AF61-00CDAA972B81}</Project>
       <Name>Rebus.MongoDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.MsmqLoadBalancer\Rebus.MsmqLoadBalancer.csproj">
+      <Project>{C2359E91-35C1-4D48-B089-97EF739A08F5}</Project>
+      <Name>Rebus.MsmqLoadBalancer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Ninject\Rebus.Ninject.csproj">
       <Project>{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}</Project>
