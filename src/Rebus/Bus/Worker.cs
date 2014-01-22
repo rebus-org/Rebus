@@ -530,22 +530,9 @@ namespace Rebus.Bus
         /// <summary>
         /// Create a backoff helper that matches the given behavior.
         /// </summary>
-        static BackoffHelper CreateBackoffHelper(BackoffBehavior backoffBehavior)
+        static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
         {
-            switch (backoffBehavior)
-            {
-                case BackoffBehavior.LowLatency:
-                    return new BackoffHelper(new[] { TimeSpan.FromMilliseconds(20) });
-
-                default:
-                    return new BackoffHelper(Enumerable.Empty<TimeSpan>()
-                        .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // first 2 s
-                        .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 10)) // next 10 s
-                        .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(5000), 1))) // keep waiting for 5 s each time
-                    {
-                        LoggingDisabled = true
-                    };
-            }
+            return new BackoffHelper(backoffTimes);
         }
     }
 }

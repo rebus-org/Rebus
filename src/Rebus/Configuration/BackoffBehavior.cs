@@ -1,24 +1,69 @@
-﻿namespace Rebus.Configuration
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Rebus.Bus;
+
+namespace Rebus.Configuration
 {
     /// <summary>
     /// Defines the worker thread back off behavior.
     /// </summary>
-    public enum BackoffBehavior
+    public class BackoffBehavior : IEnumerable<TimeSpan>
     {
-        /// <summary>
-        /// Default behavior which waits longer and longer on each empty message received.
-        /// </summary>
-        /// <remarks>
-        /// Waits a maximum of 5 seconds.
-        /// </remarks>
-        Default,
+        public static BackoffBehavior Default()
+        {
+            return new BackoffBehavior
+            {
+                // first 2 s
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
+                TimeSpan.FromMilliseconds(200),
 
-        /// <summary>
-        /// Low latency behavior which waits a constant time on each empty message received.
-        /// </summary>
-        /// <remarks>
-        /// Waits a maximum of 20 milliseconds.
-        /// </remarks>
-        LowLatency
+                // next 10 s
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+                TimeSpan.FromMilliseconds(1000),
+
+                // the rest of the time
+                TimeSpan.FromMilliseconds(5000)
+            };
+        }
+
+        public static BackoffBehavior LowLatency()
+        {
+            return new BackoffBehavior { TimeSpan.FromMilliseconds(20) };
+        }
+
+        readonly List<TimeSpan> backoffTimes = new List<TimeSpan>();
+
+        public void Add(TimeSpan backoffTime)
+        {
+            backoffTimes.Add(backoffTime);
+        }
+
+        public IEnumerator<TimeSpan> GetEnumerator()
+        {
+            return backoffTimes.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }

@@ -79,7 +79,7 @@ namespace Rebus.Configuration
         /// </summary>
         public RebusBehaviorConfigurer SetLowLatencyBackoffBehavior()
         {
-            Backbone.AdditionalBehavior.BackoffBehavior = BackoffBehavior.LowLatency;
+            Backbone.AdditionalBehavior.BackoffBehavior = BackoffBehavior.LowLatency();
             return this;
         }
     }
