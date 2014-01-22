@@ -77,12 +77,13 @@
     <Compile Include="Bus\TransactionContext.cs" />
     <Compile Include="Bus\TxBomkarl.cs" />
     <Compile Include="Bus\UnitOfWorkCommitException.cs" />
+    <Compile Include="Configuration\BackoffBehavior.cs" />
     <Compile Include="Configuration\BaseConfigurer.cs" />
     <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
-    <Compile Include="Configuration\IConfigureAdditionalBehavior.cs" />
+    <Compile Include="Configuration\ConfigureAdditionalBehavior.cs" />
     <Compile Include="Configuration\JsonSerializationOptions.cs" />
     <Compile Include="Configuration\RebusBehaviorConfigurer.cs" />
     <Compile Include="Configuration\RebusTimeoutsConfigurer.cs" />
