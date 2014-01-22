@@ -287,3 +287,7 @@
 ## 0.55.1
 
 * Fixed Rabbit transport nuspec
+
+## 0.56.0
+
+* Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
