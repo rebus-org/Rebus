@@ -15,7 +15,7 @@ using Shouldly;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class TestUsingTransactionScope : SqlServerFixtureBase, IDetermineMessageOwnership
     {
         const string PublisherInputQueueName = "test.sub-unsub.publisher";
