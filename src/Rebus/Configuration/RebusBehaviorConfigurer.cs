@@ -72,5 +72,15 @@ namespace Rebus.Configuration
                 });
             return this;
         }
+
+        /// <summary>
+        /// Sets the backoff behavior to the low latency behavior. This lets Rebus check the message queue every 20ms
+        /// for new messages. Do note, this increases the load on the message queue.
+        /// </summary>
+        public RebusBehaviorConfigurer SetLowLatencyBackoffBehavior()
+        {
+            Backbone.AdditionalBehavior.BackoffBehavior = BackoffBehavior.LowLatency();
+            return this;
+        }
     }
 }

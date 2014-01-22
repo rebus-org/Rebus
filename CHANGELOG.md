@@ -254,3 +254,40 @@
 
 * Nudged order of disposal and logging inside Azure Service Bus transport
 * Warning when sending > 90 messages with Azure Service Bus transport + `InvalidOperationException` when > 100 (because of a limitation in Azure Service bus)
+
+## 0.54.3
+
+* `XmlSubscriptionStorage` automatically creates directory pointed to by the subscription XML file path - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+* Made the Rabbit transport throw out its subscription and underlying model when an end-of-stream is detected
+
+## 0.54.4
+
+* Nothing changed - pushed new version because NuGet.org had a seisure the other day and 0.54.3 wasn't properly uploaded
+
+## 0.54.5
+
+* Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk](https://github.com/jasperdk)
+
+## 0.54.6
+
+* Added load balancer NuGet package
+
+## 0.54.7
+
+* Fixed logging in load balancer
+
+## 0.54.8
+
+* Made `ConsoleLoggerFactory` public so it can be used e.g. from processes hosting the load balancer
+
+## 0.55.0
+
+* RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.55.1
+
+* Fixed Rabbit transport nuspec
+
+## 0.56.0
+
+* Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore](https://github.com/hagbarddenstore)

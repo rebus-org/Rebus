@@ -267,7 +267,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 using (var model = connection.CreateModel())
                 {
                     var props = model.CreateBasicProperties();
-                    props.Headers = new Hashtable
+                    props.Headers = new Dictionary<string, object>
                         {
                             {
                                 "someKey", new Hashtable
@@ -484,6 +484,9 @@ namespace Rebus.Tests.Transports.Rabbit
             using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
             using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
             {
+                recipientQueue.PurgeInputQueue();
+                senderQueue.PurgeInputQueue();
+
                 var id = Guid.NewGuid();
                 senderQueue.Send(recipientInputQueueName,
                                  serializer.Serialize(new Message

@@ -27,14 +27,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Helps with waiting an appropriate amount of time when no message is received
         /// </summary>
-        readonly BackoffHelper nullMessageReceivedBackoffHelper =
-            new BackoffHelper(Enumerable.Empty<TimeSpan>()
-                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // first 2 s
-                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 10)) // next 10 s
-                .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(5000), 1))) // keep waiting for 5 s each time
-            {
-                LoggingDisabled = true
-            };
+        readonly BackoffHelper nullMessageReceivedBackoffHelper;
 
         /// <summary>
         /// Helps with waiting an appropriate amount of time when something is wrong that makes us unable to do
@@ -109,6 +102,7 @@ namespace Rebus.Bus
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+            nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
@@ -531,6 +525,14 @@ namespace Rebus.Bus
         internal void DispatchGeneric<T>(T message)
         {
             dispatcher.Dispatch(message);
+        }
+
+        /// <summary>
+        /// Create a backoff helper that matches the given behavior.
+        /// </summary>
+        static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
+        {
+            return new BackoffHelper(backoffTimes);
         }
     }
 }

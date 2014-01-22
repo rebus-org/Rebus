@@ -14,6 +14,7 @@ namespace Rebus.Configuration
         {
             HandleMessagesInTransactionScope = false;
             OneWayClientMode = false;
+            BackoffBehavior = BackoffBehavior.Default();
         }
 
         /// <summary>
@@ -21,6 +22,12 @@ namespace Rebus.Configuration
         /// Defaults to false.
         /// </summary>
         public bool HandleMessagesInTransactionScope { get; set; }
+
+        /// <summary>
+        /// When a worker attempts to receive a message, and no message is available, the times specified in the
+        /// given backoff behavior will be used to cut the queueing system some slack.
+        /// </summary>
+        public BackoffBehavior BackoffBehavior { get; set; }
 
         /// <summary>
         /// Indicates whether the bus is in one-way client mode - i.e. if it can be used only for outgoing

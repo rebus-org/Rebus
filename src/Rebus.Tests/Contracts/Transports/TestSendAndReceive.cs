@@ -11,10 +11,9 @@ namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
     [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
-    [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
-    [TestFixture(typeof(AzureServiceBusMessageQueueFactory)), Category(TestCategories.Azure)]
-    [TestFixture(typeof(AzureServiceBusMessageQueueQueuesFactory)), Category(TestCategories.Azure)]
-    [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
+    [TestFixture(typeof(AzureMqTransportFactory), Category = TestCategories.Azure)]
+    [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
+    [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestSendAndReceive<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         static readonly TimeSpan MaximumExpectedQueueLatency = TimeSpan.FromMilliseconds(300);
@@ -70,7 +69,7 @@ namespace Rebus.Tests.Contracts.Transports
             5.Times(() =>
                 {
                     var receivedMessage = receiver.ReceiveMessage(new NoTransaction());
-                    
+
                     receivedMessage.ShouldBe(null);
                 });
         }
@@ -80,7 +79,7 @@ namespace Rebus.Tests.Contracts.Transports
         {
             // arrange
             var encoding = Encoding.UTF7;
-            
+
             // act
             sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") }, new NoTransaction());
             Thread.Sleep(MaximumExpectedQueueLatency);

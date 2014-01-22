@@ -19,10 +19,10 @@ namespace Rebus.Shared
         public static void PurgeQueue(string queueName)
         {
             var path = GetPath(queueName);
-            
+
             if (!MessageQueue.Exists(path)) return;
 
-            using(var messageQueue = new MessageQueue(path))
+            using (var messageQueue = new MessageQueue(path))
             {
                 messageQueue.Purge();
             }
@@ -72,7 +72,7 @@ namespace Rebus.Shared
         static bool IsIpAddress(string machineName)
         {
             var ipTokens = machineName.Split('.');
-            
+
             return ipTokens.Length == 4 && ipTokens.All(IsByte);
         }
 
@@ -90,7 +90,10 @@ namespace Rebus.Shared
 
         public static void Delete(string queueName)
         {
-            MessageQueue.Delete(GetPath(queueName));
+            var queuePath = GetPath(queueName);
+            if (!MessageQueue.Exists(queuePath)) return;
+
+            MessageQueue.Delete(queuePath);
         }
 
         static QueueInfo Parse(string queueName)
@@ -114,9 +117,9 @@ namespace Rebus.Shared
 
         in order to send the message to the private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
                 }
-                return new QueueInfo {QueueName = tokens[0], MachineName = tokens[1]};
+                return new QueueInfo { QueueName = tokens[0], MachineName = tokens[1] };
             }
-            return new QueueInfo {QueueName = queueName};
+            return new QueueInfo { QueueName = queueName };
         }
 
         public static void EnsureMessageQueueIsTransactional(string path)
@@ -191,7 +194,7 @@ If Rebus allowed you to work with non-transactional queues, it would not be able
             try
             {
                 return new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
-                    .Translate(typeof (NTAccount))
+                    .Translate(typeof(NTAccount))
                     .ToString();
             }
             catch (Exception e)
