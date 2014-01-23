@@ -5,7 +5,6 @@ using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.StorageClient;
 using Rebus.Logging;
 using Rebus.Shared;
-using Rebus.Transports.Msmq;
 
 namespace Rebus.Azure
 {

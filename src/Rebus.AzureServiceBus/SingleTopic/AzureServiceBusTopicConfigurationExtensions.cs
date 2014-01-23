@@ -10,11 +10,14 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.AzureServiceBus.SingleTopic
 {
-    public static class AzureServiceBusConfigurationExtensions
+    /// <summary>
+    /// Configuration extensions for configuring Rebus to use Azure Service Bus TOPICS as its transport.
+    /// </summary>
+    public static class AzureServiceBusTopicConfigurationExtensions
     {
         static ILog log;
 
-        static AzureServiceBusConfigurationExtensions()
+        static AzureServiceBusTopicConfigurationExtensions()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }

@@ -10,6 +10,9 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.AzureServiceBus.Queues
 {
+    /// <summary>
+    /// Configuration extensions for configuring Rebus to use Azure Service Bus QUEUES as its transport.
+    /// </summary>
     public static class AzureServiceBusConfigurationExtensions
     {
         static ILog log;
