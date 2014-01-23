@@ -6,6 +6,7 @@ using System.ServiceModel;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
+using Rebus.Shared;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.AzureServiceBus.Queues
@@ -28,6 +29,8 @@ namespace Rebus.AzureServiceBus.Queues
         const string AzureServiceBusReceivedMessagePeekLockRenewalTimer = "AzureServiceBusReceivedMessagePeekLockRenewalTimer";
 
         const string AzureServiceBusReceivedMessagePeekLockRenewedTime = "AzureServiceBusReceivedMessagePeekLockRenewedTime";
+        
+        const string CurrentlyRenewingThePeekLockItemKey = "currently-renewing-the-peek-lock";
 
         /// <summary>
         /// Will be used to cache queue clients for each queue that we need to communicate with
@@ -116,7 +119,7 @@ namespace Rebus.AzureServiceBus.Queues
                     .TolerateInnerExceptionsAsWell()
                     .Do(() =>
                         {
-                            using (var messageToSendImmediately = new BrokeredMessage(envelopeToSendImmediately))
+                            using (var messageToSendImmediately = CreateBrokeredMessage(envelopeToSendImmediately))
                             {
                                 GetClientFor(destinationQueueName).Send(messageToSendImmediately);
                             }
@@ -125,7 +128,8 @@ namespace Rebus.AzureServiceBus.Queues
                 return;
             }
 
-            // if the batch is null, we're doing tx send outside of a message handler
+            // if the batch is null, we're doing tx send outside of a message handler - this means
+            // that we must initialize the collection of messages to be sent
             if (context[AzureServiceBusMessageBatch] == null)
             {
                 context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
@@ -254,11 +258,11 @@ namespace Rebus.AzureServiceBus.Queues
 
         void RenewPeekLock(ITransactionContext context, string messageId)
         {
-            if (context["currently-renewing-the-peek-lock"] != null) return;
+            if (context[CurrentlyRenewingThePeekLockItemKey] != null) return;
 
             try
             {
-                context["currently-renewing-the-peek-lock"] = true;
+                context[CurrentlyRenewingThePeekLockItemKey] = true;
 
                 var peekLockRenewalBackoffTimes = new[] { 1, 2, 5, 10, 10, 10 }
                     .Select(s => TimeSpan.FromSeconds(s))
@@ -291,11 +295,11 @@ namespace Rebus.AzureServiceBus.Queues
             }
             finally
             {
-                context["currently-renewing-the-peek-lock"] = null;
+                context[CurrentlyRenewingThePeekLockItemKey] = null;
             }
         }
 
-        static TimeSpan TimeSinceLastLockRenewal(ITransactionContext context)
+        TimeSpan TimeSinceLastLockRenewal(ITransactionContext context)
         {
             var timeOfLastRenewal = (DateTime)context[AzureServiceBusReceivedMessagePeekLockRenewedTime];
             var timeSinceLastRenewal = DateTime.UtcNow - timeOfLastRenewal;
@@ -390,13 +394,13 @@ namespace Rebus.AzureServiceBus.Queues
 
                     foreach (var group in messagesForEachRecipient)
                     {
-                        var destinationQueueName = @group.Key;
-                        var messagesForThisRecipient = @group.Select(g => g.Item2).ToList();
+                        var destinationQueueName = group.Key;
+                        var messagesForThisRecipient = group.Select(g => g.Item2).ToList();
 
                         foreach (var batch in messagesForThisRecipient.Partition(100))
                         {
                             var brokeredMessagesInThisBatch = batch
-                                .Select(envelope => new BrokeredMessage(envelope))
+                                .Select(CreateBrokeredMessage)
                                 .ToList();
 
                             stuffToDispose.AddRange(brokeredMessagesInThisBatch);
@@ -440,6 +444,30 @@ namespace Rebus.AzureServiceBus.Queues
             }
         }
 
+        BrokeredMessage CreateBrokeredMessage(Envelope envelope)
+        {
+            var brokeredMessage = new BrokeredMessage(envelope);
+
+            if (envelope.Headers.ContainsKey(Headers.MessageId))
+            {
+                brokeredMessage.MessageId = envelope.Headers[Headers.MessageId];
+            }
+
+            if (envelope.Headers.ContainsKey(Headers.CorrelationId))
+            {
+                brokeredMessage.CorrelationId = envelope.Headers[Headers.CorrelationId];
+            }
+
+            if (envelope.Headers.ContainsKey(Headers.ReturnAddress))
+            {
+                brokeredMessage.ReplyTo = envelope.Headers[Headers.ReturnAddress];
+            }
+
+            brokeredMessage.Label = envelope.Label;
+
+            return brokeredMessage;
+        }
+
         public string InputQueue { get; private set; }
 
         public string InputQueueAddress { get { return InputQueue; } }
@@ -452,6 +480,11 @@ namespace Rebus.AzureServiceBus.Queues
             namespaceManager.CreateQueue(InputQueue);
 
             return this;
+        }
+
+        public void SetAutomaticPeekLockRenewalInterval(TimeSpan peekLockRenewalTimeSpan)
+        {
+            peekLockRenewalInterval = peekLockRenewalTimeSpan;
         }
 
         public void Dispose()
@@ -482,11 +515,6 @@ namespace Rebus.AzureServiceBus.Queues
             }
 
             disposed = true;
-        }
-
-        public void SetAutomaticPeekLockRenewalInterval(TimeSpan peekLockRenewalTimeSpan)
-        {
-            peekLockRenewalInterval = peekLockRenewalTimeSpan;
         }
     }
 }
