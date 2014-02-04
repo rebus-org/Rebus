@@ -291,3 +291,7 @@
 ## 0.56.0
 
 * Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.56.1
+
+* Don't make so many DEBUG logging statements while backing off
