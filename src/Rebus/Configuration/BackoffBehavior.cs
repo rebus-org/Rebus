@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
@@ -11,6 +9,9 @@ namespace Rebus.Configuration
     /// </summary>
     public class BackoffBehavior : IEnumerable<TimeSpan>
     {
+        /// <summary>
+        /// Returns the default backoff behavior, which is a compromise between low latency and not thrashing the queueing system too hard.
+        /// </summary>
         public static BackoffBehavior Default()
         {
             return new BackoffBehavior
@@ -44,6 +45,10 @@ namespace Rebus.Configuration
             };
         }
 
+        /// <summary>
+        /// Returns a backoff behavior, that will only wait a short while between re-polling the queueing system, which may lead to
+        /// putting slightly more load on the queueing system.
+        /// </summary>
         public static BackoffBehavior LowLatency()
         {
             return new BackoffBehavior { TimeSpan.FromMilliseconds(20) };
@@ -51,6 +56,9 @@ namespace Rebus.Configuration
 
         readonly List<TimeSpan> backoffTimes = new List<TimeSpan>();
 
+        /// <summary>
+        /// Adds the given backoff interval to the collection of backoff times
+        /// </summary>
         public void Add(TimeSpan backoffTime)
         {
             backoffTimes.Add(backoffTime);

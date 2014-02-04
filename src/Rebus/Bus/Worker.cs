@@ -44,7 +44,10 @@ namespace Rebus.Bus
                                   TimeSpan.FromSeconds(13),
                                   TimeSpan.FromSeconds(21),
                                   TimeSpan.FromSeconds(30),
-                              });
+                              })
+            {
+                LoggingDisabled = true
+            };
 
         /// <summary>
         /// Caching of dispatcher methods
@@ -532,7 +535,7 @@ namespace Rebus.Bus
         /// </summary>
         static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
         {
-            return new BackoffHelper(backoffTimes);
+            return new BackoffHelper(backoffTimes) { LoggingDisabled = true };
         }
     }
 }
