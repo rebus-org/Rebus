@@ -157,7 +157,7 @@ where the following options are available:
 
 e.g. like this:
 
-    returnToSourceQueue.rabbitmq myErrorQueue ampq:://hostname
+    returnToSourceQueue.rabbitmq myErrorQueue ampq://hostname
 
 in order to start processing the messages from 'myErrorQueue', or
 
@@ -165,7 +165,7 @@ in order to start processing the messages from 'myErrorQueue', or
 
 in order to automatically retry all messages that have the '{0}' header set, or
 
-    returnToSourceQueue.rabbitmq myErrorQueue ampq:://hostname --auto-move --dry
+    returnToSourceQueue.rabbitmq myErrorQueue ampq://hostname --auto-move --dry
 
 in order to SIMULATE automatically processing all messages (queue transaction will be aborted).", Headers.SourceQueue);
         }
