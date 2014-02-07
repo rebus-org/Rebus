@@ -7,15 +7,21 @@ namespace Rebus.Transports.Encrypted
     /// Encryption helper that encapsulated the Rijndael-specified stuff. Basically just
     /// gives <see cref="RijndaelManaged"/> a decent API.
     /// </summary>
-    public class RijndaelHelper
+    class RijndaelHelper
     {
         readonly byte[] key;
 
+        /// <summary>
+        /// Constructs the encryption helper, storing the specified key to be used when encrypting/decrypting
+        /// </summary>
         public RijndaelHelper(string key)
         {
             this.key = Convert.FromBase64String(key);
         }
 
+        /// <summary>
+        /// Encrypts the specified buffer using the stored key and the specified salt and returns an encrypted buffer
+        /// </summary>
         public byte[] Encrypt(byte[] bytes, string initializationVector)
         {
             var rijndael = new RijndaelManaged
@@ -29,6 +35,12 @@ namespace Rebus.Transports.Encrypted
             return encryptor.TransformFinalBlock(bytes, 0, bytes.Length);
         }
 
+        /// <summary>
+        /// Decrypts the specified buffer using the stored key and the specified salt and returns an unencrypted buffer
+        /// </summary>
+        /// <param name="bytes"></param>
+        /// <param name="initializationVector"></param>
+        /// <returns></returns>
         public byte[] Decrypt(byte[] bytes, string initializationVector)
         {
             var rijndael = new RijndaelManaged
@@ -42,6 +54,9 @@ namespace Rebus.Transports.Encrypted
             return decryptor.TransformFinalBlock(bytes, 0, bytes.Length);
         }
 
+        /// <summary>
+        /// Generates a new key
+        /// </summary>
         public static string GenerateNewKey()
         {
             var rijndael = new RijndaelManaged
@@ -55,6 +70,9 @@ namespace Rebus.Transports.Encrypted
             return Convert.ToBase64String(rijndael.Key);
         }
 
+        /// <summary>
+        /// Generates a new salt
+        /// </summary>
         public string GenerateNewIv()
         {
             var rijndael = new RijndaelManaged

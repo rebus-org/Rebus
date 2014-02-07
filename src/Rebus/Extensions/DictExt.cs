@@ -2,7 +2,7 @@
 
 namespace Rebus.Extensions
 {
-    public static class DictExt
+    internal static class DictExt
     {
         public static IDictionary<TKey, TValue> Clone<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
         {

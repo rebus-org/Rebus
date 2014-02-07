@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
+using Rebus.Shared;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
+using Rhino.Mocks;
 using Shouldly;
 using System.Linq;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
@@ -13,6 +17,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]
     [TestFixture(typeof(NinjectContainerAdapterFactory))]
+    [TestFixture(typeof(BuiltinContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         IContainerAdapter adapter;
@@ -29,14 +34,88 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         }
 
         [Test]
+        public void CanInjectMessageContext()
+        {
+            // since the built-in container adapter does not support ctor injection, we can't test this
+            if (typeof(TFactory) == typeof(BuiltinContainerAdapterFactory)) return;
+
+            SomeHandler.Reset();
+
+            factory.Register<IHandleMessages<string>, SomeHandler>();
+
+            try
+            {
+                using (var bus = Configure.With(adapter)
+                                          .Logging(l => l.ColoredConsole(LogLevel.Warn))
+                                          .Transport(t => t.UseMsmq("test.containeradapter.input", "error"))
+                                          .CreateBus()
+                                          .Start())
+                {
+                    bus.SendLocal("hello there!");
+
+                    var timeout = 5.Seconds();
+                    if (!SomeHandler.WaitieThingie.WaitOne(timeout))
+                    {
+                        Assert.Fail("Did not receive message within {0} timeout", timeout);
+                    }
+
+                    SomeHandler.HadContext.ShouldBe(true);
+                }
+            }
+            finally
+            {
+                MsmqUtil.Delete("test.containeradapter.input");
+            }
+        }
+
+        class SomeHandler : IHandleMessages<string>
+        {
+            public static bool HadContext { get; private set; }
+
+            public static ManualResetEvent WaitieThingie { get; private set; }
+
+            public static void Reset()
+            {
+                HadContext = false;
+                WaitieThingie = new ManualResetEvent(false);
+            }
+
+            readonly IMessageContext context;
+
+            public SomeHandler(IMessageContext context)
+            {
+                this.context = context;
+            }
+
+            public void Handle(string message)
+            {
+                if (context != null)
+                {
+                    HadContext = true;
+                }
+
+                WaitieThingie.Set();
+            }
+        }
+
+        [Test]
+        public void NothingHappensWhenDisposingAnEmptyContainerAdapter()
+        {
+            Assert.DoesNotThrow(() => factory.DisposeInnerContainer());
+        }
+
+        [Test]
         public void MultipleCallsToGetYieldsNewInstances()
         {
             // arrange
             factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
-            var firstInstance = adapter.GetHandlerInstancesFor<string>().Single();
+            factory.StartUnitOfWork();
+            var firstInstance = adapter.GetHandlerInstancesFor<string>()
+                                       .Single();
 
             // act
-            var nextInstance = adapter.GetHandlerInstancesFor<string>().Single();
+            var nextInstance = adapter.GetHandlerInstancesFor<string>()
+                                      .Single();
 
             // assert
             nextInstance.ShouldNotBeSameAs(firstInstance);
@@ -47,10 +126,12 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         {
             // arrange
             factory.Register<IHandleMessages<string>, SomeDisposableHandler>();
-            var instances = adapter.GetHandlerInstancesFor<string>();
+            factory.StartUnitOfWork();
 
             // act
+            var instances = adapter.GetHandlerInstancesFor<string>();
             adapter.Release(instances);
+            factory.EndUnitOfWork();
 
             // assert
             SomeDisposableHandler.WasDisposed.ShouldBe(true);
@@ -59,7 +140,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
         class SomeDisposableHandler : IHandleMessages<string>, IDisposable
         {
             public static bool WasDisposed { get; private set; }
-            
+
             public void Handle(string message)
             {
             }
@@ -81,7 +162,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             // arrange
             var disposableBus = new SomeDisposableSingleton();
             SomeDisposableSingleton.Disposed.ShouldBe(false);
-            adapter.SaveBusInstances(disposableBus, disposableBus);
+            adapter.SaveBusInstances(disposableBus);
 
             // act
             factory.DisposeInnerContainer();
@@ -90,9 +171,14 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeDisposableSingleton.Disposed.ShouldBe(true);
         }
 
-        class SomeDisposableSingleton : IAdvancedBus
+        class SomeDisposableSingleton : IBus, IAdvancedBus
         {
             public static bool Disposed { get; set; }
+
+            public SomeDisposableSingleton()
+            {
+                Events = MockRepository.GenerateMock<IRebusEvents>();
+            }
 
             public void Dispose()
             {
@@ -124,6 +210,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 throw new NotImplementedException();
             }
 
+            public void Unsubscribe<T>()
+            {
+                throw new NotImplementedException();
+            }
+
             public void Publish<TEvent>(TEvent message)
             {
                 throw new NotImplementedException();
@@ -139,19 +230,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 throw new NotImplementedException();
             }
 
+            public IAdvancedBus Advanced { get { return this; } }
+
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
         }
-    }
-
-    public interface IContainerAdapterFactory
-    {
-        IContainerAdapter Create();
-        void DisposeInnerContainer();
-
-        void Register<TService, TImplementation>()
-            where TImplementation : TService
-            where TService : class;
     }
 }

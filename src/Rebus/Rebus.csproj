@@ -35,18 +35,20 @@
     <DocumentationFile>bin\Release\Rebus.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.0.8.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.0.8\lib\net40\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Messaging" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
@@ -54,23 +56,59 @@
     <Compile Include="..\..\lib\Ponder\Ponder.cs">
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
-    <Compile Include="Bus\BusMode.cs" />
+    <Compile Include="Bus\AmbientTransactionContext.cs" />
+    <Compile Include="Bus\BackoffHelper.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
+    <Compile Include="Bus\DueTimeoutScheduler.cs" />
     <Compile Include="Bus\ErrorTracker.cs" />
-    <Compile Include="Bus\HeaderContextExtensions.cs" />
     <Compile Include="Bus\IErrorTracker.cs" />
+    <Compile Include="Bus\IMulticastTransport.cs" />
+    <Compile Include="Bus\IMutateIncomingMessages.cs" />
+    <Compile Include="Bus\IncomingMessageMutatorPipeline.cs" />
+    <Compile Include="Bus\IUnitOfWork.cs" />
+    <Compile Include="Bus\IUnitOfWorkManager.cs" />
+    <Compile Include="Bus\NoTransaction.cs" />
+    <Compile Include="Bus\QueueCommitException.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Bus\TimeoutRequestHandler.cs" />
+    <Compile Include="Bus\TransactionContext.cs" />
+    <Compile Include="Bus\TxBomkarl.cs" />
+    <Compile Include="Bus\UnitOfWorkCommitException.cs" />
+    <Compile Include="Configuration\BackoffBehavior.cs" />
+    <Compile Include="Configuration\BaseConfigurer.cs" />
     <Compile Include="Configuration\BuiltinContainerAdapter.cs" />
     <Compile Include="Configuration\ConfigurationBackbone.cs" />
     <Compile Include="Configuration\Configure.cs" />
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
+    <Compile Include="Configuration\ConfigureAdditionalBehavior.cs" />
+    <Compile Include="Configuration\JsonSerializationOptions.cs" />
+    <Compile Include="Configuration\RebusBehaviorConfigurer.cs" />
+    <Compile Include="Configuration\RebusTimeoutsConfigurer.cs" />
+    <Compile Include="Configuration\SqlServerSagaPersisterFluentConfigurer.cs" />
+    <Compile Include="Configuration\SqlServerSubscriptionStorageFluentConfigurer.cs" />
+    <Compile Include="Configuration\SqlServerTimeoutStorageFluentConfigurer.cs" />
     <Compile Include="ExceptionExtensions.cs" />
+    <Compile Include="Guard.cs" />
+    <Compile Include="Logging\MessageLogger.cs" />
+    <Compile Include="MessageHandleException.cs" />
+    <Compile Include="IDuplexTransport.cs" />
+    <Compile Include="IMutateMessages.cs" />
+    <Compile Include="INeedInitializationBeforeStart.cs" />
+    <Compile Include="ITransactionContext.cs" />
+    <Compile Include="Logging\GhettoFileLoggerFactory.cs" />
+    <Compile Include="MultipleSagaHandlersException.cs" />
+    <Compile Include="Persistence\HybridSagaPersister.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
+    <Compile Include="SagaContext.cs" />
+    <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
+    <Compile Include="TimedExtensions.cs" />
+    <Compile Include="Transports\Encrypted\GZipHelper.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />
     <Compile Include="Configuration\LoggingConfigurer.cs" />
@@ -89,7 +127,7 @@
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />
     <Compile Include="Bus\TimeoutReplyHandler.cs" />
-    <Compile Include="Configuration\DetermineDestinationFromConfigurationSection.cs" />
+    <Compile Include="Configuration\DetermineMessageOwnershipFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\FluentRearrangeHandlersPipelineInspectorBuilder.cs" />
     <Compile Include="Configuration\MappingElement.cs" />
     <Compile Include="Configuration\MappingsCollection.cs" />
@@ -97,11 +135,10 @@
     <Compile Include="Configuration\RebusConfigurationSection.cs" />
     <Compile Include="Configuration\RijndaelSection.cs" />
     <Compile Include="Extensions\DictExt.cs" />
-    <Compile Include="FakeMessageContext.cs" />
+    <Compile Include="Testing\FakeMessageContext.cs" />
     <Compile Include="IMessageContext.cs" />
     <Compile Include="InconsistentReturnAddressException.cs" />
     <Compile Include="InconsistentTimeToBeReceivedException.cs" />
-    <Compile Include="Lifestyle.cs" />
     <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
@@ -112,8 +149,7 @@
     <Compile Include="Configuration\ConfigurationException.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />
     <Compile Include="Configuration\PipelineInspectorConfigurer.cs" />
-    <Compile Include="Configuration\DetermineDestinationFromNServiceBusEndpointMappings.cs" />
-    <Compile Include="Configuration\EndpointMappingsExtensions.cs" />
+    <Compile Include="Configuration\DetermineMessageOwnershipFromNServiceBusEndpointMappings.cs" />
     <Compile Include="Configuration\IAppConfigLoader.cs" />
     <Compile Include="Configuration\RearrangeHandlersPipelineInspector.cs" />
     <Compile Include="Configuration\StandardAppConfigLoader.cs" />
@@ -135,27 +171,31 @@
     <Compile Include="Persistence\Xml\XmlSubscriptionStorage.cs" />
     <Compile Include="Serialization\Binary\BinaryMessageSerializer.cs" />
     <Compile Include="Serialization\Json\JsonMessageSerializer.cs" />
-    <Compile Include="Extensions\EnumerableExt.cs" />
     <Compile Include="SimpleHandlerActivator.cs" />
-    <Compile Include="Time.cs" />
+    <Compile Include="RebusTimeMachine.cs" />
     <Compile Include="Timed.cs" />
     <Compile Include="TimeMachine.cs" />
     <Compile Include="Timeout\IStoreTimeouts.cs" />
     <Compile Include="Timeout\Timeout.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
+    <Compile Include="Bus\HostingContext.cs" />
+    <Compile Include="Transports\OneWayClientGag.cs" />
+    <Compile Include="Transports\Sql\ConnectionHolder.cs" />
+    <Compile Include="Transports\Sql\SqlServerMessageQueueConfigurationExtension.cs" />
+    <Compile Include="Transports\Sql\SqlServerMessageQueue.cs" />
+    <Compile Include="Transports\Sql\SqlServerMessageQueueOptions.cs" />
     <Compile Include="TrivialPipelineInspector.cs" />
-    <Compile Include="Extensions\IntExt.cs" />
     <Compile Include="Extensions\ObjectExt.cs" />
     <Compile Include="IAmInitiatedBy.cs" />
     <Compile Include="IBus.cs" />
     <Compile Include="IHandleMessages.cs" />
     <Compile Include="IActivateHandlers.cs" />
-    <Compile Include="IDetermineDestination.cs" />
+    <Compile Include="IDetermineMessageOwnership.cs" />
     <Compile Include="IInspectHandlerPipeline.cs" />
     <Compile Include="ISagaData.cs" />
     <Compile Include="ISerializeMessages.cs" />
@@ -174,11 +214,11 @@
     <Compile Include="ReceivedTransportMessage.cs" />
     <Compile Include="Transports\Msmq\RebusTransportMessageFormatter.cs" />
     <Compile Include="Transports\Msmq\MsmqMessageQueue.cs" />
-    <Compile Include="Transports\Msmq\MsmqTransactionWrapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Messages\SubscriptionMessage.cs" />
     <Compile Include="Messages\Message.cs" />
+    <Compile Include="UnhandledMessageException.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

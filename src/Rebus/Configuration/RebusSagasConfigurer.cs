@@ -2,30 +2,37 @@ using System;
 using System.Data.SqlClient;
 using Rebus.Persistence.InMemory;
 using Rebus.Persistence.SqlServer;
+using Rebus.Transports.Sql;
 
 namespace Rebus.Configuration
 {
-    public class RebusSagasConfigurer
+    /// <summary>
+    /// Configurer that allows for configuring how sagas are made persistent
+    /// </summary>
+    public class RebusSagasConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public RebusSagasConfigurer(ConfigurationBackbone backbone)
+        internal RebusSagasConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IStoreSagaData"/> to persist saga data
+        /// </summary>
         public void Use(IStoreSagaData storeSagaData)
         {
-            backbone.StoreSagaData = storeSagaData;
+            Backbone.StoreSagaData = storeSagaData;
         }
 
         /// <summary>
         /// Configures Rebus to store sagas in SQL Server. Use this overload when your saga doesn't perform
         /// any additional work in the same SQL Server.
         /// </summary>
-        public void StoreInSqlServer(string connectionstring, string sagaTable, string sagaIndexTable)
+        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(string connectionstring, string sagaTable, string sagaIndexTable)
         {
-            Use(new SqlServerSagaPersister(connectionstring, sagaIndexTable, sagaTable));
+            var persister = new SqlServerSagaPersister(connectionstring, sagaIndexTable, sagaTable);
+            Use(persister);
+            return new SqlServerSagaPersisterFluentConfigurer(persister);
         }
 
         /// <summary>
@@ -33,9 +40,11 @@ namespace Rebus.Configuration
         /// same <see cref="SqlConnection"/> as you're using, thus enlisting in whatever transactional
         /// behavior you might be using.
         /// </summary>
-        public void StoreInSqlServer(Func<SqlConnection> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
+        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(Func<ConnectionHolder> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
         {
-            Use(new SqlServerSagaPersister(connectionFactoryMethod, sagaIndexTable, sagaTable));
+            var persister = new SqlServerSagaPersister(connectionFactoryMethod, sagaIndexTable, sagaTable);
+            Use(persister);
+            return new SqlServerSagaPersisterFluentConfigurer(persister);
         }
 
         /// <summary>

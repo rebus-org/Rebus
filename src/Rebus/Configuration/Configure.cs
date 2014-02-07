@@ -1,7 +1,19 @@
 ﻿namespace Rebus.Configuration
 {
     /// <summary>
-    /// Main configuration API entry point.
+    /// Main configuration API entry point. Just go ahead and
+    /// <code>
+    /// using(var adapter = new BuiltinContainerAdapter())
+    /// {
+    ///     Configure.With(adapter)
+    ///         .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
+    ///         .determineMessageOwnership(d => d.FromRebusConfigurationSection())
+    ///         .CreateBus()
+    ///         .Start();
+    /// 
+    ///     adapter.Bus.Send(new SomeMessage{Text = "hola mundo!"});
+    /// }
+    /// </code>
     /// </summary>
     public static class Configure
     {

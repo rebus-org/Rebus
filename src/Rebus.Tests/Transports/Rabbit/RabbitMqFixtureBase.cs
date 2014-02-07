@@ -1,20 +1,21 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using RabbitMQ.Client;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
-using Rebus.Persistence.InMemory;
 using Rebus.RabbitMQ;
-using Rebus.Serialization.Json;
 using log4net.Config;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
-    public abstract class RabbitMqFixtureBase : IDetermineDestination
+    public abstract class RabbitMqFixtureBase : IDetermineMessageOwnership
     {
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
-        protected List<IDisposable> toDispose;
+        protected readonly List<string> queuesToDelete = new List<string>();
 
         static RabbitMqFixtureBase()
         {
@@ -24,7 +25,6 @@ namespace Rebus.Tests.Transports.Rabbit
         [SetUp]
         public void SetUp()
         {
-            toDispose = new List<IDisposable>();
             DoSetUp();
         }
 
@@ -35,8 +35,9 @@ namespace Rebus.Tests.Transports.Rabbit
         [TearDown]
         public void TearDown()
         {
-            toDispose.ForEach(b => b.Dispose());
+            queuesToDelete.ForEach(DeleteQueue);
             DoTearDown();
+            CleanUpTrackedDisposables();
             RebusLoggerFactory.Reset();
         }
 
@@ -44,17 +45,31 @@ namespace Rebus.Tests.Transports.Rabbit
         {
         }
 
+        protected void CleanUpTrackedDisposables()
+        {
+            DisposableTracker.DisposeTheDisposables();
+        }
+
+        protected T TrackDisposable<T>(T disposable) where T : IDisposable
+        {
+            DisposableTracker.TrackDisposable(disposable);
+            return disposable;
+        }
+
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
         {
-            var rabbitMqMessageQueue = new RabbitMqMessageQueue(ConnectionString, inputQueueName, inputQueueName + ".error").PurgeInputQueue();
+            queuesToDelete.Add(inputQueueName);
+            queuesToDelete.Add(inputQueueName + ".error");
 
-            var bus = new RebusBus(handlerActivator, rabbitMqMessageQueue, rabbitMqMessageQueue,
-                                   new InMemorySubscriptionStorage(), new InMemorySagaPersister(), this,
-                                   new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker(inputQueueName + ".error"));
 
-            toDispose.Add(bus);
-            toDispose.Add(rabbitMqMessageQueue);
+            var bus = Configure.With(new FakeContainerAdapter(handlerActivator))
+                               .Transport(x => x.UseRabbitMq(ConnectionString, inputQueueName, inputQueueName + ".error"))
+                               .CreateBus() as RebusBus;
+
+            var rabbitMqMessageQueue = new RabbitMqMessageQueue(ConnectionString, inputQueueName).PurgeInputQueue();
+
+            DisposableTracker.TrackDisposable(rabbitMqMessageQueue);
+            DisposableTracker.TrackDisposable(bus);
 
             return bus;
         }
@@ -62,6 +77,46 @@ namespace Rebus.Tests.Transports.Rabbit
         public virtual string GetEndpointFor(Type messageType)
         {
             throw new NotImplementedException(string.Format("Don't know the destination of {0} - override this method in derived classes", messageType));
+        }
+
+        public static void DeleteQueue(string queueName)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    model.QueueDelete(queueName);
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        class FakeContainerAdapter : IContainerAdapter
+        {
+            readonly IActivateHandlers handlerActivator;
+
+            public FakeContainerAdapter(IActivateHandlers handlerActivator)
+            {
+                this.handlerActivator = handlerActivator;
+            }
+
+            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+            {
+                return handlerActivator.GetHandlerInstancesFor<T>();
+            }
+
+            public void Release(IEnumerable handlerInstances)
+            {
+                handlerActivator.Release(handlerInstances);
+            }
+
+            public void SaveBusInstances(IBus bus)
+            {
+            }
         }
     }
 }

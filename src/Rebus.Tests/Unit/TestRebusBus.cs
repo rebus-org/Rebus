@@ -1,8 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Messages;
 using Rebus.Shared;
+using Rebus.Testing;
+using Rebus.Transports;
 using Rhino.Mocks;
 using Shouldly;
 
@@ -48,13 +53,14 @@ is just because there was a bug some time when the grouping of the messages was 
             var firstMessage = new FirstMessage();
             var secondMessage = new SecondMessage();
 
-            bus.Batch.Publish(firstMessage, secondMessage);
+            bus.Batch.Publish(new object[] { firstMessage, secondMessage });
 
             // assert
-            
+
             // check that the endpoint is right
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someSubscriberEndpoint),
-                                                     Arg<TransportMessageToSend>.Is.Anything),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything),
                                          o => o.Repeat.Once());
         }
 
@@ -69,16 +75,44 @@ is just because there was a bug some time when the grouping of the messages was 
             var thirdMessage = new SomeRandomMessage();
 
             var someEndpoint = "some-endpoint";
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (FirstMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SecondMessage))).Return(someEndpoint);
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(FirstMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SecondMessage))).Return(someEndpoint);
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return(someEndpoint);
 
             // act
-            bus.Batch.Send(firstMessage, secondMessage, thirdMessage);
+            bus.Batch.Send(new object[] { firstMessage, secondMessage, thirdMessage });
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint), Arg<TransportMessageToSend>.Is.Anything),
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(someEndpoint),
+                Arg<TransportMessageToSend>.Is.Anything,
+                Arg<ITransactionContext>.Is.Anything),
                                                             o => o.Repeat.Once());
+        }
+
+        [Test]
+        public void CanDoBatchReply()
+        {
+            // arrange
+            const string returnAddress = "some random return address";
+            var firstMessage = new FirstMessage();
+            var secondMessage = new SecondMessage();
+            var someRandomMessage = new SomeRandomMessage();
+            var fakeContext = Mock<IMessageContext>();
+            fakeContext.Stub(s => s.ReturnAddress).Return(returnAddress);
+            fakeContext.Stub(s => s.Headers).Return(new Dictionary<string, object>());
+            fakeContext.Stub(s => s.Items).Return(new Dictionary<string, object>());
+
+            // act
+            using (FakeMessageContext.Establish(fakeContext))
+            {
+                bus.Batch.Reply(new object[] { firstMessage, secondMessage, someRandomMessage });
+            }
+
+            // assert
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(returnAddress),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything),
+                                         o => o.Repeat.Once());
         }
 
         [Test]
@@ -93,11 +127,11 @@ is just because there was a bug some time when the grouping of the messages was 
 
             // act
             // assert
-            Assert.DoesNotThrow(() => bus.Batch.Send(someMessage, anotherMessage));
+            Assert.DoesNotThrow(() => bus.Batch.Send(new object[] { someMessage, anotherMessage }));
 
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
-                                                     Arg<TransportMessageToSend>.Matches(
-                                                         t => true)));
+                                                     Arg<TransportMessageToSend>.Matches(t => true),
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
@@ -112,7 +146,7 @@ is just because there was a bug some time when the grouping of the messages was 
 
             // act
             // assert
-            Assert.Throws<InconsistentReturnAddressException>(() => bus.Batch.Send(someMessage, anotherMessage));
+            Assert.Throws<InconsistentReturnAddressException>(() => bus.Batch.Send(new object[] { someMessage, anotherMessage }));
         }
 
         [Test, Description(@"Tests that headers associated with a message don't get deleted after the first time that
@@ -132,16 +166,16 @@ Or should it?")]
             bus.Routing.Send("somewhereElse", someRandomMessage);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhereElse"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key"))));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhere"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key")), Arg<ITransactionContext>.Is.Anything));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("somewhereElse"), Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("some-key")), Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
         public void CanPublishBatchOfMessages()
         {
             // arrange
-            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (FirstMessage))).Return(new[] {"first-sub1", "first-sub2"});
-            storeSubscriptions.Stub(s => s.GetSubscribers(typeof (SecondMessage))).Return(new[] {"second-sub1", "second-sub2"});
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(FirstMessage))).Return(new[] { "first-sub1", "first-sub2" });
+            storeSubscriptions.Stub(s => s.GetSubscribers(typeof(SecondMessage))).Return(new[] { "second-sub1", "second-sub2" });
 
             // act
             var firstMessage1 = new FirstMessage();
@@ -154,24 +188,24 @@ Or should it?")]
             bus.AttachHeader(secondMessage1, "secondMessage1", "foo");
             bus.AttachHeader(secondMessage2, "secondMessage2", "foo");
 
-            bus.Batch.Publish(firstMessage1, secondMessage1, firstMessage2, secondMessage2);
+            bus.Batch.Publish(new object[] { firstMessage1, secondMessage1, firstMessage2, secondMessage2 });
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub1"),
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub2"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub1"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
-            
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub2"), 
-                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2"))));
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("first-sub2"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("firstMessage1") && t.Headers.ContainsKey("firstMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub1"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2")), Arg<ITransactionContext>.Is.Anything));
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("second-sub2"),
+                Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2")), Arg<ITransactionContext>.Is.Anything));
         }
 
-        class FirstMessage{}
-        class SecondMessage{}
+        class FirstMessage { }
+        class SecondMessage { }
 
         [Test]
         public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncluded()
@@ -179,13 +213,13 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:10");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -198,12 +232,12 @@ Or should it?")]
             // arrange
             var someRandomMessage = new SomeRandomMessage();
             var anotherRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(anotherRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -215,12 +249,12 @@ Or should it?")]
             // arrange
             var anotherRandomMessage = new SomeRandomMessage();
             var someRandomMessage = new SomeRandomMessage();
-            determineDestination.Stub(d => d.GetEndpointFor(typeof (SomeRandomMessage))).Return("whatever");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("whatever");
 
             bus.AttachHeader(someRandomMessage, Headers.TimeToBeReceived, "00:00:05");
 
             // act
-            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(someRandomMessage, anotherRandomMessage));
+            var invalidOperationException = Assert.Throws<InconsistentTimeToBeReceivedException>(() => bus.Batch.Send(new object[] { someRandomMessage, anotherRandomMessage }));
 
             // assert
             //invalidOperationException.Message.ShouldContain("00:00:05");
@@ -238,50 +272,55 @@ Or should it?")]
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("hardcoded.endpoint.to.skip.lookup"),
-                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.TimeToBeReceived))));
+                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.TimeToBeReceived)),
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
-        class SomeRandomMessage {}
+        class SomeRandomMessage { }
 
         [Test]
         public void SendsMessagesToTheRightDestination()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             var theMessageThatWasSent = new PolymorphicMessage();
 
             // act
             bus.Send(theMessageThatWasSent);
 
             // assert
-            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"), Arg<TransportMessageToSend>.Is.Anything));
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
         public void SendsMessagesToTheRightDestinationAlsoWhenSendingBatch()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("polymorphic message endpoint");
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("some random message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("polymorphic message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(SomeRandomMessage))).Return("some random message endpoint");
             var firstMessage = new PolymorphicMessage();
             var secondMessage = new SomeRandomMessage();
 
             // act
-            bus.Batch.Send(firstMessage, secondMessage);
+            bus.Batch.Send(new object[] { firstMessage, secondMessage });
 
             // assert
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("polymorphic message endpoint"),
-                                                     Arg<TransportMessageToSend>.Is.Anything));
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
 
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("some random message endpoint"),
-                                                     Arg<TransportMessageToSend>.Is.Anything));
+                                                     Arg<TransportMessageToSend>.Is.Anything,
+                                                     Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
         public void SubscribesToMessagesFromTheRightPublisher()
         {
             // arrange
-            determineDestination.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(PolymorphicMessage))).Return("woolala");
             receiveMessages.SetInputQueue("my input queue");
 
             // act
@@ -291,7 +330,8 @@ Or should it?")]
             sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("woolala"),
                                                      Arg<TransportMessageToSend>.Matches(
                                                          m => m.Headers.ContainsKey(Headers.ReturnAddress)
-                                                              && m.Headers[Headers.ReturnAddress] == "my input queue")));
+                                                              && m.Headers[Headers.ReturnAddress].ToString() == "my input queue"),
+                                                              Arg<ITransactionContext>.Is.Anything));
         }
 
         [Test]
@@ -316,6 +356,69 @@ Or should it?")]
 
             handler.FirstMessageHandled.ShouldBe(true);
             handler.SecondMessageHandled.ShouldBe(true);
+        }
+
+        [Test]
+        public void ThrowsWhenUsingDeferInOneWayMode()
+        {
+            IBus bus = CreateBusInOneWayMode().Start();
+            TimeSpan deferTime = TimeSpan.FromMinutes(5);
+
+            Assert.That(() => bus.Defer(deferTime, new {msg = "foo"}), Throws.InvalidOperationException);
+        }
+
+        [Test]
+        public void AcceptsDeferInOneWayModeWhenReturnAddressHasBeenManuallySpecified()
+        {
+            var bus = CreateBusInOneWayMode().Start();
+            var deferTime = TimeSpan.FromMinutes(5);
+            var message = new { msg = "foo" };
+            bus.AttachHeader(message, Headers.ReturnAddress, "this is not really an endpoint, but who cares :)");
+
+            Assert.That(() => bus.Defer(deferTime, message), Throws.Nothing);
+        }
+
+        [Test]
+        public void AttachesRebusMessageIdOnVirginMessage()
+        {
+            bus.Send(new FirstMessage());
+
+            sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Anything,
+                                                     Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey(Headers.MessageId)),
+                                                     Arg<ITransactionContext>.Is.Anything));
+        }
+
+        [Test]
+        public void TransfersMessageIdToDeferredMessage()
+        {
+            var headers = new Dictionary<string, object>
+            {
+                {Headers.MessageId, "Oh the uniqueness"}
+            };
+
+            var message = new FirstMessage();
+
+            using (MessageContext.Establish(headers))
+            {
+                bus.Defer(TimeSpan.Zero, message);
+            }
+
+            bus.GetHeaderFor(message, Headers.MessageId).ShouldBe("Oh the uniqueness");
+        }
+
+        [Test]
+        public void UserCannotOverwriteRebusMessageId()
+        {
+            Should.Throw<ArgumentException>(() => bus.AttachHeader(new object(), Headers.MessageId, "anything"));
+        }
+
+
+        RebusBus CreateBusInOneWayMode()
+        {
+            var behavior = new ConfigureAdditionalBehavior();
+            behavior.EnterOneWayClientMode();
+            return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(), storeSubscriptions, storeSagaData, determineMessageOwnership,
+                serializeMessages, inspectHandlerPipeline, new ErrorTracker("error"), null, behavior);
         }
 
         class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>

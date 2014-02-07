@@ -2,6 +2,8 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Shared;
+using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Unit
@@ -24,7 +26,7 @@ namespace Rebus.Tests.Unit
 
             receiveMessages.Deliver(new Message
                 {
-                    Headers = new Dictionary<string, string>
+                    Headers = new Dictionary<string, object>
                         {
                             {arbitrarykey, arbitraryValue},
                             {anotherArbitraryKey, anotherArbitraryValue}
@@ -38,10 +40,39 @@ namespace Rebus.Tests.Unit
             sendMessages
                 .AssertWasCalled(s => s.Send(Arg<string>.Is.Equal("anotherEndpoint"),
                                              Arg<TransportMessageToSend>
-                                                 .Matches(m => m.Headers.ContainsKey(arbitrarykey) && m.Headers[arbitrarykey] == arbitraryValue
-                                                               && m.Headers.ContainsKey(anotherArbitraryKey) && m.Headers[anotherArbitraryKey] == anotherArbitraryValue)));
+                                                 .Matches(
+                                                     m =>
+                                                     m.Headers.ContainsKey(arbitrarykey) &&
+                                                     m.Headers[arbitrarykey].ToString() == arbitraryValue
+                                                     && m.Headers.ContainsKey(anotherArbitraryKey) &&
+                                                     m.Headers[anotherArbitraryKey].ToString() == anotherArbitraryValue),
+                                             Arg<ITransactionContext>.Is.Anything));
         }
+
+
+        [Test]
+        public void TransfersMessageIdToForwardedMessage()
+        {
+            var headers = new Dictionary<string, object>
+            {
+                {Headers.MessageId, "Oh the uniqueness"}
+            };
+
+            using (var context = MessageContext.Establish(headers))
+            {
+                context.SetLogicalMessage(new JustSomeMessage());
+                bus.Advanced.Routing.ForwardCurrentMessage("somewhere");
+            }
+
+            sendMessages.AssertWasCalled(s =>
+                s.Send(Arg<string>.Is.Anything,
+                    Arg<TransportMessageToSend>.Matches(m => m.Headers[Headers.MessageId] == "Oh the uniqueness"),
+                    Arg<ITransactionContext>.Is.Anything));
+        }
+
 
         class JustSomeMessage {}
     }
+
+
 }

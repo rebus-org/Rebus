@@ -17,8 +17,14 @@ namespace Rebus.Snoop.ViewModel
         readonly ObservableCollection<Machine> machines = new ObservableCollection<Machine>();
         readonly ObservableCollection<Notification> notifications = new ObservableCollection<Notification>();
 
+#pragma warning disable 649
         bool canMoveMessagesToSourceQueue;
         bool canDeleteMessages;
+        bool canDownloadMessages;
+        bool canUpdateMessage;
+        bool canMoveMessages;
+        bool canCopyMessages;
+#pragma warning restore 649
 
         public MachinesViewModel()
         {
@@ -78,6 +84,7 @@ namespace Rebus.Snoop.ViewModel
                                              new Queue {QueueName = "aService.error"},
                                              new Queue {QueueName = "unrelated"},
                                              new Queue {QueueName = "another.unrelated"},
+                                             new Queue {QueueName = "Dead-letter queue", CanBeDeleted = false},
                                              new Queue
                                                  {
                                                      QueueName = "yet.another.unrelated",
@@ -156,10 +163,34 @@ namespace Rebus.Snoop.ViewModel
             set { SetValue(() => CanMoveMessagesToSourceQueue, value); }
         }
 
+        public bool CanMoveMessages
+        {
+            get { return canMoveMessages; }
+            set { SetValue(() => CanMoveMessages, value); }
+        }
+
+        public bool CanCopyMessages
+        {
+            get { return canCopyMessages; }
+            set { SetValue(() => CanCopyMessages, value); }
+        }
+
         public bool CanDeleteMessages
         {
             get { return canDeleteMessages; }
             set { SetValue(() => CanDeleteMessages, value); }
+        }
+
+        public bool CanUpdateMessage
+        {
+            get { return canUpdateMessage; }
+            set { SetValue(() => CanUpdateMessage, value); }
+        }
+
+        public bool CanDownloadMessages
+        {
+            get { return canDownloadMessages; }
+            set { SetValue(() => CanDownloadMessages, value); }
         }
 
         public ObservableCollection<Machine> Machines
@@ -172,8 +203,16 @@ namespace Rebus.Snoop.ViewModel
         public RelayCommand<Machine> RemoveMachineCommand { get; set; }
 
         public RelayCommand<IEnumerable> ReturnToSourceQueuesCommand { get; set; }
+        
+        public RelayCommand<IEnumerable> MoveToQueueCommand { get; set; }
+        
+        public RelayCommand<IEnumerable> CopyToQueueCommand { get; set; }
 
         public RelayCommand<IEnumerable> DeleteMessagesCommand { get; set; }
+        
+        public RelayCommand<IEnumerable> DownloadMessagesCommand { get; set; }
+
+        public RelayCommand<IEnumerable> UpdateMessageCommand { get; set; }
 
         public ObservableCollection<Notification> Notifications
         {
@@ -186,7 +225,43 @@ namespace Rebus.Snoop.ViewModel
             Messenger.Default.Register(this, (MessageSelectionWasMade n) => HandleMessageSelectionWasMade(n));
             Messenger.Default.Register(this, (MessageMoved m) => HandleMessageMoved(m));
             Messenger.Default.Register(this, (MessageDeleted m) => HandleMessageDeleted(m));
+            Messenger.Default.Register(this, (QueuePurged m) => HandleQueuePurged(m));
+            Messenger.Default.Register(this, (QueueDeleted m) => HandleQueueDeleted(m));
         }
+
+        void HandleQueueDeleted(QueueDeleted queueDeleted)
+        {
+            var queue = queueDeleted.Queue;
+
+            var machineWhereQueueWasDeleted = Machines.FirstOrDefault(m => m.Queues.Contains(queue));
+            if (machineWhereQueueWasDeleted == null) return;
+
+            Messenger.Default.Send(new ReloadQueuesRequested(machineWhereQueueWasDeleted));
+        }
+
+        void HandleQueuePurged(QueuePurged queuePurged)
+        {
+            var queue = queuePurged.Queue;
+            
+            // reload queue in question
+            Messenger.Default.Send(new ReloadMessagesRequested(queue));
+
+            // if possible, reload dead-letter queue as well
+            var machineWhereQueueWasPurged = Machines.FirstOrDefault(m => m.Queues.Contains(queue));
+            if (machineWhereQueueWasPurged == null) return;
+
+            var deadLetterQueue = machineWhereQueueWasPurged.Queues
+                                                            .FirstOrDefault(q => q.QueuePath.ToLowerInvariant()
+                                                                                  .Contains("deadxact"));
+            // if the purged queue was the dead-letter queue, don't bother :)
+            if (queue == deadLetterQueue)
+            {
+                return;
+            }
+
+            Messenger.Default.Send(new ReloadMessagesRequested(deadLetterQueue));
+        }
+
 
         void HandleMessageDeleted(MessageDeleted messageDeleted)
         {
@@ -239,6 +314,7 @@ namespace Rebus.Snoop.ViewModel
                                                        DestinationQueue = destinationQueue,
                                                        DestinationQueuePath = destinationQueuePath,
                                                        TheMessage = theMessage,
+                                                       CopyWasLeftInSourceQueue = messageMoved.CopyWasLeftInSourceQueue,
                                                    };
 
                                   return result;
@@ -250,6 +326,11 @@ namespace Rebus.Snoop.ViewModel
                                       if (result.SourceQueue != null)
                                       {
                                           result.SourceQueue.Remove(result.TheMessage);
+                                          
+                                          if (result.CopyWasLeftInSourceQueue)
+                                          {
+                                              result.SourceQueue.Add(result.TheMessage.Clone());
+                                          }
                                       }
 
                                       if (result.DestinationQueue != null)
@@ -262,8 +343,16 @@ namespace Rebus.Snoop.ViewModel
 
         void HandleMessageSelectionWasMade(MessageSelectionWasMade messageSelectionWasMade)
         {
-            CanMoveMessagesToSourceQueue = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
-            CanDeleteMessages = messageSelectionWasMade.SelectedMessages.Any();
+            var oneOrMoreSelectedMessagesHasSourceQueueHeader = messageSelectionWasMade.SelectedMessages.Any(m => m.Headers.ContainsKey(Headers.SourceQueue));
+            var oneOrMoreMessagesSelected = messageSelectionWasMade.SelectedMessages.Any();
+            var exactlyOneMessageIsSelected = messageSelectionWasMade.SelectedMessages.Count() == 1;
+
+            CanMoveMessagesToSourceQueue = oneOrMoreSelectedMessagesHasSourceQueueHeader;
+            CanMoveMessages = oneOrMoreMessagesSelected;
+            CanCopyMessages = oneOrMoreMessagesSelected;
+            CanDeleteMessages = oneOrMoreMessagesSelected;
+            CanDownloadMessages = oneOrMoreMessagesSelected;
+            CanUpdateMessage = exactlyOneMessageIsSelected;
         }
 
         void AddNotification(NotificationEvent n)
@@ -278,7 +367,28 @@ namespace Rebus.Snoop.ViewModel
             AddMachineCommand = new RelayCommand<string>(AddNewMachine);
             RemoveMachineCommand = new RelayCommand<Machine>(RemoveMachine);
             ReturnToSourceQueuesCommand = new RelayCommand<IEnumerable>(ReturnToSourceQueues);
+            MoveToQueueCommand = new RelayCommand<IEnumerable>(MoveToQueue);
+            CopyToQueueCommand = new RelayCommand<IEnumerable>(CopyToQueue);
             DeleteMessagesCommand = new RelayCommand<IEnumerable>(DeleteMessages);
+            DownloadMessagesCommand = new RelayCommand<IEnumerable>(DownloadMessages);
+            UpdateMessageCommand = new RelayCommand<IEnumerable>(UpdateMessage);
+        }
+
+        void UpdateMessage(IEnumerable list)
+        {
+            var message = list.OfType<Message>().Single();
+
+            var queue = Machines.SelectMany(m => m.Queues)
+                                .First(q => q.Messages.Contains(message));
+
+            Messenger.Default.Send(new UpdateMessageRequested(message, queue));
+        }
+
+        void DownloadMessages(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new DownloadMessagesRequested(messagesToMove));
         }
 
         void DeleteMessages(IEnumerable messages)
@@ -293,6 +403,20 @@ namespace Rebus.Snoop.ViewModel
             var messagesToMove = messages.OfType<Message>().ToList();
 
             Messenger.Default.Send(new MoveMessagesToSourceQueueRequested(messagesToMove));
+        }
+
+        void MoveToQueue(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new MoveMessagesToQueueRequested(messagesToMove));
+        }
+
+        void CopyToQueue(IEnumerable messages)
+        {
+            var messagesToMove = messages.OfType<Message>().ToList();
+
+            Messenger.Default.Send(new CopyMessagesToQueueRequested(messagesToMove));
         }
 
         void AddNewMachine(string newMachineName)

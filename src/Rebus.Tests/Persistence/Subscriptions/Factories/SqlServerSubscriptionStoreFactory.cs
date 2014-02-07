@@ -1,6 +1,8 @@
+using System;
 using System.Data.SqlClient;
 using Rebus.Persistence.SqlServer;
 using log4net.Config;
+using System.Linq;
 
 namespace Rebus.Tests.Persistence.Subscriptions.Factories
 {
@@ -17,13 +19,13 @@ namespace Rebus.Tests.Persistence.Subscriptions.Factories
 
         public IStoreSubscriptions CreateStore()
         {
-            DeleteRows("subscriptions");
-            return new SqlServerSubscriptionStorage(ConnectionStrings.SqlServer, "subscriptions");
-        }
-
-        protected void DeleteRows(string tableName)
-        {
-            ExecuteCommand("delete from " + tableName);
+            if (SqlServerFixtureBase.GetTableNames()
+                                    .Contains("subscriptions", StringComparer.CurrentCultureIgnoreCase))
+            {
+                ExecuteCommand("drop table subscriptions");
+            }
+            return new SqlServerSubscriptionStorage(ConnectionStrings.SqlServer, "subscriptions")
+                .EnsureTableIsCreated();
         }
 
         static void ExecuteCommand(string commandText)

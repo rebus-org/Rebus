@@ -23,7 +23,68 @@ namespace Rebus.Tests.Unit
                                         activator,
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
-                                        new DeferredMessageHandlerForTesting());
+                                        new DeferredMessageHandlerForTesting(),
+                                        null);
+        }
+
+        [Test]
+        public void ThrowsIfTwoSagaHandlersArePresentInHandlerPipeline()
+        {
+            // arrange
+            activator.UseHandler(new FirstSaga());
+            activator.UseHandler(new SecondSaga());
+            var messageThatCanBeHandledByBothSagas = new SomeMessage();
+
+            // act
+            var exception =
+                Assert.Throws<MultipleSagaHandlersFoundException>(
+                    () => dispatcher.Dispatch(messageThatCanBeHandledByBothSagas));
+
+            // assert
+            exception.Message.ShouldContain("FirstSaga");
+            exception.Message.ShouldContain("SecondSaga");
+            exception.Message.ShouldContain("SomeMessage");
+        }
+
+        class FirstSaga : Saga<SomeSagaData>, IHandleMessages<SomeMessage>
+        {
+            public override void ConfigureHowToFindSaga()
+            {
+            }
+
+            public void Handle(SomeMessage message)
+            {
+            }
+        }
+
+        class SecondSaga : Saga<SomeSagaData>, IHandleMessages<SomeMessage>
+        {
+            public override void ConfigureHowToFindSaga()
+            {
+            }
+
+            public void Handle(SomeMessage message)
+            {
+            }
+        }
+
+        class SomeSagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+        }
+
+        [Test]
+        public void ThrowsIfNoHandlersCanBeFound()
+        {
+            // arrange
+            var theMessage = new SomeMessage();
+
+            // act
+            var ex = Assert.Throws<UnhandledMessageException>(() => dispatcher.Dispatch(theMessage));
+
+            // assert
+            ex.UnhandledMessage.ShouldBe(theMessage);
         }
 
         [Test]
@@ -35,7 +96,7 @@ namespace Rebus.Tests.Unit
                 .UseHandler(new YetAnotherHandler(calls))
                 .UseHandler(new AuthHandler(calls));
 
-            pipelineInspector.SetOrder(typeof(AuthHandler), typeof(AnotherHandler));
+            pipelineInspector.SetOrder(typeof (AuthHandler), typeof (AnotherHandler));
 
             // act
             dispatcher.Dispatch(new SomeMessage());
@@ -69,23 +130,18 @@ namespace Rebus.Tests.Unit
             saga.IsNew.ShouldBe(false);
         }
 
-        [Test]
-        public void OneMessageCanNotCorrelateWithSeveralSagas()
+        interface ISomeInterface
         {
-            var saga = new SmallestSagaOnEarthNotCorrelatedOnInitialMessage();
-            activator.UseHandler(saga);
-
-            // initiate two sagas with the same number
-            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
-            dispatcher.Dispatch(new InitiatingMessageWithANumber(1));
-
-            dispatcher.Dispatch(new SomeMessageWithANumber(1));
-            saga.TimesHandlingSomeMessageWithANumber.ShouldBe(1);
         }
 
-        interface ISomeInterface { }
-        interface IAnotherInterface { }
-        class SomeMessage : ISomeInterface, IAnotherInterface { }
+        interface IAnotherInterface
+        {
+        }
+
+        class SomeMessage : ISomeInterface, IAnotherInterface
+        {
+        }
+
         class SomeMessageWithANumber
         {
             public SomeMessageWithANumber(int theNumber)
@@ -119,7 +175,9 @@ namespace Rebus.Tests.Unit
             }
         }
 
-        class SmallestSagaOnEarthNotCorrelatedOnInitialMessage : Saga<SagaData>, IAmInitiatedBy<InitiatingMessageWithANumber>, IHandleMessages<SomeMessageWithANumber>
+        class SmallestSagaOnEarthNotCorrelatedOnInitialMessage : Saga<SagaData>,
+                                                                 IAmInitiatedBy<InitiatingMessageWithANumber>,
+                                                                 IHandleMessages<SomeMessageWithANumber>
         {
             public int TimesHandlingSomeMessageWithANumber { get; set; }
 
@@ -162,7 +220,7 @@ namespace Rebus.Tests.Unit
         }
 
         class AnotherHandler : IHandleMessages<ISomeInterface>, IHandleMessages<object>,
-            IHandleMessages<IAnotherInterface>
+                               IHandleMessages<IAnotherInterface>
         {
             readonly List<string> calls;
 
@@ -202,5 +260,4 @@ namespace Rebus.Tests.Unit
             }
         }
     }
-
 }

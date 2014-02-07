@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Tests.Contracts.Transports.Factories;
 using Shouldly;
 
 namespace Rebus.Tests.Contracts.Transports
 {
     [TestFixture(typeof(MsmqTransportFactory))]
-    [TestFixture(typeof(AzureMqTransportFactory)), Category(TestCategories.Azure)]
-    [TestFixture(typeof(RabbitMqTransportFactory)), Category(TestCategories.Rabbit)]
+    [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(AzureMqTransportFactory), Category = TestCategories.Azure)]
+    [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
+    [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     public class TestSendAndReceive<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         static readonly TimeSpan MaximumExpectedQueueLatency = TimeSpan.FromMilliseconds(300);
@@ -41,7 +44,7 @@ namespace Rebus.Tests.Contracts.Transports
             var transportMessageToSend = new TransportMessageToSend
                 {
                     Body = encoding.GetBytes("this is some data"),
-                    Headers = new Dictionary<string, string>
+                    Headers = new Dictionary<string, object>
                         {
                             {"key1", "value1"},
                             {"key2", "value2"},
@@ -49,9 +52,9 @@ namespace Rebus.Tests.Contracts.Transports
                 };
 
             // act
-            sender.Send(receiver.InputQueue, transportMessageToSend);
+            sender.Send(receiver.InputQueue, transportMessageToSend, new NoTransaction());
             Thread.Sleep(MaximumExpectedQueueLatency);
-            var receivedTransportMessage = receiver.ReceiveMessage();
+            var receivedTransportMessage = receiver.ReceiveMessage(new NoTransaction());
 
             // assert
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("this is some data");
@@ -62,6 +65,13 @@ namespace Rebus.Tests.Contracts.Transports
 
             headers.ShouldContainKeyAndValue("key1", "value1");
             headers.ShouldContainKeyAndValue("key2", "value2");
+
+            5.Times(() =>
+                {
+                    var receivedMessage = receiver.ReceiveMessage(new NoTransaction());
+
+                    receivedMessage.ShouldBe(null);
+                });
         }
 
         [Test]
@@ -69,13 +79,14 @@ namespace Rebus.Tests.Contracts.Transports
         {
             // arrange
             var encoding = Encoding.UTF7;
-            
+
             // act
-            sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") });
+            sender.Send(receiver.InputQueue, new TransportMessageToSend { Body = encoding.GetBytes("wooolalalala") }, new NoTransaction());
             Thread.Sleep(MaximumExpectedQueueLatency);
-            var receivedTransportMessage = receiver.ReceiveMessage();
+            var receivedTransportMessage = receiver.ReceiveMessage(new NoTransaction());
 
             // assert
+            receivedTransportMessage.ShouldNotBe(null);
             encoding.GetString(receivedTransportMessage.Body).ShouldBe("wooolalalala");
         }
     }

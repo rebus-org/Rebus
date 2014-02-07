@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Net;
 using NUnit.Framework;
-using Rebus.Gateway.Http.Inbound;
+using Rebus.HttpGateway.Inbound;
 using Shouldly;
 
-namespace Rebus.Tests.Gateway.Http
+namespace Rebus.Tests.HttpGateway.Http
 {
     [TestFixture]
     public class TestInboundService : FixtureBase
     {
         const string DestinationQueueName = "test.inbound.destination";
-        const string ListenUri = "http://+:8080";
-        const string InboundServiceUri = "http://127.0.0.1:8080";
+        const string ListenUri = "http://+:18080";
+        const string InboundServiceUri = "http://127.0.0.1:18080";
         
         InboundService service;
 

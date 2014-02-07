@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight.Messaging;
 using Rebus.Snoop.Events;
 using Rebus.Snoop.ViewModel.Models;
@@ -16,9 +18,26 @@ namespace Rebus.Snoop
     {
         public MainWindow()
         {
+            Application.Current.DispatcherUnhandledException += HandleUnhandledException;
             Context.Init();
             InitializeComponent();
             Messenger.Default.Register(this, (NotificationAdded n) => HandleNotificationAdded(n));
+        }
+
+        void HandleUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+        {
+            var result = MessageBox.Show(string.Format(@"An exception was caught: {0}
+
+Would you like to continue? (YES: The application might become unstable. NO: The application will quit.)", e.Exception),
+                                         "Unhandled exception", MessageBoxButton.YesNo);
+            if (result == MessageBoxResult.Yes)
+            {
+                e.Handled = true;
+            }
+            else
+            {
+                Environment.Exit(1);
+            }
         }
 
         void HandleNotificationAdded(NotificationAdded notificationAdded)

@@ -44,13 +44,13 @@ namespace Rebus.Tests.HttpGateway
             outbound = new GatewayService
                 {
                     ListenQueue = outboundListenQueue,
-                    DestinationUri = "http://localhost:8080",
+                    DestinationUri = "http://localhost:" + TestCategories.AvailableHttpPort,
                 };
 
             // and the inbound is on the network domain side
             inbound = new GatewayService
                 {
-                    ListenUri = "http://+:8080",
+                    ListenUri = "http://+:" + TestCategories.AvailableHttpPort,
                     DestinationQueue = ordersystemInputQueue
                 };
 

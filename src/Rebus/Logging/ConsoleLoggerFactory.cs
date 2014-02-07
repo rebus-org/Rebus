@@ -1,17 +1,41 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace Rebus.Logging
 {
-    internal class ConsoleLoggerFactory : AbstractRebusLoggerFactory
+    /// <summary>
+    /// Logger factory that logs stuff to the console
+    /// </summary>
+    public class ConsoleLoggerFactory : AbstractRebusLoggerFactory
     {
+        /// <summary>
+        /// One single log statement
+        /// </summary>
+        public class LogStatement
+        {
+            internal LogStatement(LogLevel level, string text, object[] args)
+            {
+                Level = level;
+                Args = args;
+                Text = text;
+            }
+
+            public LogLevel Level { get; private set; }
+            public string Text { get; private set; }
+            public object[] Args { get; private set; }
+        }
+
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
 
         readonly bool colored;
+        readonly List<Func<LogStatement, bool>> filters = new List<Func<LogStatement, bool>>(); 
 
         LoggingColors colors = new LoggingColors();
         LogLevel minLevel = LogLevel.Debug;
+        bool showTimestamps;
 
         public ConsoleLoggerFactory(bool colored)
         {
@@ -34,12 +58,27 @@ namespace Rebus.Logging
             }
         }
 
+        public IList<Func<LogStatement, bool>> Filters
+        {
+            get { return filters; }
+        }
+
+        public bool ShowTimestamps
+        {
+            get { return showTimestamps; }
+            set
+            {
+                showTimestamps = value;
+                Loggers.Clear();
+            }
+        }
+
         protected override ILog GetLogger(Type type)
         {
             ILog logger;
             if (!Loggers.TryGetValue(type, out logger))
             {
-                logger = new ConsoleLogger(type, colors, this);
+                logger = new ConsoleLogger(type, colors, this, showTimestamps);
                 Loggers.TryAdd(type, logger);
             }
             return logger;
@@ -50,12 +89,17 @@ namespace Rebus.Logging
             readonly LoggingColors loggingColors;
             readonly ConsoleLoggerFactory factory;
             readonly Type type;
+            readonly string logLineFormatString;
 
-            public ConsoleLogger(Type type, LoggingColors loggingColors, ConsoleLoggerFactory factory)
+            public ConsoleLogger(Type type, LoggingColors loggingColors, ConsoleLoggerFactory factory, bool showTimestamps)
             {
                 this.type = type;
                 this.loggingColors = loggingColors;
                 this.factory = factory;
+
+                logLineFormatString = showTimestamps
+                                          ? "{0} {1} {2} ({3}): {4}"
+                                          : "{1} {2} ({3}): {4}";
             }
 
             #region ILog Members
@@ -122,28 +166,38 @@ namespace Rebus.Logging
             void Write(LogLevel level, string message, object[] objs)
             {
                 if ((int)level < (int)factory.MinLevel) return;
+                if (factory.AbortedByFilter(new LogStatement(level, message, objs))) return;
 
                 var levelString = LevelString(level);
 
+                var threadName = Thread.CurrentThread.Name;
+                var typeName = type.FullName;
                 try
                 {
-                    Console.WriteLine("{0} {1} ({2}): {3}",
-                                      type.FullName,
-                                      levelString,
-                                      Thread.CurrentThread.Name,
-                                      string.Format(message, objs));
+                    var renderedMessage = string.Format(message, objs);
+                    var timeFormat = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+
+                    try
+                    {
+                        Console.WriteLine(logLineFormatString,
+                            timeFormat,
+                            typeName,
+                            levelString,
+                            threadName,
+                            renderedMessage);
+                    }
+                    catch { } //< nothing to do about it if this part fails
                 }
                 catch
                 {
-                    Warn("Could not render output string: {0}", message);
-
-                    Console.WriteLine("{0} {1} ({2}): {3}",
-                                      type.FullName,
-                                      levelString,
-                                      Thread.CurrentThread.Name,
-                                      message);
+                    Warn("Could not render output string: '{0}' with args: {1}", message, string.Join(", ", objs));
                 }
             }
+        }
+
+        bool AbortedByFilter(LogStatement logStatement)
+        {
+            return filters.Any(f => !f(logStatement));
         }
     }
 }

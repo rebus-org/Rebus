@@ -9,8 +9,16 @@ namespace Rebus.Logging
     /// </summary>
     public abstract class AbstractRebusLoggerFactory : IRebusLoggerFactory
     {
+        /// <summary>
+        /// Should get a logger for the specified type 
+        /// </summary>
         protected abstract ILog GetLogger(Type type);
 
+        /// <summary>
+        /// Gets a logger that is initialized to somehow carry information on the class that is using it.
+        /// Be warned that this method will most likely be pretty slow, because it will probably rely on
+        /// some clunky <see cref="StackFrame"/> inspection.
+        /// </summary>
         public ILog GetCurrentClassLogger()
         {
             var stackFrame = new StackFrame(1);

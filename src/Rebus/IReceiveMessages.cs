@@ -10,7 +10,7 @@ namespace Rebus
         /// <summary>
         /// Attempt to receive the next available message. Should return null if no message is available.
         /// </summary>
-        ReceivedTransportMessage ReceiveMessage();
+        ReceivedTransportMessage ReceiveMessage(ITransactionContext context);
         
         /// <summary>
         /// Gets the name of this receiver's input queue - i.e. this is the queue that this receiver

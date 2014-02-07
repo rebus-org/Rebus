@@ -1,14 +1,29 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
+using Rebus.Logging;
+using Rebus.Transports.Sql;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
+    /// and correlation properties in an index table on the side.
+    /// </summary>
     public class SqlServerSagaPersister : IStoreSagaData
     {
-        const int PrimaryKeyViolationNumber = 2627;
+        static ILog log;
+
+        static SqlServerSagaPersister()
+        {
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
         const int MaximumSagaDataTypeNameLength = 40;
 
         static readonly JsonSerializerSettings Settings =
@@ -17,24 +32,36 @@ namespace Rebus.Persistence.SqlServer
         readonly string sagaIndexTableName;
         readonly string sagaTableName;
 
-        readonly Func<SqlConnection> getConnection;
-        readonly Action<SqlConnection> releaseConnection;
+        readonly Func<ConnectionHolder> getConnection;
+        readonly Action<ConnectionHolder> commitAction;
+        readonly Action<ConnectionHolder> rollbackAction;
+        readonly Action<ConnectionHolder> releaseConnection;
+
+        readonly string idPropertyName;
+
+        SqlServerSagaPersister(string sagaIndexTableName, string sagaTableName)
+        {
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
+        }
 
         /// <summary>
         /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the persister will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
         public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
+            : this(sagaIndexTableName, sagaTableName)
         {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-
             getConnection = () =>
                 {
-                    var sqlConnection = new SqlConnection(connectionString);
-                    sqlConnection.Open();
-                    return sqlConnection;
+                    var connection = new SqlConnection(connectionString);
+                    connection.Open();
+                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
                 };
+            commitAction = h => h.Commit();
+            rollbackAction = h => h.RollBack();
             releaseConnection = c => c.Dispose();
         }
 
@@ -43,25 +70,37 @@ namespace Rebus.Persistence.SqlServer
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the perister will assume
         /// that someone else manages the connection's lifetime.
         /// </summary>
-        public SqlServerSagaPersister(Func<SqlConnection> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
+        public SqlServerSagaPersister(Func<ConnectionHolder> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
+            : this(sagaIndexTableName, sagaTableName)
         {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-
             getConnection = connectionFactoryMethod;
-            releaseConnection = c => { };
+
+            // everything else is handed over to whoever provided the connection
+            releaseConnection = h => { };
+            commitAction = h => { };
+            rollbackAction = h => { };
         }
 
+        /// <summary>
+        /// Returns the name of the table used to store correlation properties of saga instances
+        /// </summary>
         public string SagaIndexTableName
         {
             get { return sagaIndexTableName; }
         }
 
+        /// <summary>
+        /// Returns the name of the table used to store JSON serializations of saga instances.
+        /// </summary>
         public string SagaTableName
         {
             get { return sagaTableName; }
         }
 
+        /// <summary>
+        /// Inserts the given saga data in the underlying SQL table, generating an appropriate index in the index table for the specified
+        /// correlation properties. In this process, all existing index entries associated with this particular saga data are deleted.
+        /// </summary>
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var connection = getConnection();
@@ -88,14 +127,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
-                var propertiesToIndex = sagaDataPropertyPathsToIndex
-                    .Select(path => new
-                                        {
-                                            Key = path,
-                                            Value = (Reflect.Value(sagaData, path) ?? "").ToString()
-                                        })
-                    .Where(a => a.Value != null)
-                    .ToList();
+                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex);
 
                 if (propertiesToIndex.Any())
                 {
@@ -122,7 +154,7 @@ namespace Rebus.Persistence.SqlServer
                         }
                         catch (SqlException sqlException)
                         {
-                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                             {
                                 throw new OptimisticLockingException(sagaData, sqlException);
                             }
@@ -132,6 +164,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
+                commitAction(connection);
             }
             finally
             {
@@ -139,6 +172,10 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Updates the given saga data in the underlying SQL table, generating an appropriate index in the index table for the specified
+        /// correlation properties. In this process, all existing index entries associated with this particular saga data are deleted.
+        /// </summary>
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             var connection = getConnection();
@@ -170,14 +207,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
-                var propertiesToIndex = sagaDataPropertyPathsToIndex
-                    .Select(path => new
-                    {
-                        Key = path,
-                        Value = (Reflect.Value(sagaData, path) ?? "").ToString()
-                    })
-                    .Where(a => a.Value != null)
-                    .ToList();
+                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex);
 
                 if (propertiesToIndex.Any())
                 {
@@ -203,7 +233,7 @@ namespace Rebus.Persistence.SqlServer
                         }
                         catch (SqlException sqlException)
                         {
-                            if (sqlException.Number == PrimaryKeyViolationNumber)
+                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                             {
                                 throw new OptimisticLockingException(sagaData, sqlException);
                             }
@@ -212,6 +242,8 @@ namespace Rebus.Persistence.SqlServer
                         }
                     }
                 }
+
+                commitAction(connection);
             }
             finally
             {
@@ -219,6 +251,9 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Deletes the saga data instance from the underlying SQL table
+        /// </summary>
         public void Delete(ISagaData sagaData)
         {
             var connection = getConnection();
@@ -226,7 +261,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from sagas where id = @id and revision = @current_revision;";
+                    command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
                     var rows = command.ExecuteNonQuery();
@@ -238,9 +273,63 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = @"delete from saga_index where saga_id = @id";
+                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
+                }
+
+                commitAction(connection);
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
+        }
+
+        /// <summary>
+        /// Queries the underlying SQL table for the saga whose correlation field has a value
+        /// that matches the given field from the incoming message.
+        /// </summary>
+        public TSagaData Find<TSagaData>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaData : class, ISagaData
+        {
+            var connection = getConnection();
+            try
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    if (sagaDataPropertyPath == idPropertyName)
+                    {
+                        command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
+                    }
+                    else
+                    {
+                        command.CommandText = string.Format(@"select s.data 
+                                                    from [{0}] s 
+                                                        join [{1}] i on s.id = i.saga_id 
+                                                    where i.[saga_type] = @saga_type
+                                                        and i.[key] = @key 
+                                                        and i.value = @value", sagaTableName, sagaIndexTableName);
+
+                        command.Parameters.AddWithValue("key", sagaDataPropertyPath);
+                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
+                    }
+
+                    command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
+
+                    var value = (string)command.ExecuteScalar();
+
+                    if (value == null) return null;
+
+                    try
+                    {
+                        return (TSagaData)JsonConvert.DeserializeObject(value, Settings);
+                    }
+                    catch (Exception exception)
+                    {
+                        throw new ApplicationException(
+                            string.Format("An error occurred while attempting to deserialize '{0}' into a {1}",
+                                value, typeof(TSagaData)), exception);
+                    }
                 }
             }
             finally
@@ -249,43 +338,16 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
-        public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
+        List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
-            var connection = getConnection();
-            try
-            {
-                using (var command = connection.CreateCommand())
+            return sagaDataPropertyPathsToIndex
+                .Select(path =>
                 {
-                    if (sagaDataPropertyPath == "Id")
-                    {
-                        command.CommandText = @"select s.data from sagas s where s.id = @value";
-                    }
-                    else
-                    {
-                        command.CommandText = @"select s.data 
-                                                    from sagas s 
-                                                        join saga_index i on s.id = i.saga_id 
-                                                    where i.[saga_type] = @saga_type
-                                                        and i.[key] = @key 
-                                                        and i.value = @value";
-                        command.Parameters.AddWithValue("key", sagaDataPropertyPath);
-                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(T)));
-                    }
+                    var value = Reflect.Value(sagaData, path);
 
-                    command.Parameters.AddWithValue("value", (fieldFromMessage ?? "").ToString());
-
-                    var value = (string)command.ExecuteScalar();
-
-                    if (value == null)
-                        return null;
-
-                    return (T)JsonConvert.DeserializeObject(value, Settings);
-                }
-            }
-            finally
-            {
-                releaseConnection(connection);
-            }
+                    return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
+                })
+                .ToList();
         }
 
         string GetSagaTypeName(Type sagaDataType)
@@ -306,6 +368,80 @@ saga type name.",
             }
 
             return sagaTypeName;
+        }
+
+        /// <summary>
+        /// Creates the necessary saga storage tables if they haven't already been created. If a table already exists
+        /// with a name that matches one of the desired table names, no action is performed (i.e. it is assumed that
+        /// the tables already exist).
+        /// </summary>
+        public SqlServerSagaPersister EnsureTablesAreCreated()
+        {
+            var connection = getConnection();
+            try
+            {
+                var tableNames = connection.GetTableNames();
+
+                // bail out if there's already a table in the database with one of the names
+                if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
+                    || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return this;
+                }
+
+                log.Info("Tables '{0}' and '{1}' do not exist - they will be created now",
+                         SagaTableName, SagaIndexTableName);
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}] (
+	[id] [uniqueidentifier] NOT NULL,
+	[revision] [int] NOT NULL,
+	[data] [nvarchar](max) NOT NULL,
+
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [id] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
+
+", SagaTableName);
+                    command.ExecuteNonQuery();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+CREATE TABLE [dbo].[{0}] (
+	[saga_type] [nvarchar](40) NOT NULL,
+	[key] [nvarchar](200) NOT NULL,
+	[value] [nvarchar](200) NOT NULL,
+	[saga_id] [uniqueidentifier] NOT NULL,
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [key] ASC,
+	    [value] ASC,
+	    [saga_type] ASC
+    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
+)
+
+CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
+(
+	[saga_id] ASC
+) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
+
+", SagaIndexTableName);
+                    command.ExecuteNonQuery();
+                }
+
+                commitAction(connection);
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
+            return this;
         }
     }
 }

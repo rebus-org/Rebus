@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
@@ -20,30 +21,43 @@ using Message = Rebus.Messages.Message;
 namespace Rebus.Tests.Transports.Msmq
 {
     [TestFixture]
-    public class TestMsmqMessageQueue
+    public class TestMsmqMessageQueue : FixtureBase
     {
-        List<IDisposable> disposables;
+        const string SenderQueueName = "test.msmq.tx.sender";
+        const string DestinationQueueName = "test.msmq.tx.destination";
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
         JsonMessageSerializer serializer;
-        string destinationQueueName;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
-            disposables = new List<IDisposable>();
-
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
-            destinationQueueName = "test.msmq.tx.destination";
+            senderQueue = new MsmqMessageQueue(SenderQueueName);
 
-            destinationQueue = NewRawMsmqQueue(destinationQueueName);
+            destinationQueue = NewRawMsmqQueue(DestinationQueueName);
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
 
-            disposables.Add(senderQueue);
-            disposables.Add(destinationQueue);
+            TrackDisposable(senderQueue);
+        }
+
+        protected override void DoTearDown()
+        {
+            foreach (var disposable in DisposableTracker.GetTrackedDisposables())
+            {
+                var msmqMessageQueue = disposable as MsmqMessageQueue;
+                if (msmqMessageQueue != null)
+                {
+                    msmqMessageQueue.DeleteInputQueue();
+                }
+
+                var messageQueue = disposable as MessageQueue;
+                if (messageQueue != null)
+                {
+                    MessageQueue.Delete(messageQueue.Path);
+                }
+            }
         }
 
         MessageQueue NewRawMsmqQueue(string queueName)
@@ -64,21 +78,40 @@ namespace Rebus.Tests.Transports.Msmq
 
             newRawMsmqQueue.Purge();
 
+            TrackDisposable(newRawMsmqQueue);
+
             return newRawMsmqQueue;
         }
 
-        [TearDown]
-        public void TearDown()
+        [Test, Ignore("Only works in RELEASE mode because otherwise object references are held on to for the duration of the method")]
+        public void DoesNotLeakMessages()
         {
-            disposables.ForEach(d =>
-                {
-                    var msmqMessageQueue = d as MsmqMessageQueue;
-                    if (msmqMessageQueue != null)
-                    {
-                        msmqMessageQueue.DeleteInputQueue();
-                    }
-                    d.Dispose();
-                });
+            // arrange
+            const string inputQueueName = "test.leak.input";
+            var queue = TrackDisposable(new MsmqMessageQueue(inputQueueName));
+
+            var body = Encoding.UTF8.GetBytes(new string('*', 32768));
+            var message = new TransportMessageToSend
+                            {
+                                Headers = new Dictionary<string, object> { { Headers.MessageId, "msg-1" } },
+                                Body = body
+                            };
+            
+            var weakMessageRef = new WeakReference(message);
+            var weakBodyRef = new WeakReference(body);
+
+
+            // act
+            queue.Send(inputQueueName, message, new NoTransaction());
+            message = null;
+            body = null;
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+
+            // assert
+            Assert.That(weakMessageRef.IsAlive, Is.False, "Expected the message to have been collected");
+            Assert.That(weakBodyRef.IsAlive, Is.False, "Expected the body bytes to have been collected");
         }
 
         [Test]
@@ -86,17 +119,17 @@ namespace Rebus.Tests.Transports.Msmq
         {
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.mach.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
 
             // act
-            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(machineQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(200);
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -106,17 +139,17 @@ namespace Rebus.Tests.Transports.Msmq
         {
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.loca.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             const string localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
 
             // act
-            queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(localHostQualifiedQueueName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(200);
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -128,17 +161,17 @@ namespace Rebus.Tests.Transports.Msmq
 
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.ip.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var ipQualifiedName = "test.msmq.ip.input@" + ipAddress;
 
             // act
-            queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") });
+            queue.Send(ipQualifiedName, new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("yo dawg!") }, new NoTransaction());
 
             Thread.Sleep(1.Seconds());
 
             // assert
-            var receivedTransportMessage = queue.ReceiveMessage();
+            var receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
             receivedTransportMessage.ShouldNotBe(null);
             Encoding.UTF8.GetString(receivedTransportMessage.Body).ShouldBe("yo dawg!");
         }
@@ -191,20 +224,21 @@ The following addresses were collected:
         /// 
         /// </summary>
         [TestCase(1000)]
+        [TestCase(10000)]
         public void CheckSendPerformance(int count)
         {
             var queue = new MsmqMessageQueue("test.msmq.performance").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var transportMessageToSend = new TransportMessageToSend
                                              {
-                                                 Headers = new Dictionary<string, string>(),
+                                                 Headers = new Dictionary<string, object>(),
                                                  Body = new byte[1024],
                                                  Label = "this is just a label"
                                              };
 
             var stopwatch = Stopwatch.StartNew();
-            count.Times(() => queue.Send("test.msmq.performance", transportMessageToSend));
+            count.Times(() => queue.Send("test.msmq.performance", transportMessageToSend, new NoTransaction()));
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
             Console.WriteLine("Sending {0} messages took {1:0} s - that's {2:0} msg/s",
@@ -239,12 +273,13 @@ The following addresses were collected:
             var timeToBeReceived = 2.Seconds()
                 .ToString();
 
-            senderQueue.Send(destinationQueueName,
+            senderQueue.Send(DestinationQueueName,
                              serializer.Serialize(new Message
-                                                      {
-                                                          Messages = new object[] { "HELLO WORLD!" },
-                                                          Headers = new Dictionary<string, string> { { Headers.TimeToBeReceived, timeToBeReceived } },
-                                                      }));
+                                 {
+                                     Messages = new object[] { "HELLO WORLD!" },
+                                     Headers = new Dictionary<string, object> { { Headers.TimeToBeReceived, timeToBeReceived } },
+                                 }),
+                             new NoTransaction());
 
             // act
             Thread.Sleep(2.Seconds() + 1.Seconds());
@@ -258,14 +293,16 @@ The following addresses were collected:
         {
             using (var tx = new TransactionScope())
             {
-                senderQueue.Send(destinationQueueName,
+                var ctx = new AmbientTransactionContext();
+                senderQueue.Send(DestinationQueueName,
                                  serializer.Serialize(new Message
-                                                          {
-                                                              Messages = new object[]
-                                                                             {
-                                                                                 "W00t!"
-                                                                             },
-                                                          }));
+                                     {
+                                         Messages = new object[]
+                                             {
+                                                 "W00t!"
+                                             },
+                                     }),
+                                 ctx);
 
                 tx.Complete();
             }
@@ -281,17 +318,18 @@ The following addresses were collected:
         [Test]
         public void HeadersAreTransferred()
         {
-            var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, object>
                               {
                                   {"someRandomHeaderKey", "someRandomHeaderValue"},
                               };
 
-            senderQueue.Send(destinationQueueName,
+            senderQueue.Send(DestinationQueueName,
                              serializer.Serialize(new Message
-                                                      {
-                                                          Messages = new object[] { "W00t!" },
-                                                          Headers = headers
-                                                      }));
+                                 {
+                                     Messages = new object[] { "W00t!" },
+                                     Headers = headers
+                                 }),
+                             new NoTransaction());
             var msmqMessage = Receive();
 
             Assert.IsNotNull(msmqMessage, "No message was received within timeout!");
@@ -309,14 +347,16 @@ The following addresses were collected:
         {
             using (new TransactionScope())
             {
-                senderQueue.Send(destinationQueueName,
+                var ctx = new AmbientTransactionContext();
+                senderQueue.Send(DestinationQueueName,
                                  serializer.Serialize(new Message
-                                                          {
-                                                              Messages = new object[]
-                                                                             {
-                                                                                 "W00t! should not be delivered!"
-                                                                             }
-                                                          }));
+                                     {
+                                         Messages = new object[]
+                                             {
+                                                 "W00t! should not be delivered!"
+                                             }
+                                     }),
+                                 ctx);
 
                 //< we exit the scope without completing it!
             }
@@ -329,7 +369,7 @@ The following addresses were collected:
             }
         }
 
-        [TestCase(true, Description="Asserts that, when a TransactionScope completes the ambient tx, all messages are committed atomically to multiple queues")]
+        [TestCase(true, Description = "Asserts that, when a TransactionScope completes the ambient tx, all messages are committed atomically to multiple queues")]
         [TestCase(false, Description = "Asserts that, when a TransactionScope does not complete the ambient tx, no messages are sent to any of the involved queues")]
         public void MultipleSendOperationsToMultipleQueuesAreEnlistedInTheSameTransaction(bool commitTransactionAndExpectMessagesToBeThere)
         {
@@ -340,18 +380,17 @@ The following addresses were collected:
             var recipient1 = NewRawMsmqQueue(queueName1);
             var recipient2 = NewRawMsmqQueue(queueName2);
 
-            disposables.Add(recipient1);
-            disposables.Add(recipient2);
-
             var encoding = Encoding.UTF8;
 
             using (var tx = new TransactionScope())
             {
+                var ctx = new AmbientTransactionContext();
+
                 // act
-                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") });
-                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 2!") });
-                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 3!") });
-                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 4!") });
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 1!") }, ctx);
+                senderQueue.Send(queueName1, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 2!") }, ctx);
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 3!") }, ctx);
+                senderQueue.Send(queueName2, new TransportMessageToSend { Body = encoding.GetBytes("yo dawg 4!") }, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -362,7 +401,7 @@ The following addresses were collected:
             if (commitTransactionAndExpectMessagesToBeThere)
             {
                 allMessages.Count.ShouldBe(4);
-                
+
                 var receivedMessages = allMessages.Select(m => encoding.GetString(m.Body)).ToList();
                 receivedMessages.ShouldContain("yo dawg 1!");
                 receivedMessages.ShouldContain("yo dawg 2!");
@@ -388,7 +427,7 @@ The following addresses were collected:
                     receivedTransportMessages.Add((ReceivedTransportMessage)message.Body);
                 }
             }
-            catch (MessageQueueException e)
+            catch (MessageQueueException)
             {
             }
 

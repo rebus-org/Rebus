@@ -5,16 +5,14 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Messages;
-using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
-using Rebus.Tests.Integration;
 using System.Linq;
 using Shouldly;
 
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestWorker_PolymorphicDispatch : FixtureBase
+    internal class TestWorker_PolymorphicDispatch : WorkerFixtureBase
     {
         Worker worker;
         MessageReceiverForTesting receiveMessages;
@@ -23,19 +21,11 @@ namespace Rebus.Tests.Unit
 
         protected override void DoSetUp()
         {
-            var serializer = new JsonMessageSerializer();
-
-            receiveMessages = new MessageReceiverForTesting(serializer);
+            receiveMessages = new MessageReceiverForTesting(new JsonMessageSerializer());
             activateHandlers = new HandlerActivatorForTesting();
             inspectHandlerPipeline = new RearrangeHandlersPipelineInspector();
-            worker = new Worker(new ErrorTracker("error"),
-                                receiveMessages,
-                                activateHandlers,
-                                new InMemorySubscriptionStorage(),
-                                serializer, 
-                                new SagaDataPersisterForTesting(),
-                                inspectHandlerPipeline, "Just some test worker",
-                                new DeferredMessageHandlerForTesting());
+
+            worker = CreateWorker(receiveMessages, activateHandlers, inspectHandlerPipeline);
         }
 
         protected override void DoTearDown()
@@ -91,10 +81,10 @@ namespace Rebus.Tests.Unit
 
         class TestHandlerBase<T> : IHandleMessages<T>
         {
-            List<string> calls;
+            readonly List<string> calls;
             readonly string label;
 
-            public TestHandlerBase(List<string> calls, string label)
+            protected TestHandlerBase(List<string> calls, string label)
             {
                 this.calls = calls;
                 this.label = label;

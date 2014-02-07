@@ -9,14 +9,14 @@ namespace Rebus.Shared
         /// Specifies that the contents of the message has been encrypted.
         /// </summary>
         public const string Encrypted = "rebus-encrypted";
-        
+
         /// <summary>
         /// Key of header that contains the salt that was used when encrypting this message
         /// </summary>
         public const string EncryptionSalt = "rebus-salt";
 
         /// <summary>
-        /// Key of header that contains the unique ID of the message.
+        /// Key of header that contains the unique Rebus transport message ID.
         /// </summary>
         public const string MessageId = "rebus-msg-id";
 
@@ -59,12 +59,53 @@ namespace Rebus.Shared
         /// when serializing the string.
         /// </summary>
         public const string Encoding = "rebus-encoding";
-        
+
         /// <summary>
         /// Indicates that this message may be delivered faster if it is possible, most likely at the expense of
         /// delivery guarantee. E.g. a message queue might not durably persist the message when this header is
         /// added, which might lead to message loss in the event of a server crash.
         /// </summary>
         public const string Express = "rebus-express";
+
+        /// <summary>
+        /// Indicates thats the message will be sent using some kind of multicast protocol. This might lead transport
+        /// implementations to behave differently.
+        /// </summary>
+        public const string Multicast = "rebus-multicast";
+
+        /// <summary>
+        /// When a message is sent from within a saga, the saga's ID is attached to the outgoing
+        /// message in order to support auto-correlating replies back to the requesting saga.
+        /// </summary>
+        public const string AutoCorrelationSagaId = "rebus-autocorrelation-saga-id";
+
+        /// <summary>
+        /// Special header that will flow through message handlers and be automatically transferred to all outgoing messages.
+        /// Will automatically be set to a globally unique ID if it is not present on an outgoing message. Thus it may be
+        /// used to track cause/effect in messaging-based solutions.
+        /// </summary>
+        public const string CorrelationId = "rebus-correlation-id";
+       
+        /// <summary>
+        /// Special header that will flow though message handlers like <see cref="CorrelationId"/>, provided that it is present.
+        /// If not, nothing happens. Thus it may be used to authenticate messages and establish a user context within message handlers.
+        /// </summary>
+        public const string UserName = "rebus-username";
+
+        /// <summary>
+        /// This header indicates that the body is currently compressed. The type of the compression is specified by the value.
+        /// </summary>
+        public const string Compression = "rebus-compression";
+
+        /// <summary>
+        /// Contains the available compression types.
+        /// </summary>
+        public class CompressionTypes
+        {
+            /// <summary>
+            /// Indicates that the body has been compressed using GZip
+            /// </summary>
+            public const string GZip = "gzip";
+        }
     }
 }

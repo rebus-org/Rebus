@@ -1,18 +1,44 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using Rebus.Snoop.Annotations;
 
 namespace Rebus.Snoop.ViewModel.Models
 {
     public class Message : ViewModel
     {
-        readonly Dictionary<string, string> headers = new Dictionary<string, string>();
+#pragma warning disable 649
+        readonly EditableDictionary<string, string> headers = new EditableDictionary<string, string>();
+        readonly string bodyPropertyName;
         string body;
         int bytes;
         string id;
         string label;
         string queuePath;
         DateTime time;
+        bool bodyChanged;
+        bool couldDeserializeBody;
+        bool couldDeserializeHeaders;
+#pragma warning restore 649
+
+        public Message()
+        {
+            PropertyChanged += TrackBodyChanged;
+            bodyPropertyName = ExtractPropertyName(() => Body);
+        }
+
+        void TrackBodyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != bodyPropertyName) return;
+
+            BodyChanged = true;
+        }
+
+        public void ResetDirtyFlags()
+        {
+            BodyChanged = false;
+        }
 
         public string Body
         {
@@ -20,16 +46,27 @@ namespace Rebus.Snoop.ViewModel.Models
             set { SetValue(() => Body, value); }
         }
 
-        public Dictionary<string, string> Headers
+        public bool BodyChanged
         {
-            get { return headers; }
-            set { SetValue(() => Headers, value, ExtractPropertyName(() => HeadersExceptError), ExtractPropertyName(() => ErrorDetails)); }
+            get { return bodyChanged; }
+            set { SetValue(() => BodyChanged, value); }
         }
 
-        public IEnumerable<KeyValuePair<string, string>> HeadersExceptError
+        public EditableDictionary<string, string> Headers
+        {
+            get { return headers; }
+            set
+            {
+                SetValue(() => Headers, value,
+                    ExtractPropertyName(() => HeadersExceptError),
+                    ExtractPropertyName(() => ErrorDetails));
+            }
+        }
+
+        public IEnumerable<EditableKeyValuePair<string, string>> HeadersExceptError
         {
             get { return Headers.Where(h => h.Key != Shared.Headers.ErrorMessage).ToArray(); }
-        } 
+        }
 
         public string Label
         {
@@ -69,6 +106,44 @@ namespace Rebus.Snoop.ViewModel.Models
                            ? Headers[Shared.Headers.ErrorMessage]
                            : null;
             }
+        }
+
+        public bool CouldDeserializeBody
+        {
+            get { return couldDeserializeBody; }
+            set { SetValue(() => CouldDeserializeBody, value); }
+        }
+
+        public bool CouldDeserializeHeaders
+        {
+            get { return couldDeserializeHeaders; }
+            set { SetValue(() => CouldDeserializeHeaders, value); }
+        }
+
+        public string ReturnAddress
+        {
+            get
+            {
+                return Headers.ContainsKey(Shared.Headers.ReturnAddress)
+                           ? Headers[Shared.Headers.ReturnAddress]
+                           : "";
+            }
+        }
+
+        public Message Clone()
+        {
+            return new Message
+                       {
+                           Headers = Headers.Clone(),
+                           Body = Body,
+                           Bytes = Bytes,
+                           Id = "(reload queue contents to get id)",
+                           CouldDeserializeBody = CouldDeserializeBody,
+                           CouldDeserializeHeaders = CouldDeserializeHeaders,
+                           QueuePath = QueuePath,
+                           Label = Label,
+                           Time = Time,
+                       };
         }
     }
 }

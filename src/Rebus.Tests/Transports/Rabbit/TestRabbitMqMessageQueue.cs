@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,18 +8,319 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
+using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.RabbitMQ;
+using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Shouldly;
+using Message = Rebus.Messages.Message;
 
 namespace Rebus.Tests.Transports.Rabbit
 {
     [TestFixture, Category(TestCategories.Rabbit)]
     public class TestRabbitMqMessageQueue : RabbitMqFixtureBase
     {
+        static readonly Encoding Encoding = Encoding.UTF8;
+        JsonMessageSerializer serializer;
+
         protected override void DoSetUp()
         {
-            RebusLoggerFactory.Current = new NullLoggerFactory();
+            serializer = new JsonMessageSerializer();
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(true) { MinLevel = LogLevel.Info };
+        }
+
+        [Test]
+        public void CanSkipCreatingTheErrorQueue()
+        {
+            using (var adapter = new BuiltinContainerAdapter())
+            {
+                const string errorTopic = "this_is_just_a_topic_now_not_a_queue";
+                DeleteQueue(errorTopic);
+
+                Configure.With(adapter)
+                         .Transport(t => t.UseRabbitMq(ConnectionString, "test.input", errorTopic)
+                                          .DoNotCreateErrorQueue())
+                         .CreateBus()
+                         .Start();
+
+                Assert.That(QueueExists(errorTopic), Is.False, "Did not expect a queue to exist with the name '{0}'", errorTopic);
+            }
+        }
+
+        [Test]
+        public void CanCreateAutoDeleteQueue()
+        {
+            const string queueName = "test.autodelete.input";
+            DeleteQueue(queueName);
+
+            // arrange
+            var existedBeforeInstatiation = QueueExists(queueName);
+            bool existedWhileInstantiatedAndInsideTx;
+            bool existedWhileInstantiatedAndOutsideOfTx;
+
+            // act
+            using (var queue = new RabbitMqMessageQueue(ConnectionString, queueName).AutoDeleteInputQueue())
+            {
+                using (var scope = new TransactionScope())
+                {
+                    using (var txBomkarl = new TxBomkarl())
+                    {
+                        var willBeNull = queue.ReceiveMessage(txBomkarl);
+
+                        existedWhileInstantiatedAndInsideTx = QueueExists(queueName);
+                    }
+
+                    existedWhileInstantiatedAndOutsideOfTx = QueueExists(queueName);
+                }
+            }
+
+            var existedAfterDisposal = QueueExists(queueName);
+
+            // assert
+            existedBeforeInstatiation.ShouldBe(false);
+            existedWhileInstantiatedAndInsideTx.ShouldBe(true);
+            existedWhileInstantiatedAndOutsideOfTx.ShouldBe(true);
+            existedAfterDisposal.ShouldBe(false);
+        }
+
+        bool QueueExists(string queueName)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            {
+                using (var model = connection.CreateModel())
+                {
+                    try
+                    {
+                        model.QueueDeclarePassive(queueName);
+
+                        // if the call succeeds, then the queue exists
+                        return true;
+                    }
+                    catch (OperationInterruptedException exception)
+                    {
+                        if (exception.Message.Contains("NOT_FOUND"))
+                        {
+                            return false;
+                        }
+
+                        throw;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// With plain string concatenation
+        ///    0,0   System.Stri
+        ///    0,3   System.Coll
+        ///    0,4   System.Coll
+        ///    1,6   System.Tupl
+        ///    7,2   System.Tupl
+        /// 
+        /// With StringBuilder
+        ///    0,0   System.Stri
+        ///    0,2   System.Coll
+        ///    0,4   System.Coll
+        ///    1,5   System.Tupl
+        ///    6,7   System.Tupl
+        /// 
+        /// </summary>
+        /// <param name="count"></param>
+        [TestCase(1000)]
+        [TestCase(100000)]
+        public void TestPerformanceOfPrettyEventNameGeneration(int count)
+        {
+            var queue = new RabbitMqMessageQueue(ConnectionString, "test.eventnames");
+            var eventTypes = new List<Type>
+                                 {
+                                     typeof (string),
+                                     typeof (List<string>),
+                                     typeof (List<Tuple<string, int, int>>),
+                                     typeof (Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>>),
+                                     typeof (Tuple<Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>,
+                                     Tuple<List<Tuple<string, int, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, Tuple<string, int, int>>>>>>>>>>>),
+                                 };
+
+            var elapsed = eventTypes.Select(t =>
+                {
+                    var stopwatch = Stopwatch.StartNew();
+                    count.Times(() => queue.GetEventName(t));
+                    return Tuple.Create(queue.GetEventName(t), stopwatch.Elapsed);
+                });
+
+            Console.WriteLine(string.Join(Environment.NewLine, elapsed.Select(t => string.Format(@"    {0:0.0}   {1}", t.Item2.TotalSeconds, t.Item1))));
+        }
+
+        [Test]
+        public void CanGeneratePrettyEventNames()
+        {
+            var queue = new RabbitMqMessageQueue(ConnectionString, "test.eventnames");
+
+            var eventsAndExpectedEventNames =
+                new List<Tuple<Type, string>>
+                    {
+                        Tuple.Create(typeof (string), "System.String"),
+                        Tuple.Create(typeof (List<string>), "System.Collections.Generic.List<System.String>"),
+                        Tuple.Create(typeof (List<Tuple<string, int, int>>), "System.Collections.Generic.List<System.Tuple<System.String, System.Int32, System.Int32>>"),
+                    };
+
+            var results = AssertEventNames(queue, eventsAndExpectedEventNames);
+
+            if (results.Any(r => r.Item1))
+            {
+                Console.WriteLine(@"The following event types were fine:
+
+{0}", string.Join(Environment.NewLine, results.Where(r => r.Item1).Select(t => string.Format(@"  {0}:
+    got : {1}
+", t.Item2, t.Item3))));
+            }
+
+            if (results.Any(r => !r.Item1))
+            {
+                Assert.Fail(@"Did not get the expected results for the following event types:
+
+{0}", string.Join(Environment.NewLine, results.Where(r => !r.Item1).Select(t => string.Format(@"  {0}:
+    got      : {1}
+    expected : {2}
+", t.Item2, t.Item3, t.Item4))));
+            }
+        }
+
+        List<Tuple<bool, Type, string, string>> AssertEventNames(RabbitMqMessageQueue queue, IEnumerable<Tuple<Type, string>> eventsAndExpectedEventNames)
+        {
+            return eventsAndExpectedEventNames
+                .Select(t =>
+                    {
+                        var eventType = t.Item1;
+                        var expectedEventName = t.Item2;
+
+                        var eventName = queue.GetEventName(eventType);
+
+                        return eventName == expectedEventName
+                                   ? Tuple.Create(true, eventType, eventName, expectedEventName)
+                                   : Tuple.Create(false, eventType, eventName, expectedEventName);
+                    })
+                .ToList();
+        }
+
+        [Test]
+        public void MessageExpirationWorks()
+        {
+            // arrange
+            var timeToBeReceived = 2.Seconds().ToString();
+
+            const string recipientInputQueueName = "test.expiration.recipient";
+            const string senderInputQueueName = "test.expiration.sender";
+
+            using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
+            {
+                senderQueue.Send(recipientInputQueueName,
+                                 serializer.Serialize(new Message
+                                                          {
+                                                              Messages = new object[] { "HELLO WORLD!" },
+                                                              Headers =
+                                                                  new Dictionary<string, object>
+                                                                      {
+                                                                          {
+                                                                              Headers.TimeToBeReceived,
+                                                                              timeToBeReceived
+                                                                          }
+                                                                      },
+                                                          }),
+                                 new NoTransaction());
+
+                // act
+                Thread.Sleep(2.Seconds() + 1.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipientQueue.ReceiveMessage(new NoTransaction());
+                Assert.That(receivedTransportMessage, Is.Null);
+            }
+        }
+
+
+        [Test, Description("Because Rabbit can move around complex headers (i.e. heades whose values are themselves complete dictionaries), Rebus needs to be able to store these things, so that e.g. forwarding to error queues etc works as expected")]
+        public void RabbitTransportDoesNotChokeOnMessagesContainingComplexHeaders()
+        {
+            // arrange
+            const string recipientInputQueue = "test.roundtripping.receiver";
+            const string someText = "whoohaa!";
+
+            DeleteQueue(recipientInputQueue);
+
+            // ensure recipient queue is created...
+            using (var recipient = new RabbitMqMessageQueue(ConnectionString, recipientInputQueue))
+            {
+                // force creation of the queue
+                recipient.ReceiveMessage(new NoTransaction());
+
+                // act
+                // send a message with a complex header
+                using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+                using (var model = connection.CreateModel())
+                {
+                    var props = model.CreateBasicProperties();
+                    props.Headers = new Dictionary<string, object>
+                        {
+                            {
+                                "someKey", new Hashtable
+                                    {
+                                        {"someContainedKey", "someContainedValue"},
+                                        {"anotherContainedKey", "anotherContainedValue"},
+                                    }
+                            }
+                        };
+
+                    model.BasicPublish(recipient.ExchangeName,
+                                       recipientInputQueue,
+                                       props,
+                                       Encoding.GetBytes(someText));
+                }
+
+                Thread.Sleep(2.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipient.ReceiveMessage(new NoTransaction());
+                receivedTransportMessage.ShouldNotBe(null);
+                Encoding.GetString(receivedTransportMessage.Body).ShouldBe(someText);
+            }
+
+            // assert
+        }
+
+        [Test, Description("Experienced that ACK didn't work so the same message would be received over and over")]
+        public void DoesNotReceiveTheSameMessageOverAndOver()
+        {
+            const string receiverInputQueueName = "rabbit.acktest.receiver";
+
+            var receivedNumbers = new ConcurrentBag<int>();
+
+            // arrange
+            var receiverHandler = new HandlerActivatorForTesting()
+                .Handle<Tuple<int>>(t => receivedNumbers.Add(t.Item1));
+
+            var receiver = CreateBus(receiverInputQueueName, receiverHandler);
+            var sender = CreateBus("rabbit.acktest.sender", new HandlerActivatorForTesting());
+
+            receiver.Start(1);
+            sender.Start(1);
+
+            // act
+            // assert
+            Thread.Sleep(0.5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(0));
+            sender.Routing.Send(receiverInputQueueName, Tuple.Create(23));
+
+            Thread.Sleep(5.Seconds());
+            Assert.That(receivedNumbers.Count, Is.EqualTo(1), "Expected one single number in the bag - got {0}", string.Join(", ", receivedNumbers));
+            Assert.That(receivedNumbers, Contains.Item(23), "Well, just expected 23 to be there");
         }
 
         /// <summary>
@@ -36,6 +339,12 @@ namespace Rebus.Tests.Transports.Rabbit
         ///
         ///     Sending 100000 messages took 130,4 s - that's 767 msg/s
         ///     Receiving 100000 messages spread across 10 consumers took 6,4 s - that's 15645 msg/s
+        /// 
+        /// Now binding subscriptions and their corresponding models to the current thread (like we're in a handler on a worker thread):
+        ///     Sending 100000 messages
+        ///     Sending 100000 messages took 117,5 s - that's 851 msg/s
+        ///     Receiving 100000 messages
+        ///     Receiving 100000 messages spread across 10 consumers took 5,2 s - that's 19365 msg/s
         /// </summary>
         [TestCase(100, 10)]
         [TestCase(1000, 10)]
@@ -54,7 +363,10 @@ namespace Rebus.Tests.Transports.Rabbit
 
             Console.WriteLine("Sending {0} messages", totalMessageCount);
             Enumerable.Range(0, totalMessageCount).ToList()
-                .ForEach(i => sender.Send(receiverInputQueue, new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t! message " + i) }));
+                .ForEach(
+                    i => sender.Send(receiverInputQueue,
+                                new TransportMessageToSend { Body = Encoding.UTF7.GetBytes("w00t! message " + i) },
+                                new NoTransaction()));
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
@@ -73,14 +385,20 @@ namespace Rebus.Tests.Transports.Rabbit
                         var gotNoMessageCount = 0;
                         do
                         {
-                            var receivedTransportMessage = receiver.ReceiveMessage();
-                            if (receivedTransportMessage == null)
+                            using (var scope = new TransactionScope())
                             {
-                                gotNoMessageCount++;
-                                continue;
+                                var ctx = new AmbientTransactionContext();
+                                var receivedTransportMessage = receiver.ReceiveMessage(ctx);
+                                if (receivedTransportMessage == null)
+                                {
+                                    gotNoMessageCount++;
+                                    continue;
+                                }
+                                Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
+                                Interlocked.Increment(ref receivedMessageCount);
+
+                                scope.Complete();
                             }
-                            Encoding.UTF7.GetString(receivedTransportMessage.Body).ShouldStartWith("w00t! message ");
-                            Interlocked.Increment(ref receivedMessageCount);
                         } while (gotNoMessageCount < 3);
                     }))
                 .ToList();
@@ -107,11 +425,12 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
-                sender.Send(recipient.InputQueue, msg);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -134,15 +453,16 @@ namespace Rebus.Tests.Transports.Rabbit
             // act
             using (var tx = new TransactionScope())
             {
-                var msg = new TransportMessageToSend { Body = Encoding.UTF8.GetBytes("this is a message!") };
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
 
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
-                sender.Send(firstRecipient.InputQueue, msg);
-                
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
-                sender.Send(secondRecipient.InputQueue, msg);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+                sender.Send(firstRecipient.InputQueue, msg, ctx);
+
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
+                sender.Send(secondRecipient.InputQueue, msg, ctx);
 
                 if (commitTransactionAndExpectMessagesToBeThere) tx.Complete();
             }
@@ -155,13 +475,49 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedTransportMessagesFromSecondRecipient.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
         }
 
+        [Test]
+        public void TransportLevelMessageIdIsPreserved()
+        {
+            const string recipientInputQueueName = "test.tlid.recipient";
+            const string senderInputQueueName = "test.tlid.sender";
+
+            using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
+            {
+                recipientQueue.PurgeInputQueue();
+                senderQueue.PurgeInputQueue();
+
+                var id = Guid.NewGuid();
+                senderQueue.Send(recipientInputQueueName,
+                                 serializer.Serialize(new Message
+                                 {
+                                     Messages = new object[] { "HELLO WORLD!" },
+                                     Headers =
+                                         new Dictionary<string, object> { 
+                                            { Headers.MessageId, id.ToString() }
+                                         },
+                                 }),
+                                 new NoTransaction());
+
+                // act
+                Thread.Sleep(2.Seconds() + 1.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipientQueue.ReceiveMessage(new NoTransaction());
+                Assert.That(receivedTransportMessage, Is.Not.Null);
+                Assert.That(receivedTransportMessage.Headers, Is.Not.Null);
+                Assert.That(receivedTransportMessage.Headers.ContainsKey(Headers.MessageId), Is.True);
+                Assert.That(receivedTransportMessage.Headers[Headers.MessageId], Is.EqualTo(id.ToString()));
+            }
+        }
+
         static List<ReceivedTransportMessage> GetAllMessages(RabbitMqMessageQueue recipient)
         {
             var timesNullReceived = 0;
             var receivedTransportMessages = new List<ReceivedTransportMessage>();
             do
             {
-                var msg = recipient.ReceiveMessage();
+                var msg = recipient.ReceiveMessage(new NoTransaction());
                 if (msg == null)
                 {
                     timesNullReceived++;
@@ -174,8 +530,9 @@ namespace Rebus.Tests.Transports.Rabbit
 
         RabbitMqMessageQueue GetQueue(string queueName)
         {
-            var queue = new RabbitMqMessageQueue(ConnectionString, queueName, queueName + ".error");
-            toDispose.Add(queue);
+            queuesToDelete.Add(queueName);
+            var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
+            DisposableTracker.TrackDisposable(queue);
             return queue.PurgeInputQueue();
         }
     }

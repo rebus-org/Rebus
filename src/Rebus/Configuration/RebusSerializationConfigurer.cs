@@ -1,26 +1,45 @@
+using System.Messaging;
 using Rebus.Serialization.Binary;
 using Rebus.Serialization.Json;
 
 namespace Rebus.Configuration
 {
-    public class RebusSerializationConfigurer
+    /// <summary>
+    /// Configurer that allows for configuring which implementation of <see cref="ISerializeMessages"/> that should be used
+    /// </summary>
+    public class RebusSerializationConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public RebusSerializationConfigurer(ConfigurationBackbone backbone)
+        internal RebusSerializationConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
-
-        public void UseJsonSerializer()
+        /// <summary>
+        /// Configures Rebus to use <see cref="JsonMessageSerializer"/> to serialize messages. A <see cref="JsonSerializationOptions"/>
+        /// object is returned, which can be used to configure detailes around how the JSON serialization should work
+        /// </summary>
+        public JsonSerializationOptions UseJsonSerializer()
         {
-            backbone.SerializeMessages = new JsonMessageSerializer();
+            var jsonMessageSerializer = new JsonMessageSerializer();
+            Use(jsonMessageSerializer);
+            return new JsonSerializationOptions(jsonMessageSerializer);
         }
 
+        /// <summary>
+        /// Configures Rebus to use <see cref="BinaryMessageSerializer"/> which internally uses the BCL <see cref="BinaryMessageFormatter"/>
+        /// to serialize messages
+        /// </summary>
         public void UseBinarySerializer()
         {
-            backbone.SerializeMessages = new BinaryMessageSerializer();
+            Use(new BinaryMessageSerializer());
+        }
+
+        /// <summary>
+        /// Uses the specified implementation of <see cref="ISerializeMessages"/> to serialize transport messages
+        /// </summary>
+        public void Use(ISerializeMessages serializer)
+        {
+            Backbone.SerializeMessages = serializer;
         }
     }
 }

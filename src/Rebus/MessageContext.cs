@@ -8,9 +8,10 @@ namespace Rebus
     /// <summary>
     /// Holds information about the message currently being handled on this particular thread.
     /// </summary>
-    public class MessageContext : IDisposable, IMessageContext
+    public class MessageContext : IMessageContext
     {
-        readonly IDictionary<string, string> headers;
+        const string DispatchMessageToHandlersKey = "rebus-DispatchMessageToHandlers";
+        readonly IDictionary<string, object> headers;
         static ILog log;
 
         static MessageContext()
@@ -18,29 +19,41 @@ namespace Rebus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public IDictionary<string, string> Headers
+        /// <summary>
+        /// Contains the headers dictionary of the transport message currently being handled.
+        /// </summary>
+        public IDictionary<string, object> Headers
         {
             get { return headers; }
         }
 
-        public static event Action<IMessageContext> Established = delegate { };
-
+        /// <summary>
+        /// Event that is raised when this message context instance is disposed
+        /// </summary>
         public event Action Disposed = delegate { };
 
         [ThreadStatic]
         static internal IMessageContext current;
         object currentMessage;
 
+        /// <summary>
+        /// Gets a reference to the current logical message being handled
+        /// </summary>
         public object CurrentMessage
         {
             get { return currentMessage; }
         }
 
 #if DEBUG
+        /// <summary>
+        /// Only applicable in DEBUG build: Stores that call stack of when this message context was created. Can be used to
+        /// chase down bugs that happen when establishing a message context on a thread where a message context has already
+        /// been established
+        /// </summary>
         public string StackTrace { get; set; }
 #endif
 
-        internal static MessageContext Enter(IDictionary<string, string> headers)
+        internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             if (current != null)
             {
@@ -62,16 +75,13 @@ Stacktrace of when the current message context was created:
 
             current = messageContext;
 
-            Established(current);
-
             return messageContext;
         }
 
-        MessageContext(IDictionary<string, string> headers)
+        MessageContext(IDictionary<string, object> headers)
         {
             this.headers = headers;
 
-            DispatchMessageToHandlers = true;
             Items = new Dictionary<string, object>();
 
 #if DEBUG
@@ -79,18 +89,34 @@ Stacktrace of when the current message context was created:
 #endif
         }
 
-        public string TransportMessageId
+        /// <summary>
+        /// Gets the message ID from the transport message headers
+        /// </summary>
+        public string RebusTransportMessageId
         {
-            get { return headers.ValueOrNull(Shared.Headers.MessageId); }
+            get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }
         
+        /// <summary>
+        /// Gets the return address from the transport message headers. This address will most likely be the sender
+        /// of message currently being handled, but it could also have been set explicitly by the sender to another
+        /// endpoint
+        /// </summary>
         public string ReturnAddress
         {
-            get { return headers.ValueOrNull(Shared.Headers.ReturnAddress); }
+            get { return (string)headers.ValueOrNull(Shared.Headers.ReturnAddress); }
         }
 
+        /// <summary>
+        /// Gets the dictionary of objects associated with this message context. This collection can be used to store stuff
+        /// for the duration of the handling of this transport message.
+        /// </summary>
         public IDictionary<string, object> Items { get; private set; }
 
+        /// <summary>
+        /// Gets the current thread-bound message context if one is available, throwing an <see cref="InvalidOperationException"/>
+        /// otherwise. Use <seealso cref="HasCurrent"/> to check if a message context is available if you're unsure
+        /// </summary>
         public static IMessageContext GetCurrent()
         {
             if (current == null)
@@ -103,36 +129,62 @@ Stacktrace of when the current message context was created:
             return current;
         }
 
+        /// <summary>
+        /// Indicates whether a message context is bound to the current thread
+        /// </summary>
         public static bool HasCurrent
         {
             get { return current != null; }
         }
 
+        /// <summary>
+        /// Indicates whether message dispatch has been aborted in this message context
+        /// </summary>
         public static bool MessageDispatchAborted
         {
-            get { return HasCurrent && !((MessageContext)current).DispatchMessageToHandlers; }
+            get
+            {
+                if (!HasCurrent) return false;
+
+                var messageContext = GetCurrent();
+
+                return messageContext.Items.ContainsKey(DispatchMessageToHandlersKey)
+                       && !(bool) messageContext.Items[DispatchMessageToHandlersKey];
+            }
         }
 
-        internal bool DispatchMessageToHandlers { get; set; }
-
+        /// <summary>
+        /// Aborts processing the current message - i.e., after exiting from the
+        /// current handler, no more handlers will be called. Note that this does
+        /// not cause the current transaction to be rolled back.
+        /// </summary>
         public void Abort()
         {
             log.Debug("Abort was called - will stop dispatching message to handlers");
-            DispatchMessageToHandlers = false;
+            Items[DispatchMessageToHandlersKey] = false;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
             current = null;
-
             Disposed();
         }
 
+        /// <summary>
+        /// Sets a reference to the logical message that is currently being handled
+        /// </summary>
         public void SetLogicalMessage(object message)
         {
             currentMessage = message;
         }
 
+        /// <summary>
+        /// Clears the reference to the logical message that was being handled
+        /// </summary>
         public void ClearLogicalMessage()
         {
             currentMessage = null;

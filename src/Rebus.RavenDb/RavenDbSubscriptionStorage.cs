@@ -15,32 +15,32 @@ namespace Rebus.RavenDb
             this.collection = collection;
         }
 
-        public void Store(Type messageType, string subscriberInputQueue)
+        public void Store(Type eventType, string subscriberInputQueue)
         {
             using (var session = store.OpenSession())
             {
-                var subscription = EnsureSubscription(session, messageType);
+                var subscription = EnsureSubscription(session, eventType);
                 if (!subscription.Endpoints.Contains(subscriberInputQueue))
                     subscription.Endpoints.Add(subscriberInputQueue);
                 session.SaveChanges();
             }
         }
 
-        public void Remove(Type messageType, string subscriberInputQueue)
+        public void Remove(Type eventType, string subscriberInputQueue)
         {
             using (var session = store.OpenSession())
             {
-                var subscription = EnsureSubscription(session, messageType);
+                var subscription = EnsureSubscription(session, eventType);
                 subscription.Endpoints.Remove(subscriberInputQueue);
                 session.SaveChanges();
             }
         }
 
-        public string[] GetSubscribers(Type messageType)
+        public string[] GetSubscribers(Type eventType)
         {
             using (var session = store.OpenSession())
             {
-                var subscription = session.Load<RebusSubscription>(Key(messageType));
+                var subscription = session.Load<RebusSubscription>(Key(eventType));
                 return subscription == null ? new string[0] : subscription.Endpoints.ToArray();
             }
         }

@@ -15,6 +15,9 @@ namespace Rebus
     /// <typeparam name="TMessage">The type of the message being handled. Can be any assignable type as well.</typeparam>
     public interface IHandleMessages<in TMessage> : IHandleMessages
     {
+        /// <summary>
+        /// Handler method that will be called by the dispatcher for each logical message contained in the received transport message
+        /// </summary>
         void Handle(TMessage message);
     }
 }

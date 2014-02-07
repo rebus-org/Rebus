@@ -12,9 +12,10 @@
     <description>Provides a RabbitMQ transport implementation for Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus rabbitmq queue messaging</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="RabbitMQ.Client" version="2.8.4" />
+      <dependency id="RabbitMQ.Client" version="3.2.1" />
     </dependencies>
   </metadata>
   <files>

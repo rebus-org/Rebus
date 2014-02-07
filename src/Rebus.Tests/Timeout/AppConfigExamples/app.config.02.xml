@@ -13,7 +13,7 @@
     <MessageEndpointMappings>
       <add Messages="Rebus.Tests.Configuration.OuterClass, Rebus.Tests" 
 		   Endpoint="outer_class_endpoint"/>
-      <add Messages="Rebus.Tests.Configuration.TestDetermineDestinationFromNServiceBusEndpointMappings+InnerClass, Rebus.Tests" 
+      <add Messages="Rebus.Tests.Configuration.TestDetermineMessageOwnershipFromNServiceBusEndpointMappings+InnerClass, Rebus.Tests" 
 		   Endpoint="inner_class_endpoint"/>
     </MessageEndpointMappings>
   </UnicastBusConfig>

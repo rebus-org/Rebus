@@ -1,22 +1,47 @@
+using System;
+
 namespace Rebus.Configuration
 {
-    public class RebusRoutingConfigurer
+    /// <summary>
+    /// Configurer that allows for configuring which implementation of <see cref="IDetermineMessageOwnership"/> that should be used
+    /// </summary>
+    public class RebusRoutingConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public RebusRoutingConfigurer(ConfigurationBackbone backbone)
+        internal RebusRoutingConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
-        public void Use(IDetermineDestination determineDestination)
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IDetermineMessageOwnership"/> to determine who owns messages
+        /// </summary>
+        public void Use(IDetermineMessageOwnership determineMessageOwnership)
         {
-            backbone.DetermineDestination = determineDestination;
+            Backbone.DetermineMessageOwnership = determineMessageOwnership;
         }
 
+        /// <summary>
+        /// Configures Rebus to pick up endpoint mappings in NServiceBus format from the current app.config/web.config.
+        /// </summary>
         public void FromNServiceBusConfiguration()
         {
-            Use(new DetermineDestinationFromNServiceBusEndpointMappings(new StandardAppConfigLoader()));
+            Use(new DetermineMessageOwnershipFromNServiceBusEndpointMappings(new StandardAppConfigLoader()));
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings to be on Rebus form.
+        /// </summary>
+        public void FromRebusConfigurationSection()
+        {
+            Use(new DetermineMessageOwnershipFromRebusConfigurationSection());
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings to be on Rebus form.
+        /// </summary>
+        public void FromRebusConfigurationSectionWithFilter(Func<Type, bool> typeFilter)
+        {
+            Use(new DetermineMessageOwnershipFromRebusConfigurationSection(typeFilter));
         }
     }
 }

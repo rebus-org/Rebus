@@ -7,12 +7,19 @@ namespace Rebus.Snoop.Events
         readonly Message messageThatWasMoved;
         readonly string sourceQueuePath;
         readonly string destinationQueuePath;
+        readonly bool copyWasLeftInSourceQueue;
 
-        public MessageMoved(Message messageThatWasMoved, string sourceQueuePath, string destinationQueuePath)
+        public MessageMoved(Message messageThatWasMoved, string sourceQueuePath, string destinationQueuePath, bool copyWasLeftInSourceQueue)
         {
             this.messageThatWasMoved = messageThatWasMoved;
             this.sourceQueuePath = sourceQueuePath;
             this.destinationQueuePath = destinationQueuePath;
+            this.copyWasLeftInSourceQueue = copyWasLeftInSourceQueue;
+        }
+
+        public bool CopyWasLeftInSourceQueue
+        {
+            get { return copyWasLeftInSourceQueue; }
         }
 
         public Message MessageThatWasMoved

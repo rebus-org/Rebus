@@ -1,25 +1,99 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Rebus.Bus;
 
 namespace Rebus.Configuration
 {
-    public class EventsConfigurer : IRebusEvents
+    /// <summary>
+    /// Configurer for the various hooks that Rebus provides
+    /// </summary>
+    public class EventsConfigurer : BaseConfigurer, IRebusEvents
     {
-        public EventsConfigurer(ConfigurationBackbone backbone)
+        readonly List<IUnitOfWorkManager> unitOfWorkManagers = new List<IUnitOfWorkManager>();
+
+        internal EventsConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
             backbone.AddEvents(this);
+
+            MessageMutators = new List<IMutateMessages>();
         }
 
+        /// <summary>
+        /// Event that will be raised immediately when the bus is used to send a logical message.
+        /// </summary>
         public event MessageSentEventHandler MessageSent;
+
+        /// <summary>
+        /// Event that will be raised for each received logical message (i.e. it will only be called
+        /// if deserialization completed, and the transport message does in fact contain one or more
+        /// logical messages).
+        /// </summary>
         public event BeforeMessageEventHandler BeforeMessage;
+
+        /// <summary>
+        /// Event that will be raised for each received logical message (i.e. it will only be called
+        /// if deserialization completed, and the transport message does in fact contain one or more
+        /// logical messages).
+        /// </summary>
         public event AfterMessageEventHandler AfterMessage;
+
+        /// <summary>
+        /// Event that is raised when an incoming message can be handled by a saga handler, but it
+        /// turns out that no saga data instance could be correlated with the message.
+        /// </summary>
         public event UncorrelatedMessageEventHandler UncorrelatedMessage;
+
+        /// <summary>
+        /// Event that is raised when an incoming transport message has been properly deserialized,
+        /// and it is about to be dispatched. The message context will last for the duration of the
+        /// message processing and is disposed at the very end.
+        /// </summary>
+        public event MessageContextEstablishedEventHandler MessageContextEstablished;
+
+        /// <summary>
+        /// Event that will be raised immediately after receiving a transport 
+        /// message, before any other actions are executed.
+        /// </summary>
         public event BeforeTransportMessageEventHandler BeforeTransportMessage;
+
+        /// <summary>
+        /// Event that will be raised after a transport message has been handled.
+        /// If an error occurs, the caught exception will be passed to the
+        /// listeners. If no errors occur, the passed exception will be null.
+        /// </summary>
         public event AfterTransportMessageEventHandler AfterTransportMessage;
+
+        /// <summary>
+        /// Event that will be raised whenever it is determined that a message
+        /// has failed too many times.
+        /// </summary>
         public event PoisonMessageEventHandler PoisonMessage;
 
-        public void TransferToBus(IAdvancedBus advancedBus)
+        /// <summary>
+        /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
+        /// </summary>
+        public ICollection<IMutateMessages> MessageMutators { get; private set; }
+
+        /// <summary>
+        /// Adds the specified unit of work manager to the list of managers that get to create units of work for each incoming message
+        /// </summary>
+        public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
         {
-            var rebusEvents = advancedBus.Events;
+            unitOfWorkManagers.Add(unitOfWorkManager);
+        }
+
+        internal void TransferToBus(IBus bus)
+        {
+            var rebusEvents = bus.Advanced.Events;
+
+            if (MessageContextEstablished != null)
+            {
+                foreach (var listener in MessageContextEstablished.GetInvocationList().Cast<MessageContextEstablishedEventHandler>())
+                {
+                    rebusEvents.MessageContextEstablished += listener;
+                }
+            }
 
             if (MessageSent != null)
             {
@@ -75,6 +149,16 @@ namespace Rebus.Configuration
                 {
                     rebusEvents.UncorrelatedMessage += listener;
                 }
+            }
+
+            foreach (var messageMutator in MessageMutators)
+            {
+                rebusEvents.MessageMutators.Add(messageMutator);
+            }
+
+            foreach (var unitOfWorkManager in unitOfWorkManagers)
+            {
+                rebusEvents.AddUnitOfWorkManager(unitOfWorkManager);
             }
         }
     }

@@ -15,6 +15,15 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             return new WindsorContainerAdapter(container);
         }
 
+        public void StartUnitOfWork()
+        {
+        }
+
+        public void EndUnitOfWork()
+        {
+            
+        }
+
         public void Register<TService, TImplementation>()
             where TImplementation : TService
             where TService : class 

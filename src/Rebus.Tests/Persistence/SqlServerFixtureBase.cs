@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using NUnit.Framework;
 using log4net.Config;
+using System.Linq;
 
 namespace Rebus.Tests.Persistence
 {
@@ -31,18 +34,53 @@ namespace Rebus.Tests.Persistence
         public void TearDown()
         {
             DoTearDown();
+            CleanUpTrackedDisposables();
         }
 
         protected virtual void DoTearDown()
         {
         }
 
-        protected void DeleteRows(string tableName)
+        public static void DropTable(string tableName)
         {
+            if (!GetTableNames()
+                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
+
+            ExecuteCommand("drop table " + tableName);
+        }
+
+        public static void DeleteRows(string tableName)
+        {
+            if (!GetTableNames()
+                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
+
             ExecuteCommand("delete from " + tableName);
         }
 
-        static void ExecuteCommand(string commandText)
+        public static List<string> GetTableNames()
+        {
+            var tableNames = new List<string>();
+            using(var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            {
+                conn.Open();
+
+                using(var command = conn.CreateCommand())
+                {
+                    command.CommandText = "select * from sys.Tables";
+                    
+                    using(var reader = command.ExecuteReader())
+                    {
+                        while(reader.Read())
+                        {
+                            tableNames.Add(reader["name"].ToString());
+                        }
+                    }
+                }
+            }
+            return tableNames;
+        }
+
+        public static void ExecuteCommand(string commandText)
         {
             using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
             {
@@ -54,6 +92,17 @@ namespace Rebus.Tests.Persistence
                     command.ExecuteNonQuery();
                 }
             }
+        }
+
+        protected T TrackDisposable<T>(T disposable) where T : IDisposable
+        {
+            DisposableTracker.TrackDisposable(disposable);
+            return disposable;
+        }
+
+        protected void CleanUpTrackedDisposables()
+        {
+            DisposableTracker.DisposeTheDisposables();
         }
     }
 }

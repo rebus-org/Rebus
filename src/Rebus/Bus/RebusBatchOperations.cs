@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,20 +7,22 @@ namespace Rebus.Bus
 {
     class RebusBatchOperations : IRebusBatchOperations
     {
-        readonly IDetermineDestination determineDestination;
+        readonly IDetermineMessageOwnership determineMessageOwnership;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly RebusBus bus;
 
-        public RebusBatchOperations(IDetermineDestination determineDestination, IStoreSubscriptions storeSubscriptions, RebusBus bus)
+        public RebusBatchOperations(IDetermineMessageOwnership determineMessageOwnership, IStoreSubscriptions storeSubscriptions, RebusBus bus)
         {
-            this.determineDestination = determineDestination;
+            this.determineMessageOwnership = determineMessageOwnership;
             this.storeSubscriptions = storeSubscriptions;
             this.bus = bus;
         }
 
-        public void Send(params object[] messages)
+        public void Send(IEnumerable messages)
         {
-            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages);
+            Guard.NotNull(messages, "messages");
+
+            var groupedByEndpoints = GetMessagesGroupedByEndpoints(messages.Cast<object>().ToArray());
 
             foreach (var batch in groupedByEndpoints)
             {
@@ -27,14 +30,23 @@ namespace Rebus.Bus
             }
         }
 
-        public void Publish(params object[] messages)
+        public void Publish(IEnumerable messages)
         {
-            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages);
+            Guard.NotNull(messages, "messages");
+
+            var groupedByEndpoints = GetMessagesGroupedBySubscriberEndpoints(messages.Cast<object>().ToArray());
 
             foreach (var batch in groupedByEndpoints)
             {
                 bus.InternalSend(batch.Key, batch.Value);
             }
+        }
+
+        public void Reply(IEnumerable messages)
+        {
+            Guard.NotNull(messages, "messages");
+
+            bus.InternalReply(messages.Cast<object>().ToList());
         }
 
         IEnumerable<KeyValuePair<string, List<object>>> GetMessagesGroupedBySubscriberEndpoints(object[] messages)
@@ -64,7 +76,7 @@ namespace Rebus.Bus
         {
             var dict = new Dictionary<string, List<object>>();
             var endpointsByType = messages.Select(m => m.GetType()).Distinct()
-                .Select(t => new KeyValuePair<Type, string>(t, determineDestination.GetEndpointFor(t) ?? ""))
+                .Select(t => new KeyValuePair<Type, string>(t, determineMessageOwnership.GetEndpointFor(t) ?? ""))
                 .ToDictionary(d => d.Key, d => d.Value);
 
             foreach (var message in messages)

@@ -12,7 +12,7 @@ namespace Rebus
     {
         /// <summary>
         /// Sends the specified message to the destination as specified by the currently
-        /// used implementation of <see cref="IDetermineDestination"/>.
+        /// used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         void Send<TCommand>(TCommand message);
 
@@ -30,9 +30,15 @@ namespace Rebus
 
         /// <summary>
         /// Sends a subscription request for <typeparamref name="TEvent"/> to the destination as
-        /// specified by the currently used implementation of <see cref="IDetermineDestination"/>.
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>
         void Subscribe<TEvent>();
+
+        /// <summary>
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        void Unsubscribe<TEvent>();
 
         /// <summary>
         /// Publishes the specified event message to all endpoints that are currently subscribed.
@@ -54,5 +60,10 @@ namespace Rebus
         /// it is sent multiple times.
         /// </summary>
         void AttachHeader(object message, string key, string value);
+
+        /// <summary>
+        /// Gain access to more advanced and less commonly used features of the bus
+        /// </summary>
+        IAdvancedBus Advanced { get; }
     }
 }

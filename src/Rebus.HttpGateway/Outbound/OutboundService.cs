@@ -5,8 +5,8 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Transactions;
+using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
@@ -77,7 +77,8 @@ namespace Rebus.HttpGateway.Outbound
             {
                 using (var tx = new TransactionScope())
                 {
-                    var receivedTransportMessage = messageQueue.ReceiveMessage();
+                    var ctx = new AmbientTransactionContext();
+                    var receivedTransportMessage = messageQueue.ReceiveMessage(ctx);
 
                     if (receivedTransportMessage == null) return;
 
@@ -118,12 +119,15 @@ namespace Rebus.HttpGateway.Outbound
 
             foreach (var header in headers)
             {
-                request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, header.Value);
+                request.Headers.Add(RebusHttpHeaders.CustomHeaderPrefix + header.Key, (string)header.Value);
             }
 
             request.Headers.Add(RebusHttpHeaders.Id, receivedTransportMessage.Id);
-            
-            request.GetRequestStream().Write(bytes, 0, bytes.Length);
+
+            using(var requestStream = request.GetRequestStream())
+            {
+                requestStream.Write(bytes, 0, bytes.Length);
+            }
 
             log.Info("Added headers to request: {0}", string.Join(", ", headers.Keys));
 

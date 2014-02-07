@@ -14,29 +14,39 @@ namespace Rebus.Transports.Msmq
     /// </summary>
     public class RebusTransportMessageFormatter : IMessageFormatter
     {
-        public static readonly Encoding HeaderEcoding = Encoding.UTF7;
+        static readonly Encoding HeaderEcoding = Encoding.UTF7;
 
-        public static MessagePropertyFilter PropertyFilter
+        internal static readonly MessagePropertyFilter PropertyFilter
             = new MessagePropertyFilter
-                {
-                    Id = true,
-                    Body = true,
-                    Extension = true,
-                    Label = true,
-                };
+                  {
+                      Id = true,
+                      Body = true,
+                      Extension = true,
+                      Label = true,
+                  };
 
         static readonly DictionarySerializer DictionarySerializer = new DictionarySerializer();
 
+        /// <summary>
+        /// Returns this instance (it has no state)
+        /// </summary>
         public object Clone()
         {
             return this;
         }
 
+        /// <summary>
+        /// Always returns true - we always want to attempt to read the message
+        /// </summary>
         public bool CanRead(Message message)
         {
             return true;
         }
 
+        /// <summary>
+        /// Writes to the MSMQ message, assuming that the given object is a <see cref="TransportMessageToSend"/> -
+        /// otherwise, an <see cref="ArgumentException"/> will be thrown
+        /// </summary>
         public void Write(Message message, object obj)
         {
             var transportMessage = obj as TransportMessageToSend;
@@ -52,16 +62,22 @@ namespace Rebus.Transports.Msmq
 
             var expressDelivery = transportMessage.Headers.ContainsKey(Headers.Express);
 
-            message.UseDeadLetterQueue = !expressDelivery;
+            var hasTimeout = transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived);
+
+            // make undelivered messages go to the dead letter queue if they could disappear from the queue anyway
+            message.UseDeadLetterQueue = !(expressDelivery || hasTimeout);
             message.Recoverable = !expressDelivery;
 
-            if (transportMessage.Headers.ContainsKey(Headers.TimeToBeReceived))
+            if (hasTimeout)
             {
-                var timeToBeReceivedStr = transportMessage.Headers[Headers.TimeToBeReceived];
+                var timeToBeReceivedStr = (string)transportMessage.Headers[Headers.TimeToBeReceived];
                 message.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
             }
         }
 
+        /// <summary>
+        /// Reads the given MSMQ message, wrapping the message in a <see cref="ReceivedTransportMessage"/>
+        /// </summary>
         public object Read(Message message)
         {
             var stream = message.BodyStream;

@@ -20,6 +20,10 @@ namespace Rebus.Configuration
         string stackTrace;
         int maxIndex;
 
+        /// <summary>
+        /// Implements the filtering operation by attempting to return an ordered sequence of handlers where
+        /// the configured ordering of handler types is respected
+        /// </summary>
         public IEnumerable<IHandleMessages> Filter(object message, IEnumerable<IHandleMessages> handlers)
         {
             return handlers
@@ -40,7 +44,7 @@ namespace Rebus.Configuration
         /// Specifies the desired order of handlers. When this is done, RearrangeHandlersPipelineInspector
         /// will ensure that all handler pipelines containing one or more handlers from <paramref name="handlerTypes"/>
         /// will be ordered so that these handlers come first, in the order that they are specified. E.g. 
-        /// if <see cref="SetOrder"/> gets called with handlers A, C, and E, and <see cref="Filter{TMessage}"/>
+        /// if <see cref="SetOrder"/> gets called with handlers A, C, and E, and <see cref="Filter"/>
         /// gets called with handlers B, C, A, E, D, the result is A, C, E, B, D. This method should be called only once.
         /// </summary>
         public void SetOrder(params Type[] handlerTypes)
@@ -81,7 +85,7 @@ the stacktrace:
             maxIndex = orders.Any() ? orders.Max(o => o.Value) + 1 : 0;
         }
 
-        public Type[] GetOrder()
+        internal Type[] GetOrder()
         {
             return orders.Keys.ToArray();
         }
@@ -109,7 +113,7 @@ at the same time?", typeToAppendToOrder));
             }
 
             orders = orders
-                .Concat(new[] {new KeyValuePair<Type, int>(typeToAppendToOrder, maxIndex),})
+                .Concat(new[] {new KeyValuePair<Type, int>(typeToAppendToOrder, maxIndex)})
                 .ToDictionary(k => k.Key, v => v.Value);
 
             SetMaxIndex();

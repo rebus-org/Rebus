@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Shared;
+using Rebus.Testing;
 using Rhino.Mocks;
 
 namespace Rebus.Tests.Persistence.Sagas
@@ -9,18 +10,18 @@ namespace Rebus.Tests.Persistence.Sagas
     {
         MessageContext messageContext;
         TFactory factory;
-        protected IStoreSagaData Persister;
+        protected IStoreSagaData persister;
 
         protected override void DoSetUp()
         {
             factory = Activator.CreateInstance<TFactory>();
-            var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, object>
                 {
                     {Headers.ReturnAddress, "none"},
                     {Headers.MessageId, "just_some_message_id"},
                 };
-            messageContext = MessageContext.Enter(headers);
-            Persister = factory.CreatePersister();
+            messageContext = MessageContext.Establish(headers);
+            persister = factory.CreatePersister();
         }
 
         protected override void DoTearDown()
@@ -37,8 +38,8 @@ namespace Rebus.Tests.Persistence.Sagas
         protected void EnterAFakeMessageContext()
         {
             var fakeConcurrentMessageContext = Mock<IMessageContext>();
-            var otherItems = new Dictionary<string, object>();
-            fakeConcurrentMessageContext.Stub(x => x.Items).Return(otherItems);
+            fakeConcurrentMessageContext.Stub(x => x.Headers).Return(new Dictionary<string, object>());
+            fakeConcurrentMessageContext.Stub(x => x.Items).Return(new Dictionary<string, object>());
             FakeMessageContext.Establish(fakeConcurrentMessageContext);
         }
 

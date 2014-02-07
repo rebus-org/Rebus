@@ -12,15 +12,18 @@ namespace Rebus
     [Serializable]
     public class TransportMessageToSend
     {
+        /// <summary>
+        /// Constructs the wrapper of a transport message that is about to be sent
+        /// </summary>
         public TransportMessageToSend()
         {
-            Headers = new Dictionary<string, string>();
+            Headers = new Dictionary<string, object>();
         }
 
         /// <summary>
         /// Message headers. Pre-defined header keys can be found in <see cref="Shared.Headers"/>.
         /// </summary>
-        public IDictionary<string, string> Headers { get; set; }
+        public IDictionary<string, object> Headers { get; set; }
 
         /// <summary>
         /// Message body. Should not contain any header information.

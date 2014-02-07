@@ -1,6 +1,5 @@
 using System;
 using Rebus.Tests.Performance.StressMongo.Caf.Messages;
-using Rebus.Tests.Performance.StressMongo.Crm;
 using Rebus.Tests.Performance.StressMongo.Crm.Messages;
 
 namespace Rebus.Tests.Performance.StressMongo.Caf

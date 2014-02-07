@@ -1,6 +1,9 @@
 ﻿using System;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Tests.Integration;
+using System.Linq;
+using Shouldly;
 
 namespace Rebus.Tests.Unit
 {
@@ -23,11 +26,28 @@ namespace Rebus.Tests.Unit
         }
 
         [Test]
+        public void KeepsOnly10MostRecentExceptionDetailsEvenThoughThereMayBeManyMoreFailedDeliveries()
+        {
+            // arrange
+            const string messageId = "bim!";
+            errorTracker.MaxRetries = 1000;
+
+            // act
+            2000.Times(() => errorTracker.TrackDeliveryFail(messageId, new OmfgExceptionThisIsBad("w00t!")));
+            var messageHasFailedMaximumNumberOfTimes = errorTracker.MessageHasFailedMaximumNumberOfTimes(messageId);
+            var info = errorTracker.GetPoisonMessageInfo(messageId);
+
+            // assert
+            messageHasFailedMaximumNumberOfTimes.ShouldBe(true);
+            info.Exceptions.Count().ShouldBe(10);
+        }
+
+        [Test]
         public void ErrorTrackerRemovesAMessageWhichTimedOut()
         {
             //Arrange
             const string messageId = "testId";
-            var fakeTime = Time.Now();
+            var fakeTime = RebusTimeMachine.Now();
             TimeMachine.FixTo(fakeTime);
 
             //Act
@@ -51,7 +71,7 @@ namespace Rebus.Tests.Unit
             //Arrange
             const string messageId = "testId";
             const string messageId2 = "testId2";
-            var fakeTime = Time.Now();
+            var fakeTime = RebusTimeMachine.Now();
             TimeMachine.FixTo(fakeTime);
 
             //Act
@@ -80,10 +100,10 @@ namespace Rebus.Tests.Unit
 
             //Act
             TimeMachine.FixTo(fakeTime);
-            errorTracker.TrackDeliveryFail(messageId, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
+            errorTracker.TrackDeliveryFail(messageId, new Exception(string.Format("This exception occurred at {0}", RebusTimeMachine.Now())));
 
             TimeMachine.FixTo(fakeTime + TimeSpan.FromMinutes(10));
-            errorTracker.TrackDeliveryFail(messageId2, new Exception(string.Format("This exception occurred at {0}", Time.Now())));
+            errorTracker.TrackDeliveryFail(messageId2, new Exception(string.Format("This exception occurred at {0}", RebusTimeMachine.Now())));
 
             TimeMachine.FixTo(fakeTime + TimeSpan.FromDays(1) + TimeSpan.FromMinutes(5));
             errorTracker.CheckForMessageTimeout();

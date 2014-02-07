@@ -6,6 +6,7 @@ namespace Rebus.Messages
     /// This is the reply that the Timeout Service will send back to the
     /// timeout requestor upon completion of the timeout.
     /// </summary>
+    [Serializable]
     public class TimeoutReply : IRebusControlMessage
     {
         /// <summary>
@@ -27,7 +28,5 @@ namespace Rebus.Messages
         /// The custom data as specified in the <see cref="TimeoutRequest"/>.
         /// </summary>
         public string CustomData { get; set; }
-
-
     }
 }

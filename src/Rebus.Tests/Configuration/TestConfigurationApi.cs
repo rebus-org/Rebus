@@ -20,10 +20,73 @@ namespace Rebus.Tests.Configuration
     public class TestConfigurationApi : FixtureBase
     {
         [Test]
+        public void InvokingTheSameConfigurerTwiceYieldsAnException()
+        {
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .MessageOwnership(d => d.FromRebusConfigurationSection())
+                                                            .MessageOwnership(d => d.FromRebusConfigurationSection()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                                 .Timeouts(d => d.StoreInMemory())
+                                                                 .Timeouts(d => d.StoreInMemory()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Transport(d => d.UseMsmqInOneWayClientMode())
+                                                            .Transport(d => d.UseMsmqInOneWayClientMode()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Subscriptions(d => d.StoreInMemory())
+                                                            .Subscriptions(d => d.StoreInMemory()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Sagas(d => d.StoreInMemory())
+                                                            .Sagas(d => d.StoreInMemory()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .Serialization(d => d.UseJsonSerializer())
+                                                            .Serialization(d => d.UseJsonSerializer()));
+
+            Assert.Throws<ConfigurationException>(() => Configure.With(new TestContainerAdapter())
+                                                            .SpecifyOrderOfHandlers(d => d.First<string>())
+                                                            .SpecifyOrderOfHandlers(d => d.First<string>()));
+
+            Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
+                                                            .Events(d => d.UncorrelatedMessage += (bus, message, saga) => { })
+                                                            .Events(d => d.UncorrelatedMessage += (bus, message, saga) => { }));
+
+            Assert.DoesNotThrow(() => Configure.With(new TestContainerAdapter())
+                                                            .Decorators(d => d.AddDecoration(b => {}))
+                                                            .Decorators(d => d.AddDecoration(b => {})));
+        }
+
+        [Test]
+        public void CanConfigureTimeoutManager_External()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var configurer = Configure.With(adapter)
+                                      .Timeouts(t => t.UseExternalTimeoutManager());
+
+            configurer.Backbone.StoreTimeouts.ShouldBe(null);
+        }
+
+        [Test]
+        public void CanConfigureTimeoutManager_InternalWithAppConfig()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var configurer = Configure.With(adapter)
+                                      .Timeouts(t => t.StoreInSqlServer("someConnectionString", "timeouts"));
+
+            configurer.Backbone.StoreTimeouts.ShouldBeTypeOf<SqlServerTimeoutStorage>();
+        }
+
+        [Test]
         public void CanConfigureEvents()
         {
             var adapter = new TestContainerAdapter();
             var raisedEvents = new List<string>();
+            var unitOfWorkManagerInstanceThatCanBeRecognized = Mock<IUnitOfWorkManager>();
 
             var configurer = Configure.With(adapter)
                 .Events(e =>
@@ -35,18 +98,25 @@ namespace Rebus.Tests.Configuration
 
                         e.MessageSent += delegate { raisedEvents.Add("message sent"); };
                         e.PoisonMessage += delegate { raisedEvents.Add("poison message"); };
+
+                        e.UncorrelatedMessage += delegate { raisedEvents.Add("uncorrelated message"); };
+
+                        e.MessageContextEstablished += delegate { raisedEvents.Add("message context established"); };
+                        e.AddUnitOfWorkManager(unitOfWorkManagerInstanceThatCanBeRecognized);
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
-            var bus = (IAdvancedBus)configurer.CreateBus();
-            var events = ((RebusEvents) bus.Events);
+            var bus = (IBus)configurer.CreateBus();
+            var events = (RebusEvents) bus.Advanced.Events;
             
             events.RaiseBeforeTransportMessage(null, null);
             events.RaiseBeforeMessage(null, null);
             events.RaiseAfterMessage(null, null, null);
             events.RaiseAfterTransportMessage(null, null, null);
             events.RaiseMessageSent(null, null, null);
-            events.RaisePoisonMessage(null, null);
+            events.RaisePoisonMessage(null, null, null);
+            events.RaiseUncorrelatedMessage(null, null, null);
+            events.RaiseMessageContextEstablished(null, null);
 
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
@@ -54,6 +124,10 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("after transport message");
             raisedEvents.ShouldContain("message sent");
             raisedEvents.ShouldContain("poison message");
+            raisedEvents.ShouldContain("uncorrelated message");
+            raisedEvents.ShouldContain("message context established");
+
+            events.UnitOfWorkManagers.ShouldContain(unitOfWorkManagerInstanceThatCanBeRecognized);
         }
 
         [Test]
@@ -65,8 +139,8 @@ namespace Rebus.Tests.Configuration
 
             configurer.CreateBus();
 
-            configurer.Backbone.SendMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
-            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<RijndaelEncryptionTransportDecorator>();
+            configurer.Backbone.SendMessages.ShouldBeTypeOf<EncryptionAndCompressionTransportDecorator>();
+            configurer.Backbone.ReceiveMessages.ShouldBeTypeOf<EncryptionAndCompressionTransportDecorator>();
         }
 
         [Test]
@@ -213,9 +287,24 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var configurer = Configure.With(adapter)
-                .Serialization(s => s.UseJsonSerializer());
+                .Serialization(s => s.UseJsonSerializer()
+                                        .AddNameResolver(t => null)
+                                        .AddTypeResolver(d => null));
 
             configurer.Backbone.SerializeMessages.ShouldBeTypeOf<JsonMessageSerializer>();
+        }
+
+        [Test]
+        public void CanConfigureCustomSerialization()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var serializer = Mock<ISerializeMessages>();
+            
+            var configurer = Configure.With(adapter)
+                .Serialization(s => s.Use(serializer));
+
+            configurer.Backbone.SerializeMessages.ShouldBe(serializer);
         }
 
         [Test]
@@ -235,8 +324,7 @@ namespace Rebus.Tests.Configuration
             var adapter = new TestContainerAdapter();
 
             var configurer = Configure.With(adapter)
-                .Transport(t => t.UseMsmq("some_input_queue_name", "some_error_queue"))
-                .DetermineEndpoints(d => d.FromNServiceBusConfiguration());
+                .Transport(t => t.UseMsmq("some_input_queue_name", "some_error_queue"));
 
             configurer.CreateBus();
 
@@ -245,7 +333,7 @@ namespace Rebus.Tests.Configuration
             configurer.Backbone.StoreSubscriptions.ShouldNotBe(null);
             configurer.Backbone.InspectHandlerPipeline.ShouldNotBe(null);
             configurer.Backbone.SerializeMessages.ShouldNotBe(null);
-            configurer.Backbone.DetermineDestination.ShouldNotBe(null);
+            configurer.Backbone.DetermineMessageOwnership.ShouldNotBe(null);
         }
 
         [Test]
@@ -258,6 +346,29 @@ namespace Rebus.Tests.Configuration
                                 .SetCollectionName<FirstSagaData>("string_sagas")
                                 .SetCollectionName<SecondSagaData>("datetime_sagas"));
 
+        }
+
+        [Test]
+        public void CanConfigureEndpointMapperWithFilter()
+        {
+            var adapter = new TestContainerAdapter();
+
+            var backboneWithoutFilter =
+                (DetermineMessageOwnershipFromRebusConfigurationSection)
+                Configure.With(adapter)
+                    .MessageOwnership(d => d.FromRebusConfigurationSection())
+                    .Backbone.DetermineMessageOwnership;
+
+            var backboneWithFilter =
+                (DetermineMessageOwnershipFromRebusConfigurationSection)
+                Configure.With(adapter)
+                    .MessageOwnership(d => d.FromRebusConfigurationSectionWithFilter(f => f == typeof(SomeType)))
+                    .Backbone.DetermineMessageOwnership;
+
+            Assert.DoesNotThrow(() => backboneWithoutFilter.GetEndpointFor(typeof (SomeType)));
+
+            Assert.DoesNotThrow(() => backboneWithFilter.GetEndpointFor(typeof(SomeType)));
+            Assert.Throws<InvalidOperationException>(() => backboneWithFilter.GetEndpointFor(typeof (AnotherType)));
         }
 
         class FirstSagaData: ISagaData
@@ -284,15 +395,12 @@ namespace Rebus.Tests.Configuration
                 throw new NotImplementedException();
             }
 
-            public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+            public void SaveBusInstances(IBus bus)
             {
                 Bus = bus;
-                AdvancedBus = advancedBus;
             }
 
             public IBus Bus { get; set; }
-
-            public IAdvancedBus AdvancedBus { get; set; }
         }
     }
 

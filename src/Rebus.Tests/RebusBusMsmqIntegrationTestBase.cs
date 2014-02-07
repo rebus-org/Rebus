@@ -17,7 +17,7 @@ namespace Rebus.Tests
     /// Test base class with helpers for running integration tests with
     /// <see cref="RebusBus"/> and <see cref="MsmqMessageQueue"/>.
     /// </summary>
-    public abstract class RebusBusMsmqIntegrationTestBase : IDetermineDestination
+    public abstract class RebusBusMsmqIntegrationTestBase : IDetermineMessageOwnership
     {
         static RebusBusMsmqIntegrationTestBase()
         {
@@ -74,7 +74,9 @@ namespace Rebus.Tests
             var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
                                    storeSubscriptions, storeSagaData,
                                    this, serializer, pipelineInspector,
-                                   new ErrorTracker(errorQueueName));
+                                   new ErrorTracker(errorQueueName),
+                                   null,
+                                   new ConfigureAdditionalBehavior());
             
             EnsureProperDisposal(bus);
             EnsureProperDisposal(messageQueue);

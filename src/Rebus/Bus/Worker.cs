@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Transactions;
+using Rebus.Configuration;
 using Rebus.Logging;
+using System.Linq;
+using Rebus.Shared;
+using Rebus.Timeout;
 
 namespace Rebus.Bus
 {
@@ -20,6 +25,31 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Helps with waiting an appropriate amount of time when no message is received
+        /// </summary>
+        readonly BackoffHelper nullMessageReceivedBackoffHelper;
+
+        /// <summary>
+        /// Helps with waiting an appropriate amount of time when something is wrong that makes us unable to do
+        /// useful work
+        /// </summary>
+        readonly BackoffHelper errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper =
+            new BackoffHelper(new[]
+                              {
+                                  TimeSpan.FromSeconds(1),
+                                  TimeSpan.FromSeconds(2),
+                                  TimeSpan.FromSeconds(3),
+                                  TimeSpan.FromSeconds(5),
+                                  TimeSpan.FromSeconds(8),
+                                  TimeSpan.FromSeconds(13),
+                                  TimeSpan.FromSeconds(21),
+                                  TimeSpan.FromSeconds(30),
+                              })
+            {
+                LoggingDisabled = true
+            };
+
+        /// <summary>
         /// Caching of dispatcher methods
         /// </summary>
         readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
@@ -29,18 +59,24 @@ namespace Rebus.Bus
         readonly IErrorTracker errorTracker;
         readonly IReceiveMessages receiveMessages;
         readonly ISerializeMessages serializeMessages;
+        readonly IMutateIncomingMessages mutateIncomingMessages;
+        readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
+        readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
+        readonly MessageLogger messageLogger;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
         internal event Action<Exception, ReceivedTransportMessage> AfterTransportMessage = delegate { };
 
-        internal event Action<ReceivedTransportMessage> PoisonMessage = delegate { };
+        internal event Action<ReceivedTransportMessage, PoisonMessageInfo> PoisonMessage = delegate { };
 
         internal event Action<object> BeforeMessage = delegate { };
 
         internal event Action<Exception, object> AfterMessage = delegate { };
 
-        internal event Action<object, Saga> UncorrelatedMessage = delegate { }; 
+        internal event Action<object, Saga> UncorrelatedMessage = delegate { };
+
+        internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
@@ -53,13 +89,23 @@ namespace Rebus.Bus
             IStoreSagaData storeSagaData,
             IInspectHandlerPipeline inspectHandlerPipeline,
             string workerThreadName,
-            IHandleDeferredMessage handleDeferredMessage)
+            IHandleDeferredMessage handleDeferredMessage,
+            IMutateIncomingMessages mutateIncomingMessages,
+            IStoreTimeouts storeTimeouts,
+            IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
+            ConfigureAdditionalBehavior configureAdditionalBehavior,
+            MessageLogger messageLogger)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
+            this.mutateIncomingMessages = mutateIncomingMessages;
+            this.unitOfWorkManagers = unitOfWorkManagers;
+            this.configureAdditionalBehavior = configureAdditionalBehavior;
+            this.messageLogger = messageLogger;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+            nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
@@ -102,6 +148,8 @@ namespace Rebus.Bus
 
         public void Stop()
         {
+            if (shouldExit) return;
+
             log.Info("Stopping worker thread {0}", WorkerThreadName);
             shouldWork = false;
             shouldExit = true;
@@ -141,130 +189,313 @@ namespace Rebus.Bus
 
                 try
                 {
-                    TryProcessIncomingMessage();
-                }
-                catch (Exception e)
-                {
-                    // if there's two levels of TargetInvocationExceptions, it's user code that threw...
-                    if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
+                    try
                     {
-                        UserException(this, e.InnerException.InnerException);
+                        TryProcessIncomingMessage();
+
+                        errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper.Reset();
                     }
-                    else
+                    catch (MessageHandleException exception)
+                    {
+                        UserException(this, exception);
+                    }
+                    catch (UnitOfWorkCommitException exception)
+                    {
+                        UserException(this, exception);
+                    }
+                    catch (QueueCommitException exception)
+                    {
+                        UserException(this, exception);
+
+                        // when the queue cannot commit, we can't get the message into the error queue either - basically,
+                        // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
+                        errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper
+                            .Wait(waitTime => log.Warn(
+                                "Caught an exception when interacting with the queue system - there's basically no meaningful" +
+                                " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
+                                " wait and hope that the situation gets better... current wait time is {0}",
+                                waitTime));
+                    }
+                    catch (Exception e)
                     {
                         SystemException(this, e);
                     }
                 }
+                catch (Exception ex)
+                {
+                    errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper
+                        .Wait(waitTime => log.Error(ex,
+                            "An unhandled exception occurred while iterating the main worker loop - this is a critical error," +
+                            " and there's a probability that we cannot do any useful work, which is why we'll wait for" +
+                            " {0} and hope that the error goes away", waitTime));
+                }
             }
         }
 
+        /// <summary>
+        /// OK - here's how stuff is nested:
+        /// 
+        /// - Message queue transaction (TxBomkarl)
+        ///     - Before/After transport message
+        ///         - TransactionScope
+        ///             - Before/After logical message
+        ///                 Dispatch logical message
+        /// </summary>
         void TryProcessIncomingMessage()
         {
-            using (var transactionScope = BeginTransaction())
+            using (var context = new TxBomkarl())
             {
-                var transportMessage = receiveMessages.ReceiveMessage();
-
-                if (transportMessage == null)
+                try
                 {
-                    Thread.Sleep(20);
-                    return;
-                }
-
-                var id = transportMessage.Id;
-                var label = transportMessage.Label;
-
-                MessageContext context = null;
-
-                if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
-                {
-                    log.Error("Handling message {0} has failed the maximum number of times", id);
-                    MessageFailedMaxNumberOfTimes(transportMessage, errorTracker.GetErrorText(id));
-                    errorTracker.StopTracking(id);
+                    DoTry();
 
                     try
                     {
-                        PoisonMessage(transportMessage);
+                        context.RaiseDoCommit();
                     }
-                    catch (Exception exceptionWhileRaisingEvent)
+                    catch (Exception commitException)
                     {
-                        log.Error("An exception occurred while raising the PoisonMessage event: {0}",
-                                  exceptionWhileRaisingEvent);
+                        throw new QueueCommitException(commitException);
                     }
                 }
-                else
+                catch
                 {
                     try
                     {
-                        BeforeTransportMessage(transportMessage);
+                        context.RaiseDoRollback();
+                    }
+                    catch (Exception e)
+                    {
+                        log.Error(e, "An error occurred while rolling back the transaction!");
+                    }
 
-                        var message = serializeMessages.Deserialize(transportMessage);
+                    throw;
+                }
+            }
+        }
 
-                        // successfully deserialized the transport message, let's enter a message context
-                        context = MessageContext.Enter(message.Headers);
+        void DoTry()
+        {
+            var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
-                        foreach (var logicalMessage in message.Messages)
+            if (transportMessage == null)
+            {
+                // to back off and relax when there's no messages to process, we do this
+                nullMessageReceivedBackoffHelper.Wait();
+                return;
+            }
+
+            nullMessageReceivedBackoffHelper.Reset();
+
+            var id = transportMessage.Id;
+            var label = transportMessage.Label;
+
+            MessageContext context = null;
+
+            if (id == null)
+            {
+                HandlePoisonMessage(id, transportMessage);
+                return;
+            }
+
+            if (errorTracker.MessageHasFailedMaximumNumberOfTimes(id))
+            {
+                HandlePoisonMessage(id, transportMessage);
+                errorTracker.StopTracking(id);
+                return;
+            }
+
+            Exception transportMessageExceptionOrNull = null;
+            try
+            {
+                BeforeTransportMessage(transportMessage);
+
+                // Populate rebus-msg-id, if not set, from transport-level-id
+                if (!transportMessage.Headers.ContainsKey(Headers.MessageId))
+                {
+                    transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
+                }
+
+                using (var scope = BeginTransaction())
+                {
+                    var message = serializeMessages.Deserialize(transportMessage);
+                    // successfully deserialized the transport message, let's enter a message context
+                    context = MessageContext.Establish(message.Headers);
+                    MessageContextEstablished(context);
+
+                    var unitsOfWork = unitOfWorkManagers.Select(u => u.Create())
+                                    .Where(u => !ReferenceEquals(null, u))
+                                    .ToArray(); //< remember to invoke the chain here :)
+
+                    try
+                    {
+                        foreach (var logicalMessage in message.Messages.Select(MutateIncoming))
                         {
                             context.SetLogicalMessage(logicalMessage);
 
+                            Exception logicalMessageExceptionOrNull = null;
                             try
                             {
                                 BeforeMessage(logicalMessage);
 
                                 var typeToDispatch = logicalMessage.GetType();
 
-                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+                                messageLogger.LogReceive(id, logicalMessage);
 
-                                GetDispatchMethod(typeToDispatch).Invoke(this, new[] { logicalMessage });
-
-                                AfterMessage(null, logicalMessage);
+                                try
+                                {
+                                    var dispatchMethod = GetDispatchMethod(typeToDispatch);
+                                    var parameters = new[] { logicalMessage };
+                                    dispatchMethod.Invoke(this, parameters);
+                                }
+                                catch (TargetInvocationException tie)
+                                {
+                                    var exception = tie.InnerException;
+                                    exception.PreserveStackTrace();
+                                    throw exception;
+                                }
                             }
                             catch (Exception exception)
                             {
-                                try
-                                {
-                                    AfterMessage(exception, logicalMessage);
-                                }
-                                catch (Exception exceptionWhileRaisingEvent)
-                                {
-                                    log.Error("An exception occurred while raising the AfterMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterMessage event (including the details of the first error), this exception occurred: {1}",
-                                        exception, exceptionWhileRaisingEvent);
-                                }
+                                logicalMessageExceptionOrNull = exception;
                                 throw;
                             }
                             finally
                             {
+                                try
+                                {
+                                    AfterMessage(logicalMessageExceptionOrNull, logicalMessage);
+                                }
+                                catch (Exception exceptionWhileRaisingEvent)
+                                {
+                                    if (logicalMessageExceptionOrNull != null)
+                                    {
+                                        log.Error(
+                                            "An exception occurred while raising the AfterMessage event, and an exception occurred some" +
+                                            " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                                            " AfterMessage event (including the details of the first error), this exception occurred: {1}",
+                                            logicalMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                                    }
+                                    else
+                                    {
+                                        log.Error("An exception occurred while raising the AfterMessage event: {0}",
+                                                  exceptionWhileRaisingEvent);
+                                    }
+                                }
+
                                 context.ClearLogicalMessage();
                             }
                         }
 
-                        AfterTransportMessage(null, transportMessage);
+                        foreach (var unitOfWork in unitsOfWork)
+                        {
+                            try
+                            {
+                                unitOfWork.Commit();
+                            }
+                            catch (Exception exception)
+                            {
+                                throw new UnitOfWorkCommitException(exception, unitOfWork);
+                            }
+                        }
                     }
-                    catch (Exception exception)
+                    catch
                     {
-                        log.Debug("Handling message {0} ({1}) has failed", label, id);
-                        try
+                        foreach (var unitOfWork in unitsOfWork)
                         {
-                            AfterTransportMessage(exception, transportMessage);
+                            try
+                            {
+                                unitOfWork.Abort();
+                            }
+                            catch (Exception abortException)
+                            {
+                                log.Warn("An error occurred while aborting the unit of work {0}: {1}",
+                                         unitOfWork, abortException);
+                            }
                         }
-                        catch (Exception exceptionWhileRaisingEvent)
-                        {
-                            log.Error("An exception occurred while raising the AfterTransportMessage event, and an exception occurred some time before that as well. The first exception was this: {0}. And then, when raising the AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
-                                exception, exceptionWhileRaisingEvent);
-                        }
-                        errorTracker.TrackDeliveryFail(id, exception);
-                        if (context != null) context.Dispose(); //< dispose it if we entered
                         throw;
+                    }
+                    finally
+                    {
+                        foreach (var unitOfWork in unitsOfWork)
+                        {
+                            unitOfWork.Dispose();
+                        }
+                    }
+
+                    if (scope != null)
+                    {
+                        scope.Complete();
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                transportMessageExceptionOrNull = exception;
+                log.Debug("Handling message {0} with ID {1} has failed", label, id);
+                errorTracker.TrackDeliveryFail(id, exception);
+                throw new MessageHandleException(id, exception);
+            }
+            finally
+            {
+                try
+                {
+                    AfterTransportMessage(transportMessageExceptionOrNull, transportMessage);
+                }
+                catch (Exception exceptionWhileRaisingEvent)
+                {
+                    if (transportMessageExceptionOrNull != null)
+                    {
+                        log.Error(
+                            "An exception occurred while raising the AfterTransportMessage event, and an exception occurred some" +
+                            " time before that as well. The first exception was this: {0}. And then, when raising the" +
+                            " AfterTransportMessage event (including the details of the first error), this exception occurred: {1}",
+                            transportMessageExceptionOrNull, exceptionWhileRaisingEvent);
+                    }
+                    else
+                    {
+                        log.Error("An exception occurred while raising the AfterTransportMessage event: {0}", exceptionWhileRaisingEvent);
                     }
                 }
 
-                transactionScope.Complete();
                 if (context != null) context.Dispose(); //< dispose it if we entered
-                errorTracker.StopTracking(id);
+            }
+
+            errorTracker.StopTracking(id);
+        }
+
+        object MutateIncoming(object message)
+        {
+            return mutateIncomingMessages.MutateIncoming(message);
+        }
+
+        void HandlePoisonMessage(string id, ReceivedTransportMessage transportMessage)
+        {
+            var errorText = errorTracker.GetErrorText(id);
+            log.Error("Handling message {0} has failed the maximum number of times - details: {1}", id, errorText);
+            var poisonMessageInfo = errorTracker.GetPoisonMessageInfo(id);
+
+            MessageFailedMaxNumberOfTimes(transportMessage, errorText);
+            errorTracker.StopTracking(id);
+
+            try
+            {
+                PoisonMessage(transportMessage, poisonMessageInfo);
+            }
+            catch (Exception exceptionWhileRaisingEvent)
+            {
+                log.Error("An exception occurred while raising the PoisonMessage event: {0}",
+                          exceptionWhileRaisingEvent);
             }
         }
 
         TransactionScope BeginTransaction()
         {
+            if (!configureAdditionalBehavior.HandleMessagesInTransactionScope)
+            {
+                return null;
+            }
+
             var transactionOptions = new TransactionOptions
             {
                 IsolationLevel = IsolationLevel.ReadCommitted,
@@ -297,6 +528,14 @@ namespace Rebus.Bus
         internal void DispatchGeneric<T>(T message)
         {
             dispatcher.Dispatch(message);
+        }
+
+        /// <summary>
+        /// Create a backoff helper that matches the given behavior.
+        /// </summary>
+        static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
+        {
+            return new BackoffHelper(backoffTimes) { LoggingDisabled = true };
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus.Configuration;
-using System.Linq;
 
 namespace Rebus.Castle.Windsor
 {
@@ -37,7 +36,7 @@ namespace Rebus.Castle.Windsor
             }
         }
 
-        public void SaveBusInstances(IBus bus, IAdvancedBus advancedBus)
+        public void SaveBusInstances(IBus bus)
         {
             container.Register(
                 Component.For<IBus>()
@@ -45,10 +44,9 @@ namespace Rebus.Castle.Windsor
                     .LifestyleSingleton()
                     .Instance(bus),
 
-                Component.For<IAdvancedBus>()
-                    .Named("advancedBus")
-                    .LifestyleSingleton()
-                    .Instance(advancedBus),
+                Component.For<IMessageContext>()
+                    .UsingFactoryMethod(k => MessageContext.GetCurrent())
+                    .LifestyleTransient(),
 
                 Component.For<InstanceDisposer>()
                 );
@@ -57,24 +55,21 @@ namespace Rebus.Castle.Windsor
         }
 
         /// <summary>
-        /// Windsor hack that ensures that the externally provided instances of <see cref="IBus"/>
-        /// and <see cref="IAdvancedBus"/> are effectively owned and disposed by the container.
+        /// Windsor hack that ensures that the externally provided instance of <see cref="IBus"/>
+        /// is effectively owned and disposed by the container.
         /// </summary>
         class InstanceDisposer : IDisposable
         {
-            readonly IEnumerable<IDisposable> disposables;
+            readonly IBus bus;
 
-            public InstanceDisposer(IBus bus, IAdvancedBus advancedBus)
+            public InstanceDisposer(IBus bus)
             {
-                disposables = new List<IDisposable> {bus, advancedBus}.Distinct();
+                this.bus = bus;
             }
 
             public void Dispose()
             {
-                foreach (var disposable in disposables)
-                {
-                    disposable.Dispose();
-                }
+                bus.Dispose();
             }
         }
     }

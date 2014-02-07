@@ -26,7 +26,8 @@ namespace Rebus.Tests.Performance
                                         activator,
                                         new InMemorySubscriptionStorage(),
                                         new TrivialPipelineInspector(),
-                                        new DeferredMessageHandlerForTesting());
+                                        new DeferredMessageHandlerForTesting(),
+                                        null);
         }
 
         /// <summary>

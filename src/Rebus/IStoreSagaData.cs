@@ -28,7 +28,7 @@
 
         /// <summary>
         /// Queries the underlying data store for the saga whose correlation field has a value
-        /// that mathces the given field from the incoming message.
+        /// that matches the given field from the incoming message.
         /// </summary>
         T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData;
     }

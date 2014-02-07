@@ -14,8 +14,13 @@ namespace Rebus.Tests.Persistence.Timeouts.Factories
 
         public IStoreTimeouts CreateStore()
         {
-            DeleteRows("timeouts");
-            return new SqlServerTimeoutStorage(ConnectionStrings.SqlServer, "timeouts");
+            DropTable("timeouts");
+            return new SqlServerTimeoutStorage(ConnectionStrings.SqlServer, "timeouts").EnsureTableIsCreated();
+        }
+
+        void DropTable(string tableName)
+        {
+            ExecuteCommand("drop table " + tableName);
         }
 
         public void Dispose()

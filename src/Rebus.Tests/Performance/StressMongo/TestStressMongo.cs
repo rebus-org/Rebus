@@ -8,6 +8,7 @@ using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Castle.Windsor;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.MongoDb;
@@ -26,10 +27,18 @@ using Shouldly;
 
 namespace Rebus.Tests.Performance.StressMongo
 {
-    [TestFixture(typeof(MsmqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo)]
-    [TestFixture(typeof(RabbitMqMessageQueueFactory)), Category(TestCategories.Integration), Category(TestCategories.Mongo), Category(TestCategories.Rabbit)]
-    public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineDestination, IFlowLog where TFactory : IMessageQueueFactory, new()
+    [Category(TestCategories.Mongo)]
+    [Category(TestCategories.Integration)]
+    [TestFixture(typeof(MsmqMessageQueueFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(RabbitMqMessageQueueFactory), Category = TestCategories.Rabbit)]
+    public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineMessageOwnership, IFlowLog where TFactory : IMessageQueueFactory, new()
     {
+        const string CreditSagasCollectionName = "check_credit_sagas";
+        const string LegalSagasCollectionName = "check_legal_sagas";
+        const string CustomerInformationSagasCollectionName = "customer_information_sagas";
+        const string TimeoutsCollectionName = "rebus.timeouts";
+        const string SubscriptionsCollectionName = "rebus.subscriptions";
+
         readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
 
         readonly Dictionary<Type, string> endpointMappings =
@@ -53,7 +62,11 @@ namespace Rebus.Tests.Performance.StressMongo
         {
             messageQueueFactory = new TFactory();
 
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
+                {
+                    MinLevel = LogLevel.Warn,
+                    Filters = { l => true }
+                };
 
             crm = CreateBus("crm", ContainerAdapterWith("crm"));
             caf = CreateBus("caf", ContainerAdapterWith("caf", typeof(CheckCreditSaga)));
@@ -61,19 +74,19 @@ namespace Rebus.Tests.Performance.StressMongo
             dcc = CreateBus("dcc", ContainerAdapterWith("dcc", typeof(MaintainCustomerInformationSaga)));
 
             // clear saga data collections
-            DropCollection("check_credit_sagas");
-            DropCollection("check_legal_sagas");
-            DropCollection("customer_information_sagas");
+            DropCollection(CreditSagasCollectionName);
+            DropCollection(LegalSagasCollectionName);
+            DropCollection(CustomerInformationSagasCollectionName);
+            DropCollection(TimeoutsCollectionName);
 
-            DropCollection("rebus.timeouts");
-
-            var timeoutServiceQueues = messageQueueFactory.GetQueue(TimeoutService.InputQueueName);
-            timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, "rebus.timeouts"),
+            var timeoutServiceQueues = messageQueueFactory.GetQueue("rebus.timeout");
+            timeout = new TimeoutService(new MongoDbTimeoutStorage(ConnectionString, TimeoutsCollectionName),
                                          timeoutServiceQueues.Item1,
                                          timeoutServiceQueues.Item2);
             timeout.Start();
 
             caf.Subscribe<CustomerCreated>();
+
             legal.Subscribe<CustomerCreated>();
 
             dcc.Subscribe<CustomerCreated>();
@@ -85,7 +98,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
         [TestCase(1)]
         [TestCase(10)]
-        [TestCase(100, Ignore = true)]
+        [TestCase(100, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void ItWorksWithSagasAndEverything(int count)
         {
             var no = 1;
@@ -95,7 +108,7 @@ namespace Rebus.Tests.Performance.StressMongo
 
             File.WriteAllText("stress-mongo.txt", FormatLogContents());
 
-            var sagas = Collection<CustomerInformationSagaData>("customer_information_sagas");
+            var sagas = Collection<CustomerInformationSagaData>(CustomerInformationSagasCollectionName);
             var allSagas = sagas.FindAll();
 
             allSagas.Count().ShouldBe(count);
@@ -147,7 +160,7 @@ namespace Rebus.Tests.Performance.StressMongo
             }
 
             container.Register(Component.For<IFlowLog>().Instance(this));
-            //  container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
+            //container.Register(Component.For<IHandleMessages<object>>().Instance(new MessageLogger(this, serviceName)));
 
             return new WindsorContainerAdapter(container);
         }
@@ -234,37 +247,35 @@ namespace Rebus.Tests.Performance.StressMongo
 
         IBus CreateBus(string serviceName, WindsorContainerAdapter containerAdapter)
         {
-            var sagaCollectionName = serviceName + ".sagas";
-            var subscriptionsCollectionName = "rebus.subscriptions";
-
-            DropCollection(sagaCollectionName);
-            DropCollection(subscriptionsCollectionName);
+            DropCollection(SubscriptionsCollectionName);
 
             var inputQueueName = GetEndpoint(serviceName);
 
             var queue = messageQueueFactory.GetQueue(inputQueueName);
 
             var sagaPersister = new MongoDbSagaPersister(ConnectionString)
-                .SetCollectionName<CheckCreditSagaData>("check_credit_sagas")
-                .SetCollectionName<CheckSomeLegalStuffSagaData>("check_legal_sagas")
-                .SetCollectionName<CustomerInformationSagaData>("customer_information_sagas");
+                .SetCollectionName<CheckCreditSagaData>(CreditSagasCollectionName)
+                .SetCollectionName<CheckSomeLegalStuffSagaData>(LegalSagasCollectionName)
+                .SetCollectionName<CustomerInformationSagaData>(CustomerInformationSagasCollectionName);
 
             var bus = new RebusBus(containerAdapter, queue.Item1, queue.Item2,
-                                   new MongoDbSubscriptionStorage(ConnectionString, subscriptionsCollectionName),
+                                   new MongoDbSubscriptionStorage(ConnectionString, SubscriptionsCollectionName),
                                    sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector(),
-                                   new ErrorTracker("error"));
+                                   new ErrorTracker("error"),
+                                   null,
+                                   new ConfigureAdditionalBehavior());
 
             stuffToDispose.Add(bus);
 
             containerAdapter.Container.Register(Component.For<IBus>().Instance(bus));
 
-            return bus.Start(5);
+            return bus.Start(3);
         }
 
         static string GetEndpoint(string serviceName)
         {
-            return "test.stress.mongo." + serviceName;
+            return "test_stress_mongo_" + serviceName;
         }
 
         public void LogFlow(Guid correlationId, string message, params object[] objs)

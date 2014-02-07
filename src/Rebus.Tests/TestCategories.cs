@@ -11,6 +11,7 @@ namespace Rebus.Tests
     {
         public const string Azure = "azure";
         public const string Rabbit = "rabbit";
+        public const string Msmq = "msmq";
         public const string Integration = "integration";
         public const string Mongo = "mongo";
         public const string Raven = "raven";
@@ -18,7 +19,13 @@ namespace Rebus.Tests
         public const string ToDo = "todo";
         public const string Performance = "performance";
 
+        public const int AvailableHttpPort = 17834;
+
+#if DEBUG
         public const bool IgnoreLongRunningTests = true;
+#else
+        public const bool IgnoreLongRunningTests = false;
+#endif
 
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
         [TestCase(typeof(SqlServerFixtureBase), MsSql)]

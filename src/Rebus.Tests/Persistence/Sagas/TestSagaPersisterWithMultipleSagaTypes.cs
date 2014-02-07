@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using NUnit.Framework;
 using Ponder;
 using Rebus.Tests.Persistence.Sagas.Factories;
@@ -10,22 +9,23 @@ namespace Rebus.Tests.Persistence.Sagas
     [TestFixture(typeof(MongoDbSagaPersisterFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(SqlServerSagaPersisterFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RavenDbSagaPersisterFactory), Category = TestCategories.Raven)]
+    [TestFixture(typeof(InMemorySagaPersisterFactory))]
     public class TestSagaPersisterWithMultipleSagaTypes<TFactory> : TestSagaPersistersBase<TFactory> where TFactory : ISagaPersisterFactory
     {
         [Test]
         public void CanInsertSagasOfMultipleTypes()
         {
             // arrange
-            var someString = "just happens to be the same in two otherwise unrelated sagas";
+            const string someString = "just happens to be the same in two otherwise unrelated sagas";
             var someFieldPathOne = Reflect.Path<OneKindOfSaga>(s => s.SomeField);
             var someFieldPathAnother = Reflect.Path<AnotherKindOfSaga>(s => s.SomeField);
 
             // act
-            Persister.Insert(new OneKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathOne });
-            Persister.Insert(new AnotherKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathAnother });
+            persister.Insert(new OneKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathOne });
+            persister.Insert(new AnotherKindOfSaga { Id = Guid.NewGuid(), SomeField = someString }, new[] { "Id", someFieldPathAnother });
 
-            var oneKindOfSagaLoaded = Persister.Find<OneKindOfSaga>(someFieldPathOne, someString);
-            var anotherKindOfSagaLoaded = Persister.Find<AnotherKindOfSaga>(someFieldPathAnother, someString);
+            var oneKindOfSagaLoaded = persister.Find<OneKindOfSaga>(someFieldPathOne, someString);
+            var anotherKindOfSagaLoaded = persister.Find<AnotherKindOfSaga>(someFieldPathAnother, someString);
 
             // assert
             oneKindOfSagaLoaded.ShouldBeTypeOf<OneKindOfSaga>();

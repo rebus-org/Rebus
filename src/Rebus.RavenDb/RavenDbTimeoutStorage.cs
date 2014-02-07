@@ -32,33 +32,54 @@ namespace Rebus.RavenDb
             }
         }
 
-        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
+        public IEnumerable<DueTimeout> GetDueTimeouts()
         {
             using (var session = store.OpenSession())
             {
+                var now = RebusTimeMachine.Now();
+
                 var dueTimeouts = session.Query<RavenTimeout>()
                     .Customize(x => x.WaitForNonStaleResultsAsOfLastWrite())
-                    .Where(x => x.Time <= Time.Now()).OrderBy(x => x.Time)
+                    .Where(x => x.Time <= now).OrderBy(x => x.Time)
                     .ToList();
 
-                foreach (var timeout in dueTimeouts)
-                {
-                    var loadedTimeout = session.Load<RavenTimeout>(timeout.Id);
-                    session.Delete(loadedTimeout);
-                }
+                var rebusTimeouts = dueTimeouts
+                    .Select(storedTimeout =>
+                            new DueRavenTimeout(storedTimeout.ReplyTo,
+                                                storedTimeout.CorrelationId,
+                                                storedTimeout.Time,
+                                                storedTimeout.SagaId,
+                                                storedTimeout.Data,
+                                                store,
+                                                storedTimeout.Id))
+                    .ToList();
 
-                var rebusTimeouts = dueTimeouts.Select(storedTimeout =>
-                                                       new Timeout.Timeout
-
-                                                           {
-                                                               CorrelationId = storedTimeout.CorrelationId,
-                                                               SagaId = storedTimeout.SagaId,
-                                                               TimeToReturn = storedTimeout.Time,
-                                                               CustomData = storedTimeout.Data,
-                                                               ReplyTo = storedTimeout.ReplyTo
-                                                           }).ToList();
                 session.SaveChanges();
+                
                 return rebusTimeouts;
+            }
+        }
+
+        class DueRavenTimeout : DueTimeout
+        {
+            readonly IDocumentStore documentStore;
+            readonly string id;
+
+            public DueRavenTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, IDocumentStore documentStore, string id) 
+                : base(replyTo, correlationId, timeToReturn, sagaId, customData)
+            {
+                this.documentStore = documentStore;
+                this.id = id;
+            }
+
+            public override void MarkAsProcessed()
+            {
+                using (var session = documentStore.OpenSession())
+                {
+                    session.Delete(session.Load<RavenTimeout>(id));
+
+                    session.SaveChanges();
+                }
             }
         }
 

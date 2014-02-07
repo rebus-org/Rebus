@@ -1,18 +1,18 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Timers;
-using System.Transactions;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Serialization.Json;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using System.Linq;
 
 namespace Rebus.Timeout
 {
-    public class TimeoutService : IHandleMessages<TimeoutRequest>, IActivateHandlers
+    public class TimeoutService : IActivateHandlers
     {
         static ILog log;
 
@@ -21,50 +21,51 @@ namespace Rebus.Timeout
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        IStoreTimeouts storeTimeouts;
+        public const string DefaultInputQueueName = "rebus.timeout";
+        public const string DefaultErrorQueueName = "rebus.timeout.error";
 
-        public const string InputQueueName = "rebus.timeout";
-
-        IAdvancedBus bus;
-        readonly Timer timer = new Timer();
         RebusBus rebusBus;
-        static readonly Type[] IgnoredMessageTypes = new[] { typeof(object), typeof(IRebusControlMessage) };
+
+        static readonly Type[] IgnoredMessageTypes =
+            new[]
+                {
+                    typeof (object),
+                    typeof (IRebusControlMessage),
+                    typeof (TimeoutRequest)
+                };
 
         public TimeoutService(IStoreTimeouts storeTimeouts)
         {
-            var msmqMessageQueue = new MsmqMessageQueue(InputQueueName);
-            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue);
+            var msmqMessageQueue = new MsmqMessageQueue(DefaultInputQueueName);
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue, DefaultErrorQueueName);
+        }
+
+        public TimeoutService(IStoreTimeouts storeTimeouts, string inputQueueName, string errorQueueName)
+        {
+            var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
+            Initialize(storeTimeouts, msmqMessageQueue, msmqMessageQueue, errorQueueName);
         }
 
         public TimeoutService(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
         {
-            Initialize(storeTimeouts, sendMessages, receiveMessages);
+            Initialize(storeTimeouts, sendMessages, receiveMessages, DefaultErrorQueueName);
         }
 
-        void Initialize(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages)
+        void Initialize(IStoreTimeouts storeTimeouts, ISendMessages sendMessages, IReceiveMessages receiveMessages, string errorQueueName)
         {
-            this.storeTimeouts = storeTimeouts;
+            var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
+            MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
+            MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
 
-            rebusBus = new RebusBus(this, sendMessages, receiveMessages, null, null, null, new JsonMessageSerializer(),
-                                    new TrivialPipelineInspector(), new ErrorTracker(receiveMessages.InputQueueAddress + ".error"));
-            bus = rebusBus;
-
-            timer.Interval = 300;
-            timer.Elapsed += CheckCallbacks;
-        }
-
-        public string InputQueue
-        {
-            get { return InputQueueName; }
+            rebusBus = new RebusBus(this, sendMessages, receiveMessages, null, null, null,
+                                    new JsonMessageSerializer(),
+                                    new TrivialPipelineInspector(),
+                                    new ErrorTracker(errorQueueName),
+                                    storeTimeouts, new ConfigureAdditionalBehavior());
         }
 
         public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
         {
-            if (typeof(T) == typeof(TimeoutRequest))
-            {
-                return new[] { (IHandleMessages<T>)this };
-            }
-
             if (IgnoredMessageTypes.Contains(typeof(T)))
             {
                 return new IHandleMessages<T>[0];
@@ -81,58 +82,12 @@ namespace Rebus.Timeout
         {
             log.Info("Starting bus");
             rebusBus.Start(1);
-            log.Info("Starting inner timer");
-            timer.Start();
         }
 
         public void Stop()
         {
-            log.Info("Stopping inner timer");
-            timer.Stop();
             log.Info("Disposing bus");
             rebusBus.Dispose();
-        }
-
-        public void Handle(TimeoutRequest message)
-        {
-            var currentMessageContext = MessageContext.GetCurrent();
-
-            var newTimeout = new Timeout
-                                 {
-                                     SagaId = message.SagaId,
-                                     CorrelationId = message.CorrelationId,
-                                     ReplyTo = currentMessageContext.ReturnAddress,
-                                     TimeToReturn = Time.Now() + message.Timeout,
-                                     CustomData = message.CustomData,
-                                 };
-
-            storeTimeouts.Add(newTimeout);
-
-            log.Info("Added new timeout: {0}", newTimeout);
-        }
-
-        void CheckCallbacks(object sender, ElapsedEventArgs e)
-        {
-            using (var tx = new TransactionScope())
-            {
-                var dueTimeouts = storeTimeouts.RemoveDueTimeouts();
-
-                foreach (var timeout in dueTimeouts)
-                {
-                    log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
-
-                    bus.Routing.Send(timeout.ReplyTo,
-                             new TimeoutReply
-                                 {
-                                     SagaId = timeout.SagaId,
-                                     CorrelationId = timeout.CorrelationId,
-                                     DueTime = timeout.TimeToReturn,
-                                     CustomData = timeout.CustomData,
-                                 });
-                }
-
-                tx.Complete();
-            }
         }
     }
 }

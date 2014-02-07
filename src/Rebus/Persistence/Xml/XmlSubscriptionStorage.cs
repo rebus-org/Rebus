@@ -11,8 +11,8 @@ namespace Rebus.Persistence.Xml
     /// </summary>
     public class XmlSubscriptionStorage : IStoreSubscriptions
     {
-        private readonly object fileLock = new object();
-        private readonly string xmlFilePath;
+        readonly object fileLock = new object();
+        readonly string xmlFilePath;
 
         /// <summary>
         /// Creates a new instance of the XmlSubscriptionStorage
@@ -25,30 +25,36 @@ namespace Rebus.Persistence.Xml
 
             var dir = Path.GetDirectoryName(xmlFilePath);
             
-            if (!Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
             this.xmlFilePath = xmlFilePath;
         }
 
-        public string[] GetSubscribers(Type messageType)
+        /// <summary>
+        /// Gets the endpoints that are subscribed to the given message type from the configured XML file
+        /// </summary>
+        public string[] GetSubscribers(Type eventType)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
 
             lock (fileLock)
             {
                 var doc = GetSubscriptionDocument();
                 var subscriptions = GetSubscriptions(doc);
-                var key = Key(messageType);
+                var key = Key(eventType);
                 return subscriptions.Where(s => s.Type == key).Select(s => s.Queue).ToArray();
             }
         }
 
-        public void Remove(Type messageType, string subscriberInputQueue)
+        /// <summary>
+        /// Removes the endpoint that is subscribed to the given message type from the configured XML file
+        /// </summary>
+        public void Remove(Type eventType, string subscriberInputQueue)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
             if (string.IsNullOrEmpty(subscriberInputQueue))
                 throw new ArgumentNullException("subscriberInputQueue");
 
@@ -56,7 +62,7 @@ namespace Rebus.Persistence.Xml
             {
                 var existingDoc = GetSubscriptionDocument();
                 var newDoc = CreateSubscriptionDocument();
-                var key = Key(messageType);
+                var key = Key(eventType);
                 var subscriptions = GetSubscriptions(existingDoc);
                 var newSubscriptions = from s in subscriptions
                                        where !(s.Type == key && s.Queue == subscriberInputQueue)
@@ -68,17 +74,20 @@ namespace Rebus.Persistence.Xml
             }
         }
 
-        public void Store(Type messageType, string subscriberInputQueue)
+        /// <summary>
+        /// Adds the endpoint as a subscriber of the given message type to the configured XML file
+        /// </summary>
+        public void Store(Type eventType, string subscriberInputQueue)
         {
-            if (messageType == null)
-                throw new ArgumentNullException("messageType");
+            if (eventType == null)
+                throw new ArgumentNullException("eventType");
             if (string.IsNullOrEmpty(subscriberInputQueue))
                 throw new ArgumentNullException("subscriberInputQueue");
 
             lock (fileLock)
             {
                 XDocument doc = GetSubscriptionDocument();
-                var key = Key(messageType);
+                var key = Key(eventType);
                 var subscriptionExist = GetSubscriptions(doc, key).Any(s => s.Queue == subscriberInputQueue);
                 if (subscriptionExist)
                     return;
@@ -96,7 +105,7 @@ namespace Rebus.Persistence.Xml
         /// <param name="subscriberInputQueue">Queue name to store</param>
         /// <param name="type">Type to use</param>
         /// <returns>An XElement representing the subscription</returns>
-        private static XElement CreateSubscription(string subscriberInputQueue, string type)
+        static XElement CreateSubscription(string subscriberInputQueue, string type)
         {
             return new XElement("subscription",
                                     new XElement("type", type),
@@ -108,7 +117,7 @@ namespace Rebus.Persistence.Xml
         /// Loads the subscription document from disk if it exists, otherwise creates a new
         /// </summary>
         /// <returns>An XDocument with current subscriptions</returns>
-        private XDocument GetSubscriptionDocument()
+        XDocument GetSubscriptionDocument()
         {
             if (File.Exists(xmlFilePath))
                 return XDocument.Load(xmlFilePath);
@@ -120,7 +129,7 @@ namespace Rebus.Persistence.Xml
         /// Creates a new (and empty) subscription document
         /// </summary>
         /// <returns>An XDocument with no subscriptions</returns>
-        private XDocument CreateSubscriptionDocument()
+        XDocument CreateSubscriptionDocument()
         {
             var doc = new XDocument();
             var root = new XElement("subscriptions");
@@ -134,7 +143,7 @@ namespace Rebus.Persistence.Xml
         /// <param name="doc">XDocument to search for subscriptions in</param>
         /// <param name="type">Optional type to search for</param>
         /// <returns>A list of current subscriptions</returns>
-        private IEnumerable<Subscription> GetSubscriptions(XDocument doc, string type = null)
+        IEnumerable<Subscription> GetSubscriptions(XDocument doc, string type = null)
         {
             if (doc == null)
                 throw new ArgumentNullException("doc");
@@ -145,9 +154,9 @@ namespace Rebus.Persistence.Xml
                        where s.Element("type").Value == type
                        select new Subscription { Type = type, Queue = s.Element("subscriptionEntry").Value };
             }
-            else
-                return from s in doc.Descendants("subscription")
-                       select new Subscription { Type = s.Element("type").Value, Queue = s.Element("subscriptionEntry").Value };
+            
+            return from s in doc.Descendants("subscription")
+                   select new Subscription { Type = s.Element("type").Value, Queue = s.Element("subscriptionEntry").Value };
         }
 
         /// <summary>
@@ -155,7 +164,7 @@ namespace Rebus.Persistence.Xml
         /// </summary>
         /// <param name="t">Type to get key for</param>
         /// <returns>A key</returns>
-        private string Key(Type t)
+        string Key(Type t)
         {
             return t.AssemblyQualifiedName;
         }

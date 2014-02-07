@@ -3,24 +3,56 @@ using System.Configuration;
 
 namespace Rebus.Configuration
 {
+    /// <summary>
+    /// Configuration section for the &lt;rebus&gt; configuration section in app.config/web.config
+    /// </summary>
     public class RebusConfigurationSection : ConfigurationSection
     {
+        /// <summary>
+        /// Asserts that an input queue name has been configured
+        /// </summary>
+        public void VerifyPresenceOfInputQueueConfig()
+        {
+            if (string.IsNullOrEmpty(InputQueue))
+            {
+                throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
+            }
+        }
+
+        /// <summary>
+        /// Asserts that an error queue name has been configured
+        /// </summary>
+        public void VerifyPresenceOfErrorQueueConfig()
+        {
+            if (string.IsNullOrEmpty(ErrorQueue))
+            {
+                throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
+            } 
+        }
+
         const string MappingsCollectionPropertyName = "endpoints";
         const string RijndaelCollectionPropertyName = "rijndael";
         const string InputQueueAttributeName = "inputQueue";
+        const string TimeoutManagerAttributeName = "timeoutManager";
         const string AddressAttributeName = "address";
         const string ErrorQueueAttributeName = "errorQueue";
         const string WorkersAttributeName = "workers";
         const string RetriesAttributeName = "maxRetries";
         const string ConfigSectionName = "rebus";
 
-        [ConfigurationProperty(RijndaelCollectionPropertyName)]
+        /// <summary>
+        /// Gets the Rijndael encryption configuration section
+        /// </summary>
+        [ConfigurationProperty(RijndaelCollectionPropertyName, IsRequired = false)]
         public RijndaelSection RijndaelSection
         {
             get { return (RijndaelSection)this[RijndaelCollectionPropertyName]; }
             set { this[RijndaelCollectionPropertyName] = value; }
         }
 
+        /// <summary>
+        /// Gets the mapping configuration section
+        /// </summary>
         [ConfigurationProperty(MappingsCollectionPropertyName)]
         public MappingsCollection MappingsCollection
         {
@@ -28,6 +60,9 @@ namespace Rebus.Configuration
             set { this[MappingsCollectionPropertyName] = value; }
         }
 
+        /// <summary>
+        /// Gets the input queue name
+        /// </summary>
         [ConfigurationProperty(InputQueueAttributeName)]
         public string InputQueue
         {
@@ -35,6 +70,19 @@ namespace Rebus.Configuration
             set { this[InputQueueAttributeName] = value; }
         }
 
+        /// <summary>
+        /// Gets the timeout manager endpoint address
+        /// </summary>
+        [ConfigurationProperty(TimeoutManagerAttributeName)]
+        public string TimeoutManagerAddress
+        {
+            get { return (string)this[TimeoutManagerAttributeName]; }
+            set { this[TimeoutManagerAttributeName] = value; }
+        }
+
+        /// <summary>
+        /// Gets this endpoint's address (can be used in cases where e.g. an IP should be used instead of the machine name)
+        /// </summary>
         [ConfigurationProperty(AddressAttributeName)]
         public string Address
         {
@@ -42,6 +90,9 @@ namespace Rebus.Configuration
             set { this[AddressAttributeName] = value; }
         }
 
+        /// <summary>
+        /// Gets the error queue name
+        /// </summary>
         [ConfigurationProperty(ErrorQueueAttributeName)]
         public string ErrorQueue
         {
@@ -49,6 +100,9 @@ namespace Rebus.Configuration
             set { this[ErrorQueueAttributeName] = value; }
         }
 
+        /// <summary>
+        /// Gets the number of workers that should be started in this endpoint
+        /// </summary>
         [ConfigurationProperty(WorkersAttributeName)]
         public int? Workers
         {
@@ -56,6 +110,9 @@ namespace Rebus.Configuration
             set { this[WorkersAttributeName] = value; }
         }
 
+        /// <summary>
+        /// Configures how many times a message should be delivered with error before it is moved to the error queue
+        /// </summary>
         [ConfigurationProperty(RetriesAttributeName)]
         public int? MaxRetries
         {
@@ -63,6 +120,9 @@ namespace Rebus.Configuration
             set { this[RetriesAttributeName] = value; }
         }
 
+        /// <summary>
+        /// Gets an example configuration XML snippet that can be used in error messages
+        /// </summary>
         public const string ExampleSnippetForErrorMessages = @"
 
     <rebus inputQueue=""myService.input"" errorQueue=""myService.error"" workers=""5"">
@@ -74,6 +134,10 @@ namespace Rebus.Configuration
     </rebus>
 ";
 
+        /// <summary>
+        /// Looks up the current AppDomain's Rebus configuration section, throwing
+        /// an explanatory exception if it isn't present
+        /// </summary>
         public static RebusConfigurationSection LookItUp()
         {
             var section = ConfigurationManager.GetSection(ConfigSectionName);
@@ -90,6 +154,10 @@ that it is NOT possible to rename this section, even though the declaration make
             return (RebusConfigurationSection)section;
         }
 
+        /// <summary>
+        /// Helper method that helps getting a value from the Rebus configuration section, allowing for a nifty default to
+        /// be used in cases where the setting in question hasn't been explicitly configured
+        /// </summary>
         public static TValue GetConfigurationValueOrDefault<TValue>(Func<RebusConfigurationSection, TValue> getConfigurationValue, TValue defaultValue)
         {
             var section = ConfigurationManager.GetSection(ConfigSectionName);

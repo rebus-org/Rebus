@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus.Bus
 {
@@ -42,5 +44,38 @@ namespace Rebus.Bus
         /// the event that they exceed the accepted number of failed delivery attempts.
         /// </summary>
         string ErrorQueueAddress { get; }
+
+        /// <summary>
+        /// Retrieves the poison message information collected so far for the message with the specfied id.
+        /// </summary>
+        PoisonMessageInfo GetPoisonMessageInfo(string id);
+
+        /// <summary>
+        /// Sets the maximum number of retries for some specific exception type
+        /// </summary>
+        void SetMaxRetriesFor<TException>(int maxRetriesForThisExceptionType) where TException : Exception;
+    }
+
+    /// <summary>
+    /// Represents a message and information about exceptions that have been caught while attempting
+    /// to process the message.
+    /// </summary>
+    public class PoisonMessageInfo
+    {
+        internal PoisonMessageInfo(string id, IEnumerable<Timed<Exception>> exceptions)
+        {
+            Id = id;
+            Exceptions = exceptions.ToArray();
+        }
+
+        /// <summary>
+        /// The id of the transport message.
+        /// </summary>
+        public string Id { get; private set; }
+        
+        /// <summary>
+        /// Collection of exceptions caught at specific times while processing the message.
+        /// </summary>
+        public Timed<Exception>[] Exceptions { get; private set; }
     }
 }

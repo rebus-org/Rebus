@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using RabbitMQ.Client;
 using Rebus.Logging;
+using Rebus.RabbitMQ;
 using Rebus.Tests.Transports.Rabbit;
 
 namespace Rebus.Tests.Integration
@@ -17,9 +19,39 @@ namespace Rebus.Tests.Integration
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) {MinLevel = LogLevel.Warn};
         }
 
+        [Test]
+        public void DoesntActuallyConnectWhenCreatingTheFactory()
+        {
+            using(var connectionManager = new ConnectionManager("amqp://would_throw_if_it_connected_immediately,amqp://would_also_throw_if_it_connected_immediately", "w00t!"))
+            {
+                // arrange
+
+                // act
+
+                //var connection = connectionManager.GetConnection();
+
+                // assert
+            }
+        }
+
+        [Test]
+        public void WillCreateInputAndErrorQueue()
+        {
+            var testRabbitQueues = "test.rabbit.queues";
+            CreateBus(testRabbitQueues, new HandlerActivatorForTesting()).Start(1);
+
+
+            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                Assert.DoesNotThrow(() => model.BasicGet(testRabbitQueues, true));
+                Assert.DoesNotThrow(() => model.BasicGet(testRabbitQueues + ".error", true));
+            }
+        }
+
         [TestCase(1, 1)]
         [TestCase(100, 3)]
-        [TestCase(10000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(10000, 3)]
         [TestCase(10000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 3, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(100000, 5, Ignore = TestCategories.IgnoreLongRunningTests)]
@@ -47,7 +79,7 @@ namespace Rebus.Tests.Integration
                                                              }));
 
             var stopwatch = Stopwatch.StartNew();
-            using (var tx = new TransactionScope())
+            using (var tx = new TransactionScope(TransactionScopeOption.Required, TimeSpan.FromMinutes(5)))
             {
                 var counter = 0;
 
@@ -62,10 +94,10 @@ namespace Rebus.Tests.Integration
             stopwatch = Stopwatch.StartNew();
             receiver.Start(numberOfWorkers);
 
-            var accountForLatency = TimeSpan.FromSeconds(1);
-            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.01) + accountForLatency))
+            var accountForLatency = TimeSpan.FromSeconds(10);
+            if (!resetEvent.WaitOne(TimeSpan.FromSeconds(messageCount*0.02) + accountForLatency))
             {
-                Assert.Fail("Didn't receive all messages within timeout");
+                Assert.Fail("Didn't receive all messages within timeout - only {0} messages were received", receivedMessages.Count);
             }
             totalSeconds = stopwatch.Elapsed.TotalSeconds;
 

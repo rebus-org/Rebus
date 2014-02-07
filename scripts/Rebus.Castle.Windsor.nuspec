@@ -12,10 +12,11 @@
     <description>Provides a Castle Windsor container adapter for Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus castle windsor di dependencyInjection ioc inversionOfControl</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="Castle.Core" version="3.1.0" />
-      <dependency id="Castle.Windsor" version="3.1.0" />
+      <dependency id="Castle.Core" version="3.2.0" />
+      <dependency id="Castle.Windsor" version="3.2.0" />
     </dependencies>
   </metadata>
   <files>

@@ -19,10 +19,10 @@ namespace Rebus.Shared
         public static void PurgeQueue(string queueName)
         {
             var path = GetPath(queueName);
-            
+
             if (!MessageQueue.Exists(path)) return;
 
-            using(var messageQueue = new MessageQueue(path))
+            using (var messageQueue = new MessageQueue(path))
             {
                 messageQueue.Purge();
             }
@@ -72,7 +72,7 @@ namespace Rebus.Shared
         static bool IsIpAddress(string machineName)
         {
             var ipTokens = machineName.Split('.');
-            
+
             return ipTokens.Length == 4 && ipTokens.All(IsByte);
         }
 
@@ -88,6 +88,14 @@ namespace Rebus.Shared
             public string QueueName { get; set; }
         }
 
+        public static void Delete(string queueName)
+        {
+            var queuePath = GetPath(queueName);
+            if (!MessageQueue.Exists(queuePath)) return;
+
+            MessageQueue.Delete(queuePath);
+        }
+
         static QueueInfo Parse(string queueName)
         {
             if (queueName.Contains("@"))
@@ -95,11 +103,23 @@ namespace Rebus.Shared
                 var tokens = queueName.Split('@');
                 if (tokens.Length != 2)
                 {
-                    throw new ArgumentException(string.Format("The specified MSMQ input queue is invalid!: {0}", queueName));
+                    throw new ArgumentException(string.Format(@"The specified MSMQ input queue is invalid!: {0} - please format destination queues according to one of the following examples:
+
+    someQueue
+
+        in order to send the message to the privte queue named 'someQueue' on the local machine, or
+
+    someQueue@anotherMachine
+
+        in order to send the message to the private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
+
+    someQueue@10.0.1.45
+
+        in order to send the message to the private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
                 }
-                return new QueueInfo {QueueName = tokens[0], MachineName = tokens[1]};
+                return new QueueInfo { QueueName = tokens[0], MachineName = tokens[1] };
             }
-            return new QueueInfo {QueueName = queueName};
+            return new QueueInfo { QueueName = queueName };
         }
 
         public static void EnsureMessageQueueIsTransactional(string path)
@@ -112,11 +132,11 @@ namespace Rebus.Shared
                         string.Format(
                             @"The queue {0} is NOT transactional!
 
-Everything around Rebus is built with the assumption that queues are transactional,
-so Rebus will malfunction if queues aren't transactional. 
+Everything around Rebus is built with the assumption that queues are transactional, so Rebus will malfunction if queues aren't transactional. 
 
-To remedy this, ensure that any existing queues are transactional, or let Rebus 
-create its queues automatically.",
+To remedy this, ensure that any existing queues are transactional, or let Rebus create its queues automatically.
+
+If Rebus allowed you to work with non-transactional queues, it would not be able to e.g. safely move a received message into an error queue. Also, MSMQ does not behave well when moving messages in/out of transactional/non-transactional queue.",
                             path);
                     throw new InvalidOperationException(message);
                 }
@@ -125,13 +145,20 @@ create its queues automatically.",
 
         public static void EnsureMessageQueueExists(string path)
         {
-            if (MessageQueue.Exists(path)) return;
+            try
+            {
+                if (MessageQueue.Exists(path)) return;
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(
+                    string.Format("An exception occurred while checking whether the queue with the path {0} exists",
+                                  path), e);
+            }
 
             log.Info("MSMQ queue {0} does not exist - it will be created now...", path);
 
-            var administratorAccountName = new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
-                .Translate(typeof(NTAccount))
-                .ToString();
+            var administratorAccountName = GetAdministratorAccountName();
 
             try
             {
@@ -146,7 +173,7 @@ create its queues automatically.",
             catch (Exception e)
             {
                 log.Error(e,
-                          "Could not create message queue {0} and grant FullControl permissions to {1} - deleting queue again to avoid dangling queues...",
+                          "Could not create message queue {0} and grant FullControl permissions to {1} - will attempt to delete the queue again to avoid dangling queues with broken access rights...",
                           path,
                           administratorAccountName);
                 try
@@ -157,6 +184,25 @@ create its queues automatically.",
                 {
                     log.Error(ex, "Could not delete queue {0}", path);
                 }
+
+                throw;
+            }
+        }
+
+        static string GetAdministratorAccountName()
+        {
+            try
+            {
+                return new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
+                    .Translate(typeof(NTAccount))
+                    .ToString();
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(
+                    string.Format(
+                        "An error occurred while attempting to figure out the name of the local administrators group!"),
+                    e);
             }
         }
     }

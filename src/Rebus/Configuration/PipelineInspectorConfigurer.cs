@@ -1,17 +1,21 @@
 ﻿namespace Rebus.Configuration
 {
-    public class PipelineInspectorConfigurer
+    /// <summary>
+    /// Configurer to configure which kind of pipeline inspector should be installed.
+    /// </summary>
+    public class PipelineInspectorConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public PipelineInspectorConfigurer(ConfigurationBackbone backbone)
+        internal PipelineInspectorConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IInspectHandlerPipeline"/>
+        /// </summary>
         public void Use(IInspectHandlerPipeline inspector)
         {
-            backbone.InspectHandlerPipeline = inspector;
+            Backbone.InspectHandlerPipeline = inspector;
         }
     }
 }

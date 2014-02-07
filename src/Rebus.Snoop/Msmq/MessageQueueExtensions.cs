@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Messaging;
-using System.Runtime.InteropServices;
 
 namespace Rebus.Snoop.Msmq
 {
@@ -49,35 +48,6 @@ namespace Rebus.Snoop.Msmq
 
     static class MessageQueueExtensions2
     {
-        [DllImport("mqrt.dll")]
-        private unsafe static extern int MQMgmtGetInfo(char* computerName, char* objectName, MQMGMTPROPS* mgmtProps);
-
-        private const byte VT_NULL = 1;
-        private const byte VT_UI4 = 19;
-        private const int PROPID_MGMT_QUEUE_MESSAGE_COUNT = 7;
-
-        //size must be 16
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MQPROPVariant
-        {
-            public byte vt;       //0
-            public byte spacer;   //1
-            public short spacer2; //2
-            public int spacer3;   //4
-            public uint ulVal;    //8
-            public int spacer4;   //12
-        }
-
-        //size must be 16 in x86 and 28 in x64
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct MQMGMTPROPS
-        {
-            public uint cProp;
-            public int* aPropID;
-            public MQPROPVariant* aPropVar;
-            public int* status;
-        }
-
         public static uint GetCount(this MessageQueue queue)
         {
             var flags = new MessagePropertyFilter
@@ -127,41 +97,71 @@ namespace Rebus.Snoop.Msmq
 
             var newQueue = new MessageQueue(queue.Path);
             newQueue.MessageReadPropertyFilter = flags;
-            return (uint) newQueue.GetAllMessages().Length;
-
-            return GetCount(queue.Path);
+            return (uint) newQueue.GetAllMessages()
+                                  .Length;
+            //return GetCount(queue.Path);
         }
 
-        private static unsafe uint GetCount(string path)
-        {
-            var props = new MQMGMTPROPS {cProp = 1};
-            var aPropId = PROPID_MGMT_QUEUE_MESSAGE_COUNT;
-            props.aPropID = &aPropId;
+        //[DllImport("mqrt.dll")]
+        //private unsafe static extern int MQMgmtGetInfo(char* computerName, char* objectName, MQMGMTPROPS* mgmtProps);
 
-            var aPropVar = new MQPROPVariant {vt = VT_NULL};
-            props.aPropVar = &aPropVar;
+        //private const byte VT_NULL = 1;
+        //private const byte VT_UI4 = 19;
+        //private const int PROPID_MGMT_QUEUE_MESSAGE_COUNT = 7;
 
-            var status = 0;
-            props.status = &status;
+        ////size must be 16
+        //[StructLayout(LayoutKind.Sequential)]
+        //private struct MQPROPVariant
+        //{
+        //    public byte vt;       //0
+        //    public byte spacer;   //1
+        //    public short spacer2; //2
+        //    public int spacer3;   //4
+        //    public uint ulVal;    //8
+        //    public int spacer4;   //12
+        //}
 
-            var objectName = Marshal.StringToBSTR("queue=Direct=OS:" + path);
+        ////size must be 16 in x86 and 28 in x64
+
+        //[StructLayout(LayoutKind.Sequential)]
+        //private unsafe struct MQMGMTPROPS
+        //{
+        //    public uint cProp;
+        //    public int* aPropID;
+        //    public MQPROPVariant* aPropVar;
+        //    public int* status;
+        //}
+
+        //private static unsafe uint GetCount(string path)
+        //{
+        //    var props = new MQMGMTPROPS {cProp = 1};
+        //    var aPropId = PROPID_MGMT_QUEUE_MESSAGE_COUNT;
+        //    props.aPropID = &aPropId;
+
+        //    var aPropVar = new MQPROPVariant {vt = VT_NULL};
+        //    props.aPropVar = &aPropVar;
+
+        //    var status = 0;
+        //    props.status = &status;
+
+        //    var objectName = Marshal.StringToBSTR("queue=Direct=OS:" + path);
             
-            try
-            {
-                var result = MQMgmtGetInfo(null, (char*)objectName, &props);
-                if (result != 0 || *props.status != 0 || props.aPropVar->vt != VT_UI4)
-                {
-                    return 0;
-                }
-                else
-                {
-                    return props.aPropVar->ulVal;
-                }
-            }
-            finally
-            {
-                Marshal.FreeBSTR(objectName);
-            }
-        }
+        //    try
+        //    {
+        //        var result = MQMgmtGetInfo(null, (char*)objectName, &props);
+        //        if (result != 0 || *props.status != 0 || props.aPropVar->vt != VT_UI4)
+        //        {
+        //            return 0;
+        //        }
+        //        else
+        //        {
+        //            return props.aPropVar->ulVal;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        Marshal.FreeBSTR(objectName);
+        //    }
+        //}
     }
 }

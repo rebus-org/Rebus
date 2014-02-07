@@ -12,6 +12,7 @@
     <description>Provides an Autofac container adapter for Rebus</description>
     <copyright>Copyright 2012</copyright>
     <tags>rebus autofac di dependencyInjection ioc inversionOfControl</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
       <dependency id="Autofac" version="2.6.3.862" />

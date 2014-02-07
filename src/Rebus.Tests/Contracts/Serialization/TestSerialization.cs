@@ -22,13 +22,31 @@ namespace Rebus.Tests.Contracts.Serialization
             instance = new TSerializer();
         }
 
+        [TestCase(typeof(TimeoutRequest))]
+        [TestCase(typeof(TimeoutReply))]
+        [TestCase(typeof(SubscriptionMessage))]
+        public void CanSerializeRebusControlMessages(Type controlBusMessageType)
+        {
+            var messageInstance = Activator.CreateInstance(controlBusMessageType);
+
+            var messageToSerialize = new Message
+                                         {
+                                             Headers = new Dictionary<string, object>(),
+                                             Messages = new[] {messageInstance}
+                                         };
+            
+            var transportMessageToSend = instance.Serialize(messageToSerialize);
+            
+            var deserializedMessage = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
+        }
+
         [Test]
         public void CanSerializeComplexNestedType()
         {
             var transportMessageToSend = instance
                 .Serialize(new Message
                     {
-                        Headers = new Dictionary<string, string>
+                        Headers = new Dictionary<string, object>
                             {
                                 {"some_key", "some_value"},
                                 {"another_key", "another_value"},
@@ -54,11 +72,7 @@ namespace Rebus.Tests.Contracts.Serialization
                             }
                     });
 
-            var message = instance.Deserialize(new ReceivedTransportMessage
-                {
-                    Body = transportMessageToSend.Body,
-                    Headers = transportMessageToSend.Headers,
-                });
+            var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
 
             message.Headers.ShouldContainKeyAndValue("some_key", "some_value");
             message.Headers.ShouldContainKeyAndValue("another_key", "another_value");
@@ -89,7 +103,7 @@ namespace Rebus.Tests.Contracts.Serialization
                         }
                 };
             var transportMessageToSend = instance.Serialize(new Message { Messages = new object[] { person } });
-            var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+            var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
             var deserializedPerson = (Person)message.Messages[0];
 
             deserializedPerson.Address.ShouldBeTypeOf<ForeignAddress>();
@@ -118,7 +132,7 @@ namespace Rebus.Tests.Contracts.Serialization
             for (; (elapsedSeconds = stopwatch.Elapsed.TotalSeconds) < window; iterations++)
             {
                 var transportMessageToSend = instance.Serialize(new Message { Messages = new object[] { site } });
-                var message = instance.Deserialize(new ReceivedTransportMessage { Body = transportMessageToSend.Body });
+                var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
                 var deserializedSite = (Site)message.Messages[0];
                 deserializedSite.LocalUnits.Length.ShouldBe(site.LocalUnits.Length);
             }

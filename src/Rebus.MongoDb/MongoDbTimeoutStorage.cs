@@ -1,63 +1,98 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
 using Rebus.Timeout;
+using System.Linq;
 
 namespace Rebus.MongoDb
 {
+    /// <summary>
+    /// Implementation of <see cref="IStoreTimeouts"/> that stores timeouts in a MongoDB
+    /// </summary>
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
-        readonly string collectionName;
-        MongoDatabase database;
+        const string ReplyToProperty = "reply_to";
+        const string CorrIdProperty = "corr_id";
+        const string TimeProperty = "time";
+        const string SagaIdProperty = "saga_id";
+        const string DataProperty = "data";
+        const string IdProperty = "_id";
+        readonly MongoDatabase database;
+        readonly MongoCollection<BsonDocument> collection;
 
+        /// <summary>
+        /// Constructs the timeout storage, connecting to the Mongo database pointed to by the given connection string,
+        /// storing the timeouts in the given collection
+        /// </summary>
         public MongoDbTimeoutStorage(string connectionString, string collectionName)
         {
-            this.collectionName = collectionName;
-
-            database = MongoDatabase.Create(connectionString);
+            database = MongoHelper.GetDatabase(connectionString);
+            collection = database.GetCollection(collectionName);
+            collection.EnsureIndex(IndexKeys.Ascending(TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
         }
 
+        /// <summary>
+        /// Adds the timeout to the underlying collection of timeouts
+        /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
-            var collection = database.GetCollection(collectionName);
+            var doc = new BsonDocument()
+                .Add(CorrIdProperty, newTimeout.CorrelationId)
+                .Add(SagaIdProperty, newTimeout.SagaId)
+                .Add(TimeProperty, newTimeout.TimeToReturn)
+                .Add(DataProperty, newTimeout.CustomData)
+                .Add(ReplyToProperty, newTimeout.ReplyTo);
 
-            collection.Insert(new
-                                  {
-                                      corr_id = newTimeout.CorrelationId,
-                                      saga_id = newTimeout.SagaId,
-                                      time = newTimeout.TimeToReturn,
-                                      data = newTimeout.CustomData,
-                                      reply_to = newTimeout.ReplyTo,
-                                  });
+            collection.Insert(doc);
         }
 
-        public IEnumerable<Timeout.Timeout> RemoveDueTimeouts()
+        /// <summary>
+        /// Gets all timeouts that are due by now. Doesn't remove the timeouts or change them or anything,
+        /// each individual timeout can be marked as processed by calling <see cref="DueTimeout.MarkAsProcessed"/>
+        /// </summary>
+        public IEnumerable<DueTimeout> GetDueTimeouts()
         {
-            var collection = database.GetCollection(collectionName);
-            var gotResult = true;
-            do
+            var result = collection.Find(Query.LTE(TimeProperty, RebusTimeMachine.Now()))
+                                   .SetSortOrder(SortBy.Ascending(TimeProperty));
+
+            return result
+                .Select(r => new DueMongoTimeout(r[ReplyToProperty].AsString,
+                                                 GetString(r, CorrIdProperty),
+                                                 r[TimeProperty].ToUniversalTime(),
+                                                 GetGuid(r, SagaIdProperty),
+                                                 GetString(r, DataProperty),
+                                                 collection,
+                                                 (ObjectId) r[IdProperty]));
+        }
+
+        static Guid GetGuid(BsonDocument doc, string propertyName)
+        {
+            return doc.Contains(propertyName) ? doc[propertyName].AsGuid : Guid.Empty;
+        }
+
+        static string GetString(BsonDocument doc, string propertyName)
+        {
+            return doc.Contains(propertyName) ? doc[propertyName].AsString : "";
+        }
+
+        class DueMongoTimeout : DueTimeout
+        {
+            readonly MongoCollection<BsonDocument> collection;
+            readonly ObjectId objectId;
+
+            public DueMongoTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, MongoCollection<BsonDocument> collection, ObjectId objectId) 
+                : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
-                var result = collection.FindAndRemove(Query.LTE("time", Time.Now()), SortBy.Ascending("time"));
+                this.collection = collection;
+                this.objectId = objectId;
+            }
 
-                if (result != null && result.ModifiedDocument != null)
-                {
-                    var document = result.ModifiedDocument;
-
-                    yield return new Timeout.Timeout
-                        {
-                            CorrelationId = document["corr_id"].AsString,
-                            SagaId = document["saga_id"].AsGuid,
-                            CustomData = document["data"] != BsonNull.Value ? document["data"].AsString : "",
-                            ReplyTo = document["reply_to"].AsString,
-                            TimeToReturn = document["time"].AsDateTime,
-                        };
-                }
-                else
-                {
-                    gotResult = false;
-                }
-            } while (gotResult);
+            public override void MarkAsProcessed()
+            {
+                collection.Remove(Query.EQ(IdProperty, objectId));
+            }
         }
     }
 }

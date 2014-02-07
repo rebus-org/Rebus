@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -13,14 +14,26 @@ namespace Rebus.Snoop.ViewModel.Models
     public class Queue : ViewModel
     {
         readonly ObservableCollection<Message> messages = new ObservableCollection<Message>();
+#pragma warning disable 649
         int messageCount;
         string queueName;
         string queuePath;
         bool initialized;
+        bool canBeDeleted;
+#pragma warning restore 649
 
         public Queue()
         {
             ReloadMessagesCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new ReloadMessagesRequested(q)));
+            PurgeMessagesCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new PurgeMessagesRequested(q)));
+            DeleteQueueCommand = new RelayCommand<Queue>(q => Messenger.Default.Send(new DeleteQueueRequested(q)));
+            CanBeDeleted = true;
+        }
+
+        public bool CanBeDeleted
+        {
+            get { return canBeDeleted; }
+            set { SetValue(() => CanBeDeleted, value); }
         }
 
         public bool Initialized
@@ -32,9 +45,39 @@ namespace Rebus.Snoop.ViewModel.Models
         public Queue(MessageQueue queue)
             : this()
         {
-            QueueName = queue.QueueName;
             QueuePath = queue.Path;
-            MessageCount = (int)queue.GetCount();
+            try
+            {
+                QueueName = queue.QueueName;
+            }
+            catch (Exception e)
+            {
+                if (queue.Path.ToLowerInvariant()
+                         .Contains("deadxact"))
+                {
+                    QueueName = "Dead-letter queue (TX)";
+                    CanBeDeleted = false;
+                }
+                else
+                {
+                    Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
+                                                                  "An error occurred while getting queue name for {0}: {1}",
+                                                                  queue.Path, e.Message));
+                    QueueName = QueuePath;
+                }
+            }
+
+            try
+            {
+                MessageCount = (int)queue.GetCount();
+            }
+            catch (Exception e)
+            {
+                Messenger.Default.Send(NotificationEvent.Fail(e.ToString(),
+                                                              "An error occurred while retrieving message count from {0}: {1}",
+                                                              QueueName, e.Message));
+                MessageCount = -1;
+            }
         }
 
         public string QueueName
@@ -61,6 +104,10 @@ namespace Rebus.Snoop.ViewModel.Models
         }
 
         public RelayCommand<Queue> ReloadMessagesCommand { get; set; }
+        
+        public RelayCommand<Queue> PurgeMessagesCommand { get; set; }
+        
+        public RelayCommand<Queue> DeleteQueueCommand { get; set; }
 
         public void SetMessages(List<Message> messages)
         {
@@ -82,7 +129,7 @@ namespace Rebus.Snoop.ViewModel.Models
         public void Add(Message message)
         {
             Messages.Add(message);
-            
+
             // in case the queue hasn't been initialized, we need to just increment this number
             MessageCount++;
 

@@ -1,3 +1,5 @@
+using Rebus.Bus;
+
 namespace Rebus
 {
     /// <summary>
@@ -9,5 +11,10 @@ namespace Rebus
         /// Starts the bus.
         /// </summary>
         IBus Start();
+
+        /// <summary>
+        /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
+        /// </summary>
+        IBus Start(int numberOfWorkers);
     }
 }

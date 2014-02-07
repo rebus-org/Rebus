@@ -2,18 +2,22 @@ using Rebus.Logging;
 
 namespace Rebus.Configuration
 {
-    public class LoggingConfigurer
+    /// <summary>
+    /// Configurer that allows for logging to be configured
+    /// </summary>
+    public class LoggingConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public LoggingConfigurer(ConfigurationBackbone backbone)
+        internal LoggingConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
         }
 
+        /// <summary>
+        /// Passes the specified <see cref="IRebusLoggerFactory"/> to the backbone
+        /// </summary>
         public void Use(IRebusLoggerFactory loggerFactory)
         {
-            backbone.LoggerFactory = loggerFactory;
+            Backbone.LoggerFactory = loggerFactory;
         }
     }
 }

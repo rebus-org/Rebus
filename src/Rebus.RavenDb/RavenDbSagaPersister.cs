@@ -152,7 +152,10 @@ namespace Rebus.RavenDb
         {
             //use MD5 hash to get a 16-byte hash of the string
             var provider = new MD5CryptoServiceProvider();
-            var inputBytes = Encoding.Default.GetBytes(value.ToString());
+            var inputBytes = value != null
+                ? Encoding.Default.GetBytes(value.ToString())
+                : new byte[0];
+
             var hashBytes = provider.ComputeHash(inputBytes);
             //generate a guid from the hash:
             var hashedValue = new Guid(hashBytes);

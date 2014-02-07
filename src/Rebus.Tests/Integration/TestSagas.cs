@@ -21,7 +21,8 @@ namespace Rebus.Tests.Integration
             dispatcher = new Dispatcher(persister, activator,
                                         new InMemorySubscriptionStorage(),
                                         new TrivialPipelineInspector(),
-                                        new DeferredMessageHandlerForTesting());
+                                        new DeferredMessageHandlerForTesting(),
+                                        null);
         }
 
         [Test]

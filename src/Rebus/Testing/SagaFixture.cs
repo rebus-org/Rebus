@@ -1,91 +1,251 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.Serialization;
-using Ponder;
+using Rebus.Bus;
+using Rebus.Persistence.InMemory;
+using System.Linq;
 
 namespace Rebus.Testing
 {
     /// <summary>
     /// Saga fixture that can help unit testing sagas.
     /// </summary>
-    public class SagaFixture<T> where T : class, ISagaData, new()
+    public class SagaFixture<TSagaData> : IEnumerable<TSagaData> where TSagaData : class, ISagaData, new()
     {
-        readonly Saga<T> saga;
-        readonly IList<T> availableSagaData;
-        readonly ConcurrentDictionary<Type, Correlation> correlations;
-        readonly List<T> deletedSagaData = new List<T>();
+        readonly List<TSagaData> deletedSagaData = new List<TSagaData>();
+        readonly Dispatcher dispatcher;
+        readonly SagaFixtureSagaPersister<TSagaData> persister;
+
+        object currentLogicalMessage;
+        TSagaData latestSagaData;
 
         /// <summary>
-        /// Constructs the fixture with the given saga and the given saga data available. The <see cref="availableSagaData"/>
-        /// list will be used to look for existing saga data instances, and new ones will be added to this list as well.
+        /// Constructs the fixture with the given saga handler and the given saga data initially available. Saga data
+        /// instances are cloned.
         /// </summary>
-        public SagaFixture(Saga<T> saga, IList<T> availableSagaData)
+        [DebuggerStepThrough]
+        public SagaFixture(Saga<TSagaData> saga)
+            : this(new[] { saga })
         {
-            this.saga = saga;
-            this.availableSagaData = availableSagaData;
-            saga.ConfigureHowToFindSaga();
-            correlations = saga.Correlations;
         }
 
         /// <summary>
-        /// Constructs the fixture with the given saga.
+        /// Constructs the fixture with the given saga handlers and the given saga data initially available. Saga data
+        /// instances are cloned.
         /// </summary>
-        public SagaFixture(Saga<T> saga)
-            : this(saga, new List<T>())
+        public SagaFixture(IEnumerable<Saga<TSagaData>> sagaInstances)
         {
+            persister = new SagaFixtureSagaPersister<TSagaData>(deletedSagaData);
+
+            persister.CreatedNew += RaiseCreatedNewSagaData;
+            persister.Correlated += RaiseCorrelatedWithExistingSagaData;
+            persister.CouldNotCorrelate += RaiseCouldNotCorrelate;
+            persister.Deleted += RaiseMarkedAsComplete;
+
+            dispatcher = new Dispatcher(persister,
+                                        new SagaFixtureHandlerActivator(sagaInstances), new InMemorySubscriptionStorage(),
+                                        new TrivialPipelineInspector(), null, null);
         }
 
-        public IList<T> AvailableSagaData
+        void RaiseMarkedAsComplete(ISagaData sagaData)
         {
-            get { return availableSagaData; }
+            if (MarkedAsComplete != null)
+            {
+                MarkedAsComplete(currentLogicalMessage, (TSagaData)sagaData);
+            }
         }
 
-        public IList<T> DeletedSagaData
+        void RaiseCouldNotCorrelate()
+        {
+            if (CouldNotCorrelate != null)
+            {
+                CouldNotCorrelate(currentLogicalMessage);
+            }
+        }
+
+        void RaiseCorrelatedWithExistingSagaData(ISagaData sagaData)
+        {
+            latestSagaData = (TSagaData)sagaData;
+
+            if (CorrelatedWithExistingSagaData != null)
+            {
+                CorrelatedWithExistingSagaData(currentLogicalMessage, (TSagaData)sagaData);
+            }
+        }
+
+        void RaiseCreatedNewSagaData(ISagaData sagaData)
+        {
+            latestSagaData = (TSagaData)sagaData;
+
+            if (CreatedNewSagaData != null)
+            {
+                CreatedNewSagaData(currentLogicalMessage, (TSagaData)sagaData);
+            }
+        }
+
+        class SagaFixtureHandlerActivator : IActivateHandlers
+        {
+            readonly IEnumerable<Saga> sagaInstance;
+
+            public SagaFixtureHandlerActivator(IEnumerable<Saga<TSagaData>> sagaInstance)
+            {
+                this.sagaInstance = sagaInstance;
+            }
+
+            public IEnumerable<IHandleMessages<TMessage>> GetHandlerInstancesFor<TMessage>()
+            {
+                return sagaInstance.OfType<IHandleMessages<TMessage>>();
+            }
+
+            public void Release(IEnumerable handlerInstances)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Gets a list of all the saga data that is currently persisted
+        /// </summary>
+        public IEnumerable<TSagaData> AvailableSagaData
+        {
+            get { return persister.AvailableSagaData; }
+        }
+
+        /// <summary>
+        /// Gets a list of all the saga data that has been marked as complete
+        /// </summary>
+        public IList<TSagaData> DeletedSagaData
         {
             get { return deletedSagaData; }
         }
 
-        public delegate void CorrelatedWithExistingSagaDataEventHandler<T>(object message, T sagaData);
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message can be correlated with an existing piece of saga data
+        /// </summary>
+        public delegate void CorrelatedWithExistingSagaDataEventHandler<in T>(object message, T sagaData);
 
-        public delegate void CreatedNewSagaDataEventHandler<T>(object message, T sagaData);
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message gives rise to a new instance of saga data
+        /// </summary>
+        public delegate void CreatedNewSagaDataEventHandler<in T>(object message, T sagaData);
 
+        /// <summary>
+        /// Delegate type that can be used to detect when an incoming message gives rise to a saga data being marked as complete
+        /// </summary>
+        public delegate void MarkedAsCompleteEventHandler<in T>(object message, T sagaData);
+
+        /// <summary>
+        /// Delegate type that can be used to define events of when handling an incoming message results in an exception
+        /// </summary>
+        public delegate void ExceptionEventHandler(object message, Exception exception);
+
+        /// <summary>
+        /// Delegate type that can be used to define events of when an incoming message could have been handled by a saga handler but
+        /// could not be correlated with an existing piece of saga data and it wasn't allowed to initiate a new saga
+        /// </summary>
         public delegate void CouldNotCorrelateEventHandler(object message);
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could be correlated with an existing saga data instance.
+        /// Raised when the handling of an incoming message gives rise to an exception. When you add a listener to this event,
+        /// the exception will be considered "handled" - i.e. it will not be re-thrown by the saga fixture.
+        /// </summary>
+        public event ExceptionEventHandler Exception;
+
+        /// <summary>
+        /// Raised during message dispatch when the message could be correlated with an existing saga data instance.
         /// The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CorrelatedWithExistingSagaDataEventHandler<T> CorrelatedWithExistingSagaData = delegate { };
+        public event CorrelatedWithExistingSagaDataEventHandler<TSagaData> CorrelatedWithExistingSagaData;
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could not be correlated with an existing saga data instance
+        /// Raised during message dispatch when the message could not be correlated with an existing saga data instance
         /// and a new saga data instance was created. The event is raised before the message is handled by the saga.
         /// </summary>
-        public event CreatedNewSagaDataEventHandler<T> CreatedNewSagaData = delegate { };
+        public event CreatedNewSagaDataEventHandler<TSagaData> CreatedNewSagaData;
 
         /// <summary>
-        /// Gets raised during message dispatch when the message could not be correlated with a saga data instance, and 
+        /// Raised during message dispatch when the message could not be correlated with a saga data instance, and 
         /// creating a new saga data instance was not allowed.
         /// </summary>
-        public event CouldNotCorrelateEventHandler CouldNotCorrelate = delegate { };
+        public event CouldNotCorrelateEventHandler CouldNotCorrelate;
+
+        /// <summary>
+        /// Raised when the message gives rise to the saga being marked as complete.
+        /// </summary>
+        public event MarkedAsCompleteEventHandler<TSagaData> MarkedAsComplete;
 
         /// <summary>
         /// Dispatches a message to the saga, raising the appropriate events along the way.
         /// </summary>
         public void Handle<TMessage>(TMessage message)
         {
+            currentLogicalMessage = message;
+
             try
             {
-                InnerHandle(message);
+                dispatcher.GetType()
+                    .GetMethod("Dispatch").MakeGenericMethod(message.GetType())
+                    .Invoke(dispatcher, new object[] { message });
             }
             catch (TargetInvocationException tie)
             {
-                var exceptionToThrow = tie.InnerException;
-                exceptionToThrow.PreserveStackTrace();
-                throw exceptionToThrow;
+                var exception = (Exception)tie;
+
+                if (exception.InnerException is TargetInvocationException)
+                    exception = exception.InnerException;
+
+                if (exception.InnerException is TargetInvocationException)
+                    exception = exception.InnerException;
+
+                var exceptionToRethrow = exception.InnerException;
+
+                exceptionToRethrow.PreserveStackTrace();
+
+                if (Exception != null)
+                {
+                    Exception(message, exceptionToRethrow);
+                }
+                else
+                {
+                    throw exceptionToRethrow;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds the given saga data to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(TSagaData sagaData)
+        {
+            persister.AddSagaData(sagaData);
+        }
+
+        /// <summary>
+        /// Adds the saga data from the given sequence to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(IEnumerable<TSagaData> sagaData)
+        {
+            foreach (var data in sagaData)
+            {
+                persister.AddSagaData(data);
+            }
+        }
+
+        /// <summary>
+        /// Adds the saga data from the given sequence to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void AddSagaData(params TSagaData[] sagaData)
+        {
+            foreach (var data in sagaData)
+            {
+                persister.AddSagaData(data);
             }
         }
 
@@ -93,69 +253,110 @@ namespace Rebus.Testing
         /// Gives access to the currently correlated piece of saga data. If none could be correlated, 
         /// null is returned.
         /// </summary>
-        public T Data
+        public TSagaData Data
         {
-            get { return saga.Data; }
+            get { return latestSagaData; }
         }
 
-        void InnerHandle<TMessage>(TMessage message)
+        class SagaFixtureSagaPersister<TSagaDataToStore> : IStoreSagaData where TSagaDataToStore : ISagaData
         {
-            var existingSagaData = availableSagaData.SingleOrDefault(data => Correlates(correlations, message, data));
+            readonly IList<TSagaDataToStore> deletedSagaData;
+            readonly InMemorySagaPersister innerPersister;
 
-            if (existingSagaData != null)
+            public SagaFixtureSagaPersister(IList<TSagaDataToStore> deletedSagaData)
             {
-                saga.Data = existingSagaData;
-                saga.IsNew = false;
-                CorrelatedWithExistingSagaData(message, saga.Data);
-                Dispatch(message);
-                if (saga.Complete)
-                {
-                    availableSagaData.Remove(saga.Data);
-                    deletedSagaData.Add(saga.Data);
-                }
-                return;
+                innerPersister = new InMemorySagaPersister();
+
+                this.deletedSagaData = deletedSagaData;
             }
 
-            if (saga.GetType().GetInterfaces().Contains(typeof(IAmInitiatedBy<TMessage>)))
+            public IEnumerable<TSagaData> AvailableSagaData
             {
-                saga.Data = new T();
-                saga.IsNew = true;
-                CreatedNewSagaData(message, saga.Data);
-                Dispatch(message);
-                if (!saga.Complete)
+                get { return innerPersister.Cast<TSagaData>(); }
+            }
+
+            public void AddSagaData(TSagaData sagaData)
+            {
+                innerPersister.AddSagaData(sagaData);
+            }
+
+            public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+            {
+                innerPersister.Insert(sagaData, sagaDataPropertyPathsToIndex);
+
+                if (CreatedNew != null)
                 {
-                    availableSagaData.Add(saga.Data);
+                    CreatedNew(sagaData);
+                }
+            }
+
+            public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+            {
+                innerPersister.Update(sagaData, sagaDataPropertyPathsToIndex);
+            }
+
+            public void Delete(ISagaData sagaData)
+            {
+                innerPersister.Delete(sagaData);
+                deletedSagaData.Add((TSagaDataToStore)sagaData);
+
+                if (Deleted != null)
+                {
+                    Deleted(sagaData);
+                }
+            }
+
+            public TSagaDataToFind Find<TSagaDataToFind>(string sagaDataPropertyPath, object fieldFromMessage) where TSagaDataToFind : class, ISagaData
+            {
+                var result = innerPersister.Find<TSagaDataToFind>(sagaDataPropertyPath, fieldFromMessage);
+
+                if (result != null)
+                {
+                    if (Correlated != null)
+                    {
+                        Correlated(result);
+                    }
                 }
                 else
                 {
-                    deletedSagaData.Add(saga.Data);
+                    if (CouldNotCorrelate != null)
+                    {
+                        CouldNotCorrelate();
+                    }
                 }
-                return;
+                return result;
             }
 
-            CouldNotCorrelate(message);
+            public event Action<ISagaData> CreatedNew;
+
+            public event Action<ISagaData> Correlated;
+
+            public event Action<ISagaData> Deleted;
+
+            public event Action CouldNotCorrelate;
         }
 
-        bool Correlates(ConcurrentDictionary<Type, Correlation> concurrentDictionary, object message, T data)
+        /// <summary>
+        /// Adds the given saga data to the underlying persister. Please note that the usual uniqueness constraint cannot be enforced
+        /// when adding saga data this way, simply because it is impossible to know at this point which properties are correlation
+        /// properties.
+        /// </summary>
+        public void Add(TSagaData someSagaData)
         {
-            var messageType = message.GetType();
-            if (!concurrentDictionary.ContainsKey(messageType)) return false;
-
-            var correlation = concurrentDictionary[messageType];
-
-            var path = correlation.SagaDataPropertyPath;
-
-            var fieldFromMessage = (correlation.FieldFromMessage(message) ?? "").ToString();
-            var fieldFromSagaData = (Reflect.Value(data, path) ?? "").ToString();
-
-            return fieldFromMessage == fieldFromSagaData;
+            AddSagaData(someSagaData);
         }
 
-        void Dispatch<TMessage>(TMessage message)
+        /// <summary>
+        /// Enumerates all persistent saga data
+        /// </summary>
+        public IEnumerator GetEnumerator()
         {
-            saga.Complete = false;
-            saga.GetType().GetMethod("Handle", new[] { typeof(TMessage) })
-                .Invoke(saga, new object[] { message });
+            return AvailableSagaData.GetEnumerator();
+        }
+
+        IEnumerator<TSagaData> IEnumerable<TSagaData>.GetEnumerator()
+        {
+            return AvailableSagaData.GetEnumerator();
         }
     }
 }

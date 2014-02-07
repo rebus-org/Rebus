@@ -41,7 +41,7 @@ namespace Rebus.Azure
             this.errorQueueName = errorQueueName;
         }
 
-        public void Send(string destinationQueueName, TransportMessageToSend message)
+        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var outputQueue = cloudQueueClient.GetQueueReference(destinationQueueName);
 
@@ -77,13 +77,13 @@ namespace Rebus.Azure
         {
             if (message.Headers != null && message.Headers.ContainsKey(Headers.TimeToBeReceived))
             {
-                return TimeSpan.Parse(message.Headers[Headers.TimeToBeReceived]);
+                return TimeSpan.Parse((string)message.Headers[Headers.TimeToBeReceived]);
             }
 
             return null;
         }
 
-        public ReceivedTransportMessage ReceiveMessage()
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             var azureMessageQueueTransactionSimulator = new AzureMessageQueueTransactionSimulator(inputQueue);
             try

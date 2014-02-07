@@ -28,13 +28,38 @@ namespace Rebus.Tests.Persistence.Timeouts
         }
 
         [Test]
+        public void DoesNotActuallyRemoveTimeoutUntilItIsMarkedAsProcessed()
+        {
+            // arrange
+            const string someRecognizablePieceOfCustomData = "this custom dizzle can be recognizzle!!";
+
+            var actualTimeWhenIWroteThis = new DateTime(2012, 11, 30, 22, 13, 00, DateTimeKind.Utc);
+            storage.Add(new Rebus.Timeout.Timeout("someone", "wham!", actualTimeWhenIWroteThis.AddSeconds(20), Guid.Empty, someRecognizablePieceOfCustomData));
+            TimeMachine.FixTo(actualTimeWhenIWroteThis.AddSeconds(25));
+
+            // act
+            var dueTimeoutsFromFirstCall = storage.GetDueTimeouts().ToList();
+
+            // this is where we'd have marked the due timeout as processed - instead, we pretend that didn't happen
+            // (perhaps because the timeout service was interrupted) ...
+            var dueTimeoutsFromSecondCall = storage.GetDueTimeouts().ToList();
+
+            // assert
+            dueTimeoutsFromFirstCall.Count.ShouldBe(1);
+            dueTimeoutsFromFirstCall.Single().CustomData.ShouldBe(someRecognizablePieceOfCustomData);
+            
+            dueTimeoutsFromSecondCall.Count().ShouldBe(1);
+            dueTimeoutsFromSecondCall.Single().CustomData.ShouldBe(someRecognizablePieceOfCustomData);
+        }
+
+        [Test]
         public void DoesNotComplainWhenTheSameTimeoutIsAddedMultipleTimes()
         {
             var justSomeTime = new DateTime(2010, 1, 1, 10, 30, 0, DateTimeKind.Utc);
 
-            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
-            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
-            storage.Add(new Rebus.Timeout.Timeout { CorrelationId = "blah", ReplyTo = "blah blah", TimeToReturn = justSomeTime });
+            storage.Add(new Rebus.Timeout.Timeout("blah blah", "blah", justSomeTime, Guid.Empty, null));
+            storage.Add(new Rebus.Timeout.Timeout("blah blah", "blah", justSomeTime, Guid.Empty, null));
+            storage.Add(new Rebus.Timeout.Timeout("blah blah", "blah", justSomeTime, Guid.Empty, null));
         }
 
         [Test]
@@ -44,42 +69,39 @@ namespace Rebus.Tests.Persistence.Timeouts
             var anotherUtcTimeStamp = someUtcTimeStamp.AddHours(2);
             var thirtytwoKilobytesOfDollarSigns = new string('$', 32768);
 
-            storage.Add(new Rebus.Timeout.Timeout
-                            {
-                                SagaId = new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                                CorrelationId = "first",
-                                ReplyTo = "somebody",
-                                TimeToReturn = someUtcTimeStamp,
-                                CustomData = null,
-                            });
+            storage.Add(new Rebus.Timeout.Timeout("somebody",
+                                                  "first", someUtcTimeStamp,
+                                                  new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                                                  null));
 
-            storage.Add(new Rebus.Timeout.Timeout
-                            {
-                                SagaId = new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-                                CorrelationId = "second",
-                                ReplyTo = "somebody",
-                                TimeToReturn = anotherUtcTimeStamp,
-                                CustomData = thirtytwoKilobytesOfDollarSigns,
-                            });
+            storage.Add(new Rebus.Timeout.Timeout("somebody",
+                                                  "second",
+                                                  anotherUtcTimeStamp,
+                                                  new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                                                  thirtytwoKilobytesOfDollarSigns));
 
             TimeMachine.FixTo(someUtcTimeStamp.AddSeconds(-1));
 
-            var dueTimeoutsBeforeTimeout = storage.RemoveDueTimeouts();
+            var dueTimeoutsBeforeTimeout = storage.GetDueTimeouts();
             dueTimeoutsBeforeTimeout.Count().ShouldBe(0);
 
             TimeMachine.FixTo(someUtcTimeStamp.AddSeconds(1));
 
-            var dueTimeoutsAfterFirstTimeout = storage.RemoveDueTimeouts();
+            var dueTimeoutsAfterFirstTimeout = storage.GetDueTimeouts();
             var firstTimeout = dueTimeoutsAfterFirstTimeout.SingleOrDefault();
             firstTimeout.ShouldNotBe(null);
             firstTimeout.SagaId.ShouldBe(new Guid("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"));
             firstTimeout.CorrelationId.ShouldBe("first");
             firstTimeout.ReplyTo.ShouldBe("somebody");
             firstTimeout.TimeToReturn.ShouldBe(someUtcTimeStamp);
+            firstTimeout.MarkAsProcessed();
+
+            var dueTimeoutsAfterHavingMarkingTheFirstTimeoutAsProcessed = storage.GetDueTimeouts();
+            dueTimeoutsAfterHavingMarkingTheFirstTimeoutAsProcessed.Count().ShouldBe(0);
 
             TimeMachine.FixTo(anotherUtcTimeStamp.AddSeconds(1));
 
-            var dueTimeoutsAfterSecondTimeout = storage.RemoveDueTimeouts();
+            var dueTimeoutsAfterSecondTimeout = storage.GetDueTimeouts();
             var secondTimeout = dueTimeoutsAfterSecondTimeout.SingleOrDefault();
             secondTimeout.ShouldNotBe(null);
             secondTimeout.SagaId.ShouldBe(new Guid("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"));
@@ -87,6 +109,9 @@ namespace Rebus.Tests.Persistence.Timeouts
             secondTimeout.ReplyTo.ShouldBe("somebody");
             secondTimeout.TimeToReturn.ShouldBe(anotherUtcTimeStamp);
             secondTimeout.CustomData.ShouldBe(thirtytwoKilobytesOfDollarSigns);
+            secondTimeout.MarkAsProcessed();
+
+            storage.GetDueTimeouts().Count().ShouldBe(0);
         }
 
         [Test]
@@ -94,25 +119,12 @@ namespace Rebus.Tests.Persistence.Timeouts
         {
             var justSomeUtcTimeStamp = new DateTime(2010, 3, 10, 12, 30, 15, DateTimeKind.Utc);
 
-            storage.Add(new Rebus.Timeout.Timeout
-            {
-                CorrelationId = "first",
-                ReplyTo = "somebody",
-                TimeToReturn = justSomeUtcTimeStamp,
-                CustomData = null,
-            });
-
-            storage.Add(new Rebus.Timeout.Timeout
-            {
-                CorrelationId = "second",
-                ReplyTo = "somebody",
-                TimeToReturn = justSomeUtcTimeStamp,
-                CustomData = null,
-            });
+            storage.Add(new Rebus.Timeout.Timeout("somebody", "first", justSomeUtcTimeStamp, Guid.Empty, null));
+            storage.Add(new Rebus.Timeout.Timeout("somebody", "second", justSomeUtcTimeStamp, Guid.Empty, null));
 
             TimeMachine.FixTo(justSomeUtcTimeStamp.AddSeconds(1));
 
-            var dueTimeoutsAfterFirstTimeout = storage.RemoveDueTimeouts();
+            var dueTimeoutsAfterFirstTimeout = storage.GetDueTimeouts();
             dueTimeoutsAfterFirstTimeout.Count().ShouldBe(2);
         }
     }

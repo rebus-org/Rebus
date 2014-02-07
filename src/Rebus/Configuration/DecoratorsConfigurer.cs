@@ -1,19 +1,13 @@
-using System;
-
 namespace Rebus.Configuration
 {
-    public class DecoratorsConfigurer
+    /// <summary>
+    /// Configurer that allows for decorators to be added in the form of "decoration steps"
+    /// </summary>
+    public class DecoratorsConfigurer : BaseConfigurer
     {
-        readonly ConfigurationBackbone backbone;
-
-        public DecoratorsConfigurer(ConfigurationBackbone backbone)
+        internal DecoratorsConfigurer(ConfigurationBackbone backbone)
+            : base(backbone)
         {
-            this.backbone = backbone;
-        }
-
-        public void AddDecoration(Action<ConfigurationBackbone> decorationStep)
-        {
-            backbone.AddDecoration(decorationStep);
         }
     }
 }

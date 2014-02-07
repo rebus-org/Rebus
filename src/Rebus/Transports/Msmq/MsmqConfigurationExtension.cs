@@ -1,5 +1,4 @@
-﻿using System;
-using System.Configuration;
+﻿using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Shared;
@@ -7,6 +6,9 @@ using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.Transports.Msmq
 {
+    /// <summary>
+    /// Configuration extensions that allow for configuring Rebus to use <see cref="MsmqMessageQueue"/> as a message transport
+    /// </summary>
     public static class MsmqConfigurationExtension
     {
         /// <summary>
@@ -18,6 +20,9 @@ namespace Rebus.Transports.Msmq
             DoIt(configurer, inputQueue, errorQueue);
         }
 
+        /// <summary>
+        /// Configures Rebus to run in one-way client mode, which means that the bus is capable only of sending messages.
+        /// </summary>
         public static void UseMsmqInOneWayClientMode(this RebusTransportConfigurer configurer)
         {
             var msmqMessageQueue = MsmqMessageQueue.Sender();
@@ -26,38 +31,6 @@ namespace Rebus.Transports.Msmq
             var gag = new OneWayClientGag();
             configurer.UseReceiver(gag);
             configurer.UseErrorTracker(gag);
-        }
-
-        public class OneWayClientGag : IReceiveMessages, IErrorTracker
-        {
-            public ReceivedTransportMessage ReceiveMessage()
-            {
-                throw new NotImplementedException();
-            }
-
-            public string InputQueue { get; private set; }
-            public string InputQueueAddress { get; private set; }
-            public void StopTracking(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public bool MessageHasFailedMaximumNumberOfTimes(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string GetErrorText(string id)
-            {
-                throw new NotImplementedException();
-            }
-
-            public void TrackDeliveryFail(string id, Exception exception)
-            {
-                throw new NotImplementedException();
-            }
-
-            public string ErrorQueueAddress { get; private set; }
         }
 
         /// <summary>
@@ -71,19 +44,11 @@ namespace Rebus.Transports.Msmq
             {
                 var section = RebusConfigurationSection.LookItUp();
 
+                section.VerifyPresenceOfInputQueueConfig();
+                section.VerifyPresenceOfErrorQueueConfig();
+
                 var inputQueueName = section.InputQueue;
-
-                if (string.IsNullOrEmpty(inputQueueName))
-                {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'inputQueue' attribute?");
-                } 
-
                 var errorQueueName = section.ErrorQueue;
-
-                if (string.IsNullOrEmpty(errorQueueName))
-                {
-                    throw new ConfigurationErrorsException("Could not get input queue name from Rebus configuration section. Did you forget the 'errorQueue' attribute?");
-                } 
 
                 DoIt(configurer, inputQueueName, errorQueueName);
             }

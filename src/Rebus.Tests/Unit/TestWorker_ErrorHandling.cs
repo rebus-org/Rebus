@@ -4,14 +4,13 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
-using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Shouldly;
 
 namespace Rebus.Tests.Unit
 {
     [TestFixture]
-    public class TestWorker_ErrorHandling : FixtureBase
+    internal class TestWorker_ErrorHandling : WorkerFixtureBase
     {
         MessageReceiverForTesting receiveMessages;
         Worker worker;
@@ -22,14 +21,7 @@ namespace Rebus.Tests.Unit
             receiveMessages = new MessageReceiverForTesting(new JsonMessageSerializer());
             handlerActivatorForTesting = new HandlerActivatorForTesting();
 
-            worker = new Worker(new ErrorTracker("error"),
-                                receiveMessages,
-                                handlerActivatorForTesting,
-                                new InMemorySubscriptionStorage(),
-                                new JsonMessageSerializer(),
-                                new InMemorySagaPersister(),
-                                new TrivialPipelineInspector(), "Just some test worker",
-                                new DeferredMessageHandlerForTesting());
+            worker = CreateWorker(receiveMessages, handlerActivatorForTesting);
         }
 
         [Test]
@@ -49,7 +41,7 @@ namespace Rebus.Tests.Unit
             // act
             receiveMessages.Deliver(new Message {Messages = new object[] {"woot!"}});
             
-            if (!manualResetEvent.WaitOne(5.Seconds())) Assert.Fail("Message was not delivered within timeout!");
+            if (!manualResetEvent.WaitOne(500.Seconds())) Assert.Fail("Message was not delivered within timeout!");
 
             // assert
             exceptions.Count.ShouldBe(5);

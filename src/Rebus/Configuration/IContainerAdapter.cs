@@ -9,9 +9,9 @@ namespace Rebus.Configuration
     public interface IContainerAdapter : IActivateHandlers
     {
         /// <summary>
-        /// Instructs the container to save the specified bus instance(s) 
+        /// Instructs the container to save the specified bus instance 
         /// and take responsibility of their disposal when it's the right time.
         /// </summary>
-        void SaveBusInstances(IBus bus, IAdvancedBus advancedBus);
+        void SaveBusInstances(IBus bus);
     }
 }

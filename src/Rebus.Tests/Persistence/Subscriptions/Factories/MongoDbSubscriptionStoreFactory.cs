@@ -9,7 +9,7 @@ namespace Rebus.Tests.Persistence.Subscriptions.Factories
 
         public IStoreSubscriptions CreateStore()
         {
-            db = MongoDatabase.Create(ConnectionStrings.MongoDb);
+            db = MongoHelper.GetDatabase(ConnectionStrings.MongoDb);
             return new MongoDbSubscriptionStorage(ConnectionStrings.MongoDb, "sagas");
         }
 
