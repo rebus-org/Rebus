@@ -71,6 +71,9 @@ namespace Rebus.MsmqLoadBalancer
 
         string GetNextDestination()
         {
+            // Guard against int.MaxValue - reset to 0
+            Interlocked.CompareExchange(ref roundRobinCounter, 0, int.MaxValue);
+            
             var indexOfThisDestination = Interlocked.Increment(ref roundRobinCounter)
                                          %destinationQueueNames.Count;
 
