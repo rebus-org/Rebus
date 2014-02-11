@@ -140,6 +140,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\lib\IpUtil\IpUtil.cs">
+      <Link>IpUtil.cs</Link>
+    </Compile>
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
@@ -343,6 +346,7 @@
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
     <Compile Include="Unit\WorkerFixtureBase.cs" />
     <Compile Include="UserIdentityContext.cs" />
+    <Compile Include="Util\TestIpUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Timeout\AppConfigExamples\app.config.01.xml">

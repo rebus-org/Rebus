@@ -11,7 +11,7 @@ using log4net.Config;
 
 namespace Rebus.Timeout
 {
-    internal class Program
+    public class Program
     {
         static ILog log;
 
@@ -56,11 +56,17 @@ namespace Rebus.Timeout
                             {
                                 case "sql":
                                     c.ConstructUsing(settings => CreateSQLTimeoutService(configuration));
-                                    s.DependsOnMsSql();
+                                    if (IpUtil.Lookup.IsLocalIpAddress(configuration.ConnectionString))
+                                    {
+                                        s.DependsOnMsSql();
+                                    }
                                     break;
                                 case "mongodb":
                                     c.ConstructUsing(settings => CreateMongoDbTimeoutService(configuration));
-                                    s.DependsOn("MongoDB");
+                                    if (IpUtil.Lookup.IsLocalIpAddress(configuration.ConnectionString))
+                                    {
+                                        s.DependsOn("MongoDB");
+                                    }
                                     break;
                                 default:
                                     throw new ArgumentException(string.Format("Cannot use the value '{0}' as the storage type... sorry!",
@@ -114,7 +120,9 @@ namespace Rebus.Timeout
 
             log.Warn(@"The timeout manager will use the MSMQ queue '{0}' as its input queue because the input queue name has not been explicitly configured.
 
-The timeout manager will use the in-memory timeout storage, which is NOT suitable for production use. For production use, you should use a SQL Server (e.g. a locally installed SQL Express) or another durable database.
+The timeout manager will use the in-memory timeout storage, which is NOT suitable for production use. 
+For production use, you should use a SQL Server (e.g. a locally installed SQL Express) or another durable database.
+NB: Assigning a locally installed database will cause the service to add a dependency to it. You'll have to reinstall the service if you decide later to change the service to use a remote connection string
 
 If you want to configure the timeout manager for production use, you can use one the following examples to get started:
 
@@ -158,5 +166,7 @@ Take a look at this example configuration snippet
 for inspiration on how it can be done.
 "));
         }
+
+     
     }
 }
