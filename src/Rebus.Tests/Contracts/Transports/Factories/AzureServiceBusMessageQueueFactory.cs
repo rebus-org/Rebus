@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using Rebus.AzureServiceBus.SingleTopic;
+using Rebus.AzureServiceBus.Queues;
 
 namespace Rebus.Tests.Contracts.Transports.Factories
 {

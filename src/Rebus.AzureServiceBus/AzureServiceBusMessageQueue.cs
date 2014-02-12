@@ -76,7 +76,7 @@ namespace Rebus.AzureServiceBus.Queues
             }
         }
 
-        void EnsureQueueExists(string queueName)
+        public void EnsureQueueExists(string queueName)
         {
             if (namespaceManager.QueueExists(queueName)) return;
 

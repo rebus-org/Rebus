@@ -53,13 +53,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Ex.cs" />
-    <Compile Include="Queues\AsbOptions.cs" />
-    <Compile Include="Queues\AzureServiceBusMessageQueue.cs" />
-    <Compile Include="Queues\AzureServiceBusQueuesConfigurationExtensions.cs" />
+    <Compile Include="AsbOptions.cs" />
+    <Compile Include="AzureServiceBusMessageQueue.cs" />
+    <Compile Include="AzureServiceBusQueuesConfigurationExtensions.cs" />
     <Compile Include="Envelope.cs" />
-    <Compile Include="Queues\NoopAsbOptions.cs" />
-    <Compile Include="SingleTopic\AzureServiceBusTopicConfigurationExtensions.cs" />
-    <Compile Include="SingleTopic\AzureServiceBusMessageQueue.cs" />
+    <Compile Include="NoopAsbOptions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retrier.cs" />
   </ItemGroup>

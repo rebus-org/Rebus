@@ -2,10 +2,9 @@
 using System.Threading;
 using Microsoft.ServiceBus;
 using NUnit.Framework;
-using Rebus.AzureServiceBus.SingleTopic;
+using Rebus.AzureServiceBus.Queues;
 using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.AzureServiceBus;
 using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Bugs
@@ -42,11 +41,9 @@ namespace Rebus.Tests.Bugs
             CleanUpTrackedDisposables();
 
             var namespaceManager = NamespaceManager.CreateFromConnectionString(ConnectionString);
-            var topicDescription = namespaceManager.GetTopic(AzureServiceBusMessageQueue.TopicName);
-
-            // clean up
-            namespaceManager.DeleteSubscription(topicDescription.Path, InputQueueName);
-            namespaceManager.DeleteSubscription(topicDescription.Path, ErrorQueueName);
+            
+            namespaceManager.DeleteQueue(InputQueueName);
+            namespaceManager.DeleteQueue(ErrorQueueName);
         }
 
         [Test]
