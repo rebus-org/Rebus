@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.SqlClient;
 using System.IO;
 using Rebus.Log4Net;
 using Rebus.Logging;
@@ -56,14 +57,14 @@ namespace Rebus.Timeout
                             {
                                 case "sql":
                                     c.ConstructUsing(settings => CreateSQLTimeoutService(configuration));
-                                    if (IpUtil.Lookup.IsLocalIpAddress(configuration.ConnectionString))
+                                    if (MssqlConnectionStringIsLocal(configuration.ConnectionString))
                                     {
                                         s.DependsOnMsSql();
                                     }
                                     break;
                                 case "mongodb":
                                     c.ConstructUsing(settings => CreateMongoDbTimeoutService(configuration));
-                                    if (IpUtil.Lookup.IsLocalIpAddress(configuration.ConnectionString))
+                                    if (MongoDBConnectionStringIsLocal(configuration.ConnectionString))
                                     {
                                         s.DependsOn("MongoDB");
                                     }
@@ -80,6 +81,16 @@ namespace Rebus.Timeout
 
                     s.DependsOnMsmq();
                 });
+        }
+
+        static bool MongoDBConnectionStringIsLocal(string connectionString)
+        {
+            return IpUtil.Lookup.IsLocalIpAddress(new Uri(connectionString));
+        }
+
+        static bool MssqlConnectionStringIsLocal(string connectionString)
+        {
+            return IpUtil.Lookup.IsLocalIpAddress(new SqlConnectionStringBuilder(connectionString));
         }
 
 

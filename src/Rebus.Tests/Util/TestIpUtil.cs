@@ -1,4 +1,6 @@
-﻿using System.Net;
+﻿using System;
+using System.Data.SqlClient;
+using System.Net;
 using NUnit.Framework;
 using Shouldly;
 
@@ -14,6 +16,21 @@ namespace Rebus.Tests.Util
         public void TestIsLocalIpAddress(string hostname, bool isLocal)
         {
             IpUtil.Lookup.IsLocalIpAddress(hostname).ShouldBe(isLocal);
+        }
+
+        [TestCase("Server=localhost;Database=myDataBase;Trusted_Connection=True;")] //server
+        [TestCase(@"Data Source=localhost;Initial Catalog=myDataBase;Integrated Security=SSPI;User ID=myDomain\myUsername;Password=myPassword;")] //data source
+        public void TestIsLocalIpAddress_ConnectionString(string connectionString)
+        {
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            IpUtil.Lookup.IsLocalIpAddress(builder).ShouldBe(true);
+        }
+
+        [TestCase("mongodb://localhost/tradingHub")] // mongo connection string
+        [TestCase("http://localhost:8870/")] // normal uri
+        public void TestIsLocalIpAddress_Uri(string hostname)
+        {
+            IpUtil.Lookup.IsLocalIpAddress(new Uri(hostname)).ShouldBe(true);
         }
 
         [Test]

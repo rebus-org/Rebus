@@ -1,4 +1,5 @@
    using System;
+   using System.Data.SqlClient;
    using System.Linq;
    using System.Net;
 
@@ -6,6 +7,15 @@ namespace IpUtil
 {
     public class Lookup
     {
+        public static bool IsLocalIpAddress(Uri uri)
+        {
+            return IsLocalIpAddress(uri.Host);
+        }
+        public static bool IsLocalIpAddress(SqlConnectionStringBuilder connectionStringBuilder)
+        {
+            return IsLocalIpAddress(connectionStringBuilder.DataSource);
+        }
+
         public static bool IsLocalIpAddress(string host)
         {
             if (String.IsNullOrEmpty(host))
