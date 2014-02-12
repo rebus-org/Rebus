@@ -2,7 +2,7 @@
 using System.Threading;
 using Microsoft.ServiceBus;
 using NUnit.Framework;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Tests.Contracts.Transports.Factories;

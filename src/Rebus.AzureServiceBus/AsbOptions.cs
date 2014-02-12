@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rebus.AzureServiceBus.Queues
+namespace Rebus.AzureServiceBus
 {
     public interface IAsbOptions
     {

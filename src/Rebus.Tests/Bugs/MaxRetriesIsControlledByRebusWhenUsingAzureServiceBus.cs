@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Castle.MicroKernel.Facilities;
 using NUnit.Framework;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports.Factories;
@@ -65,7 +65,7 @@ namespace Rebus.Tests.Bugs
             
             using (var queue = new AzureServiceBusMessageQueue(connectionString, "test_input"))
             {
-                queue.Purge();
+                queue.Delete();
             }
 
             Configure.With(adapter)

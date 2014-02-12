@@ -236,7 +236,6 @@
     <Compile Include="LoadBalancer\TestMsmqLoadBalancer.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusAndOneWayClient.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue_Queues.cs" />
-    <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue_SingleTopic.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister_UserProvidedConnection.cs" />
@@ -296,7 +295,6 @@
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueue_Queues.cs" />
-    <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueue_SingleTopic.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Transports\Azure\TestDevelopmentStorageTransport.cs" />
     <Compile Include="Transports\Encrypted\TestEncryptionAndCompressionTransportDecorator.cs" />

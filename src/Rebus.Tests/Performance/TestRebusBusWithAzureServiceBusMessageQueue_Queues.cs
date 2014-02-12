@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Tests.Contracts.Transports.Factories;

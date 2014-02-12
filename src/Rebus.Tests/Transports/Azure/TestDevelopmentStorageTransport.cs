@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 using NUnit.Framework;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Configuration;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;

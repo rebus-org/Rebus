@@ -3,13 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.Timers;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
 using Rebus.Shared;
-using Timer = System.Timers.Timer;
 
-namespace Rebus.AzureServiceBus.Queues
+namespace Rebus.AzureServiceBus
 {
     public class AzureServiceBusMessageQueue : IDuplexTransport, IDisposable
     {
@@ -84,7 +84,7 @@ namespace Rebus.AzureServiceBus.Queues
             {
 
                 var lockDuration = TimeSpan.FromMinutes(5);
-                var maxDeliveryCount = 10;
+                const int maxDeliveryCount = 1000;
 
                 log.Info("Queue '{0}' does not exist - it will be created now (with lockDuration={1} and maxDeliveryCount={2})",
                     queueName, lockDuration, maxDeliveryCount);
@@ -477,7 +477,16 @@ namespace Rebus.AzureServiceBus.Queues
             log.Warn("Purging queue '{0}'", InputQueue);
 
             namespaceManager.DeleteQueue(InputQueue);
-            namespaceManager.CreateQueue(InputQueue);
+            EnsureQueueExists(InputQueue);
+
+            return this;
+        }
+
+        public AzureServiceBusMessageQueue Delete()
+        {
+            log.Warn("Deleting queue '{0}'", InputQueue);
+
+            namespaceManager.DeleteQueue(InputQueue);
 
             return this;
         }

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Ponder;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;

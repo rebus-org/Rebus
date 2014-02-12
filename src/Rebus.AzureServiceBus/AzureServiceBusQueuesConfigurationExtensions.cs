@@ -8,7 +8,7 @@ using Rebus.Transports;
 using Rebus.Transports.Msmq;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
-namespace Rebus.AzureServiceBus.Queues
+namespace Rebus.AzureServiceBus
 {
     /// <summary>
     /// Configuration extensions for configuring Rebus to use Azure Service Bus QUEUES as its transport.
