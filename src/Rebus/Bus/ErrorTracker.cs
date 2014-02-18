@@ -220,7 +220,7 @@ namespace Rebus.Bus
             public void AddError(Exception exception)
             {
                 errorCount++;
-                exceptions.Enqueue(exception.Now());
+                exceptions.Enqueue(exception.At(DateTime.Now));
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
 

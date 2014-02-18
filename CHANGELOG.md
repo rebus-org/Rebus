@@ -299,3 +299,4 @@
 ## 0.57.0
 
 * Tweaked ASB transport so that send batching kicks in only when there's 100 or more messages to send
+* Fixed it so that the error log on a tracked message has the local time (i.e. machine time) as its timestamp, and not UTC
