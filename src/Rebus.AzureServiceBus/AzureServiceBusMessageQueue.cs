@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
+using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -29,7 +30,7 @@ namespace Rebus.AzureServiceBus
         const string AzureServiceBusReceivedMessagePeekLockRenewalTimer = "AzureServiceBusReceivedMessagePeekLockRenewalTimer";
 
         const string AzureServiceBusReceivedMessagePeekLockRenewedTime = "AzureServiceBusReceivedMessagePeekLockRenewedTime";
-        
+
         const string CurrentlyRenewingThePeekLockItemKey = "currently-renewing-the-peek-lock";
 
         /// <summary>
@@ -397,22 +398,57 @@ namespace Rebus.AzureServiceBus
                         var destinationQueueName = group.Key;
                         var messagesForThisRecipient = group.Select(g => g.Item2).ToList();
 
-                        foreach (var batch in messagesForThisRecipient.Partition(100))
+                        const int batchThreshold = 100;
+                        if (messagesForThisRecipient.Count < batchThreshold)
                         {
-                            var brokeredMessagesInThisBatch = batch
-                                .Select(CreateBrokeredMessage)
-                                .ToList();
+                            log.Debug("Less than {0} messages to be sent to {1} - will perform one single send operation for each message",
+                                batchThreshold, destinationQueueName);
+                            
+                            messagesForThisRecipient.ForEach(message =>
+                            {
+                                var brokeredMessage = CreateBrokeredMessage(message);
+                                stuffToDispose.Add(brokeredMessage);
 
-                            stuffToDispose.AddRange(brokeredMessagesInThisBatch);
+                                new Retrier(backoffTimes)
+                                    .RetryOn<ServerBusyException>()
+                                    .RetryOn<MessagingCommunicationException>()
+                                    .RetryOn<TimeoutException>()
+                                    .TolerateInnerExceptionsAsWell()
+                                    .OnRetryException(
+                                        (exception, delay, faultNumber) =>
+                                            log.Warn("An exception occurred while making attempt no. {0} to send message from batch of {1} to {2}: {3} - will wait {4} and try again",
+                                                faultNumber, messagesToSend.Count, destinationQueueName, exception, delay))
+                                    .Do(() => GetClientFor(destinationQueueName).Send(brokeredMessage));
+                            });
+                        }
+                        else
+                        {
+                            var messageBatches = messagesForThisRecipient.Partition(100).ToList();
 
-                            new Retrier(backoffTimes)
-                                .RetryOn<ServerBusyException>()
-                                .RetryOn<MessagingCommunicationException>()
-                                .RetryOn<TimeoutException>()
-                                .TolerateInnerExceptionsAsWell()
-                                .OnRetryException((exception, delay, faultNumber) => log.Warn("An exception occurred while making attempt no. {0} to send batch of {1} messages to {2} (out of a total of {3} messages): {4} - will wait {5} and try again",
-                                    faultNumber, brokeredMessagesInThisBatch.Count, destinationQueueName, messagesToSend.Count, exception, delay))
-                                .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessagesInThisBatch));
+                            log.Debug("More than {0} messages to be sent to {1} - will send messages in {2} batches",
+                                batchThreshold, destinationQueueName, messageBatches.Count);
+
+                            foreach (var batch in messageBatches)
+                            {
+                                var brokeredMessagesInThisBatch = batch
+                                    .Select(CreateBrokeredMessage)
+                                    .ToList();
+
+                                stuffToDispose.AddRange(brokeredMessagesInThisBatch);
+
+                                new Retrier(backoffTimes)
+                                    .RetryOn<ServerBusyException>()
+                                    .RetryOn<MessagingCommunicationException>()
+                                    .RetryOn<TimeoutException>()
+                                    .TolerateInnerExceptionsAsWell()
+                                    .OnRetryException(
+                                        (exception, delay, faultNumber) =>
+                                            log.Warn(
+                                                "An exception occurred while making attempt no. {0} to send batch of {1} messages to {2} (out of a total of {3} messages): {4} - will wait {5} and try again",
+                                                faultNumber, brokeredMessagesInThisBatch.Count, destinationQueueName,
+                                                messagesToSend.Count, exception, delay))
+                                    .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessagesInThisBatch));
+                            }
                         }
                     }
                 }

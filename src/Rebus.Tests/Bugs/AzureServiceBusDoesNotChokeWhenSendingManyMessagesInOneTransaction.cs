@@ -77,7 +77,7 @@ namespace Rebus.Tests.Bugs
                 {
                     var saga = new SomeSaga(adapter.Bus, allRepliesReceived, requestCount);
                     saga.MessageSent += () => Interlocked.Increment(ref messagesSent);
-                    saga.MessageHandled += () => Interlocked.Increment(ref messagesHandled);
+                    saga.MessageHandled += currentHandledMessagesCount => Interlocked.Exchange(ref messagesHandled, currentHandledMessagesCount);
                     return saga;
                 });
 
@@ -120,7 +120,7 @@ namespace Rebus.Tests.Bugs
 
             public event Action MessageSent = delegate { };
 
-            public event Action MessageHandled = delegate { };
+            public event Action<int> MessageHandled = delegate { };
 
             public override void ConfigureHowToFindSaga()
             {
@@ -165,7 +165,7 @@ namespace Rebus.Tests.Bugs
                     allRepliesReceived.Set();
                 }
 
-                MessageHandled();
+                MessageHandled(Data.Requests.Count(r => r.Value > 0));
             }
         }
 
