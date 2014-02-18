@@ -50,6 +50,7 @@ namespace Rebus.Tests.Bugs
                 .Logging(l => l.ColoredConsole(LogLevel.Warn))
                 .Transport(t => t.UseAzureServiceBus(busConnection, InputQueueName, "error"))
                 .Sagas(s => s.Use(sagaPersister))
+                .Behavior(b => b.SetMaxRetriesFor<Exception>(100))
                 .CreateBus()
                 .Start(3);
         }
