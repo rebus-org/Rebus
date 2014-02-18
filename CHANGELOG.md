@@ -295,3 +295,7 @@
 ## 0.56.1
 
 * Don't make so many DEBUG logging statements while backing off
+
+## 0.57.0
+
+* Tweaked ASB transport so that send batching kicks in only when there's 100 or more messages to send
