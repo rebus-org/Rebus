@@ -78,6 +78,7 @@
     <Compile Include="..\Rebus\Shared\MsmqUtil.cs">
       <Link>MsmqUtil.cs</Link>
     </Compile>
+    <Compile Include="IpUtil.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\TimeoutConfigurationSection.cs" />
