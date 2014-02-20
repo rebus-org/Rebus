@@ -300,3 +300,7 @@
 
 * Tweaked ASB transport so that send batching kicks in only when there's 100 or more messages to send
 * Fixed it so that the error log on a tracked message has the local time (i.e. machine time) as its timestamp, and not UTC
+
+## 0.58.0
+
+* Fixed it so that the `MarkedAsComplete` event is raised also when a piece of saga data was never persisted - before, it was tied to the `Deleted` event from the persister, which you not be raised if the saga data was not persistent.
