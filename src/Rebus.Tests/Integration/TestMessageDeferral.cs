@@ -102,8 +102,8 @@ namespace Rebus.Tests.Integration
             bus.Defer(10.Seconds(), new MessageWithText { Text = "deferred 10 seconds" });
             bus.Defer(5.Seconds(), new MessageWithText { Text = "deferred 5 seconds" });
 
-            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(7));
-            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(5));
+            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(10));
+            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(10));
 
             // assert
             messages.Count.ShouldBe(2);
