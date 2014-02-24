@@ -305,3 +305,4 @@
 
 * Fixed it so that the `MarkedAsComplete` event is raised also when a piece of saga data was never persisted - before, it was tied to the `Deleted` event from the persister, which you not be raised if the saga data was not persistent.
 * Made Rebus Timeout Service create a service dependency on local SQL Server/MongoDB if the connection is local. This way, services will be started/stopped in the right order. Thanks [caspertdk](https://github.com/caspertdk) 
+* Fixed it so that headers attached to deferred messages are preserved when roundtripping the timeout manager.

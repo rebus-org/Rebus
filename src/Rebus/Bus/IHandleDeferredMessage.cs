@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rebus.Messages;
 
 namespace Rebus.Bus
@@ -9,7 +10,7 @@ namespace Rebus.Bus
     /// </summary>
     interface IHandleDeferredMessage
     {
-        void DispatchLocal(object deferredMessage, Guid sagaId);
+        void DispatchLocal(object deferredMessage, Guid sagaId, IDictionary<string, object> headers);
         void SendReply(string recipient, TimeoutReply reply, Guid sagaId);
     }
 }

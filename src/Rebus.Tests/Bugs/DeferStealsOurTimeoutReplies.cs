@@ -52,7 +52,7 @@ namespace Rebus.Tests.Bugs
                 get { return dispatchedMessages; }
             }
 
-            public void DispatchLocal(object deferredMessage, Guid sagaId)
+            public void DispatchLocal(object deferredMessage, Guid sagaId, IDictionary<string, object> headers)
             {
                 dispatchedMessages.Add(deferredMessage);
             }

@@ -353,7 +353,9 @@ namespace Rebus.Bus
                         Headers.ReturnAddress));
             }
 
-            var customData = TimeoutReplyHandler.Serialize(message);
+
+            var attachedHeaders = headerContext.GetHeadersFor(message);
+            var customData = TimeoutReplyHandler.Serialize(new Message { Headers = attachedHeaders, Messages = new[] { message } });
 
             var timeoutRequest = new TimeoutRequest
                 {
@@ -966,7 +968,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     lock (items)
                     {
                         var headerItemsToRemove = items.Where(i => i.IsDead).ToList();
-                        
+
                         foreach (var itemToRemove in headerItemsToRemove)
                         {
                             items.Remove(itemToRemove);

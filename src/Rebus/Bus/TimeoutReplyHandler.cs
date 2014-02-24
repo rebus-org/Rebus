@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using Rebus.Logging;
 using Rebus.Messages;
 
@@ -33,11 +34,24 @@ namespace Rebus.Bus
             if (message.CorrelationId != TimeoutReplySecretCorrelationId)
                 return;
 
-            var deferredMessage = Deserialize(message.CustomData);
+            var deferredMessageContainer = Deserialize(message.CustomData);
 
-            log.Info("Received timeout reply - sending deferred message to self.");
+            if (deferredMessageContainer is Message)
+            {
+                var messageContainer = (Message)deferredMessageContainer;
 
-            handleDeferredMessage.DispatchLocal(deferredMessage, message.SagaId);
+                var headers = messageContainer.Headers;
+
+                foreach (var messageObj in messageContainer.Messages)
+                {
+                    handleDeferredMessage.DispatchLocal(messageObj, message.SagaId, headers);
+                }
+            }
+            else
+            {
+                log.Info("Received timeout reply - sending deferred message to self.");
+                handleDeferredMessage.DispatchLocal(deferredMessageContainer, message.SagaId, new Dictionary<string, object>());
+            }
         }
 
         object Deserialize(string customData)
