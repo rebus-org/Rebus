@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Timers;
 using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -688,7 +686,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
-                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct();
+                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct().ToList();
 
                 if (returnAddresses.Count() > 1)
                 {
@@ -708,7 +706,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
 
                 // assert all values are the same
-                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct();
+                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct().ToList();
+
                 if (timesToBeReceived.Count() > 1)
                 {
                     throw new InconsistentTimeToBeReceivedException("These times to be received were specified: {0}", string.Join(", ", timesToBeReceived));
