@@ -310,3 +310,7 @@
 ## 0.58.1
 
 * Added 'CorrelationId' thread-local context variable to NLog logger, similar to how it's done with the Log4Net logger.
+
+## 0.58.2
+
+* Fixed `AttachHeader` bug in `FakeBus`.
