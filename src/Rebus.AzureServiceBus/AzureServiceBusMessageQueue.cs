@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
-using System.Threading.Tasks;
-using System.Timers;
+using System.Threading;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Logging;
 using Rebus.Shared;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.AzureServiceBus
 {
@@ -79,11 +79,22 @@ namespace Rebus.AzureServiceBus
 
         public void EnsureQueueExists(string queueName)
         {
-            if (namespaceManager.QueueExists(queueName)) return;
+            try
+            {
+                if (namespaceManager.QueueExists(queueName)) return;
+            }
+            catch (TimeoutException exception)
+            {
+                log.Warn("An attempt to check whether ASB queue '{0}' exists timed out: {1} - will wait a short while and try again...",
+                    queueName, exception);
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+
+                if (namespaceManager.QueueExists(queueName)) return;
+            }
 
             try
             {
-
                 var lockDuration = TimeSpan.FromMinutes(5);
                 const int maxDeliveryCount = 1000;
 

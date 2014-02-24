@@ -31,14 +31,14 @@ namespace Rebus.Tests.Performance
             PurgeQueue(QueueName1);
             PurgeQueue(QueueName2);
 
-            adapter1 = new BuiltinContainerAdapter();
+            adapter1 = TrackDisposable(new BuiltinContainerAdapter());
 
             Configure.With(adapter1)
                      .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName1, "error"))
                      .CreateBus()
                      .Start();
 
-            adapter2 = new BuiltinContainerAdapter();
+            adapter2 = TrackDisposable(new BuiltinContainerAdapter());
 
             var receiverBus =
                 (RebusBus)Configure
@@ -243,12 +243,6 @@ The following received messages were duplicated: {2}
         {
             public string Text { get; set; }
             public Guid Id { get; set; }
-        }
-
-        protected override void DoTearDown()
-        {
-            adapter1.Dispose();
-            adapter2.Dispose();
         }
 
         void PurgeQueue(string queueName)
