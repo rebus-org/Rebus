@@ -1,3 +1,5 @@
+#### _"As friendly as machinely possible."_
+
 ![Bedford OB](http://mookid.dk/oncode/wp-content/2011/10/logo400x150.png)
 
 What?

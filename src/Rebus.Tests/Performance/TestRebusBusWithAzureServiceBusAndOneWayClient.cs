@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using NUnit.Framework;
-using Rebus.Configuration;
 using Rebus.AzureServiceBus;
+using Rebus.Configuration;
 using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Performance

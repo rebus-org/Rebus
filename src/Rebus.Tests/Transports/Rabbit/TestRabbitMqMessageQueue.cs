@@ -267,7 +267,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 using (var model = connection.CreateModel())
                 {
                     var props = model.CreateBasicProperties();
-                    props.Headers = new Hashtable
+                    props.Headers = new Dictionary<string, object>
                         {
                             {
                                 "someKey", new Hashtable

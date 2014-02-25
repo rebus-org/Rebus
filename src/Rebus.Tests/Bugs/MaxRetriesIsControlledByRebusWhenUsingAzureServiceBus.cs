@@ -65,7 +65,7 @@ namespace Rebus.Tests.Bugs
             
             using (var queue = new AzureServiceBusMessageQueue(connectionString, "test_input"))
             {
-                queue.Purge();
+                queue.Delete();
             }
 
             Configure.With(adapter)

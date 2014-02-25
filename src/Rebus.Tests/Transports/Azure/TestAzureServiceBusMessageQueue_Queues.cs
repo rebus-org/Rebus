@@ -15,7 +15,7 @@ using Rebus.Tests.Contracts.Transports.Factories;
 namespace Rebus.Tests.Transports.Azure
 {
     [TestFixture, Category(TestCategories.Azure)]
-    public class TestAzureServiceBusMessageQueue : FixtureBase
+    public class TestAzureServiceBusMessageQueue_Queues : FixtureBase
     {
         const string InputQueueName = "test_competing_input";
 

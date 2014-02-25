@@ -1,13 +1,14 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
+using System.Linq;
 using System.ServiceModel;
 using System.Threading;
-using System.Transactions;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
-using System.Linq;
 using Rebus.Logging;
+using Rebus.Shared;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.AzureServiceBus
 {
@@ -20,25 +21,32 @@ namespace Rebus.AzureServiceBus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public const string TopicName = "Rebus";
-        public const string LogicalQueuePropertyKey = "LogicalDestinationQueue";
-
         public const string AzureServiceBusRenewLeaseAction = "AzureServiceBusRenewLeaseAction (invoke in order to renew the peek lock on the current message)";
 
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
 
         const string AzureServiceBusReceivedMessage = "AzureServiceBusReceivedMessage";
 
+        const string AzureServiceBusReceivedMessagePeekLockRenewalTimer = "AzureServiceBusReceivedMessagePeekLockRenewalTimer";
+
+        const string AzureServiceBusReceivedMessagePeekLockRenewedTime = "AzureServiceBusReceivedMessagePeekLockRenewedTime";
+
+        const string CurrentlyRenewingThePeekLockItemKey = "currently-renewing-the-peek-lock";
+
+        /// <summary>
+        /// Will be used to cache queue clients for each queue that we need to communicate with
+        /// </summary>
+        readonly ConcurrentDictionary<string, QueueClient> queueClients = new ConcurrentDictionary<string, QueueClient>();
         readonly NamespaceManager namespaceManager;
+        readonly string connectionString;
 
-        readonly TopicDescription topicDescription;
-
-        readonly TopicClient topicClient;
-
-        readonly SubscriptionClient subscriptionClient;
+        TimeSpan peekLockRenewalInterval = TimeSpan.FromMinutes(4.5);
 
         bool disposed;
 
+        /// <summary>
+        /// Construct a send-only instance of the transport
+        /// </summary>
         public static AzureServiceBusMessageQueue Sender(string connectionString)
         {
             return new AzureServiceBusMessageQueue(connectionString, null);
@@ -46,47 +54,63 @@ namespace Rebus.AzureServiceBus
 
         public AzureServiceBusMessageQueue(string connectionString, string inputQueue)
         {
+            this.connectionString = connectionString;
             try
             {
-                log.Info("Initializing Azure Service Bus transport with logical input queue '{0}'", inputQueue);
+                log.Info("Initializing Azure Service Bus transport with input queue '{0}'", inputQueue);
 
                 namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
 
                 InputQueue = inputQueue;
 
-                log.Info("Ensuring that topic '{0}' exists", TopicName);
-                if (!namespaceManager.TopicExists(TopicName))
-                {
-                    try
-                    {
-                        namespaceManager.CreateTopic(TopicName);
-                    }
-                    catch
-                    {
-                        // just assume the call failed because the topic already exists - if GetTopic below
-                        // fails, then something must be wrong, and then we just want to fail immediately
-                    }
-                }
-
-                topicDescription = namespaceManager.GetTopic(TopicName);
-
-                log.Info("Creating topic client");
-                topicClient = TopicClient.CreateFromConnectionString(connectionString, topicDescription.Path);
-
                 // if we're in one-way mode, just quit here
                 if (inputQueue == null) return;
 
-                GetOrCreateSubscription(InputQueue);
-
-                log.Info("Creating subscription client");
-                subscriptionClient = SubscriptionClient.CreateFromConnectionString(connectionString, TopicName, InputQueue, ReceiveMode.PeekLock);
+                EnsureQueueExists(inputQueue);
             }
             catch (Exception e)
             {
                 throw new ApplicationException(
                     string.Format(
-                        "An error occurred while initializing Azure Service Bus with logical input queue '{0}'",
+                        "An error occurred while initializing Azure Service Bus with input queue '{0}'",
                         inputQueue), e);
+            }
+        }
+
+        public void EnsureQueueExists(string queueName)
+        {
+            try
+            {
+                if (namespaceManager.QueueExists(queueName)) return;
+            }
+            catch (TimeoutException exception)
+            {
+                log.Warn("An attempt to check whether ASB queue '{0}' exists timed out: {1} - will wait a short while and try again...",
+                    queueName, exception);
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+
+                if (namespaceManager.QueueExists(queueName)) return;
+            }
+
+            try
+            {
+                var lockDuration = TimeSpan.FromMinutes(5);
+                const int maxDeliveryCount = 1000;
+
+                log.Info("Queue '{0}' does not exist - it will be created now (with lockDuration={1} and maxDeliveryCount={2})",
+                    queueName, lockDuration, maxDeliveryCount);
+
+                namespaceManager.CreateQueue(new QueueDescription(queueName)
+                {
+                    LockDuration = lockDuration,
+                    MaxDeliveryCount = maxDeliveryCount,
+                    UserMetadata = string.Format("Queue created by Rebus {0}", DateTime.Now)
+                });
+            }
+            catch
+            {
+                // just assume the call failed because the queue already exists
             }
         }
 
@@ -94,17 +118,7 @@ namespace Rebus.AzureServiceBus
         {
             if (!context.IsTransactional)
             {
-                var envelopeToSendImmediately = new Envelope
-                                                    {
-                                                        Body = message.Body,
-                                                        Headers = message.Headers != null
-                                                                      ? message
-                                                                            .Headers
-                                                                            .ToDictionary(h => h.Key,
-                                                                                          h => h.Value.ToString())
-                                                                      : null,
-                                                        Label = message.Label,
-                                                    };
+                var envelopeToSendImmediately = CreateEnvelope(message);
 
                 var backoffTimes = new[] { 1, 2, 5, 10, 10, 10, 10, 10, 20, 20, 20, 30, 30, 30, 30 }
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
@@ -117,60 +131,52 @@ namespace Rebus.AzureServiceBus
                     .TolerateInnerExceptionsAsWell()
                     .Do(() =>
                         {
-                            using (var messageToSendImmediately = new BrokeredMessage(envelopeToSendImmediately))
+                            using (var messageToSendImmediately = CreateBrokeredMessage(envelopeToSendImmediately))
                             {
-                                messageToSendImmediately.Properties[LogicalQueuePropertyKey] = destinationQueueName;
-                                topicClient.Send(messageToSendImmediately);
+                                GetClientFor(destinationQueueName).Send(messageToSendImmediately);
                             }
                         });
 
                 return;
             }
 
-            // if the batch is null, we're doing tx send outside of a message handler
+            // if the batch is null, we're doing tx send outside of a message handler - this means
+            // that we must initialize the collection of messages to be sent
             if (context[AzureServiceBusMessageBatch] == null)
             {
                 context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
                 context.DoCommit += () => DoCommit(context);
             }
 
-            var envelope = new Envelope
-            {
-                Body = message.Body,
-                Headers = message.Headers != null
-                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value.ToString())
-                    : null,
-                Label = message.Label,
-            };
+            var envelope = CreateEnvelope(message);
 
             var messagesToSend = (List<Tuple<string, Envelope>>)context[AzureServiceBusMessageBatch];
 
             messagesToSend.Add(Tuple.Create(destinationQueueName, envelope));
+        }
 
-            if (messagesToSend.Count > 100)
-            {
-                var errorMessage = string.Format("Cannot send more than 100 messages in one transaction with Azure Service Bus." +
-                                                 " This is a limitation in the service bus that you must handle in the way you're" +
-                                                 " using Rebus with Azure Service Bus, possibly by introducting a way of batching" +
-                                                 " work in another way.");
+        QueueClient GetClientFor(string destinationQueueName)
+        {
+            var client = queueClients.GetOrAdd(destinationQueueName, CreateNewClient);
 
-                throw new InvalidOperationException(errorMessage);
-            }
+            if (!client.IsClosed) return client;
 
-            if (messagesToSend.Count > 90)
-            {
-                log.Warn("Currently carrying {0} messages that will be sent with the batch API when the transaction is" +
-                         " committed - this is pretty close to 100 which the absolute maximum number of messages that" +
-                         " can be sent in one single transaction with Azure Service Bus. At the moment, there's no other" +
-                         " workaround than handling this in the way you're using Rebus with Azure Service Bus.", messagesToSend.Count);
-            }
+            client = CreateNewClient(destinationQueueName);
+            queueClients[destinationQueueName] = client;
+
+            return client;
+        }
+
+        QueueClient CreateNewClient(string queueName)
+        {
+            return QueueClient.CreateFromConnectionString(connectionString, queueName);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
             try
             {
-                var brokeredMessage = subscriptionClient.Receive(TimeSpan.FromSeconds(1));
+                var brokeredMessage = GetClientFor(InputQueue).Receive(TimeSpan.FromSeconds(1));
 
                 if (brokeredMessage == null)
                 {
@@ -193,24 +199,16 @@ namespace Rebus.AzureServiceBus
                         context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
 
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
-                        context[AzureServiceBusRenewLeaseAction] = (Action)(() =>
+                        var peekLockRenewalAction = (Action)(() => RenewPeekLock(context, messageId));
+
+                        context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
+                        context[AzureServiceBusRenewLeaseAction] = peekLockRenewalAction;
+
+                        if (peekLockRenewalInterval > TimeSpan.FromSeconds(1))
                         {
-                            try
-                            {
-                                var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
+                            context[AzureServiceBusReceivedMessagePeekLockRenewalTimer] = ScheduleInvocation(peekLockRenewalAction, peekLockRenewalInterval);
+                        }
 
-                                log.Info("Renewing lock on message {0}", messageId);
-
-                                messageToRenew.RenewLock();
-                            }
-                            catch (Exception exception)
-                            {
-                                throw new ApplicationException(
-                                    string.Format(
-                                        "An error occurred while attempting to renew the lock on message {0}", messageId),
-                                    exception);
-                            }
-                        });
                         context.DoCommit += () => DoCommit(context);
                         context.DoRollback += () => DoRollBack(context);
                         context.Cleanup += () => DoCleanUp(context);
@@ -220,17 +218,7 @@ namespace Rebus.AzureServiceBus
                     {
                         var envelope = brokeredMessage.GetBody<Envelope>();
 
-                        return new ReceivedTransportMessage
-                        {
-                            Id = messageId,
-                            Headers = envelope.Headers == null
-                                ? new Dictionary<string, object>()
-                                : envelope
-                                    .Headers
-                                    .ToDictionary(e => e.Key, e => (object)e.Value),
-                            Body = envelope.Body,
-                            Label = envelope.Label
-                        };
+                        return CreateReceivedTransportMessage(messageId, envelope);
                     }
                     finally
                     {
@@ -243,49 +231,125 @@ namespace Rebus.AzureServiceBus
                 }
                 catch (Exception receiveException)
                 {
-                    var message = string.Format("An exception occurred while handling brokered message {0}",
-                        messageId);
+                    var message = string.Format("An exception occurred while handling brokered message {0}", messageId);
 
                     try
                     {
                         log.Info("Will attempt to abandon message {0}", messageId);
                         brokeredMessage.Abandon();
                     }
-                    catch (Exception abandonException)
-                    {
-                        log.Warn("Got exception while abandoning message: {0}", abandonException);
-                    }
+                    catch { }
 
                     throw new ApplicationException(message, receiveException);
                 }
             }
-            catch (TimeoutException exception)
+            catch (TimeoutException)
             {
-                Console.WriteLine("TimeoutException: {0}", exception);
                 return null;
             }
-            catch (CommunicationObjectFaultedException exception)
+            catch (CommunicationObjectFaultedException)
             {
-                Console.WriteLine("CommunicationObjectFaultedException: {0}", exception);
                 return null;
             }
             catch (MessagingCommunicationException e)
             {
-                Console.WriteLine("MessagingCommunicationException: {0}", e);
                 if (!e.IsTransient)
                 {
-                    log.Warn("Caught exception while receiving message from logical queue '{0}': {1}", InputQueue, e);
+                    log.Warn("Caught exception while receiving message from queue '{0}': {1}", InputQueue, e);
                 }
 
                 return null;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Exception: {0}", e);
-                log.Warn("Caught exception while receiving message from logical queue '{0}': {1}", InputQueue, e);
+                log.Warn("Caught exception while receiving message from queue '{0}': {1}", InputQueue, e);
 
                 return null;
             }
+        }
+
+        void RenewPeekLock(ITransactionContext context, string messageId)
+        {
+            if (context[CurrentlyRenewingThePeekLockItemKey] != null) return;
+
+            try
+            {
+                context[CurrentlyRenewingThePeekLockItemKey] = true;
+
+                var peekLockRenewalBackoffTimes = new[] { 1, 2, 5, 10, 10, 10 }
+                    .Select(s => TimeSpan.FromSeconds(s))
+                    .ToArray();
+
+                var messageToRenew = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
+
+                try
+                {
+                    new Retrier(peekLockRenewalBackoffTimes)
+                        .RetryOn<Exception>()
+                        .TolerateInnerExceptionsAsWell()
+                        .DoNotRetryOn<MessageLockLostException>()
+                        .OnRetryException(
+                            (exception, delay, faultNumber) =>
+                                log.Warn(
+                                    "Attempt no. {0} to renew the peek lock on message {1} failed: {2} - will wait {3} before trying again",
+                                    faultNumber, messageId, exception, delay))
+                        .Do(messageToRenew.RenewLock);
+
+                    context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
+
+                    log.Info("Peek lock renewed on message {0} - current lease is {1:0.0} seconds old", messageId,
+                        TimeSinceLastLockRenewal(context).TotalSeconds);
+                }
+                catch (Exception exception)
+                {
+                    log.Warn("Could not renew peek lock on message {0}: {1}", messageId, exception);
+                }
+            }
+            finally
+            {
+                context[CurrentlyRenewingThePeekLockItemKey] = null;
+            }
+        }
+
+        TimeSpan TimeSinceLastLockRenewal(ITransactionContext context)
+        {
+            var timeOfLastRenewal = (DateTime)context[AzureServiceBusReceivedMessagePeekLockRenewedTime];
+            var timeSinceLastRenewal = DateTime.UtcNow - timeOfLastRenewal;
+            return timeSinceLastRenewal;
+        }
+
+        Timer ScheduleInvocation(Action actionToCall, TimeSpan interval)
+        {
+            var timer = new Timer(interval.TotalMilliseconds);
+            timer.Elapsed += (o, ea) => actionToCall();
+            timer.Start();
+
+            return timer;
+        }
+
+        Envelope CreateEnvelope(TransportMessageToSend message)
+        {
+            return new Envelope
+            {
+                Body = message.Body,
+                Headers = message.Headers != null
+                    ? message.Headers.ToDictionary(h => h.Key, h => h.Value.ToString())
+                    : null,
+                Label = message.Label,
+            };
+        }
+
+        ReceivedTransportMessage CreateReceivedTransportMessage(string messageId, Envelope envelope)
+        {
+            return new ReceivedTransportMessage
+            {
+                Id = messageId,
+                Headers = envelope.Headers == null
+                    ? new Dictionary<string, object>()
+                    : envelope.Headers.ToDictionary(e => e.Key, e => (object)e.Value),
+                Body = envelope.Body,
+                Label = envelope.Label
+            };
         }
 
         void DoRollBack(ITransactionContext context)
@@ -303,6 +367,13 @@ namespace Rebus.AzureServiceBus
         }
         void DoCleanUp(ITransactionContext context)
         {
+            var timer = context[AzureServiceBusReceivedMessagePeekLockRenewalTimer] as Timer;
+            if (timer != null)
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
+
             try
             {
                 var brokeredMessage = (BrokeredMessage)context[AzureServiceBusReceivedMessage];
@@ -312,12 +383,12 @@ namespace Rebus.AzureServiceBus
             catch
             {
             }
-
         }
 
         void DoCommit(ITransactionContext context)
         {
             // the message will be null when doing tx send outside of a message handler
+            var stuffToDispose = new List<IDisposable>();
             var receivedMessageOrNull = context[AzureServiceBusReceivedMessage] as BrokeredMessage;
             var messagesToSend = (List<Tuple<string, Envelope>>)context[AzureServiceBusMessageBatch];
 
@@ -327,44 +398,76 @@ namespace Rebus.AzureServiceBus
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
-                new Retrier(backoffTimes)
-                    .RetryOn<ServerBusyException>()
-                    .RetryOn<MessagingCommunicationException>()
-                    .RetryOn<TimeoutException>()
-                    .TolerateInnerExceptionsAsWell()
-                    .Do(() =>
+                if (messagesToSend.Any())
+                {
+                    var messagesForEachRecipient = messagesToSend
+                        .GroupBy(g => g.Item1)
+                        .ToList();
+
+                    foreach (var group in messagesForEachRecipient)
+                    {
+                        var destinationQueueName = group.Key;
+                        var messagesForThisRecipient = group.Select(g => g.Item2).ToList();
+
+                        const int batchThreshold = 100;
+                        if (messagesForThisRecipient.Count < batchThreshold)
                         {
-                            using (var scope = new TransactionScope(TransactionScopeOption.RequiresNew))
+                            log.Debug("Less than {0} messages to be sent to {1} - will perform one single send operation for each message",
+                                batchThreshold, destinationQueueName);
+                            
+                            messagesForThisRecipient.ForEach(message =>
                             {
-                                var brokeredMessagesToSend = new List<BrokeredMessage>();
+                                var brokeredMessage = CreateBrokeredMessage(message);
+                                stuffToDispose.Add(brokeredMessage);
 
-                                if (messagesToSend.Any())
-                                {
-                                    brokeredMessagesToSend.AddRange(messagesToSend
-                                        .Select(tuple =>
-                                        {
-                                            var brokeredMessage = new BrokeredMessage(tuple.Item2);
-                                            brokeredMessage.Properties[LogicalQueuePropertyKey] = tuple.Item1;
-                                            return brokeredMessage;
-                                        }));
+                                new Retrier(backoffTimes)
+                                    .RetryOn<ServerBusyException>()
+                                    .RetryOn<MessagingCommunicationException>()
+                                    .RetryOn<TimeoutException>()
+                                    .TolerateInnerExceptionsAsWell()
+                                    .OnRetryException(
+                                        (exception, delay, faultNumber) =>
+                                            log.Warn("An exception occurred while making attempt no. {0} to send message from batch of {1} to {2}: {3} - will wait {4} and try again",
+                                                faultNumber, messagesToSend.Count, destinationQueueName, exception, delay))
+                                    .Do(() => GetClientFor(destinationQueueName).Send(brokeredMessage));
+                            });
+                        }
+                        else
+                        {
+                            var messageBatches = messagesForThisRecipient.Partition(100).ToList();
 
-                                    topicClient.SendBatch(brokeredMessagesToSend);
-                                }
+                            log.Debug("More than {0} messages to be sent to {1} - will send messages in {2} batches",
+                                batchThreshold, destinationQueueName, messageBatches.Count);
 
-                                if (receivedMessageOrNull != null)
-                                {
-                                    receivedMessageOrNull.Complete();
-                                }
+                            foreach (var batch in messageBatches)
+                            {
+                                var brokeredMessagesInThisBatch = batch
+                                    .Select(CreateBrokeredMessage)
+                                    .ToList();
 
-                                scope.Complete();
+                                stuffToDispose.AddRange(brokeredMessagesInThisBatch);
 
-                                try
-                                {
-                                    brokeredMessagesToSend.ForEach(m => m.Dispose());
-                                }
-                                catch{}
+                                new Retrier(backoffTimes)
+                                    .RetryOn<ServerBusyException>()
+                                    .RetryOn<MessagingCommunicationException>()
+                                    .RetryOn<TimeoutException>()
+                                    .TolerateInnerExceptionsAsWell()
+                                    .OnRetryException(
+                                        (exception, delay, faultNumber) =>
+                                            log.Warn(
+                                                "An exception occurred while making attempt no. {0} to send batch of {1} messages to {2} (out of a total of {3} messages): {4} - will wait {5} and try again",
+                                                faultNumber, brokeredMessagesInThisBatch.Count, destinationQueueName,
+                                                messagesToSend.Count, exception, delay))
+                                    .Do(() => GetClientFor(destinationQueueName).SendBatch(brokeredMessagesInThisBatch));
                             }
-                        });
+                        }
+                    }
+                }
+
+                if (receivedMessageOrNull != null)
+                {
+                    receivedMessageOrNull.Complete();
+                }
             }
             catch (Exception)
             {
@@ -384,18 +487,32 @@ namespace Rebus.AzureServiceBus
             }
             finally
             {
-                try
-                {
-                    if (receivedMessageOrNull != null)
-                    {
-                        receivedMessageOrNull.Dispose();
-                    }
-                }
-                catch (Exception e)
-                {
-                    log.Warn("An exception occurred while disposing brokered messages: {0}", e);
-                }
+                stuffToDispose.ForEach(d => d.Dispose());
             }
+        }
+
+        BrokeredMessage CreateBrokeredMessage(Envelope envelope)
+        {
+            var brokeredMessage = new BrokeredMessage(envelope);
+
+            if (envelope.Headers.ContainsKey(Headers.MessageId))
+            {
+                brokeredMessage.MessageId = envelope.Headers[Headers.MessageId];
+            }
+
+            if (envelope.Headers.ContainsKey(Headers.CorrelationId))
+            {
+                brokeredMessage.CorrelationId = envelope.Headers[Headers.CorrelationId];
+            }
+
+            if (envelope.Headers.ContainsKey(Headers.ReturnAddress))
+            {
+                brokeredMessage.ReplyTo = envelope.Headers[Headers.ReturnAddress];
+            }
+
+            brokeredMessage.Label = envelope.Label;
+
+            return brokeredMessage;
         }
 
         public string InputQueue { get; private set; }
@@ -404,130 +521,26 @@ namespace Rebus.AzureServiceBus
 
         public AzureServiceBusMessageQueue Purge()
         {
-            log.Warn("Purging logical queue {0}", InputQueue);
+            log.Warn("Purging queue '{0}'", InputQueue);
 
-            namespaceManager.DeleteSubscription(topicDescription.Path, InputQueue);
-            GetOrCreateSubscription(InputQueue);
+            namespaceManager.DeleteQueue(InputQueue);
+            EnsureQueueExists(InputQueue);
 
             return this;
         }
 
-        [DataContract]
-        class Envelope
+        public AzureServiceBusMessageQueue Delete()
         {
-            [DataMember]
-            public Dictionary<string, string> Headers { get; set; }
+            log.Warn("Deleting queue '{0}'", InputQueue);
 
-            [DataMember]
-            public byte[] Body { get; set; }
+            namespaceManager.DeleteQueue(InputQueue);
 
-            [DataMember]
-            public string Label { get; set; }
+            return this;
         }
 
-        class Retrier
+        public void SetAutomaticPeekLockRenewalInterval(TimeSpan peekLockRenewalTimeSpan)
         {
-            readonly TimeSpan[] backoffTimes;
-            readonly List<Type> toleratedExceptionTypes = new List<Type>();
-            bool scanInnerExceptions;
-
-            public Retrier(params TimeSpan[] backoffTimes)
-            {
-                this.backoffTimes = backoffTimes;
-            }
-
-            public Retrier TolerateInnerExceptionsAsWell()
-            {
-                scanInnerExceptions = true;
-                return this;
-            }
-
-            public Retrier RetryOn<TException>() where TException : Exception
-            {
-                toleratedExceptionTypes.Add(typeof(TException));
-                return this;
-            }
-
-            public void Do(Action action)
-            {
-                var backoffIndex = 0;
-                var complete = false;
-                var caughtExceptions = new List<Timed<Exception>>();
-
-                while (!complete)
-                {
-                    try
-                    {
-                        action();
-                        complete = true;
-                    }
-                    catch (Exception e)
-                    {
-                        caughtExceptions.Add(e.At(DateTime.Now));
-
-                        if (backoffIndex >= backoffTimes.Length)
-                        {
-                            throw;
-                        }
-
-                        if (ExceptionCanBeTolerated(e))
-                        {
-                            Thread.Sleep(backoffTimes[backoffIndex++]);
-                        }
-                        else
-                        {
-                            throw new AggregateException(string.Format("Operation did not complete within {0} retries which resulted in exceptions at the following times: {1}",
-                                backoffTimes.Length, string.Join(", ", caughtExceptions.Select(c => c.Time))), caughtExceptions.Select(c => c.Value));
-                        }
-                    }
-                }
-            }
-
-            bool ExceptionCanBeTolerated(Exception exceptionToCheck)
-            {
-                while (exceptionToCheck != null)
-                {
-                    var exceptionType = exceptionToCheck.GetType();
-
-                    // if the exception can be tolerated...
-                    if (toleratedExceptionTypes.Contains(exceptionType))
-                    {
-                        return true;
-                    }
-
-                    // otherwise, see if we are allowed to check the inner exception as well
-                    exceptionToCheck = scanInnerExceptions
-                        ? exceptionToCheck.InnerException
-                        : null;
-                }
-
-                // exception cannot be tolerated
-                return false;
-            }
-        }
-
-        public void GetOrCreateSubscription(string logicalQueueName)
-        {
-            if (namespaceManager.SubscriptionExists(topicDescription.Path, logicalQueueName)) return;
-
-            try
-            {
-                log.Info("Establishing subscription '{0}'", logicalQueueName);
-                var filter = new SqlFilter(string.Format("LogicalDestinationQueue='{0}'", logicalQueueName));
-
-                var newSubscription = namespaceManager.CreateSubscription(topicDescription.Path, logicalQueueName, filter);
-
-                // effectively disable Azure Service Bus' own dead lettering
-                newSubscription.MaxDeliveryCount = 1000;
-                newSubscription.EnableDeadLetteringOnMessageExpiration = false;
-                newSubscription.LockDuration = TimeSpan.FromMinutes(5);
-                newSubscription.UserMetadata = string.Format("Created by Rebus: {0}", DateTime.UtcNow.ToString("u"));
-
-                namespaceManager.UpdateSubscription(newSubscription);
-            }
-            catch (MessagingEntityAlreadyExistsException)
-            {
-            }
+            peekLockRenewalInterval = peekLockRenewalTimeSpan;
         }
 
         public void Dispose()
@@ -544,25 +557,16 @@ namespace Rebus.AzureServiceBus
             {
                 try
                 {
-                    if (subscriptionClient != null)
+                    foreach (var client in queueClients)
                     {
-                        log.Info("Closing subscription client");
-                        subscriptionClient.Close();
+                        log.Info("Closing queue client for '{0}'", client.Key);
+
+                        client.Value.Close();
                     }
                 }
                 catch (Exception e)
                 {
-                    log.Warn("An exception occurred while closing the subscription client: {0}", e);
-                }
-
-                try
-                {
-                    log.Info("Closing topic client");
-                    topicClient.Close();
-                }
-                catch (Exception e)
-                {
-                    log.Warn("An exception occurred while closing the topic client: {0}", e);
+                    log.Warn("An exception occurred while closing queue client(s): {0}", e);
                 }
             }
 

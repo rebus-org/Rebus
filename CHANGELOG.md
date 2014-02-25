@@ -283,3 +283,34 @@
 ## 0.55.0
 
 * RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.55.1
+
+* Fixed Rabbit transport nuspec
+
+## 0.56.0
+
+* Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.56.1
+
+* Don't make so many DEBUG logging statements while backing off
+
+## 0.57.0
+
+* Tweaked ASB transport so that send batching kicks in only when there's 100 or more messages to send
+* Fixed it so that the error log on a tracked message has the local time (i.e. machine time) as its timestamp, and not UTC
+
+## 0.58.0
+
+* Fixed it so that the `MarkedAsComplete` event is raised also when a piece of saga data was never persisted - before, it was tied to the `Deleted` event from the persister, which you not be raised if the saga data was not persistent.
+* Made Rebus Timeout Service create a service dependency on local SQL Server/MongoDB if the connection is local. This way, services will be started/stopped in the right order. Thanks [caspertdk](https://github.com/caspertdk) 
+* Fixed it so that headers attached to deferred messages are preserved when roundtripping the timeout manager.
+
+## 0.58.1
+
+* Added 'CorrelationId' thread-local context variable to NLog logger, similar to how it's done with the Log4Net logger.
+
+## 0.58.2
+
+* Fixed `AttachHeader` bug in `FakeBus`.

@@ -81,8 +81,10 @@ namespace Rebus.Testing
         /// </summary>
         public void AttachHeader(object message, string key, string value)
         {
-            if (attachedHeaders.ContainsKey(message))
+            if (!attachedHeaders.ContainsKey(message))
+            {
                 attachedHeaders[message] = new Dictionary<string, string>();
+            }
 
             attachedHeaders[message][key] = value;
         }

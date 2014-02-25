@@ -42,10 +42,12 @@ namespace Rebus.Testing
             persister.CreatedNew += RaiseCreatedNewSagaData;
             persister.Correlated += RaiseCorrelatedWithExistingSagaData;
             persister.CouldNotCorrelate += RaiseCouldNotCorrelate;
-            persister.Deleted += RaiseMarkedAsComplete;
+
+            var handlerActivator = new SagaFixtureHandlerActivator(sagaInstances);
+            handlerActivator.MarkedAsComplete += () => RaiseMarkedAsComplete(persister.MostRecentlyLoadedSagaData);
 
             dispatcher = new Dispatcher(persister,
-                                        new SagaFixtureHandlerActivator(sagaInstances), new InMemorySubscriptionStorage(),
+                                        handlerActivator, new InMemorySubscriptionStorage(),
                                         new TrivialPipelineInspector(), null, null);
         }
 
@@ -87,6 +89,8 @@ namespace Rebus.Testing
 
         class SagaFixtureHandlerActivator : IActivateHandlers
         {
+            public event Action MarkedAsComplete = delegate { };
+
             readonly IEnumerable<Saga> sagaInstance;
 
             public SagaFixtureHandlerActivator(IEnumerable<Saga<TSagaData>> sagaInstance)
@@ -101,6 +105,9 @@ namespace Rebus.Testing
 
             public void Release(IEnumerable handlerInstances)
             {
+                if (!handlerInstances.OfType<Saga>().Any(saga => saga.Complete)) return;
+
+                MarkedAsComplete();
             }
         }
 
@@ -134,6 +141,11 @@ namespace Rebus.Testing
         /// Delegate type that can be used to detect when an incoming message gives rise to a saga data being marked as complete
         /// </summary>
         public delegate void MarkedAsCompleteEventHandler<in T>(object message, T sagaData);
+
+        /// <summary>
+        /// Delegate type that can be used to detect when a persistent instance of saga data has been deleted
+        /// </summary>
+        public delegate void DeletedEventHandler<in T>(object message, T sagaData);
 
         /// <summary>
         /// Delegate type that can be used to define events of when handling an incoming message results in an exception
@@ -275,6 +287,8 @@ namespace Rebus.Testing
                 get { return innerPersister.Cast<TSagaData>(); }
             }
 
+            public ISagaData MostRecentlyLoadedSagaData { get; set; }
+
             public void AddSagaData(TSagaData sagaData)
             {
                 innerPersister.AddSagaData(sagaData);
@@ -312,6 +326,8 @@ namespace Rebus.Testing
 
                 if (result != null)
                 {
+                    MostRecentlyLoadedSagaData = result;
+
                     if (Correlated != null)
                     {
                         Correlated(result);
@@ -319,6 +335,8 @@ namespace Rebus.Testing
                 }
                 else
                 {
+                    MostRecentlyLoadedSagaData = null;
+
                     if (CouldNotCorrelate != null)
                     {
                         CouldNotCorrelate();

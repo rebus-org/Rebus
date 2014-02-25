@@ -64,13 +64,11 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Unity.2.1.505.2\lib\NET35\Microsoft.Practices.Unity.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.ServiceBus, Version=2.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\WindowsAzure.ServiceBus.2.1.0.0\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
+    <Reference Include="Microsoft.ServiceBus, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\WindowsAzure.ServiceBus.2.2.3.0\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
+      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.3\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAzure.Storage.1.7.0.0\lib\net35-full\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
@@ -95,9 +93,8 @@
     <Reference Include="pnunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\pnunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="RabbitMQ.Client, Version=3.1.5.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\RabbitMQ.Client.3.1.5\lib\net30\RabbitMQ.Client.dll</HintPath>
+    <Reference Include="RabbitMQ.Client">
+      <HintPath>..\packages\RabbitMQ.Client.3.2.1\lib\net30\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Abstractions, Version=2.0.3.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -143,6 +140,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\lib\IpUtil\IpUtil.cs">
+      <Link>IpUtil.cs</Link>
+    </Compile>
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
@@ -185,6 +185,7 @@
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueQueuesFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
@@ -207,6 +208,7 @@
     <Compile Include="Integration\TestUsingTransactionScope.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
     <Compile Include="Integration\TestMaxRetriesConfiguration.cs" />
+    <Compile Include="Integration\TestRabbitMqAlternativeBackoffBehavior.cs" />
     <Compile Include="Integration\TestUserContext.cs" />
     <Compile Include="Integration\TestUserNameHeader.cs" />
     <Compile Include="Integration\Factories\BusFactoryBase.cs" />
@@ -237,7 +239,7 @@
     <Compile Include="Integration\TestWebCallbacks.cs" />
     <Compile Include="LoadBalancer\TestMsmqLoadBalancer.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusAndOneWayClient.cs" />
-    <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue.cs" />
+    <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue_Queues.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister_UserProvidedConnection.cs" />
@@ -246,6 +248,7 @@
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="TestHelpers.cs" />
+    <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Testing\TestSagaFixtureAndSerializationCornerCases.cs" />
     <Compile Include="Timeout\TestTimeoutConfigurationSection.cs" />
@@ -296,7 +299,7 @@
     <Compile Include="Persistence\Timeouts\ITimeoutStorageFactory.cs" />
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
-    <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueue.cs" />
+    <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueue_Queues.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Transports\Azure\TestDevelopmentStorageTransport.cs" />
     <Compile Include="Transports\Encrypted\TestEncryptionAndCompressionTransportDecorator.cs" />
@@ -343,6 +346,7 @@
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
     <Compile Include="Unit\WorkerFixtureBase.cs" />
     <Compile Include="UserIdentityContext.cs" />
+    <Compile Include="Util\TestIpUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Timeout\AppConfigExamples\app.config.01.xml">
@@ -446,9 +450,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Contracts\readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />

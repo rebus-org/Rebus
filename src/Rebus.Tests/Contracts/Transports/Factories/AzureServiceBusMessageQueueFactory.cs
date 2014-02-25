@@ -47,7 +47,7 @@ Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyNam
             return GetQueue(queueName);
         }
 
-        private AzureServiceBusMessageQueue GetQueue(string queueName)
+        AzureServiceBusMessageQueue GetQueue(string queueName)
         {
             return new AzureServiceBusMessageQueue(ConnectionString, queueName).Purge();
         }

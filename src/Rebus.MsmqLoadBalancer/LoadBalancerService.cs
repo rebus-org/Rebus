@@ -71,8 +71,12 @@ namespace Rebus.MsmqLoadBalancer
 
         string GetNextDestination()
         {
-            var indexOfThisDestination = Interlocked.Increment(ref roundRobinCounter)
-                                         %destinationQueueNames.Count;
+            var nextNumber = Interlocked.Increment(ref roundRobinCounter);
+            var numberOfDestinations = destinationQueueNames.Count;
+            
+            // modulo gymnastics to ensure that the index is always positive
+            var indexOfThisDestination = (nextNumber%numberOfDestinations + numberOfDestinations)
+                                         %numberOfDestinations;
 
             return destinationQueueNames[indexOfThisDestination];
         }
