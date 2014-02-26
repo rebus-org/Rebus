@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using Rebus.Logging;
 using Rebus.Transports.Sql;
-using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Persistence.SqlServer
 {
     /// <summary>
     /// Implements a subscriotion storage for Rebus that will store subscriptions in an SQL Server.
     /// </summary>
-    public class SqlServerSubscriptionStorage : IStoreSubscriptions
+    public class SqlServerSubscriptionStorage : SqlServerStorage, IStoreSubscriptions
     {
         static ILog log;
 
@@ -23,34 +21,13 @@ namespace Rebus.Persistence.SqlServer
 
         readonly string subscriptionsTableName;
 
-        readonly Func<ConnectionHolder> getConnection;
-        readonly Action<ConnectionHolder> commitAction;
-        readonly Action<ConnectionHolder> rollbackAction;
-        readonly Action<ConnectionHolder> releaseConnection;
-
         /// <summary>
         /// Constructs the storage with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the storage will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
-        public SqlServerSubscriptionStorage(string connectionString, string subscriptionsTableName)
+        public SqlServerSubscriptionStorage(string connectionString, string subscriptionsTableName):base(connectionString)
         {
             this.subscriptionsTableName = subscriptionsTableName;
-
-            getConnection = () =>
-                {
-                    var connection = new SqlConnection(connectionString);
-                    connection.Open();
-
-                    if (Transaction.Current == null)
-                    {
-                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
-                    }
-                    return ConnectionHolder.ForNonTransactionalWork(connection);
-                };
-            commitAction = h => h.Commit();
-            rollbackAction = h => h.RollBack();
-            releaseConnection = c => c.Dispose();
         }
 
         /// <summary>
@@ -58,14 +35,9 @@ namespace Rebus.Persistence.SqlServer
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the storage will assume
         /// that someone else manages the connection's lifetime.
         /// </summary>
-        public SqlServerSubscriptionStorage(Func<ConnectionHolder> connectionFactoryMethod, string subscriptionsTableName)
+        public SqlServerSubscriptionStorage(Func<ConnectionHolder> connectionFactoryMethod, string subscriptionsTableName):base(connectionFactoryMethod)
         {
             this.subscriptionsTableName = subscriptionsTableName;
-
-            getConnection = connectionFactoryMethod;
-            commitAction = h => { };
-            rollbackAction = h => { };
-            releaseConnection = c => { };
         }
 
         /// <summary>

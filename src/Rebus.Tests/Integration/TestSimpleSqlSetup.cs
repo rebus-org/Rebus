@@ -14,7 +14,7 @@ using Timer = System.Timers.Timer;
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.MsSql)]
-    public class TestSimpleSqlSetup : SqlServerFixtureBase, IDetermineMessageOwnership
+    public class TestSimpleSqlSetup : SqlServerFixtureBase
     {
         const string InputQueueName2 = "test.input2";
         const string InputQueueName1 = "test.input1";
@@ -154,7 +154,7 @@ namespace Rebus.Tests.Integration
             }
         }
 
-        public string GetEndpointFor(Type messageType)
+        public override string GetEndpointFor(Type messageType)
         {
             string endpoint;
             if (endpointMappings.TryGetValue(messageType, out endpoint))
