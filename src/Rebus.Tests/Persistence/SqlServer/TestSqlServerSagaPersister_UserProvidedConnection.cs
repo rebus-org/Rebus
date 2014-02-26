@@ -11,19 +11,13 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerSagaPersister_UserProvidedConnection : SqlServerFixtureBase
     {
         SqlServerSagaPersister persister;
-        const string SagaTableName = "testSagaTable";
-        const string SagaIndexTableName = "testSagaIndexTable";
-
+        
         SqlConnection currentConnection;
         SqlTransaction currentTransaction;
 
         protected override void DoSetUp()
         {
-            // ensure the two tables are dropped
-            try { ExecuteCommand("drop table " + SagaTableName); }
-            catch { }
-            try { ExecuteCommand("drop table " + SagaIndexTableName); }
-            catch { }
+            DropeSagaTables();
 
             persister = new SqlServerSagaPersister(GetOrCreateConnection, SagaIndexTableName, SagaTableName);
             persister.EnsureTablesAreCreated();

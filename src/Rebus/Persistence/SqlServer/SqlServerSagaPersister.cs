@@ -57,8 +57,12 @@ namespace Rebus.Persistence.SqlServer
                 {
                     var connection = new SqlConnection(connectionString);
                     connection.Open();
-                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
+                    if (Transaction.Current == null)
+                    {
+                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
+                    }
+                    return ConnectionHolder.ForNonTransactionalWork(connection);
                 };
             commitAction = h => h.Commit();
             rollbackAction = h => h.RollBack();

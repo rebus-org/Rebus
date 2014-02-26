@@ -19,7 +19,7 @@ using System.Linq;
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
-    public class TestUsingTransactionScope : SqlServerFixtureBase, IDetermineMessageOwnership
+    public class TestUsingTransactionScope : SqlServerFixtureBase
     {
         const string PublisherInputQueueName = "test.sub-unsub.publisher";
         const string SubscriberInputQueueName = "test.sub-unsub.subscriber";
@@ -128,7 +128,7 @@ namespace Rebus.Tests.Integration
         }
 
 
-        public string GetEndpointFor(Type messageType)
+        public override string GetEndpointFor(Type messageType)
         {
             if (messageType == typeof(SomeEvent))
             {

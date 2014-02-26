@@ -2,13 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using NUnit.Framework;
+using Rebus.Configuration;
+using Rebus.Transports.Msmq;
 using log4net.Config;
 using System.Linq;
 
 namespace Rebus.Tests.Persistence
 {
-    public class SqlServerFixtureBase
+    public abstract class SqlServerFixtureBase:IDetermineMessageOwnership
     {
+        protected const string SagaTableName = "testSagaTable";
+        protected const string SagaIndexTableName = "testSagaIndexTable";
+
+        const string ErrorQueueName = "error";
+        
         static SqlServerFixtureBase()
         {
             XmlConfigurator.Configure();
@@ -94,6 +101,20 @@ namespace Rebus.Tests.Persistence
             }
         }
 
+        public static object ExecuteScalar(string commandText)
+        {
+            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            {
+                conn.Open();
+
+                using (var command = conn.CreateCommand())
+                {
+                    command.CommandText = commandText;
+                    return command.ExecuteScalar();
+                }
+            }
+        }
+
         protected T TrackDisposable<T>(T disposable) where T : IDisposable
         {
             DisposableTracker.TrackDisposable(disposable);
@@ -103,6 +124,37 @@ namespace Rebus.Tests.Persistence
         protected void CleanUpTrackedDisposables()
         {
             DisposableTracker.DisposeTheDisposables();
+        }
+
+        protected static void DropeSagaTables()
+        {
+            try { ExecuteCommand("drop table " + SagaTableName); }
+            catch { }
+            try { ExecuteCommand("drop table " + SagaIndexTableName); }
+            catch { }
+        }
+
+        protected IStartableBus CreateBus(BuiltinContainerAdapter adapter, string inputQueueName)
+        {
+            var bus = Configure.With(adapter)
+                               .Transport(t => t.UseMsmq(inputQueueName, ErrorQueueName))
+                               .MessageOwnership(d => d.Use(this))
+                               .Behavior(b => b.HandleMessagesInsideTransactionScope())
+                               .Subscriptions(
+                                   s =>
+                                   s.StoreInSqlServer(ConnectionString, "RebusSubscriptions")
+                                    .EnsureTableIsCreated())
+                               .Sagas(
+                                   s =>
+                                   s.StoreInSqlServer(ConnectionString, SagaTableName, SagaIndexTableName)
+                                    .EnsureTablesAreCreated())
+                               .CreateBus();
+            return bus;
+        }
+
+        public virtual string GetEndpointFor(Type messageType)
+        {
+            return null;
         }
     }
 }
