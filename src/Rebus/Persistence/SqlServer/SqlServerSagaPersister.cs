@@ -2,12 +2,10 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
-using System.Transactions;
 using Newtonsoft.Json;
 using Ponder;
 using Rebus.Logging;
 using Rebus.Transports.Sql;
-using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -15,7 +13,7 @@ namespace Rebus.Persistence.SqlServer
     /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
     /// and correlation properties in an index table on the side.
     /// </summary>
-    public class SqlServerSagaPersister : IStoreSagaData
+    public class SqlServerSagaPersister : SqlServerStorage, IStoreSagaData
     {
         static ILog log;
 
@@ -29,44 +27,26 @@ namespace Rebus.Persistence.SqlServer
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
-        readonly string sagaIndexTableName;
-        readonly string sagaTableName;
+        string sagaIndexTableName;
+        string sagaTableName;
 
-        readonly Func<ConnectionHolder> getConnection;
-        readonly Action<ConnectionHolder> commitAction;
-        readonly Action<ConnectionHolder> rollbackAction;
-        readonly Action<ConnectionHolder> releaseConnection;
-
-        readonly string idPropertyName;
-
-        SqlServerSagaPersister(string sagaIndexTableName, string sagaTableName)
-        {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
-        }
+        string idPropertyName;
 
         /// <summary>
         /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the persister will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
         public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
-            : this(sagaIndexTableName, sagaTableName)
+            : base(connectionString)
         {
-            getConnection = () =>
-                {
-                    var connection = new SqlConnection(connectionString);
-                    connection.Open();
-                    if (Transaction.Current == null)
-                    {
-                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
-                    }
-                    return ConnectionHolder.ForNonTransactionalWork(connection);
-                };
-            commitAction = h => h.Commit();
-            rollbackAction = h => h.RollBack();
-            releaseConnection = c => c.Dispose();
+            Initialize(sagaIndexTableName, sagaTableName);
+        }
+
+        void Initialize(string sagaIndexTableName, string sagaTableName)
+        {
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
         }
 
         /// <summary>
@@ -75,14 +55,9 @@ namespace Rebus.Persistence.SqlServer
         /// that someone else manages the connection's lifetime.
         /// </summary>
         public SqlServerSagaPersister(Func<ConnectionHolder> connectionFactoryMethod, string sagaIndexTableName, string sagaTableName)
-            : this(sagaIndexTableName, sagaTableName)
+            : base(connectionFactoryMethod)
         {
-            getConnection = connectionFactoryMethod;
-
-            // everything else is handed over to whoever provided the connection
-            releaseConnection = h => { };
-            commitAction = h => { };
-            rollbackAction = h => { };
+            Initialize(sagaIndexTableName, sagaTableName);
         }
 
         /// <summary>
