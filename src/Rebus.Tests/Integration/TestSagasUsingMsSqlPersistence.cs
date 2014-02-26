@@ -7,7 +7,7 @@ using Rebus.Tests.Persistence;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class TestSagasUsingMsSqlPersistence : SqlServerFixtureBase
     {
         const string InputQueueName = "test.saga.input";
