@@ -314,3 +314,7 @@
 ## 0.58.2
 
 * Fixed `AttachHeader` bug in `FakeBus`.
+
+## 0.59.0
+
+* Fixed bug when working with automatic `TransactionScope` and sagas persisted in SQL Server - thanks [jasperdk](https://github.com/jasperdk)
