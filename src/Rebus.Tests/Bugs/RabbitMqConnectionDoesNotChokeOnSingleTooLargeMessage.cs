@@ -46,7 +46,7 @@ namespace Rebus.Tests.Bugs
         [TestCase(65536 * 2, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(65536 * 3, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(65536 * 4, Ignore = TestCategories.IgnoreLongRunningTests)]
-        [TestCase(65536 * 5, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(65536 * 5, Ignore = true, Description = "kills the Rabbit")]
         public void CanSendAndReceiveMessageWithThisManyKiloBytesOfOPayload(int sizeInKiloBytes)
         {
             // arrange
