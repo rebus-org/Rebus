@@ -322,3 +322,7 @@
 ## 0.60.0
 
 * Made SQL Server saga persister behave more like expected by skipping null-valued properties in the saga index.
+
+## 0.60.1
+
+* Fixed but in SQL Server saga persister that could result in malformed SQL when there are no correlation properties at all.
