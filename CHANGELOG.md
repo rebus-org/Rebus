@@ -318,3 +318,7 @@
 ## 0.59.0
 
 * Fixed bug when working with automatic `TransactionScope` and sagas persisted in SQL Server - thanks [jasperdk](https://github.com/jasperdk)
+
+## 0.60.0
+
+* Made SQL Server saga persister behave more like expected by skipping null-valued properties in the saga index.
