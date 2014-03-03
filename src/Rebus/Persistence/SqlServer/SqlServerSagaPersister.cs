@@ -186,7 +186,7 @@ namespace Rebus.Persistence.SqlServer
                     }
                 }
 
-                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex)
+                var propertiesToIndex = GetPropertiesToIndex(sagaData, sagaDataPropertyPathsToIndex);
 
                 if (propertiesToIndex.Any())
                 {
