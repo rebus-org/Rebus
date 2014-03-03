@@ -1,7 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 using Ponder;
-using Raven.Database.Linq.PrivateExtensions;
 using Rebus.Persistence.SqlServer;
 using Shouldly;
 
@@ -11,7 +10,7 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerSagaPersister : SqlServerFixtureBase
     {
         SqlServerSagaPersister persister;
-        
+
         protected override void DoSetUp()
         {
             DropSagaTables();
@@ -19,7 +18,35 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         [Test]
-        public void DoesNotSaveNullProperties()
+        public void DoesNotSaveNullPropertiesOnUpdate()
+        {
+            persister.EnsureTablesAreCreated();
+
+            const string correlationProperty1 = "correlation property 1";
+            const string correlationProperty2 = "correlation property 2";
+            var correlationPropertyPaths = new[]
+            {
+                Reflect.Path<PieceOfSagaData>(s => s.SomeProperty),
+                Reflect.Path<PieceOfSagaData>(s => s.AnotherProperty)
+            };
+
+            var firstPieceOfSagaDataWithNullValueOnProperty = new PieceOfSagaData { SomeProperty = correlationProperty1, AnotherProperty="random12423" };
+            var nextPieceOfSagaDataWithNullValueOnProperty = new PieceOfSagaData { SomeProperty = correlationProperty2, AnotherProperty="random38791387" };
+
+            persister.Insert(firstPieceOfSagaDataWithNullValueOnProperty, correlationPropertyPaths);
+            persister.Insert(nextPieceOfSagaDataWithNullValueOnProperty, correlationPropertyPaths);
+
+            var firstPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty1);
+            firstPiece.AnotherProperty = null;
+            persister.Update(firstPiece, correlationPropertyPaths);
+
+            var nextPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty2);
+            nextPiece.AnotherProperty = null;
+            persister.Update(nextPiece, correlationPropertyPaths);
+        }
+
+        [Test]
+        public void DoesNotSaveNullPropertiesOnInsert()
         {
             persister.EnsureTablesAreCreated();
 
@@ -51,7 +78,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
             var firstPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty1);
             var nextPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty2);
-            
+
             Assert.That(firstPiece.Id, Is.EqualTo(firstId));
             Assert.That(nextPiece.Id, Is.EqualTo(nextId));
         }

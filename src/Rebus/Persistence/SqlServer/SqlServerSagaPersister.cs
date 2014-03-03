@@ -115,6 +115,7 @@ namespace Rebus.Persistence.SqlServer
                     {
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
+                            .Where(p => p.Value != null)
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
                                                             ([saga_type], [key], value, saga_id) 
@@ -195,6 +196,7 @@ namespace Rebus.Persistence.SqlServer
                     {
                         // generate batch insert with SQL for each entry in the index
                         var inserts = propertiesToIndex
+                            .Where(p => p.Value != null)
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
                                                             ([saga_type], [key], value, saga_id) 
