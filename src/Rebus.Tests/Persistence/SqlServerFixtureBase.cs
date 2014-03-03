@@ -126,7 +126,7 @@ namespace Rebus.Tests.Persistence
             DisposableTracker.DisposeTheDisposables();
         }
 
-        protected static void DropeSagaTables()
+        protected static void DropSagaTables()
         {
             try { ExecuteCommand("drop table " + SagaTableName); }
             catch { }

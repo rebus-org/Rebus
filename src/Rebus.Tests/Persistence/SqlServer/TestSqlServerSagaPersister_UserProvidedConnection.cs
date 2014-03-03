@@ -17,7 +17,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         protected override void DoSetUp()
         {
-            DropeSagaTables();
+            DropSagaTables();
 
             persister = new SqlServerSagaPersister(GetOrCreateConnection, SagaIndexTableName, SagaTableName);
             persister.EnsureTablesAreCreated();

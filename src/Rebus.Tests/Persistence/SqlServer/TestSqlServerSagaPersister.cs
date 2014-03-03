@@ -1,4 +1,7 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
+using Ponder;
+using Raven.Database.Linq.PrivateExtensions;
 using Rebus.Persistence.SqlServer;
 using Shouldly;
 
@@ -11,9 +14,60 @@ namespace Rebus.Tests.Persistence.SqlServer
         
         protected override void DoSetUp()
         {
-            DropeSagaTables();
+            DropSagaTables();
             persister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, SagaIndexTableName, SagaTableName);
         }
+
+        [Test]
+        public void DoesNotSaveNullProperties()
+        {
+            persister.EnsureTablesAreCreated();
+
+            const string correlationProperty1 = "correlation property 1";
+            const string correlationProperty2 = "correlation property 2";
+            var correlationPropertyPaths = new[]
+            {
+                Reflect.Path<PieceOfSagaData>(s => s.SomeProperty),
+                Reflect.Path<PieceOfSagaData>(s => s.AnotherProperty)
+            };
+
+            var firstPieceOfSagaDataWithNullValueOnProperty = new PieceOfSagaData
+            {
+                SomeProperty = correlationProperty1
+            };
+
+            var nextPieceOfSagaDataWithNullValueOnProperty = new PieceOfSagaData
+            {
+                SomeProperty = correlationProperty2
+            };
+
+            var firstId = firstPieceOfSagaDataWithNullValueOnProperty.Id;
+            var nextId = nextPieceOfSagaDataWithNullValueOnProperty.Id;
+
+            persister.Insert(firstPieceOfSagaDataWithNullValueOnProperty, correlationPropertyPaths);
+
+            // must not throw:
+            persister.Insert(nextPieceOfSagaDataWithNullValueOnProperty, correlationPropertyPaths);
+
+            var firstPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty1);
+            var nextPiece = persister.Find<PieceOfSagaData>(Reflect.Path<PieceOfSagaData>(s => s.SomeProperty), correlationProperty2);
+            
+            Assert.That(firstPiece.Id, Is.EqualTo(firstId));
+            Assert.That(nextPiece.Id, Is.EqualTo(nextId));
+        }
+
+        class PieceOfSagaData : ISagaData
+        {
+            public PieceOfSagaData()
+            {
+                Id = Guid.NewGuid();
+            }
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string SomeProperty { get; set; }
+            public string AnotherProperty { get; set; }
+        }
+
 
         [Test]
         public void CanCreateSagaTablesAutomatically()

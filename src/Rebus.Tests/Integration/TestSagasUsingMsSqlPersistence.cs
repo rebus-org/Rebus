@@ -15,7 +15,7 @@ namespace Rebus.Tests.Integration
         protected override void DoSetUp()
         {
             base.DoSetUp();
-            DropeSagaTables();
+            DropSagaTables();
         }
 
         [Test]
