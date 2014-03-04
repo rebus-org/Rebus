@@ -23,5 +23,14 @@ namespace Rebus.Configuration
             persister.EnsureTablesAreCreated();
             return this;
         }
+
+        /// <summary>
+        /// Configures the persister to ignore null-valued correlation properties and not add them to the saga index.
+        /// </summary>
+        public SqlServerSagaPersisterFluentConfigurer DoNotIndexNullProperties()
+        {
+            persister.DoNotIndexNullProperties();
+            return this;
+        }
     }
 }

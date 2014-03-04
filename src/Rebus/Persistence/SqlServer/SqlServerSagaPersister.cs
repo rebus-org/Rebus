@@ -31,6 +31,7 @@ namespace Rebus.Persistence.SqlServer
         string sagaTableName;
 
         string idPropertyName;
+        bool indexNullProperties = true;
 
         /// <summary>
         /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
@@ -326,7 +327,7 @@ namespace Rebus.Persistence.SqlServer
 
                     return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
                 })
-                .Where(kvp => kvp.Value != null)
+                .Where(kvp => indexNullProperties || kvp.Value != null)
                 .ToList();
         }
 
@@ -421,6 +422,15 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
             {
                 releaseConnection(connection);
             }
+            return this;
+        }
+
+        /// <summary>
+        /// Configures the persister to ignore null-valued correlation properties and not add them to the saga index.
+        /// </summary>
+        public SqlServerSagaPersister DoNotIndexNullProperties()
+        {
+            indexNullProperties = false;
             return this;
         }
     }

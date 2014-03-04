@@ -18,9 +18,10 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         [Test]
-        public void DoesNotSaveNullPropertiesOnUpdate()
+        public void WhenIgnoringNullProperties_DoesNotSaveNullPropertiesOnUpdate()
         {
-            persister.EnsureTablesAreCreated();
+            persister.EnsureTablesAreCreated()
+                .DoNotIndexNullProperties();
 
             const string correlationProperty1 = "correlation property 1";
             const string correlationProperty2 = "correlation property 2";
@@ -46,9 +47,10 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         [Test]
-        public void DoesNotSaveNullPropertiesOnInsert()
+        public void WhenIgnoringNullProperties_DoesNotSaveNullPropertiesOnInsert()
         {
-            persister.EnsureTablesAreCreated();
+            persister.EnsureTablesAreCreated()
+                .DoNotIndexNullProperties();
 
             const string correlationProperty1 = "correlation property 1";
             const string correlationProperty2 = "correlation property 2";

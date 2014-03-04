@@ -326,3 +326,7 @@
 ## 0.60.1
 
 * Fixed but in SQL Server saga persister that could result in malformed SQL when there are no correlation properties at all.
+
+## 0.61.0
+
+* Made it configurable whether null-valued correlation properties should be included in the inde with SQL Server saga persister.
