@@ -330,3 +330,7 @@
 ## 0.61.0
 
 * Made it configurable whether null-valued correlation properties should be included in the inde with SQL Server saga persister.
+
+## 0.61.1
+
+* Added to RavenDB saga persister the ability to obtain the current session from the outside, thereby allowing you to make the saga work part of the same RavenDB transaction that you're working in.
