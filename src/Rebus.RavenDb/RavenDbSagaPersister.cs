@@ -50,7 +50,7 @@ namespace Rebus.RavenDb
             var session = GetSession();
 
             if (sagaDataPropertyPath == "Id")
-                return session.Load<T>(store.Conventions.GetTypeTagName(typeof(T)) + "/" + fieldFromMessage);
+                return session.Load<T>(session.Advanced.DocumentStore.Conventions.GetTypeTagName(typeof(T)) + "/" + fieldFromMessage);
             
             var idForUniqueProperty = GetIdForUniqueProperty(typeof(T), sagaDataPropertyPath, fieldFromMessage);
             var property = session.Include<UniqueSagaProperty>(x => x.SagaId)
