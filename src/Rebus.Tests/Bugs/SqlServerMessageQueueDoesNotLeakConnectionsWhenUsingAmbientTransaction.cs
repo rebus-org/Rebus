@@ -7,7 +7,7 @@ using Rebus.Transports.Sql;
 
 namespace Rebus.Tests.Bugs
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategories.MsSql)]
     public class SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction : SqlServerFixtureBase
     {
         const string InputQueueName = "test.connection.leak";

@@ -334,3 +334,7 @@
 ## 0.61.1
 
 * Added to RavenDB saga persister the ability to obtain the current session from the outside, thereby allowing you to make the saga work part of the same RavenDB transaction that you're working in.
+
+## 0.62.0
+
+* Fixed leakage of SQL connections (and other potential issues) when using ambient transactions - thanks [mgayeski](https://github.com/mgayeski)
