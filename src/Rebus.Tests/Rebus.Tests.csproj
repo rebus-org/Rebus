@@ -151,6 +151,7 @@
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
+    <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
     <Compile Include="Bugs\TestUsingTransactionScope.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
