@@ -23,7 +23,7 @@ namespace Rebus.Castle.Windsor
 
         public IWindsorContainer Container { get { return container; } }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return container.ResolveAll<IHandleMessages<T>>();
         }

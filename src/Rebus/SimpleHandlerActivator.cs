@@ -61,13 +61,13 @@ namespace Rebus
         /// <summary>
         /// Gets all available handlers that can be cast to <see cref="IHandleMessages{TMessage}"/>
         /// </summary>
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             if (!activators.ContainsKey(typeof(IHandleMessages<T>)))
                 return new IHandleMessages<T>[0];
 
             return activators[typeof(IHandleMessages<T>)]
-                .Select(f => f()).Cast<IHandleMessages<T>>()
+                .Select(f => f()).Cast<IHandleMessages>()
                 .ToArray();
         }
 

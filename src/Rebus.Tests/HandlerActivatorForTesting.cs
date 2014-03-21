@@ -13,7 +13,7 @@ namespace Rebus.Tests
         private readonly Dictionary<Type, List<Func<IHandleMessages>>> handlers =
             new Dictionary<Type, List<Func<IHandleMessages>>>();
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return (from handler in handlers
                     where handler.Key == typeof (T)

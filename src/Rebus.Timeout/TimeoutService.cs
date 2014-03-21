@@ -64,7 +64,7 @@ namespace Rebus.Timeout
                                     storeTimeouts, new ConfigureAdditionalBehavior());
         }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             if (IgnoredMessageTypes.Contains(typeof(T)))
             {

@@ -41,7 +41,7 @@ namespace Rebus.Autofac
         /// </summary>
         /// <typeparam name="T">The type of message to get handlers for.</typeparam>
         /// <returns>Instances of handlers for the specified message type.</returns>
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             var context = MessageContext.GetCurrent();
             var lifetimeScope = (ILifetimeScope)context.Items[ContextKey];

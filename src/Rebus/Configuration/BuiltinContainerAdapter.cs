@@ -49,7 +49,7 @@ namespace Rebus.Configuration
         /// Uses the underlying <see cref="SimpleHandlerActivator"/> to look up handler instances
         /// that can handle messages of type <typeparamref name="T"/>
         /// </summary>
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return handlerActivator.GetHandlerInstancesFor<T>();
         }

@@ -13,7 +13,7 @@ namespace Rebus
         /// Should get a sequence of handlers where each handler implements
         /// the <see cref="IHandleMessages{TMessage}"/> interface.
         /// </summary>
-        IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>();
+        IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>();
 
         /// <summary>
         /// Is called after each handler has been invoked. Please note that this method

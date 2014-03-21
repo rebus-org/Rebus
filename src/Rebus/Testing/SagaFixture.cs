@@ -98,7 +98,7 @@ namespace Rebus.Testing
                 this.sagaInstance = sagaInstance;
             }
 
-            public IEnumerable<IHandleMessages<TMessage>> GetHandlerInstancesFor<TMessage>()
+            public IEnumerable<IHandleMessages> GetHandlerInstancesFor<TMessage>()
             {
                 return sagaInstance.OfType<IHandleMessages<TMessage>>();
             }

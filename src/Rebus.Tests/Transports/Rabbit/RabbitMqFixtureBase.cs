@@ -104,7 +104,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 this.handlerActivator = handlerActivator;
             }
 
-            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+            public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
             {
                 return handlerActivator.GetHandlerInstancesFor<T>();
             }

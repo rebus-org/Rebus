@@ -16,7 +16,7 @@ namespace Rebus.Unity
             this.unityContainer = unityContainer;
         }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return unityContainer.ResolveAll<IHandleMessages<T>>().ToArray();
         }

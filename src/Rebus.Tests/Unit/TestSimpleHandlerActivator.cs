@@ -21,10 +21,12 @@ namespace Rebus.Tests.Unit
         {
             // arrange
             var list = new List<string>();
-            activator.Handle<string>(str => list.Add(str));
+            activator.Handle<string>(list.Add);
 
             // act
-            activator.GetHandlerInstancesFor<string>().ToList()
+            activator.GetHandlerInstancesFor<string>()
+                .OfType<IHandleMessages<string>>()
+                .ToList()
                 .ForEach(h => h.Handle("hello there!!"));
 
             // assert

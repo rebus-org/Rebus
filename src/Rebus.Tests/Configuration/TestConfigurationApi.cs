@@ -385,7 +385,7 @@ namespace Rebus.Tests.Configuration
 
         public class TestContainerAdapter : IContainerAdapter
         {
-            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+            public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
             {
                 throw new NotImplementedException();
             }

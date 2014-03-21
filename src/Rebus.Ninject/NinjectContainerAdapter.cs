@@ -16,7 +16,7 @@ namespace Rebus.Ninject
             this.kernel = kernel;
         }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return kernel.GetAll<IHandleMessages<T>>().ToArray();
         }
