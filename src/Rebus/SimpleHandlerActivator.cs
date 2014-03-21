@@ -40,19 +40,23 @@ namespace Rebus
         public SimpleHandlerActivator Handle<TMessage>(Action<TMessage> handler)
         {
             InnerRegister(typeof(HandlerMethodWrapper<TMessage>), () => new HandlerMethodWrapper<TMessage>(handler));
-            
+
             return this;
         }
 
         void InnerRegister(Type handlerType, Func<object> factoryMethod)
         {
             var handlerInterfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>));
+                .Where(i => i.IsGenericType
+                    && (i.GetGenericTypeDefinition() == typeof(IHandleMessages<>)
+                    || i.GetGenericTypeDefinition() == typeof(IHandleMessagesAsync<>)));
 
             foreach (var handlerInterface in handlerInterfaces)
             {
                 if (!activators.ContainsKey(handlerInterface))
+                {
                     activators[handlerInterface] = new List<Func<object>>();
+                }
 
                 activators[handlerInterface].Add(factoryMethod);
             }
@@ -63,12 +67,21 @@ namespace Rebus
         /// </summary>
         public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            if (!activators.ContainsKey(typeof(IHandleMessages<T>)))
-                return new IHandleMessages<T>[0];
+            var handlerInstances = new List<IHandleMessages>();
 
-            return activators[typeof(IHandleMessages<T>)]
-                .Select(f => f()).Cast<IHandleMessages>()
-                .ToArray();
+            if (activators.ContainsKey(typeof(IHandleMessages<T>)))
+            {
+                handlerInstances.AddRange(activators[typeof(IHandleMessages<T>)]
+                    .Select(f => f()).Cast<IHandleMessages>());
+            }
+
+            if (activators.ContainsKey(typeof(IHandleMessagesAsync<T>)))
+            {
+                handlerInstances.AddRange(activators[typeof(IHandleMessagesAsync<T>)]
+                    .Select(f => f()).Cast<IHandleMessages>());
+            }
+
+            return handlerInstances.ToArray();
         }
 
         /// <summary>
@@ -82,7 +95,7 @@ namespace Rebus
             {
                 if (!(instance is IDisposable)) continue;
 
-                ((IDisposable) instance).Dispose();
+                ((IDisposable)instance).Dispose();
             }
         }
 
