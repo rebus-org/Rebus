@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Rebus
 {
     /// <summary>
@@ -19,5 +21,10 @@ namespace Rebus
         /// Handler method that will be called by the dispatcher for each logical message contained in the received transport message
         /// </summary>
         void Handle(TMessage message);
+    }
+
+    public interface IHandleMessagesAsync<in TMessage> : IHandleMessages
+    {
+        Task Handle(TMessage message);
     }
 }
