@@ -338,3 +338,7 @@
 ## 0.62.0
 
 * Fixed leakage of SQL connections (and other potential issues) when using ambient transactions - thanks [mgayeski](https://github.com/mgayeski)
+
+## 0.63.0
+
+* Added several `Subscribe`/`Unsubscribe` overloads to `IRebusRouting` so you can `bus.Advanced.Routing.Subscribe(someMessageType)` if you want

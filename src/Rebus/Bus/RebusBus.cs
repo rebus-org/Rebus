@@ -437,16 +437,23 @@ namespace Rebus.Bus
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Subscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
         }
 
         internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Unsubscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
         }
 
-        internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
+        internal void SendSubscriptionMessage(Type messageType, SubscribeAction subscribeAction)
         {
+            SendSubscriptionMessage(messageType, GetMessageOwnerEndpointFor(messageType), subscribeAction);
+        }
+
+        internal void SendSubscriptionMessage(Type messageType, string destinationQueue, SubscribeAction subscribeAction)
+        {
+            if (messageType == null) throw new ArgumentNullException("messageType", "A message type must be specified in order to subscribe/unsubscribe");
+
             if (configureAdditionalBehavior.OneWayClientMode)
             {
                 throw new InvalidOperationException(
@@ -456,7 +463,7 @@ namespace Rebus.Bus
 
             var message = new SubscriptionMessage
                 {
-                    Type = typeof(TMessage).AssemblyQualifiedName,
+                    Type = messageType.AssemblyQualifiedName,
                     Action = subscribeAction,
                 };
 
@@ -773,7 +780,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return string.Format("Rebus {0}", rebusId);
         }
 
-        string GetMessageOwnerEndpointFor(Type messageType)
+        internal string GetMessageOwnerEndpointFor(Type messageType)
         {
             return determineMessageOwnership.GetEndpointFor(messageType);
         }
