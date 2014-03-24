@@ -34,6 +34,7 @@ namespace Rebus
 
         [ThreadStatic]
         static internal IMessageContext current;
+        
         object currentMessage;
 
         /// <summary>
@@ -44,32 +45,12 @@ namespace Rebus
             get { return currentMessage; }
         }
 
-#if DEBUG
-        /// <summary>
-        /// Only applicable in DEBUG build: Stores that call stack of when this message context was created. Can be used to
-        /// chase down bugs that happen when establishing a message context on a thread where a message context has already
-        /// been established
-        /// </summary>
-        public string StackTrace { get; set; }
-#endif
-
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             if (current != null)
             {
-#if DEBUG
-                throw new InvalidOperationException(
-                    string.Format(
-                        @"Cannot establish new message context when one is already present!
-
-Stacktrace of when the current message context was created:
-{0}",
-                        current.StackTrace));
-#else
                 throw new InvalidOperationException(
                     string.Format("Cannot establish new message context when one is already present"));
-#endif
-
             }
             var messageContext = new MessageContext(headers);
 
@@ -83,10 +64,6 @@ Stacktrace of when the current message context was created:
             this.headers = headers;
 
             Items = new Dictionary<string, object>();
-
-#if DEBUG
-            StackTrace = Environment.StackTrace;
-#endif
         }
 
         /// <summary>
@@ -96,7 +73,7 @@ Stacktrace of when the current message context was created:
         {
             get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }
-        
+
         /// <summary>
         /// Gets the return address from the transport message headers. This address will most likely be the sender
         /// of message currently being handled, but it could also have been set explicitly by the sender to another
@@ -149,7 +126,7 @@ Stacktrace of when the current message context was created:
                 var messageContext = GetCurrent();
 
                 return messageContext.Items.ContainsKey(DispatchMessageToHandlersKey)
-                       && !(bool) messageContext.Items[DispatchMessageToHandlersKey];
+                       && !(bool)messageContext.Items[DispatchMessageToHandlersKey];
             }
         }
 

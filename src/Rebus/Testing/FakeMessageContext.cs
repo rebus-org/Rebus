@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Testing
 {

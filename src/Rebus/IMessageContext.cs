@@ -46,12 +46,5 @@ namespace Rebus
         /// Contains the headers of the transport message currently being handled.
         /// </summary>
         IDictionary<string, object> Headers { get; }
-
-#if DEBUG
-        /// <summary>
-        /// Gets the stack trace of the place in the code where this message context was created. Only on the message context in debug build though
-        /// </summary>
-        string StackTrace { get; }
-#endif
     }
 }
