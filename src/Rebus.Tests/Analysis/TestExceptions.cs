@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using NUnit.Framework;
-using Rebus.Bus;
 using System.Linq;
 
 namespace Rebus.Tests.Analysis

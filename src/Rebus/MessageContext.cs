@@ -1,5 +1,7 @@
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Extensions;
 
@@ -11,6 +13,7 @@ namespace Rebus
     public class MessageContext : IMessageContext
     {
         const string DispatchMessageToHandlersKey = "rebus-DispatchMessageToHandlers";
+        const string MessageContextItemKey = "rebus-message-context";
         readonly IDictionary<string, object> headers;
         static ILog log;
 
@@ -47,14 +50,26 @@ namespace Rebus
 
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
-            if (current != null)
-            {
-                throw new InvalidOperationException(
-                    string.Format("Cannot establish new message context when one is already present"));
-            }
             var messageContext = new MessageContext(headers);
 
-            current = messageContext;
+            if (TransactionContext.Current != null)
+            {
+                if (TransactionContext.Current[MessageContextItemKey] != null)
+                {
+                    throw new InvalidOperationException(
+                        string.Format("Cannot establish new message context when one is already present!"));
+                }
+                TransactionContext.Current[MessageContextItemKey] = messageContext;
+            }
+            else
+            {
+                if (current != null)
+                {
+                    throw new InvalidOperationException(
+                        string.Format("Cannot establish new message context when one is already present"));
+                }
+                current = messageContext;
+            }
 
             return messageContext;
         }
@@ -96,6 +111,16 @@ namespace Rebus
         /// </summary>
         public static IMessageContext GetCurrent()
         {
+            if (TransactionContext.Current != null)
+            {
+                var context = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
+                if (context == null)
+                {
+                    throw new InvalidOperationException(string.Format("Could not find message context! Looked for it in the current transaction context: {0}", TransactionContext.Current));
+                }
+                return context;
+            }
+
             if (current == null)
             {
                 throw new InvalidOperationException("No message context available - the MessageContext instance will"
@@ -111,7 +136,16 @@ namespace Rebus
         /// </summary>
         public static bool HasCurrent
         {
-            get { return current != null; }
+            get
+            {
+                if (TransactionContext.Current != null)
+                {
+                    var messageContext = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
+                    
+                    return messageContext != null;
+                }
+                return current != null;
+            }
         }
 
         /// <summary>
@@ -147,6 +181,10 @@ namespace Rebus
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
+            if (TransactionContext.Current != null)
+            {
+                TransactionContext.Current[MessageContextItemKey] = null;
+            }
             current = null;
             Disposed();
         }
