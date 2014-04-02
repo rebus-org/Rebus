@@ -165,6 +165,8 @@ namespace Rebus.Transports.FileSystem
         /// </summary>
         public void Initialize()
         {
+            if (inputQueue == null) return;
+
             EnsureQueueInitialized(inputQueue);
         }
 

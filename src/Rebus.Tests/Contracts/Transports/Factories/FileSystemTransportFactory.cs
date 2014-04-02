@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
         {
             if (Directory.Exists(baseDirectory))
             {
-                //Directory.Delete(baseDirectory, true);
+                Directory.Delete(baseDirectory, true);
             }
         }
     }
