@@ -137,6 +137,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
+
         IBus IStartableBus.Start()
         {
             InternalStart(GetConfiguredNumberOfWorkers());
@@ -492,6 +493,8 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
 
+            RaiseBusStarted();
+
             log.Info("Bus started");
         }
 
@@ -770,6 +773,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 disposable.Dispose();
             }
+
+            RaiseBusStopped();
         }
 
         /// <summary>
@@ -862,6 +867,16 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         void RaiseAfterMessage(Exception exception, object message)
         {
             events.RaiseAfterMessage(this, exception, message);
+        }
+
+        void RaiseBusStarted()
+        {
+            events.RaiseBusStarted(this);
+        }
+
+        void RaiseBusStopped()
+        {
+            events.RaiseBusStopped(this);
         }
 
         void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)
