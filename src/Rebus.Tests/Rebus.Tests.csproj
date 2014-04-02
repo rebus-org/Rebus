@@ -194,6 +194,7 @@
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\SqlServerTransportFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\FileSystemTransportFactory.cs" />
     <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\Serialization\TestSerialization.cs" />
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
@@ -308,6 +309,7 @@
     <Compile Include="Transports\Encrypted\TestEncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelHelper.cs" />
     <Compile Include="ListLoggerFactory.cs" />
+    <Compile Include="Transports\FileSystem\TestFileSystemTransport.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\TestMsmqMessageQueue.cs" />

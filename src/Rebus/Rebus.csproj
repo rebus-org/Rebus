@@ -182,6 +182,8 @@
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Transports\Encrypted\EncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
+    <Compile Include="Transports\FileSystem\FileSystemMessageQueue.cs" />
+    <Compile Include="Transports\FileSystem\FileSystemMessageQueueExtensions.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="Bus\HostingContext.cs" />

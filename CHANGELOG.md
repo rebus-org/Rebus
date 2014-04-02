@@ -342,3 +342,7 @@
 ## 0.63.0
 
 * Added several `Subscribe`/`Unsubscribe` overloads to `IRebusRouting` so you can `bus.Advanced.Routing.Subscribe(someMessageType)` if you want
+
+## 0.63.1
+
+* Added file system-based transport. Please do not use this one for your really important messages.
