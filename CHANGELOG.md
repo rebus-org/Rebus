@@ -346,3 +346,4 @@
 ## 0.63.1
 
 * Added file system-based transport. Please do not use this one for your really important messages.
+* Added message auditing capability - i.e. the copying of successfully handled and published messages to another queue.
