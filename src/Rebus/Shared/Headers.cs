@@ -138,6 +138,11 @@ namespace Rebus.Shared
         public const string AuditSourceQueue = "rebus-audit-source-queue";
         
         /// <summary>
+        /// Header that is added to an audited message when the input queue cannot be added (i.e. the publisher is a one-way client)
+        /// </summary>
+        public const string AuditPublishedByOneWayClient = "rebus-published-by-one-way-client";
+        
+        /// <summary>
         /// UTC time of when the message was copied to the audit queue
         /// </summary>
         public const string AuditMessageCopyTime = "rebus-audit-copy-time";

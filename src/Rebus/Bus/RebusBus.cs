@@ -646,7 +646,14 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             if (configureAdditionalBehavior.AuditMessages && published)
             {
                 transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
-                transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                if (configureAdditionalBehavior.OneWayClientMode)
+                {
+                    transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
+                }
+                else
+                {
+                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                }
                 transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
 
                 var auditQueueName = configureAdditionalBehavior.AuditQueueName;
