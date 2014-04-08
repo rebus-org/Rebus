@@ -650,14 +650,16 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// </summary>
         internal void InternalSend(List<string> destinations, Message messageToSend, bool published = false)
         {
-            log.Info("Sending {0} to {1}", messageToSend, destination);
-            messageLogger.LogSend(destination, messageToSend);
+            messageLogger.LogSend(destinations, messageToSend);
+
+            var transportMessage = serializeMessages.Serialize(messageToSend);
 
             InternalSend(destinations, transportMessage);
 
             if (configureAdditionalBehavior.AuditMessages && published)
             {
                 transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
+                
                 if (configureAdditionalBehavior.OneWayClientMode)
                 {
                     transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
@@ -666,9 +668,10 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 {
                     transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
                 }
+                
                 transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
-
                 var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+                
                 InternalSend(new List<string>{auditQueueName}, transportMessage);
             }
         }

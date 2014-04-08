@@ -92,8 +92,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 catch
                 {
                 }
-
-            });
+            }
         }
 
         public static void WithModel(Action<IModel> modelCallback)

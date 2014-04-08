@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
@@ -19,13 +18,12 @@ namespace Rebus.Tests.Integration
     {
         const string InputQueueName = "test.audit.input";
         const string AuditQueueName = "test.audit.audit";
-        List<IDisposable> disposables;
         BuiltinContainerAdapter adapter;
+        RabbitMqMessageQueue auditQueueReceiver;
 
         protected override void DoSetUp()
         {
-            adapter = new BuiltinContainerAdapter();
-            disposables = new List<IDisposable> { adapter };
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
 
             Configure.With(adapter)
                 .Transport(t => t.UseRabbitMq(RabbitMqFixtureBase.ConnectionString, InputQueueName, "error"))
@@ -33,6 +31,18 @@ namespace Rebus.Tests.Integration
                 .CreateBus()
                 .Start(1);
 
+            RabbitMqFixtureBase.DeleteQueue(AuditQueueName);
+
+            // make sure the receiver is in place at this point, ensuring that bindings'n'all are in place...
+            auditQueueReceiver = TrackDisposable(new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, AuditQueueName));
+            auditQueueReceiver.Initialize();
+        }
+
+        protected override void DoTearDown()
+        {
+            CleanUpTrackedDisposables();
+
+            RabbitMqFixtureBase.DeleteQueue(InputQueueName);
             RabbitMqFixtureBase.DeleteQueue(AuditQueueName);
         }
 
@@ -95,33 +105,25 @@ namespace Rebus.Tests.Integration
             headers.ShouldContainKeyAndValue(Headers.AuditSourceQueue, InputQueueAddress);
         }
 
-        protected override void DoTearDown()
-        {
-            disposables.ForEach(d => d.Dispose());
-        }
-
         Message GetMessageFrom(string queueName)
         {
             var timer = Stopwatch.StartNew();
-            using (var queue = new RabbitMqMessageQueue(RabbitMqFixtureBase.ConnectionString, queueName))
+            ReceivedTransportMessage receivedTransportMessage;
+
+            var timeout = 2.Seconds();
+            do
             {
-                ReceivedTransportMessage receivedTransportMessage = null;
+                receivedTransportMessage = auditQueueReceiver.ReceiveMessage(new NoTransaction());
+            } while (receivedTransportMessage == null && timer.Elapsed < timeout);
 
-                var timeout = 2.Seconds();
-                do
-                {
-                    receivedTransportMessage = queue.ReceiveMessage(new NoTransaction());
-                } while (receivedTransportMessage == null && timer.Elapsed < timeout);
-
-                if (receivedTransportMessage == null)
-                {
-                    throw new TimeoutException(string.Format("No message was received within {0} timeout", timeout));
-                }
-
-                var serializer = new JsonMessageSerializer();
-
-                return serializer.Deserialize(receivedTransportMessage);
+            if (receivedTransportMessage == null)
+            {
+                throw new TimeoutException(string.Format("No message was received within {0} timeout", timeout));
             }
+
+            var serializer = new JsonMessageSerializer();
+
+            return serializer.Deserialize(receivedTransportMessage);
         }
     }
 }

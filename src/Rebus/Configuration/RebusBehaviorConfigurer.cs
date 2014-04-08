@@ -52,23 +52,23 @@ namespace Rebus.Configuration
                 {
                     e.MessageContextEstablished +=
                         (bus, context) =>
-                            {
-                                // if no user name header is present, just bail out
-                                if (!context.Headers.ContainsKey(Headers.UserName)) return;
-                                
-                                var userName = context.Headers[Headers.UserName].ToString();
-                                
-                                // only accept user name if it does in fact contain something
-                                if (string.IsNullOrWhiteSpace(userName)) return;
+                        {
+                            // if no user name header is present, just bail out
+                            if (!context.Headers.ContainsKey(Headers.UserName)) return;
 
-                                // be sure to store the current principal to be able to restore it later
-                                var currentPrincipal = Thread.CurrentPrincipal;
-                                context.Disposed += () => Thread.CurrentPrincipal = currentPrincipal;
+                            var userName = context.Headers[Headers.UserName].ToString();
 
-                                // now set the principal for the duration of the message context
-                                var principalForThisUser = new GenericPrincipal(new GenericIdentity(userName), new string[0]);
-                                Thread.CurrentPrincipal = principalForThisUser;
-                            };
+                            // only accept user name if it does in fact contain something
+                            if (string.IsNullOrWhiteSpace(userName)) return;
+
+                            // be sure to store the current principal to be able to restore it later
+                            var currentPrincipal = Thread.CurrentPrincipal;
+                            context.Disposed += () => Thread.CurrentPrincipal = currentPrincipal;
+
+                            // now set the principal for the duration of the message context
+                            var principalForThisUser = new GenericPrincipal(new GenericIdentity(userName), new string[0]);
+                            Thread.CurrentPrincipal = principalForThisUser;
+                        };
                 });
             return this;
         }
@@ -83,6 +83,8 @@ namespace Rebus.Configuration
         {
             Backbone.AdditionalBehavior.PerformMessageAudit(auditQueueName);
         }
+
+        /// <summary>
         /// Sets the backoff behavior to the low latency behavior. This lets Rebus check the message queue every 20ms
         /// for new messages. Do note, this increases the load on the message queue.
         /// </summary>
