@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using NUnit.Framework;
-using Rebus.Configuration;
 using Rebus.AzureServiceBus;
+using Rebus.Configuration;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
 
@@ -15,7 +13,6 @@ namespace Rebus.Tests.Transports.Azure
         const string AzureReceiverInputQueueName = "test.azure.receiver";
         const string MsmqSenderInputQueueName = "test.azure.sender";
 
-        readonly List<IDisposable> disposables = new List<IDisposable>();
         BuiltinContainerAdapter azureAdapter;
         BuiltinContainerAdapter msmqAdapter;
         BuiltinContainerAdapter oneWayAzureAdapter;
@@ -43,7 +40,7 @@ namespace Rebus.Tests.Transports.Azure
 
         protected override void DoTearDown()
         {
-            disposables.ForEach(d => d.Dispose());
+            CleanUpTrackedDisposables();
 
             MsmqUtil.Delete(AzureReceiverInputQueueName);
             MsmqUtil.Delete(MsmqSenderInputQueueName);
@@ -51,9 +48,7 @@ namespace Rebus.Tests.Transports.Azure
 
         BuiltinContainerAdapter NewAdapter()
         {
-            var adapter = new BuiltinContainerAdapter();
-            disposables.Add(adapter);
-            return adapter;
+            return TrackDisposable(new BuiltinContainerAdapter());
         }
 
         [Test]

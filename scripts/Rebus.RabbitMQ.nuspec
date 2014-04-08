@@ -15,7 +15,7 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
-      <dependency id="RabbitMQ.Client" version="3.1.5" />
+      <dependency id="RabbitMQ.Client" version="3.2.1" />
     </dependencies>
   </metadata>
   <files>

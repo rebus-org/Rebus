@@ -30,15 +30,15 @@ namespace Rebus.Bus
         Timer timer;
 
         /// <summary>
-        /// Constructor
+        /// Constructs the error tracker with the given settings
         /// </summary>
-        /// <param name="timeoutSpan">How long messages will be supervised by the ErrorTracker</param>
-        /// <param name="timeoutCheckInterval">This is the interval that will last between checking whether delivery attempts have been tracked for too long</param>
+        /// <param name="messageTrackerMaxAge">How long messages will be supervised by the ErrorTracker</param>
+        /// <param name="expiredMessageTrackersCheckInterval">This is the interval that will last between checking whether delivery attempts have been tracked for too long</param>
         /// <param name="errorQueueAddress">This is the address of the error queue to which messages should be forwarded whenever they are deemed poisonous</param>
-        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval, string errorQueueAddress)
+        public ErrorTracker(TimeSpan messageTrackerMaxAge, TimeSpan expiredMessageTrackersCheckInterval, string errorQueueAddress)
         {
             this.errorQueueAddress = errorQueueAddress;
-            StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
+            StartTimeoutTracker(messageTrackerMaxAge, expiredMessageTrackersCheckInterval);
 
             MaxRetries = Math.Max(0, RebusConfigurationSection
                                          .GetConfigurationValueOrDefault(s => s.MaxRetries, 5)
@@ -46,17 +46,17 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Default constructor which sets the timeoutSpan to 1 day
+        /// Default constructor which sets the messageTrackerMaxAge to 1 day
         /// </summary>
         public ErrorTracker(string errorQueueAddress)
             : this(TimeSpan.FromDays(1), TimeSpan.FromMinutes(5), errorQueueAddress)
         {
         }
 
-        void StartTimeoutTracker(TimeSpan timeoutSpanToUse, TimeSpan timeoutCheckInterval)
+        void StartTimeoutTracker(TimeSpan messageTrackerMaxAge, TimeSpan expiredMessageTrackersCheckInterval)
         {
-            timeoutSpan = timeoutSpanToUse;
-            timer = new Timer(TimeoutTracker, null, TimeSpan.Zero, timeoutCheckInterval);
+            timeoutSpan = messageTrackerMaxAge;
+            timer = new Timer(TimeoutTracker, null, TimeSpan.Zero, expiredMessageTrackersCheckInterval);
         }
 
         void TimeoutTracker(object state)
@@ -71,18 +71,18 @@ namespace Rebus.Bus
                 .Select(m => m.Key)
                 .ToList();
 
-            keysOfExpiredMessages.ForEach(key =>
+            foreach (var key in keysOfExpiredMessages)
+            {
+                TrackedMessage temp;
+                if (trackedMessages.TryRemove(key, out temp))
                 {
-                    TrackedMessage temp;
-                    if (trackedMessages.TryRemove(key, out temp))
-                    {
-                        log.Warn(
-                            "Timeout expired for delivery tracking of message with ID {0}. This probably means that the " +
-                            "message was deleted from the queue before the max number of retries could be carried out, " +
-                            "thus the delivery tracking for this message could not be fully completed. The error text for" +
-                            "the message deliveries is as follows: {1}", temp.Id, temp.GetErrorMessages());
-                    }
-                });
+                    log.Info(
+                        "Timeout expired for delivery tracking of message with ID {0}. If you're running in a" +
+                        " 'competing consumers' setup, the message must have been processed by another consumer." +
+                        " If that is not the case, then someone else must have removed the message from the queue.",
+                        temp.Id, temp.GetErrorMessages());
+                }
+            }
         }
 
         /// <summary>
@@ -220,7 +220,7 @@ namespace Rebus.Bus
             public void AddError(Exception exception)
             {
                 errorCount++;
-                exceptions.Enqueue(exception.Now());
+                exceptions.Enqueue(exception.At(DateTime.Now));
 
                 log.Debug("Message {0} has failed {1} time(s)", Id, FailCount);
 

@@ -21,30 +21,43 @@ using Message = Rebus.Messages.Message;
 namespace Rebus.Tests.Transports.Msmq
 {
     [TestFixture]
-    public class TestMsmqMessageQueue
+    public class TestMsmqMessageQueue : FixtureBase
     {
-        List<IDisposable> disposables;
+        const string SenderQueueName = "test.msmq.tx.sender";
+        const string DestinationQueueName = "test.msmq.tx.destination";
         MsmqMessageQueue senderQueue;
         MessageQueue destinationQueue;
         JsonMessageSerializer serializer;
-        string destinationQueueName;
 
-        [SetUp]
-        public void SetUp()
+        protected override void DoSetUp()
         {
-            disposables = new List<IDisposable>();
-
             serializer = new JsonMessageSerializer();
-            senderQueue = new MsmqMessageQueue("test.msmq.tx.sender");
-            destinationQueueName = "test.msmq.tx.destination";
+            senderQueue = new MsmqMessageQueue(SenderQueueName);
 
-            destinationQueue = NewRawMsmqQueue(destinationQueueName);
+            destinationQueue = NewRawMsmqQueue(DestinationQueueName);
 
             senderQueue.PurgeInputQueue();
             destinationQueue.Purge();
 
-            disposables.Add(senderQueue);
-            disposables.Add(destinationQueue);
+            TrackDisposable(senderQueue);
+        }
+
+        protected override void DoTearDown()
+        {
+            foreach (var disposable in DisposableTracker.GetTrackedDisposables())
+            {
+                var msmqMessageQueue = disposable as MsmqMessageQueue;
+                if (msmqMessageQueue != null)
+                {
+                    msmqMessageQueue.DeleteInputQueue();
+                }
+
+                var messageQueue = disposable as MessageQueue;
+                if (messageQueue != null)
+                {
+                    MessageQueue.Delete(messageQueue.Path);
+                }
+            }
         }
 
         MessageQueue NewRawMsmqQueue(string queueName)
@@ -65,29 +78,9 @@ namespace Rebus.Tests.Transports.Msmq
 
             newRawMsmqQueue.Purge();
 
-            return newRawMsmqQueue;
-        }
+            TrackDisposable(newRawMsmqQueue);
 
-        [TearDown]
-        public void TearDown()
-        {
-            disposables.ForEach(d =>
-                {
-                    var msmqMessageQueue = d as MsmqMessageQueue;
-                    if (msmqMessageQueue != null)
-                    {
-                        msmqMessageQueue.DeleteInputQueue();
-                    }
-                    var messageQueue = d as MessageQueue;
-                    if (messageQueue != null)
-                    {
-                        if (MessageQueue.Exists(messageQueue.Path))
-                        {
-                            MessageQueue.Delete(messageQueue.Path);
-                        }
-                    }
-                    d.Dispose();
-                });
+            return newRawMsmqQueue;
         }
 
         [Test, Ignore("Only works in RELEASE mode because otherwise object references are held on to for the duration of the method")]
@@ -95,8 +88,7 @@ namespace Rebus.Tests.Transports.Msmq
         {
             // arrange
             const string inputQueueName = "test.leak.input";
-            var queue = new MsmqMessageQueue(inputQueueName);
-            disposables.Add(queue);
+            var queue = TrackDisposable(new MsmqMessageQueue(inputQueueName));
 
             var body = Encoding.UTF8.GetBytes(new string('*', 32768));
             var message = new TransportMessageToSend
@@ -127,7 +119,7 @@ namespace Rebus.Tests.Transports.Msmq
         {
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.mach.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var machineQualifiedQueueName = "test.msmq.mach.input@" + Environment.MachineName;
 
@@ -147,7 +139,7 @@ namespace Rebus.Tests.Transports.Msmq
         {
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.loca.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             const string localHostQualifiedQueueName = "test.msmq.loca.input@localhost";
 
@@ -169,7 +161,7 @@ namespace Rebus.Tests.Transports.Msmq
 
             // arrange
             var queue = new MsmqMessageQueue("test.msmq.ip.input").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var ipQualifiedName = "test.msmq.ip.input@" + ipAddress;
 
@@ -236,7 +228,7 @@ The following addresses were collected:
         public void CheckSendPerformance(int count)
         {
             var queue = new MsmqMessageQueue("test.msmq.performance").PurgeInputQueue();
-            disposables.Add(queue);
+            TrackDisposable(queue);
 
             var transportMessageToSend = new TransportMessageToSend
                                              {
@@ -281,7 +273,7 @@ The following addresses were collected:
             var timeToBeReceived = 2.Seconds()
                 .ToString();
 
-            senderQueue.Send(destinationQueueName,
+            senderQueue.Send(DestinationQueueName,
                              serializer.Serialize(new Message
                                  {
                                      Messages = new object[] { "HELLO WORLD!" },
@@ -302,7 +294,7 @@ The following addresses were collected:
             using (var tx = new TransactionScope())
             {
                 var ctx = new AmbientTransactionContext();
-                senderQueue.Send(destinationQueueName,
+                senderQueue.Send(DestinationQueueName,
                                  serializer.Serialize(new Message
                                      {
                                          Messages = new object[]
@@ -331,7 +323,7 @@ The following addresses were collected:
                                   {"someRandomHeaderKey", "someRandomHeaderValue"},
                               };
 
-            senderQueue.Send(destinationQueueName,
+            senderQueue.Send(DestinationQueueName,
                              serializer.Serialize(new Message
                                  {
                                      Messages = new object[] { "W00t!" },
@@ -356,7 +348,7 @@ The following addresses were collected:
             using (new TransactionScope())
             {
                 var ctx = new AmbientTransactionContext();
-                senderQueue.Send(destinationQueueName,
+                senderQueue.Send(DestinationQueueName,
                                  serializer.Serialize(new Message
                                      {
                                          Messages = new object[]
@@ -387,9 +379,6 @@ The following addresses were collected:
 
             var recipient1 = NewRawMsmqQueue(queueName1);
             var recipient2 = NewRawMsmqQueue(queueName2);
-
-            disposables.Add(recipient1);
-            disposables.Add(recipient2);
 
             var encoding = Encoding.UTF8;
 

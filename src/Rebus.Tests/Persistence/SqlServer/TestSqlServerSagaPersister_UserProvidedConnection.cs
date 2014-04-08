@@ -2,6 +2,7 @@
 using System.Data.SqlClient;
 using NUnit.Framework;
 using Rebus.Persistence.SqlServer;
+using Rebus.Transports.Sql;
 using Shouldly;
 
 namespace Rebus.Tests.Persistence.SqlServer
@@ -10,19 +11,13 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerSagaPersister_UserProvidedConnection : SqlServerFixtureBase
     {
         SqlServerSagaPersister persister;
-        const string SagaTableName = "testSagaTable";
-        const string SagaIndexTableName = "testSagaIndexTable";
-
+        
         SqlConnection currentConnection;
         SqlTransaction currentTransaction;
 
         protected override void DoSetUp()
         {
-            // ensure the two tables are dropped
-            try { ExecuteCommand("drop table " + SagaTableName); }
-            catch { }
-            try { ExecuteCommand("drop table " + SagaIndexTableName); }
-            catch { }
+            DropSagaTables();
 
             persister = new SqlServerSagaPersister(GetOrCreateConnection, SagaIndexTableName, SagaTableName);
             persister.EnsureTablesAreCreated();
@@ -36,14 +31,20 @@ namespace Rebus.Tests.Persistence.SqlServer
             currentConnection = null;
         }
 
-        SqlConnection GetOrCreateConnection()
+        ConnectionHolder GetOrCreateConnection()
         {
-            if (currentConnection != null) return currentConnection;
+            if (currentConnection != null)
+            {
+                return currentTransaction == null
+                    ? ConnectionHolder.ForNonTransactionalWork(currentConnection)
+                    : ConnectionHolder.ForTransactionalWork(currentConnection, currentTransaction);
+            }
 
             var newConnection = new SqlConnection(ConnectionStrings.SqlServer);
             newConnection.Open();
             currentConnection = newConnection;
-            return newConnection;
+            
+            return ConnectionHolder.ForNonTransactionalWork(newConnection);
         }
 
         void BeginTransaction()
@@ -52,7 +53,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             {
                 throw new InvalidOperationException("Cannot begin new transaction when a transaction has already been started!");
             }
-            currentTransaction = GetOrCreateConnection().BeginTransaction();
+            currentTransaction = GetOrCreateConnection().Connection.BeginTransaction();
         }
 
         void CommitTransaction()

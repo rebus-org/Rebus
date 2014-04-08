@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -7,30 +6,25 @@ using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Performance.StressMongo.Factories;
-using Rebus.Timeout;
 using Shouldly;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture(typeof(MsmqMessageQueueFactory))]
-    [TestFixture(typeof(RabbitMqMessageQueueFactory))]
+    [TestFixture(typeof(MsmqMessageQueueFactory), Category = TestCategories.Msmq)]
+    [TestFixture(typeof(RabbitMqMessageQueueFactory), Category = TestCategories.Rabbit)]
     public class TestOneWayClientMode<TFactory> : FixtureBase, IDetermineMessageOwnership where TFactory : IMessageQueueFactory, new()
     {
         TFactory factory;
         const string ReceiverInputQueueName = "test.oneWayClientMode.receiver";
 
-        List<IDisposable> disposables;
-
         protected override void DoSetUp()
         {
-            disposables = new List<IDisposable>();
             factory = new TFactory();
         }
 
         protected override void DoTearDown()
         {
             factory.CleanUp();
-            disposables.ForEach(d => d.Dispose());
         }
 
         [Test]
@@ -135,14 +129,14 @@ namespace Rebus.Tests.Integration
                                    new ErrorTracker(inputQueueName + ".error"),
                                    null,
                                    new ConfigureAdditionalBehavior());
-            disposables.Add(bus);
+            TrackDisposable(bus);
             bus.Start();
         }
 
         IContainerAdapter CreateAdapter()
         {
             var adapter = new BuiltinContainerAdapter();
-            disposables.Add(adapter);
+            TrackDisposable(adapter);
             return adapter;
         }
     }

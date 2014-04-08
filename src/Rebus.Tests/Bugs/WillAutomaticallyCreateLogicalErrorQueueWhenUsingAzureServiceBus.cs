@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using Microsoft.ServiceBus;
-using Microsoft.ServiceBus.Messaging;
 using NUnit.Framework;
+using Rebus.AzureServiceBus;
 using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.AzureServiceBus;
 using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Bugs
@@ -17,7 +15,6 @@ namespace Rebus.Tests.Bugs
         const string InputQueueName = "test_input";
         const string ErrorQueueName = "myCustomErrorQueue";
         const string RecognizableErrorMessage = "FAILLLLLLLL";
-        List<IDisposable> stuffToDispose;
         BuiltinContainerAdapter adapter;
         ManualResetEvent resetEvent;
 
@@ -28,10 +25,10 @@ namespace Rebus.Tests.Bugs
 
         protected override void DoSetUp()
         {
-            stuffToDispose = new List<IDisposable>();
             resetEvent = new ManualResetEvent(false);
 
-            adapter = new BuiltinContainerAdapter();
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
+
             Configure.With(adapter)
                      .Transport(t => t.UseAzureServiceBus(ConnectionString, InputQueueName, ErrorQueueName))
                      .Events(e => e.PoisonMessage += (b, m, i) => resetEvent.Set())
@@ -41,14 +38,12 @@ namespace Rebus.Tests.Bugs
 
         protected override void DoTearDown()
         {
-            stuffToDispose.ForEach(s => s.Dispose());
+            CleanUpTrackedDisposables();
 
             var namespaceManager = NamespaceManager.CreateFromConnectionString(ConnectionString);
-            var topicDescription = namespaceManager.GetTopic(AzureServiceBusMessageQueue.TopicName);
-
-            // clean up
-            namespaceManager.DeleteSubscription(topicDescription.Path, InputQueueName);
-            namespaceManager.DeleteSubscription(topicDescription.Path, ErrorQueueName);
+            
+            namespaceManager.DeleteQueue(InputQueueName);
+            namespaceManager.DeleteQueue(ErrorQueueName);
         }
 
         [Test]

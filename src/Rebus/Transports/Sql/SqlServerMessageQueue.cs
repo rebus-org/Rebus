@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Persistence.SqlServer;
 using System.Linq;
 using Rebus.Serialization;
 using IsolationLevel = System.Data.IsolationLevel;
@@ -47,9 +46,9 @@ namespace Rebus.Transports.Sql
         readonly string inputQueueName;
 
         readonly Func<ConnectionHolder> getConnection;
-        readonly Action<ConnectionHolder> releaseConnection;
         readonly Action<ConnectionHolder> commitAction;
         readonly Action<ConnectionHolder> rollbackAction;
+        readonly Action<ConnectionHolder> releaseConnection;
 
         /// <summary>
         /// Constructs the SQL Server-based Rebus transport using the specified <paramref name="connectionString"/> to connect to a database,
@@ -60,32 +59,19 @@ namespace Rebus.Transports.Sql
             : this(messageTableName, inputQueueName)
         {
             getConnection = () =>
+            {
+                // avoid enlisting in ambient tx because we handle this stuff on our own!
+                using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
-                    // avoid enlisting in ambient tx because we handle this stuff on our own!
-                    using (new TransactionScope(TransactionScopeOption.Suppress))
-                    {
-                        var connection = new SqlConnection(connectionString);
-                        connection.Open();
-                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
-                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
-                    }
-                };
-            commitAction = h =>
-                {
-                    var transaction = h.Transaction;
-                    if (transaction == null) return;
-                    transaction.Commit();
-                };
-            rollbackAction = h =>
-                {
-                    var transaction = h.Transaction;
-                    if (transaction == null) return;
-                    transaction.Rollback();
-                };
-            releaseConnection = h =>
-                {
-                    h.Dispose();
-                };
+                    var connection = new SqlConnection(connectionString);
+                    connection.Open();
+                    var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                    return ConnectionHolder.ForTransactionalWork(connection, transaction);
+                }
+            };
+            commitAction = h => h.Commit();
+            rollbackAction = h => h.RollBack();
+            releaseConnection = h => h.Dispose();
         }
 
         /// <summary>
@@ -99,9 +85,9 @@ namespace Rebus.Transports.Sql
             getConnection = connectionFactoryMethod;
 
             // everything else is handed over to whoever provided the connection
-            releaseConnection = c => { };
-            commitAction = c => { };
-            rollbackAction = c => { };
+            releaseConnection = h => { };
+            commitAction = h => { };
+            rollbackAction = h => { };
         }
 
         SqlServerMessageQueue(string messageTableName, string inputQueueName)
@@ -366,7 +352,7 @@ namespace Rebus.Transports.Sql
             var connection = getConnection();
             try
             {
-                var tableNames = connection.Connection.GetTableNames();
+                var tableNames = connection.GetTableNames();
 
                 if (tableNames.Contains(messageTableName, StringComparer.OrdinalIgnoreCase))
                 {
@@ -390,13 +376,13 @@ CREATE TABLE [dbo].[{0}](
 	[label] [nvarchar](max) NOT NULL,
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
- CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-(
-	[recipient] ASC,
-	[priority] ASC,
-	[seq] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
-) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    (
+	    [recipient] ASC,
+	    [priority] ASC,
+	    [seq] ASC
+    ) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF)
+)
 ", messageTableName);
 
                     command.ExecuteNonQuery();

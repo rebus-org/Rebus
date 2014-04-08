@@ -66,7 +66,7 @@ namespace Rebus.Tests.Unit
 
             sendMessages.AssertWasCalled(s =>
                 s.Send(Arg<string>.Is.Anything,
-                    Arg<TransportMessageToSend>.Matches(m => m.Headers[Headers.MessageId] == "Oh the uniqueness"),
+					Arg<TransportMessageToSend>.Matches(m => m.Headers[Headers.MessageId].ToString() == "Oh the uniqueness"),
                     Arg<ITransactionContext>.Is.Anything));
         }
 

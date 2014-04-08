@@ -14,13 +14,5 @@ namespace Rebus
         {
             return new Timed<T>(time, value);
         }
-
-        /// <summary>
-        /// Gets a timed value representation of the specified value at the time right now
-        /// </summary>
-        public static Timed<T> Now<T>(this T value)
-        {
-            return new Timed<T>(RebusTimeMachine.Now(), value);
-        }
     }
 }

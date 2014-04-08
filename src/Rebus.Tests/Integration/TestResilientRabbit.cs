@@ -18,7 +18,6 @@ namespace Rebus.Tests.Integration
     [Ignore]
     public class TestResilientRabbit : FixtureBase
     {
-        readonly List<IDisposable> disposables = new List<IDisposable>();
         readonly List<int> sub1Received = new List<int>();
         readonly List<int> sub2Received = new List<int>();
 
@@ -35,7 +34,7 @@ namespace Rebus.Tests.Integration
 
         protected override void DoTearDown()
         {
-            disposables.ForEach(d => d.Dispose());
+            CleanUpTrackedDisposables();
 
             Rabbit("start");
         }
@@ -146,7 +145,7 @@ namespace Rebus.Tests.Integration
                 .CreateBus()
                 .Start();
 
-            disposables.Add(adapter);
+            TrackDisposable(adapter);
 
             return adapter.Bus;
         }

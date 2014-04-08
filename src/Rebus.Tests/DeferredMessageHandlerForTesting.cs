@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Messages;
 
@@ -6,7 +7,7 @@ namespace Rebus.Tests
 {
     class DeferredMessageHandlerForTesting : IHandleDeferredMessage
     {
-        public void DispatchLocal(object deferredMessage, Guid sagaId)
+        public void DispatchLocal(object deferredMessage, Guid sagaId, IDictionary<string, object> headers)
         {
         }
 

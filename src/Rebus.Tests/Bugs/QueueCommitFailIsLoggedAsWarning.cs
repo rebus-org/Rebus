@@ -15,15 +15,13 @@ namespace Rebus.Tests.Bugs
     [TestFixture, Description("Verifies that an exception on queue commit is logged as a warning")]
     public class QueueCommitFailIsLoggedAsWarning : FixtureBase
     {
-        List<IDisposable> disposables;
         BuiltinContainerAdapter adapter;
         List<string> logStatements;
         ArtificialTransport transport;
 
         protected override void DoSetUp()
         {
-            adapter = new BuiltinContainerAdapter();
-            disposables = new List<IDisposable> { adapter };
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
             logStatements = new List<string>();
 
             transport = new ArtificialTransport();
@@ -143,11 +141,6 @@ namespace Rebus.Tests.Bugs
             public string InputQueue { get; private set; }
 
             public string InputQueueAddress { get { return InputQueue; } }
-        }
-
-        protected override void DoTearDown()
-        {
-            disposables.ForEach(d => d.Dispose());
         }
     }
 

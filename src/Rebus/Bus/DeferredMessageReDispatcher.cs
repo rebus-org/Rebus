@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Rebus.Messages;
 using Rebus.Shared;
 
@@ -13,11 +14,16 @@ namespace Rebus.Bus
             this.bus = bus;
         }
 
-        public void DispatchLocal(object deferredMessage, Guid sagaId)
+        public void DispatchLocal(object deferredMessage, Guid sagaId, IDictionary<string, object> headers)
         {
             if (sagaId != Guid.Empty)
             {
                 bus.AttachHeader(deferredMessage, Headers.AutoCorrelationSagaId, sagaId.ToString());
+            }
+
+            foreach (var header in headers)
+            {
+                bus.AttachHeader(deferredMessage, header.Key, (header.Value ?? "").ToString());
             }
 
             bus.SendLocal(deferredMessage);

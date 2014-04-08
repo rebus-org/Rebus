@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Rebus.Extensions;
 using Rebus.Messages;
 
@@ -39,7 +40,50 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Sends the logical message currently being handled to the specified endpoint, preserving all
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the specified 
+        /// destination
+        /// </summary>
+        public void Unsubscribe<TEvent>(string publisherInputQueue)
+        {
+            rebusBus.InternalUnsubscribe<TEvent>(publisherInputQueue);
+        }
+
+        /// <summary>
+        /// Sends a subscription request for the specified event type to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Subscribe(Type eventType)
+        {
+            rebusBus.SendSubscriptionMessage(eventType, SubscribeAction.Subscribe);
+        }
+
+        /// <summary>
+        /// Sends a subscription request for the specified event type to the specified destination
+        /// </summary>
+        public void Subscribe(Type eventType, string publisherInputQueue)
+        {
+            rebusBus.SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Subscribe);
+        }
+
+        /// <summary>
+        /// Sends an unsubscription request for the specified event type to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Unsubscribe(Type eventType)
+        {
+            rebusBus.SendSubscriptionMessage(eventType, SubscribeAction.Unsubscribe);
+        }
+
+        /// <summary>
+        /// Sends an unsubscription request for the specified event type to the specified destination
+        /// </summary>
+        public void Unsubscribe(Type eventType, string publisherInputQueue)
+        {
+            rebusBus.SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Unsubscribe);
+        }
+
+        /// <summary>
+        /// Sends the message currently being handled to the specified endpoint, preserving all
         /// of the transport level headers.
         /// </summary>
         public void ForwardCurrentMessage(string destinationEndpoint)

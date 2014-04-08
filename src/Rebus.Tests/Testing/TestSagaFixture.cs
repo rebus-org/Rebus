@@ -13,6 +13,35 @@ namespace Rebus.Tests.Testing
     [TestFixture]
     public class TestSagaFixture : FixtureBase
     {
+        [TestCase("mark persistent saga data as complete")]
+        [TestCase("mark non-persistent saga data as complete")]
+        public void EventAreFiredInTheRightPlaces(string scenario)
+        {
+            var events = new List<string>();
+            const string justTheSameFrigginId = "just the same friggin ID";
+
+            var fixture = new SagaFixture<CompletionSagaData>(new CompletionSaga());
+            fixture.MarkedAsComplete += (msg, data) => events.Add("markedAsComplete");
+
+            switch (scenario)
+            {
+                case "mark persistent saga data as complete":
+                    fixture.Handle(new InitiatingMessage { CorrelationId = justTheSameFrigginId });
+                    fixture.Handle(new CompletionMessage { CorrelationId = justTheSameFrigginId });
+                    break;
+
+                case "mark non-persistent saga data as complete":
+                    fixture.Handle(new InitiateAndCompleteMessage { CorrelationId = justTheSameFrigginId });
+                    break;
+
+                default:
+                    throw new ArgumentException(string.Format("Unknown scenario: {0}", scenario));
+            }
+        
+            events.ShouldContain("markedAsComplete");
+        }
+
+
         [Test]
         public void CanCorrectlyHandleWhenSagaIsMarkedAsComplete()
         {
@@ -47,8 +76,15 @@ namespace Rebus.Tests.Testing
         {
             public string CorrelationId { get; set; }
         }
+        class InitiateAndCompleteMessage
+        {
+            public string CorrelationId { get; set; }
+        }
 
-        class CompletionSaga : Saga<CompletionSagaData>, IAmInitiatedBy<InitiatingMessage>, IHandleMessages<CompletionMessage>
+        class CompletionSaga : Saga<CompletionSagaData>
+            , IAmInitiatedBy<InitiatingMessage>
+            , IHandleMessages<CompletionMessage>
+            , IAmInitiatedBy<InitiateAndCompleteMessage>
         {
             static int instanceCounter = 1;
 
@@ -61,6 +97,7 @@ namespace Rebus.Tests.Testing
             {
                 Incoming<InitiatingMessage>(m => m.CorrelationId).CorrelatesWith(d => d.CorrelationId);
                 Incoming<CompletionMessage>(m => m.CorrelationId).CorrelatesWith(d => d.CorrelationId);
+                Incoming<InitiateAndCompleteMessage>(m => m.CorrelationId).CorrelatesWith(d => d.CorrelationId);
             }
 
             public void Handle(InitiatingMessage message)
@@ -70,6 +107,11 @@ namespace Rebus.Tests.Testing
             }
 
             public void Handle(CompletionMessage message)
+            {
+                MarkAsComplete();
+            }
+
+            public void Handle(InitiateAndCompleteMessage message)
             {
                 MarkAsComplete();
             }

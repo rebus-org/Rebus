@@ -1,3 +1,5 @@
+#### _"As friendly as machinely possible."_
+
 ![Bedford OB](http://mookid.dk/oncode/wp-content/2011/10/logo400x150.png)
 
 What?
@@ -68,7 +70,7 @@ which will stuff the resulting `IBus` in the container as a singleton and use th
 License
 ====
 
-Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus in any way you see fit.
+Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
 
 [1]: http://www.apache.org/licenses/LICENSE-2.0.html
 [2]: http://twitter.com/#!/mookid8000

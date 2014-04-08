@@ -22,6 +22,10 @@ namespace Rebus.Bus
 
         public event MessageContextEstablishedEventHandler MessageContextEstablished = delegate { };
 
+        public event BusStartedEventHandler BusStarted = delegate { };
+        
+        public event BusStoppedEventHandler BusStopped = delegate { };
+        
         public event BeforeTransportMessageEventHandler BeforeTransportMessage = delegate { };
 
         public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
@@ -58,6 +62,16 @@ namespace Rebus.Bus
         internal void RaiseAfterMessage(IBus bus, Exception exception, object message)
         {
             AfterMessage(bus, exception, message);
+        }
+
+        internal void RaiseBusStarted(IBus bus)
+        {
+            BusStarted(bus);
+        }
+
+        internal void RaiseBusStopped(IBus bus)
+        {
+            BusStopped(bus);
         }
 
         internal void RaiseBeforeTransportMessage(IBus bus, ReceivedTransportMessage transportMessage)

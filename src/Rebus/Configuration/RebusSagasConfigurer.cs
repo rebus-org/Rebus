@@ -2,6 +2,7 @@ using System;
 using System.Data.SqlClient;
 using Rebus.Persistence.InMemory;
 using Rebus.Persistence.SqlServer;
+using Rebus.Transports.Sql;
 
 namespace Rebus.Configuration
 {
@@ -39,7 +40,7 @@ namespace Rebus.Configuration
         /// same <see cref="SqlConnection"/> as you're using, thus enlisting in whatever transactional
         /// behavior you might be using.
         /// </summary>
-        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(Func<SqlConnection> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
+        public SqlServerSagaPersisterFluentConfigurer StoreInSqlServer(Func<ConnectionHolder> connectionFactoryMethod, string sagaTable, string sagaIndexTable)
         {
             var persister = new SqlServerSagaPersister(connectionFactoryMethod, sagaIndexTable, sagaTable);
             Use(persister);

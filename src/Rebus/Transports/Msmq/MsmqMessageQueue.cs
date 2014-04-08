@@ -122,30 +122,33 @@ because there would be remote calls involved when you wanted to receive a messag
                     using (var transaction = new MessageQueueTransaction())
                     {
                         transaction.Begin();
-                        var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
-                        if (message == null)
-                        {
-                            log.Warn("Received NULL message - how weird is that?");
-                            transaction.Commit();
-                            return null;
-                        }
 
-                        var body = message.Body;
-                        if (body == null)
+                        using (var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction))
                         {
-                            log.Warn("Received message with NULL body - how weird is that?");
+                            if (message == null)
+                            {
+                                log.Warn("Received NULL message - how weird is that?");
+                                transaction.Commit();
+                                return null;
+                            }
+                            var body = message.Body;
+                            if (body == null)
+                            {
+                                log.Warn("Received message with NULL body - how weird is that?");
+                                transaction.Commit();
+                                return null;
+                            }
+                            var transportMessage = (ReceivedTransportMessage) body;
+                        
                             transaction.Commit();
-                            return null;
+                            
+                            return transportMessage;
                         }
-                        var transportMessage = (ReceivedTransportMessage)body;
-                        transaction.Commit();
-                        return transportMessage;
                     }
                 }
-                else
+                
+                using (var message = inputQueue.Receive(TimeSpan.FromSeconds(1), GetTransaction(context)))
                 {
-                    var transaction = GetTransaction(context);
-                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
                     if (message == null)
                     {
                         log.Warn("Received NULL message - how weird is that?");
@@ -158,7 +161,8 @@ because there would be remote calls involved when you wanted to receive a messag
                         log.Warn("Received message with NULL body - how weird is that?");
                         return null;
                     }
-                    var transportMessage = (ReceivedTransportMessage)body;
+                    var transportMessage = (ReceivedTransportMessage) body;
+                    
                     return transportMessage;
                 }
             }

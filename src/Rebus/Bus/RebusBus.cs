@@ -41,6 +41,7 @@ namespace Rebus.Bus
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly HeaderContext headerContext = new HeaderContext();
         readonly RebusEvents events = new RebusEvents();
+        readonly MessageLogger messageLogger = new MessageLogger();
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
@@ -92,12 +93,12 @@ namespace Rebus.Bus
                 var timeoutManagerEndpointAddress = RebusConfigurationSection
                     .GetConfigurationValueOrDefault(s => s.TimeoutManagerAddress, "rebus.timeout");
 
-                log.Info("Using timeout manager with input queue {0}", timeoutManagerEndpointAddress);
+                log.Info("Using external timeout manager with input queue '{0}'", timeoutManagerEndpointAddress);
                 timeoutManagerAddress = timeoutManagerEndpointAddress;
             }
             else
             {
-                log.Info("Using local timeout manager");
+                log.Info("Using internal timeout manager");
                 timeoutManagerAddress = this.receiveMessages.InputQueue;
                 dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
             }
@@ -136,6 +137,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
+
         IBus IStartableBus.Start()
         {
             InternalStart(GetConfiguredNumberOfWorkers());
@@ -314,7 +316,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Sets the number of workers in this <see cref="RebusBus"/> to the specified
         /// number. The number of workers must be greater than or equal to 0. Blocks
-        /// until the number of workers has been set to <see cref="newNumberOfWorkers"/>.
+        /// until the number of workers has been set to <seealso cref="newNumberOfWorkers"/>.
         /// </summary>
         public void SetNumberOfWorkers(int newNumberOfWorkers)
         {
@@ -348,7 +350,9 @@ namespace Rebus.Bus
                         Headers.ReturnAddress));
             }
 
-            var customData = TimeoutReplyHandler.Serialize(message);
+
+            var attachedHeaders = headerContext.GetHeadersFor(message);
+            var customData = TimeoutReplyHandler.Serialize(new Message { Headers = attachedHeaders, Messages = new[] { message } });
 
             var timeoutRequest = new TimeoutRequest
                 {
@@ -432,16 +436,23 @@ namespace Rebus.Bus
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Subscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
         }
 
         internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Unsubscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
         }
 
-        internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
+        internal void SendSubscriptionMessage(Type messageType, SubscribeAction subscribeAction)
         {
+            SendSubscriptionMessage(messageType, GetMessageOwnerEndpointFor(messageType), subscribeAction);
+        }
+
+        internal void SendSubscriptionMessage(Type messageType, string destinationQueue, SubscribeAction subscribeAction)
+        {
+            if (messageType == null) throw new ArgumentNullException("messageType", "A message type must be specified in order to subscribe/unsubscribe");
+
             if (configureAdditionalBehavior.OneWayClientMode)
             {
                 throw new InvalidOperationException(
@@ -451,7 +462,7 @@ namespace Rebus.Bus
 
             var message = new SubscriptionMessage
                 {
-                    Type = typeof(TMessage).AssemblyQualifiedName,
+                    Type = messageType.AssemblyQualifiedName,
                     Action = subscribeAction,
                 };
 
@@ -479,6 +490,8 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
+
+            RaiseBusStarted();
 
             log.Info("Bus started");
         }
@@ -637,9 +650,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// </summary>
         internal void InternalSend(List<string> destinations, Message messageToSend, bool published = false)
         {
-            log.Info("Sending {0} to {1}", messageToSend, string.Join(", ", destinations));
-
-            var transportMessage = serializeMessages.Serialize(messageToSend);
+            log.Info("Sending {0} to {1}", messageToSend, destination);
+            messageLogger.LogSend(destination, messageToSend);
 
             InternalSend(destinations, transportMessage);
 
@@ -715,7 +727,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
-                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct();
+                var returnAddresses = messages.Select(m => m.Item2[Headers.ReturnAddress]).Distinct().ToList();
 
                 if (returnAddresses.Count() > 1)
                 {
@@ -735,7 +747,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
 
                 // assert all values are the same
-                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct();
+                var timesToBeReceived = messages.Select(m => m.Item2[Headers.TimeToBeReceived]).Distinct().ToList();
+
                 if (timesToBeReceived.Count() > 1)
                 {
                     throw new InconsistentTimeToBeReceivedException("These times to be received were specified: {0}", string.Join(", ", timesToBeReceived));
@@ -791,6 +804,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 disposable.Dispose();
             }
+
+            RaiseBusStopped();
         }
 
         /// <summary>
@@ -801,7 +816,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return string.Format("Rebus {0}", rebusId);
         }
 
-        string GetMessageOwnerEndpointFor(Type messageType)
+        internal string GetMessageOwnerEndpointFor(Type messageType)
         {
             return determineMessageOwnership.GetEndpointFor(messageType);
         }
@@ -822,7 +837,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         new IncomingMessageMutatorPipeline(Events),
                                         storeTimeouts,
                                         events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior);
+                                        configureAdditionalBehavior,
+                                        messageLogger);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -882,6 +898,16 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         void RaiseAfterMessage(Exception exception, object message)
         {
             events.RaiseAfterMessage(this, exception, message);
+        }
+
+        void RaiseBusStarted()
+        {
+            events.RaiseBusStarted(this);
+        }
+
+        void RaiseBusStopped()
+        {
+            events.RaiseBusStopped(this);
         }
 
         void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)

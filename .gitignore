@@ -2,8 +2,6 @@ obj
 bin
 deploy
 deploy/*
-packages
-packages/*
 _ReSharper.*
 *.csproj.user
 *.resharper.user
@@ -18,3 +16,6 @@ _ReSharper.*
 ~$*
 
 src/Rebus.Tests/azure_connection_string.txt
+*.ncrunchproject
+
+*.ncrunchsolution

@@ -15,7 +15,6 @@ namespace Rebus.Tests.Transports.Rabbit
     {
         public const string ConnectionString = "amqp://guest:guest@localhost";
 
-        protected List<IDisposable> toDispose;
         protected readonly List<string> queuesToDelete = new List<string>();
 
         static RabbitMqFixtureBase()
@@ -26,7 +25,6 @@ namespace Rebus.Tests.Transports.Rabbit
         [SetUp]
         public void SetUp()
         {
-            toDispose = new List<IDisposable>();
             DoSetUp();
         }
 
@@ -37,24 +35,25 @@ namespace Rebus.Tests.Transports.Rabbit
         [TearDown]
         public void TearDown()
         {
-            toDispose.ForEach(b =>
-                {
-                    try
-                    {
-                        b.Dispose();
-                    }
-                    catch(Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                });
             queuesToDelete.ForEach(DeleteQueue);
             DoTearDown();
+            CleanUpTrackedDisposables();
             RebusLoggerFactory.Reset();
         }
 
         protected virtual void DoTearDown()
         {
+        }
+
+        protected void CleanUpTrackedDisposables()
+        {
+            DisposableTracker.DisposeTheDisposables();
+        }
+
+        protected T TrackDisposable<T>(T disposable) where T : IDisposable
+        {
+            DisposableTracker.TrackDisposable(disposable);
+            return disposable;
         }
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator)
@@ -63,15 +62,14 @@ namespace Rebus.Tests.Transports.Rabbit
             queuesToDelete.Add(inputQueueName + ".error");
 
 
-            RabbitMqMessageQueue rabbitMqMessageQueue =
-                new RabbitMqMessageQueue(ConnectionString, inputQueueName)
-                    .PurgeInputQueue();
             var bus = Configure.With(new FakeContainerAdapter(handlerActivator))
                                .Transport(x => x.UseRabbitMq(ConnectionString, inputQueueName, inputQueueName + ".error"))
                                .CreateBus() as RebusBus;
 
-            toDispose.Add(bus);
-            toDispose.Add(rabbitMqMessageQueue);
+            var rabbitMqMessageQueue = new RabbitMqMessageQueue(ConnectionString, inputQueueName).PurgeInputQueue();
+
+            DisposableTracker.TrackDisposable(rabbitMqMessageQueue);
+            DisposableTracker.TrackDisposable(bus);
 
             return bus;
         }
@@ -83,7 +81,8 @@ namespace Rebus.Tests.Transports.Rabbit
 
         public static void DeleteQueue(string queueName)
         {
-            WithModel(model =>
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
             {
                 // just ignore if it fails...
                 try

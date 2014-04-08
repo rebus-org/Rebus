@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Transports.Sql
 {
@@ -72,6 +74,34 @@ namespace Rebus.Transports.Sql
             }
             
             Connection.Dispose();
+        }
+
+        /// <summary>
+        /// Commits the transaction if one is present
+        /// </summary>
+        public void Commit()
+        {
+            if (Transaction == null) return;
+            
+            Transaction.Commit();
+        }
+
+        /// <summary>
+        /// Rolls back the transaction is one is present
+        /// </summary>
+        public void RollBack()
+        {
+            if (Transaction == null) return;
+
+            Transaction.Rollback();
+        }
+
+        /// <summary>
+        /// Queries sys.Tables in the current DB
+        /// </summary>
+        public List<string> GetTableNames()
+        {
+            return Connection.GetTableNames(Transaction);
         }
     }
 }

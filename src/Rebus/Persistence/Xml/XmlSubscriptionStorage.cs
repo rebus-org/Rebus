@@ -25,7 +25,7 @@ namespace Rebus.Persistence.Xml
 
             var dir = Path.GetDirectoryName(xmlFilePath);
             
-            if (!Directory.Exists(dir))
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
                 Directory.CreateDirectory(dir);
 
             this.xmlFilePath = xmlFilePath;

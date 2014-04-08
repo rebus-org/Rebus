@@ -152,6 +152,18 @@ namespace Rebus.Tests
             tx.Commit();
         }
 
+        [Test]
+        public void VerifyBehaviorOfModulo()
+        {
+            int numberOfProcessedMessages = int.MaxValue;
+            numberOfProcessedMessages++;
+
+            var modulo = numberOfProcessedMessages%5;
+
+            Console.WriteLine(modulo);
+        }
+
+
         MessageQueue GetOrCreate(string name)
         {
             var path = string.Format(@".\private$\{0}", name);

@@ -6,13 +6,26 @@ using System.Threading;
 
 namespace Rebus.Logging
 {
-    internal class ConsoleLoggerFactory : AbstractRebusLoggerFactory
+    /// <summary>
+    /// Logger factory that logs stuff to the console
+    /// </summary>
+    public class ConsoleLoggerFactory : AbstractRebusLoggerFactory
     {
+        /// <summary>
+        /// One single log statement
+        /// </summary>
         public class LogStatement
         {
-            public LogLevel Level { get; set; }
-            public string Text { get; set; }
-            public object[] Args { get; set; }
+            internal LogStatement(LogLevel level, string text, object[] args)
+            {
+                Level = level;
+                Args = args;
+                Text = text;
+            }
+
+            public LogLevel Level { get; private set; }
+            public string Text { get; private set; }
+            public object[] Args { get; private set; }
         }
 
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
@@ -153,7 +166,7 @@ namespace Rebus.Logging
             void Write(LogLevel level, string message, object[] objs)
             {
                 if ((int)level < (int)factory.MinLevel) return;
-                if (factory.AbortedByFilter(new LogStatement { Level = level, Text = message, Args = objs })) return;
+                if (factory.AbortedByFilter(new LogStatement(level, message, objs))) return;
 
                 var levelString = LevelString(level);
 
@@ -161,16 +174,23 @@ namespace Rebus.Logging
                 var typeName = type.FullName;
                 try
                 {
-                    Console.WriteLine(logLineFormatString,
-                                      DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss"),
-                                      typeName,
-                                      levelString,
-                                      threadName,
-                                      string.Format(message, objs));
+                    var renderedMessage = string.Format(message, objs);
+                    var timeFormat = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+
+                    try
+                    {
+                        Console.WriteLine(logLineFormatString,
+                            timeFormat,
+                            typeName,
+                            levelString,
+                            threadName,
+                            renderedMessage);
+                    }
+                    catch { } //< nothing to do about it if this part fails
                 }
                 catch
                 {
-                    Warn("Could not render output string: {0}", message);
+                    Warn("Could not render output string: '{0}' with args: {1}", message, string.Join(", ", objs));
                 }
             }
         }

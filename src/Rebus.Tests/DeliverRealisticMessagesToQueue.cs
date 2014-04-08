@@ -1,6 +1,5 @@
 using System;
 using System.Threading;
-using Messages;
 using NUnit.Framework;
 using Rebus.Persistence.InMemory;
 using Rebus.Tests.Integration;
@@ -18,12 +17,12 @@ namespace Rebus.Tests
 
             var a = CreateBus(inputQueueNameA, new HandlerActivatorForTesting()
                 .Handle<DoSomething>(s =>
-                                         {
-                                             throw new MuahahahaException();
-                                         }),
-                              new InMemorySubscriptionStorage(),
-                              new SagaDataPersisterForTesting(),
-                              inputQueueNameA + ".error").Start(1);
+                {
+                    throw new MuahahahaException();
+                }),
+                new InMemorySubscriptionStorage(),
+                new SagaDataPersisterForTesting(),
+                inputQueueNameA + ".error").Start(1);
 
             var b = CreateBus(inputQueueNameB, new HandlerActivatorForTesting());
 
@@ -44,10 +43,7 @@ namespace Rebus.Tests
         {
         }
     }
-}
 
-namespace Messages
-{
     public class DoSomething
     {
         public string WhatToDo { get; set; }

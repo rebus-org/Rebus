@@ -11,6 +11,7 @@ namespace Rebus.Tests
     {
         public const string Azure = "azure";
         public const string Rabbit = "rabbit";
+        public const string Msmq = "msmq";
         public const string Integration = "integration";
         public const string Mongo = "mongo";
         public const string Raven = "raven";

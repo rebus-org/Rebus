@@ -11,17 +11,42 @@ using Raven.Json.Linq;
 
 namespace Rebus.RavenDb
 {
+    /// <summary>
+    /// Implements a saga persister for Rebus that stores sagas in RavenDB.
+    /// </summary>
     public class RavenDbSagaPersister : IStoreSagaData
     {
         const string SessionKey = "RavenDbSagaPersisterSessionKey";
         const string MetaDataKey = "RebusUniqueValues";
-        readonly IDocumentStore store;
 
+        readonly Func<IDocumentSession> getSession;
+        readonly Action<IDocumentSession> releaseSession;
+
+        /// <summary>
+        /// Constructs the persister with the given document store. The document session will be managed by Rebus, and changes will be saved
+        /// after the successful completion of each operation.
+        /// </summary>
         public RavenDbSagaPersister(IDocumentStore store)
         {
-            this.store = store;
+            getSession = () => GetCurrentSessionOrNull() ?? CreateSession(store);
+            releaseSession = session => session.SaveChanges();
+        }
+        
+        /// <summary>
+        /// Constructs the persister with the given document session provider/releaser. This way, you can let the persister use the same
+        /// document session are you're using yourself, making the saga work part of the same transaction. Rebus will NOT save changes
+        /// when this ctor is used, that's your responsibility :)
+        /// </summary>
+        public RavenDbSagaPersister(Func<IDocumentSession> getSession, Action<IDocumentSession> releaseSession)
+        {
+            this.getSession = getSession;
+            this.releaseSession = releaseSession;
         }
 
+        /// <summary>
+        /// Inserts the given saga data, using the given saga data property names as IDs of documents to ensure uniqueness. Will throw if
+        /// the uniqueness is violated.
+        /// </summary>
         public void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             Try(sagaData, session =>
@@ -31,11 +56,18 @@ namespace Rebus.RavenDb
             });
         }
 
+        /// <summary>
+        /// Updates the given saga data, using the given saga data property names as IDs of documents to ensure uniqueness. Will throw if
+        /// the uniqueness is violated.
+        /// </summary>
         public void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
         {
             Try(sagaData, session => RenewUniqueness(session, sagaData));
         }
 
+        /// <summary>
+        /// Deletes the given saga data including the associated uniqueness properties.
+        /// </summary>
         public void Delete(ISagaData sagaData)
         {
             Try(sagaData, session =>
@@ -45,14 +77,21 @@ namespace Rebus.RavenDb
             });
         }
 
+        /// <summary>
+        /// Queries the document store for a saga instance with the given correlation property name and value. Returns null if
+        /// none was found.
+        /// </summary>
         public T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData
         {
-            var session = GetSession();
+            var session = getSession();
 
             if (sagaDataPropertyPath == "Id")
-                return session.Load<T>(store.Conventions.GetTypeTagName(typeof(T)) + "/" + fieldFromMessage);
+            {
+                return session.Load<T>(session.Advanced.DocumentStore.Conventions.GetTypeTagName(typeof(T)) + "/" + fieldFromMessage);
+            }
             
             var idForUniqueProperty = GetIdForUniqueProperty(typeof(T), sagaDataPropertyPath, fieldFromMessage);
+            
             var property = session.Include<UniqueSagaProperty>(x => x.SagaId)
                 .Load(idForUniqueProperty);
 
@@ -62,6 +101,7 @@ namespace Rebus.RavenDb
         static void AddUniqueness(IDocumentSession session, ISagaData sagaData, IEnumerable<string> sagaDataPropertyPathsToIndex)
         {
             var uniqueSagaPropertyIds = new List<string>();
+            
             foreach (var propertyPath in sagaDataPropertyPathsToIndex.Where(x => x != "Id"))
             {
                 var value = Reflect.Value(sagaData, propertyPath);
@@ -77,8 +117,8 @@ namespace Rebus.RavenDb
         static void RemoveUniqueness(IDocumentSession session, ISagaData sagaData)
         {
             var ids = GetUniquePropertyIdsFromMetaData(session, sagaData);
-
             var uniqueSagaProperties = session.Load<UniqueSagaProperty>(ids);
+            
             foreach (var uniqueSagaProperty in uniqueSagaProperties)
             {
                 session.Delete(uniqueSagaProperty);
@@ -92,6 +132,7 @@ namespace Rebus.RavenDb
             var ids = GetUniquePropertyIdsFromMetaData(session, sagaData);
             var uniqueSagaProperties = session.Load<UniqueSagaProperty>(ids);
             var uniqueSagaPropertyIds = new List<string>();
+            
             foreach (var uniqueSagaProperty in uniqueSagaProperties)
             {
                 var value = Reflect.Value(sagaData, uniqueSagaProperty.PropertyPath);
@@ -115,22 +156,25 @@ namespace Rebus.RavenDb
             var metadata = session.Advanced.GetMetadataFor(sagaData);
             var uniqueSagaPropertiesIds = new List<string>();
             RavenJToken values;
+            
             if (metadata.TryGetValue(MetaDataKey, out values))
             {
                 var s = values.ToString();
                 if (s == "") return uniqueSagaPropertiesIds;
                 uniqueSagaPropertiesIds = s.Split(',').ToList();
             }
+            
             return uniqueSagaPropertiesIds;
         }
 
         void Try(ISagaData sagaData, Action<IDocumentSession> action)
         {
-            var session = GetSession();
+            var session = getSession();
             try
             {
                 action(session);
-                session.SaveChanges();
+                
+                releaseSession(session);
             }
             catch (ConcurrencyException concurrencyException)
             {
@@ -173,28 +217,31 @@ namespace Rebus.RavenDb
                 }
                 catch(Exception exception)
                 {
-                    throw new InvalidOperationException(
-                        "RavenDbSagaPersister can not be used outside of message context",
-                        exception);
+                    throw new InvalidOperationException("RavenDbSagaPersister cannot be used outside of message context", exception);
                 }
             }
         }
 
-        IDocumentSession GetSession()
+        static IDocumentSession GetCurrentSessionOrNull()
+        {
+            object currentSession;
+            if (CurrentMessageContext.Items.TryGetValue(SessionKey, out currentSession))
+            {
+                return (IDocumentSession)currentSession;
+            }
+            return null;
+        }
+
+        static IDocumentSession CreateSession(IDocumentStore store)
         {
             var messageContext = CurrentMessageContext;
-
-            object currentSession;
-            if (messageContext.Items.TryGetValue(SessionKey, out currentSession))
-            {
-                return (IDocumentSession) currentSession;
-            }
-
             var session = store.OpenSession();
+            
             session.Advanced.UseOptimisticConcurrency = true;
             session.Advanced.AllowNonAuthoritativeInformation = false;
             messageContext.Disposed += session.Dispose;
             messageContext.Items.Add(SessionKey, session);
+
             return session;
         }
 
