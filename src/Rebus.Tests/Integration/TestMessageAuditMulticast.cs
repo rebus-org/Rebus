@@ -64,7 +64,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.SendLocal("yo!");
 
             // assert
-            var message = GetMessageFrom(AuditQueueName);
+            var message = GetMessageFromAuditQueue();
 
             message.ShouldNotBe(null);
 
@@ -90,7 +90,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.Publish("yo!");
 
             // assert
-            var message = GetMessageFrom(AuditQueueName);
+            var message = GetMessageFromAuditQueue();
 
             message.ShouldNotBe(null);
 
@@ -105,12 +105,12 @@ namespace Rebus.Tests.Integration
             headers.ShouldContainKeyAndValue(Headers.AuditSourceQueue, InputQueueAddress);
         }
 
-        Message GetMessageFrom(string queueName)
+        Message GetMessageFromAuditQueue()
         {
             var timer = Stopwatch.StartNew();
             ReceivedTransportMessage receivedTransportMessage;
 
-            var timeout = 2.Seconds();
+            var timeout = 3.Seconds();
             do
             {
                 receivedTransportMessage = auditQueueReceiver.ReceiveMessage(new NoTransaction());

@@ -19,13 +19,11 @@ namespace Rebus.Tests.Integration
     {
         const string InputQueueName = "test.audit.input";
         const string AuditQueueName = "test.audit.audit";
-        List<IDisposable> disposables;
         BuiltinContainerAdapter adapter;
 
         protected override void DoSetUp()
         {
-            adapter = new BuiltinContainerAdapter();
-            disposables = new List<IDisposable> {adapter};
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
 
             MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(AuditQueueName));
             MsmqUtil.PurgeQueue(AuditQueueName);
@@ -46,17 +44,16 @@ namespace Rebus.Tests.Integration
 
         void SetUpSubscriberThatDoesNotAuditMessages(string inputQueueName)
         {
-            var adapter = new BuiltinContainerAdapter();
-            disposables.Add(adapter);
+            var subscriberAdapter = TrackDisposable(new BuiltinContainerAdapter());
 
-            adapter.Handle<string>(s => { });
+            subscriberAdapter.Handle<string>(s => { });
 
-            var bus = Configure.With(adapter)
+            var bus = Configure.With(subscriberAdapter)
                 .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
                 .Transport(t => t.UseMsmq(inputQueueName, "error"))
                 .MessageOwnership(o => o.Use(this))
                 .CreateBus()
-                .Start();
+                .Start(1);
 
             bus.Subscribe<string>();
         }
@@ -145,7 +142,7 @@ namespace Rebus.Tests.Integration
 
         protected override void DoTearDown()
         {
-            disposables.ForEach(d => d.Dispose());
+            CleanUpTrackedDisposables();
 
             DeleteQueue(InputQueueName);
             DeleteQueue(AuditQueueName);
