@@ -346,3 +346,5 @@
 ## 0.63.1
 
 * Added file system-based transport. Please do not use this one for your really important messages.
+* Fixed MSMQ transaction leak - thanks [jasperdk](https://github.com/jasperdk) 
+
