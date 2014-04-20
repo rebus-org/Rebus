@@ -348,3 +348,6 @@
 * Added file system-based transport. Please do not use this one for your really important messages.
 * Fixed MSMQ transaction leak - thanks [jasperdk](https://github.com/jasperdk) 
 
+## 0.64.0
+
+* Updated MongoDB driver dependency to 1.9

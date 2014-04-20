@@ -1696,6 +1696,11 @@
             Represents a BSON array that is deserialized lazily.
             </summary>
         </member>
+        <member name="T:MongoDB.Bson.MaterializedOnDemandBsonArray">
+            <summary>
+            Represents a BSON array that is not materialized until you start using it.
+            </summary>
+        </member>
         <member name="T:MongoDB.Bson.BsonArray">
             <summary>
             Represents a BSON array.
@@ -2836,161 +2841,171 @@
             <param name="index">The position.</param>
             <returns>The value.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.#ctor(MongoDB.Bson.IO.IByteBuffer)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.#ctor">
             <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Bson.LazyBsonArray"/> class.
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.MaterializedOnDemandBsonArray"/> class.
             </summary>
-            <param name="slice">The slice.</param>
-            <exception cref="T:System.ArgumentNullException">slice</exception>
-            <exception cref="T:System.ArgumentException">LazyBsonArray cannot be used with an IByteBuffer that needs disposing.</exception>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Add(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Add(MongoDB.Bson.BsonValue)">
             <summary>
             Adds an element to the array.
             </summary>
             <param name="value">The value to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Boolean})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Boolean})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonValue})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonValue})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.DateTime})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.DateTime})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Double})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Double})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Int32})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Int32})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Int64})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.Int64})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.ObjectId})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.ObjectId})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.AddRange(System.Collections.IEnumerable)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.AddRange(System.Collections.IEnumerable)">
             <summary>
             Adds multiple elements to the array.
             </summary>
             <param name="values">A list of values to add to the array.</param>
             <returns>The array (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Clone">
-            <summary>
-            Creates a shallow clone of the array (see also DeepClone).
-            </summary>
-            <returns>A shallow clone of the array.</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Clear">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Clear">
             <summary>
             Clears the array.
             </summary>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.CompareTo(MongoDB.Bson.BsonArray)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Clone">
+            <summary>
+            Creates a shallow clone of the array (see also DeepClone).
+            </summary>
+            <returns>
+            A shallow clone of the array.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.CompareTo(MongoDB.Bson.BsonArray)">
             <summary>
             Compares the array to another array.
             </summary>
             <param name="other">The other array.</param>
             <returns>A 32-bit signed integer that indicates whether this array is less than, equal to, or greather than the other.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.CompareTo(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.CompareTo(MongoDB.Bson.BsonValue)">
             <summary>
             Compares the array to another BsonValue.
             </summary>
             <param name="other">The other BsonValue.</param>
             <returns>A 32-bit signed integer that indicates whether this array is less than, equal to, or greather than the other BsonValue.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Contains(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Contains(MongoDB.Bson.BsonValue)">
             <summary>
             Tests whether the array contains a value.
             </summary>
             <param name="value">The value to test for.</param>
             <returns>True if the array contains the value.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.CopyTo(MongoDB.Bson.BsonValue[],System.Int32)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.CopyTo(MongoDB.Bson.BsonValue[],System.Int32)">
             <summary>
             Copies elements from this array to another array.
             </summary>
             <param name="array">The other array.</param>
             <param name="arrayIndex">The zero based index of the other array at which to start copying.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.CopyTo(System.Object[],System.Int32)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.CopyTo(System.Object[],System.Int32)">
             <summary>
             Copies elements from this array to another array as raw values (see BsonValue.RawValue).
             </summary>
             <param name="array">The other array.</param>
             <param name="arrayIndex">The zero based index of the other array at which to start copying.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.DeepClone">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.DeepClone">
             <summary>
             Creates a deep clone of the array (see also Clone).
             </summary>
-            <returns>A deep clone of the array.</returns>
+            <returns>
+            A deep clone of the array.
+            </returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Dispose">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Dispose">
             <summary>
             Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
             </summary>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.GetEnumerator">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/>, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with this instance.</param>
+            <returns>
+              <c>true</c> if the specified <see cref="T:System.Object"/> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.GetEnumerator">
             <summary>
             Gets an enumerator that can enumerate the elements of the array.
             </summary>
             <returns>An enumerator.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.GetHashCode">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.GetHashCode">
             <summary>
             Gets the hash code.
             </summary>
             <returns>The hash code.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.IndexOf(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.IndexOf(MongoDB.Bson.BsonValue)">
             <summary>
             Gets the index of a value in the array.
             </summary>
             <param name="value">The value to search for.</param>
             <returns>The zero based index of the value (or -1 if not found).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.IndexOf(MongoDB.Bson.BsonValue,System.Int32)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.IndexOf(MongoDB.Bson.BsonValue,System.Int32)">
             <summary>
             Gets the index of a value in the array.
             </summary>
@@ -2998,7 +3013,7 @@
             <param name="index">The zero based index at which to start the search.</param>
             <returns>The zero based index of the value (or -1 if not found).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.IndexOf(MongoDB.Bson.BsonValue,System.Int32,System.Int32)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.IndexOf(MongoDB.Bson.BsonValue,System.Int32,System.Int32)">
             <summary>
             Gets the index of a value in the array.
             </summary>
@@ -3007,43 +3022,129 @@
             <param name="count">The number of elements to search.</param>
             <returns>The zero based index of the value (or -1 if not found).</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Insert(System.Int32,MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Insert(System.Int32,MongoDB.Bson.BsonValue)">
             <summary>
             Inserts a new value into the array.
             </summary>
             <param name="index">The zero based index at which to insert the new value.</param>
             <param name="value">The new value.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.Remove(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Remove(MongoDB.Bson.BsonValue)">
             <summary>
             Removes the first occurrence of a value from the array.
             </summary>
             <param name="value">The value to remove.</param>
             <returns>True if the value was removed.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.RemoveAt(System.Int32)">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.RemoveAt(System.Int32)">
             <summary>
             Removes an element from the array.
             </summary>
             <param name="index">The zero based index of the element to remove.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.ToArray">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.ToArray">
             <summary>
             Converts the BsonArray to an array of BsonValues.
             </summary>
             <returns>An array of BsonValues.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.ToList">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.ToList">
             <summary>
             Converts the BsonArray to a list of BsonValues.
             </summary>
             <returns>A list of BsonValues.</returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.ToString">
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.ToString">
             <summary>
             Returns a string representation of the array.
             </summary>
             <returns>A string representation of the array.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and - optionally - managed resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.Materialize">
+            <summary>
+            Materializes the BsonArray.
+            </summary>
+            <returns>The materialized elements.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.MaterializeCompleted">
+            <summary>
+            Informs subclasses that the Materialize process completed so they can free any resources related to the unmaterialized state.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonArray.ThrowIfDisposed">
+            <summary>
+            Throws if disposed.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.Capacity">
+            <summary>
+            Gets or sets the total number of elements the internal data structure can hold without resizing.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.Count">
+            <summary>
+            Gets the count of array elements.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.IsDisposed">
+            <summary>
+            Gets a value indicating whether this instance is disposed.
+            </summary>
+            <value>
+            <c>true</c> if this instance is disposed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.IsMaterialized">
+            <summary>
+            Gets a value indicating whether this instance is materialized.
+            </summary>
+            <value>
+            <c>true</c> if this instance is materialized; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.RawValues">
+            <summary>
+            Gets the array elements as raw values (see BsonValue.RawValue).
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.Values">
+            <summary>
+            Gets the array elements.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonArray.Item(System.Int32)">
+            <summary>
+            Gets or sets a value by position.
+            </summary>
+            <param name="index">The position.</param>
+            <returns>The value.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.LazyBsonArray.#ctor(MongoDB.Bson.IO.IByteBuffer)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.LazyBsonArray"/> class.
+            </summary>
+            <param name="slice">The slice.</param>
+            <exception cref="T:System.ArgumentNullException">slice</exception>
+            <exception cref="T:System.ArgumentException">LazyBsonArray cannot be used with an IByteBuffer that needs disposing.</exception>
+        </member>
+        <member name="M:MongoDB.Bson.LazyBsonArray.Clone">
+            <summary>
+            Creates a shallow clone of the array (see also DeepClone).
+            </summary>
+            <returns>A shallow clone of the array.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.LazyBsonArray.DeepClone">
+            <summary>
+            Creates a deep clone of the array (see also Clone).
+            </summary>
+            <returns>A deep clone of the array.</returns>
         </member>
         <member name="M:MongoDB.Bson.LazyBsonArray.Dispose(System.Boolean)">
             <summary>
@@ -3051,25 +3152,17 @@
             </summary>
             <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonArray.ThrowIfDisposed">
+        <member name="M:MongoDB.Bson.LazyBsonArray.Materialize">
             <summary>
-            Throws if disposed.
+            Materializes the BsonArray.
             </summary>
-            <exception cref="T:System.ObjectDisposedException"></exception>
+            <returns>
+            The materialized values.
+            </returns>
         </member>
-        <member name="P:MongoDB.Bson.LazyBsonArray.Capacity">
+        <member name="M:MongoDB.Bson.LazyBsonArray.MaterializeCompleted">
             <summary>
-            Gets or sets the total number of elements the internal data structure can hold without resizing.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonArray.Count">
-            <summary>
-            Gets the count of array elements.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonArray.RawValues">
-            <summary>
-            Gets the array elements as raw values (see BsonValue.RawValue).
+            Informs subclasses that the Materialize process completed so they can free any resources related to the unmaterialized state.
             </summary>
         </member>
         <member name="P:MongoDB.Bson.LazyBsonArray.Slice">
@@ -3080,21 +3173,14 @@
             The slice.
             </value>
         </member>
-        <member name="P:MongoDB.Bson.LazyBsonArray.Values">
-            <summary>
-            Gets the array elements.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonArray.Item(System.Int32)">
-            <summary>
-            Gets or sets a value by position.
-            </summary>
-            <param name="index">The position.</param>
-            <returns>The value.</returns>
-        </member>
         <member name="T:MongoDB.Bson.LazyBsonDocument">
             <summary>
             Represents a BSON document that is deserialized lazily.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Bson.MaterializedOnDemandBsonDocument">
+            <summary>
+            Represents a BSON document that is not materialized until you start using it.
             </summary>
         </member>
         <member name="T:MongoDB.Bson.BsonDocument">
@@ -3371,6 +3457,16 @@
             </summary>
             <param name="name">The name of the element.</param>
             <param name="value">The value of the element.</param>
+            <param name="condition">Whether to add the element to the document.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.BsonDocument.Add(System.String,System.Func{MongoDB.Bson.BsonValue},System.Boolean)">
+            <summary>
+            Creates and adds an element to the document, but only if the condition is true.
+            If the condition is false the value factory is not called at all.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="valueFactory">A delegate called to compute the value of the element if condition is true.</param>
             <param name="condition">Whether to add the element to the document.</param>
             <returns>The document (so method calls can be chained).</returns>
         </member>
@@ -3723,6 +3819,480 @@
             <param name="name">The name.</param>
             <returns>The value.</returns>
         </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.MaterializedOnDemandBsonDocument"/> class.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(MongoDB.Bson.BsonElement)">
+            <summary>
+            Adds an element to the document.
+            </summary>
+            <param name="element">The element to add.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <param name="keys">Which keys of the hash table to add.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.Generic.IDictionary{System.String,System.Object})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.Generic.IDictionary{System.String,System.Object},System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <param name="keys">Which keys of the hash table to add.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.IDictionary)">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.IDictionary,System.Collections.IEnumerable)">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <param name="keys">Which keys of the hash table to add.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonElement})">
+            <summary>
+            Adds a list of elements to the document.
+            </summary>
+            <param name="elements">The list of elements.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(MongoDB.Bson.BsonElement[])">
+            <summary>
+            Adds a list of elements to the document.
+            </summary>
+            <param name="elements">The list of elements.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.String,MongoDB.Bson.BsonValue)">
+            <summary>
+            Creates and adds an element to the document.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="value">The value of the element.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.String,MongoDB.Bson.BsonValue,System.Boolean)">
+            <summary>
+            Creates and adds an element to the document, but only if the condition is true.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="value">The value of the element.</param>
+            <param name="condition">Whether to add the element to the document.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Add(System.String,System.Func{MongoDB.Bson.BsonValue},System.Boolean)">
+            <summary>
+            Creates and adds an element to the document, but only if the condition is true.
+            If the condition is false the value factory is not called at all.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="valueFactory">A delegate called to compute the value of the element if condition is true.</param>
+            <param name="condition">Whether to add the element to the document.</param>
+            <returns>The document (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.AddRange(System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.AddRange(System.Collections.IDictionary)">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonElement})">
+            <summary>
+            Adds a list of elements to the document.
+            </summary>
+            <param name="elements">The list of elements.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.AddRange(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.Object}})">
+            <summary>
+            Adds elements to the document from a dictionary of key/value pairs.
+            </summary>
+            <param name="dictionary">The dictionary.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Clear">
+            <summary>
+            Clears the document (removes all elements).
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Clone">
+            <summary>
+            Creates a shallow clone of the document (see also DeepClone).
+            </summary>
+            <returns>
+            A shallow clone of the document.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.CompareTo(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Compares this document to another document.
+            </summary>
+            <param name="other">The other document.</param>
+            <returns>
+            A 32-bit signed integer that indicates whether this document is less than, equal to, or greather than the other.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.CompareTo(MongoDB.Bson.BsonValue)">
+            <summary>
+            Compares the BsonDocument to another BsonValue.
+            </summary>
+            <param name="other">The other BsonValue.</param>
+            <returns>A 32-bit signed integer that indicates whether this BsonDocument is less than, equal to, or greather than the other BsonValue.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Contains(System.String)">
+            <summary>
+            Tests whether the document contains an element with the specified name.
+            </summary>
+            <param name="name">The name of the element to look for.</param>
+            <returns>
+            True if the document contains an element with the specified name.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.ContainsValue(MongoDB.Bson.BsonValue)">
+            <summary>
+            Tests whether the document contains an element with the specified value.
+            </summary>
+            <param name="value">The value of the element to look for.</param>
+            <returns>
+            True if the document contains an element with the specified value.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.DeepClone">
+            <summary>
+            Creates a deep clone of the document (see also Clone).
+            </summary>
+            <returns>
+            A deep clone of the document.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Dispose">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/>, is equal to this instance.
+            </summary>
+            <param name="obj">The <see cref="T:System.Object"/> to compare with this instance.</param>
+            <returns>
+              <c>true</c> if the specified <see cref="T:System.Object"/> is equal to this instance; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetDocumentId(System.Object@,System.Type@,MongoDB.Bson.Serialization.IIdGenerator@)">
+            <summary>
+            Gets the Id of the document.
+            </summary>
+            <param name="id">The Id of the document (the RawValue if it has one, otherwise the element Value).</param>
+            <param name="idNominalType">The nominal type of the Id.</param>
+            <param name="idGenerator">The IdGenerator for the Id (or null).</param>
+            <returns>True (a BsonDocument either has an Id member or one can be added).</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetElement(System.Int32)">
+            <summary>
+            Gets an element of this document.
+            </summary>
+            <param name="index">The zero based index of the element.</param>
+            <returns>
+            The element.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetElement(System.String)">
+            <summary>
+            Gets an element of this document.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <returns>
+            A BsonElement.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetEnumerator">
+            <summary>
+            Gets an enumerator that can be used to enumerate the elements of this document.
+            </summary>
+            <returns>
+            An enumerator.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetHashCode">
+            <summary>
+            Returns a hash code for this instance.
+            </summary>
+            <returns>
+            A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetValue(System.Int32)">
+            <summary>
+            Gets the value of an element.
+            </summary>
+            <param name="index">The zero based index of the element.</param>
+            <returns>
+            The value of the element.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetValue(System.String)">
+            <summary>
+            Gets the value of an element.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <returns>
+            The value of the element.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.GetValue(System.String,MongoDB.Bson.BsonValue)">
+            <summary>
+            Gets the value of an element or a default value if the element is not found.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="defaultValue">The default value returned if the element is not found.</param>
+            <returns>
+            The value of the element or the default value if the element is not found.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.InsertAt(System.Int32,MongoDB.Bson.BsonElement)">
+            <summary>
+            Inserts a new element at a specified position.
+            </summary>
+            <param name="index">The position of the new element.</param>
+            <param name="element">The element.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Merge(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Merges another document into this one. Existing elements are not overwritten.
+            </summary>
+            <param name="document">The other document.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Merge(MongoDB.Bson.BsonDocument,System.Boolean)">
+            <summary>
+            Merges another document into this one, specifying whether existing elements are overwritten.
+            </summary>
+            <param name="document">The other document.</param>
+            <param name="overwriteExistingElements">Whether to overwrite existing elements.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Remove(System.String)">
+            <summary>
+            Removes an element from this document (if duplicate element names are allowed
+            then all elements with this name will be removed).
+            </summary>
+            <param name="name">The name of the element to remove.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.RemoveAt(System.Int32)">
+            <summary>
+            Removes an element from this document.
+            </summary>
+            <param name="index">The zero based index of the element to remove.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.RemoveElement(MongoDB.Bson.BsonElement)">
+            <summary>
+            Removes an element from this document.
+            </summary>
+            <param name="element">The element to remove.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Set(System.Int32,MongoDB.Bson.BsonValue)">
+            <summary>
+            Sets the value of an element.
+            </summary>
+            <param name="index">The zero based index of the element whose value is to be set.</param>
+            <param name="value">The new value.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Set(System.String,MongoDB.Bson.BsonValue)">
+            <summary>
+            Sets the value of an element (an element will be added if no element with this name is found).
+            </summary>
+            <param name="name">The name of the element whose value is to be set.</param>
+            <param name="value">The new value.</param>
+            <returns>
+            The document (so method calls can be chained).
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.SetDocumentId(System.Object)">
+            <summary>
+            Sets the document Id.
+            </summary>
+            <param name="id">The value of the Id.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.SetElement(MongoDB.Bson.BsonElement)">
+            <summary>
+            Sets an element of the document (replaces any existing element with the same name or adds a new element if an element with the same name is not found).
+            </summary>
+            <param name="element">The new element.</param>
+            <returns>
+            The document.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.SetElement(System.Int32,MongoDB.Bson.BsonElement)">
+            <summary>
+            Sets an element of the document (replacing the existing element at that position).
+            </summary>
+            <param name="index">The zero based index of the element to replace.</param>
+            <param name="element">The new element.</param>
+            <returns>
+            The document.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.TryGetElement(System.String,MongoDB.Bson.BsonElement@)">
+            <summary>
+            Tries to get an element of this document.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="value">The element.</param>
+            <returns>
+            True if an element with that name was found.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.TryGetValue(System.String,MongoDB.Bson.BsonValue@)">
+            <summary>
+            Tries to get the value of an element of this document.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="value">The value of the element.</param>
+            <returns>
+            True if an element with that name was found.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Dispose(System.Boolean)">
+            <summary>
+            Releases unmanaged and - optionally - managed resources.
+            </summary>
+            <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.Materialize">
+            <summary>
+            Materializes the BsonDocument.
+            </summary>
+            <returns>The materialized elements.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.MaterializeCompleted">
+            <summary>
+            Informs subclasses that the Materialize process completed so they can free any resources related to the unmaterialized state.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.MaterializedOnDemandBsonDocument.ThrowIfDisposed">
+            <summary>
+            Throws if disposed.
+            </summary>
+            <exception cref="T:System.ObjectDisposedException"></exception>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.ElementCount">
+            <summary>
+            Gets the number of elements.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Elements">
+            <summary>
+            Gets the elements.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.IsDisposed">
+            <summary>
+            Gets a value indicating whether this instance is disposed.
+            </summary>
+            <value>
+            <c>true</c> if this instance is disposed; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.IsMaterialized">
+            <summary>
+            Gets a value indicating whether this instance is materialized.
+            </summary>
+            <value>
+            <c>true</c> if this instance is materialized; otherwise, <c>false</c>.
+            </value>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Names">
+            <summary>
+            Gets the element names.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.RawValues">
+            <summary>
+            Gets the raw values (see BsonValue.RawValue).
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Values">
+            <summary>
+            Gets the values.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Item(System.Int32)">
+            <summary>
+            Gets or sets a value by position.
+            </summary>
+            <param name="index">The position.</param>
+            <returns>The value.</returns>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Item(System.String,MongoDB.Bson.BsonValue)">
+            <summary>
+            Gets the value of an element or a default value if the element is not found.
+            </summary>
+            <param name="name">The name of the element.</param>
+            <param name="defaultValue">The default value to return if the element is not found.</param>
+            <returns>Teh value of the element or a default value if the element is not found.</returns>
+        </member>
+        <member name="P:MongoDB.Bson.MaterializedOnDemandBsonDocument.Item(System.String)">
+            <summary>
+            Gets or sets a value by name.
+            </summary>
+            <param name="name">The name.</param>
+            <returns>The value.</returns>
+        </member>
         <member name="M:MongoDB.Bson.LazyBsonDocument.#ctor(MongoDB.Bson.IO.IByteBuffer)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Bson.LazyBsonDocument"/> class.
@@ -3737,174 +4307,12 @@
             </summary>
             <param name="bytes">The bytes.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(MongoDB.Bson.BsonElement)">
-            <summary>
-            Adds an element to the document.
-            </summary>
-            <param name="element">The element to add.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.Generic.Dictionary{System.String,System.Object})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.Generic.Dictionary{System.String,System.Object},System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <param name="keys">Which keys of the hash table to add.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.Generic.IDictionary{System.String,System.Object})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.Generic.IDictionary{System.String,System.Object},System.Collections.Generic.IEnumerable{System.String})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <param name="keys">Which keys of the hash table to add.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.IDictionary)">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.IDictionary,System.Collections.IEnumerable)">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <param name="keys">Which keys of the hash table to add.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonElement})">
-            <summary>
-            Adds a list of elements to the document.
-            </summary>
-            <param name="elements">The list of elements.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(MongoDB.Bson.BsonElement[])">
-            <summary>
-            Adds a list of elements to the document.
-            </summary>
-            <param name="elements">The list of elements.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Creates and adds an element to the document.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="value">The value of the element.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Add(System.String,MongoDB.Bson.BsonValue,System.Boolean)">
-            <summary>
-            Creates and adds an element to the document, but only if the condition is true.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="value">The value of the element.</param>
-            <param name="condition">Whether to add the element to the document.</param>
-            <returns>The document (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.AddRange(System.Collections.Generic.Dictionary{System.String,System.Object})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.AddRange(System.Collections.IDictionary)">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.AddRange(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonElement})">
-            <summary>
-            Adds a list of elements to the document.
-            </summary>
-            <param name="elements">The list of elements.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.AddRange(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.Object}})">
-            <summary>
-            Adds elements to the document from a dictionary of key/value pairs.
-            </summary>
-            <param name="dictionary">The dictionary.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Clear">
-            <summary>
-            Clears the document (removes all elements).
-            </summary>
-        </member>
         <member name="M:MongoDB.Bson.LazyBsonDocument.Clone">
             <summary>
             Creates a shallow clone of the document (see also DeepClone).
             </summary>
             <returns>
             A shallow clone of the document.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.CompareTo(MongoDB.Bson.BsonDocument)">
-            <summary>
-            Compares this document to another document.
-            </summary>
-            <param name="other">The other document.</param>
-            <returns>
-            A 32-bit signed integer that indicates whether this document is less than, equal to, or greather than the other.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.CompareTo(MongoDB.Bson.BsonValue)">
-            <summary>
-            Compares the BsonDocument to another BsonValue.
-            </summary>
-            <param name="other">The other BsonValue.</param>
-            <returns>A 32-bit signed integer that indicates whether this BsonDocument is less than, equal to, or greather than the other BsonValue.</returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Contains(System.String)">
-            <summary>
-            Tests whether the document contains an element with the specified name.
-            </summary>
-            <param name="name">The name of the element to look for.</param>
-            <returns>
-            True if the document contains an element with the specified name.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.ContainsValue(MongoDB.Bson.BsonValue)">
-            <summary>
-            Tests whether the document contains an element with the specified value.
-            </summary>
-            <param name="value">The value of the element to look for.</param>
-            <returns>
-            True if the document contains an element with the specified value.
             </returns>
         </member>
         <member name="M:MongoDB.Bson.LazyBsonDocument.DeepClone">
@@ -3915,207 +4323,21 @@
             A deep clone of the document.
             </returns>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Dispose">
-            <summary>
-            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetElement(System.Int32)">
-            <summary>
-            Gets an element of this document.
-            </summary>
-            <param name="index">The zero based index of the element.</param>
-            <returns>
-            The element.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetElement(System.String)">
-            <summary>
-            Gets an element of this document.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <returns>
-            A BsonElement.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetEnumerator">
-            <summary>
-            Gets an enumerator that can be used to enumerate the elements of this document.
-            </summary>
-            <returns>
-            An enumerator.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetHashCode">
-            <summary>
-            Returns a hash code for this instance.
-            </summary>
-            <returns>
-            A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetValue(System.Int32)">
-            <summary>
-            Gets the value of an element.
-            </summary>
-            <param name="index">The zero based index of the element.</param>
-            <returns>
-            The value of the element.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetValue(System.String)">
-            <summary>
-            Gets the value of an element.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <returns>
-            The value of the element.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.GetValue(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Gets the value of an element or a default value if the element is not found.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="defaultValue">The default value returned if the element is not found.</param>
-            <returns>
-            The value of the element or the default value if the element is not found.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.InsertAt(System.Int32,MongoDB.Bson.BsonElement)">
-            <summary>
-            Inserts a new element at a specified position.
-            </summary>
-            <param name="index">The position of the new element.</param>
-            <param name="element">The element.</param>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Merge(MongoDB.Bson.BsonDocument)">
-            <summary>
-            Merges another document into this one. Existing elements are not overwritten.
-            </summary>
-            <param name="document">The other document.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Merge(MongoDB.Bson.BsonDocument,System.Boolean)">
-            <summary>
-            Merges another document into this one, specifying whether existing elements are overwritten.
-            </summary>
-            <param name="document">The other document.</param>
-            <param name="overwriteExistingElements">Whether to overwrite existing elements.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Remove(System.String)">
-            <summary>
-            Removes an element from this document (if duplicate element names are allowed
-            then all elements with this name will be removed).
-            </summary>
-            <param name="name">The name of the element to remove.</param>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.RemoveAt(System.Int32)">
-            <summary>
-            Removes an element from this document.
-            </summary>
-            <param name="index">The zero based index of the element to remove.</param>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.RemoveElement(MongoDB.Bson.BsonElement)">
-            <summary>
-            Removes an element from this document.
-            </summary>
-            <param name="element">The element to remove.</param>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Set(System.Int32,MongoDB.Bson.BsonValue)">
-            <summary>
-            Sets the value of an element.
-            </summary>
-            <param name="index">The zero based index of the element whose value is to be set.</param>
-            <param name="value">The new value.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.Set(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Sets the value of an element (an element will be added if no element with this name is found).
-            </summary>
-            <param name="name">The name of the element whose value is to be set.</param>
-            <param name="value">The new value.</param>
-            <returns>
-            The document (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.SetElement(MongoDB.Bson.BsonElement)">
-            <summary>
-            Sets an element of the document (replaces any existing element with the same name or adds a new element if an element with the same name is not found).
-            </summary>
-            <param name="element">The new element.</param>
-            <returns>
-            The document.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.SetElement(System.Int32,MongoDB.Bson.BsonElement)">
-            <summary>
-            Sets an element of the document (replacing the existing element at that position).
-            </summary>
-            <param name="index">The zero based index of the element to replace.</param>
-            <param name="element">The new element.</param>
-            <returns>
-            The document.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.TryGetElement(System.String,MongoDB.Bson.BsonElement@)">
-            <summary>
-            Tries to get an element of this document.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="value">The element.</param>
-            <returns>
-            True if an element with that name was found.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.TryGetValue(System.String,MongoDB.Bson.BsonValue@)">
-            <summary>
-            Tries to get the value of an element of this document.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="value">The value of the element.</param>
-            <returns>
-            True if an element with that name was found.
-            </returns>
-        </member>
         <member name="M:MongoDB.Bson.LazyBsonDocument.Dispose(System.Boolean)">
             <summary>
             Releases unmanaged and - optionally - managed resources.
             </summary>
             <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         </member>
-        <member name="M:MongoDB.Bson.LazyBsonDocument.ThrowIfDisposed">
+        <member name="M:MongoDB.Bson.LazyBsonDocument.Materialize">
             <summary>
-            Throws if disposed.
+            Materializes the BsonDocument.
             </summary>
-            <exception cref="T:System.ObjectDisposedException"></exception>
+            <returns>The materialized elements.</returns>
         </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.ElementCount">
+        <member name="M:MongoDB.Bson.LazyBsonDocument.MaterializeCompleted">
             <summary>
-            Gets the number of elements.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Elements">
-            <summary>
-            Gets the elements.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Names">
-            <summary>
-            Gets the element names.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.RawValues">
-            <summary>
-            Gets the raw values (see BsonValue.RawValue).
+            Informs subclasses that the Materialize process completed so they can free any resources related to the unmaterialized state.
             </summary>
         </member>
         <member name="P:MongoDB.Bson.LazyBsonDocument.Slice">
@@ -4125,33 +4347,6 @@
             <value>
             The slice.
             </value>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Values">
-            <summary>
-            Gets the values.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Item(System.Int32)">
-            <summary>
-            Gets or sets a value by position.
-            </summary>
-            <param name="index">The position.</param>
-            <returns>The value.</returns>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Item(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Gets the value of an element or a default value if the element is not found.
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="defaultValue">The default value to return if the element is not found.</param>
-            <returns>Teh value of the element or a default value if the element is not found.</returns>
-        </member>
-        <member name="P:MongoDB.Bson.LazyBsonDocument.Item(System.String)">
-            <summary>
-            Gets or sets a value by name.
-            </summary>
-            <param name="name">The name.</param>
-            <returns>The value.</returns>
         </member>
         <member name="T:MongoDB.Bson.RawBsonArray">
             <summary>
@@ -4367,6 +4562,11 @@
         <member name="P:MongoDB.Bson.RawBsonArray.Count">
             <summary>
             Gets the count of array elements.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.RawBsonArray.IsReadOnly">
+            <summary>
+            Gets whether the array is read-only.
             </summary>
         </member>
         <member name="P:MongoDB.Bson.RawBsonArray.RawValues">
@@ -6459,6 +6659,24 @@
             <param name="actualType">The actual type.</param>
             <returns>The discriminator value.</returns>
         </member>
+        <member name="T:MongoDB.Bson.Serialization.Conventions.EnumRepresentationConvention">
+            <summary>
+            A convention that allows you to set the Enum serialization representation
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Conventions.EnumRepresentationConvention.#ctor(MongoDB.Bson.BsonType)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Conventions.EnumRepresentationConvention"/> class.
+            </summary>  
+            <param name="representation">The serialization representation. 0 is used to detect representation
+            from the enum itself.</param>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Conventions.EnumRepresentationConvention.Apply(MongoDB.Bson.Serialization.BsonMemberMap)">
+            <summary>
+            Applies a modification to the member map.
+            </summary>
+            <param name="memberMap">The member map.</param>
+        </member>
         <member name="T:MongoDB.Bson.Serialization.Conventions.StringObjectIdIdGeneratorConvention">
             <summary>
             A convention that sets the id generator for a string member with a BSON representation of ObjectId.
@@ -7250,6 +7468,17 @@
             Represents a serializer for BsonArrays.
             </summary>
         </member>
+        <member name="T:MongoDB.Bson.Serialization.IBsonArraySerializer">
+            <summary>
+            Contract for serializers to implement if they serialize an array of items.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.IBsonArraySerializer.GetItemSerializationInfo">
+            <summary>
+            Gets the serialization info for individual items of the array.
+            </summary>
+            <returns>The serialization info for the items.</returns>
+        </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.BsonArraySerializer.#ctor">
             <summary>
             Initializes a new instance of the BsonArraySerializer class.
@@ -7264,6 +7493,14 @@
             <param name="actualType">The actual type of the object.</param>
             <param name="options">The serialization options.</param>
             <returns>An object.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonArraySerializer.GetItemSerializationInfo">
+            <summary>
+            Gets the serialization info for individual items of the array.
+            </summary>
+            <returns>
+            The serialization info for the items.
+            </returns>
         </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.BsonArraySerializer.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -7459,17 +7696,6 @@
             Applies the attribute to the class map.
             </summary>
             <param name="classMap">The class map.</param>
-        </member>
-        <member name="T:MongoDB.Bson.Serialization.IBsonArraySerializer">
-            <summary>
-            Contract for serializers to implement if they serialize an array of items.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Bson.Serialization.IBsonArraySerializer.GetItemSerializationInfo">
-            <summary>
-            Gets the serialization info for individual items of the array.
-            </summary>
-            <returns>The serialization info for the items.</returns>
         </member>
         <member name="T:MongoDB.Bson.Serialization.IBsonIdProvider">
             <summary>
@@ -10557,6 +10783,15 @@
             <param name="idGenerator">The IdGenerator for the Id type.</param>
             <returns>True if the document has an Id.</returns>
         </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonDocumentSerializer.GetMemberSerializationInfo(System.String)">
+            <summary>
+            Gets the serialization info for a member.
+            </summary>
+            <param name="memberName">The member name.</param>
+            <returns>
+            The serialization info for the member.
+            </returns>
+        </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.BsonDocumentSerializer.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
             Serializes an object to a BsonWriter.
@@ -11107,6 +11342,23 @@
             <param name="actualType">The actual type of the object.</param>
             <param name="options">The serialization options.</param>
             <returns>An object.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueSerializer.GetMemberSerializationInfo(System.String)">
+            <summary>
+            Gets the serialization info for a member.
+            </summary>
+            <param name="memberName">The member name.</param>
+            <returns>
+            The serialization info for the member.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueSerializer.GetItemSerializationInfo">
+            <summary>
+            Gets the serialization info for individual items of the array.
+            </summary>
+            <returns>
+            The serialization info for the items.
+            </returns>
         </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueSerializer.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -13715,7 +13967,7 @@
         </member>
         <member name="F:MongoDB.Bson.IO.JsonOutputMode.TenGen">
             <summary>
-            Use JavaScript and 10gen data types for some values.
+            Use JavaScript and MongoDB data types for some values.
             </summary>
         </member>
         <member name="F:MongoDB.Bson.IO.JsonOutputMode.Shell">
@@ -14235,6 +14487,16 @@
             <param name="wrappedObject">The wrapped object.</param>
             <param name="isUpdateDocument">Whether the wrapped object is an update document that needs to be checked.</param>
         </member>
+        <member name="M:MongoDB.Bson.BsonDocumentWrapper.#ctor(System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializer,MongoDB.Bson.Serialization.IBsonSerializationOptions,System.Boolean)">
+            <summary>
+            Initializes a new instance of the BsonDocumentWrapper class.
+            </summary>
+            <param name="wrappedNominalType">The nominal type of the wrapped object.</param>
+            <param name="wrappedObject">The wrapped object.</param>
+            <param name="serializer">The serializer.</param>
+            <param name="serializationOptions">The serialization options.</param>
+            <param name="isUpdateDocument">Whether the wrapped object is an update document that needs to be checked.</param>
+        </member>
         <member name="M:MongoDB.Bson.BsonDocumentWrapper.Create``1(``0)">
             <summary>
             Creates a new instance of the BsonDocumentWrapper class.
@@ -14285,12 +14547,13 @@
             <param name="values">A list of wrapped objects.</param>
             <returns>A list of BsonDocumentWrappers.</returns>
         </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.CompareTo(MongoDB.Bson.BsonValue)">
+        <member name="M:MongoDB.Bson.BsonDocumentWrapper.Clone">
             <summary>
-            CompareTo is an invalid operation for BsonDocumentWrapper.
+            Creates a shallow clone of the document (see also DeepClone).
             </summary>
-            <param name="other">Not applicable.</param>
-            <returns>Not applicable.</returns>
+            <returns>
+            A shallow clone of the document.
+            </returns>
         </member>
         <member name="M:MongoDB.Bson.BsonDocumentWrapper.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -14301,52 +14564,45 @@
             <param name="options">Not applicable.</param>
             <returns>Not applicable.</returns>
         </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.GetDocumentId(System.Object@,System.Type@,MongoDB.Bson.Serialization.IIdGenerator@)">
-            <summary>
-            GetDocumentId is an invalid operation for BsonDocumentWrapper.
-            </summary>
-            <param name="id">Not applicable.</param>
-            <param name="idNominalType">Not applicable.</param>
-            <param name="idGenerator">Not applicable.</param>
-            <returns>Not applicable.</returns>
-        </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.Equals(System.Object)">
-            <summary>
-            Equals is an invalid operation for BsonDocumentWrapper.
-            </summary>
-            <param name="obj">Not applicable.</param>
-            <returns>Not applicable.</returns>
-        </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.GetHashCode">
-            <summary>
-            GetHashCode is an invalid operation for BsonDocumentWrapper.
-            </summary>
-            <returns>Not applicable.</returns>
-        </member>
         <member name="M:MongoDB.Bson.BsonDocumentWrapper.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
             Serializes the wrapped object to a BsonWriter.
             </summary>
             <param name="bsonWriter">The writer.</param>
-            <param name="nominalType">The nominal type (overridded by the wrapped nominal type).</param>
-            <param name="options">The serialization options.</param>
+            <param name="nominalType">The nominal type (overridden by the wrapped nominal type).</param>
+            <param name="options">The serialization options (can be null).</param>
         </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.SetDocumentId(System.Object)">
+        <member name="M:MongoDB.Bson.BsonDocumentWrapper.Materialize">
             <summary>
-            SetDocumentId is an invalid operation for BsonDocumentWrapper.
+            Materializes the BsonDocument.
             </summary>
-            <param name="Id">Not applicable.</param>
+            <returns>The materialized elements.</returns>
         </member>
-        <member name="M:MongoDB.Bson.BsonDocumentWrapper.ToString">
+        <member name="M:MongoDB.Bson.BsonDocumentWrapper.MaterializeCompleted">
             <summary>
-            Returns a string representation of the wrapped document.
+            Informs subclasses that the Materialize process completed so they can free any resources related to the unmaterialized state.
             </summary>
-            <returns>A string representation of the wrapped document.</returns>
         </member>
         <member name="P:MongoDB.Bson.BsonDocumentWrapper.IsUpdateDocument">
             <summary>
             Gets whether the wrapped document is an update document.
             </summary>
+        </member>
+        <member name="P:MongoDB.Bson.BsonDocumentWrapper.SerializationOptions">
+            <summary>
+            Gets the serialization options.
+            </summary>
+            <value>
+            The serialization options.
+            </value>
+        </member>
+        <member name="P:MongoDB.Bson.BsonDocumentWrapper.Serializer">
+            <summary>
+            Gets the serializer.
+            </summary>
+            <value>
+            The serializer.
+            </value>
         </member>
         <member name="P:MongoDB.Bson.BsonDocumentWrapper.WrappedNominalType">
             <summary>
@@ -16426,6 +16682,17 @@
             <summary>
             Flushes any pending data to the output destination.
             </summary>
+        </member>
+        <member name="M:MongoDB.Bson.IO.BsonBinaryWriter.PopMaxDocumentSize">
+            <summary>
+            Pops the max document size stack, restoring the previous max document size.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.IO.BsonBinaryWriter.PushMaxDocumentSize(System.Int32)">
+            <summary>
+            Pushes a new max document size onto the max document size stack.
+            </summary>
+            <param name="maxDocumentSize">The maximum size of the document.</param>
         </member>
         <member name="M:MongoDB.Bson.IO.BsonBinaryWriter.WriteBinaryData(MongoDB.Bson.BsonBinaryData)">
             <summary>
