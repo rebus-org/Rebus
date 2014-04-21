@@ -110,23 +110,21 @@ namespace Rebus.RabbitMQ
         {
             try
             {
+				var exchange = ExchangeName == null ? destinationQueueName : ExchangeName;
+				var routingKey = ExchangeName == null ? "" : destinationQueueName;
+
                 if (!context.IsTransactional)
                 {
                     using (var model = GetConnection().CreateModel())
                     {
                         var headers = GetHeaders(model, message);
-                        model.BasicPublish(ExchangeName, destinationQueueName,
-                                           headers,
-                                           message.Body);
+                        model.BasicPublish(exchange, routingKey, headers, message.Body);
                     }
                 }
                 else
                 {
                     var model = GetSenderModel(context);
-
-                    model.BasicPublish(ExchangeName, destinationQueueName,
-                                       GetHeaders(model, message),
-                                       message.Body);
+                    model.BasicPublish(exchange, routingKey, GetHeaders(model, message), message.Body);
                 }
             }
             catch (Exception e)
@@ -388,6 +386,10 @@ namespace Rebus.RabbitMQ
 
             EnsureInputQueueInitialized(inputQueueAddress);
 
+			var eventName = GetEventName(messageType);
+			var exchange = ExchangeName == null ? eventName : ExchangeName;
+			var routingKey = ExchangeName == null ? "" : eventName;
+
             if (autoDeleteInputQueue)
             {
                 string dummy;
@@ -396,9 +398,8 @@ namespace Rebus.RabbitMQ
                 var model = threadBoundModel;
                 if (model != null)
                 {
-                    var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
+                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, eventName);
+					model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
                 }
                 return;
             }
@@ -407,9 +408,8 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
+                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, eventName);
+                    model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
                 }
             }
             catch (Exception e)
@@ -471,12 +471,22 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
-        /// Instructs the Rabbit transport to publish messages on the given exchange
+        /// Instructs the Rabbit transport to publish messages on the given exchange, 
+		/// or to use one exchange per each message type (if no 'default exchange is given').
         /// </summary>
         public RabbitMqMessageQueue UseExchange(string exchangeNameToUse)
         {
-            log.Info("Will use exchanged named {0}", exchangeNameToUse);
-            exchangeName = exchangeNameToUse;
+			if (exchangeNameToUse != null)
+			{
+				log.Info("Will use exchanged named {0}", exchangeNameToUse);
+				exchangeName = exchangeNameToUse;
+			}
+			else
+			{
+				log.Info("Will use one exchange per each message type.");
+				exchangeName = null;
+			}
+
             return this;
         }
 
@@ -548,9 +558,18 @@ namespace Rebus.RabbitMQ
 
         void EstablishSubscription(IModel model, Type subscription)
         {
-            var topic = GetEventName(subscription);
-            log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-            model.QueueBind(InputQueueAddress, ExchangeName, topic);
+			var eventName = GetEventName(subscription);
+			var exchange = ExchangeName == null ? eventName : ExchangeName;
+			var routingKey = ExchangeName == null ? "" : eventName;
+
+			if (ExchangeName == null)
+			{
+				log.Debug("Declaring fanout exchange for: {0}", exchange);
+				model.ExchangeDeclare(exchange, "fanout", true, false, null);
+			}
+
+            log.Info("Subscribing {0} to {1}", InputQueueAddress, eventName);
+            model.QueueBind(InputQueueAddress, exchange, routingKey);
         }
 
         string GetPrettyTypeName(Type messageType)
@@ -589,6 +608,12 @@ namespace Rebus.RabbitMQ
                                arguments: arguments,
                                autoDelete: autoDelete,
                                exclusive: false);
+
+			if (ExchangeName == null)
+			{
+				log.Debug("Queue '{0}' is using one exchange-per-type routing.", queueName);
+				return;
+			}
 
             if (ensureExchangeIsDeclared)
             {
