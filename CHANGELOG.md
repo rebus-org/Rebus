@@ -351,3 +351,8 @@
 ## 0.64.0
 
 * Updated MongoDB driver dependency to 1.9
+
+## 0.64.1
+
+* Added ability to configure JSON serializer to serialize enums with their string representations - thanks [maeserichar](https://github.com/maeserichar)
+
