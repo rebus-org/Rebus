@@ -10,10 +10,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus.Tests</RootNamespace>
     <AssemblyName>Rebus.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=2.6.3.862, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
@@ -432,6 +435,10 @@
     <ProjectReference Include="..\Rebus.RavenDb\Rebus.RavenDb.csproj">
       <Project>{A56478ED-F8B1-4300-9C6C-87322E565252}</Project>
       <Name>Rebus.RavenDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
+      <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
+      <Name>Rebus.Serilog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.StructureMap\Rebus.StructureMap.csproj">
       <Project>{D5263804-AD2A-40E3-B656-5132255883A8}</Project>
