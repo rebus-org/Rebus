@@ -183,5 +183,34 @@ namespace Rebus.Tests.Serialization.Json
         {
             public string AnotherField { get; set; }            
         }
+
+        enum SomeEnumValue
+        {
+            IAmTheValueOne,
+            IAmTheValueTwo
+        }
+
+        class SomeMessageWithEnums
+        {
+            public SomeEnumValue SomeEnum { get; set; }
+        }
+
+        [TestCase("utf-7")]
+        [TestCase("utf-8")]
+        [TestCase("utf-16")]
+        [TestCase("utf-32")]
+        public void EnumValueIsSerializedAsString(string encodingWebName)
+        {
+            var encoding = Encoding.GetEncoding(encodingWebName);
+            // arrange
+            serializer.SpecifyEncoding(encoding);
+            serializer.SerializeEnumAsStrings(true);
+
+            // act
+            var message = serializer.Serialize(new Message {Messages = new[] {new SomeMessageWithEnums { SomeEnum = SomeEnumValue.IAmTheValueTwo }}});
+
+            // assert
+            encoding.GetString(message.Body).ShouldContain(SomeEnumValue.IAmTheValueTwo.ToString());
+        }
     }
 }
