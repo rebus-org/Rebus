@@ -95,64 +95,64 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 1 });
         }
 
-		[Test]
-		public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType()
-		{
-			// arrange
-			DeleteExchange("Rebus");
-			DeleteQueue("test.rabbitsub.publisher");
-			DeleteQueue("test.rabbitsub.sub1");
-			DeleteQueue("test.rabbitsub.sub2");
-			DeleteQueue("test.rabbitsub.sub3");
+        [Test]
+        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType()
+        {
+            // arrange
+            DeleteExchange("Rebus");
+            DeleteQueue("test.rabbitsub.publisher");
+            DeleteQueue("test.rabbitsub.sub1");
+            DeleteQueue("test.rabbitsub.sub2");
+            DeleteQueue("test.rabbitsub.sub3");
 
-			var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher", oneExchangePerType: true);
+            var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher", oneExchangePerType: true);
 
-			var receivedSub1 = new List<int>();
-			var receivedSub2 = new List<int>();
-			var receivedSub3 = new List<int>();
+            var receivedSub1 = new List<int>();
+            var receivedSub2 = new List<int>();
+            var receivedSub3 = new List<int>();
 
-			var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add, oneExchangePerType: true);
-			var sub2 = PullOneOutOfTheHat("test.rabbitsub.sub2", receivedSub2.Add, oneExchangePerType: true);
-			var sub3 = PullOneOutOfTheHat("test.rabbitsub.sub3", receivedSub3.Add, oneExchangePerType: true);
+            var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add, oneExchangePerType: true);
+            var sub2 = PullOneOutOfTheHat("test.rabbitsub.sub2", receivedSub2.Add, oneExchangePerType: true);
+            var sub3 = PullOneOutOfTheHat("test.rabbitsub.sub3", receivedSub3.Add, oneExchangePerType: true);
 
-			// act
-			publisher.Publish(new SomeEvent { Number = 1 });
+            // act
+            publisher.Publish(new SomeEvent { Number = 1 });
 
-			Thread.Sleep(200.Milliseconds());
+            Thread.Sleep(200.Milliseconds());
 
-			sub1.Subscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 2 });
+            sub1.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 2 });
 
-			sub2.Subscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 3 });
+            sub2.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 3 });
 
-			sub3.Subscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 4 });
+            sub3.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 4 });
 
-			Thread.Sleep(200.Milliseconds());
+            Thread.Sleep(200.Milliseconds());
 
-			sub3.Unsubscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 5 });
+            sub3.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 5 });
 
-			sub2.Unsubscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 6 });
+            sub2.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 6 });
 
-			sub1.Unsubscribe<SomeEvent>();
-			Thread.Sleep(200.Milliseconds());
-			publisher.Publish(new SomeEvent { Number = 7 });
+            sub1.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 7 });
 
-			// assert
-			receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 2, 3, 4, 5, 6 });
-			receivedSub2.OrderBy(i => i).ToArray().ShouldBe(new[] { 3, 4, 5 });
-			receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
-			DeclareExchange("Rebus", "topic", passive: true).ShouldBe(false);
-			DeclareExchange("Rebus.Tests.Transports.Rabbit.TestRabbitSubscriptions+SomeEvent", "topic", passive: true).ShouldBe(true);
-		}
+            // assert
+            receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 2, 3, 4, 5, 6 });
+            receivedSub2.OrderBy(i => i).ToArray().ShouldBe(new[] { 3, 4, 5 });
+            receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
+            DeclareExchange("Rebus", "topic", passive: true).ShouldBe(false);
+            DeclareExchange("Rebus.Tests.Transports.Rabbit.TestRabbitSubscriptions+SomeEvent", "topic", passive: true).ShouldBe(true);
+        }
 
         class SomeEvent
         {
@@ -167,9 +167,9 @@ namespace Rebus.Tests.Transports.Rabbit
 
             Configure.With(adapter)
                 .Transport(t => {
-					var obj = t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions();
-					if (oneExchangePerType) obj.UseOneExchangePerMessageTypeRouting();
-				})
+                    var obj = t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions();
+                    if (oneExchangePerType) obj.UseOneExchangePerMessageTypeRouting();
+                })
                 .CreateBus().Start();
 
             TrackDisposable(adapter);

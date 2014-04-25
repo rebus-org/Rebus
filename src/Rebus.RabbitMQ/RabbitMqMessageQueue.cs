@@ -110,8 +110,8 @@ namespace Rebus.RabbitMQ
         {
             try
             {
-				var exchange = ExchangeName == null ? destinationQueueName : ExchangeName;
-				var routingKey = ExchangeName == null ? "" : destinationQueueName;
+                var exchange = ExchangeName == null ? destinationQueueName : ExchangeName;
+                var routingKey = ExchangeName == null ? "" : destinationQueueName;
 
                 if (!context.IsTransactional)
                 {
@@ -386,9 +386,9 @@ namespace Rebus.RabbitMQ
 
             EnsureInputQueueInitialized(inputQueueAddress);
 
-			var eventName = GetEventName(messageType);
-			var exchange = ExchangeName == null ? eventName : ExchangeName;
-			var routingKey = ExchangeName == null ? "" : eventName;
+            var eventName = GetEventName(messageType);
+            var exchange = ExchangeName == null ? eventName : ExchangeName;
+            var routingKey = ExchangeName == null ? "" : eventName;
 
             if (autoDeleteInputQueue)
             {
@@ -399,7 +399,7 @@ namespace Rebus.RabbitMQ
                 if (model != null)
                 {
                     log.Info("Unsubscribing {0} from {1}", InputQueueAddress, eventName);
-					model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
+                    model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
                 }
                 return;
             }
@@ -472,20 +472,20 @@ namespace Rebus.RabbitMQ
 
         /// <summary>
         /// Instructs the Rabbit transport to publish messages on the given exchange, 
-		/// or to use one exchange per each message type (if no 'default exchange is given').
+        /// or to use one exchange per each message type (if no 'default exchange is given').
         /// </summary>
         public RabbitMqMessageQueue UseExchange(string exchangeNameToUse)
         {
-			if (exchangeNameToUse != null)
-			{
-				log.Info("Will use exchanged named {0}", exchangeNameToUse);
-				exchangeName = exchangeNameToUse;
-			}
-			else
-			{
-				log.Info("Will use one exchange per each message type.");
-				exchangeName = null;
-			}
+            if (exchangeNameToUse != null)
+            {
+                log.Info("Will use exchanged named {0}", exchangeNameToUse);
+                exchangeName = exchangeNameToUse;
+            }
+            else
+            {
+                log.Info("Will use one exchange per each message type.");
+                exchangeName = null;
+            }
 
             return this;
         }
@@ -558,15 +558,15 @@ namespace Rebus.RabbitMQ
 
         void EstablishSubscription(IModel model, Type subscription)
         {
-			var eventName = GetEventName(subscription);
-			var exchange = ExchangeName == null ? eventName : ExchangeName;
-			var routingKey = ExchangeName == null ? "" : eventName;
+            var eventName = GetEventName(subscription);
+            var exchange = ExchangeName == null ? eventName : ExchangeName;
+            var routingKey = ExchangeName == null ? "" : eventName;
 
-			if (ExchangeName == null)
-			{
-				log.Debug("Declaring fanout exchange for: {0}", exchange);
-				model.ExchangeDeclare(exchange, "fanout", true, false, null);
-			}
+            if (ExchangeName == null)
+            {
+                log.Debug("Declaring fanout exchange for: {0}", exchange);
+                model.ExchangeDeclare(exchange, "fanout", true, false, null);
+            }
 
             log.Info("Subscribing {0} to {1}", InputQueueAddress, eventName);
             model.QueueBind(InputQueueAddress, exchange, routingKey);
@@ -609,11 +609,11 @@ namespace Rebus.RabbitMQ
                                autoDelete: autoDelete,
                                exclusive: false);
 
-			if (ExchangeName == null)
-			{
-				log.Debug("Queue '{0}' is using one exchange-per-type routing.", queueName);
-				return;
-			}
+            if (ExchangeName == null)
+            {
+                log.Debug("Queue '{0}' is using one exchange-per-type routing.", queueName);
+                return;
+            }
 
             if (ensureExchangeIsDeclared)
             {

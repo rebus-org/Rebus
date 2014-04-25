@@ -95,17 +95,17 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
-		/// <summary>
-		/// Uses the exchange per type routing, instead of Rebus' default behaviour of using a single topic-based exchange.
-		/// This allows for a little more performance (fanout vs topic) and also allows forwarding of messages to other
-		/// rabbitmq servers by manually setting federated queues/exchanges.
-		/// </summary>
-		/// <returns></returns>
-		public RabbitMqOptions UseOneExchangePerMessageTypeRouting()
-		{
-			queue.UseExchange(null);
-			return this;
-		}
+        /// <summary>
+        /// Uses the exchange per type routing, instead of Rebus' default behaviour of using a single topic-based exchange.
+        /// This allows for a little more performance (fanout vs topic) and also allows forwarding of messages to other
+        /// rabbitmq servers by manually setting federated queues/exchanges.
+        /// </summary>
+        /// <returns></returns>
+        public RabbitMqOptions UseOneExchangePerMessageTypeRouting()
+        {
+            queue.UseExchange(null);
+            return this;
+        }
 
         /// <summary>
         /// Disables automatic creation of the error queue. This means that the Rebus error queue setting merely becomes the
