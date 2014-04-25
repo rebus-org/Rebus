@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Rebus.Messages;
 using Rebus.Extensions;
@@ -257,6 +258,14 @@ namespace Rebus.Serialization.Json
         public void SpecifyEncoding(Encoding encoding)
         {
             customEncoding = encoding;
+        }
+
+        /// <summary>
+        /// Configure the serializer to serialize the enums as string.
+        /// </summary>
+        public void SerializeEnumAsStrings(bool camelCaseText)
+        {
+            settings.Converters.Add(new StringEnumConverter { CamelCaseText = camelCaseText });
         }
     }
 }

@@ -49,5 +49,14 @@ namespace Rebus.Configuration
             jsonMessageSerializer.SpecifyEncoding(encoding);
             return this;
         }
+
+        /// <summary>
+        /// Configure the serializer to serialize the enums as string.
+        /// </summary>
+        public JsonSerializationOptions SerializeEnumAsStrings(bool camelCaseText)
+        {
+            jsonMessageSerializer.SerializeEnumAsStrings(camelCaseText);
+            return this;
+        }
     }
 }
