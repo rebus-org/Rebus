@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using Rebus.Configuration;
 using Rebus.Shared;
 using Serilog;
 using Serilog.Context;
+
 
 namespace Rebus.Serilog
 {
@@ -39,6 +41,9 @@ namespace Rebus.Serilog
             SetUpEventHandler(configurer, overriddenCorrelationIdPropertyKey);
         }
 
+        [ThreadStatic]
+        private static List<IDisposable> pushedProperties;
+
         static void SetUpEventHandler(BaseConfigurer configurer, string correlationIdPropertyKey)
         {
             configurer.Backbone.ConfigureEvents(e =>
@@ -46,22 +51,37 @@ namespace Rebus.Serilog
                     e.BeforeTransportMessage +=
                         (bus, message) =>
                             {
-                                var correlationid = message.Headers.ContainsKey(Headers.CorrelationId)
-                                                        ? message.Headers[Headers.CorrelationId]
-                                                        : null;
+                                pushedProperties = new List<IDisposable>();
 
-                                IDisposable correlationProperty = LogContext.PushProperty(
-                                    correlationIdPropertyKey, correlationid);
-
-                                //
-                                // Todo: I need somewhere to register the correlationProperty for disposal ???
-                                //
+                                PushHeaderProperty(Headers.CorrelationId, message, correlationIdPropertyKey);
+                                PushHeaderProperty(Headers.SourceQueue, message);
+                                PushHeaderProperty(Headers.ReturnAddress, message);
+                                PushHeaderProperty(Headers.AutoCorrelationSagaId, message);
                             };
                     e.AfterTransportMessage +=
                         (bus, exceptionOrNull, receivedTransportMessage) =>
                         {
+                            if (pushedProperties != null)
+                            {
+                                foreach (IDisposable pushedProperty in pushedProperties)
+                                    pushedProperty.Dispose();
+                            }
+                            pushedProperties = null;
                         };
                 });
+        }
+
+        private static void PushHeaderProperty(string headerKey, ReceivedTransportMessage message,
+            string serilogPropertyKey = null)
+        {
+            if (message.Headers.ContainsKey(headerKey))
+            {
+                if (string.IsNullOrEmpty(serilogPropertyKey))
+                    serilogPropertyKey = headerKey;
+
+                pushedProperties.Add(
+                    LogContext.PushProperty(serilogPropertyKey, message.Headers[headerKey]));
+            }
         }
     }
 }
