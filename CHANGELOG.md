@@ -351,3 +351,7 @@
 ## 0.64.0
 
 * Updated MongoDB driver dependency to 1.9
+
+## 0.65.0
+
+* Updated StructureMap dependency to 3.0 - thanks [fritsduus](https://github.com/fritsduus) 
