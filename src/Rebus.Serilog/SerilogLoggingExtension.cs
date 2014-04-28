@@ -41,46 +41,31 @@ namespace Rebus.Serilog
             SetUpEventHandler(configurer, overriddenCorrelationIdPropertyKey);
         }
 
-        [ThreadStatic]
-        private static List<IDisposable> pushedProperties;
-
         static void SetUpEventHandler(BaseConfigurer configurer, string correlationIdPropertyKey)
         {
             configurer.Backbone.ConfigureEvents(e =>
                 {
-                    e.BeforeTransportMessage +=
-                        (bus, message) =>
+                    e.MessageContextEstablished += 
+                        (bus, ctx) => 
                             {
-                                pushedProperties = new List<IDisposable>();
-
-                                PushHeaderProperty(Headers.CorrelationId, message, correlationIdPropertyKey);
-                                PushHeaderProperty(Headers.SourceQueue, message);
-                                PushHeaderProperty(Headers.ReturnAddress, message);
-                                PushHeaderProperty(Headers.AutoCorrelationSagaId, message);
+                                PushHeaderProperty(Headers.CorrelationId, ctx, correlationIdPropertyKey);
+                                PushHeaderProperty(Headers.SourceQueue, ctx);
+                                PushHeaderProperty(Headers.ReturnAddress, ctx);
+                                PushHeaderProperty(Headers.AutoCorrelationSagaId, ctx);
                             };
-                    e.AfterTransportMessage +=
-                        (bus, exceptionOrNull, receivedTransportMessage) =>
-                        {
-                            if (pushedProperties != null)
-                            {
-                                foreach (IDisposable pushedProperty in pushedProperties)
-                                    pushedProperty.Dispose();
-                            }
-                            pushedProperties = null;
-                        };
                 });
         }
 
-        private static void PushHeaderProperty(string headerKey, ReceivedTransportMessage message,
+        private static void PushHeaderProperty(string headerKey, IMessageContext ctx,
             string serilogPropertyKey = null)
         {
-            if (message.Headers.ContainsKey(headerKey))
+            if (ctx.Headers.ContainsKey(headerKey))
             {
                 if (string.IsNullOrEmpty(serilogPropertyKey))
                     serilogPropertyKey = headerKey;
 
-                pushedProperties.Add(
-                    LogContext.PushProperty(serilogPropertyKey, message.Headers[headerKey]));
+                ctx.Disposed +=
+                    LogContext.PushProperty(serilogPropertyKey, ctx.Headers[headerKey]).Dispose;
             }
         }
     }

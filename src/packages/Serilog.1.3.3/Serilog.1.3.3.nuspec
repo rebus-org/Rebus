@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>Serilog</id>
-    <version>1.3.1</version>
+    <version>1.3.3</version>
     <authors>Serilog Contributors</authors>
     <owners>Serilog Contributors</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
