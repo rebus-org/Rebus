@@ -811,16 +811,29 @@
         </member>
         <member name="T:Serilog.Formatting.Json.JsonFormatter">
             <summary>
-            Formats log events in a simple JSON structure.
+            Formats log events in a simple JSON structure. Instances of this class
+            are safe for concurrent access by multiple threads.
             </summary>
         </member>
         <member name="M:Serilog.Formatting.Json.JsonFormatter.#ctor(System.Boolean)">
+            <summary>
+            Construct a <see cref="T:Serilog.Formatting.Json.JsonFormatter"/>. Obsolete, please use named arguments
+            when calling this constructor.
+            </summary>
+        </member>
+        <member name="M:Serilog.Formatting.Json.JsonFormatter.#ctor(System.Boolean,System.String,System.Boolean,System.IFormatProvider)">
             <summary>
             Construct a <see cref="T:Serilog.Formatting.Json.JsonFormatter"/>.
             </summary>
             <param name="omitEnclosingObject">If true, the properties of the event will be written to
             the output without enclosing braces. Otherwise, if false, each event will be written as a well-formed
             JSON object.</param>
+            <param name="closingDelimiter">A string that will be written after each log event is formatted.
+            If null, <see cref="P:System.Environment.NewLine"/> will be used. Ignored if <paramref name="omitEnclosingObject"/>
+            is true.</param>
+            <param name="renderMessage">If true, the message will be rendered and written to the output as a
+            property named RenderedMessage.</param>
+            <param name="formatProvider">Supplies culture-specific formatting information, or null.</param>
         </member>
         <member name="M:Serilog.Formatting.Json.JsonFormatter.Format(Serilog.Events.LogEvent,System.IO.TextWriter)">
             <summary>
@@ -1194,6 +1207,43 @@
             The value of the property.
             </summary>
         </member>
+        <member name="T:Serilog.Parsing.Alignment">
+            <summary>
+            A structure representing the alignment settings to apply when rendering a property.
+            </summary>
+        </member>
+        <member name="M:Serilog.Parsing.Alignment.#ctor(Serilog.Parsing.AlignmentDirection,System.Int32)">
+            <summary>
+            Initializes a new instance of <see cref="T:Serilog.Parsing.Alignment"/>.
+            </summary>
+            <param name="direction">The text alignment direction.</param>
+            <param name="width">The width of the text, in characters.</param>
+        </member>
+        <member name="P:Serilog.Parsing.Alignment.Direction">
+            <summary>
+            The text alignment direction.
+            </summary>
+        </member>
+        <member name="P:Serilog.Parsing.Alignment.Width">
+            <summary>
+            The width of the text.
+            </summary>
+        </member>
+        <member name="T:Serilog.Parsing.AlignmentDirection">
+            <summary>
+            Defines the direction of the alignment.
+            </summary>
+        </member>
+        <member name="F:Serilog.Parsing.AlignmentDirection.Left">
+            <summary>
+            Text will be left-aligned.
+            </summary>
+        </member>
+        <member name="F:Serilog.Parsing.AlignmentDirection.Right">
+            <summary>
+            Text will be right-aligned.
+            </summary>
+        </member>
         <member name="T:Serilog.Formatting.Display.OutputProperties">
             <summary>
             Describes the properties available in standard message template-based
@@ -1423,7 +1473,18 @@
             </summary>
             <param name="propertyName">The name of the property.</param>
             <param name="rawText">The token as it appears in the message template.</param>
+            <param name="formatObsolete">The format applied to the property, if any.</param>
+            <param name="destructuringObsolete">The destructuring strategy applied to the property, if any.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Serilog.Parsing.PropertyToken.#ctor(System.String,System.String,System.String,System.Nullable{Serilog.Parsing.Alignment},Serilog.Parsing.Destructuring)">
+            <summary>
+            Construct a <see cref="T:Serilog.Parsing.PropertyToken"/>.
+            </summary>
+            <param name="propertyName">The name of the property.</param>
+            <param name="rawText">The token as it appears in the message template.</param>
             <param name="format">The format applied to the property, if any.</param>
+            <param name="alignment">The alignment applied to the property, if any.</param>
             <param name="destructuring">The destructuring strategy applied to the property, if any.</param>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
@@ -1482,6 +1543,11 @@
         <member name="P:Serilog.Parsing.PropertyToken.Format">
             <summary>
             Format applied to the property.
+            </summary>
+        </member>
+        <member name="P:Serilog.Parsing.PropertyToken.Alignment">
+            <summary>
+            Alignment applied to the property.
             </summary>
         </member>
         <member name="P:Serilog.Parsing.PropertyToken.IsPositional">
