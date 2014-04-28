@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using Rebus.Configuration;
+﻿using Rebus.Configuration;
 using Rebus.Shared;
-using Serilog;
 using Serilog.Context;
 
 
@@ -56,17 +53,16 @@ namespace Rebus.Serilog
                 });
         }
 
-        private static void PushHeaderProperty(string headerKey, IMessageContext ctx,
-            string serilogPropertyKey = null)
+        static void PushHeaderProperty(string headerKey, IMessageContext ctx, string serilogPropertyKey = null)
         {
-            if (ctx.Headers.ContainsKey(headerKey))
-            {
-                if (string.IsNullOrEmpty(serilogPropertyKey))
-                    serilogPropertyKey = headerKey;
+            if (!ctx.Headers.ContainsKey(headerKey)) return;
 
-                ctx.Disposed +=
-                    LogContext.PushProperty(serilogPropertyKey, ctx.Headers[headerKey]).Dispose;
+            if (string.IsNullOrEmpty(serilogPropertyKey))
+            {
+                serilogPropertyKey = headerKey;
             }
+
+            ctx.Disposed += LogContext.PushProperty(serilogPropertyKey, ctx.Headers[headerKey]).Dispose;
         }
     }
 }

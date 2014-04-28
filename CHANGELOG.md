@@ -359,3 +359,7 @@
 ## 0.65.0
 
 * Updated StructureMap dependency to 3.0 - thanks [fritsduus](https://github.com/fritsduus) 
+
+## 0.65.1
+
+* Added Serilog logger - thanks [fritsduus](https://github.com/fritsduus) 
