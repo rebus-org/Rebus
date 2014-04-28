@@ -6,6 +6,7 @@ using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Log4Net;
 using Rebus.Logging;
+using Rebus.Serilog;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
@@ -201,6 +202,17 @@ namespace Rebus.Tests.Configuration
                 .Logging(l => l.Log4Net());
 
             RebusLoggerFactory.Current.ShouldBeTypeOf<Log4NetLoggerFactory>();
+        }
+
+        [Test]
+        public void CanConfigureSerilogLogging()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.Serilog());
+
+            RebusLoggerFactory.Current.ShouldBeTypeOf<SerilogLoggerFactory>();
         }
 
         [Test]
