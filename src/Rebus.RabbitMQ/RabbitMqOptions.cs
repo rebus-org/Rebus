@@ -107,6 +107,29 @@ namespace Rebus.RabbitMQ
             return this;
         }
 
+		/// <summary>
+		/// Uses the exchange as input address, by binding it to subscribed type's exchange(s).
+		/// This setting only works in conjuntion with 'One Exchange Per Message Type' routing.
+		/// </summary>
+		/// <param name="exchangeName">Name of the exchange.</param>
+		/// <returns></returns>
+		public RabbitMqOptions UseExchangeAsInputAddress(string exchangeName)
+		{
+			queue.UseExchangeAsInputAddress(exchangeName);
+			return this;
+		}
+
+		/// <summary>
+		/// Disables Rebus' default behavior of (re)declaring the input exhange when it first interacts with Rabbit.
+		/// This setting only works in conjuntion with 'One Exchange Per Message Type' routing.
+		/// </summary>
+		/// <returns></returns>
+		public RabbitMqOptions DoNotDeclareInputExchange()
+		{
+			queue.DoNotDeclareInputExchange();
+			return this;
+		}
+
         /// <summary>
         /// Disables automatic creation of the error queue. This means that the Rebus error queue setting merely becomes the
         /// topic under which failed messages will be published, thus allowing you to route failed messages wherever you want.

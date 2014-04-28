@@ -56,6 +56,8 @@ namespace Rebus.RabbitMQ
         bool autoDeleteInputQueue;
         ushort prefetchCount = 100;
         bool managesSubscriptions;
+        string inputExchangeAddress = null;
+        bool ensureInputExchangeIsDeclared = true;
 
         [ThreadStatic]
         static IModel threadBoundModel;
@@ -94,7 +96,7 @@ namespace Rebus.RabbitMQ
 
             using (var model = GetConnection().CreateModel())
             {
-                InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
+                InitializeLogicalQueue(inputQueueName, model, false, autoDeleteInputQueue);
             }
         }
 
@@ -146,7 +148,7 @@ namespace Rebus.RabbitMQ
                 {
                     using (var localModel = GetConnection().CreateModel())
                     {
-                        InitializeLogicalQueue(inputQueueName, localModel, autoDeleteInputQueue);
+                        InitializeLogicalQueue(inputQueueName, localModel, false, autoDeleteInputQueue);
 
                         var basicGetResult = localModel.BasicGet(inputQueueName, true);
 
@@ -246,7 +248,18 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public string InputQueueAddress
         {
-            get { return inputQueueName; }
+            get { return inputExchangeAddress ?? inputQueueName; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether <see cref="InputQueueAddress"/> is an exchange address.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [input queue address is exchange]; otherwise, <c>false</c>.
+        /// </value>
+        public bool InputQueueAddressIsExchange
+        {
+            get { return inputExchangeAddress != null; }
         }
 
         /// <summary>
@@ -305,7 +318,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
+                    InitializeLogicalQueue(inputQueueName, model, false, autoDeleteInputQueue);
                     log.Warn("Purging queue {0}", inputQueueName);
                     model.QueuePurge(inputQueueName);
                 }
@@ -399,7 +412,10 @@ namespace Rebus.RabbitMQ
                 if (model != null)
                 {
                     log.Info("Unsubscribing {0} from {1}", InputQueueAddress, eventName);
-                    model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
+                    if (InputQueueAddressIsExchange)
+                        model.ExchangeUnbind(InputQueueAddress, exchange, routingKey);
+                    else
+                        model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
                 }
                 return;
             }
@@ -409,7 +425,10 @@ namespace Rebus.RabbitMQ
                 using (var model = GetConnection().CreateModel())
                 {
                     log.Info("Unsubscribing {0} from {1}", InputQueueAddress, eventName);
-                    model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
+                    if (InputQueueAddressIsExchange)
+                        model.ExchangeUnbind(InputQueueAddress, exchange, routingKey);
+                    else
+                        model.QueueUnbind(InputQueueAddress, exchange, routingKey, new Dictionary<string, object>());
                 }
             }
             catch (Exception e)
@@ -491,6 +510,28 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
+        /// Uses the exchange as input address, by binding it to subscribed type's exchange(s).
+        /// </summary>
+        /// <param name="exchangeName">Name of the exchange.</param>
+        /// <returns></returns>
+        public RabbitMqMessageQueue UseExchangeAsInputAddress(string exchangeName)
+        {
+            log.Info("Will use exchange named {0} as input address.", exchangeName);
+            inputExchangeAddress = exchangeName;
+            return this;
+        }
+
+        /// <summary>
+        /// Disables Rebus' default behavior of (re)declaring the input exhange when it first interacts with Rabbit.
+        /// </summary>
+        /// <returns></returns>
+        public RabbitMqMessageQueue DoNotDeclareInputExchange()
+        {
+            this.ensureInputExchangeIsDeclared = false;
+            return this;
+        }
+
+        /// <summary>
         /// Configures Rabbit transport to prefetch the specified number of messages
         /// </summary>
         public RabbitMqMessageQueue Prefetch(ushort prefetchCountToSet)
@@ -515,11 +556,11 @@ namespace Rebus.RabbitMQ
         {
             if (CanUseThreadBoundModel)
             {
-                InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, autoDeleteInputQueue);
+                InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, false, autoDeleteInputQueue);
             }
             else
             {
-                WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, autoDeleteInputQueue));
+                WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, false, autoDeleteInputQueue));
             }
         }
 
@@ -569,7 +610,10 @@ namespace Rebus.RabbitMQ
             }
 
             log.Info("Subscribing {0} to {1}", InputQueueAddress, eventName);
-            model.QueueBind(InputQueueAddress, exchange, routingKey);
+            if (InputQueueAddressIsExchange)
+                model.ExchangeBind(InputQueueAddress, exchange, routingKey);
+            else
+                model.QueueBind(InputQueueAddress, exchange, routingKey);
         }
 
         string GetPrettyTypeName(Type messageType)
@@ -597,7 +641,7 @@ namespace Rebus.RabbitMQ
             return builder.ToString();
         }
 
-        void InitializeLogicalQueue(string queueName, IModel model, bool autoDelete = false)
+        void InitializeLogicalQueue(string queueName, IModel model, bool asErrorQueue, bool autoDelete = false)
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
@@ -609,9 +653,22 @@ namespace Rebus.RabbitMQ
                                autoDelete: autoDelete,
                                exclusive: false);
 
+            // Error queues do not need additional setup.
+            if (asErrorQueue) return;
+
             if (ExchangeName == null)
             {
                 log.Debug("Queue '{0}' is using one exchange-per-type routing.", queueName);
+
+                if (InputQueueAddressIsExchange && ensureInputExchangeIsDeclared)
+                {
+                    log.Debug("Declaring (input) exchange '{0}'", InputQueueAddress);
+                    model.ExchangeDeclare(InputQueueAddress, ExchangeType.Fanout, true);
+
+                    log.Debug("Binding queue '{0}' to exchange '{0'}", InputQueue, InputQueueAddress);
+                    model.QueueBind(InputQueue, InputQueueAddress, "");
+                }
+
                 return;
             }
 
@@ -628,9 +685,9 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        internal void CreateQueue(string queueName)
+        internal void CreateQueue(string queueName, bool asErrorQueue)
         {
-            WithConnection(model => InitializeLogicalQueue(queueName, model));
+            WithConnection(model => InitializeLogicalQueue(queueName, model, asErrorQueue));
         }
 
         void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
@@ -660,7 +717,7 @@ namespace Rebus.RabbitMQ
             // bind it to the thread
             threadBoundModel = newModel;
 
-            InitializeLogicalQueue(inputQueueName, threadBoundModel, autoDeleteInputQueue);
+            InitializeLogicalQueue(inputQueueName, threadBoundModel, false, autoDeleteInputQueue);
 
             EstablishSubscriptions(threadBoundModel);
         }

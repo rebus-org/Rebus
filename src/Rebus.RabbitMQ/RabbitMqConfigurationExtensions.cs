@@ -109,7 +109,7 @@ A more full example configuration snippet can be seen here:
                 {
                     if (options.CreateErrorQueue)
                     {
-                        queue.CreateQueue(errorQueueName);
+                        queue.CreateQueue(errorQueueName, true);
                     }
                     else
                     {

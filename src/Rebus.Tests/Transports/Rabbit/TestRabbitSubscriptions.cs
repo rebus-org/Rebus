@@ -95,25 +95,29 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 1 });
         }
 
-        [Test]
-        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType()
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType(bool usingExchangeAsInput)
         {
+            var queues = new[] { "test.rabbitsub.sub1", "test.rabbitsub.sub2", "test.rabbitsub.sub3", "test.rabbitsub.publisher" };
+
             // arrange
             DeleteExchange("Rebus");
-            DeleteQueue("test.rabbitsub.publisher");
-            DeleteQueue("test.rabbitsub.sub1");
-            DeleteQueue("test.rabbitsub.sub2");
-            DeleteQueue("test.rabbitsub.sub3");
+            foreach (var q in queues)
+            {
+                DeleteQueue(q);
+                DeleteExchange("ex-" + q);
+            }
 
-            var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher", oneExchangePerType: true);
+            var publisher = PullOneOutOfTheHat(queues[3], oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[3] : null);
 
             var receivedSub1 = new List<int>();
             var receivedSub2 = new List<int>();
             var receivedSub3 = new List<int>();
 
-            var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add, oneExchangePerType: true);
-            var sub2 = PullOneOutOfTheHat("test.rabbitsub.sub2", receivedSub2.Add, oneExchangePerType: true);
-            var sub3 = PullOneOutOfTheHat("test.rabbitsub.sub3", receivedSub3.Add, oneExchangePerType: true);
+            var sub1 = PullOneOutOfTheHat(queues[0], receivedSub1.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[0] : null);
+            var sub2 = PullOneOutOfTheHat(queues[1], receivedSub2.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[1] : null);
+            var sub3 = PullOneOutOfTheHat(queues[2], receivedSub3.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[2] : null);
 
             // act
             publisher.Publish(new SomeEvent { Number = 1 });
@@ -151,7 +155,11 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub2.OrderBy(i => i).ToArray().ShouldBe(new[] { 3, 4, 5 });
             receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
             DeclareExchange("Rebus", "topic", passive: true).ShouldBe(false);
-            DeclareExchange("Rebus.Tests.Transports.Rabbit.TestRabbitSubscriptions+SomeEvent", "topic", passive: true).ShouldBe(true);
+            DeclareExchange(typeof(SomeEvent).FullName, "topic", passive: true).ShouldBe(true);
+            foreach (var q in queues)
+            {
+                DeclareExchange("ex-" + q, "fanout", passive: true).ShouldBe(usingExchangeAsInput);
+            }
         }
 
         class SomeEvent
@@ -159,7 +167,7 @@ namespace Rebus.Tests.Transports.Rabbit
             public int Number { get; set; }
         }
 
-        IBus PullOneOutOfTheHat(string inputQueueName, Action<int> handler = null, bool oneExchangePerType = false)
+        IBus PullOneOutOfTheHat(string inputQueueName, Action<int> handler = null, bool oneExchangePerType = false, string inputExchange = null)
         {
             var adapter = new BuiltinContainerAdapter();
 
@@ -169,6 +177,7 @@ namespace Rebus.Tests.Transports.Rabbit
                 .Transport(t => {
                     var obj = t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions();
                     if (oneExchangePerType) obj.UseOneExchangePerMessageTypeRouting();
+                    if (inputExchange != null) obj.UseExchangeAsInputAddress(inputExchange);
                 })
                 .CreateBus().Start();
 
