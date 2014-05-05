@@ -67,6 +67,41 @@ namespace Rebus.Tests.Persistence.SqlServer
             currentTransaction = null;
         }
 
-        
+        [Test]
+        public void WorksWithUserProvidedConnectionWithStartedTransaction()
+        {
+            // arrange
+            BeginTransaction();
+
+            // act
+            storage.Store(typeof(string), "whatever");
+
+            // assert
+            CommitTransaction();
+        }
+
+        [Test]
+        public void WorksWithUserProvidedConnectionWithoutStartedTransaction()
+        {
+            // arrange
+
+            // act
+            storage.Store(typeof(string), "whatever");
+
+            // assert
+        }
+
+        [Test]
+        public void CanCreateSagaTablesAutomatically()
+        {
+            // arrange
+
+            // act
+            storage.EnsureTableIsCreated();
+
+            // assert
+            var existingTables = GetTableNames();
+            existingTables.ShouldContain(SubscriptionsTableName);
+        }
     }
 }
