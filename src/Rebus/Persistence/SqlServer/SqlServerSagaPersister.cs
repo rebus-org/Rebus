@@ -376,17 +376,12 @@ saga type name.",
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}] (
-	[id] [uniqueidentifier] NOT NULL,
-	[revision] [int] NOT NULL,
-	[data] [nvarchar](max) NOT NULL,
-
-    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-    (
-	    [id] ASC
-    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
-)
-
+CREATE TABLE ""{0}"" (
+	""id"" UUID NOT NULL,
+	""revision"" INTEGER NOT NULL,
+	""data"" TEXT NOT NULL,
+	PRIMARY KEY (""id"")
+);
 ", SagaTableName);
                     command.ExecuteNonQuery();
                 }
@@ -394,24 +389,15 @@ CREATE TABLE [dbo].[{0}] (
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}] (
-	[saga_type] [nvarchar](40) NOT NULL,
-	[key] [nvarchar](200) NOT NULL,
-	[value] [nvarchar](200) NOT NULL,
-	[saga_id] [uniqueidentifier] NOT NULL,
-    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
-    (
-	    [key] ASC,
-	    [value] ASC,
-	    [saga_type] ASC
-    ) WITH (PAD_INDEX  = OFF, STATISTICS_NORECOMPUTE  = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS  = ON, ALLOW_PAGE_LOCKS  = ON)
-)
+CREATE TABLE ""{0}"" (
+	""saga_type"" VARCHAR(40) NOT NULL,
+	""key"" VARCHAR(200) NOT NULL,
+	""value"" VARCHAR(200) NOT NULL,
+	""saga_id"" UUID NOT NULL,
+	PRIMARY KEY (""key"", ""value"", ""saga_type"")
+);
 
-CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
-(
-	[saga_id] ASC
-) WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON)
-
+CREATE INDEX ON ""{0}"" (""saga_id"");
 ", SagaIndexTableName);
                     command.ExecuteNonQuery();
                 }
