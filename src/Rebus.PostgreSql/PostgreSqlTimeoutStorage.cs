@@ -140,19 +140,20 @@ ORDER BY ""time_to_return"" ASC
         public PostgreSqlTimeoutStorage EnsureTableIsCreated()
         {
             var connection = getConnection();
-
-            var tableNames = connection.GetTableNames();
-
-            if (tableNames.Contains(timeoutsTableName, StringComparer.OrdinalIgnoreCase))
+            try
             {
-                return this;
-            }
+                var tableNames = connection.GetTableNames();
 
-            log.Info("Table '{0}' does not exist - it will be created now", timeoutsTableName);
+                if (tableNames.Contains(timeoutsTableName, StringComparer.OrdinalIgnoreCase))
+                {
+                    return this;
+                }
 
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = string.Format(@"
+                log.Info("Table '{0}' does not exist - it will be created now", timeoutsTableName);
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
 CREATE TABLE ""{0}"" (
     ""id"" BIGSERIAL NOT NULL,
     ""time_to_return"" TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -164,15 +165,24 @@ CREATE TABLE ""{0}"" (
 );
 ", timeoutsTableName);
 
-                command.ExecuteNonQuery();
+                    command.ExecuteNonQuery();
+                }
 
-                command.CommandText = string.Format(@"
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
 CREATE INDEX ON ""{0}"" (""time_to_return"");
 ", timeoutsTableName);
 
-                command.ExecuteNonQuery();
-            }
+                    command.ExecuteNonQuery();
+                }
 
+                commitAction(connection);
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
             return this;
         }
 
