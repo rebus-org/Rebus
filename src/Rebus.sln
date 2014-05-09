@@ -47,6 +47,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.Ninject.nuspec = ..\scripts\Rebus.Ninject.nuspec
 		..\scripts\Rebus.NLog.nuspec = ..\scripts\Rebus.NLog.nuspec
 		..\scripts\Rebus.nuspec = ..\scripts\Rebus.nuspec
+		..\scripts\Rebus.PostgreSql.nuspec = ..\scripts\Rebus.PostgreSql.nuspec
 		..\scripts\Rebus.RabbitMQ.nuspec = ..\scripts\Rebus.RabbitMQ.nuspec
 		..\scripts\Rebus.RavenDb.nuspec = ..\scripts\Rebus.RavenDb.nuspec
 		..\scripts\Rebus.Serilog.nuspec = ..\scripts\Rebus.Serilog.nuspec
@@ -102,6 +103,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.RabbitMQ", "Rebus.ReturnToSourceQueue.RabbitMQ\Rebus.ReturnToSourceQueue.RabbitMQ.csproj", "{77AB0C4F-C839-4BD1-BB49-19357A42A82B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Serilog", "Rebus.Serilog\Rebus.Serilog.csproj", "{994133F4-799B-4878-8AE8-29F5D7E00B8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.PostgreSql", "Rebus.PostgreSql\Rebus.PostgreSql.csproj", "{BA89E035-AD58-42A9-AC55-443EAD2527CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -339,6 +342,16 @@ Global
 		{994133F4-799B-4878-8AE8-29F5D7E00B8D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{994133F4-799B-4878-8AE8-29F5D7E00B8D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{994133F4-799B-4878-8AE8-29F5D7E00B8D}.Release|x86.ActiveCfg = Release|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -353,6 +366,7 @@ Global
 		{EB3B369C-B510-43B1-8157-BEB87873CB7A} = {CDBB385F-F696-4B45-9E87-5A0A3C28F633}
 		{A56478ED-F8B1-4300-9C6C-87322E565252} = {9FAD5BC1-8B70-4E51-816C-CEE718EB5E5C}
 		{81686CC0-5387-4990-AF61-00CDAA972B81} = {9FAD5BC1-8B70-4E51-816C-CEE718EB5E5C}
+		{BA89E035-AD58-42A9-AC55-443EAD2527CE} = {9FAD5BC1-8B70-4E51-816C-CEE718EB5E5C}
 		{2AFAE434-5CD2-494E-8341-005CD637FE2D} = {48006958-82E0-46B0-81CB-0A6FC7BA1A75}
 		{F439A82E-B375-4C38-877B-7ED7F49AC6C2} = {48006958-82E0-46B0-81CB-0A6FC7BA1A75}
 		{994133F4-799B-4878-8AE8-29F5D7E00B8D} = {48006958-82E0-46B0-81CB-0A6FC7BA1A75}
