@@ -263,12 +263,15 @@
     <Compile Include="Persistence\PostgreSql\TestPostgreSqlSubscriptionStorage.cs" />
     <Compile Include="Persistence\PostgreSql\TestPostgreSqlSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\PostgreSql\TestPostgreSqlTimeoutStorage.cs" />
+    <Compile Include="Persistence\Sagas\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
+    <Compile Include="Persistence\Subscriptions\Factories\PostgreSqlServerSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
+    <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />

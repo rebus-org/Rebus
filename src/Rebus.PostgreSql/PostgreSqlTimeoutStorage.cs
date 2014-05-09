@@ -32,16 +32,6 @@ namespace Rebus.PostgreSql
         }
 
         /// <summary>
-        /// Constructs the timeout storage which will use the specified connection factory method to connect to a database,
-        /// storing the timeouts in the table with the specified name
-        /// </summary>
-        public PostgreSqlTimeoutStorage(Func<ConnectionHolder> connectionFactoryMethod, string timeoutsTableName)
-            : base(connectionFactoryMethod)
-        {
-            this.timeoutsTableName = timeoutsTableName;
-        }
-
-        /// <summary>
         /// Gets the name of the table where timeouts are stored
         /// </summary>
         public string TimeoutsTableName
@@ -78,12 +68,12 @@ namespace Rebus.PostgreSql
                         command.Parameters.AddWithValue(parameter.Key, parameter.Value);
                     }
 
-                    const string Sql = @"INSERT INTO ""{0}"" ({1}) VALUES ({2})";
+                    const string sql = @"INSERT INTO ""{0}"" ({1}) VALUES ({2})";
 
                     var valueNames = string.Join(", ", parameters.Keys.Select(x => "\"" + x + "\""));
                     var parameterNames = string.Join(", ", parameters.Keys.Select(x => "@" + x));
 
-                    command.CommandText = string.Format(Sql, timeoutsTableName, valueNames, parameterNames);
+                    command.CommandText = string.Format(sql, timeoutsTableName, valueNames, parameterNames);
 
                     command.ExecuteNonQuery();
                 }
@@ -101,35 +91,66 @@ namespace Rebus.PostgreSql
         /// </summary>
         public IEnumerable<DueTimeout> GetDueTimeouts()
         {
+            var dueTimeouts = new List<DueTimeout>();
             var connection = getConnection();
 
-            var dueTimeouts = new List<DueTimeout>();
-
-            using (var command = connection.CreateCommand())
+            try
             {
-                const string Sql = @"
+                using (var command = connection.CreateCommand())
+                {
+                    const string sql = @"
 SELECT ""id"", ""time_to_return"", ""correlation_id"", ""saga_id"", ""reply_to"", ""custom_data""
 FROM ""{0}""
 WHERE ""time_to_return"" <= @current_time
 ORDER BY ""time_to_return"" ASC
 ";
 
-                command.CommandText = string.Format(Sql, timeoutsTableName);
+                    command.CommandText = string.Format(sql, timeoutsTableName);
 
-                command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
+                    command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
+                    using (var reader = command.ExecuteReader())
                     {
-                        var sqlTimeout = DueSqlTimeout.Create(getConnection, timeoutsTableName, reader);
+                        while (reader.Read())
+                        {
+                            var sqlTimeout = DuePostgreSqlTimeout.Create(MarkAsProcessed, timeoutsTableName, reader);
 
-                        dueTimeouts.Add(sqlTimeout);
+                            dueTimeouts.Add(sqlTimeout);
+                        }
                     }
                 }
+
+                connection.Commit();
+            }
+            finally
+            {
+                releaseConnection(connection);
             }
 
             return dueTimeouts;
+        }
+
+        void MarkAsProcessed(DuePostgreSqlTimeout dueTimeout)
+        {
+            var connection = getConnection();
+
+            try
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"DELETE FROM ""{0}"" WHERE ""id"" = @id", timeoutsTableName);
+
+                    command.Parameters.AddWithValue("id", dueTimeout.Id);
+
+                    command.ExecuteNonQuery();
+                }
+
+                connection.Commit();
+            }
+            finally
+            {
+                releaseConnection(connection);
+            }
         }
 
         /// <summary>
@@ -186,23 +207,22 @@ CREATE INDEX ON ""{0}"" (""time_to_return"");
             return this;
         }
 
-        public class DueSqlTimeout : DueTimeout
+        public class DuePostgreSqlTimeout : DueTimeout
         {
-            readonly Func<ConnectionHolder> connectionFactoryMethod;
-
+            readonly Action<DuePostgreSqlTimeout> markAsProcessedAction;
             readonly string timeoutsTableName;
 
             readonly long id;
 
-            public DueSqlTimeout(Func<ConnectionHolder> connectionFactoryMethod, string timeoutsTableName, long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData)
+            public DuePostgreSqlTimeout(Action<DuePostgreSqlTimeout> markAsProcessedAction, string timeoutsTableName, long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
-                this.connectionFactoryMethod = connectionFactoryMethod;
+                this.markAsProcessedAction = markAsProcessedAction;
                 this.timeoutsTableName = timeoutsTableName;
                 this.id = id;
             }
 
-            public static DueSqlTimeout Create(Func<ConnectionHolder> connectionFactoryMethod, string timeoutsTableName, IDataReader reader)
+            public static DuePostgreSqlTimeout Create(Action<DuePostgreSqlTimeout> markAsProcessedAction, string timeoutsTableName, IDataReader reader)
             {
                 var id = (long)reader["id"];
                 var correlationId = (string)reader["correlation_id"];
@@ -211,23 +231,19 @@ CREATE INDEX ON ""{0}"" (""time_to_return"");
                 var timeToReturn = (DateTime)reader["time_to_return"];
                 var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                var timeout = new DueSqlTimeout(connectionFactoryMethod, timeoutsTableName, id, replyTo, correlationId, timeToReturn, sagaId, customData);
+                var timeout = new DuePostgreSqlTimeout(markAsProcessedAction, timeoutsTableName, id, replyTo, correlationId, timeToReturn, sagaId, customData);
 
                 return timeout;
             }
 
             public override void MarkAsProcessed()
             {
-                var connection = connectionFactoryMethod();
+                markAsProcessedAction(this);
+            }
 
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format(@"DELETE FROM ""{0}"" WHERE ""id"" = @id", timeoutsTableName);
-
-                    command.Parameters.AddWithValue("id", id);
-
-                    command.ExecuteNonQuery();
-                }
+            public long Id
+            {
+                get { return id; }
             }
         }
     }
