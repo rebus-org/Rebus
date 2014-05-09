@@ -3,15 +3,15 @@
   <metadata>
     <id>Rebus.PostgreSql</id>
     <version>0.0.1</version>
-    <title>Rebus.MongoDb</title>
-    <authors>mookid8000</authors>
-    <owners>mookid8000,rasmuskl</owners>
+    <title>Rebus.PostgreSql</title>
+    <authors>mookid8000,hagbarddenstore</authors>
+    <owners>mookid8000,hagbarddenstore</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Provides PostgreSql saga persister and subscription storage</description>
+    <description>Provides PostgreSql saga persister, subscription storage, and timeout storage</description>
     <copyright>Copyright 2012</copyright>
-    <tags>rebus mongodb</tags>
+    <tags>rebus postgres postgresql</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
