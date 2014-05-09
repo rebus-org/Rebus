@@ -158,9 +158,9 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                     {
                         command.ExecuteNonQuery();
                     }
-                    catch (NpgsqlException)
+                    catch (NpgsqlException exception)
                     {
-                        throw new OptimisticLockingException(sagaData);
+                        throw new OptimisticLockingException(sagaData, exception);
                     }
                 }
 
@@ -184,7 +184,6 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 
                         command.CommandText = sql;
-
                         command.ExecuteNonQuery();
                     }
                 }
@@ -205,9 +204,9 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    const string DeleteSagaIndexSql = @"DELETE FROM ""{0}"" WHERE ""saga_id"" = @id;";
+                    const string deleteSagaIndexSql = @"DELETE FROM ""{0}"" WHERE ""saga_id"" = @id;";
 
-                    command.CommandText = string.Format(DeleteSagaIndexSql, sagaIndexTableName);
+                    command.CommandText = string.Format(deleteSagaIndexSql, sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -222,9 +221,9 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                     command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
-                    const string UpdateSagaSql = @"UPDATE ""{0}"" SET ""data"" = @data, ""revision"" = @next_revision WHERE ""id"" = @id AND ""revision"" = @current_revision";
+                    const string updateSagaSql = @"UPDATE ""{0}"" SET ""data"" = @data, ""revision"" = @next_revision WHERE ""id"" = @id AND ""revision"" = @current_revision";
 
-                    command.CommandText = string.Format(UpdateSagaSql, sagaTableName);
+                    command.CommandText = string.Format(updateSagaSql, sagaTableName);
                     var rows = command.ExecuteNonQuery();
                     if (rows == 0)
                     {
@@ -240,10 +239,10 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                     using (var command = connection.CreateCommand())
                     {
                         // generate batch insert with SQL for each entry in the index
-                        const string InsertSagaIndexSql = @"INSERT INTO ""{0}"" (""saga_type"", ""key"", ""value"", ""saga_id"") VALUES ('{1}', '{2}', '{3}', '{4}')";
+                        const string insertSagaIndexSql = @"INSERT INTO ""{0}"" (""saga_type"", ""key"", ""value"", ""saga_id"") VALUES ('{1}', '{2}', '{3}', '{4}')";
 
                         var inserts = propertiesToIndex
-                            .Select(a => string.Format(InsertSagaIndexSql, sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value, sagaData.Id.ToString()));
+                            .Select(a => string.Format(insertSagaIndexSql, sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value, sagaData.Id.ToString()));
 
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 
@@ -268,9 +267,9 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
             {
                 using (var command = connection.CreateCommand())
                 {
-                    const string UpdateSagaSql = @"DELETE FROM ""{0}"" WHERE ""id"" = @id AND ""revision"" = @current_revision;";
+                    const string updateSagaSql = @"DELETE FROM ""{0}"" WHERE ""id"" = @id AND ""revision"" = @current_revision;";
 
-                    command.CommandText = string.Format(UpdateSagaSql, sagaTableName);
+                    command.CommandText = string.Format(updateSagaSql, sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
 
@@ -284,9 +283,9 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
 
                 using (var command = connection.CreateCommand())
                 {
-                    const string DeleteSagaIndexSql = @"DELETE FROM ""{0}"" WHERE ""saga_id"" = @id";
+                    const string deleteSagaIndexSql = @"DELETE FROM ""{0}"" WHERE ""saga_id"" = @id";
 
-                    command.CommandText = string.Format(DeleteSagaIndexSql, sagaIndexTableName);
+                    command.CommandText = string.Format(deleteSagaIndexSql, sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -308,20 +307,20 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                 {
                     if (sagaDataPropertyPath == idPropertyName)
                     {
-                        const string Sql = @"SELECT s.data FROM ""{0}"" s WHERE s.id = @value";
+                        const string sql = @"SELECT s.data FROM ""{0}"" s WHERE s.id = @value";
 
-                        command.CommandText = string.Format(Sql, sagaTableName);
+                        command.CommandText = string.Format(sql, sagaTableName);
                     }
                     else
                     {
-                        const string Sql = @"
+                        const string sql = @"
 SELECT s.data 
 FROM ""{0}"" s 
 JOIN ""{1}"" i on s.id = i.saga_id 
 WHERE i.""saga_type"" = @saga_type AND i.""key"" = @key AND i.value = @value
 ";
 
-                        command.CommandText = string.Format(Sql, sagaTableName, sagaIndexTableName);
+                        command.CommandText = string.Format(sql, sagaTableName, sagaIndexTableName);
 
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
