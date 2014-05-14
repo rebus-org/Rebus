@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using MongoDB.Driver;
 using NUnit.Framework;
 using log4net.Config;
@@ -8,6 +11,8 @@ namespace Rebus.Tests.Persistence
     public abstract class MongoDbFixtureBase
     {
         MongoDatabase db;
+        Process mongod;
+        string datapath;
 
         static MongoDbFixtureBase()
         {
@@ -23,7 +28,7 @@ namespace Rebus.Tests.Persistence
         public void SetUp()
         {
             TimeMachine.Reset();
-
+            mongod = MongoHelper.StartServerFromScratch();
             db = MongoHelper.GetDatabase(ConnectionStrings.MongoDb);
             db.Drop();
 
@@ -38,6 +43,7 @@ namespace Rebus.Tests.Persistence
         public void TearDown()
         {
             DoTearDown();
+            MongoHelper.StopServer(mongod, db);
         }
 
         protected virtual void DoTearDown()
