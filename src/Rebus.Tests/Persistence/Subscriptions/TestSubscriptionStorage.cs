@@ -8,6 +8,7 @@ namespace Rebus.Tests.Persistence.Subscriptions
 {
     [TestFixture(typeof(InMemorySubscriptionStoreFactory))]
     [TestFixture(typeof(SqlServerSubscriptionStoreFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(PostgreSqlServerSubscriptionStoreFactory), Category = TestCategories.PostgreSql)]
     [TestFixture(typeof(RavenDbSubscriptionStoreFactory), Category = TestCategories.Raven)]
     [TestFixture(typeof(MongoDbSubscriptionStoreFactory), Category = TestCategories.Mongo)]
     [TestFixture(typeof(XmlSubscriptionStoreFactory))]

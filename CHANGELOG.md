@@ -359,3 +359,12 @@
 ## 0.65.0
 
 * Updated StructureMap dependency to 3.0 - thanks [fritsduus](https://github.com/fritsduus) 
+
+## 0.65.1
+
+* Added Serilog logger - thanks [fritsduus](https://github.com/fritsduus) 
+
+## 0.66.0
+
+* Fixed it so that inner exceptions are included when a `SqlException` causes saga persister to not be able to insert.
+* Added Postgres persisters for sagas, subscriptions, and timeouts - thanks [hagbarddenstore](https://github.com/hagbarddenstore)

@@ -101,9 +101,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         command.ExecuteNonQuery();
                     }
-                    catch (SqlException)
+                    catch (SqlException sqlException)
                     {
-                        throw new OptimisticLockingException(sagaData);
+                        if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
+                        {
+                            throw new OptimisticLockingException(sagaData, sqlException);
+                        }
+
+                        throw;
                     }
                 }
 

@@ -10,10 +10,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus.Tests</RootNamespace>
     <AssemblyName>Rebus.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,6 +24,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +33,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=2.6.3.862, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
@@ -125,6 +128,12 @@
     </Reference>
     <Reference Include="StructureMap.Net4">
       <HintPath>..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.Net4.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security">
+      <HintPath>..\packages\Npgsql.2.1.3\lib\net40\Mono.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>..\packages\Npgsql.2.1.3\lib\net40\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -248,12 +257,21 @@
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusAndOneWayClient.cs" />
     <Compile Include="Performance\TestRebusBusWithAzureServiceBusMessageQueue_Queues.cs" />
     <Compile Include="Persistence\MongoHelper.cs" />
+    <Compile Include="Persistence\PostgreSqlFixtureBase.cs" />
+    <Compile Include="Persistence\PostgreSql\TestPostgreSqlSagaPersister.cs" />
+    <Compile Include="Persistence\PostgreSql\TestPostgreSqlSagaPersister_UserProvidedConnection.cs" />
+    <Compile Include="Persistence\PostgreSql\TestPostgreSqlSubscriptionStorage.cs" />
+    <Compile Include="Persistence\PostgreSql\TestPostgreSqlSubscriptionStorage_UserProvidedConnection.cs" />
+    <Compile Include="Persistence\PostgreSql\TestPostgreSqlTimeoutStorage.cs" />
+    <Compile Include="Persistence\Sagas\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSagaPersister_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
+    <Compile Include="Persistence\Subscriptions\Factories\PostgreSqlServerSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
+    <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
@@ -425,6 +443,10 @@
       <Project>{f439a82e-b375-4c38-877b-7ed7f49ac6c2}</Project>
       <Name>Rebus.NLog</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.PostgreSql\Rebus.PostgreSql.csproj">
+      <Project>{BA89E035-AD58-42A9-AC55-443EAD2527CE}</Project>
+      <Name>Rebus.PostgreSql</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.RabbitMQ\Rebus.RabbitMQ.csproj">
       <Project>{5836C347-90FC-4628-B4A1-16926B6CA781}</Project>
       <Name>Rebus.RabbitMQ</Name>
@@ -432,6 +454,10 @@
     <ProjectReference Include="..\Rebus.RavenDb\Rebus.RavenDb.csproj">
       <Project>{A56478ED-F8B1-4300-9C6C-87322E565252}</Project>
       <Name>Rebus.RavenDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
+      <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
+      <Name>Rebus.Serilog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.StructureMap\Rebus.StructureMap.csproj">
       <Project>{D5263804-AD2A-40E3-B656-5132255883A8}</Project>
@@ -459,6 +485,10 @@
     </Content>
     <Content Include="Contracts\readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
