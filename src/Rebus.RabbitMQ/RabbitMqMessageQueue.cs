@@ -49,6 +49,7 @@ namespace Rebus.RabbitMQ
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
 
         const string CurrentModelKey = "current_model";
+        const int MaxMessageBodySize = 44739489; //< this is 32768 KB of '*' chars in a byte array, wrapped in a message
 
         string exchangeName = "Rebus";
         bool ensureExchangeIsDeclared = true;
@@ -110,6 +111,14 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
+            var messageBodyLength = message.Body.Length;
+
+            if (messageBodyLength > MaxMessageBodySize)
+            {
+                throw new InvalidOperationException(string.Format("Message body length of {0} bytes exceeds the maximum message body length of {1} bytes",
+                    messageBodyLength, MaxMessageBodySize));
+            }
+
             try
             {
                 var exchange = UsingOneExchangePerMessageTypeRouting ? destinationQueueName : ExchangeName;

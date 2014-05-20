@@ -74,5 +74,16 @@ namespace Rebus.Tests.Bugs
 
             // assert
         }
+
+        [TestCase(32768 + 1, Description = "Too big => InvalidOperationException inside ApplicationException")]
+        public void ThrowsWhenSendingTooHugeMessages(int sizeInKiloBytes)
+        {
+            var sizeInBytes = sizeInKiloBytes * 1024;
+            var byteArray = Enumerable.Repeat((byte)'*', sizeInBytes).ToArray();
+
+            Console.WriteLine("Publishing byte[] with Length={0}", byteArray.Length);
+
+            Assert.Throws<ApplicationException>(() => bus.SendLocal(byteArray));
+        }
     }
 }
