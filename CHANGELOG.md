@@ -372,7 +372,7 @@
 ## 0.67.0
 
 * Added ability for RabbitMQ transport to publish to different exchanges instead of different routing keys - thanks [pruiz]
-
+* Limit message body size to 32 MB for RabbitMQ transport because publishing larger messages can destabilize the server.
 
 
 
