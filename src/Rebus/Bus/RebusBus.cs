@@ -194,7 +194,7 @@ namespace Rebus.Bus
                     " there's no way for the bus to receive the message you're sending.");
             }
 
-            var destinationEndpoint = receiveMessages.InputQueue;
+            var destinationEndpoint = receiveMessages.InputQueueAddress;
 
             PossiblyAttachSagaIdToRequest(message);
 
