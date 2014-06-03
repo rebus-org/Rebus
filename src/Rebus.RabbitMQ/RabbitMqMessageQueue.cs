@@ -688,7 +688,7 @@ namespace Rebus.RabbitMQ
                     log.Debug("Declaring (input) exchange '{0}'", InputQueueAddress);
                     model.ExchangeDeclare(InputQueueAddress, ExchangeType.Fanout, true);
 
-                    log.Debug("Binding queue '{0}' to exchange '{0'}", InputQueue, InputQueueAddress);
+                    log.Debug("Binding queue '{0}' to exchange '{0}'", InputQueue, InputQueueAddress);
                     model.QueueBind(InputQueue, InputQueueAddress, "");
                 }
 
