@@ -99,7 +99,7 @@ namespace Rebus.Bus
             else
             {
                 log.Info("Using internal timeout manager");
-                timeoutManagerAddress = this.receiveMessages.InputQueue;
+                timeoutManagerAddress = this.receiveMessages.InputQueueAddress;
                 dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
             }
         }
