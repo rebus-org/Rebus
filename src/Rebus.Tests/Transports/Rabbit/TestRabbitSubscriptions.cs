@@ -106,6 +106,7 @@ namespace Rebus.Tests.Transports.Rabbit
             foreach (var q in queues)
             {
                 DeleteQueue(q);
+			    DeleteQueue("ex-" + q);
                 DeleteExchange("ex-" + q);
             }
 
@@ -159,7 +160,10 @@ namespace Rebus.Tests.Transports.Rabbit
             foreach (var q in queues)
             {
                 DeclareExchange("ex-" + q, "fanout", passive: true).ShouldBe(usingExchangeAsInput);
+			    // Ensure no spurious queue names are created.
+			    DeclareQueue("ex-" + q, passive: true).ShouldBe(false);
             }
+
         }
 
         class SomeEvent

@@ -137,6 +137,35 @@ namespace Rebus.Tests.Transports.Rabbit
             }
         }
 
+        public static bool DeclareQueue(string queueName, bool durable = true, bool exclusive = false, bool autoDelete = false, bool passive = false)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    if (passive)
+                    {
+                        model.QueueDeclarePassive(queueName);
+                    }
+                    else
+                    {
+                        model.QueueDeclare(queueName, durable, exclusive, autoDelete, null);
+                    }
+
+
+                }
+                catch
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+
         class FakeContainerAdapter : IContainerAdapter
         {
             readonly IActivateHandlers handlerActivator;

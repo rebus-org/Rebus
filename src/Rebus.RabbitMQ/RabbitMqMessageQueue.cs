@@ -573,6 +573,14 @@ namespace Rebus.RabbitMQ
 
         void EnsureInputQueueInitialized(string inputQueueNameToInitialize)
         {
+            // If desired queue name is our public exchange, declare our input queue instead.
+			// This is needed in order to avoid creating a queue named as our public exchange address
+			// we we are using an exchange as our public facing address.
+            if (InputQueueAddressIsExchange && inputQueueNameToInitialize == inputExchangeAddress)
+            {
+                inputQueueNameToInitialize = inputQueueName;
+            }
+
             if (CanUseThreadBoundModel)
             {
                 InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, false, autoDeleteInputQueue);
