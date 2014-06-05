@@ -374,7 +374,9 @@
 * Added ability for RabbitMQ transport to publish to different exchanges instead of different routing keys - thanks [pruiz]
 * Limit message body size to 32 MB for RabbitMQ transport because publishing larger messages can destabilize the server.
 
+## 0.68.0
 
+* Added additional routing options with RabbitMQ - endpoints can now be adressed on several forms: `topic`, `@exchange`, and `topic@exchange` - thanks [pruiz]
 
 
 [pruiz]: https://github.com/pruiz
