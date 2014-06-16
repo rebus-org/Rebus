@@ -11,7 +11,7 @@
         /// ID and/or correlations, an <see cref="OptimisticLockingException"/> must be thrown.
         /// </summary>
         void Insert(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex);
-        
+
         /// <summary>
         /// Updates the specified saga data in the underlying data store, ensuring that the
         /// specified fields can be used to correlate with incoming messages. If the saga no
@@ -19,7 +19,7 @@
         /// and <see cref="OptimisticLockingException"/> must be thrown.
         /// </summary>
         void Update(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex);
-        
+
         /// <summary>
         /// Deletes the specified saga data from the underlying data store.
         /// </summary>
@@ -32,4 +32,12 @@
         /// </summary>
         T Find<T>(string sagaDataPropertyPath, object fieldFromMessage) where T : class, ISagaData;
     }
+
+    /// <summary>
+    /// Implement this on a saga persister if it can handle multiple sagas atomically in one transaction.
+    /// </summary>
+    public interface ICanUpdateMultipleSagaDatasAtomically
+    {
+    }
+
 }
