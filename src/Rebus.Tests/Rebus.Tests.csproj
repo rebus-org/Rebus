@@ -165,6 +165,7 @@
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
+    <Compile Include="Bugs\SupportsRemoteErrorQueue.cs" />
     <Compile Include="Bugs\TestUsingTransactionScope.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
