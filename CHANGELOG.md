@@ -378,6 +378,14 @@
 
 * Added additional routing options with RabbitMQ - endpoints can now be adressed on several forms: `topic`, `@exchange`, and `topic@exchange` - thanks [pruiz]
 
+## 0.69.0
+
+* Removed MSMQ error queue existence check when queue is remote (because it can't be done, and because it doesn't make sense for remote queues)
+* Added ability for saga persisters to provide the ability to update more than one saga instance for an incoming message, by implementing `ICanUpdateMultipleSagaDatasAtomically` - thanks [PeteProgrammer]
+
+
+
+
 
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
@@ -388,3 +396,4 @@
 [caspertdk]: https://github.com/caspertdk
 [dev4ce]: https://github.com/dev4ce
 [krivin]: https://github.com/krivin
+[PeteProgrammer]: https://github.com/PeteProgrammer
