@@ -383,6 +383,9 @@
 * Removed MSMQ error queue existence check when queue is remote (because it can't be done, and because it doesn't make sense for remote queues)
 * Added ability for saga persisters to provide the ability to update more than one saga instance for an incoming message, by implementing `ICanUpdateMultipleSagaDatasAtomically` - thanks [PeteProgrammer]
 
+## 0.70.0
+
+* Made all batch operations obsolete so that you'll get a compiler warning if you use them.
 
 
 
