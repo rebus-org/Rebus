@@ -252,6 +252,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Gives access to Rebus' batch operations.
         /// </summary>
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public IRebusBatchOperations Batch
         {
             get { return batch; }
