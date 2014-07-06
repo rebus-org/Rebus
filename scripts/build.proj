@@ -8,6 +8,7 @@
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.SimpleInjector\*.csproj" />
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
     <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Autofac\*.csproj"/>
