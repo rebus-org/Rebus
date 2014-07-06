@@ -13,6 +13,7 @@ using Rebus.Transports.Msmq;
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
     [TestFixture(typeof(WindsorContainerAdapterFactory))]
+    [TestFixture(typeof(SimpleInjectorContainerAdapterFactory))]
     [TestFixture(typeof(StructureMapContainerAdapterFactory))]
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]

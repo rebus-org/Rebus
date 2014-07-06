@@ -123,6 +123,12 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Shouldly.1.1.1.1\lib\35\Shouldly.dll</HintPath>
     </Reference>
+    <Reference Include="SimpleInjector">
+      <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleInjector.Diagnostics">
+      <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
+    </Reference>
     <Reference Include="StructureMap">
       <HintPath>..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.dll</HintPath>
     </Reference>
@@ -195,6 +201,7 @@
     <Compile Include="Contracts\ContainerAdapters\Factories\AutofacContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\BuiltinContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\NinjectContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\SimpleInjectorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\UnityContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\IContainerAdapterFactory.cs" />
@@ -459,6 +466,10 @@
     <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
       <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
       <Name>Rebus.Serilog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.SimpleInjector\Rebus.SimpleInjector.csproj">
+      <Project>{44a9cdf9-3a76-4b4c-aa1d-a34ad7fc2bd5}</Project>
+      <Name>Rebus.SimpleInjector</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.StructureMap\Rebus.StructureMap.csproj">
       <Project>{D5263804-AD2A-40E3-B656-5132255883A8}</Project>
