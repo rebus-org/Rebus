@@ -99,7 +99,7 @@ namespace Rebus.Bus
             else
             {
                 log.Info("Using internal timeout manager");
-                timeoutManagerAddress = this.receiveMessages.InputQueue;
+                timeoutManagerAddress = this.receiveMessages.InputQueueAddress;
                 dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
             }
         }
@@ -137,6 +137,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
+
         IBus IStartableBus.Start()
         {
             InternalStart(GetConfiguredNumberOfWorkers());
@@ -193,7 +194,7 @@ namespace Rebus.Bus
                     " there's no way for the bus to receive the message you're sending.");
             }
 
-            var destinationEndpoint = receiveMessages.InputQueue;
+            var destinationEndpoint = receiveMessages.InputQueueAddress;
 
             PossiblyAttachSagaIdToRequest(message);
 
@@ -251,6 +252,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Gives access to Rebus' batch operations.
         /// </summary>
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public IRebusBatchOperations Batch
         {
             get { return batch; }
@@ -437,16 +439,23 @@ namespace Rebus.Bus
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Subscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
         }
 
         internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage<TMessage>(publisherInputQueue, SubscribeAction.Unsubscribe);
+            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
         }
 
-        internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
+        internal void SendSubscriptionMessage(Type messageType, SubscribeAction subscribeAction)
         {
+            SendSubscriptionMessage(messageType, GetMessageOwnerEndpointFor(messageType), subscribeAction);
+        }
+
+        internal void SendSubscriptionMessage(Type messageType, string destinationQueue, SubscribeAction subscribeAction)
+        {
+            if (messageType == null) throw new ArgumentNullException("messageType", "A message type must be specified in order to subscribe/unsubscribe");
+
             if (configureAdditionalBehavior.OneWayClientMode)
             {
                 throw new InvalidOperationException(
@@ -456,7 +465,7 @@ namespace Rebus.Bus
 
             var message = new SubscriptionMessage
                 {
-                    Type = typeof(TMessage).AssemblyQualifiedName,
+                    Type = messageType.AssemblyQualifiedName,
                     Action = subscribeAction,
                 };
 
@@ -484,6 +493,8 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
+
+            RaiseBusStarted();
 
             log.Info("Bus started");
         }
@@ -763,6 +774,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 disposable.Dispose();
             }
+
+            RaiseBusStopped();
         }
 
         /// <summary>
@@ -773,7 +786,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return string.Format("Rebus {0}", rebusId);
         }
 
-        string GetMessageOwnerEndpointFor(Type messageType)
+        internal string GetMessageOwnerEndpointFor(Type messageType)
         {
             return determineMessageOwnership.GetEndpointFor(messageType);
         }
@@ -855,6 +868,16 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         void RaiseAfterMessage(Exception exception, object message)
         {
             events.RaiseAfterMessage(this, exception, message);
+        }
+
+        void RaiseBusStarted()
+        {
+            events.RaiseBusStarted(this);
+        }
+
+        void RaiseBusStopped()
+        {
+            events.RaiseBusStopped(this);
         }
 
         void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)

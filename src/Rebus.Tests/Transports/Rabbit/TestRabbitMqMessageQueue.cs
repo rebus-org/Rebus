@@ -475,6 +475,107 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedTransportMessagesFromSecondRecipient.Count.ShouldBe(commitTransactionAndExpectMessagesToBeThere ? 3 : 0);
         }
 
+        [TestCase(1, Description="Asserts that routing directly to a queue works when rebus' classic routing strategy")]
+        [TestCase(2, Description = "Asserts that routing directly to a queue works when one-message-per-type routing")]
+        [TestCase(3, Description = "Asserts that routing directly to a queue works when one-message-per-type routing + using an exchange as queue address")]
+        public void CanSendMessagesDirectlyToQueue(int mode)
+        {
+            // arrange
+            var routeUsingExchanges = mode > 1;
+            var exchangeAsAddress = mode > 2;
+            var sender = GetQueue("test.sender", removeExiting: true, oneExchangePerType: routeUsingExchanges, 
+                inputExchange: exchangeAsAddress ? "ex-test.sender" : null);
+            var recipient = GetQueue("test.recipient", removeExiting: true, oneExchangePerType: routeUsingExchanges, 
+                inputExchange: exchangeAsAddress ? "ex-test.recipient" : null);
+
+            // act
+            using (var tx = new TransactionScope())
+            {
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
+
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
+                sender.Send(recipient.InputQueue, msg, ctx);
+
+                tx.Complete();
+            }
+
+            // assert
+            var receivedTransportMessages = GetAllMessages(recipient);
+
+            receivedTransportMessages.Count.ShouldBe(3);
+        }
+
+        [TestCase(1, Description = "Asserts that routing directly to an exchange works when rebus' classic routing strategy")]
+        [TestCase(2, Description = "Asserts that routing directly to an exchange works when one-message-per-type routing")]
+        [TestCase(3, Description = "Asserts that routing directly to an exchange works when one-message-per-type routing + using an exchange as queue address")]
+        public void CanSendMessagesDirectlyToExchange(int mode)
+        {
+            // arrange
+            var routeUsingExchanges = mode > 1;
+            var exchangeAsAddress = mode > 2;
+            var sender = GetQueue("test.sender", removeExiting: true, oneExchangePerType: routeUsingExchanges,
+                inputExchange: exchangeAsAddress ? "ex-test.sender" : null);
+            var recipient = GetQueue("test.recipient", removeExiting: true, oneExchangePerType: true, inputExchange: "ex-test.recipient");
+
+            // act
+            using (var tx = new TransactionScope())
+            {
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
+
+                sender.Send("@ex-test.recipient", msg, ctx);
+                sender.Send("@ex-test.recipient", msg, ctx);
+                sender.Send("@ex-test.recipient", msg, ctx);
+
+                tx.Complete();
+            }
+
+            // assert
+            var receivedTransportMessages = GetAllMessages(recipient);
+
+            receivedTransportMessages.Count.ShouldBe(3);
+        }
+
+        [TestCase(1, Description = "Asserts that routing directly to an exchange + routing key works when rebus' classic routing strategy")]
+        [TestCase(2, Description = "Asserts that routing directly to an exchange + routing key works when one-message-per-type routing")]
+        [TestCase(3, Description = "Asserts that routing directly to an exchange + routing key works when one-message-per-type routing + using an exchange as queue address")]
+        public void CanSendMessagesDirectlyToExchangeWithRoutingKey(int mode)
+        {
+            // arrange
+            var routeUsingExchanges = mode > 1;
+            var exchangeAsAddress = mode > 2;
+            var sender = GetQueue("test.sender", removeExiting: true, oneExchangePerType: routeUsingExchanges,
+                inputExchange: exchangeAsAddress ? "ex-test.sender" : null);
+            var recipient = GetQueue("test.recipient", removeExiting: true);
+
+            using (var cm = new ConnectionManager(ConnectionString, "test.sender"))
+            using (var conn = cm.GetConnection())
+            using (var model = conn.CreateModel())
+            {
+                model.QueueBind("test.recipient", "ex-test.recipient", "sample");
+            }
+
+            // act
+            using (var tx = new TransactionScope())
+            {
+                var ctx = new AmbientTransactionContext();
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
+
+                sender.Send("sample@ex-test.recipient", msg, ctx);
+                sender.Send("sample@ex-test.recipient", msg, ctx);
+                sender.Send("sample@ex-test.recipient", msg, ctx);
+
+                tx.Complete();
+            }
+
+            // assert
+            var receivedTransportMessages = GetAllMessages(recipient);
+
+            receivedTransportMessages.Count.ShouldBe(3);
+        }
+
         [Test]
         public void TransportLevelMessageIdIsPreserved()
         {
@@ -528,10 +629,15 @@ namespace Rebus.Tests.Transports.Rabbit
             return receivedTransportMessages;
         }
 
-        RabbitMqMessageQueue GetQueue(string queueName)
+        RabbitMqMessageQueue GetQueue(string queueName, bool removeExiting = false, bool oneExchangePerType = false, string inputExchange = null)
         {
+            if (removeExiting) DeleteQueue(queueName);
+            if (removeExiting && inputExchange != null) DeleteExchange(inputExchange);
+
             queuesToDelete.Add(queueName);
             var queue = new RabbitMqMessageQueue(ConnectionString, queueName);
+            if (oneExchangePerType) queue.UseExchange(null);
+            if (inputExchange != null) queue.UseExchangeAsInputAddress(inputExchange);
             DisposableTracker.TrackDisposable(queue);
             return queue.PurgeInputQueue();
         }

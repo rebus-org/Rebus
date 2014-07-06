@@ -13,7 +13,7 @@ namespace Rebus.Persistence.SqlServer
     /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
     /// and correlation properties in an index table on the side.
     /// </summary>
-    public class SqlServerSagaPersister : SqlServerStorage, IStoreSagaData
+    public class SqlServerSagaPersister : SqlServerStorage, IStoreSagaData, ICanUpdateMultipleSagaDatasAtomically
     {
         static ILog log;
 
@@ -101,9 +101,14 @@ namespace Rebus.Persistence.SqlServer
                     {
                         command.ExecuteNonQuery();
                     }
-                    catch (SqlException)
+                    catch (SqlException sqlException)
                     {
-                        throw new OptimisticLockingException(sagaData);
+                        if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
+                        {
+                            throw new OptimisticLockingException(sagaData, sqlException);
+                        }
+
+                        throw;
                     }
                 }
 

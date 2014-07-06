@@ -95,19 +95,94 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 1 });
         }
 
+        [TestCase(false)]
+        [TestCase(true)]
+        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType(bool usingExchangeAsInput)
+        {
+            var queues = new[] { "test.rabbitsub.sub1", "test.rabbitsub.sub2", "test.rabbitsub.sub3", "test.rabbitsub.publisher" };
+
+            // arrange
+            DeleteExchange("Rebus");
+            foreach (var q in queues)
+            {
+                DeleteQueue(q);
+			    DeleteQueue("ex-" + q);
+                DeleteExchange("ex-" + q);
+            }
+
+            var publisher = PullOneOutOfTheHat(queues[3], oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[3] : null);
+
+            var receivedSub1 = new List<int>();
+            var receivedSub2 = new List<int>();
+            var receivedSub3 = new List<int>();
+
+            var sub1 = PullOneOutOfTheHat(queues[0], receivedSub1.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[0] : null);
+            var sub2 = PullOneOutOfTheHat(queues[1], receivedSub2.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[1] : null);
+            var sub3 = PullOneOutOfTheHat(queues[2], receivedSub3.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[2] : null);
+
+            // act
+            publisher.Publish(new SomeEvent { Number = 1 });
+
+            Thread.Sleep(200.Milliseconds());
+
+            sub1.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 2 });
+
+            sub2.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 3 });
+
+            sub3.Subscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 4 });
+
+            Thread.Sleep(200.Milliseconds());
+
+            sub3.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 5 });
+
+            sub2.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 6 });
+
+            sub1.Unsubscribe<SomeEvent>();
+            Thread.Sleep(200.Milliseconds());
+            publisher.Publish(new SomeEvent { Number = 7 });
+
+            // assert
+            receivedSub1.OrderBy(i => i).ToArray().ShouldBe(new[] { 2, 3, 4, 5, 6 });
+            receivedSub2.OrderBy(i => i).ToArray().ShouldBe(new[] { 3, 4, 5 });
+            receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
+            DeclareExchange("Rebus", "topic", passive: true).ShouldBe(false);
+            DeclareExchange(typeof(SomeEvent).FullName, "topic", passive: true).ShouldBe(true);
+            foreach (var q in queues)
+            {
+                DeclareExchange("ex-" + q, "fanout", passive: true).ShouldBe(usingExchangeAsInput);
+			    // Ensure no spurious queue names are created.
+			    DeclareQueue("ex-" + q, passive: true).ShouldBe(false);
+            }
+
+        }
+
         class SomeEvent
         {
             public int Number { get; set; }
         }
 
-        IBus PullOneOutOfTheHat(string inputQueueName, Action<int> handler = null)
+        IBus PullOneOutOfTheHat(string inputQueueName, Action<int> handler = null, bool oneExchangePerType = false, string inputExchange = null)
         {
             var adapter = new BuiltinContainerAdapter();
 
             if (handler != null) adapter.Handle<SomeEvent>(e => handler(e.Number));
 
             Configure.With(adapter)
-                .Transport(t => t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions())
+                .Transport(t => {
+                    var obj = t.UseRabbitMq(ConnectionString, inputQueueName, "error").ManageSubscriptions();
+                    if (oneExchangePerType) obj.UseOneExchangePerMessageTypeRouting();
+                    if (inputExchange != null) obj.UseExchangeAsInputAddress(inputExchange);
+                })
                 .CreateBus().Start();
 
             TrackDisposable(adapter);

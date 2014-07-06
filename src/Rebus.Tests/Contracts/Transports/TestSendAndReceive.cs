@@ -14,6 +14,7 @@ namespace Rebus.Tests.Contracts.Transports
     [TestFixture(typeof(AzureMqTransportFactory), Category = TestCategories.Azure)]
     [TestFixture(typeof(AzureServiceBusMessageQueueFactory), Category = TestCategories.Azure)]
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
+    [TestFixture(typeof(FileSystemTransportFactory))]
     public class TestSendAndReceive<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         static readonly TimeSpan MaximumExpectedQueueLatency = TimeSpan.FromMilliseconds(300);

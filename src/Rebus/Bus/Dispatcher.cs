@@ -77,6 +77,7 @@ namespace Rebus.Bus
                 // add own internal handlers
                 var handlerPipeline = handlerInstances.Concat(OwnHandlersFor<TMessage>()).ToList();
 
+
                 // allow pipeline to be filtered
                 var handlersToExecute = inspectHandlerPipeline.Filter(message, handlerPipeline).ToArray();
 
@@ -91,12 +92,8 @@ namespace Rebus.Bus
                     throw new UnhandledMessageException(message);
                 }
 
-                var sagaHandlers = distinctHandlersToExecute.Where(h => h is Saga).ToArray();
-
-                if (sagaHandlers.Length > 1)
-                {
-                    throw new MultipleSagaHandlersFoundException(message, sagaHandlers.Select(h => h.GetType()).ToArray());
-                }
+                if(!(storeSagaData is ICanUpdateMultipleSagaDatasAtomically))
+                    CheckMultipleSagaHandlers(message, distinctHandlersToExecute);
 
                 foreach (var handler in distinctHandlersToExecute)
                 {
@@ -137,6 +134,16 @@ namespace Rebus.Bus
                         log.Error(e, "An error occurred while attempting to release handlers: {0}", string.Join(", ", handlersToRelease.Select(h => h.GetType())));
                     }
                 }
+            }
+        }
+
+        void CheckMultipleSagaHandlers(object message, IHandleMessages[] distinctHandlersToExecute)
+        {
+            var sagaHandlers = distinctHandlersToExecute.Where(h => h is Saga).ToArray();
+
+            if (sagaHandlers.Length > 1)
+            {
+                throw new MultipleSagaHandlersFoundException(message, sagaHandlers.Select(h => h.GetType()).ToArray());
             }
         }
 

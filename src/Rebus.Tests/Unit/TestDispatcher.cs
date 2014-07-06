@@ -4,6 +4,8 @@ using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
+using Rebus.Tests.Persistence.Sagas;
+using Rhino.Mocks;
 using Shouldly;
 
 namespace Rebus.Tests.Unit
@@ -44,6 +46,28 @@ namespace Rebus.Tests.Unit
             exception.Message.ShouldContain("FirstSaga");
             exception.Message.ShouldContain("SecondSaga");
             exception.Message.ShouldContain("SomeMessage");
+        }
+
+        [Test]
+        public void DoesNotThrowIfTwoSagaHandlersArePresentInHandlerPipeline_ButSagaPersisterCanUpdateMultipleSagaDatasAtomically()
+        {
+            // arrange
+            var fakePersister = MockRepository.GenerateMock<IStoreSagaData, ICanUpdateMultipleSagaDatasAtomically>();
+            
+            dispatcher = new Dispatcher(fakePersister,
+                                        activator,
+                                        new InMemorySubscriptionStorage(),
+                                        pipelineInspector,
+                                        new DeferredMessageHandlerForTesting(),
+                                        null);
+
+
+            activator.UseHandler(new FirstSaga());
+            activator.UseHandler(new SecondSaga());
+            var messageThatCanBeHandledByBothSagas = new SomeMessage();
+
+            // act
+            Assert.DoesNotThrow(() => dispatcher.Dispatch(messageThatCanBeHandledByBothSagas));
         }
 
         class FirstSaga : Saga<SomeSagaData>, IHandleMessages<SomeMessage>
