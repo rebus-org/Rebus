@@ -387,7 +387,9 @@
 
 * Made all batch operations obsolete so that you'll get a compiler warning if you use them.
 
+## 0.70.1
 
+* Added container adapter for SimpleInjector - thanks [oguzhaneren]
 
 
 [pruiz]: https://github.com/pruiz
@@ -400,3 +402,4 @@
 [dev4ce]: https://github.com/dev4ce
 [krivin]: https://github.com/krivin
 [PeteProgrammer]: https://github.com/PeteProgrammer
+[oguzhaneren]: https://github.com/oguzhaneren
