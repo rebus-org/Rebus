@@ -82,6 +82,9 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
+            string exchange;
+            GetExchangeAndRoutingKeyFor(inputQueueName, out exchange, out inputQueueName);
+
             connectionManager = new ConnectionManager(connectionString, inputQueueName);
             if (inputQueueName == null) return;
 
@@ -153,6 +156,7 @@ namespace Rebus.RabbitMQ
                 // If we are publishing with one-exchange-per-type strategy
                 // passed destination should be pressumed to be an exchange.
                 if (message.Headers.ContainsKey(Headers.Multicast)
+                    && !message.Headers.ContainsKey(Headers.BouncedMessage)
                     && UsingOneExchangePerMessageTypeRouting
                     && !destination.Contains('@'))
                 {
@@ -595,8 +599,8 @@ namespace Rebus.RabbitMQ
         void EnsureInputQueueInitialized(string inputQueueNameToInitialize)
         {
             // If desired queue name is our public exchange, declare our input queue instead.
-			// This is needed in order to avoid creating a queue named as our public exchange address
-			// we we are using an exchange as our public facing address.
+            // This is needed in order to avoid creating a queue named as our public exchange address
+            // we we are using an exchange as our public facing address.
             if (InputQueueAddressIsExchange && inputQueueNameToInitialize == InputQueueAddress)
             {
                 inputQueueNameToInitialize = inputQueueName;
@@ -821,7 +825,6 @@ namespace Rebus.RabbitMQ
                              result.Id, headerLevelId);
                 }
             }
-
 
             return result;
         }

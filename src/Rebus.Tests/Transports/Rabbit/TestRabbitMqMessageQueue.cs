@@ -612,6 +612,52 @@ namespace Rebus.Tests.Transports.Rabbit
             }
         }
 
+        [Test]
+        public void CanSendToQueueWithEmptyExchangeAfterAtSign()
+        {
+            const string recipientInputQueueName = "test.atsimbol.recipient@";
+            const string senderInputQueueName = "test.atsimbol.sender";
+
+            using (var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName))
+            using (var senderQueue = new RabbitMqMessageQueue(ConnectionString, senderInputQueueName))
+            {
+                recipientQueue.PurgeInputQueue();
+                senderQueue.PurgeInputQueue();
+
+                var id = Guid.NewGuid();
+                senderQueue.Send(recipientInputQueueName,
+                                 serializer.Serialize(new Message
+                                 {
+                                     Messages = new object[] { "HELLO WORLD!" },
+                                     Headers =
+                                         new Dictionary<string, object> { 
+                                            { Headers.MessageId, id.ToString() }
+                                         },
+                                 }),
+                                 new NoTransaction());
+
+                // act
+                Thread.Sleep(2.Seconds() + 1.Seconds());
+
+                // assert
+                var receivedTransportMessage = recipientQueue.ReceiveMessage(new NoTransaction());
+                Assert.That(receivedTransportMessage, Is.Not.Null);
+            }
+        }
+
+        [Test]
+        public void IfQueueNameHasAtSimbolItIsCreatedCorrectly()
+        {
+            const string recipientInputQueueName = "test.AtSimbol@";
+            queuesToDelete.Add(recipientInputQueueName);
+
+            var recipientQueue = new RabbitMqMessageQueue(ConnectionString, recipientInputQueueName);
+            recipientQueue.Initialize();
+
+            DeclareQueue(recipientInputQueueName, passive: true).ShouldBe(false);
+            DeclareQueue(recipientInputQueueName.TrimEnd('@'), passive: true).ShouldBe(true);
+        }
+
         static List<ReceivedTransportMessage> GetAllMessages(RabbitMqMessageQueue recipient)
         {
             var timesNullReceived = 0;
