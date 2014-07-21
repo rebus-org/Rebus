@@ -40,7 +40,7 @@ namespace Rebus.Shared
         /// <summary>
         /// Key of header that flags a message as beign bounced to error queue.
         /// </summary>
-        public const string BouncedMessage = "rebus-bounced-message";
+        public const string Bounced = "rebus-bounced";
 
         /// <summary>
         /// Key of header that specifies the maximum time a sent/published message is valid. This can/should be used by the infrastructure

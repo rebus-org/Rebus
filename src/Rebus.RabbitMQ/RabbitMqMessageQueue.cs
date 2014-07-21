@@ -156,7 +156,7 @@ namespace Rebus.RabbitMQ
                 // If we are publishing with one-exchange-per-type strategy
                 // passed destination should be pressumed to be an exchange.
                 if (message.Headers.ContainsKey(Headers.Multicast)
-                    && !message.Headers.ContainsKey(Headers.BouncedMessage)
+                    && !message.Headers.ContainsKey(Headers.Bounced)
                     && UsingOneExchangePerMessageTypeRouting
                     && !destination.Contains('@'))
                 {

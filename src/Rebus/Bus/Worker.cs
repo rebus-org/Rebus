@@ -317,9 +317,9 @@ namespace Rebus.Bus
                 }
 
                 // Clean up Bounced header (to avoid problems with re-enqueued messages)
-                if (transportMessage.Headers.ContainsKey(Headers.BouncedMessage))
+                if (transportMessage.Headers.ContainsKey(Headers.Bounced))
                 {
-                    transportMessage.Headers.Remove(Headers.BouncedMessage);
+                    transportMessage.Headers.Remove(Headers.Bounced);
                 }
 
                 using (var scope = BeginTransaction())
