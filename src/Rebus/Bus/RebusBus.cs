@@ -734,6 +734,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueueAddress;
             transportMessageToSend.Headers[Headers.ErrorMessage] = errorDetail;
+            transportMessageToSend.Headers[Headers.Bounced] = "";
 
             try
             {
