@@ -391,6 +391,10 @@
 
 * Added container adapter for SimpleInjector - thanks [oguzhaneren]
 
+## 0.70.2
+
+* Fix problem when trying to send Multicast message to error queue - thanks [maeserichar]
+
 
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
