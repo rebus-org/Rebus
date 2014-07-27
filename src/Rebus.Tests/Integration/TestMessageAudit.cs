@@ -8,6 +8,7 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Serialization.Json;
 using Rebus.Shared;
+using Rebus.Tests.Util;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using Message = Rebus.Messages.Message;
@@ -71,7 +72,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.SendLocal("yo!");
             
             // assert
-            var message = GetMessagesFrom(AuditQueueName).Single();
+            var message = MsmqTestHelper.GetMessagesFrom(AuditQueueName).Single();
             
             message.ShouldNotBe(null);
 
@@ -99,7 +100,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.Publish("yo!");
             
             // assert
-            var message = GetMessagesFrom(AuditQueueName).Single();
+            var message = MsmqTestHelper.GetMessagesFrom(AuditQueueName).Single();
             
             message.ShouldNotBe(null);
 
@@ -129,7 +130,7 @@ namespace Rebus.Tests.Integration
             adapter.Bus.Publish("yo!");
             
             // assert
-            var messages = GetMessagesFrom(AuditQueueName).ToList();
+            var messages = MsmqTestHelper.GetMessagesFrom(AuditQueueName).ToList();
 
             Console.WriteLine(string.Join(Environment.NewLine, messages));
 
@@ -146,53 +147,6 @@ namespace Rebus.Tests.Integration
 
             DeleteQueue(InputQueueName);
             DeleteQueue(AuditQueueName);
-        }
-
-        IEnumerable<Message> GetMessagesFrom(string queueName)
-        {
-            using (var queue = new MessageQueue(MsmqUtil.GetPath(queueName)))
-            {
-                queue.Formatter = new RebusTransportMessageFormatter();
-                queue.MessageReadPropertyFilter = RebusTransportMessageFormatter.PropertyFilter;
-
-                var gotMessage = true;
-
-                do
-                {
-                    Message messageToReturn = null;
-                    try
-                    {
-                        var msmqMessage = queue.Receive(3.Seconds());
-                        if (msmqMessage == null)
-                        {
-                            yield break;
-                        }
-                        var receivedTransportMessage = (ReceivedTransportMessage) msmqMessage.Body;
-                        var serializer = new JsonMessageSerializer();
-
-                        messageToReturn = serializer.Deserialize(receivedTransportMessage);
-                    }
-                    catch (MessageQueueException exception)
-                    {
-                        if (exception.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
-                        {
-                            yield break;
-                        }
-
-                        throw;
-                    }
-
-                    if (messageToReturn != null)
-                    {
-                        gotMessage = true;
-                        yield return messageToReturn;
-                    }
-                    else
-                    {
-                        gotMessage = false;
-                    }
-                } while (gotMessage);
-            }
         }
 
         static void DeleteQueue(string queueName)
