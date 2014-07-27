@@ -18,6 +18,7 @@ namespace Rebus.Bus
             this.bus = bus;
         }
 
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public void Send(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");
@@ -30,6 +31,7 @@ namespace Rebus.Bus
             }
         }
 
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public void Publish(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");
@@ -42,6 +44,7 @@ namespace Rebus.Bus
             }
         }
 
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public void Reply(IEnumerable messages)
         {
             Guard.NotNull(messages, "messages");

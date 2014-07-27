@@ -18,6 +18,12 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         [Test]
+        public void CanUpdateMultipleSagaDatasAtomically()
+        {
+            Assert.That(persister is ICanUpdateMultipleSagaDatasAtomically, Is.True);
+        }
+
+        [Test]
         public void WhenIgnoringNullProperties_DoesNotSaveNullPropertiesOnUpdate()
         {
             persister.EnsureTablesAreCreated()

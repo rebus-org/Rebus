@@ -108,19 +108,19 @@ namespace Rebus.Shared
                 var tokens = queueName.Split('@');
                 if (tokens.Length != 2)
                 {
-                    throw new ArgumentException(string.Format(@"The specified MSMQ input queue is invalid!: {0} - please format destination queues according to one of the following examples:
+                    throw new ArgumentException(string.Format(@"The specified MSMQ queue name is invalid!: {0} - please format queue names according to one of the following examples:
 
     someQueue
 
-        in order to send the message to the privte queue named 'someQueue' on the local machine, or
+        in order to specify a private queue named 'someQueue' on the local machine, or
 
     someQueue@anotherMachine
 
-        in order to send the message to the private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
+        in order to specify a private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
 
     someQueue@10.0.1.45
 
-        in order to send the message to the private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
+        in order to specify a private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
                 }
                 return new QueueInfo { QueueName = tokens[0], MachineName = tokens[1] };
             }
@@ -209,6 +209,15 @@ If Rebus allowed you to work with non-transactional queues, it would not be able
                         "An error occurred while attempting to figure out the name of the local administrators group!"),
                     e);
             }
+        }
+
+        public static bool IsLocal(string errorQueueName)
+        {
+            var queueInfo = Parse(errorQueueName);
+
+            return queueInfo.MachineName == null
+                   || queueInfo.MachineName == "."
+                   || queueInfo.MachineName.ToLowerInvariant().Equals(Environment.MachineName);
         }
     }
 }

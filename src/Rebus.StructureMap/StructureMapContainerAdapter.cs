@@ -39,7 +39,7 @@ namespace Rebus.StructureMap
             container.Configure(x =>
                 {
                     x.For<IBus>().Singleton().Add(bus);
-                    x.For<IMessageContext>().Transient().Use(MessageContext.GetCurrent);
+                    x.For<IMessageContext>().Transient().Use(() => MessageContext.GetCurrent());
                 });
         }
     }

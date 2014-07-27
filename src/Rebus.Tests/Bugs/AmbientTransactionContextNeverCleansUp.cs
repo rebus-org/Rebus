@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Transactions;
+﻿using System.Transactions;
 using NUnit.Framework;
 using Rebus.Bus;
 using Shouldly;
@@ -37,8 +33,18 @@ namespace Rebus.Tests.Bugs
             cleanupCalled.ShouldBe(0);
             tx.Dispose();
             cleanupCalled.ShouldBe(1);
+        }
 
+        [Test]
+        public void CleanupIsPerformedEvenIfTransactionIsNotCommitted()
+        {
+            int cleanupCalled = 0;
+            var tx = new TransactionScope();
+            var ctx = new AmbientTransactionContext();
+            ctx.Cleanup += () => { cleanupCalled++; };
             
+            tx.Dispose();
+            cleanupCalled.ShouldBe(1);
         }
     }
 }

@@ -8,6 +8,7 @@
     <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
+    <RebusProjects Include="..\src\Rebus.SimpleInjector\*.csproj" />
     <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
     <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
     <RebusProjects Include="..\src\Rebus.Autofac\*.csproj"/>
@@ -18,6 +19,7 @@
     <RebusProjects Include="..\src\Rebus.NLog\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.Async\*.csproj"/>
     <RebusProjects Include="..\src\Rebus.MsmqLoadBalancer\*.csproj"/>
+		<RebusProjects Include="..\src\Rebus.PostgreSql\*.csproj"/>
 
     <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
     <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
@@ -79,8 +81,10 @@
     <Message Text="Merge Newtonsoft.Json.NET into Rebus"/>
 
     <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
+    <Delete Files="$(BuildOutputFolder)\Rebus.PostgreSql.dll"/>
     <!-- should probably use variables instead of hardcoded DLL paths here ... -->
     <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
   </Target>
 
   <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">
