@@ -23,8 +23,19 @@ namespace Rebus.Logging
                 Text = text;
             }
 
+            /// <summary>
+            /// The level of this log statement
+            /// </summary>
             public LogLevel Level { get; private set; }
+            
+            /// <summary>
+            /// The text (possibly inclusing formatting placeholders) of this log statement
+            /// </summary>
             public string Text { get; private set; }
+            
+            /// <summary>
+            /// The values to use for string interpolation
+            /// </summary>
             public object[] Args { get; private set; }
         }
 
@@ -37,17 +48,33 @@ namespace Rebus.Logging
         LogLevel minLevel = LogLevel.Debug;
         bool showTimestamps;
 
+        /// <summary>
+        /// Constructs the logger factory
+        /// </summary>
         public ConsoleLoggerFactory(bool colored)
         {
             this.colored = colored;
         }
 
+        /// <summary>
+        /// Gets or sets the colors to use when logging
+        /// </summary>
         public LoggingColors Colors
         {
             get { return colors; }
-            set { colors = value; }
+            set
+            {
+                if (value == null)
+                {
+                    throw new InvalidOperationException("Attempted to set logging colors to null");
+                }
+                colors = value;
+            }
         }
 
+        /// <summary>
+        /// Gets or sets the minimum logging level to output to the console
+        /// </summary>
         public LogLevel MinLevel
         {
             get { return minLevel; }
@@ -58,11 +85,18 @@ namespace Rebus.Logging
             }
         }
 
+        /// <summary>
+        /// Gets the list of filters that each log statement will be passed through in order to evaluate whether
+        /// the given log statement should be output to the console
+        /// </summary>
         public IList<Func<LogStatement, bool>> Filters
         {
             get { return filters; }
         }
 
+        /// <summary>
+        /// Gets/sets whether timestamps should be shown when logging
+        /// </summary>
         public bool ShowTimestamps
         {
             get { return showTimestamps; }
@@ -73,14 +107,18 @@ namespace Rebus.Logging
             }
         }
 
+        /// <summary>
+        /// Gets a logger for logging stuff from within the specified type
+        /// </summary>
         protected override ILog GetLogger(Type type)
         {
             ILog logger;
-            if (!Loggers.TryGetValue(type, out logger))
-            {
-                logger = new ConsoleLogger(type, colors, this, showTimestamps);
-                Loggers.TryAdd(type, logger);
-            }
+            
+            if (Loggers.TryGetValue(type, out logger)) return logger;
+            
+            logger = new ConsoleLogger(type, colors, this, showTimestamps);
+            Loggers.TryAdd(type, logger);
+            
             return logger;
         }
 
@@ -177,6 +215,7 @@ namespace Rebus.Logging
                     var renderedMessage = string.Format(message, objs);
                     var timeFormat = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
 
+                    // ReSharper disable EmptyGeneralCatchClause
                     try
                     {
                         Console.WriteLine(logLineFormatString,
@@ -186,7 +225,11 @@ namespace Rebus.Logging
                             threadName,
                             renderedMessage);
                     }
-                    catch { } //< nothing to do about it if this part fails
+                    catch
+                    {
+                        // nothing to do about it if this part fails   
+                    }
+                    // ReSharper restore EmptyGeneralCatchClause
                 }
                 catch
                 {

@@ -16,6 +16,10 @@ namespace Rebus.Persistence.SqlServer
         protected Action<ConnectionHolder> rollbackAction;
         protected Action<ConnectionHolder> releaseConnection;
 
+        /// <summary>
+        /// Constructs the storage with the given connection factory method, assuming that commit/rollback and housekeeping is taken
+        /// care of elsewhere
+        /// </summary>
         protected SqlServerStorage(Func<ConnectionHolder> connectionFactoryMethod)
         {
             getConnection = connectionFactoryMethod;
@@ -24,6 +28,10 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
+        /// <summary>
+        /// Constructs the storage with the given connection string, which will be used to establish the connection. Commit/rollback and
+        /// housekeeping is taken care of here
+        /// </summary>
         protected SqlServerStorage(string connectionString)
         {
             getConnection = () => CreateConnection(connectionString);
