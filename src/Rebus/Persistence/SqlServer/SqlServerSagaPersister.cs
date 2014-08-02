@@ -96,7 +96,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
-                    command.CommandText = string.Format(@"insert into [{0}] (id, revision, data) values (@id, @next_revision, @data)", sagaTableName);
+                    command.CommandText = string.Format(@"insert into [{0}] ([id], [revision], [data]) values (@id, @next_revision, @data)", sagaTableName);
                     try
                     {
                         command.ExecuteNonQuery();
@@ -123,7 +123,7 @@ namespace Rebus.Persistence.SqlServer
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
-                                                            ([saga_type], [key], value, saga_id) 
+                                                            ([saga_type], [key], [value], [saga_id]) 
                                                         values 
                                                             ('{1}', '{2}', '{3}', '{4}')",
                                 sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
@@ -132,6 +132,13 @@ namespace Rebus.Persistence.SqlServer
                         var sql = string.Join(";" + Environment.NewLine, inserts);
 
                         command.CommandText = sql;
+
+                        Console.WriteLine(@"------------------------------------------------------------
+
+{0}
+
+---------------------------------------------------------------------------", command.CommandText);
+
 
                         try
                         {
@@ -169,7 +176,7 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [saga_id] = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -184,7 +191,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
-                    command.CommandText = string.Format(@"update [{0}] set data = @data, revision = @next_revision where id = @id and revision = @current_revision", sagaTableName);
+                    command.CommandText = string.Format(@"update [{0}] set [data] = @data, [revision] = @next_revision where [id] = @id and [revision] = @current_revision", sagaTableName);
                     var rows = command.ExecuteNonQuery();
                     if (rows == 0)
                     {
@@ -203,7 +210,7 @@ namespace Rebus.Persistence.SqlServer
                         var inserts = propertiesToIndex
                             .Select(a => string.Format(
                                 @"                      insert into [{0}]
-                                                            ([saga_type], [key], value, saga_id) 
+                                                            ([saga_type], [key], [value], [saga_id]) 
                                                         values 
                                                             ('{1}', '{2}', '{3}', '{4}')",
                                 sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
@@ -246,7 +253,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [id] = @id and [revision] = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
                     var rows = command.ExecuteNonQuery();
@@ -258,7 +265,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [saga_id] = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -284,16 +291,16 @@ namespace Rebus.Persistence.SqlServer
                 {
                     if (sagaDataPropertyPath == idPropertyName)
                     {
-                        command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
+                        command.CommandText = string.Format(@"select [s].[data] from [{0}] [s] where [s].[id] = @value", sagaTableName);
                     }
                     else
                     {
-                        command.CommandText = string.Format(@"select s.data 
-                                                    from [{0}] s 
-                                                        join [{1}] i on s.id = i.saga_id 
-                                                    where i.[saga_type] = @saga_type
-                                                        and i.[key] = @key 
-                                                        and i.value = @value", sagaTableName, sagaIndexTableName);
+                        command.CommandText = string.Format(@"select [s].[data] 
+                                                    from [{0}] [s] 
+                                                        join [{1}] [i] on [s].[id] = [i].[saga_id] 
+                                                    where [i].[saga_type] = @saga_type
+                                                        and [i].[key] = @key 
+                                                        and [i].[value] = @value", sagaTableName, sagaIndexTableName);
 
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));
