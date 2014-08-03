@@ -397,7 +397,7 @@
 
 ## 0.70.3
 
-* Fixed vulnerability that could lead to executing arbitrary SQL statements by injecting it in a correlation property on a saga message.
+* Fixed vulnerability that could lead to executing arbitrary SQL statements by injecting it in a correlation property on a saga message when using SQL Server and PostgreSQL saga persisters.
 
 
 [pruiz]: https://github.com/pruiz
