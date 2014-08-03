@@ -395,6 +395,10 @@
 
 * Fix problem when trying to send Multicast message to error queue - thanks [maeserichar]
 
+## 0.70.3
+
+* Fixed vulnerability that could lead to executing arbitrary SQL statements by injecting it in a correlation property on a saga message.
+
 
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
