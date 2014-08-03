@@ -117,66 +117,7 @@ namespace Rebus.Persistence.SqlServer
 
                 if (propertiesToIndex.Any())
                 {
-                    var sagaTypeName = GetSagaTypeName(sagaData.GetType());
-                    var parameters = propertiesToIndex
-                        .Select((p, i) => new
-                        {
-                            PropertyName = p.Key,
-                            PropertyValue = p.Value,
-                            PropertyNameParameter = string.Format("@n{0}", i),
-                            PropertyValueParameter = string.Format("@v{0}", i)
-                        })
-                        .ToList();
-
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        var inserts = parameters
-                            .Select(a => string.Format(
-                                @"                      insert into [{0}]
-                                                            ([saga_type], [key], [value], [saga_id]) 
-                                                        values 
-                                                            (@saga_type, {1}, {2}, @saga_id)",
-                                sagaIndexTableName, a.PropertyNameParameter, a.PropertyValueParameter))
-                            .ToList();
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-
-                        foreach (var parameter in parameters)
-                        {
-                            Console.WriteLine("{0} = {1}", parameter.PropertyNameParameter, parameter.PropertyName);
-                            Console.WriteLine("{0} = {1}", parameter.PropertyValueParameter, parameter.PropertyValue);
-                            command.Parameters.Add(parameter.PropertyNameParameter, SqlDbType.NVarChar).Value = parameter.PropertyName;
-                            command.Parameters.Add(parameter.PropertyValueParameter, SqlDbType.NVarChar).Value = parameter.PropertyValue;
-                        }
-
-                        command.Parameters.Add("saga_type", SqlDbType.NVarChar).Value = sagaTypeName;
-                        command.Parameters.Add("saga_id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
-
-                        Console.WriteLine(@"------------------------------------------------------------
-
-{0}
-
----------------------------------------------------------------------------", command.CommandText);
-
-
-                        try
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                        catch (SqlException sqlException)
-                        {
-                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
-                            {
-                                throw new OptimisticLockingException(sagaData, sqlException);
-                            }
-
-                            throw;
-                        }
-                    }
+                    CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
                 commitAction(connection);
@@ -226,36 +167,7 @@ namespace Rebus.Persistence.SqlServer
 
                 if (propertiesToIndex.Any())
                 {
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        var inserts = propertiesToIndex
-                            .Select(a => string.Format(
-                                @"                      insert into [{0}]
-                                                            ([saga_type], [key], [value], [saga_id]) 
-                                                        values 
-                                                            ('{1}', '{2}', '{3}', '{4}')",
-                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
-                                sagaData.Id.ToString()));
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-                        try
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                        catch (SqlException sqlException)
-                        {
-                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
-                            {
-                                throw new OptimisticLockingException(sagaData, sqlException);
-                            }
-
-                            throw;
-                        }
-                    }
+                    CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
                 commitAction(connection);
@@ -264,6 +176,62 @@ namespace Rebus.Persistence.SqlServer
             {
                 releaseConnection(connection);
             }
+        }
+
+        void CreateIndex(List<KeyValuePair<string, string>> propertiesToIndex, ConnectionHolder connection, ISagaData sagaData)
+        {
+            var sagaTypeName = GetSagaTypeName(sagaData.GetType());
+            var parameters = propertiesToIndex
+                .Select((p, i) => new
+                {
+                    PropertyName = p.Key,
+                    PropertyValue = p.Value,
+                    PropertyNameParameter = string.Format("@n{0}", i),
+                    PropertyValueParameter = string.Format("@v{0}", i)
+                })
+                .ToList();
+
+            // lastly, generate new index
+            using (var command = connection.CreateCommand())
+            {
+                // generate batch insert with SQL for each entry in the index
+                var inserts = parameters
+                    .Select(a => string.Format(
+                        @"                      insert into [{0}]
+                                                            ([saga_type], [key], [value], [saga_id]) 
+                                                        values 
+                                                            (@saga_type, {1}, {2}, @saga_id)",
+                        sagaIndexTableName, a.PropertyNameParameter, a.PropertyValueParameter))
+                    .ToList();
+
+                var sql = string.Join(";" + Environment.NewLine, inserts);
+
+                command.CommandText = sql;
+
+                foreach (var parameter in parameters)
+                {
+                    command.Parameters.Add(parameter.PropertyNameParameter, SqlDbType.NVarChar).Value = parameter.PropertyName;
+                    command.Parameters.Add(parameter.PropertyValueParameter, SqlDbType.NVarChar).Value = parameter.PropertyValue;
+                }
+
+                command.Parameters.Add("saga_type", SqlDbType.NVarChar).Value = sagaTypeName;
+                command.Parameters.Add("saga_id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (SqlException sqlException)
+                {
+                    if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
+                    {
+                        throw new OptimisticLockingException(sagaData, sqlException);
+                    }
+
+                    throw;
+                }
+            }
+
         }
 
         /// <summary>
