@@ -178,14 +178,14 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
-        void CreateIndex(List<KeyValuePair<string, string>> propertiesToIndex, ConnectionHolder connection, ISagaData sagaData)
+        void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, ConnectionHolder connection, ISagaData sagaData)
         {
             var sagaTypeName = GetSagaTypeName(sagaData.GetType());
             var parameters = propertiesToIndex
                 .Select((p, i) => new
                 {
                     PropertyName = p.Key,
-                    PropertyValue = p.Value,
+                    PropertyValue = p.Value ?? "",
                     PropertyNameParameter = string.Format("@n{0}", i),
                     PropertyValueParameter = string.Format("@v{0}", i)
                 })
