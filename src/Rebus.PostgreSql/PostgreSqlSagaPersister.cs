@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using Newtonsoft.Json;
 using Npgsql;
+using NpgsqlTypes;
 using Ponder;
 using Rebus.Logging;
 
@@ -168,24 +170,7 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
 
                 if (propertiesToIndex.Any())
                 {
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        var inserts = propertiesToIndex
-                            .Select(a => string.Format(
-                                @"                      insert into ""{0}""
-                                                            (""saga_type"", ""key"", ""value"", ""saga_id"") 
-                                                        values 
-                                                            ('{1}', '{2}', '{3}', '{4}')",
-                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
-                                sagaData.Id.ToString()));
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-                        command.ExecuteNonQuery();
-                    }
+                    CreateIndex(sagaData, connection, propertiesToIndex);
                 }
 
                 commitAction(connection);
@@ -235,21 +220,7 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
 
                 if (propertiesToIndex.Any())
                 {
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        const string insertSagaIndexSql = @"INSERT INTO ""{0}"" (""saga_type"", ""key"", ""value"", ""saga_id"") VALUES ('{1}', '{2}', '{3}', '{4}')";
-
-                        var inserts = propertiesToIndex
-                            .Select(a => string.Format(insertSagaIndexSql, sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value, sagaData.Id.ToString()));
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-
-                        command.ExecuteNonQuery();
-                    }
+                    CreateIndex(sagaData, connection, propertiesToIndex);
                 }
 
                 commitAction(connection);
@@ -257,6 +228,48 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
             finally
             {
                 releaseConnection(connection);
+            }
+        }
+
+        void CreateIndex(ISagaData sagaData, ConnectionHolder connection, IEnumerable<KeyValuePair<string, string>> propertiesToIndex)
+        {
+            var sagaTypeName = GetSagaTypeName(sagaData.GetType());
+            var parameters = propertiesToIndex
+                .Select((p, i) => new
+                {
+                    PropertyName = p.Key,
+                    PropertyValue = p.Value ?? "",
+                    PropertyNameParameter = string.Format("@n{0}", i),
+                    PropertyValueParameter = string.Format("@v{0}", i)
+                })
+                .ToList();
+
+            // lastly, generate new index
+            using (var command = connection.CreateCommand())
+            {
+                // generate batch insert with SQL for each entry in the index
+                var inserts = parameters
+                    .Select(a => string.Format(
+                        @"                      insert into ""{0}""
+                                                            (""saga_type"", ""key"", ""value"", ""saga_id"") 
+                                                        values 
+                                                            (@saga_type, {1}, {2}, @saga_id)",
+                        sagaIndexTableName, a.PropertyNameParameter, a.PropertyValueParameter));
+
+                var sql = string.Join(";" + Environment.NewLine, inserts);
+
+                command.CommandText = sql;
+
+                foreach (var parameter in parameters)
+                {
+                    command.Parameters.AddWithValue(parameter.PropertyNameParameter, NpgsqlDbType.Text, parameter.PropertyName);
+                    command.Parameters.AddWithValue(parameter.PropertyValueParameter, NpgsqlDbType.Text, parameter.PropertyValue);
+                }
+
+                command.Parameters.AddWithValue("saga_type", NpgsqlDbType.Text, sagaTypeName);
+                command.Parameters.AddWithValue("saga_id", NpgsqlDbType.Uuid, sagaData.Id);
+
+                command.ExecuteNonQuery();
             }
         }
 
@@ -358,7 +371,7 @@ WHERE i.""saga_type"" = @saga_type AND i.""key"" = @key AND i.value = @value
             idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
         }
 
-        List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, string[] sagaDataPropertyPathsToIndex)
+        List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, IEnumerable<string> sagaDataPropertyPathsToIndex)
         {
             return sagaDataPropertyPathsToIndex
                 .Select(path =>
