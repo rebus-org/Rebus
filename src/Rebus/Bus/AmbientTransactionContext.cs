@@ -21,9 +21,12 @@ namespace Rebus.Bus
                 throw new InvalidOperationException("There's currently no ambient transaction associated with this thread." +
                                                     " You can only instantiate this class within a TransactionScope.");
             }
+
             Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
+
             TransactionContext.Set(this);
         }
+
 
         /// <summary>
         /// Will be raised when it is time to commit the transaction. The transport should do its final
@@ -86,7 +89,7 @@ namespace Rebus.Bus
             }
             finally
             {
-                TransactionContext.Clear();
+                RunCleanup();
             }
         }
 
@@ -103,7 +106,7 @@ namespace Rebus.Bus
             }
             finally
             {
-                TransactionContext.Clear();
+                RunCleanup();
             }
         }
 
@@ -115,6 +118,18 @@ namespace Rebus.Bus
             try
             {
                 enlistment.Done();
+            }
+            finally
+            {
+                RunCleanup();
+            }
+        }
+
+        public void RunCleanup()
+        {
+            try
+            {
+                Cleanup();
             }
             finally
             {

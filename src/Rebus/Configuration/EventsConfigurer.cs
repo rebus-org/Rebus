@@ -52,6 +52,17 @@ namespace Rebus.Configuration
         public event MessageContextEstablishedEventHandler MessageContextEstablished;
 
         /// <summary>
+        /// Event that is raised immediately after the bus starts
+        /// and is ready to handle messages
+        /// </summary>
+        public event BusStartedEventHandler BusStarted;
+
+        /// <summary>
+        /// Event that is raised when the bus is disposed
+        /// </summary>
+        public event BusStoppedEventHandler BusStopped;
+
+        /// <summary>
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.
         /// </summary>
@@ -116,6 +127,22 @@ namespace Rebus.Configuration
                 foreach (var listener in AfterMessage.GetInvocationList().Cast<AfterMessageEventHandler>())
                 {
                     rebusEvents.AfterMessage += listener;
+                }
+            }
+
+            if (BusStarted != null)
+            {
+                foreach (var listener in BusStarted.GetInvocationList().Cast<BusStartedEventHandler>())
+                {
+                    rebusEvents.BusStarted += listener;
+                }
+            }
+
+            if (BusStopped != null)
+            {
+                foreach (var listener in BusStopped.GetInvocationList().Cast<BusStoppedEventHandler>())
+                {
+                    rebusEvents.BusStopped += listener;
                 }
             }
 

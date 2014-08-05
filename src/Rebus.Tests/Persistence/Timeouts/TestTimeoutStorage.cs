@@ -9,6 +9,7 @@ namespace Rebus.Tests.Persistence.Timeouts
 {
     [TestFixture(typeof(InMemoryTimeoutStorageFactory))]
     [TestFixture(typeof(SqlServerTimeoutStorageFactory), Category = TestCategories.MsSql)]
+    [TestFixture(typeof(PostgreSqlServerTimeoutStorageFactory), Category = TestCategories.PostgreSql)]
     [TestFixture(typeof(RavenDbTimeoutStorageFactory), Category = TestCategories.Raven)]
     [TestFixture(typeof(MongoDbTimeoutStorageFactory), Category = TestCategories.Mongo)]
     public class TestTimeoutStorage<TFactory> : FixtureBase where TFactory : ITimeoutStorageFactory

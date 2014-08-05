@@ -13,6 +13,7 @@ using Rebus.Transports.Msmq;
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
     [TestFixture(typeof(WindsorContainerAdapterFactory))]
+    [TestFixture(typeof(SimpleInjectorContainerAdapterFactory))]
     [TestFixture(typeof(StructureMapContainerAdapterFactory))]
     [TestFixture(typeof(AutofacContainerAdapterFactory))]
     [TestFixture(typeof(UnityContainerAdapterFactory))]
@@ -233,6 +234,8 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IAdvancedBus Advanced { get { return this; } }
 
             public IRebusEvents Events { get; private set; }
+
+            [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
         }

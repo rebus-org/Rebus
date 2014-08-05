@@ -6,6 +6,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Rebus.Tests.Integration.Factories;
 using Shouldly;
 using System.Linq;
@@ -32,7 +33,7 @@ namespace Rebus.Tests.Integration
             handlerActivator = new HandlerActivatorForTesting();
             bus = timeoutManagerFactory.CreateBus("test.deferral", handlerActivator);
 
-            var logFileName = string.Format("log-{0}-{1}.txt", typeof (TTimeoutManagerFactory).Name, typeof(TBusFactory).Name);
+            var logFileName = string.Format("log-{0}-{1}.txt", typeof(TTimeoutManagerFactory).Name, typeof(TBusFactory).Name);
             var logFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, logFileName);
 
             if (File.Exists(logFilePath))
@@ -41,7 +42,7 @@ namespace Rebus.Tests.Integration
             }
 
             RebusLoggerFactory.Current = new GhettoFileLoggerFactory(logFilePath)
-                .WithFilter(m => m.LoggerType == typeof (InMemoryTimeoutStorage));
+                .WithFilter(m => m.LoggerType == typeof(InMemoryTimeoutStorage));
 
             timeoutManagerFactory.StartAll();
         }
@@ -52,11 +53,47 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public void CanPreserveCustomHeadersOnDeferredMessage()
+        {
+            // arrange
+            var deferredMessageReceived = new ManualResetEvent(false);
+            IDictionary<string, object> receivedHeaders = null;
+            handlerActivator.Handle<MessageWithText>(m =>
+            {
+                receivedHeaders = MessageContext.GetCurrent().Headers;
+
+                deferredMessageReceived.Set();
+            });
+
+            var message = new MessageWithText { Text = "hello" };
+            bus.AttachHeader(message, Headers.UserName, "joe");
+            bus.AttachHeader(message, "test-custom1", "bimmelim!");
+            bus.AttachHeader(message, "test-custom2", "w00t!");
+
+            // act
+            bus.Defer(1.Seconds(), message);
+            deferredMessageReceived.WaitUntilSetOrDie(3.Seconds());
+
+            // assert
+            receivedHeaders.ShouldNotBe(null);
+            receivedHeaders.ShouldContainKeyAndValue(Headers.UserName, "joe");
+            receivedHeaders.ShouldContainKeyAndValue("test-custom1", "bimmelim!");
+            receivedHeaders.ShouldContainKeyAndValue("test-custom2", "w00t!");
+        }
+
+
+        [Test]
         public void CanMakeSimpleDeferralOfMessages()
         {
             // arrange
             var messages = new List<Tuple<string, DateTime>>();
-            handlerActivator.Handle<MessageWithText>(m => messages.Add(new Tuple<string, DateTime>(m.Text, DateTime.UtcNow)));
+            var deferredMessageReceived = new AutoResetEvent(false);
+            handlerActivator.Handle<MessageWithText>(m =>
+            {
+                Console.WriteLine("Got message with '{0}'", m.Text);
+                messages.Add(new Tuple<string, DateTime>(m.Text, DateTime.UtcNow));
+                deferredMessageReceived.Set();
+            });
 
             var timeOfDeferral = DateTime.UtcNow;
             var acceptedTolerance = 2.Seconds();
@@ -65,7 +102,8 @@ namespace Rebus.Tests.Integration
             bus.Defer(10.Seconds(), new MessageWithText { Text = "deferred 10 seconds" });
             bus.Defer(5.Seconds(), new MessageWithText { Text = "deferred 5 seconds" });
 
-            Thread.Sleep(10.Seconds() + acceptedTolerance + acceptedTolerance);
+            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(10));
+            deferredMessageReceived.WaitUntilSetOrDie(TimeSpan.FromSeconds(10));
 
             // assert
             messages.Count.ShouldBe(2);
@@ -95,7 +133,7 @@ namespace Rebus.Tests.Integration
                         receivedMessages.Add(Tuple.Create(m.ExpectedReturnTime, DateTime.UtcNow, m.MessageId));
 
                         var currentCount = receivedMessages.Count;
-                        
+
                         if (currentCount >= messageCount)
                         {
                             Console.WriteLine("Got {0} messages, setting reset event", currentCount);

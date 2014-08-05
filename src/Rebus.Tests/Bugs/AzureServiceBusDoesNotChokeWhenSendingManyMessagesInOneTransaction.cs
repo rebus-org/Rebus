@@ -4,12 +4,13 @@ using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Ponder;
-using Rebus.AzureServiceBus.Queues;
+using Rebus.AzureServiceBus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Contracts.Transports.Factories;
 using Rebus.Tests.Persistence;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Bugs
 {
@@ -35,7 +36,7 @@ namespace Rebus.Tests.Bugs
 
             using (var azureQueue = new AzureServiceBusMessageQueue(busConnection, InputQueueName))
             {
-                azureQueue.Purge();
+                azureQueue.Delete();
             }
 
             allRepliesReceived = new ManualResetEvent(false);
@@ -46,9 +47,10 @@ namespace Rebus.Tests.Bugs
             sagaPersister = new SqlServerSagaPersister(sqlConnection, SagaIndex, SagaTable).EnsureTablesAreCreated();
 
             Configure.With(TrackDisposable(adapter))
-                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Error))
+                .Logging(l => l.ColoredConsole(LogLevel.Warn))
                 .Transport(t => t.UseAzureServiceBus(busConnection, InputQueueName, "error"))
                 .Sagas(s => s.Use(sagaPersister))
+                .Behavior(b => b.SetMaxRetriesFor<Exception>(100))
                 .CreateBus()
                 .Start(3);
         }
@@ -61,27 +63,44 @@ namespace Rebus.Tests.Bugs
         [TestCase(1000, Description = "Max batch size within tx=100")]
         public void RunIt(int requestCount)
         {
-            // arrange
             const string initiatingString = "Hello!";
-            adapter.Register(() => new SomeSaga(adapter.Bus, allRepliesReceived, requestCount));
 
-            // act
-            adapter.Bus.SendLocal(initiatingString);
+            var messagesSent = 0;
+            var messagesHandled = 0;
 
-            // assert
-            var timeout = 5.Seconds() + (requestCount / 2).Seconds();
-            allRepliesReceived.WaitUntilSetOrDie(timeout, "Did not receive all replies within {0} timeout", timeout);
+            using (var debugInfoTimer = new Timer(5000))
+            {
+                debugInfoTimer.Elapsed += (o, ea) => Console.WriteLine("{0} messages sent - {1} messages handled", messagesSent, messagesHandled);
+                debugInfoTimer.Start();
 
-            Thread.Sleep(2.Seconds());
+                // arrange
+                adapter.Register(() =>
+                {
+                    var saga = new SomeSaga(adapter.Bus, allRepliesReceived, requestCount);
+                    saga.MessageSent += () => Interlocked.Increment(ref messagesSent);
+                    saga.MessageHandled += currentHandledMessagesCount => Interlocked.Exchange(ref messagesHandled, currentHandledMessagesCount);
+                    return saga;
+                });
 
-            var sagaDataPropertyPath = Reflect.Path<SomeSagaData>(d => d.InitiatingString);
+                // act
+                adapter.Bus.SendLocal(initiatingString);
 
-            var data = sagaPersister.Find<SomeSagaData>(sagaDataPropertyPath, initiatingString);
-            
-            Assert.That(data, Is.Not.Null, "Could not find saga data!!!");
-            Assert.That(data.Requests.Count, Is.EqualTo(requestCount));
-            Assert.That(data.Requests.All(r => r.Value == 1), "The following requests were not replied to exactly once: {0}",
-                string.Join(", ", data.Requests.Where(kvp => kvp.Value != 1).Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value))));
+                // assert
+                var timeout = 5.Seconds() + (requestCount/2).Seconds();
+                allRepliesReceived.WaitUntilSetOrDie(timeout, "Did not receive all replies within {0} timeout", timeout);
+
+                Thread.Sleep(2.Seconds());
+
+                var sagaDataPropertyPath = Reflect.Path<SomeSagaData>(d => d.InitiatingString);
+
+                var data = sagaPersister.Find<SomeSagaData>(sagaDataPropertyPath, initiatingString);
+
+                Assert.That(data, Is.Not.Null, "Could not find saga data!!!");
+                Assert.That(data.Requests.Count, Is.EqualTo(requestCount));
+                Assert.That(data.Requests.All(r => r.Value == 1),
+                    "The following requests were not replied to exactly once: {0}",
+                    string.Join(", ", data.Requests.Where(kvp => kvp.Value != 1).Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value))));
+            }
         }
 
 
@@ -99,6 +118,10 @@ namespace Rebus.Tests.Bugs
                 this.allRepliesReceived = allRepliesReceived;
                 this.requestCount = requestCount;
             }
+
+            public event Action MessageSent = delegate { };
+
+            public event Action<int> MessageHandled = delegate { };
 
             public override void ConfigureHowToFindSaga()
             {
@@ -122,11 +145,14 @@ namespace Rebus.Tests.Bugs
                     .ForEach(i =>
                     {
                         Data.Requests[i] = 0;
+
                         bus.SendLocal(new SomeRequest
                         {
                             CorrelationId = Data.CorrelationId,
                             RequestId = i
                         });
+
+                        MessageSent();
                     });
             }
 
@@ -134,17 +160,13 @@ namespace Rebus.Tests.Bugs
             {
                 Data.Requests[message.RequestId]++;
 
-                var numberOfReceivedReplies = Data.Requests.Count(r => r.Value > 0);
-                if (numberOfReceivedReplies % 100 == 0)
-                {
-                    Console.WriteLine("Got {0} replies", numberOfReceivedReplies);    
-                }
-
                 if (Data.Requests.All(kvp => kvp.Value > 0))
                 {
                     Console.WriteLine("All replies received!");
                     allRepliesReceived.Set();
                 }
+
+                MessageHandled(Data.Requests.Count(r => r.Value > 0));
             }
         }
 

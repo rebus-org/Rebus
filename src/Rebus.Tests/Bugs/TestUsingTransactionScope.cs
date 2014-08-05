@@ -16,7 +16,7 @@ using Shouldly;
 namespace Rebus.Tests.Bugs
 {
     [TestFixture, Category(TestCategories.MsSql)]
-    public class TestUsingTransactionScope : SqlServerFixtureBase, IDetermineMessageOwnership
+    public class TestUsingTransactionScope : SqlServerFixtureBase
     {
         const string PublisherInputQueueName = "test.sub-unsub.publisher";
         const string SubscriberInputQueueName = "test.sub-unsub.subscriber";
@@ -131,7 +131,7 @@ namespace Rebus.Tests.Bugs
         }
 
 
-        public string GetEndpointFor(Type messageType)
+        public override string GetEndpointFor(Type messageType)
         {
             if (messageType == typeof(SomeEvent))
             {

@@ -30,10 +30,10 @@ namespace Rebus.MongoDb
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
 
             // try to use our own naming convention
-            RevisionMemberName = namingConvention.RevisionMemberName;
+            RevisionMemberName = NamingConvention.RevisionMemberName;
             
             ConventionRegistry.Register("SagaDataConventionPack",
-                                        namingConvention,
+                                        NamingConvention,
                                         t => typeof (ISagaData).IsAssignableFrom(t));
         }
 
@@ -81,7 +81,7 @@ namespace Rebus.MongoDb
         readonly object indexEnsuredRecentlyLock = new object();
 
         bool allowAutomaticSagaCollectionNames;
-        static readonly SagaDataNamingConvention namingConvention = new SagaDataNamingConvention();
+        static readonly SagaDataNamingConvention NamingConvention = new SagaDataNamingConvention();
 
         /// <summary>
         /// Constructs the persister which will connect to the Mongo database pointed to by the connection string.
@@ -314,13 +314,15 @@ which will make the persister use the type of the saga to come up with collectio
                 {
                     if (!indexEnsuredRecently)
                     {
-                        log.Info("Re-declaring indexes with unique constraints for the following paths: {0}", string.Join(", ", sagaDataPropertyPathsToIndex));
+                        var propertyPathsToIndex = sagaDataPropertyPathsToIndex.ToList();
+
+                        log.Info("Re-declaring indexes with unique constraints for the following paths: {0}", string.Join(", ", propertyPathsToIndex));
 
                         //collection.ResetIndexCache();
 
                         //                        var indexes = collection.GetIndexes();
 
-                        foreach (var propertyToIndex in sagaDataPropertyPathsToIndex.Except(new[] { "Id" }))
+                        foreach (var propertyToIndex in propertyPathsToIndex.Except(new[] { "Id" }))
                         {
                             var indexDefinition = IndexKeys.Ascending(propertyToIndex);
 
@@ -329,8 +331,7 @@ which will make the persister use the type of the saga to come up with collectio
                             //    AssertIndexIsCorrect(indexes, propertyToIndex);
                             //}
 
-                            collection.EnsureIndex(indexDefinition,
-                                                   IndexOptions.SetBackground(false).SetUnique(true));
+                            collection.CreateIndex(indexDefinition, IndexOptions.SetBackground(false).SetUnique(true));
                         }
 
                         //collection.ReIndex();
@@ -394,7 +395,7 @@ which will make the persister use the type of the saga to come up with collectio
             if (propertyInfo == null)
                 return sagaDataPropertyPath;
 
-            return namingConvention.GetElementName(propertyInfo);
+            return NamingConvention.GetElementName(propertyInfo);
         }
 
         void EnsureResultIsGood(WriteConcernResult writeConcernResult, string message, int expectedNumberOfAffectedDocuments, params object[] objs)

@@ -23,7 +23,7 @@ namespace Rebus
         /// <summary>
         /// Indicates whether the saga data instance mounted on this saga handler is new (i.e. it is not yet persistent)
         /// </summary>
-        public bool IsNew { get; set; }
+        public bool IsNew { get; internal set; }
         
         /// <summary>
         /// Should fill the internally stored dictionary of correlations by invoking the nifty

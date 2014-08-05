@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
-using Rebus.Persistence.SqlServer;
 using System.Linq;
 using Rebus.Serialization;
 using IsolationLevel = System.Data.IsolationLevel;

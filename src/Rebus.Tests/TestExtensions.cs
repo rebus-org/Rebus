@@ -47,7 +47,24 @@ namespace Rebus.Tests
 
             throw new AssertionException(message);
         }
+        public static void WaitUntilSetOrDie(this AutoResetEvent resetEvent, TimeSpan timeout, string errorMessage, params object[] objs)
+        {
+            if (resetEvent.WaitOne(timeout)) return;
+
+            var message = string.Format("Event was not set within {0} timeout: ", timeout)
+                         + string.Format(errorMessage, objs);
+
+            throw new AssertionException(message);
+        }
         public static void WaitUntilSetOrDie(this ManualResetEvent resetEvent, TimeSpan timeout)
+        {
+            if (resetEvent.WaitOne(timeout)) return;
+
+            var message = string.Format("Event was not set within {0} timeout", timeout);
+
+            throw new AssertionException(message);
+        }
+        public static void WaitUntilSetOrDie(this AutoResetEvent resetEvent, TimeSpan timeout)
         {
             if (resetEvent.WaitOne(timeout)) return;
 

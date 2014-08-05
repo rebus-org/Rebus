@@ -18,6 +18,7 @@ namespace Rebus.Tests
         public const string MsSql = "mssql";
         public const string ToDo = "todo";
         public const string Performance = "performance";
+        public const string PostgreSql = "postgresql";
 
         public const int AvailableHttpPort = 17834;
 
@@ -30,6 +31,7 @@ namespace Rebus.Tests
         [TestCase(typeof(MongoDbFixtureBase), Mongo)]
         [TestCase(typeof(SqlServerFixtureBase), MsSql)]
         [TestCase(typeof(RabbitMqFixtureBase), Rabbit)]
+        [TestCase(typeof(PostgreSqlFixtureBase), PostgreSql)]
         public void AssertCategoriesIfPossible(Type fixtureBaseType, string expectedCategoryName)
         {
             GetType().Assembly.GetTypes()

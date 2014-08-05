@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.IO;
 using System.Text;
 using System.Threading;
 using RabbitMQ.Client;
@@ -52,6 +49,7 @@ namespace Rebus.RabbitMQ
         readonly List<Func<Type, string>> eventNameResolvers = new List<Func<Type, string>>();
 
         const string CurrentModelKey = "current_model";
+        const int MaxMessageBodySize = 44739489; //< this is 32768 KB of '*' chars in a byte array, wrapped in a message
 
         string exchangeName = "Rebus";
         bool ensureExchangeIsDeclared = true;
@@ -59,6 +57,8 @@ namespace Rebus.RabbitMQ
         bool autoDeleteInputQueue;
         ushort prefetchCount = 100;
         bool managesSubscriptions;
+        string inputExchangeAddress = null;
+        bool ensureInputExchangeIsDeclared = true;
 
         [ThreadStatic]
         static IModel threadBoundModel;
@@ -82,6 +82,9 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public RabbitMqMessageQueue(string connectionString, string inputQueueName)
         {
+            string exchange;
+            GetExchangeAndRoutingKeyFor(inputQueueName, out exchange, out inputQueueName);
+
             connectionManager = new ConnectionManager(connectionString, inputQueueName);
             if (inputQueueName == null) return;
 
@@ -97,39 +100,83 @@ namespace Rebus.RabbitMQ
 
             using (var model = GetConnection().CreateModel())
             {
-                InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
+                InitializeLogicalQueue(inputQueueName, model, false, autoDeleteInputQueue);
             }
         }
 
         bool SenderOnly { get { return string.IsNullOrEmpty(inputQueueName); } }
 
-        /// <summary>
-        /// Sends the specified message to the queue specified by <see cref="destinationQueueName"/>. Please
-        /// note that <see cref="destinationQueueName"/> is not actually a queue, it's a topic. That topic
-        /// MAY correspond to one single queue (in case it's the "default binding" for a queue), or it may
-        /// correspond to a "proper topic" (i.e. one that is meant to used for multicasting).
-        /// </summary>
-        public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
+        void GetExchangeAndRoutingKeyFor(string destinationAddress, out string exchange, out string routingKey)
         {
+            var address = (destinationAddress ?? "");
+
+            if (!address.Contains('@'))
+            {
+                // We're routing (directly) towards a queue, which means:
+                //  - Classic Routing => use configured ExchangeName.
+                //  - OneExchangePerTypr => use empty-string as exchange name.
+                exchange = ExchangeName ?? "";
+                routingKey = address;
+            }
+            else if (address.StartsWith("@"))
+            {
+                // We're routing (directly) towards an exchange, so use empty-string routing key.
+                exchange = address.TrimStart('@');
+                routingKey = "";
+            }
+            else
+            {
+                // We're are routing towards an exchange, but with an specific routing key.
+                var addressParts = address.Split('@');
+                exchange = addressParts[1];
+                routingKey = addressParts[0];
+            }
+        }
+
+        /// <summary>
+        /// Sends the specified message to the queue specified by <see cref="destination"/>. Please
+        /// note that <see cref="destination"/> is not actually a queue, it's a destination address.
+        /// Which may correspond to a topic address (routingKey@exchange), or to a single queue (queue),
+        /// or even simply an exchange (@exchange).
+        /// </summary>
+        public void Send(string destination, TransportMessageToSend message, ITransactionContext context)
+        {
+            var messageBodyLength = message.Body.Length;
+
+            if (messageBodyLength > MaxMessageBodySize)
+            {
+                throw new InvalidOperationException(string.Format("Message body length of {0} bytes exceeds the maximum message body length of {1} bytes",
+                    messageBodyLength, MaxMessageBodySize));
+            }
+
             try
             {
+                string exchange, routingKey;
+
+                // If we are publishing with one-exchange-per-type strategy
+                // passed destination should be pressumed to be an exchange.
+                if (message.Headers.ContainsKey(Headers.Multicast)
+                    && !message.Headers.ContainsKey(Headers.Bounced)
+                    && UsingOneExchangePerMessageTypeRouting
+                    && !destination.Contains('@'))
+                {
+                    destination = "@" + destination;
+                }
+
+                GetExchangeAndRoutingKeyFor(destination, out exchange, out routingKey);
+
                 if (!context.IsTransactional)
                 {
                     using (var model = GetConnection().CreateModel())
                     {
                         var headers = GetHeaders(model, message);
-                        model.BasicPublish(ExchangeName, destinationQueueName,
-                                           headers,
-                                           message.Body);
+                        model.BasicPublish(exchange, routingKey, headers, message.Body);
                     }
                 }
                 else
                 {
                     var model = GetSenderModel(context);
-
-                    model.BasicPublish(ExchangeName, destinationQueueName,
-                                       GetHeaders(model, message),
-                                       message.Body);
+                    model.BasicPublish(exchange, routingKey, GetHeaders(model, message), message.Body);
                 }
             }
             catch (Exception e)
@@ -137,6 +184,11 @@ namespace Rebus.RabbitMQ
                 ErrorOnConnection(e);
                 throw;
             }
+        }
+
+        bool UsingOneExchangePerMessageTypeRouting
+        {
+            get { return ExchangeName == null; }
         }
 
         /// <summary>
@@ -151,7 +203,7 @@ namespace Rebus.RabbitMQ
                 {
                     using (var localModel = GetConnection().CreateModel())
                     {
-                        InitializeLogicalQueue(inputQueueName, localModel, autoDeleteInputQueue);
+                        InitializeLogicalQueue(inputQueueName, localModel, false, autoDeleteInputQueue);
 
                         var basicGetResult = localModel.BasicGet(inputQueueName, true);
 
@@ -251,7 +303,18 @@ namespace Rebus.RabbitMQ
         /// </summary>
         public string InputQueueAddress
         {
-            get { return inputQueueName; }
+            get { return inputExchangeAddress ?? inputQueueName; }
+        }
+
+        /// <summary>
+        /// Gets a value indicating whether <see cref="InputQueueAddress"/> is an exchange address.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [input queue address is exchange]; otherwise, <c>false</c>.
+        /// </value>
+        public bool InputQueueAddressIsExchange
+        {
+            get { return inputExchangeAddress != null; }
         }
 
         /// <summary>
@@ -310,7 +373,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    InitializeLogicalQueue(inputQueueName, model, autoDeleteInputQueue);
+                    InitializeLogicalQueue(inputQueueName, model, false, autoDeleteInputQueue);
                     log.Warn("Purging queue {0}", inputQueueName);
                     model.QueuePurge(inputQueueName);
                 }
@@ -397,12 +460,9 @@ namespace Rebus.RabbitMQ
                 subscriptions.TryRemove(messageType, out dummy);
 
                 var model = threadBoundModel;
-                if (model != null)
-                {
-                    var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
-                }
+                if (model == null) return;
+
+                RemoveSubscription(model, messageType);
                 return;
             }
 
@@ -410,9 +470,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    var topic = GetEventName(messageType);
-                    log.Info("Unsubscribing {0} from {1}", InputQueueAddress, topic);
-                    model.QueueUnbind(InputQueueAddress, ExchangeName, topic, new Dictionary<string, object>());
+                    RemoveSubscription(model, messageType);
                 }
             }
             catch (Exception e)
@@ -433,7 +491,9 @@ namespace Rebus.RabbitMQ
                 var eventName = tryResolve(messageType);
 
                 if (eventName != null)
+                {
                     return eventName;
+                }
             }
 
             return GetPrettyTypeName(messageType);
@@ -474,12 +534,44 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
-        /// Instructs the Rabbit transport to publish messages on the given exchange
+        /// Instructs the Rabbit transport to publish messages on the given exchange, 
+        /// or to use one exchange per each message type (if no 'default exchange is given').
         /// </summary>
         public RabbitMqMessageQueue UseExchange(string exchangeNameToUse)
         {
-            log.Info("Will use exchanged named {0}", exchangeNameToUse);
-            exchangeName = exchangeNameToUse;
+            if (exchangeNameToUse != null)
+            {
+                log.Info("Will use exchanged named {0}", exchangeNameToUse);
+                exchangeName = exchangeNameToUse;
+            }
+            else
+            {
+                log.Info("Will use one exchange per each message type.");
+                exchangeName = null;
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Uses the exchange as input address, by binding it to subscribed type's exchange(s).
+        /// </summary>
+        /// <param name="exchangeName">Name of the exchange.</param>
+        /// <returns></returns>
+        public RabbitMqMessageQueue UseExchangeAsInputAddress(string exchangeName)
+        {
+            log.Info("Will use exchange named {0} as input address.", exchangeName);
+            inputExchangeAddress = "@" + exchangeName;
+            return this;
+        }
+
+        /// <summary>
+        /// Disables Rebus' default behavior of (re)declaring the input exhange when it first interacts with Rabbit.
+        /// </summary>
+        /// <returns></returns>
+        public RabbitMqMessageQueue DoNotDeclareInputExchange()
+        {
+            this.ensureInputExchangeIsDeclared = false;
             return this;
         }
 
@@ -506,13 +598,21 @@ namespace Rebus.RabbitMQ
 
         void EnsureInputQueueInitialized(string inputQueueNameToInitialize)
         {
+            // If desired queue name is our public exchange, declare our input queue instead.
+            // This is needed in order to avoid creating a queue named as our public exchange address
+            // we we are using an exchange as our public facing address.
+            if (InputQueueAddressIsExchange && inputQueueNameToInitialize == InputQueueAddress)
+            {
+                inputQueueNameToInitialize = inputQueueName;
+            }
+
             if (CanUseThreadBoundModel)
             {
-                InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, autoDeleteInputQueue);
+                InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, false, autoDeleteInputQueue);
             }
             else
             {
-                WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, autoDeleteInputQueue));
+                WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, false, autoDeleteInputQueue));
             }
         }
 
@@ -551,9 +651,44 @@ namespace Rebus.RabbitMQ
 
         void EstablishSubscription(IModel model, Type subscription)
         {
-            var topic = GetEventName(subscription);
-            log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-            model.QueueBind(InputQueueAddress, ExchangeName, topic);
+            var eventName = GetEventName(subscription);
+            var exchange = UsingOneExchangePerMessageTypeRouting ? eventName : ExchangeName;
+            var routingKey = UsingOneExchangePerMessageTypeRouting ? "" : eventName;
+            var inputAddress = InputQueueAddress.TrimStart('@');
+
+            if (UsingOneExchangePerMessageTypeRouting)
+            {
+                log.Debug("Declaring fanout exchange for: {0}", exchange);
+                model.ExchangeDeclare(exchange, "fanout", true, false, null);
+            }
+
+            log.Info("Subscribing {0} to {1}", inputAddress, eventName);
+            if (InputQueueAddressIsExchange)
+            {
+                model.ExchangeBind(inputAddress, exchange, routingKey);
+            }
+            else
+            {
+                model.QueueBind(inputAddress, exchange, routingKey);
+            }
+        }
+
+        void RemoveSubscription(IModel model, Type subscription)
+        {
+            var eventName = GetEventName(subscription);
+            var exchange = UsingOneExchangePerMessageTypeRouting ? eventName : ExchangeName;
+            var routingKey = UsingOneExchangePerMessageTypeRouting ? "" : eventName;
+            var inputAddress = InputQueueAddress.TrimStart('@');
+
+            log.Info("Unsubscribing {0} from {1}", inputAddress, eventName);
+            if (InputQueueAddressIsExchange)
+            {
+                model.ExchangeUnbind(inputAddress, exchange, routingKey);
+            }
+            else
+            {
+                model.QueueUnbind(inputAddress, exchange, routingKey, new Dictionary<string, object>());
+            }
         }
 
         string GetPrettyTypeName(Type messageType)
@@ -565,7 +700,7 @@ namespace Rebus.RabbitMQ
             var genericArguments = messageType.GetGenericArguments();
 
             var fullName = genericTypeDefinition.FullName;
-            var substring = fullName.Substring(0, fullName.IndexOf("`"));
+            var substring = fullName.Substring(0, fullName.IndexOf("`", StringComparison.Ordinal));
 
             var builder = new StringBuilder();
             builder.Append(substring);
@@ -581,7 +716,7 @@ namespace Rebus.RabbitMQ
             return builder.ToString();
         }
 
-        void InitializeLogicalQueue(string queueName, IModel model, bool autoDelete = false)
+        void InitializeLogicalQueue(string queueName, IModel model, bool asErrorQueue, bool autoDelete = false)
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
@@ -592,6 +727,27 @@ namespace Rebus.RabbitMQ
                                arguments: arguments,
                                autoDelete: autoDelete,
                                exclusive: false);
+
+            // Error queues do not need additional setup.
+            if (asErrorQueue) return;
+
+            if (UsingOneExchangePerMessageTypeRouting)
+            {
+                log.Debug("Queue '{0}' is using one exchange-per-type routing.", queueName);
+
+                if (InputQueueAddressIsExchange && ensureInputExchangeIsDeclared)
+                {
+                    var exchangeName = InputQueueAddress.TrimStart('@');
+
+                    log.Debug("Declaring (input) exchange '{0}'", InputQueueAddress);
+                    model.ExchangeDeclare(exchangeName, ExchangeType.Fanout, true);
+
+                    log.Debug("Binding queue '{0}' to exchange '{0}'", InputQueue, exchangeName);
+                    model.QueueBind(InputQueue, exchangeName, "");
+                }
+
+                return;
+            }
 
             if (ensureExchangeIsDeclared)
             {
@@ -606,9 +762,9 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        internal void CreateQueue(string queueName)
+        internal void CreateQueue(string queueName, bool asErrorQueue)
         {
-            WithConnection(model => InitializeLogicalQueue(queueName, model));
+            WithConnection(model => InitializeLogicalQueue(queueName, model, asErrorQueue));
         }
 
         void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
@@ -638,7 +794,7 @@ namespace Rebus.RabbitMQ
             // bind it to the thread
             threadBoundModel = newModel;
 
-            InitializeLogicalQueue(inputQueueName, threadBoundModel, autoDeleteInputQueue);
+            InitializeLogicalQueue(inputQueueName, threadBoundModel, false, autoDeleteInputQueue);
 
             EstablishSubscriptions(threadBoundModel);
         }
@@ -669,7 +825,6 @@ namespace Rebus.RabbitMQ
                              result.Id, headerLevelId);
                 }
             }
-
 
             return result;
         }
