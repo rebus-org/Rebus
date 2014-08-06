@@ -55,6 +55,8 @@ namespace Rebus.Tests
             {
                 toDispose.ForEach(b => b.Dispose());
             }
+
+            MsmqUtil.Delete(ErrorQueueName);
         }
 
         protected virtual void DoTearDown()
