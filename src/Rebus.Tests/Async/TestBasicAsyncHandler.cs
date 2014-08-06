@@ -86,7 +86,7 @@ namespace Rebus.Tests.Async
 
                 adapter.Bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
 
-                messageHandled.WaitUntilSetOrDie(4.Seconds());
+                messageHandled.WaitUntilSetOrDie(10.Seconds());
             }
         }
 
@@ -103,16 +103,17 @@ namespace Rebus.Tests.Async
 
             public async Task Handle(SomeMessage message)
             {
-                LogAdd(string.Format("Thread: {0}", Thread.CurrentThread.Name));
+                MessageContext.GetCurrent().Items["test"] = "asger";
+                LogAdd(string.Format("Thread: {0}, MessageContext: {1}", Thread.CurrentThread.Name, MessageContext.GetCurrent().Items["test"]));
                 await Task.Delay(message.Delay);
 
-                LogAdd(string.Format("Thread: {0}", Thread.CurrentThread.Name));
+                LogAdd(string.Format("Thread: {0}, MessageContext: {1}", Thread.CurrentThread.Name, MessageContext.GetCurrent().Items["test"]));
                 await Task.Delay(message.Delay);
 
-                LogAdd(string.Format("Thread: {0}", Thread.CurrentThread.Name));
+                LogAdd(string.Format("Thread: {0}, MessageContext: {1}", Thread.CurrentThread.Name, MessageContext.GetCurrent().Items["test"]));
                 await Task.Delay(message.Delay);
 
-                LogAdd(string.Format("Thread: {0}", Thread.CurrentThread.Name));
+                LogAdd(string.Format("Thread: {0}, MessageContext: {1}", Thread.CurrentThread.Name, MessageContext.GetCurrent().Items["test"]));
                 messageHandled.Set();
             }
 

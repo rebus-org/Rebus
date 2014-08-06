@@ -1,6 +1,8 @@
 using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Extensions;
@@ -48,9 +50,16 @@ namespace Rebus
             get { return currentMessage; }
         }
 
+        internal static void Restablish(IMessageContext context)
+        {
+            current = context;
+        }
+
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             var messageContext = new MessageContext(headers);
+
+            CallContext.LogicalSetData("context", messageContext);
 
             if (TransactionContext.Current != null)
             {

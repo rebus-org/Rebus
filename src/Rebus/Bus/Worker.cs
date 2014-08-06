@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Transactions;
 using Rebus.Configuration;
@@ -63,6 +64,7 @@ namespace Rebus.Bus
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly MessageLogger messageLogger;
+        readonly WorkerSynchronizationContext synchronizationContext;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -80,6 +82,7 @@ namespace Rebus.Bus
 
         volatile bool shouldExit;
         volatile bool shouldWork;
+
 
         public Worker(IErrorTracker errorTracker,
             IReceiveMessages receiveMessages,
@@ -107,6 +110,7 @@ namespace Rebus.Bus
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
             nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
+            synchronizationContext = new WorkerSynchronizationContext();
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
 
@@ -179,6 +183,8 @@ namespace Rebus.Bus
 
         void MainLoop()
         {
+            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+
             while (!shouldExit)
             {
                 if (!shouldWork)
@@ -191,6 +197,8 @@ namespace Rebus.Bus
                 {
                     try
                     {
+                        synchronizationContext.Run();
+
                         TryProcessIncomingMessage();
 
                         errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper.Reset();
@@ -536,6 +544,29 @@ namespace Rebus.Bus
         static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
         {
             return new BackoffHelper(backoffTimes) { LoggingDisabled = true };
+        }
+    }
+
+    public class WorkerSynchronizationContext : SynchronizationContext
+    {
+        readonly ConcurrentQueue<Tuple<SendOrPostCallback, object, IMessageContext>> callbacks =
+            new ConcurrentQueue<Tuple<SendOrPostCallback, object, IMessageContext>>();
+
+        public override void Post(SendOrPostCallback d, object state)
+        {
+            var transactionContext = TransactionContext.Current;
+            var logicalGetData = (IMessageContext)CallContext.LogicalGetData("context");
+            callbacks.Enqueue(Tuple.Create(d, state, logicalGetData));
+        }
+
+        public void Run()
+        {
+            Tuple<SendOrPostCallback, object, IMessageContext> tuple;
+            while (callbacks.TryDequeue(out tuple))
+            {
+                MessageContext.Restablish(tuple.Item3);
+                tuple.Item1(tuple.Item2);
+            }
         }
     }
 }

@@ -300,7 +300,11 @@ This most likely indicates that you have configured this Rebus service to use an
             var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
             if (asyncHandler != null)
             {
-                Task.WaitAll(asyncHandler.Handle(message));
+                asyncHandler.Handle(message)
+                    .ContinueWith(x =>
+                    {
+                        Console.WriteLine(x.Exception);
+                    });
             }
         }
 
