@@ -11,8 +11,25 @@ using Shouldly;
 namespace Rebus.Tests.Bugs
 {
     [TestFixture, Category(TestCategories.Rabbit)]
+    [Description("Verifies that RabbitMQ can create&bind error queue at the right time, even when configured to use a non-default exchange")]
     public class DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq : RabbitMqFixtureBase
     {
+        protected override void DoSetUp()
+        {
+            RemoveQueues();
+        }
+
+        protected override void DoTearDown()
+        {
+            RemoveQueues();
+        }
+
+        static void RemoveQueues()
+        {
+            DeleteQueue("test.input");
+            DeleteQueue("test.error");
+        }
+
         [Test]
         public void ItHasBeenFixed()
         {
