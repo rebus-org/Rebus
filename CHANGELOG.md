@@ -399,6 +399,11 @@
 
 * Fixed vulnerability that could lead to executing arbitrary SQL statements by injecting it in a correlation property on a saga message when using SQL Server and PostgreSQL saga persisters.
 
+## 0.71.0
+
+* Fixed bug that could result in not automatically binding the error queue topic to the error queue when using RabbitMQ
+* Update MongoDB driver dependency to 1.9.2
+
 
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore

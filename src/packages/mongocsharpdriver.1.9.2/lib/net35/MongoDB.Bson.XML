@@ -7584,6 +7584,64 @@
             Gets an instance of the BsonBooleanSerializer class.
             </summary>
         </member>
+        <member name="T:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer">
+            <summary>
+            Represents a serializer for BsonValue members of a BsonClassMap.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Bson.Serialization.IBsonDocumentSerializer">
+            <summary>
+            Contract for composite serializers that contain a number of named serializers.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.IBsonDocumentSerializer.GetMemberSerializationInfo(System.String)">
+            <summary>
+            Gets the serialization info for a member.
+            </summary>
+            <param name="memberName">The member name.</param>
+            <returns>The serialization info for the member.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
+            <summary>
+            Deserializes an object from a BsonReader.
+            </summary>
+            <param name="bsonReader">The BsonReader.</param>
+            <param name="nominalType">The nominal type of the object.</param>
+            <param name="actualType">The actual type of the object.</param>
+            <param name="options">The serialization options.</param>
+            <returns>An object.</returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer.GetMemberSerializationInfo(System.String)">
+            <summary>
+            Gets the serialization info for a member.
+            </summary>
+            <param name="memberName">The member name.</param>
+            <returns>
+            The serialization info for the member.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer.GetItemSerializationInfo">
+            <summary>
+            Gets the serialization info for individual items of the array.
+            </summary>
+            <returns>
+            The serialization info for the items.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
+            <summary>
+            Serializes an object to a BsonWriter.
+            </summary>
+            <param name="bsonWriter">The BsonWriter.</param>
+            <param name="nominalType">The nominal type.</param>
+            <param name="value">The object.</param>
+            <param name="options">The serialization options.</param>
+        </member>
+        <member name="P:MongoDB.Bson.Serialization.Serializers.BsonValueCSharpNullSerializer.Instance">
+            <summary>
+            Gets an instance of the BsonBooleanSerializer class.
+            </summary>
+        </member>
         <member name="T:MongoDB.Bson.Serialization.Serializers.BsonDateTimeSerializer">
             <summary>
             Represents a serializer for BsonDateTimes.
@@ -7623,18 +7681,6 @@
             Represents a serializer for TClass (a subclass of BsonDocumentBackedClass).
             </summary>
             <typeparam name="TClass">The subclass of BsonDocumentBackedClass.</typeparam>
-        </member>
-        <member name="T:MongoDB.Bson.Serialization.IBsonDocumentSerializer">
-            <summary>
-            Contract for composite serializers that contain a number of named serializers.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Bson.Serialization.IBsonDocumentSerializer.GetMemberSerializationInfo(System.String)">
-            <summary>
-            Gets the serialization info for a member.
-            </summary>
-            <param name="memberName">The member name.</param>
-            <returns>The serialization info for the member.</returns>
         </member>
         <member name="M:MongoDB.Bson.Serialization.BsonDocumentBackedClassSerializer`1.#ctor">
             <summary>
@@ -10400,6 +10446,14 @@
             Gets the value of an Int64 token.
             </summary>
         </member>
+        <member name="P:MongoDB.Bson.IO.JsonToken.IsNumber">
+            <summary>
+            Gets a value indicating whether this token is number.
+            </summary>
+            <value>
+              <c>true</c> if this token is number; otherwise, <c>false</c>.
+            </value>
+        </member>
         <member name="P:MongoDB.Bson.IO.JsonToken.ObjectIdValue">
             <summary>
             Gets the value of an ObjectId token.
@@ -10449,6 +10503,24 @@
             Gets the value of a Double token.
             </summary>
         </member>
+        <member name="P:MongoDB.Bson.IO.DoubleJsonToken.Int32Value">
+            <summary>
+            Gets the value of an Int32 token.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.DoubleJsonToken.Int64Value">
+            <summary>
+            Gets the value of an Int64 token.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.DoubleJsonToken.IsNumber">
+            <summary>
+            Gets a value indicating whether this token is number.
+            </summary>
+            <value>
+              <c>true</c> if this token is number; otherwise, <c>false</c>.
+            </value>
+        </member>
         <member name="T:MongoDB.Bson.IO.Int32JsonToken">
             <summary>
             Represents an Int32 JSON token.
@@ -10461,6 +10533,11 @@
             <param name="lexeme">The lexeme.</param>
             <param name="value">The Int32 value.</param>
         </member>
+        <member name="P:MongoDB.Bson.IO.Int32JsonToken.DoubleValue">
+            <summary>
+            Gets the value of a Double token.
+            </summary>
+        </member>
         <member name="P:MongoDB.Bson.IO.Int32JsonToken.Int32Value">
             <summary>
             Gets the value of an Int32 token.
@@ -10470,6 +10547,14 @@
             <summary>
             Gets the value of an Int32 token as an Int64.
             </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.Int32JsonToken.IsNumber">
+            <summary>
+            Gets a value indicating whether this token is number.
+            </summary>
+            <value>
+              <c>true</c> if this token is number; otherwise, <c>false</c>.
+            </value>
         </member>
         <member name="T:MongoDB.Bson.IO.Int64JsonToken">
             <summary>
@@ -10483,10 +10568,28 @@
             <param name="lexeme">The lexeme.</param>
             <param name="value">The Int64 value.</param>
         </member>
+        <member name="P:MongoDB.Bson.IO.Int64JsonToken.DoubleValue">
+            <summary>
+            Gets the value of a Double token.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.Int64JsonToken.Int32Value">
+            <summary>
+            Gets the value of an Int32 token.
+            </summary>
+        </member>
         <member name="P:MongoDB.Bson.IO.Int64JsonToken.Int64Value">
             <summary>
             Gets the value of an Int64 token.
             </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.Int64JsonToken.IsNumber">
+            <summary>
+            Gets a value indicating whether this token is number.
+            </summary>
+            <value>
+              <c>true</c> if this token is number; otherwise, <c>false</c>.
+            </value>
         </member>
         <member name="T:MongoDB.Bson.IO.ObjectIdJsonToken">
             <summary>
@@ -13960,6 +14063,11 @@
             Output strict JSON.
             </summary>
         </member>
+        <member name="F:MongoDB.Bson.IO.JsonOutputMode.Shell">
+            <summary>
+            Use a format that can be pasted in to the MongoDB shell.
+            </summary>
+        </member>
         <member name="F:MongoDB.Bson.IO.JsonOutputMode.JavaScript">
             <summary>
             Use JavaScript data types for some values.
@@ -13968,11 +14076,6 @@
         <member name="F:MongoDB.Bson.IO.JsonOutputMode.TenGen">
             <summary>
             Use JavaScript and MongoDB data types for some values.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Bson.IO.JsonOutputMode.Shell">
-            <summary>
-            Use a format that can be pasted in to the MongoDB shell.
             </summary>
         </member>
         <member name="T:MongoDB.Bson.IO.JsonWriter">
@@ -17800,6 +17903,11 @@
             <param name="value">The object.</param>
             <param name="options">The serialization options.</param>
         </member>
+        <member name="P:MongoDB.Bson.Serialization.Serializers.RawBsonArraySerializer.Instance">
+            <summary>
+            Gets an instance of the RawBsonArraySerializer class.
+            </summary>
+        </member>
         <member name="T:MongoDB.Bson.Serialization.Serializers.RawBsonDocumentSerializer">
             <summary>
             Represents a serializer for RawBsonDocuments.
@@ -17823,6 +17931,11 @@
             <param name="nominalType">The nominal type.</param>
             <param name="value">The object.</param>
             <param name="options">The serialization options.</param>
+        </member>
+        <member name="P:MongoDB.Bson.Serialization.Serializers.RawBsonDocumentSerializer.Instance">
+            <summary>
+            Gets an instance of the RawBsonDocumentSerializer class.
+            </summary>
         </member>
         <member name="T:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSerializer`1">
             <summary>

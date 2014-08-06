@@ -748,6 +748,11 @@
             The max time feature.
             </summary>
         </member>
+        <member name="F:MongoDB.Driver.FeatureId.GeoJson">
+            <summary>
+            The GeoJson data and query feature.
+            </summary>
+        </member>
         <member name="F:MongoDB.Driver.FeatureId.ParallelScanCommand">
             <summary>
             The parallel scan command.
@@ -2306,6 +2311,13 @@
             <param name="value">Whether to build the index in the background.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptions.SetBits(System.Int32)">
+            <summary>
+            Sets the location precision bits.
+            </summary>
+            <param name="value">The value.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptions.SetBucketSize(System.Double)">
             <summary>
             Sets the bucket size for geospatial haystack indexes.
@@ -2405,6 +2417,13 @@
             Sets whether to build the index in the background.
             </summary>
             <param name="value">Whether to build the index in the background.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetBits(System.Int32)">
+            <summary>
+            Sets the location precision bits.
+            </summary>
+            <param name="value">The value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetBucketSize(System.Double)">
@@ -2508,6 +2527,13 @@
             <param name="value">Whether to build the index in the background.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetBits(System.Int32)">
+            <summary>
+            Sets the location precision bits.
+            </summary>
+            <param name="value">The value.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetBucketSize(System.Double)">
             <summary>
             Sets the bucket size for geospatial haystack indexes.
@@ -2606,6 +2632,13 @@
             Sets whether to build the index in the background.
             </summary>
             <param name="value">Whether to build the index in the background.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetBits(System.Int32)">
+            <summary>
+            Sets the location precision bits.
+            </summary>
+            <param name="value">The value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetBucketSize(System.Double)">
@@ -8379,7 +8412,7 @@
             http://msdn.microsoft.com/en-us/library/windows/desktop/aa375378(v=vs.85).aspx
             </remarks>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.FreeContextBuffer(System.IntPtr@)">
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.FreeContextBuffer(System.IntPtr)">
             <summary>
             Frees the context buffer.
             </summary>
@@ -21007,24 +21040,21 @@
         </member>
         <member name="M:MongoDB.Driver.MongoServer.GetDatabase(MongoDB.Driver.MongoDatabaseSettings)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseSettings">The settings to use with this database.</param>
             <returns>A new or existing instance of MongoDatabase.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoServer.GetDatabase(System.String)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseName">The name of the database.</param>
             <returns>A new or existing instance of MongoDatabase.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoServer.GetDatabase(System.String,MongoDB.Driver.WriteConcern)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseName">The name of the database.</param>
             <param name="writeConcern">The write concern to use with this database.</param>
@@ -21032,8 +21062,7 @@
         </member>
         <member name="M:MongoDB.Driver.MongoServer.GetDatabase(System.String,MongoDB.Driver.MongoDatabaseSettings)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseName">The name of the database.</param>
             <param name="databaseSettings">The settings to use with this database.</param>
@@ -21208,24 +21237,21 @@
         </member>
         <member name="P:MongoDB.Driver.MongoServer.Item(System.String)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseName">The name of the database.</param>
             <returns>A new or existing instance of MongoDatabase.</returns>
         </member>
         <member name="P:MongoDB.Driver.MongoServer.Item(MongoDB.Driver.MongoDatabaseSettings)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseSettings">The settings to use with this database.</param>
             <returns>A new or existing instance of MongoDatabase.</returns>
         </member>
         <member name="P:MongoDB.Driver.MongoServer.Item(System.String,MongoDB.Driver.WriteConcern)">
             <summary>
-            Gets a MongoDatabase instance representing a database on this server. Only one instance
-            is created for each combination of database settings.
+            Gets a MongoDatabase instance representing a database on this server.
             </summary>
             <param name="databaseName">The name of the database.</param>
             <param name="writeConcern">The write concern to use with this database.</param>
@@ -21753,9 +21779,8 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.Create(MongoDB.Driver.MongoConnectionStringBuilder)">
             <summary>
-            Creates a new instance or returns an existing instance of MongoDatabase. Only one instance
-            is created for each combination of database settings. Automatically creates an instance
-            of MongoServer if needed.
+            Creates an instance of a MongoDatabase.
+            Automatically creates an instance of MongoServer if needed.
             </summary>
             <param name="builder">Server and database settings in the form of a MongoConnectionStringBuilder.</param>
             <returns>
@@ -21764,9 +21789,8 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.Create(MongoDB.Driver.MongoServerSettings,System.String)">
             <summary>
-            Creates a new instance or returns an existing instance of MongoDatabase. Only one instance
-            is created for each combination of database settings. Automatically creates an instance
-            of MongoServer if needed.
+            Creates an instance of a MongoDatabase.
+            Automatically creates an instance of MongoServer if needed.
             </summary>
             <param name="serverSettings">The server settings for the server that contains this database.</param>
             <param name="databaseName">The name of this database (will be accessed using default settings).</param>
@@ -21776,9 +21800,8 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.Create(MongoDB.Driver.MongoUrl)">
             <summary>
-            Creates a new instance or returns an existing instance of MongoDatabase. Only one instance
-            is created for each combination of database settings. Automatically creates an instance
-            of MongoServer if needed.
+            Creates an instance of a MongoDatabase.
+            Automatically creates an instance of MongoServer if needed.
             </summary>
             <param name="url">Server and database settings in the form of a MongoUrl.</param>
             <returns>
@@ -21787,9 +21810,8 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.Create(System.String)">
             <summary>
-            Creates a new instance or returns an existing instance of MongoDatabase. Only one instance
-            is created for each combination of database settings. Automatically creates an instance
-            of MongoServer if needed.
+            Creates an instance of a MongoDatabase.
+            Automatically creates an instance of MongoServer if needed.
             </summary>
             <param name="connectionString">Server and database settings in the form of a connection string.</param>
             <returns>
@@ -21798,9 +21820,8 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.Create(System.Uri)">
             <summary>
-            Creates a new instance or returns an existing instance of MongoDatabase. Only one instance
-            is created for each combination of database settings. Automatically creates an instance
-            of MongoServer if needed.
+            Creates an instance of a MongoDatabase.
+            Automatically creates an instance of MongoServer if needed.
             </summary>
             <param name="uri">Server and database settings in the form of a Uri.</param>
             <returns>
