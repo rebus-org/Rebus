@@ -1,8 +1,6 @@
 using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
-using System.Threading;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Extensions;
@@ -24,6 +22,12 @@ namespace Rebus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        MessageContext(IDictionary<string, object> headers)
+        {
+            this.headers = headers;
+            Items = new Dictionary<string, object>();
+        }
+
         /// <summary>
         /// Contains the headers dictionary of the transport message currently being handled.
         /// </summary>
@@ -37,57 +41,39 @@ namespace Rebus
         /// </summary>
         public event Action Disposed = delegate { };
 
-        [ThreadStatic]
-        static internal IMessageContext current;
-        
-        object currentMessage;
-
         /// <summary>
         /// Gets a reference to the current logical message being handled
         /// </summary>
-        public object CurrentMessage
-        {
-            get { return currentMessage; }
-        }
+        public object CurrentMessage { get; private set; }
 
-        internal static void Restablish(IMessageContext context)
+        internal static MessageContext Establish()
         {
-            current = context;
+            return Establish(new Dictionary<string, object>());
         }
 
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             var messageContext = new MessageContext(headers);
-
-            CallContext.LogicalSetData("context", messageContext);
-
-            if (TransactionContext.Current != null)
-            {
-                if (TransactionContext.Current[MessageContextItemKey] != null)
-                {
-                    throw new InvalidOperationException(
-                        string.Format("Cannot establish new message context when one is already present!"));
-                }
-                TransactionContext.Current[MessageContextItemKey] = messageContext;
-            }
-            else
-            {
-                if (current != null)
-                {
-                    throw new InvalidOperationException(
-                        string.Format("Cannot establish new message context when one is already present"));
-                }
-                current = messageContext;
-            }
-
+            Establish(messageContext);
             return messageContext;
         }
 
-        MessageContext(IDictionary<string, object> headers)
+        internal static void Establish(IMessageContext messageContext)
         {
-            this.headers = headers;
+            if (TransactionContext.Current == null)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Could not find a transaction context. There should always be a transaction " +
+                                  "context - though it might be a NoTransaction transaction context."));
+            }
 
-            Items = new Dictionary<string, object>();
+            if (TransactionContext.Current[MessageContextItemKey] != null)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Cannot establish new message context when one is already present!"));
+            }
+
+            TransactionContext.Current[MessageContextItemKey] = messageContext;
         }
 
         /// <summary>
@@ -120,24 +106,22 @@ namespace Rebus
         /// </summary>
         public static IMessageContext GetCurrent()
         {
-            if (TransactionContext.Current != null)
+            if (TransactionContext.Current == null)
             {
-                var context = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
-                if (context == null)
-                {
-                    throw new InvalidOperationException(string.Format("Could not find message context! Looked for it in the current transaction context: {0}", TransactionContext.Current));
-                }
-                return context;
+                throw new InvalidOperationException(
+                    string.Format("Could not find a transaction context. There should always be a transaction " +
+                                  "context - though it might be a NoTransaction transaction context."));
             }
 
-            if (current == null)
+            var context = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
+            if (context == null)
             {
-                throw new InvalidOperationException("No message context available - the MessageContext instance will"
-                                                    + " only be set during the handling of messages, and it"
-                                                    + " is available only on the worker thread.");
+                throw new InvalidOperationException(
+                    string.Format("Could not find message context! Looked for it in the current transaction context: {0}. " +
+                                  "The MessageContext instance will only be set during the handling of messages.", TransactionContext.Current));
             }
 
-            return current;
+            return context;
         }
 
         /// <summary>
@@ -150,10 +134,10 @@ namespace Rebus
                 if (TransactionContext.Current != null)
                 {
                     var messageContext = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
-                    
                     return messageContext != null;
                 }
-                return current != null;
+
+                return false;
             }
         }
 
@@ -194,7 +178,7 @@ namespace Rebus
             {
                 TransactionContext.Current[MessageContextItemKey] = null;
             }
-            current = null;
+
             Disposed();
         }
 
@@ -203,7 +187,7 @@ namespace Rebus
         /// </summary>
         public void SetLogicalMessage(object message)
         {
-            currentMessage = message;
+            CurrentMessage = message;
         }
 
         /// <summary>
@@ -211,7 +195,7 @@ namespace Rebus
         /// </summary>
         public void ClearLogicalMessage()
         {
-            currentMessage = null;
+            CurrentMessage = null;
         }
     }
 }

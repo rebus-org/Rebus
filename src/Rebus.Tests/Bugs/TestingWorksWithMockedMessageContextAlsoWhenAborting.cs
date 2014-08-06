@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Testing;
 using Shouldly;
 using Rhino.Mocks;
@@ -28,6 +29,7 @@ namespace Rebus.Tests.Bugs
             mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
 
             // act
+            using(TransactionContext.None())
             using (FakeMessageContext.Establish(mock))
             {
                 fixture.Handle("hello there!");

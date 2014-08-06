@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
-using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -580,58 +579,61 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
 
-            messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
-
-            var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
-            var headers = MergeHeaders(messageToSend);
-
-            // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
-            if (!headers.ContainsKey(Headers.ReturnAddress))
+            using (var txc = ManagedTransactionContext.Get())
             {
-                if (!configureAdditionalBehavior.OneWayClientMode)
+                messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+
+                var messageToSend = new Message {Messages = messages.Select(MutateOutgoing).ToArray(),};
+                var headers = MergeHeaders(messageToSend);
+
+                // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
+                if (!headers.ContainsKey(Headers.ReturnAddress))
                 {
-                    headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                    if (!configureAdditionalBehavior.OneWayClientMode)
+                    {
+                        headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                    }
                 }
-            }
 
-            if (MessageContext.HasCurrent)
-            {
-                var messageContext = MessageContext.GetCurrent();
+                if (MessageContext.HasCurrent)
+                {
+                    var messageContext = MessageContext.GetCurrent();
 
-                // if we're currently handling a message with a correlation ID, make sure it flows...
+                    // if we're currently handling a message with a correlation ID, make sure it flows...
+                    if (!headers.ContainsKey(Headers.CorrelationId))
+                    {
+                        if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                        {
+                            headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                        }
+                    }
+
+                    // if we're currently handling a message with a user name, make sure it flows...
+                    if (!headers.ContainsKey(Headers.UserName))
+                    {
+                        if (messageContext.Headers.ContainsKey(Headers.UserName))
+                        {
+                            headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
+                        }
+                    }
+                }
+
+                // if, at this point, there's no correlation ID in a header, just provide one
                 if (!headers.ContainsKey(Headers.CorrelationId))
                 {
-                    if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
-                    {
-                        headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
-                    }
+                    headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
                 }
 
-                // if we're currently handling a message with a user name, make sure it flows...
-                if (!headers.ContainsKey(Headers.UserName))
+                // if, at this point, there's no rebus message ID in a header, just provide one
+                if (!headers.ContainsKey(Headers.MessageId))
                 {
-                    if (messageContext.Headers.ContainsKey(Headers.UserName))
-                    {
-                        headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
-                    }
+                    headers[Headers.MessageId] = Guid.NewGuid().ToString();
                 }
+
+                messageToSend.Headers = headers;
+
+                InternalSend(destination, messageToSend, txc.Context);
             }
-
-            // if, at this point, there's no correlation ID in a header, just provide one
-            if (!headers.ContainsKey(Headers.CorrelationId))
-            {
-                headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
-            }
-
-            // if, at this point, there's no rebus message ID in a header, just provide one
-            if (!headers.ContainsKey(Headers.MessageId))
-            {
-                headers[Headers.MessageId] = Guid.NewGuid().ToString();
-            }
-
-            messageToSend.Headers = headers;
-
-            InternalSend(destination, messageToSend);
         }
 
         object MutateOutgoing(object msg)
@@ -642,11 +644,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// <summary>
         /// Internal send method - this one must not change the headers!
         /// </summary>
-        internal void InternalSend(string destination, Message messageToSend)
+        internal void InternalSend(string destination, Message messageToSend, ITransactionContext transactionContext)
         {
             messageLogger.LogSend(destination, messageToSend);
-
-            var transactionContext = GetTransactionContext();
 
             try
             {
@@ -659,15 +659,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     "An exception occurred while attempting to send {0} to {1} (context: {2})",
                     messageToSend, destination, transactionContext), exception);
             }
-        }
-
-        ITransactionContext GetTransactionContext()
-        {
-            if (TransactionContext.Current != null) return TransactionContext.Current;
-
-            if (Transaction.Current == null) return new NoTransaction();
-
-            return new AmbientTransactionContext();
         }
 
         IDictionary<string, object> MergeHeaders(Message messageToSend)
@@ -736,7 +727,10 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             try
             {
-                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, GetTransactionContext());
+                using (var txc = ManagedTransactionContext.Get())
+                {
+                    sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, txc.Context);
+                }
             }
             catch (Exception e)
             {

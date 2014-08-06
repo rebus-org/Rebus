@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Ninject;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Ninject;
 using Shouldly;
 
@@ -52,6 +53,7 @@ namespace Rebus.Tests.Unit
             
             new Thread(() =>
             {
+                using(new NoTransaction())
                 using (MessageContext.Establish(new Dictionary<string, object>()))
                 {
                     Thread.Sleep(200);
@@ -60,6 +62,7 @@ namespace Rebus.Tests.Unit
                 }
             }).Start();
 
+            using (new NoTransaction())
             using (MessageContext.Establish(new Dictionary<string, object>()))
             {
                 Thread.Sleep(200);

@@ -564,7 +564,7 @@ namespace Rebus.Bus
             Tuple<SendOrPostCallback, object, IMessageContext> tuple;
             while (callbacks.TryDequeue(out tuple))
             {
-                MessageContext.Restablish(tuple.Item3);
+                //MessageContext.Restablish(tuple.Item3);
                 tuple.Item1(tuple.Item2);
             }
         }

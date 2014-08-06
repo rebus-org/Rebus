@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
@@ -58,6 +59,7 @@ namespace Rebus.Tests.Unit
                 {Headers.MessageId, "Oh the uniqueness"}
             };
 
+            using (new NoTransaction())
             using (var context = MessageContext.Establish(headers))
             {
                 context.SetLogicalMessage(new JustSomeMessage());

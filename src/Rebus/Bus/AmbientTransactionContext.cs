@@ -136,5 +136,10 @@ namespace Rebus.Bus
                 TransactionContext.Clear();
             }
         }
+
+        public void Dispose()
+        {
+            // we don't own the transaction so don't do anything
+        }
     }
 }

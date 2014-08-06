@@ -71,6 +71,7 @@
     <Compile Include="Bus\IncomingMessageMutatorPipeline.cs" />
     <Compile Include="Bus\IUnitOfWork.cs" />
     <Compile Include="Bus\IUnitOfWorkManager.cs" />
+    <Compile Include="Bus\ManagedTransactionContext.cs" />
     <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\QueueCommitException.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="Configuration\SqlServerSagaPersisterFluentConfigurer.cs" />
     <Compile Include="Configuration\SqlServerSubscriptionStorageFluentConfigurer.cs" />
     <Compile Include="Configuration\SqlServerTimeoutStorageFluentConfigurer.cs" />
+    <Compile Include="Disposable.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="Logging\MessageLogger.cs" />

@@ -160,7 +160,6 @@
     <Compile Include="..\..\lib\Massive\Massive.cs">
       <Link>Massive.cs</Link>
     </Compile>
-    <Compile Include="Analysis\TestAsyncScheduler.cs" />
     <Compile Include="Analysis\TestExceptions.cs" />
     <Compile Include="Async\TestBasicAsyncHandler.cs" />
     <Compile Include="Bugs\AmbientTransactionContextNeverCleansUp.cs" />

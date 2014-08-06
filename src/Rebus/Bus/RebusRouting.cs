@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Transactions;
 using Rebus.Extensions;
 using Rebus.Messages;
 
@@ -88,18 +89,21 @@ namespace Rebus.Bus
         /// </summary>
         public void ForwardCurrentMessage(string destinationEndpoint)
         {
-            var messageContext = MessageContext.GetCurrent();
-            
-            var currentMessage = messageContext.CurrentMessage;
-            var headers = messageContext.Headers.Clone();
+            using (var transactionContext = ManagedTransactionContext.Get())
+            {
+                var messageContext = MessageContext.GetCurrent();
 
-            var message = new Message
+                var currentMessage = messageContext.CurrentMessage;
+                var headers = messageContext.Headers.Clone();
+
+                var message = new Message
                 {
                     Headers = headers,
                     Messages = new[] {currentMessage}
                 };
 
-            rebusBus.InternalSend(destinationEndpoint, message);
+                rebusBus.InternalSend(destinationEndpoint, message, transactionContext.Context);
+            }
         }
     }
 }

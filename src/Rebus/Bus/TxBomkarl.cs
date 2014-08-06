@@ -6,7 +6,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Special implementation of <see cref="ITransactionContext"/> that is designed to work with message handlers
     /// </summary>
-    class TxBomkarl : ITransactionContext, IDisposable
+    class TxBomkarl : ITransactionContext
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 

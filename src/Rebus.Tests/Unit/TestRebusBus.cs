@@ -103,9 +103,10 @@ is just because there was a bug some time when the grouping of the messages was 
             fakeContext.Stub(s => s.Items).Return(new Dictionary<string, object>());
 
             // act
+            using (new NoTransaction())
             using (FakeMessageContext.Establish(fakeContext))
             {
-                bus.Batch.Reply(new object[] { firstMessage, secondMessage, someRandomMessage });
+                bus.Batch.Reply(new object[] {firstMessage, secondMessage, someRandomMessage});
             }
 
             // assert
@@ -398,7 +399,8 @@ Or should it?")]
 
             var message = new FirstMessage();
 
-            using (MessageContext.Establish(headers))
+            using(new NoTransaction())
+            using(MessageContext.Establish(headers))
             {
                 bus.Defer(TimeSpan.Zero, message);
             }
