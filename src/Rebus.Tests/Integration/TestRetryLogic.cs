@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Transactions;
 using NUnit.Framework;
+using Raven.Abstractions.Extensions;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -20,26 +21,39 @@ namespace Rebus.Tests.Integration
     {
         const string SenderQueueName = "test.tx.sender";
         const string ReceiverQueueName = "test.tx.receiver";
-        const string ReceiverErrorQueueName = ReceiverQueueName + ".error";
+        const string ReceiverErrorQueueName = "test.tx.receiver.error";
+        const string ErrorQueueName = "error";
+        const string TestCustomRetryCountInput = "test.customRetryCount.input";
+
+        static readonly string[] QueueNames =
+        {
+            SenderQueueName,
+            ReceiverQueueName,
+            ReceiverErrorQueueName,
+            ErrorQueueName,
+            TestCustomRetryCountInput
+        };
 
         protected override void DoSetUp()
         {
+            QueueNames.ForEach(MsmqUtil.Delete);
             RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
-            base.DoSetUp();
+        }
+
+        protected override void DoTearDown()
+        {
+            QueueNames.ForEach(MsmqUtil.Delete);
         }
 
         [Test]
         public void CanConfigureNumberOfRetriesForExceptionTypes()
         {
-            const string errorQueueName = "error";
-            const string testCustomretrycountInput = "test.customRetryCount.input";
-
             using (var adapter = new BuiltinContainerAdapter())
-            using (var errorQueue = GetMessageQueue(errorQueueName))
+            using (var errorQueue = GetMessageQueue(ErrorQueueName))
             {
                 errorQueue.Purge();
 
-                using (var inputQueue = GetMessageQueue(testCustomretrycountInput))
+                using (var inputQueue = GetMessageQueue(TestCustomRetryCountInput))
                 {
                     inputQueue.Purge();
                 }
@@ -69,7 +83,7 @@ namespace Rebus.Tests.Integration
                 var bus = (RebusBus)
                           Configure.With(adapter)
                                    .Logging(l => l.None())
-                                   .Transport(t => t.UseMsmq(testCustomretrycountInput, errorQueueName))
+                                   .Transport(t => t.UseMsmq(TestCustomRetryCountInput, ErrorQueueName))
                                    .Behavior(b => b.SetMaxRetriesFor<InvalidOperationException>(9)
                                                    .SetMaxRetriesFor<ArgumentException>(7))
                                    .CreateBus();
@@ -94,16 +108,15 @@ namespace Rebus.Tests.Integration
         [Test]
         public void CanMoveUnserializableMessageToErrorQueue()
         {
-            var errorQueue = GetMessageQueue("error");
+            var errorQueue = GetMessageQueue(ErrorQueueName);
 
-            var receiverQueueName = "test.tx.receiver";
-            var receiverQueuePath = PrivateQueueNamed(receiverQueueName);
+            var receiverQueuePath = PrivateQueueNamed(ReceiverQueueName);
             EnsureQueueExists(receiverQueuePath);
 
             var messageQueueOfReceiver = new MessageQueue(receiverQueuePath) { Formatter = new XmlMessageFormatter() };
             messageQueueOfReceiver.Purge();
 
-            CreateBus(receiverQueueName, new HandlerActivatorForTesting()).Start(1);
+            CreateBus(ReceiverQueueName, new HandlerActivatorForTesting()).Start(1);
 
             messageQueueOfReceiver.Send("bla bla bla bla bla bla cannot be deserialized properly!!", MessageQueueTransactionType.Single);
 
