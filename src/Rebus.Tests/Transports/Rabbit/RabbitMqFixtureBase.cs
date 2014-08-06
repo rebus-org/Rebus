@@ -95,6 +95,48 @@ namespace Rebus.Tests.Transports.Rabbit
             }
         }
 
+        public static bool DeclareExchange(string exchangeName, string type, bool passive=false)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    if (passive)
+                    {
+                        model.ExchangeDeclarePassive(exchangeName);
+                    }
+                    else
+                    {
+                        model.ExchangeDeclare(exchangeName, type);
+                    }
+                }
+                catch
+                {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+
+        public static void DeleteExchange(string exchangeName)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                // just ignore if it fails...
+                try
+                {
+                    model.ExchangeDelete(exchangeName);
+                }
+                catch
+                {
+                }
+            }
+        }
+
         class FakeContainerAdapter : IContainerAdapter
         {
             readonly IActivateHandlers handlerActivator;

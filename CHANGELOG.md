@@ -127,7 +127,7 @@
 
 ## 0.38.1
 
-* Fixed constantly generated warning in timeout manager - thx [hagbarddenstore](https://github.com/hagbarddenstore)
+* Fixed constantly generated warning in timeout manager - thx [hagbarddenstore]
 
 ## 0.39.0
 
@@ -135,8 +135,8 @@
 
 ## 0.40.0
 
-* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx [krivin](https://github.com/krivin)
-* `IStartableBus` API extended with the ability to specify number of workers - thx [krivin](https://github.com/krivin)
+* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx [krivin]
+* `IStartableBus` API extended with the ability to specify number of workers - thx [krivin]
 
 ## 0.40.1
 
@@ -197,7 +197,7 @@
 
 ## 0.47.0
 
-* Use hybrid stash model for transaction context, allowing it to overcome thread discontinuity in ASP.NET and WCF - thanks [jasperdk](https://github.com/jasperdk)
+* Use hybrid stash model for transaction context, allowing it to overcome thread discontinuity in ASP.NET and WCF - thanks [jasperdk]
 * Optimized data structure for attached headers by doing a hash code-based pre-lookup before searching for `WeakReference` target match
 
 ## 0.48.0
@@ -214,7 +214,7 @@
 ## 0.50.0
 
 * Sent messages are no longer logged at INFO level. Both sent and received messages are now logged at DEBUG level by calling ToString on the logical message in a logger called `MessageLogger`
-* Dispose MSMQ messages after use - thanks [dev4ce](https://github.com/dev4ce)
+* Dispose MSMQ messages after use - thanks [dev4ce]
 
 ## 0.50.1
 
@@ -257,7 +257,7 @@
 
 ## 0.54.3
 
-* `XmlSubscriptionStorage` automatically creates directory pointed to by the subscription XML file path - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+* `XmlSubscriptionStorage` automatically creates directory pointed to by the subscription XML file path - thanks [hagbarddenstore]
 * Made the Rabbit transport throw out its subscription and underlying model when an end-of-stream is detected
 
 ## 0.54.4
@@ -266,7 +266,7 @@
 
 ## 0.54.5
 
-* Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk](https://github.com/jasperdk)
+* Fixed `SqlServerSubscriptionStorage` to be able to work when publishing within a `TransactionScope` when it manages the connection by itself - thanks [jasperdk]
 
 ## 0.54.6
 
@@ -282,7 +282,7 @@
 
 ## 0.55.0
 
-* RabbitMQ client updated - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+* RabbitMQ client updated - thanks [hagbarddenstore]
 
 ## 0.55.1
 
@@ -290,7 +290,7 @@
 
 ## 0.56.0
 
-* Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore](https://github.com/hagbarddenstore)
+* Added ability to configure queue polling backoff strategy to low-latency mode - thanks [hagbarddenstore]
 
 ## 0.56.1
 
@@ -304,7 +304,7 @@
 ## 0.58.0
 
 * Fixed it so that the `MarkedAsComplete` event is raised also when a piece of saga data was never persisted - before, it was tied to the `Deleted` event from the persister, which you not be raised if the saga data was not persistent.
-* Made Rebus Timeout Service create a service dependency on local SQL Server/MongoDB if the connection is local. This way, services will be started/stopped in the right order. Thanks [caspertdk](https://github.com/caspertdk) 
+* Made Rebus Timeout Service create a service dependency on local SQL Server/MongoDB if the connection is local. This way, services will be started/stopped in the right order. Thanks [caspertdk]
 * Fixed it so that headers attached to deferred messages are preserved when roundtripping the timeout manager.
 
 ## 0.58.1
@@ -317,7 +317,7 @@
 
 ## 0.59.0
 
-* Fixed bug when working with automatic `TransactionScope` and sagas persisted in SQL Server - thanks [jasperdk](https://github.com/jasperdk)
+* Fixed bug when working with automatic `TransactionScope` and sagas persisted in SQL Server - thanks [jasperdk]
 
 ## 0.60.0
 
@@ -337,4 +337,52 @@
 
 ## 0.62.0
 
-* Fixed leakage of SQL connections (and other potential issues) when using ambient transactions - thanks [mgayeski](https://github.com/mgayeski)
+* Fixed leakage of SQL connections (and other potential issues) when using ambient transactions - thanks [mgayeski]
+
+## 0.63.0
+
+* Added several `Subscribe`/`Unsubscribe` overloads to `IRebusRouting` so you can `bus.Advanced.Routing.Subscribe(someMessageType)` if you want
+
+## 0.63.1
+
+* Added file system-based transport. Please do not use this one for your really important messages.
+* Fixed MSMQ transaction leak - thanks [jasperdk]
+
+## 0.64.0
+
+* Updated MongoDB driver dependency to 1.9
+
+## 0.64.1
+
+* Added ability to configure JSON serializer to serialize enums with their string representations - thanks [maeserichar]
+
+## 0.65.0
+
+* Updated StructureMap dependency to 3.0 - thanks [fritsduus]
+
+## 0.65.1
+
+* Added Serilog logger - thanks [fritsduus]
+
+## 0.66.0
+
+* Fixed it so that inner exceptions are included when a `SqlException` causes saga persister to not be able to insert.
+* Added Postgres persisters for sagas, subscriptions, and timeouts - thanks [hagbarddenstore]
+
+## 0.67.0
+
+* Added ability for RabbitMQ transport to publish to different exchanges instead of different routing keys - thanks [pruiz]
+* Limit message body size to 32 MB for RabbitMQ transport because publishing larger messages can destabilize the server.
+
+
+
+
+[pruiz]: https://github.com/pruiz
+[hagbarddenstore]: https://github.com/hagbarddenstore
+[fritsduus]: https://github.com/fritsduus
+[maeserichar]: https://github.com/maeserichar
+[jasperdk]: https://github.com/jasperdk
+[mgayeski]: https://github.com/mgayeski
+[caspertdk]: https://github.com/caspertdk
+[dev4ce]: https://github.com/dev4ce
+[krivin]: https://github.com/krivin

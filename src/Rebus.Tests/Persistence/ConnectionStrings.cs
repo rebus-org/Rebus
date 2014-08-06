@@ -12,7 +12,22 @@ namespace Rebus.Tests.Persistence
             {
                 var connectionStringSettings = ConfigurationManager.ConnectionStrings
                     .Cast<ConnectionStringSettings>()
-                    .FirstOrDefault();
+                    .FirstOrDefault(x => x.Name == "LocalSqlServer");
+
+                Assert.IsNotNull(connectionStringSettings,
+                                 "There doesn't seem to be any connection strings in the app.config.");
+
+                return connectionStringSettings.ConnectionString;
+            }
+        }
+
+        public static string PostgreSql
+        {
+            get
+            {
+                var connectionStringSettings = ConfigurationManager.ConnectionStrings
+                    .Cast<ConnectionStringSettings>()
+                    .FirstOrDefault(x => x.Name == "LocalPostgreSql");
 
                 Assert.IsNotNull(connectionStringSettings,
                                  "There doesn't seem to be any connection strings in the app.config.");

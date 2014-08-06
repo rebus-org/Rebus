@@ -23,7 +23,6 @@ namespace Rebus.Bus
             }
 
             Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
-            Transaction.Current.TransactionCompleted += OnTransactionCompleted;
 
             TransactionContext.Set(this);
         }
@@ -90,7 +89,7 @@ namespace Rebus.Bus
             }
             finally
             {
-                TransactionContext.Clear();
+                RunCleanup();
             }
         }
 
@@ -107,7 +106,7 @@ namespace Rebus.Bus
             }
             finally
             {
-                TransactionContext.Clear();
+                RunCleanup();
             }
         }
 
@@ -122,21 +121,16 @@ namespace Rebus.Bus
             }
             finally
             {
-                TransactionContext.Clear();
+                RunCleanup();
             }
         }
 
-
-        /// <summary>
-        /// Performs necessary cleanup actions, clearing the current <see cref="TransactionContext"/>
-        /// </summary>
-        void OnTransactionCompleted(object sender, TransactionEventArgs transactionEventArgs)
+        public void RunCleanup()
         {
             try
             {
                 Cleanup();
             }
-
             finally
             {
                 TransactionContext.Clear();

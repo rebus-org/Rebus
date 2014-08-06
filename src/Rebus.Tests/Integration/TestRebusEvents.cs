@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Shared;
+using Rebus.Tests.Configuration;
 using Shouldly;
 using System.Linq;
 
@@ -123,6 +124,21 @@ Events:
             events[17].ShouldContain("System.ApplicationException: w00t!");
 
             events[18].ShouldBe("Poison! - 5 exceptions caught");
+        }
+
+        [Test]
+        public void RebusRaisesEventsWhenStartingAndStopping()
+        {
+            var busEvents = new List<string>();
+            var bus = CreateBus("test.events.receiver", new TestConfigurationApi.TestContainerAdapter());
+            bus.Events.BusStarted += x => busEvents.Add("bus started");
+            bus.Events.BusStopped += x => busEvents.Add("bus stopped");
+
+            bus.Start();
+            busEvents.Last().ShouldBe("bus started");
+
+            bus.Dispose();
+            busEvents.Last().ShouldBe("bus stopped");
         }
     }
 }

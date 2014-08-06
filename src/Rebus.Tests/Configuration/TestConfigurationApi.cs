@@ -6,6 +6,7 @@ using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Log4Net;
 using Rebus.Logging;
+using Rebus.Serilog;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
@@ -91,6 +92,8 @@ namespace Rebus.Tests.Configuration
             var configurer = Configure.With(adapter)
                 .Events(e =>
                     {
+                        e.BusStarted += delegate { raisedEvents.Add("bus started"); };
+
                         e.BeforeTransportMessage += delegate { raisedEvents.Add("before transport message"); };
                         e.BeforeMessage += delegate { raisedEvents.Add("before message"); };
                         e.AfterMessage += delegate { raisedEvents.Add("after message"); };
@@ -103,12 +106,15 @@ namespace Rebus.Tests.Configuration
 
                         e.MessageContextEstablished += delegate { raisedEvents.Add("message context established"); };
                         e.AddUnitOfWorkManager(unitOfWorkManagerInstanceThatCanBeRecognized);
+
+                        e.BusStopped += delegate { raisedEvents.Add("bus stopped"); };
                     })
                 .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig());
 
             var bus = (IBus)configurer.CreateBus();
             var events = (RebusEvents) bus.Advanced.Events;
             
+            events.RaiseBusStarted(null);
             events.RaiseBeforeTransportMessage(null, null);
             events.RaiseBeforeMessage(null, null);
             events.RaiseAfterMessage(null, null, null);
@@ -117,7 +123,9 @@ namespace Rebus.Tests.Configuration
             events.RaisePoisonMessage(null, null, null);
             events.RaiseUncorrelatedMessage(null, null, null);
             events.RaiseMessageContextEstablished(null, null);
+            events.RaiseBusStopped(null);
 
+            raisedEvents.ShouldContain("bus started");
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
             raisedEvents.ShouldContain("after message");
@@ -126,6 +134,7 @@ namespace Rebus.Tests.Configuration
             raisedEvents.ShouldContain("poison message");
             raisedEvents.ShouldContain("uncorrelated message");
             raisedEvents.ShouldContain("message context established");
+            raisedEvents.ShouldContain("bus stopped");
 
             events.UnitOfWorkManagers.ShouldContain(unitOfWorkManagerInstanceThatCanBeRecognized);
         }
@@ -193,6 +202,17 @@ namespace Rebus.Tests.Configuration
                 .Logging(l => l.Log4Net());
 
             RebusLoggerFactory.Current.ShouldBeTypeOf<Log4NetLoggerFactory>();
+        }
+
+        [Test]
+        public void CanConfigureSerilogLogging()
+        {
+            var adapter = new TestContainerAdapter();
+
+            Configure.With(adapter)
+                .Logging(l => l.Serilog());
+
+            RebusLoggerFactory.Current.ShouldBeTypeOf<SerilogLoggerFactory>();
         }
 
         [Test]

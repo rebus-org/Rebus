@@ -19,7 +19,6 @@ namespace Rebus.MongoDb
         const string SagaIdProperty = "saga_id";
         const string DataProperty = "data";
         const string IdProperty = "_id";
-        readonly MongoDatabase database;
         readonly MongoCollection<BsonDocument> collection;
 
         /// <summary>
@@ -28,9 +27,9 @@ namespace Rebus.MongoDb
         /// </summary>
         public MongoDbTimeoutStorage(string connectionString, string collectionName)
         {
-            database = MongoHelper.GetDatabase(connectionString);
+            var database = MongoHelper.GetDatabase(connectionString);
             collection = database.GetCollection(collectionName);
-            collection.EnsureIndex(IndexKeys.Ascending(TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
+            collection.CreateIndex(IndexKeys.Ascending(TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
         }
 
         /// <summary>

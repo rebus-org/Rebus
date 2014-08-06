@@ -185,6 +185,8 @@
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Transports\Encrypted\EncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
+    <Compile Include="Transports\FileSystem\FileSystemMessageQueue.cs" />
+    <Compile Include="Transports\FileSystem\FileSystemMessageQueueExtensions.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="Bus\HostingContext.cs" />
@@ -228,7 +230,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
