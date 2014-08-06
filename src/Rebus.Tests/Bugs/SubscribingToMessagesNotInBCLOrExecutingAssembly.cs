@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Shouldly;
 
 namespace Rebus.Tests.Bugs
@@ -10,6 +11,14 @@ namespace Rebus.Tests.Bugs
     {
         const string PublisherInputQueueName = "test.publisher";
         const string SubscriberInputQueueName = "test.subscriber";
+        const string ErrorQueueName = "error";
+
+        protected override void DoSetUp()
+        {
+            MsmqUtil.Delete(PublisherInputQueueName);
+            MsmqUtil.Delete(SubscriberInputQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
+        }
 
         [Test]
         public void SubscriptionWorks()
@@ -18,7 +27,7 @@ namespace Rebus.Tests.Bugs
             var subscriptionStorage = new InMemorySubscriptionStorage();
             
             // publisher
-            CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage, new InMemorySagaPersister(), "error").Start(1);
+            CreateBus(PublisherInputQueueName, new HandlerActivatorForTesting(), subscriptionStorage, new InMemorySagaPersister(), ErrorQueueName).Start(1);
             
             // subscriber
             var subscriber = CreateBus(SubscriberInputQueueName, new HandlerActivatorForTesting()).Start(1);

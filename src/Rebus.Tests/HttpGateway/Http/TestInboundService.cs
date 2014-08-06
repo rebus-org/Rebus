@@ -2,6 +2,7 @@
 using System.Net;
 using NUnit.Framework;
 using Rebus.HttpGateway.Inbound;
+using Rebus.Shared;
 using Shouldly;
 
 namespace Rebus.Tests.HttpGateway.Http
@@ -17,6 +18,8 @@ namespace Rebus.Tests.HttpGateway.Http
 
         protected override void DoSetUp()
         {
+            MsmqUtil.Delete(DestinationQueueName);
+
             Console.WriteLine("Creating new service");
             service = new InboundService(ListenUri, DestinationQueueName);
             service.Start();
@@ -26,6 +29,8 @@ namespace Rebus.Tests.HttpGateway.Http
         {
             Console.WriteLine("Tearing down the service");
             service.Stop();
+
+            MsmqUtil.Delete(DestinationQueueName);
         }
 
         [TestCase("GET")]

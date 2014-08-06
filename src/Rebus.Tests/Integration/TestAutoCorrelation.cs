@@ -3,6 +3,7 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Rebus.Timeout;
 using Shouldly;
 using System.Linq;
@@ -24,6 +25,9 @@ namespace Rebus.Tests.Integration
 
         protected override void DoSetUp()
         {
+            MsmqUtil.Delete(SagaBusInputQueueName);
+            MsmqUtil.Delete(ServiceBusInputQueueName);
+
             // this is the bus hosting the saga
             sagaHandlerActivator = new HandlerActivatorForTesting();
             sagaPersister = new InMemorySagaPersister();
@@ -43,6 +47,9 @@ namespace Rebus.Tests.Integration
         protected override void DoTearDown()
         {
             timeoutService.Stop();
+
+            MsmqUtil.Delete(SagaBusInputQueueName);
+            MsmqUtil.Delete(ServiceBusInputQueueName);
         }
 
         [TestCase(true, Description = "Verifies that automatic correlation is NOT performed when a correlation is explicitly set up. This is because we want to preserve the ability to 'abandon' outstanding replies by changing a correlation ID on the saga")]

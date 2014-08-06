@@ -218,13 +218,13 @@
     <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\Serialization\TestSerialization.cs" />
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
+    <Compile Include="DisposableAction.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="DisposableTracker.cs" />
     <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\Http\TestInboundService.cs" />
     <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
-    <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
