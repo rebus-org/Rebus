@@ -57,7 +57,7 @@ namespace Rebus.RabbitMQ
         bool autoDeleteInputQueue;
         ushort prefetchCount = 100;
         bool managesSubscriptions;
-        string inputExchangeAddress = null;
+        string inputExchangeAddress;
         bool ensureInputExchangeIsDeclared = true;
 
         [ThreadStatic]
@@ -388,8 +388,8 @@ namespace Rebus.RabbitMQ
         }
 
         /// <summary>
-        /// When managing subscriptions, the transport will be called when subscribing and ubsubscribing.
-        /// This will result in binding and unbinding, respectively, to the topic for the given <see cref="messageType"/>
+        /// When managing subscriptions, the transport will be called when subscribing and unsubscribing.
+        /// This will result in binding and unbinding, respectively, to the topic for the given <see cref="eventType"/>
         /// </summary>
         public void Subscribe(Type eventType, string inputQueueAddress)
         {
@@ -557,7 +557,6 @@ namespace Rebus.RabbitMQ
         /// Uses the exchange as input address, by binding it to subscribed type's exchange(s).
         /// </summary>
         /// <param name="exchangeName">Name of the exchange.</param>
-        /// <returns></returns>
         public RabbitMqMessageQueue UseExchangeAsInputAddress(string exchangeName)
         {
             log.Info("Will use exchange named {0} as input address.", exchangeName);
@@ -571,7 +570,7 @@ namespace Rebus.RabbitMQ
         /// <returns></returns>
         public RabbitMqMessageQueue DoNotDeclareInputExchange()
         {
-            this.ensureInputExchangeIsDeclared = false;
+            ensureInputExchangeIsDeclared = false;
             return this;
         }
 
@@ -720,7 +719,7 @@ namespace Rebus.RabbitMQ
         {
             log.Info("Initializing logical queue '{0}'", queueName);
 
-            var arguments = new Dictionary<string, object>() { { "x-ha-policy", "all" } }; //< enable queue mirroring
+            var arguments = new Dictionary<string, object> { { "x-ha-policy", "all" } }; //< enable queue mirroring
 
             log.Debug("Declaring queue '{0}'", queueName);
             model.QueueDeclare(queueName, durable: true,
@@ -729,7 +728,8 @@ namespace Rebus.RabbitMQ
                                exclusive: false);
 
             // Error queues do not need additional setup.
-            if (asErrorQueue) return;
+            // @mookid8000: for "Traditional" Rebus RabbitMQ usage, yes they do - otherwise, failed messages might be published using a topic to which there are no subscribers
+            if (asErrorQueue && UsingOneExchangePerMessageTypeRouting) return;
 
             if (UsingOneExchangePerMessageTypeRouting)
             {

@@ -13,6 +13,22 @@ namespace Rebus.Tests.Bugs
     [TestFixture, Category(TestCategories.Rabbit)]
     public class DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq : RabbitMqFixtureBase
     {
+        protected override void DoSetUp()
+        {
+            RemoveQueues();
+        }
+
+        protected override void DoTearDown()
+        {
+            RemoveQueues();
+        }
+
+        static void RemoveQueues()
+        {
+            DeleteQueue("test.error");
+            DeleteQueue("test.input");
+        }
+
         [Test]
         public void ItHasBeenFixed()
         {
