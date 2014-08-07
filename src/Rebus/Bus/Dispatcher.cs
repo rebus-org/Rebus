@@ -109,6 +109,8 @@ namespace Rebus.Bus
                     {
                         try
                         {
+                            //await DispatchToHandler(message, handler);
+
                             await (Task)GetDispatcherMethod(typeToDispatch)
                                 .Invoke(this, new object[] {message, handler});
                         }
