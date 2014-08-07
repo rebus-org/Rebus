@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -179,6 +180,40 @@ namespace Rebus.Tests.Async
                 initial.ShouldNotBe(final);
                 initial.Name.ShouldContain("Rebus 1 worker");
                 final.Name.ShouldContain("Rebus 1 worker");
+            }
+        }
+
+        [Test]
+        public void HandlesExceptionsAsUsual()
+        {
+            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            {
+                var done = new ManualResetEvent(false);
+                var log = new List<string>();
+                var tries = 0;
+
+                adapter.HandleAsync<SomeMessage>(async message =>
+                {
+                    tries++;
+                    Console.WriteLine("Handling");
+                    await Task.Yield();
+                    throw new Exception("failed");
+                });
+
+                Configure.With(adapter)
+                    .Logging(l => l.Use(new ListLoggerFactory(log)))
+                    .Behavior(b => b.SetMaxRetriesFor<Exception>(3))
+                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
+                    .Events(x => x.PoisonMessage += (bus, message, info) => done.Set())
+                    .CreateBus()
+                    .Start(1);
+
+                adapter.Bus.SendLocal(new SomeMessage());
+
+                done.WaitUntilSetOrDie(1.Seconds());
+
+                log.ShouldContain(x => x.StartsWith("Rebus.Bus.RebusBus|WARN: User exception in Rebus"));
+                tries.ShouldBe(3);
             }
         }
 

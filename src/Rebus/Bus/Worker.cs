@@ -64,7 +64,7 @@ namespace Rebus.Bus
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly MessageLogger messageLogger;
-        readonly RebusSynchronizationContext synchronizationContext;
+        readonly RebusSynchronizationContext continuations;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -97,7 +97,7 @@ namespace Rebus.Bus
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
             ConfigureAdditionalBehavior configureAdditionalBehavior,
             MessageLogger messageLogger,
-            RebusSynchronizationContext synchronizationContext)
+            RebusSynchronizationContext continuations)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
@@ -105,7 +105,7 @@ namespace Rebus.Bus
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
             this.messageLogger = messageLogger;
-            this.synchronizationContext = synchronizationContext;
+            this.continuations = continuations;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
@@ -183,7 +183,7 @@ namespace Rebus.Bus
 
         void MainLoop()
         {
-            SynchronizationContext.SetSynchronizationContext(synchronizationContext);
+            SynchronizationContext.SetSynchronizationContext(continuations);
 
             while (!shouldExit)
             {
@@ -197,7 +197,7 @@ namespace Rebus.Bus
                 {
                     try
                     {
-                        synchronizationContext.Run();
+                        continuations.Run();
 
                         TryProcessIncomingMessage();
 
@@ -249,7 +249,7 @@ namespace Rebus.Bus
         ///             - Before/After logical message
         ///                 Dispatch logical message
         /// </summary>
-        async Task TryProcessIncomingMessage()
+        async void TryProcessIncomingMessage()
         {
             using (var context = new TxBomkarl())
             {
