@@ -403,10 +403,9 @@
 
 * Fixed bug that could result in not automatically binding the error queue topic to the error queue when using RabbitMQ
 * Update MongoDB driver dependency to 1.9.2
-
-## 0.71.1
-
 * Fixed error in build script that did not build the Serilog project. Also fixed it so that Rebus.Serilog is .NET 4 like the rest of Rebus.
+
+
 
 
 [pruiz]: https://github.com/pruiz
