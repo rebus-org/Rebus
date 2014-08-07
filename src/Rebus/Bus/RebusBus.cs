@@ -44,6 +44,7 @@ namespace Rebus.Bus
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
+        readonly RebusSynchronizationContext synchronizationContext;
 
         readonly object workerCountAdjustmentLock = new object();
 
@@ -84,6 +85,7 @@ namespace Rebus.Bus
             routing = new RebusRouting(this);
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
+            synchronizationContext = new RebusSynchronizationContext();
 
             log.Info("Rebus bus {0} created", rebusId);
 
@@ -801,7 +803,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         storeTimeouts,
                                         events.UnitOfWorkManagers,
                                         configureAdditionalBehavior,
-                                        messageLogger);
+                                        messageLogger,
+                                        synchronizationContext);
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;

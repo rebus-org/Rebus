@@ -28,7 +28,8 @@ namespace Rebus.Tests.Unit
                               null,
                               unitOfWorkManagers ?? new IUnitOfWorkManager[0],
                               new ConfigureAdditionalBehavior(),
-                              new MessageLogger());
+                              new MessageLogger(),
+                              new RebusSynchronizationContext());
         }
     }
 }

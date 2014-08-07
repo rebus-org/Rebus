@@ -2,8 +2,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -64,7 +64,7 @@ namespace Rebus.Bus
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly MessageLogger messageLogger;
-        readonly WorkerSynchronizationContext synchronizationContext;
+        readonly RebusSynchronizationContext synchronizationContext;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -83,7 +83,6 @@ namespace Rebus.Bus
         volatile bool shouldExit;
         volatile bool shouldWork;
 
-
         public Worker(IErrorTracker errorTracker,
             IReceiveMessages receiveMessages,
             IActivateHandlers activateHandlers,
@@ -97,7 +96,8 @@ namespace Rebus.Bus
             IStoreTimeouts storeTimeouts,
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
             ConfigureAdditionalBehavior configureAdditionalBehavior,
-            MessageLogger messageLogger)
+            MessageLogger messageLogger,
+            RebusSynchronizationContext synchronizationContext)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
@@ -105,12 +105,12 @@ namespace Rebus.Bus
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
             this.messageLogger = messageLogger;
+            this.synchronizationContext = synchronizationContext;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
             nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
-            synchronizationContext = new WorkerSynchronizationContext();
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
 
@@ -249,13 +249,13 @@ namespace Rebus.Bus
         ///             - Before/After logical message
         ///                 Dispatch logical message
         /// </summary>
-        void TryProcessIncomingMessage()
+        async Task TryProcessIncomingMessage()
         {
             using (var context = new TxBomkarl())
             {
                 try
                 {
-                    DoTry();
+                    await DoTry();
 
                     try
                     {
@@ -282,7 +282,7 @@ namespace Rebus.Bus
             }
         }
 
-        void DoTry()
+        async Task DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
@@ -354,7 +354,7 @@ namespace Rebus.Bus
                                 {
                                     var dispatchMethod = GetDispatchMethod(typeToDispatch);
                                     var parameters = new[] { logicalMessage };
-                                    dispatchMethod.Invoke(this, parameters);
+                                    await (Task)dispatchMethod.Invoke(this, parameters);
                                 }
                                 catch (TargetInvocationException tie)
                                 {
@@ -533,9 +533,9 @@ namespace Rebus.Bus
         /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
         /// for some strongly typed interaction from this point and on....
         /// </summary>
-        internal void DispatchGeneric<T>(T message)
+        internal async Task DispatchGeneric<T>(T message)
         {
-            dispatcher.Dispatch(message);
+            await dispatcher.Dispatch(message);
         }
 
         /// <summary>
@@ -544,29 +544,6 @@ namespace Rebus.Bus
         static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
         {
             return new BackoffHelper(backoffTimes) { LoggingDisabled = true };
-        }
-    }
-
-    public class WorkerSynchronizationContext : SynchronizationContext
-    {
-        readonly ConcurrentQueue<Tuple<SendOrPostCallback, object, IMessageContext>> callbacks =
-            new ConcurrentQueue<Tuple<SendOrPostCallback, object, IMessageContext>>();
-
-        public override void Post(SendOrPostCallback d, object state)
-        {
-            var transactionContext = TransactionContext.Current;
-            var logicalGetData = (IMessageContext)CallContext.LogicalGetData("context");
-            callbacks.Enqueue(Tuple.Create(d, state, logicalGetData));
-        }
-
-        public void Run()
-        {
-            Tuple<SendOrPostCallback, object, IMessageContext> tuple;
-            while (callbacks.TryDequeue(out tuple))
-            {
-                //MessageContext.Restablish(tuple.Item3);
-                tuple.Item1(tuple.Item2);
-            }
         }
     }
 }

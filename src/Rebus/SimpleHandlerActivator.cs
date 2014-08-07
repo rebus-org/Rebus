@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rebus
 {
@@ -40,6 +41,16 @@ namespace Rebus
         public SimpleHandlerActivator Handle<TMessage>(Action<TMessage> handler)
         {
             InnerRegister(typeof(HandlerMethodWrapper<TMessage>), () => new HandlerMethodWrapper<TMessage>(handler));
+
+            return this;
+        }
+
+        /// <summary>
+        /// Registers a function that can handle messages of the specified type in an async manner.
+        /// </summary>
+        public SimpleHandlerActivator HandleAsync<TMessage>(Func<TMessage, Task> handler)
+        {
+            InnerRegister(typeof(AsyncHandlerMethodWrapper<TMessage>), () => new AsyncHandlerMethodWrapper<TMessage>(handler));
 
             return this;
         }
@@ -114,5 +125,19 @@ namespace Rebus
             }
         }
 
+        class AsyncHandlerMethodWrapper<T> : IHandleMessagesAsync<T>
+        {
+            private readonly Func<T, Task> func;
+
+            public AsyncHandlerMethodWrapper(Func<T, Task> func)
+            {
+                this.func = func;
+            }
+
+            public Task Handle(T message)
+            {
+                return func(message);
+            }
+        }
     }
 }

@@ -65,7 +65,7 @@ namespace Rebus.Bus
         /// Main entry point of the dispatcher. Dispatches the given message, doing handler
         /// lookup etc. Any exceptions thrown will bubble up.
         /// </summary>
-        public void Dispatch<TMessage>(TMessage message)
+        public async Task Dispatch<TMessage>(TMessage message)
         {
             IHandleMessages[] handlersToRelease = null;
 
@@ -109,7 +109,7 @@ namespace Rebus.Bus
                     {
                         try
                         {
-                            GetDispatcherMethod(typeToDispatch)
+                            await (Task)GetDispatcherMethod(typeToDispatch)
                                 .Invoke(this, new object[] {message, handler});
                         }
                         catch (TargetInvocationException tie)
@@ -245,7 +245,7 @@ This most likely indicates that you have configured this Rebus service to use an
         ///   Private dispatcher method that gets invoked only via reflection.
         /// </summary>
         // ReSharper disable UnusedMember.Local
-        void DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
+        async Task DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
         {
             var saga = handler as Saga;
             if (saga != null)
@@ -278,18 +278,18 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 using (new SagaContext(sagaData.Id))
                 {
-                    DoDispatch(message, handler);
+                    await DoDispatch(message, handler);
                     PerformSaveActions(saga, sagaData);
                 }
 
                 return;
             }
 
-            DoDispatch(message, handler);
+            await DoDispatch(message, handler);
         }
         // ReSharper restore UnusedMember.Local
 
-        static void DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
+        static async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
         {
             var ordinaryHandler = handler as IHandleMessages<TMessage>;
             if (ordinaryHandler != null)
@@ -300,11 +300,7 @@ This most likely indicates that you have configured this Rebus service to use an
             var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
             if (asyncHandler != null)
             {
-                asyncHandler.Handle(message)
-                    .ContinueWith(x =>
-                    {
-                        Console.WriteLine(x.Exception);
-                    });
+                await asyncHandler.Handle(message);
             }
         }
 
