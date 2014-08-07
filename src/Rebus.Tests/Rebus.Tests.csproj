@@ -276,7 +276,6 @@
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.log4net.cs" />
-    <Compile Include="TestHandler.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
