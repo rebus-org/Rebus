@@ -19,9 +19,10 @@ namespace Rebus.Tests.Persistence.Sagas
                     {Headers.ReturnAddress, "none"},
                     {Headers.MessageId, "just_some_message_id"},
                 };
+            persister = TrackDisposable(Activator.CreateInstance<TFactory>()).CreatePersister();
+
             TrackDisposable(TransactionContext.None());
             messageContext = MessageContext.Establish(headers);
-            persister = TrackDisposable(Activator.CreateInstance<TFactory>()).CreatePersister();
         }
 
         protected override void DoTearDown()
