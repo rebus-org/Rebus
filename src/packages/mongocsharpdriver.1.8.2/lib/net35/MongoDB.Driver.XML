@@ -4,1181 +4,6 @@
         <name>MongoDB.Driver</name>
     </assembly>
     <members>
-        <member name="T:MongoDB.Driver.Builders.UpdateCurrentDateType">
-            <summary>
-            The type to use for the $currentDate type.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.Builders.UpdateCurrentDateType.Date">
-            <summary>
-            The date type.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.Builders.UpdateCurrentDateType.Timestamp">
-            <summary>
-            The timestamp type.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.ParallelScanArgs">
-            <summary>
-            Represents arguments for the ParallelScan command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.ParallelScanArgs.BatchSize">
-            <summary>
-            Gets or sets the size of the batch.
-            </summary>
-            <value>
-            The size of the batch.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ParallelScanArgs.NumberOfCursors">
-            <summary>
-            Gets or sets the desired number of cursors.
-            </summary>
-            <value>
-            The desired number of cursors.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ParallelScanArgs.ReadPreference">
-            <summary>
-            Gets or sets the read preference.
-            </summary>
-            <value>
-            The read preference.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ParallelScanArgs.SerializationOptions">
-            <summary>
-            Gets or sets the serialization options.
-            </summary>
-            <value>
-            The serialization options.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ParallelScanArgs.Serializer">
-            <summary>
-            Gets or sets the serializer.
-            </summary>
-            <value>
-            The serializer.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.WriteConcernError">
-            <summary>
-            Represents the details of a write concern error.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcernError.Code">
-            <summary>
-            Gets the error code.
-            </summary>
-            <value>
-            The error code.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcernError.Details">
-            <summary>
-            Gets the error information.
-            </summary>
-            <value>
-            The error information.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcernError.Message">
-            <summary>
-            Gets the error message.
-            </summary>
-            <value>
-            The error message.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteError">
-            <summary>
-            Represents the details of a write error for a particular request.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteError.Code">
-            <summary>
-            Gets the error code.
-            </summary>
-            <value>
-            The error code.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteError.Details">
-            <summary>
-            Gets the error information.
-            </summary>
-            <value>
-            The error information.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteError.Index">
-            <summary>
-            Gets the index of the request that had an error.
-            </summary>
-            <value>
-            The index.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteError.Message">
-            <summary>
-            Gets the error message.
-            </summary>
-            <value>
-            The error message.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteResult">
-            <summary>
-            Represents the result of a bulk write operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteResult.#ctor(System.Int32,System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.BulkWriteResult"/> class.
-            </summary>
-            <param name="requestCount">The request count.</param>
-            <param name="processedRequests">The processed requests.</param>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.DeletedCount">
-            <summary>
-            Gets the number of documents that were deleted.
-            </summary>
-            <value>
-            The number of document that were deleted.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.InsertedCount">
-            <summary>
-            Gets the number of documents that were inserted.
-            </summary>
-            <value>
-            The number of document that were inserted.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.IsAcknowledged">
-            <summary>
-            Gets a value indicating whether the bulk write operation was acknowledged.
-            </summary>
-            <value>
-              <c>true</c> if the bulk write operation was acknowledged; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.IsModifiedCountAvailable">
-            <summary>
-            Gets a value indicating whether the modified count is available.
-            </summary>
-            <remarks>
-            The modified count is only available when all servers have been upgraded to 2.6 or above.
-            </remarks>
-            <value>
-            <c>true</c> if the modified count is available; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.MatchedCount">
-            <summary>
-            Gets the number of documents that were matched.
-            </summary>
-            <value>
-            The number of document that were matched.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.ModifiedCount">
-            <summary>
-            Gets the number of documents that were actually modified during an update.
-            </summary>
-            <value>
-            The number of document that were actually modified during an update.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.ProcessedRequests">
-            <summary>
-            Gets the processed requests.
-            </summary>
-            <value>
-            The processed requests.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.RequestCount">
-            <summary>
-            Gets the request count.
-            </summary>
-            <value>
-            The request count.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteResult.Upserts">
-            <summary>
-            Gets a list with information about each request that resulted in an upsert.
-            </summary>
-            <value>
-            The list with information about each request that resulted in an upsert.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteUpsert">
-            <summary>
-            Represents the information about one Upsert.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteUpsert.Id">
-            <summary>
-            Gets the identifier.
-            </summary>
-            <value>
-            The identifier.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteUpsert.Index">
-            <summary>
-            Gets the index.
-            </summary>
-            <value>
-            The index.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteException">
-            <summary>
-            Represents a bulk write exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoException">
-            <summary>
-            Represents a MongoDB exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the MongoException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the MongoException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(MongoDB.Driver.BulkWriteResult,System.Collections.Generic.IEnumerable{MongoDB.Driver.BulkWriteError},MongoDB.Driver.WriteConcernError,System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.BulkWriteException"/> class.
-            </summary>
-            <param name="result">The result.</param>
-            <param name="writeErrors">The write errors.</param>
-            <param name="unprocessedRequests">The unprocessed requests.</param>
-            <param name="writeConcernError">The write concern error.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoQueryException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.Result">
-            <summary>
-            Gets the result of the bulk write operation.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.UnprocessedRequests">
-            <summary>
-            Gets the unprocessed requests.
-            </summary>
-            <value>
-            The unprocessed requests.
-            </value>
-            <exception cref="T:System.NotImplementedException"></exception>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.WriteConcernError">
-            <summary>
-            Gets the write concern error.
-            </summary>
-            <value>
-            The write concern error.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.WriteErrors">
-            <summary>
-            Gets the write errors.
-            </summary>
-            <value>
-            The write errors.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.Operations.BulkWriteBatchResult">
-            <summary>
-            Represents the result of one batch executed using a write command.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteOperation">
-            <summary>
-            Represents a fluent builder for a bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteOperation.Execute">
-            <summary>
-            Executes the bulk operation using the default write concern from the collection.
-            </summary>
-            <returns>A BulkWriteResult.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteOperation.Execute(MongoDB.Driver.WriteConcern)">
-            <summary>
-            Executes the bulk operation.
-            </summary>
-            <param name="writeConcern">The write concern for this bulk operation.</param>
-            <returns>A BulkWriteResult.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteOperation.Find(MongoDB.Driver.IMongoQuery)">
-            <summary>
-            Creates a builder for a new write request (either a remove or an update).
-            </summary>
-            <param name="query">The query.</param>
-            <returns>A FluentWriteRequestBuilder.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteOperation.Insert``1(``0)">
-            <summary>
-            Adds an insert request for the specified document to the bulk operation.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-            <param name="document">The document.</param>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteRequestBuilder">
-            <summary>
-            Represents a fluent builder for a write request (either a remove or an update).
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.Remove">
-            <summary>
-            Adds a request to remove all matching documents to the bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.RemoveOne">
-            <summary>
-            Adds a request to remove one matching documents to the bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.ReplaceOne``1(``0)">
-            <summary>
-            Adds a request to replace one matching documents to the bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.Update(MongoDB.Driver.IMongoUpdate)">
-            <summary>
-            Adds a request to update all matching documents to the bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.UpdateOne(MongoDB.Driver.IMongoUpdate)">
-            <summary>
-            Adds a request to update one matching documents to the bulk operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.Upsert">
-            <summary>
-            Specifies that the request being built should be an upsert.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:MongoDB.Driver.BulkUpdateRequestBuilder">
-            <summary>
-            Represents a fluent builder for one update request.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.BulkUpdateRequestBuilder.ReplaceOne``1(``0)">
-            <summary>
-            Adds an update request to replace one matching document to the bulk operation.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-            <param name="document">The document.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkUpdateRequestBuilder.Update(MongoDB.Driver.IMongoUpdate)">
-            <summary>
-            Adds an update request to update all matching documents to the bulk operation.
-            </summary>
-            <param name="update">The update.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkUpdateRequestBuilder.UpdateOne(MongoDB.Driver.IMongoUpdate)">
-            <summary>
-            Adds an update request to update one matching document to the bulk operation.
-            </summary>
-            <param name="update">The update.</param>
-        </member>
-        <member name="T:MongoDB.Driver.InsertRequest">
-            <summary>
-            Represents a request to insert a document.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.WriteRequest">
-            <summary>
-            Represents a request to write something to the database.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.WriteRequest.#ctor(MongoDB.Driver.WriteRequestType)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.WriteRequest"/> class.
-            </summary>
-            <param name="requestType">The request type.</param>
-        </member>
-        <member name="P:MongoDB.Driver.WriteRequest.RequestType">
-            <summary>
-            Gets the request type.
-            </summary>
-            <value>
-            The request type.
-            </value>
-        </member>
-        <member name="M:MongoDB.Driver.InsertRequest.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.InsertRequest"/> class.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.InsertRequest.#ctor(System.Type,System.Object)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.InsertRequest"/> class.
-            </summary>
-            <param name="nominalType">Type nominal type.</param>
-            <param name="document">The document.</param>
-        </member>
-        <member name="M:MongoDB.Driver.InsertRequest.#ctor(System.Type,System.Object,MongoDB.Bson.Serialization.IBsonSerializer,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.InsertRequest"/> class.
-            </summary>
-            <param name="nominalType">Type nominal type.</param>
-            <param name="document">The document.</param>
-            <param name="serializer">The serializer.</param>
-            <param name="serializationOptions">The serialization options.</param>
-        </member>
-        <member name="P:MongoDB.Driver.InsertRequest.Document">
-            <summary>
-            Gets or sets the document.
-            </summary>
-            <value>
-            The document.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.InsertRequest.NominalType">
-            <summary>
-            Gets or sets the nominal type.
-            </summary>
-            <value>
-            The nominal type.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.InsertRequest.SerializationOptions">
-            <summary>
-            Gets or sets the serialization options.
-            </summary>
-            <value>
-            The serialization options.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.InsertRequest.Serializer">
-            <summary>
-            Gets or sets the serializer.
-            </summary>
-            <value>
-            The serializer.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.WriteRequestType">
-            <summary>
-            Represents the type of a write request.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.WriteRequestType.Delete">
-            <summary>
-            A delete request.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.WriteRequestType.Insert">
-            <summary>
-            An insert request.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.WriteRequestType.Update">
-            <summary>
-            An udpate request.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol">
-            <summary>
-            Authentication protocol using the SSL X509 certificates as the client identity.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.Communication.Security.IAuthenticationProtocol">
-            <summary>
-            Authenticates a MongoConnection.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.Authenticate(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
-            <summary>
-            Authenticates the specified connection with the given credential.
-            </summary>
-            <param name="connection">The connection.</param>
-            <param name="credential">The credential.</param>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
-            <summary>
-            Determines whether this instance can use the specified credential.
-            </summary>
-            <param name="credential">The credential.</param>
-            <returns>
-              <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="P:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.Name">
-            <summary>
-            Gets the name.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol.Authenticate(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
-            <summary>
-            Authenticates the specified connection with the given credential.
-            </summary>
-            <param name="connection">The connection.</param>
-            <param name="credential">The credential.</param>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
-            <summary>
-            Determines whether this instance can use the specified credential.
-            </summary>
-            <param name="credential">The credential.</param>
-            <returns>
-              <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="P:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol.Name">
-            <summary>
-            Gets the name.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.DistinctArgs">
-            <summary>
-            Represents arguments for the Distinct command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.DistinctArgs.Key">
-            <summary>
-            Gets or sets the key.
-            </summary>
-            <value>
-            The key.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.DistinctArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.DistinctArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.DistinctArgs.ValueSerializationOptions">
-            <summary>
-            Gets or sets the value serialization options.
-            </summary>
-            <value>
-            The value serialization options.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.DistinctArgs.ValueSerializer">
-            <summary>
-            Gets or sets the value serializer.
-            </summary>
-            <value>
-            The value serializer.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.MongoDuplicateKeyException">
-            <summary>
-            Thrown when a duplicate key is inserted into a collection.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.WriteConcernException">
-            <summary>
-            Represents a get last error exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoSafeModeException">
-            <summary>
-            Represents a MongoDB safe mode exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoCommandException">
-            <summary>
-            Represents a MongoDB command exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="commandResult">The command result (an error message will be constructed using the result).</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="commandResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.MongoCommandException.CommandResult">
-            <summary>
-            Gets the command result.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.String,MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoSafeModeException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="commandResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoSafeModeException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
-            <summary>
-            Initializes a new instance of the WriteConcernException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="writeConcernResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcernException.WriteConcernResult">
-            <summary>
-            Gets the write concern result.
-            </summary>
-            <value>
-            The write concern result.
-            </value>
-        </member>
-        <member name="M:MongoDB.Driver.MongoDuplicateKeyException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.MongoDuplicateKeyException"/> class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="commandResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoDuplicateKeyException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="T:MongoDB.Driver.FeatureId">
-            <summary>
-            Represents the Id of a feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.AggregateAllowDiskUse">
-            <summary>
-            The aggregate allow disk use feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.AggregateCursor">
-            <summary>
-            The aggregate cursor feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.AggregateExplain">
-            <summary>
-            The aggregate explain feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.AggregateOutputToCollection">
-            <summary>
-            The aggregate output to collection feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.CreateIndexCommand">
-            <summary>
-            The create index command feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.MaxTime">
-            <summary>
-            The max time feature.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.ParallelScanCommand">
-            <summary>
-            The parallel scan command.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.TextSearchCommand">
-            <summary>
-            The text search command.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.TextSearchQuery">
-            <summary>
-            The text search query operator.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.UserManagementCommands">
-            <summary>
-            The user management commands.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.WriteCommands">
-            <summary>
-            The write commands.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FeatureId.WriteOpcodes">
-            <summary>
-            The write opcodes.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.Communication.FeatureDetection.FeatureSet">
-            <summary>
-            Represents a set of features that are supported by a server instance.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.FeatureDetection.FeatureSet.IsSupported(MongoDB.Driver.FeatureId)">
-            <summary>
-            Checks whether a feature is supported.
-            </summary>
-            <param name="featureId">The feature Id.</param>
-            <returns>True if the feature is supported; otherwise, false.</returns>
-        </member>
-        <member name="T:MongoDB.Driver.BulkWriteArgs">
-            <summary>
-            Represents the arguments to a BulkWrite method (BulkDelete, BulkInsert, BulkUpdate or BulkWrite).
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.AssignId">
-            <summary>
-            Gets or sets a delegate that is called before a document is inserted to assign an id if the id is empty.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.CheckElementNames">
-            <summary>
-            Gets or sets whether to check element names.
-            </summary>
-            <value>
-              <c>true</c> if element names should be checked; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.IsOrdered">
-            <summary>
-            Gets or sets a value indicating whether the server should process the requests in order.
-            </summary>
-            <value>
-              <c>true</c> if the server should process the requests in order; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.MaxBatchCount">
-            <summary>
-            Gets or sets the maximum batch count.
-            </summary>
-            <value>
-            The maximum batch count.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.MaxBatchLength">
-            <summary>
-            Gets or sets the maximum batch length (in bytes).
-            </summary>
-            <value>
-            The maximum batch length.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.Requests">
-            <summary>
-            Gets or sets the write requests.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteArgs.WriteConcern">
-            <summary>
-            Gets or sets the write concern.
-            </summary>
-            <value>
-            The write concern.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.AcknowledgedBulkWriteResult">
-            <summary>
-            Represents the result of an acknowledged bulk write operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.AcknowledgedBulkWriteResult.#ctor(System.Int32,System.Int64,System.Int64,System.Int64,System.Nullable{System.Int64},System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest},System.Collections.Generic.IEnumerable{MongoDB.Driver.BulkWriteUpsert})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.AcknowledgedBulkWriteResult"/> class.
-            </summary>
-            <param name="requestCount">The request count.</param>
-            <param name="matchedCount">The matched count.</param>
-            <param name="deletedCount">The deleted count.</param>
-            <param name="insertedCount">The inserted count.</param>
-            <param name="modifiedCount">The modified count.</param>
-            <param name="processedRequests">The processed requests.</param>
-            <param name="upserts">The upserts.</param>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.DeletedCount">
-            <summary>
-            Gets the number of documents that were deleted.
-            </summary>
-            <value>
-            The number of document that were deleted.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.InsertedCount">
-            <summary>
-            Gets the number of documents that were inserted.
-            </summary>
-            <value>
-            The number of document that were inserted.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.IsModifiedCountAvailable">
-            <summary>
-            Gets a value indicating whether the modified count is available.
-            </summary>
-            <remarks>
-            The modified count is only available when all servers have been upgraded to 2.6 or above.
-            </remarks>
-            <value>
-            <c>true</c> if the modified count is available; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.MatchedCount">
-            <summary>
-            Gets the number of documents that were matched.
-            </summary>
-            <value>
-            The number of document that were matched.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.ModifiedCount">
-            <summary>
-            Gets the number of documents that were actually modified during an update.
-            </summary>
-            <value>
-            The number of document that were actually modified during an update.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.IsAcknowledged">
-            <summary>
-            Gets a value indicating whether the bulk write operation was acknowledged.
-            </summary>
-            <value>
-            <c>true</c> if the bulk write operation was acknowledged; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AcknowledgedBulkWriteResult.Upserts">
-            <summary>
-            Gets a list with information about each request that resulted in an upsert.
-            </summary>
-            <value>
-            The list with information about each request that resulted in an upsert.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.CountArgs">
-            <summary>
-            Represents arguments for the Count command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.CountArgs.Limit">
-            <summary>
-            Gets or sets the maximum number of matching documents to count.
-            </summary>
-            <value>
-            The maximum number of matching documents to count.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.CountArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.CountArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.CountArgs.Skip">
-            <summary>
-            Gets or sets the number of matching documents to skip before starting to count matching documents.
-            </summary>
-            <value>
-            The number of matching documents to skip before starting to count matching documents.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.EvalArgs">
-            <summary>
-            Represents arguments for the Eval command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.EvalArgs.Args">
-            <summary>
-            Gets or sets the arguments to the JavaScript code.
-            </summary>
-            <value>
-            The arguments.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.EvalArgs.Code">
-            <summary>
-            Gets or sets the JavaScript code.
-            </summary>
-            <value>
-            The JavaScript code.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.EvalArgs.Lock">
-            <summary>
-            Gets or sets whether the server should take a global write lock when executing the JavaScript code.
-            </summary>
-            <value>
-            Whether the server should take a global write lock when executing the JavaScript code.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.EvalArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.ExceptionMapper">
-            <summary>
-            A mapper from error responses to custom exceptions.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.ExceptionMapper.Map(MongoDB.Bson.BsonDocument)">
-            <summary>
-            Maps the specified response to a custom exception (if possible).
-            </summary>
-            <param name="response">The response.</param>
-            <returns>The custom exception (or null if the response could not be mapped to a custom exception).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.ExceptionMapper.Map(MongoDB.Driver.WriteConcernResult)">
-            <summary>
-            Maps the specified writeConcernResult to a custom exception (if necessary).
-            </summary>
-            <param name="writeConcernResult">The write concern result.</param>
-            <returns>
-            The custom exception (or null if the writeConcernResult was not mapped to an exception).
-            </returns>
-        </member>
-        <member name="T:MongoDB.Driver.ExecutionTimeoutException">
-            <summary>
-            Represents a MongoDB execution timeout exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="T:MongoDB.Driver.FindAndModifyDocumentVersion">
-            <summary>
-            Represents a version of a document (original or modified).
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FindAndModifyDocumentVersion.Original">
-            <summary>
-            The original version of the document.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.FindAndModifyDocumentVersion.Modified">
-            <summary>
-            The modified version of the document.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.FindAndModifyArgs">
-            <summary>
-            Represents options for the FindAndModify command.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.Fields">
-            <summary>
-            Gets or sets the fields specification.
-            </summary>
-            <value>
-            The fields specification.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.SortBy">
-            <summary>
-            Gets or sets the sort specification.
-            </summary>
-            <value>
-            The sort specification.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.Update">
-            <summary>
-            Gets or sets the update specification.
-            </summary>
-            <value>
-            The update specification.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.Upsert">
-            <summary>
-            Gets or sets a value indicating whether FindAndModify should upsert.
-            </summary>
-            <value>
-              <c>true</c> if FindAndModify should upsert; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndModifyArgs.VersionReturned">
-            <summary>
-            Gets or sets the version of the document returned.
-            </summary>
-            <value>
-            The version of the document returned.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.AggregateOutputMode">
-            <summary>
-            Represents the output mode for an aggregate operation.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.AggregateOutputMode.Inline">
-            <summary>
-            The output of the aggregate operation is returned inline.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.AggregateOutputMode.Cursor">
-            <summary>
-            The output of the aggregate operation is returned using a cursor.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.AggregateArgs">
-            <summary>
-            Represents options for the Aggregate command.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.AggregateArgs.AllowDiskUse">
-            <summary>
-            Gets or sets a value indicating whether disk use is allowed.
-            </summary>
-            <value>
-              <c>true</c> if disk use is allowed; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AggregateArgs.BatchSize">
-            <summary>
-            Gets or sets the size of a batch when using a cursor.
-            </summary>
-            <value>
-            The size of a batch.
-            </value>
-            <exception cref="T:System.ArgumentException">BatchSize cannot be negative.;value</exception>
-        </member>
-        <member name="P:MongoDB.Driver.AggregateArgs.MaxTime">
-            <summary>
-            Gets or sets the max time the server should spend on the aggregation command.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.AggregateArgs.OutputMode">
-            <summary>
-            Gets or sets the output mode.
-            </summary>
-            <value>
-            The output mode.
-            </value>
-            <exception cref="T:System.ArgumentException"></exception>
-        </member>
-        <member name="P:MongoDB.Driver.AggregateArgs.Pipeline">
-            <summary>
-            Gets or sets the pipeline.
-            </summary>
-            <value>
-            The pipeline.
-            </value>
-        </member>
         <member name="T:MongoDB.Driver.Builders.BuilderBase">
             <summary>
             Abstract base class for the builders.
@@ -1331,13 +156,6 @@
             <param name="names">One or more field names.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.Fields.MetaTextScore(System.String)">
-            <summary>
-            Specifies the name of field to hold the computed relevance score for text search.
-            </summary>
-            <param name="name">The name of the field to hold the computed relevance score.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.Fields.Slice(System.String,System.Int32)">
             <summary>
             Adds a slice to be included in the results.
@@ -1395,13 +213,6 @@
             Adds one or more field names to be included in the results.
             </summary>
             <param name="names">One or more field names.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.FieldsBuilder.MetaTextScore(System.String)">
-            <summary>
-            Specifies the name of field to hold the computed relevance score for text search.
-            </summary>
-            <param name="name">The name of the field to hold the computed relevance score.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.FieldsBuilder.Slice(System.String,System.Int32)">
@@ -1464,13 +275,6 @@
             <param name="memberExpressions">The member expressions.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.Fields`1.MetaTextScore(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
-            <summary>
-            Specifies the name of field to hold the computed relevance score for text search.
-            </summary>
-            <param name="memberExpression">The member expression specifying the field to hold the computed relevance score.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.Fields`1.Slice``1(System.Linq.Expressions.Expression{System.Func{`0,System.Collections.Generic.IEnumerable{``0}}},System.Int32)">
             <summary>
             Adds a slice to be included in the results.
@@ -1527,13 +331,6 @@
             Adds one or more field names to be included in the results.
             </summary>
             <param name="memberExpressions">The member expressions.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.FieldsBuilder`1.MetaTextScore(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
-            <summary>
-            Specifies the name of field to hold the computed relevance score for text search.
-            </summary>
-            <param name="memberExpression">The member expression specifying the field to hold the computed relevance score.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.FieldsBuilder`1.Slice``1(System.Linq.Expressions.Expression{System.Func{`0,System.Collections.Generic.IEnumerable{``0}}},System.Int32)">
@@ -1976,19 +773,6 @@
             <param name="name">The key name.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeys.Text(System.String[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="names">List of key names to include in the text index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeys.TextAll">
-            <summary>
-            Create a text index that indexes all text fields of a document.
-            </summary>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="T:MongoDB.Driver.Builders.IndexKeysBuilder">
             <summary>
             A builder for specifying the keys for an index.
@@ -2052,19 +836,6 @@
             Sets the key name to create a hashed index on.
             </summary>
             <param name="name">The key name.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder.Text(System.String[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="names">List of key names to include in the text index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder.TextAll">
-            <summary>
-            Create a text index that indexes all text fields of a document.
-            </summary>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder.ToBsonDocument">
@@ -2157,26 +928,6 @@
             The builder (so method calls can be chained).
             </returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeys`1.Text(System.Linq.Expressions.Expression{System.Func{`0,System.String}}[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="memberExpressions">The member expressions.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeys`1.Text(System.Linq.Expressions.Expression{System.Func{`0,System.Collections.Generic.IEnumerable{System.String}}}[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="memberExpressions">The member expressions.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeys`1.TextAll">
-            <summary>
-            Create a text index that indexes all text fields of a document.
-            </summary>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="T:MongoDB.Driver.Builders.IndexKeysBuilder`1">
             <summary>
             A builder for specifying the keys for an index.
@@ -2258,26 +1009,6 @@
             The builder (so method calls can be chained).
             </returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder`1.Text(System.Linq.Expressions.Expression{System.Func{`0,System.String}}[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="memberExpressions">The member expressions.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder`1.Text(System.Linq.Expressions.Expression{System.Func{`0,System.Collections.Generic.IEnumerable{System.String}}}[])">
-            <summary>
-            Sets one or more key names to include in the text index.
-            </summary>
-            <param name="memberExpressions">The member expressions.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder`1.TextAll">
-            <summary>
-            Create a text index that indexes all text fields of a document.
-            </summary>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.IndexKeysBuilder`1.ToBsonDocument">
             <summary>
             Converts this object to a BsonDocument.
@@ -2342,20 +1073,6 @@
             <param name="value">Whether the index is a sparse index.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions.SetTextDefaultLanguage(System.String)">
-            <summary>
-            Sets the default language for the text index.
-            </summary>
-            <param name="language">The default language.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions.SetTextLanguageOverride(System.String)">
-            <summary>
-            Specifies the field name containing the language for the text index.
-            </summary>
-            <param name="fieldName">The field name.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptions.SetTimeToLive(System.TimeSpan)">
             <summary>
             Sets the time to live value.
@@ -2369,16 +1086,6 @@
             </summary>
             <param name="value">Whether the index enforces unique values.</param>
             <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions.SetWeight(System.String,System.Int32)">
-            <summary>
-            Sets the weight of a field for the text index.
-            </summary>
-            <param name="name">The name of the field.</param>
-            <param name="value">The weight.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
         </member>
         <member name="P:MongoDB.Driver.Builders.IndexOptions.Null">
             <summary>
@@ -2443,20 +1150,6 @@
             <param name="value">Whether the index is a sparse index.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetTextDefaultLanguage(System.String)">
-            <summary>
-            Sets the default language for the text index.
-            </summary>
-            <param name="language">The default language.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetTextLanguageOverride(System.String)">
-            <summary>
-            Specifies the field name containing the language for the text index.
-            </summary>
-            <param name="fieldName">The field name.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetTimeToLive(System.TimeSpan)">
             <summary>
             Sets the time to live value.
@@ -2470,16 +1163,6 @@
             </summary>
             <param name="value">Whether the index enforces unique values.</param>
             <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetWeight(System.String,System.Int32)">
-            <summary>
-            Sets the weight of a field for the text index.
-            </summary>
-            <param name="name">The field name.</param>
-            <param name="value">The weight.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.ToBsonDocument">
             <summary>
@@ -2495,211 +1178,30 @@
             <param name="nominalType">The nominal type.</param>
             <param name="options">The serialization options.</param>
         </member>
-        <member name="T:MongoDB.Driver.Builders.IndexOptions`1">
+        <member name="T:MongoDB.Driver.Builders.MapReduceOutputMode">
             <summary>
-            A builder for the options used when creating an index.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetBackground(System.Boolean)">
-            <summary>
-            Sets whether to build the index in the background.
-            </summary>
-            <param name="value">Whether to build the index in the background.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetBucketSize(System.Double)">
-            <summary>
-            Sets the bucket size for geospatial haystack indexes.
-            </summary>
-            <param name="value">The bucket size.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetDropDups(System.Boolean)">
-            <summary>
-            Sets whether duplicates should be dropped.
-            </summary>
-            <param name="value">Whether duplicates should be dropped.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetGeoSpatialRange(System.Double,System.Double)">
-            <summary>
-            Sets the geospatial range.
-            </summary>
-            <param name="min">The min value of the range.</param>
-            <param name="max">The max value of the range.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetName(System.String)">
-            <summary>
-            Sets the name of the index.
-            </summary>
-            <param name="value">The name of the index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetSparse(System.Boolean)">
-            <summary>
-            Sets whether the index is a sparse index.
-            </summary>
-            <param name="value">Whether the index is a sparse index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetTextDefaultLanguage(System.String)">
-            <summary>
-            Sets the default language for the text index.
-            </summary>
-            <param name="language">The default language.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetTextLanguageOverride(System.Linq.Expressions.Expression{System.Func{`0,System.String}})">
-            <summary>
-            Specifies a member expression for the field name containing the language for the text index.
-            </summary>
-            <param name="memberExpression">The member expression indicating the language field name.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetTimeToLive(System.TimeSpan)">
-            <summary>
-            Sets the time to live value.
-            </summary>
-            <param name="timeToLive">The time to live.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetUnique(System.Boolean)">
-            <summary>
-            Sets whether the index enforces unique values.
-            </summary>
-            <param name="value">Whether the index enforces unique values.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetWeight``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Int32)">
-            <summary>
-            Sets the weight of a field for the text index.
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="P:MongoDB.Driver.Builders.IndexOptions`1.Null">
-            <summary>
-            Gets a null value with a type of IMongoIndexOptions.
+            Represents the output mode for a map reduce operation.
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.Builders.IndexOptionsBuilder`1">
+        <member name="F:MongoDB.Driver.Builders.MapReduceOutputMode.Inline">
             <summary>
-            A builder for the options used when creating an index.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.#ctor">
-            <summary>
-            Initializes a new instance of the IndexOptionsBuilder class.
+            The output of the map reduce operation is returned inline.
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetBackground(System.Boolean)">
+        <member name="F:MongoDB.Driver.Builders.MapReduceOutputMode.Replace">
             <summary>
-            Sets whether to build the index in the background.
+            The output of the map reduce operation replaces an existing collection.
             </summary>
-            <param name="value">Whether to build the index in the background.</param>
-            <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetBucketSize(System.Double)">
+        <member name="F:MongoDB.Driver.Builders.MapReduceOutputMode.Merge">
             <summary>
-            Sets the bucket size for geospatial haystack indexes.
+            The output of the map reduce operation is merged with an existing collection.
             </summary>
-            <param name="value">The bucket size.</param>
-            <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetDropDups(System.Boolean)">
+        <member name="F:MongoDB.Driver.Builders.MapReduceOutputMode.Reduce">
             <summary>
-            Sets whether duplicates should be dropped.
+            The output of the map reduce operation is merged with an existing collection using the reduce function.
             </summary>
-            <param name="value">Whether duplicates should be dropped.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetGeoSpatialRange(System.Double,System.Double)">
-            <summary>
-            Sets the geospatial range.
-            </summary>
-            <param name="min">The min value of the range.</param>
-            <param name="max">The max value of the range.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetName(System.String)">
-            <summary>
-            Sets the name of the index.
-            </summary>
-            <param name="value">The name of the index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetSparse(System.Boolean)">
-            <summary>
-            Sets whether the index is a sparse index.
-            </summary>
-            <param name="value">Whether the index is a sparse index.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetTextDefaultLanguage(System.String)">
-            <summary>
-            Sets the default language for the text index.
-            </summary>
-            <param name="language">The default language.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetTextLanguageOverride(System.Linq.Expressions.Expression{System.Func{`0,System.String}})">
-            <summary>
-            Specifies a member expression for the field name containing the language for the text index.
-            </summary>
-            <param name="memberExpression">The member expression indicating the language field name.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetTimeToLive(System.TimeSpan)">
-            <summary>
-            Sets the time to live value.
-            </summary>
-            <param name="timeToLive">The time to live.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetUnique(System.Boolean)">
-            <summary>
-            Sets whether the index enforces unique values.
-            </summary>
-            <param name="value">Whether the index enforces unique values.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetWeight``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},System.Int32)">
-            <summary>
-            Sets the weight of a field for the text index.
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.ToBsonDocument">
-            <summary>
-            Converts this object to a BsonDocument.
-            </summary>
-            <returns>
-            A BsonDocument.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.Serialize(MongoDB.Bson.IO.BsonWriter,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
-            <summary>
-            Serializes the result of the builder to a BsonWriter.
-            </summary>
-            <param name="bsonWriter">The writer.</param>
-            <param name="nominalType">The nominal type.</param>
-            <param name="options">The serialization options.</param>
         </member>
         <member name="T:MongoDB.Driver.Builders.MapReduceOutput">
             <summary>
@@ -3036,11 +1538,6 @@
             Arguments for $push with an $each clause.
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.Builders.PushEachOptions.Position">
-            <summary>
-            Gets or sets the position (see $position).
-            </summary>
-        </member>
         <member name="P:MongoDB.Driver.Builders.PushEachOptions.Slice">
             <summary>
             Gets or sets the slice (see $slice).
@@ -3062,13 +1559,6 @@
             Initializes a new instance of the <see cref="T:MongoDB.Driver.Builders.PushEachOptionsBuilder`1"/> class.
             </summary>
             <param name="serializationInfoHelper">The serialization info helper.</param>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.PushEachOptionsBuilder`1.Position(System.Int32)">
-            <summary>
-            Specifies the position for the array.
-            </summary>
-            <param name="position">The position.</param>
-            <returns>The builder.</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.PushEachOptionsBuilder`1.Slice(System.Int32)">
             <summary>
@@ -3323,38 +1813,6 @@
             <param name="size">The size to compare to.</param>
             <returns>An IMongoQuery.</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.Query.SizeGreaterThan(System.String,System.Int32)">
-            <summary>
-            Tests that the size of the named array is greater than some value.
-            </summary>
-            <param name="name">The name of the element to test.</param>
-            <param name="size">The size to compare to.</param>
-            <returns>An IMongoQuery.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Query.SizeGreaterThanOrEqual(System.String,System.Int32)">
-            <summary>
-            Tests that the size of the named array is greater than or equal to some value.
-            </summary>
-            <param name="name">The name of the element to test.</param>
-            <param name="size">The size to compare to.</param>
-            <returns>An IMongoQuery.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Query.SizeLessThan(System.String,System.Int32)">
-            <summary>
-            Tests that the size of the named array is less than some value.
-            </summary>
-            <param name="name">The name of the element to test.</param>
-            <param name="size">The size to compare to.</param>
-            <returns>An IMongoQuery.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Query.SizeLessThanOrEqual(System.String,System.Int32)">
-            <summary>
-            Tests that the size of the named array is less than or equal to some value.
-            </summary>
-            <param name="name">The name of the element to test.</param>
-            <param name="size">The size to compare to.</param>
-            <returns>An IMongoQuery.</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.Query.Type(System.String,MongoDB.Bson.BsonType)">
             <summary>
             Tests that the type of the named element is equal to some type (see $type).
@@ -3418,22 +1876,6 @@
             <param name="upperRightX">The x coordinate of the upper right corner.</param>
             <param name="upperRightY">The y coordinate of the upper right corner.</param>
             <returns>An IMongoQuery.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Query.Text(System.String)">
-            <summary>
-            Generate a text search query that tests whether the given search string is present.
-            </summary>
-            <param name="searchString">The search string.</param>
-            <returns>An IMongoQuery that represents the text search.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Query.Text(System.String,System.String)">
-            <summary>
-            Generate a text search query that tests whether the given search string is present using the specified language's rules. 
-            Specifies use of language appropriate stop words, stemming rules etc.
-            </summary>
-            <param name="searchString">The search string.</param>
-            <param name="language">The language to restrict the search by.</param>
-            <returns>An IMongoQuery that represents the text search for the particular language.</returns>
         </member>
         <member name="P:MongoDB.Driver.Builders.Query.Null">
             <summary>
@@ -4277,14 +2719,6 @@
             <param name="keys">One or more key names.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.SortBy.MetaTextScore(System.String)">
-            <summary>
-            Adds a key to sort by the computed relevance score when using text search. The name of the key should be
-            the name of the projected relevance score field.
-            </summary>
-            <param name="key">The name of the computed relevance score field.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="P:MongoDB.Driver.Builders.SortBy.Null">
             <summary>
             Gets a null value with a type of IMongoSortBy.
@@ -4317,14 +2751,6 @@
             Adds keys to be sorted by in descending order.
             </summary>
             <param name="keys">One or more key names.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.SortByBuilder.MetaTextScore(System.String)">
-            <summary>
-            Adds a key to sort by the computed relevance score when using text search. The name of the key should be
-            the name of the projected relevance score field.
-            </summary>
-            <param name="key">The name of the computed relevance score field.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.SortByBuilder.ToBsonDocument">
@@ -4365,14 +2791,6 @@
             The builder (so method calls can be chained).
             </returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.SortBy`1.MetaTextScore(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
-            <summary>
-            Adds a key to sort by the computed relevance score when using text search. The name of the key should be
-            the name of the projected relevance score field.
-            </summary>
-            <param name="memberExpression">The member expression specifying the projected field.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="T:MongoDB.Driver.Builders.SortByBuilder`1">
             <summary>
             A builder for specifying a sort order.
@@ -4407,14 +2825,6 @@
             <returns>
             The builder (so method calls can be chained).
             </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.SortByBuilder`1.MetaTextScore(System.Linq.Expressions.Expression{System.Func{`0,System.Object}})">
-            <summary>
-            Adds a key to sort by the computed relevance score when using text search. The name of the key should be
-            the name of the projected relevance score field.
-            </summary>
-            <param name="memberExpression">The member expression specifying the projected field.</param>
-            <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.SortByBuilder`1.ToBsonDocument">
             <summary>
@@ -4528,22 +2938,6 @@
             <param name="value">The value to be or-ed with the current value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.Update.BitwiseXor(System.String,System.Int32)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="name">The name of the element to be modified.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.BitwiseXor(System.String,System.Int64)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="name">The name of the element to be modified.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.Update.Combine(System.Collections.Generic.IEnumerable{MongoDB.Driver.IMongoUpdate})">
             <summary>
             Combines several UpdateBuilders into a single UpdateBuilder.
@@ -4557,21 +2951,6 @@
             </summary>
             <param name="updates">The UpdateBuilders to combine.</param>
             <returns>A combined UpdateBuilder.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.CurrentDate(System.String)">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="name">The name of the element.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.CurrentDate(System.String,MongoDB.Driver.Builders.UpdateCurrentDateType)">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="type">The type to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.Update.Inc(System.String,System.Double)">
             <summary>
@@ -4595,46 +2974,6 @@
             </summary>
             <param name="name">The name of the element to be incremented.</param>
             <param name="value">The value to increment by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.Max(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Updates the named element if and only if the provided value is greater than its current value (see $max).
-            </summary>
-            <param name="name">The name of the element to be updated.</param>
-            <param name="value">The value to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.Min(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Updates the named element if and only if the provided value is less than its current value (see $max).
-            </summary>
-            <param name="name">The name of the element to be updated.</param>
-            <param name="value">The value to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.Mul(System.String,System.Double)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.Mul(System.String,System.Int32)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update.Mul(System.String,System.Int64)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.Update.PopFirst(System.String)">
@@ -5028,43 +3367,12 @@
             <param name="value">The value to be or-ed with the current value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.BitwiseXor(System.String,System.Int32)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="name">The name of the element to be modified.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.BitwiseXor(System.String,System.Int64)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="name">The name of the element to be modified.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Combine(MongoDB.Driver.IMongoUpdate)">
             <summary>
             Combines another UpdateBuilder into this one.
             </summary>
             <param name="other">The IMongoUpdate to combine into this one.</param>
             <returns>A combined UpdateBuilder.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.CurrentDate(System.String)">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="name">The name of the element.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.CurrentDate(System.String,MongoDB.Driver.Builders.UpdateCurrentDateType)">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="name">The name of the element.</param>
-            <param name="type">The type to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Inc(System.String,System.Double)">
             <summary>
@@ -5088,46 +3396,6 @@
             </summary>
             <param name="name">The name of the element to be incremented.</param>
             <param name="value">The value to increment by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Max(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Updates the named element if and only if the provided value is greater than its current value (see $max).
-            </summary>
-            <param name="name">The name of the element to be updated.</param>
-            <param name="value">The value to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Min(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Updates the named element if and only if the provided value is less than its current value (see $max).
-            </summary>
-            <param name="name">The name of the element to be updated.</param>
-            <param name="value">The value to use.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Mul(System.String,System.Double)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Mul(System.String,System.Int32)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>The builder (so method calls can be chained).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder.Mul(System.String,System.Int64)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="name">The name of the element to be multiplied.</param>
-            <param name="value">The value to multiply by.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.UpdateBuilder.PopFirst(System.String)">
@@ -5478,26 +3746,6 @@
             The builder (so method calls can be chained).
             </returns>
         </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.BitwiseXor(System.Linq.Expressions.Expression{System.Func{`0,System.Int32}},System.Int32)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.BitwiseXor(System.Linq.Expressions.Expression{System.Func{`0,System.Int64}},System.Int64)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
         <member name="M:MongoDB.Driver.Builders.Update`1.Combine(System.Collections.Generic.IEnumerable{MongoDB.Driver.IMongoUpdate})">
             <summary>
             Combines several UpdateBuilders into a single UpdateBuilder.
@@ -5514,33 +3762,6 @@
             <param name="updates">The updates to combine.</param>
             <returns>
             A combined UpdateBuilder.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,System.DateTime}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,MongoDB.Bson.BsonDateTime}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,MongoDB.Bson.BsonTimestamp}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
             </returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.Update`1.Inc(System.Linq.Expressions.Expression{System.Func{`0,System.Double}},System.Double)">
@@ -5569,58 +3790,6 @@
             </summary>
             <param name="memberExpression">The member expression.</param>
             <param name="value">The value to increment by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.Max``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},``0)">
-            <summary>
-            Updates the named element if and only if the provided value is greater than its current value (see $max).
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to use.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.Min``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},``0)">
-            <summary>
-            Updates the named element if and only if the provided value is less than its current value (see $max).
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to use.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Double}},System.Double)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Int32}},System.Int32)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.Update`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Int64}},System.Int64)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
             <returns>
             The builder (so method calls can be chained).
             </returns>
@@ -5837,27 +4006,7 @@
             Sets the named element to the bitwise or of its value with another value (see $bit with "or").
             </summary>
             <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to be or-ed with the current value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.BitwiseXor(System.Linq.Expressions.Expression{System.Func{`0,System.Int32}},System.Int32)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.BitwiseXor(System.Linq.Expressions.Expression{System.Func{`0,System.Int64}},System.Int64)">
-            <summary>
-            Sets the named element to the bitwise xor of its value with another value (see $bit with "xor").
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to be xor-ed with the current value.</param>
+            <param name="value">The value to be and-ed with the current value.</param>
             <returns>
             The builder (so method calls can be chained).
             </returns>
@@ -5868,33 +4017,6 @@
             </summary>
             <param name="other">The UpdateBuilder to combine into this one.</param>
             <returns>A combined UpdateBuilder.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,System.DateTime}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,MongoDB.Bson.BsonDateTime}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.CurrentDate(System.Linq.Expressions.Expression{System.Func{`0,MongoDB.Bson.BsonTimestamp}})">
-            <summary>
-            Sets the value of the named element to the current date (see $currentDate).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Inc(System.Linq.Expressions.Expression{System.Func{`0,System.Double}},System.Double)">
             <summary>
@@ -5922,59 +4044,6 @@
             </summary>
             <param name="memberExpression">The member expression.</param>
             <param name="value">The value to increment by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Max``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},``0)">
-            <summary>
-            Updates the named element if and only if the provided value is greater than its current value (see $max).
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to use.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-            <exception cref="T:System.ArgumentNullException">memberExpression</exception>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Min``1(System.Linq.Expressions.Expression{System.Func{`0,``0}},``0)">
-            <summary>
-            Updates the named element if and only if the provided value is less than its current value (see $max).
-            </summary>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to use.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Double}},System.Double)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Int32}},System.Int32)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
-            <returns>
-            The builder (so method calls can be chained).
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Builders.UpdateBuilder`1.Mul(System.Linq.Expressions.Expression{System.Func{`0,System.Int64}},System.Int64)">
-            <summary>
-            Multiplies the named element by a value (see $mul).
-            </summary>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value to multiply by.</param>
             <returns>
             The builder (so method calls can be chained).
             </returns>
@@ -6196,31 +4265,15 @@
             Gets the Ok value from the response.
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.CommandResult.ServerInstance">
-            <summary>
-            Gets the server instance this command was executed on.
-            </summary>
-            <value>
-            The server instance.
-            </value>
-        </member>
         <member name="M:MongoDB.Driver.AggregateResult.#ctor(MongoDB.Bson.BsonDocument)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.AggregateResult"/> class.
             </summary>
             <param name="response">The response.</param>
         </member>
-        <member name="P:MongoDB.Driver.AggregateResult.CursorId">
-            <summary>
-            Gets the cursor id.
-            </summary>
-            <value>
-            The cursor id.
-            </value>
-        </member>
         <member name="P:MongoDB.Driver.AggregateResult.ResultDocuments">
             <summary>
-            Gets the result documents (either the Inline results or the first batch if a cursor was used).
+            Gets the results of the aggregation.
             </summary>
         </member>
         <member name="T:MongoDB.Driver.CollectionSystemFlags">
@@ -7006,11 +5059,6 @@
             Gets the last error message (null if none).
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.GetLastErrorResult.Upserted">
-            <summary>
-            Gets the _id of an upsert that resulted in an insert.
-            </summary>
-        </member>
         <member name="P:MongoDB.Driver.GetLastErrorResult.UpdatedExisting">
             <summary>
             Gets whether the last command updated an existing document.
@@ -7126,30 +5174,6 @@
             The length of the max message.
             </value>
         </member>
-        <member name="P:MongoDB.Driver.IsMasterResult.MaxWireVersion">
-            <summary>
-            Gets the max wire version.
-            </summary>
-            <value>
-            The max wire version.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.IsMasterResult.MinWireVersion">
-            <summary>
-            Gets the min wire version.
-            </summary>
-            <value>
-            The min wire version.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.IsMasterResult.MaxWriteBatchSize">
-            <summary>
-            Gets the maximum size of the write batch.
-            </summary>
-            <value>
-            The maximum size of the write batch.
-            </value>
-        </member>
         <member name="P:MongoDB.Driver.IsMasterResult.Message">
             <summary>
             Gets the message.
@@ -7181,11 +5205,6 @@
         <member name="P:MongoDB.Driver.IsMasterResult.Tags">
             <summary>
             Gets the tags.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.IsMasterResult.ReplicaSetConfigVersion">
-            <summary>
-             Gets the replica set config version if present. If not returns null
             </summary>
         </member>
         <member name="T:MongoDB.Driver.ValidateCollectionResult">
@@ -7391,60 +5410,30 @@
             The server is a shard router (mongos).
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism">
+        <member name="T:MongoDB.Driver.Communication.Security.IAuthenticationProtocol">
             <summary>
-            Implements the SASL-PLAIN rfc: http://tools.ietf.org/html/rfc4616.
+            Authenticates a MongoConnection.
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.Communication.Security.ISaslMechanism">
+        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.Authenticate(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
-            Represents a sasl mechanism.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.CanUse(MongoDB.Driver.MongoCredential)">
-            <summary>
-            Determines whether this instance can authenticate with the specified credential.
-            </summary>
-            <param name="credential">The credential.</param>
-            <returns>
-              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
-            <summary>
-            Initializes the mechanism.
+            Authenticates the specified connection with the given credential.
             </summary>
             <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
-            <returns>The initial step.</returns>
         </member>
-        <member name="P:MongoDB.Driver.Communication.Security.ISaslMechanism.Name">
+        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
             <summary>
-            Gets the name of the mechanism.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism.CanUse(MongoDB.Driver.MongoCredential)">
-            <summary>
-            Determines whether this instance can authenticate with the specified credential.
+            Determines whether this instance can use the specified credential.
             </summary>
             <param name="credential">The credential.</param>
             <returns>
-              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
+              <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
             </returns>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+        <member name="P:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.Name">
             <summary>
-            Initializes the mechanism.
-            </summary>
-            <param name="connection">The connection.</param>
-            <param name="credential">The credential.</param>
-            <returns>
-            The initial step.
-            </returns>
-        </member>
-        <member name="P:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism.Name">
-            <summary>
-            Gets the name of the mechanism.
+            Gets the name.
             </summary>
         </member>
         <member name="T:MongoDB.Driver.Communication.Security.Mechanisms.SaslImplementationBase">
@@ -7735,14 +5724,12 @@
             Implements the GssApi specification using the Gsasl library.
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GsaslGssapiImplementation.#ctor(System.String,System.String,System.String,System.String,MongoDB.Driver.MongoIdentityEvidence)">
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GsaslGssapiImplementation.#ctor(System.String,System.String,MongoDB.Driver.MongoIdentityEvidence)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.Communication.Security.Mechanisms.GsaslGssapiImplementation"/> class.
             </summary>
-            <param name="serviceName">Name of the service.</param>
             <param name="hostName">Name of the host.</param>
             <param name="username">The username.</param>
-            <param name="hostRealm">The realm.</param>
             <param name="evidence">The evidence.</param>
         </member>
         <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GsaslGssapiImplementation.GetProperties">
@@ -7754,6 +5741,33 @@
         <member name="T:MongoDB.Driver.Communication.Security.Mechanisms.GssapiMechanism">
             <summary>
             A mechanism implementing the GSS API specification.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.Communication.Security.ISaslMechanism">
+            <summary>
+            Represents a sasl mechanism.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.CanUse(MongoDB.Driver.MongoCredential)">
+            <summary>
+            Determines whether this instance can authenticate with the specified credential.
+            </summary>
+            <param name="credential">The credential.</param>
+            <returns>
+              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+            <summary>
+            Initializes the mechanism.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="credential">The credential.</param>
+            <returns>The initial step.</returns>
+        </member>
+        <member name="P:MongoDB.Driver.Communication.Security.ISaslMechanism.Name">
+            <summary>
+            Gets the name of the mechanism.
             </summary>
         </member>
         <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GssapiMechanism.CanUse(MongoDB.Driver.MongoCredential)">
@@ -7784,13 +5798,11 @@
             Implements the GSS API specification on Windows utilizing the native sspi libraries.
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.WindowsGssapiImplementation.#ctor(System.String,System.String,System.String,System.String,MongoDB.Driver.MongoIdentityEvidence)">
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.WindowsGssapiImplementation.#ctor(System.String,System.String,MongoDB.Driver.MongoIdentityEvidence)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.Communication.Security.Mechanisms.WindowsGssapiImplementation"/> class.
             </summary>
-            <param name="serviceName">Name of the service.</param>
             <param name="hostName">Name of the host.</param>
-            <param name="hostRealm">The domain.</param>
             <param name="username">The username.</param>
             <param name="evidence">The evidence.</param>
         </member>
@@ -7811,6 +5823,31 @@
             <summary>
             An exception thrown during login and privilege negotiation.
             </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoException">
+            <summary>
+            Represents a MongoDB exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the MongoException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the MongoException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
         </member>
         <member name="M:MongoDB.Driver.Communication.Security.MongoSecurityException.#ctor(System.String)">
             <summary>
@@ -8355,17 +6392,6 @@
             http://msdn.microsoft.com/en-us/library/windows/desktop/aa375211(v=vs.85).aspx
             </remarks>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.EnumerateSecurityPackages(System.UInt32@,System.IntPtr@)">
-            <summary>
-            Enumerates the security packages.
-            </summary>
-            <param name="numPackages">The pc packages.</param>
-            <param name="securityPackageInfoArray">The pp package information.</param>
-            <returns>A result code.</returns>
-            <remarks>
-            http://msdn.microsoft.com/en-us/library/aa375397%28v=VS.85%29.aspx
-            </remarks>
-        </member>
         <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.EncryptMessage(MongoDB.Driver.Communication.Security.Mechanisms.Sspi.SspiHandle@,MongoDB.Driver.Communication.Security.Mechanisms.Sspi.EncryptQualityOfProtection,MongoDB.Driver.Communication.Security.Mechanisms.Sspi.SecurityBufferDescriptor@,System.UInt32)">
             <summary>
             Encrypts the message.
@@ -8377,16 +6403,6 @@
             <returns>A result code.</returns>
             <remarks>
             http://msdn.microsoft.com/en-us/library/windows/desktop/aa375378(v=vs.85).aspx
-            </remarks>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.FreeContextBuffer(System.IntPtr@)">
-            <summary>
-            Frees the context buffer.
-            </summary>
-            <param name="contextBuffer">The context buffer.</param>
-            <returns>A result code.</returns>
-            <remarks>
-            http://msdn.microsoft.com/en-us/library/aa375416(v=vs.85).aspx
             </remarks>
         </member>
         <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.Sspi.Win32.FreeCredentialsHandle(MongoDB.Driver.Communication.Security.Mechanisms.Sspi.SspiHandle@)">
@@ -8492,191 +6508,6 @@
             <summary>
             Do not take a write lock.
             </summary>
-        </member>
-        <member name="T:MongoDB.Driver.FindAndRemoveArgs">
-            <summary>
-            Represents options for the FindAndRemove command.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndRemoveArgs.Fields">
-            <summary>
-            Gets or sets the fields specification.
-            </summary>
-            <value>
-            The fields specification.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndRemoveArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndRemoveArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindAndRemoveArgs.SortBy">
-            <summary>
-            Gets or sets the sort specification.
-            </summary>
-            <value>
-            The sort specification.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.FindOneArgs">
-            <summary>
-            Represents arguments to the FindOne method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.Fields">
-            <summary>
-            Gets or sets the fields.
-            </summary>
-            <value>
-            The fields.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.Hint">
-            <summary>
-            Gets or sets the hint.
-            </summary>
-            <value>
-            The hint.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.ReadPreference">
-            <summary>
-            Gets or sets the read preference.
-            </summary>
-            <value>
-            The read preference.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.SerializationOptions">
-            <summary>
-            Gets or sets the serialization options.
-            </summary>
-            <value>
-            The serialization options.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.Serializer">
-            <summary>
-            Gets or sets the serializer.
-            </summary>
-            <value>
-            The serializer.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.Skip">
-            <summary>
-            Gets or sets the skip.
-            </summary>
-            <value>
-            The skip.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.FindOneArgs.SortBy">
-            <summary>
-            Gets or sets the sort order.
-            </summary>
-            <value>
-            The sort order.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.GeoHaystackSearchArgs">
-            <summary>
-            Represents the arguments to the GeoHaystackSearch method.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.GeoHaystackSearchArgs.SetAdditionalField(System.String,MongoDB.Bson.BsonValue)">
-            <summary>
-            Sets the name and value of the additional field.
-            </summary>
-            <param name="name">Name of the additional field.</param>
-            <param name="value">The value.</param>
-            <returns>The args so calls can be chained.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.GeoHaystackSearchArgs.SetAdditionalField``2(System.Linq.Expressions.Expression{System.Func{``0,``1}},``1)">
-            <summary>
-            Sets the name and value of the additional field.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-            <typeparam name="TMember">The type of the member.</typeparam>
-            <param name="memberExpression">The member expression.</param>
-            <param name="value">The value.</param>
-            <returns>The args so calls can be chained.</returns>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.AdditionalFieldName">
-            <summary>
-            Gets or sets the name of the additional field.
-            </summary>
-            <value>
-            The name of the additional field.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.AdditionalFieldValue">
-            <summary>
-            Gets or sets the additional field value.
-            </summary>
-            <value>
-            The additional field value.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.Limit">
-            <summary>
-            Gets or sets the limit.
-            </summary>
-            <value>
-            The limit.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.MaxDistance">
-            <summary>
-            Gets or sets the max distance.
-            </summary>
-            <value>
-            The max distance.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoHaystackSearchArgs.Near">
-            <summary>
-            Gets or sets the location near which to search.
-            </summary>
-            <value>
-            The location near which to search.
-            </value>
         </member>
         <member name="T:MongoDB.Driver.GeoJsonObjectModel.GeoJson">
             <summary>
@@ -10952,255 +8783,6 @@
             <param name="value">The object.</param>
             <param name="options">The serialization options.</param>
         </member>
-        <member name="T:MongoDB.Driver.GeoNearArgs">
-            <summary>
-            Represents the arguments to the GeoNear method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.DistanceMultiplier">
-            <summary>
-            Gets or sets the distance multiplier.
-            </summary>
-            <value>
-            The distance multiplier.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.IncludeLocs">
-            <summary>
-            Gets or sets whether to include locations in the results.
-            </summary>
-            <value>
-            Whether to include locations in the results.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.Limit">
-            <summary>
-            Gets or sets the limit.
-            </summary>
-            <value>
-            The limit.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.MaxDistance">
-            <summary>
-            Gets or sets the max distance.
-            </summary>
-            <value>
-            The max distance.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.Near">
-            <summary>
-            Gets or sets the location near which to search.
-            </summary>
-            <value>
-            The location near which to search.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.Spherical">
-            <summary>
-            Gets or sets whether the search is on a spherical surface.
-            </summary>
-            <value>
-            Whether the search is on a spherical surface.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearArgs.UniqueDocs">
-            <summary>
-            Gets or sets whether to only return a document once even if matches multiple times.
-            </summary>
-            <value>
-            Whether to only return a document once even if matches multiple times.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.GeoNearPoint">
-            <summary>
-            Represents a GeoNearPoint (wraps either an XYPoint or a GeoJsonPoint).
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.op_Implicit(MongoDB.Driver.XYPoint)~MongoDB.Driver.GeoNearPoint">
-            <summary>
-            Implicit conversion to wrap an XYPoint in a GeoNearPoint value.
-            </summary>
-            <param name="value">The value.</param>
-            <returns>A GeoNearPoint value.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.op_Implicit(MongoDB.Driver.GeoJsonObjectModel.GeoJsonPoint{MongoDB.Driver.GeoJsonObjectModel.GeoJson2DCoordinates})~MongoDB.Driver.GeoNearPoint">
-            <summary>
-            Implicit conversion to wrap a 2D GeoJson point in a GeoNearPoint value.
-            </summary>
-            <param name="value">The value.</param>
-            <returns>A GeoNearPoint value.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.op_Implicit(MongoDB.Driver.GeoJsonObjectModel.GeoJsonPoint{MongoDB.Driver.GeoJsonObjectModel.GeoJson2DGeographicCoordinates})~MongoDB.Driver.GeoNearPoint">
-            <summary>
-            Implicit conversion to wrap a 2D GeoJson point in a GeoNearPoint value.
-            </summary>
-            <param name="value">The value.</param>
-            <returns>A GeoNearPoint value.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.op_Implicit(MongoDB.Driver.GeoJsonObjectModel.GeoJsonPoint{MongoDB.Driver.GeoJsonObjectModel.GeoJson2DProjectedCoordinates})~MongoDB.Driver.GeoNearPoint">
-            <summary>
-            Implicit conversion to wrap a 2D GeoJson point in a GeoNearPoint value.
-            </summary>
-            <param name="value">The value.</param>
-            <returns>A GeoNearPoint value.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.ToGeoNearCommandValue">
-            <summary>
-            Converts the GeoNearPoint into a BsonValue for the GeoNear command.
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="T:MongoDB.Driver.GeoNearPoint.Legacy">
-            <summary>
-            Represents a GeoNearPoint that wraps an XYPoint.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.Legacy.#ctor(MongoDB.Driver.XYPoint)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.GeoNearPoint.Legacy"/> class.
-            </summary>
-            <param name="value">The value.</param>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.Legacy.ToGeoNearCommandValue">
-            <summary>
-            Converts the GeoNearPoint into a BsonValue for the GeoNear command.
-            </summary>
-            <returns>A BsonValue.</returns>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearPoint.Legacy.Value">
-            <summary>
-            Gets the value.
-            </summary>
-            <value>
-            The value.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.GeoNearPoint.GeoJson`1">
-            <summary>
-            Represents a GeoNearPoint that wraps a GeoJsonPoint.
-            </summary>
-            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.GeoJson`1.#ctor(MongoDB.Driver.GeoJsonObjectModel.GeoJsonPoint{`0})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.GeoNearPoint.GeoJson`1"/> class.
-            </summary>
-            <param name="value">The value.</param>
-        </member>
-        <member name="M:MongoDB.Driver.GeoNearPoint.GeoJson`1.ToGeoNearCommandValue">
-            <summary>
-            Converts the GeoNearPoint into a BsonValue for the GeoNear command.
-            </summary>
-            <returns>A BsonValue.</returns>
-        </member>
-        <member name="P:MongoDB.Driver.GeoNearPoint.GeoJson`1.Value">
-            <summary>
-            Gets the value.
-            </summary>
-            <value>
-            The value.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.GetStatsArgs">
-            <summary>
-            Represents arguments for the GetStats command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.GetStatsArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GetStatsArgs.Scale">
-            <summary>
-            Gets or sets the scale.
-            </summary>
-            <value>
-            The scale.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.GroupArgs">
-            <summary>
-            Represents arguments for the Group command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.FinalizeFunction">
-            <summary>
-            Gets or sets the finalize function.
-            </summary>
-            <value>
-            The finalize function.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.Initial">
-            <summary>
-            Gets or sets the initial value of the aggregation result document.
-            </summary>
-            <value>
-            The initial value of the aggregation result document.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.KeyFields">
-            <summary>
-            Gets or sets the key fields.
-            </summary>
-            <value>
-            The key fields.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.KeyFunction">
-            <summary>
-            Gets or sets the key function.
-            </summary>
-            <value>
-            The key function.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.GroupArgs.ReduceFunction">
-            <summary>
-            Gets or sets the reduce function.
-            </summary>
-            <value>
-            The reduce function.
-            </value>
-        </member>
         <member name="T:MongoDB.Driver.InsertFlags">
             <summary>
             Flags used with the Insert method in MongoCollection.
@@ -11230,156 +8812,6 @@
             <summary>
             A marker interface that represents a scope (a set of variables with values, see ScopeDocument).
             </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MapReduceOutputMode">
-            <summary>
-            Represents the output mode for a map reduce operation.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.MapReduceOutputMode.Inline">
-            <summary>
-            The output of the map reduce operation is returned inline.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.MapReduceOutputMode.Replace">
-            <summary>
-            The output of the map reduce operation replaces an existing collection.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.MapReduceOutputMode.Merge">
-            <summary>
-            The output of the map reduce operation is merged with an existing collection.
-            </summary>
-        </member>
-        <member name="F:MongoDB.Driver.MapReduceOutputMode.Reduce">
-            <summary>
-            The output of the map reduce operation is merged with an existing collection using the reduce function.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MapReduceArgs">
-            <summary>
-            Represents arguments for the MapReduce command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.FinalizeFunction">
-            <summary>
-            Gets or sets the finalize function.
-            </summary>
-            <value>
-            The finalize function.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.JsMode">
-            <summary>
-            Gets or sets the JavaScript mode (if true all intermediate values are kept in memory as JavaScript objects).
-            </summary>
-            <value>
-            The JavaScript mode.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.Limit">
-            <summary>
-            Gets or sets the limit.
-            </summary>
-            <value>
-            The limit.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.MapFunction">
-            <summary>
-            Gets or sets the map function.
-            </summary>
-            <value>
-            The map function.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.OutputCollectionName">
-            <summary>
-            Gets or sets the name of the output collection.
-            </summary>
-            <value>
-            The name of the output collection.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.OutputDatabaseName">
-            <summary>
-            Gets or sets the name of the output database.
-            </summary>
-            <value>
-            The name of the output database.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.OutputIsNonAtomic">
-            <summary>
-            Gets or sets whether Merge and Reduce output should not be atomic.
-            </summary>
-            <value>
-            Whether Merge and Reduce output should not be atomic.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.OutputIsSharded">
-            <summary>
-            Gets or sets whether the output is sharded.
-            </summary>
-            <value>
-            Whether the output is sharded.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.OutputMode">
-            <summary>
-            Gets or sets the output mode.
-            </summary>
-            <value>
-            The output mode.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.ReduceFunction">
-            <summary>
-            Gets or sets the reduce function.
-            </summary>
-            <value>
-            The reduce function.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.Scope">
-            <summary>
-            Gets or sets the scope (variables available to the map/reduce functions);
-            </summary>
-            <value>
-            The scope.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.SortBy">
-            <summary>
-            Gets or sets the sort order.
-            </summary>
-            <value>
-            The sort order.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MapReduceArgs.Verbose">
-            <summary>
-            Gets or sets whether to include extra information in the result (like timing).
-            </summary>
-            <value>
-            Whether to include extra information in the result (like timing).
-            </value>
         </member>
         <member name="T:MongoDB.Driver.MongoClient">
             <summary>
@@ -12317,18 +9749,6 @@
             Checks whether the server is alive (throws an exception if not).
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.MongoServerInstance.RefreshStateAsSoonAsPossible">
-            <summary>
-            Refreshes the state as soon as possible.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoServerInstance.Supports(MongoDB.Driver.FeatureId)">
-            <summary>
-            Checks whether this server instance supports a feature.
-            </summary>
-            <param name="featureId">The id of the feature.</param>
-            <returns>True if this server instance supports the feature; otherwise, false.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoServerInstance.VerifyState">
             <summary>
             Verifies the state of the server instance.
@@ -12407,7 +9827,7 @@
         </member>
         <member name="P:MongoDB.Driver.MongoServerInstance.BuildInfo">
             <summary>
-            Gets the build info of this server instance.
+            Gets the version of this server instance.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.MongoServerInstance.ConnectException">
@@ -12455,22 +9875,6 @@
             Gets the max message length for this server instance.
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.MongoServerInstance.MaxWireDocumentSize">
-            <summary>
-            Gets the maximum size of a wire document. Normally slightly larger than MaxDocumentSize.
-            </summary>
-            <value>
-            The  maximum size of a wire document.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.MongoServerInstance.MaxBatchCount">
-            <summary>
-            Gets the maximum batch count for write operations.
-            </summary>
-            <value>
-            The maximum batch count.
-            </value>
-        </member>
         <member name="P:MongoDB.Driver.MongoServerInstance.SequentialId">
             <summary>
             Gets the unique sequential Id for this server instance.
@@ -12484,11 +9888,6 @@
         <member name="P:MongoDB.Driver.MongoServerInstance.State">
             <summary>
             Gets the state of this server instance.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.MongoServerInstance.IsCompatible">
-            <summary>
-            Gets a value indicating whether the server is compatible with the driver.
             </summary>
         </member>
         <member name="T:MongoDB.Driver.MongoServerSettings">
@@ -12843,11 +10242,6 @@
         <member name="P:MongoDB.Driver.MongoUrlBuilder.FSync">
             <summary>
             Gets or sets the FSync component of the write concern.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.MongoUrlBuilder.GssapiServiceName">
-            <summary>
-            Gets or sets the GSSAPI service name.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.MongoUrlBuilder.GuidRepresentation">
@@ -13535,113 +10929,6 @@
             Gets whether the tag set has been frozen to prevent further changes.
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.DeleteRequest">
-            <summary>
-            Represents a request to delete one or more documents.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.DeleteRequest.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.DeleteRequest"/> class.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.DeleteRequest.#ctor(MongoDB.Driver.IMongoQuery)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.DeleteRequest"/> class.
-            </summary>
-            <param name="query">The query.</param>
-        </member>
-        <member name="P:MongoDB.Driver.DeleteRequest.Limit">
-            <summary>
-            Gets or sets the limit.
-            </summary>
-            <value>
-            The limit.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.DeleteRequest.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.UpdateRequest">
-            <summary>
-            Represents a request to update one or more documents.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.UpdateRequest.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.UpdateRequest"/> class.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.UpdateRequest.#ctor(MongoDB.Driver.IMongoQuery,MongoDB.Driver.IMongoUpdate)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.UpdateRequest"/> class.
-            </summary>
-            <param name="query">The query.</param>
-            <param name="update">The update.</param>
-        </member>
-        <member name="P:MongoDB.Driver.UpdateRequest.IsMultiUpdate">
-            <summary>
-            Gets or sets a value indicating whether this update request should affect multiple documents.
-            </summary>
-            <value>
-            <c>true</c> if this request should affect multiple documents; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.UpdateRequest.IsUpsert">
-            <summary>
-            Gets or sets a value indicating whether this update request should insert the record if it doesn't already exist.
-            </summary>
-            <value>
-              <c>true</c> if this update request should insert the record if it doesn't already exis; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.UpdateRequest.Query">
-            <summary>
-            Gets or sets the query.
-            </summary>
-            <value>
-            The query.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.UpdateRequest.Update">
-            <summary>
-            Gets or sets the update.
-            </summary>
-            <value>
-            The update.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.ServerInstanceConnectionProvider">
-            <summary>
-            Represents a provider of connections to a specific server instance.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.ServerInstanceConnectionProvider.#ctor(MongoDB.Driver.MongoServerInstance)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.ServerInstanceConnectionProvider"/> class.
-            </summary>
-            <param name="serverInstance">The server instance.</param>
-            <exception cref="T:System.ArgumentNullException">serverInstance</exception>
-        </member>
-        <member name="M:MongoDB.Driver.ServerInstanceConnectionProvider.AcquireConnection">
-            <summary>
-            Acquires a connection.
-            </summary>
-            <returns>
-            A connection.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.ServerInstanceConnectionProvider.ReleaseConnection(MongoDB.Driver.Internal.MongoConnection)">
-            <summary>
-            Releases a connection.
-            </summary>
-            <param name="connection">The connection.</param>
-        </member>
         <member name="T:MongoDB.Driver.Setting`1">
             <summary>
             Represents a setting that may or may not have been set.
@@ -14090,112 +11377,6 @@
             <summary>
             Gets the instance.
             </summary>
-        </member>
-        <member name="T:MongoDB.Driver.UnacknowledgedBulkWriteResult">
-            <summary>
-            Represents the result of an unacknowledged BulkWrite operation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.UnacknowledgedBulkWriteResult.#ctor(System.Int32,System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.AcknowledgedBulkWriteResult"/> class.
-            </summary>
-            <param name="requestCount">The request count.</param>
-            <param name="processedRequests">The processed requests.</param>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.DeletedCount">
-            <summary>
-            Gets the number of documents that were deleted.
-            </summary>
-            <value>
-            The number of document that were deleted.
-            </value>
-            <exception cref="T:System.NotSupportedException">Only acknowledged writes support the DeletedCount property.</exception>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.InsertedCount">
-            <summary>
-            Gets the number of documents that were inserted.
-            </summary>
-            <value>
-            The number of document that were inserted.
-            </value>
-            <exception cref="T:System.NotSupportedException">Only acknowledged writes support the InsertedCount property.</exception>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.IsModifiedCountAvailable">
-            <summary>
-            Gets a value indicating whether the modified count is available.
-            </summary>
-            <remarks>
-            The modified count is only available when all servers have been upgraded to 2.6 or above.
-            </remarks>
-            <value>
-            <c>true</c> if the modified count is available; otherwise, <c>false</c>.
-            </value>
-            <exception cref="T:System.NotImplementedException"></exception>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.MatchedCount">
-            <summary>
-            Gets the number of documents that were matched.
-            </summary>
-            <value>
-            The number of document that were matched
-            .
-            </value>
-            <exception cref="T:System.NotSupportedException">Only acknowledged writes support the MatchedCount property.</exception>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.ModifiedCount">
-            <summary>
-            Gets the number of documents that were actually modified during an update.
-            </summary>
-            <value>
-            The number of document that were actually modified during an update.
-            </value>
-            <exception cref="T:System.NotSupportedException">Only acknowledged writes support the ModifiedCount property.</exception>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.IsAcknowledged">
-            <summary>
-            Gets a value indicating whether the bulk write operation was acknowledged.
-            </summary>
-            <value>
-            <c>true</c> if the bulk write operation was acknowledged; otherwise, <c>false</c>.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.UnacknowledgedBulkWriteResult.Upserts">
-            <summary>
-            Gets a list with information about each request that resulted in an upsert.
-            </summary>
-            <value>
-            The list with information about each request that resulted in an upsert.
-            </value>
-        </member>
-        <member name="T:MongoDB.Driver.ValidateCollectionArgs">
-            <summary>
-            Represents arguments for the Validate collection command helper method.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.ValidateCollectionArgs.Full">
-            <summary>
-            Gets or sets whether to do a more thorough scan of the data.
-            </summary>
-            <value>
-            Whether to do a more thorough scan of the data.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ValidateCollectionArgs.MaxTime">
-            <summary>
-            Gets or sets the max time.
-            </summary>
-            <value>
-            The max time.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.ValidateCollectionArgs.ScanData">
-            <summary>
-            Gets or sets whether to scan the data.
-            </summary>
-            <value>
-            Whether to scan the data.
-            </value>
         </member>
         <member name="T:MongoDB.Driver.Wrappers.BaseWrapper">
             <summary>
@@ -15618,14 +12799,6 @@
             </summary>
             <returns>The hash code.</returns>
         </member>
-        <member name="M:MongoDB.Driver.WriteConcern.ToBsonDocument">
-            <summary>
-            Converts this object to a BsonDocument.
-            </summary>
-            <returns>
-            A BsonDocument.
-            </returns>
-        </member>
         <member name="M:MongoDB.Driver.WriteConcern.ToString">
             <summary>
             Returns a string representation of the WriteConcern.
@@ -15640,11 +12813,6 @@
         <member name="P:MongoDB.Driver.WriteConcern.Unacknowledged">
             <summary>
             Gets an instance of WriteConcern that doesn't acknowledge writes.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcern.W1">
-            <summary>
-            Gets an instance of WriteConcern where w=1.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.W2">
@@ -15674,7 +12842,7 @@
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.FSync">
             <summary>
-            Gets or sets whether the write concern includes { fsync : true }.
+            Gets or sets whether to wait for an fsync to complete.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.IsFrozen">
@@ -15684,7 +12852,7 @@
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.Journal">
             <summary>
-            Gets or sets whether the write concern includes { j : true }.
+            Gets or sets whether to wait for journal commit.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.W">
@@ -15847,6 +13015,49 @@
             <param name="info">The SerializationInfo.</param>
             <param name="context">The StreamingContext.</param>
         </member>
+        <member name="T:MongoDB.Driver.MongoCommandException">
+            <summary>
+            Represents a MongoDB command exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="commandResult">The command result (an error message will be constructed using the result).</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="commandResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.CommandResult">
+            <summary>
+            Gets the command result.
+            </summary>
+        </member>
         <member name="T:MongoDB.Driver.MongoConnectionException">
             <summary>
             Represents a MongoDB connection exception.
@@ -15868,6 +13079,44 @@
         <member name="M:MongoDB.Driver.MongoConnectionException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
             <summary>
             Initializes a new instance of the MongoConnectionException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="T:MongoDB.Driver.WriteConcernException">
+            <summary>
+            Represents a get last error exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoSafeModeException">
+            <summary>
+            Represents a MongoDB safe mode exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.String,MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoSafeModeException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="commandResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoSafeModeException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.String,MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the WriteConcernException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="commandResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
             </summary>
             <param name="info">The SerializationInfo.</param>
             <param name="context">The StreamingContext.</param>
@@ -16644,7 +13893,7 @@
             Information about a replica set member.
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.Internal.ReplicaSetInformation.#ctor(System.String,MongoDB.Driver.MongoServerAddress,System.Collections.Generic.IEnumerable{MongoDB.Driver.MongoServerAddress},MongoDB.Driver.ReplicaSetTagSet,System.Nullable{System.Int32})">
+        <member name="M:MongoDB.Driver.Internal.ReplicaSetInformation.#ctor(System.String,MongoDB.Driver.MongoServerAddress,System.Collections.Generic.IEnumerable{MongoDB.Driver.MongoServerAddress},MongoDB.Driver.ReplicaSetTagSet)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.Internal.ReplicaSetInformation"/> class.
             </summary>
@@ -16652,7 +13901,6 @@
             <param name="primary">The primary.</param>
             <param name="members">The members.</param>
             <param name="tagSet">The tag set.</param>
-            <param name="configVersion">The replica set config version if available</param>
         </member>
         <member name="M:MongoDB.Driver.Internal.ReplicaSetInformation.op_Equality(MongoDB.Driver.Internal.ReplicaSetInformation,MongoDB.Driver.Internal.ReplicaSetInformation)">
             <summary>
@@ -16731,11 +13979,6 @@
             Gets the tag set.
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.Internal.ReplicaSetInformation.ConfigVersion">
-            <summary>
-            Gets the replica set config version if available
-            </summary>
-        </member>
         <member name="T:MongoDB.Driver.Internal.ReplicaSetMongoServerProxy">
             <summary>
             Proxy for connecting to a replica set.
@@ -16785,7 +14028,7 @@
             </summary>
             <param name="instance">The instance.</param>
         </member>
-        <member name="M:MongoDB.Driver.Internal.ReplicaSetMongoServerProxy.GetMatchingInstance(System.Collections.Generic.List{MongoDB.Driver.Internal.ConnectedInstanceCollection.CachedInstance},MongoDB.Driver.ReadPreference,System.TimeSpan)">
+        <member name="M:MongoDB.Driver.Internal.ReplicaSetMongoServerProxy.GetMatchingInstance(System.Collections.Generic.List{MongoDB.Driver.Internal.ConnectedInstanceCollection.InstanceWithPingTime},MongoDB.Driver.ReadPreference,System.TimeSpan)">
             <summary>
             Gets a randomly selected matching instance.
             </summary>
@@ -18147,27 +15390,12 @@
             <param name="text">The string to get the MD5 hash of.</param>
             <returns>The MD5 hash.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoUtils.TimeSpanFromMicroseconds(System.Int64)">
-            <summary>
-            Creates a TimeSpan from microseconds.
-            </summary>
-            <param name="microseconds">The microseconds.</param>
-            <returns>The TimeSpan.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoUtils.ToCamelCase(System.String)">
             <summary>
             Converts a string to camel case by lower casing the first letter (only the first letter is modified).
             </summary>
             <param name="value">The string to camel case.</param>
             <returns>The camel cased string.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoUtils.ToInsecureString(System.Security.SecureString)">
-            <summary>
-            Should only be used when the safety of the data cannot be guaranteed.  For instance,
-            when the secure string is a password used in a plain text protocol.
-            </summary>
-            <param name="secureString">The secure string.</param>
-            <returns>The CLR string.</returns>
         </member>
         <member name="T:MongoDB.Driver.MongoDefaults">
             <summary>
@@ -18199,11 +15427,6 @@
             Gets or sets the representation to use for Guids (this is an alias for BsonDefaults.GuidRepresentation).
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.MongoDefaults.MaxBatchCount">
-            <summary>
-            Gets or sets the maximum batch count.
-            </summary>
-        </member>
         <member name="P:MongoDB.Driver.MongoDefaults.MaxConnectionIdleTime">
             <summary>
             Gets or sets the max connection idle time.
@@ -18221,7 +15444,7 @@
         </member>
         <member name="P:MongoDB.Driver.MongoDefaults.MaxDocumentSize">
             <summary>
-            Gets or sets the max document size
+            Gets or sets the max document size (this is an alias for BsonDefaults.MaxDocumentSize).
             </summary>
         </member>
         <member name="P:MongoDB.Driver.MongoDefaults.MaxMessageLength">
@@ -18354,6 +15577,7 @@
             <summary>
             Creates or opens a GridFS file for writing UTF-8 encoded text.
             </summary>
+            <param name="remoteFileName">The remote file name.</param>
             <returns>A stream writer.</returns>
         </member>
         <member name="M:MongoDB.Driver.GridFS.MongoGridFS.CreateText(System.String,MongoDB.Driver.GridFS.MongoGridFSCreateOptions)">
@@ -19250,6 +16474,11 @@
             Connected to a subset of the replica set members.
             </summary>
         </member>
+        <member name="F:MongoDB.Driver.MongoServerState.Unknown">
+            <summary>
+            The state is temporarily unknown.
+            </summary>
+        </member>
         <member name="F:MongoDB.Driver.MongoServerState.Disconnecting">
             <summary>
             Disconnecting from the server (in progress).
@@ -19308,59 +16537,25 @@
             <param name="name">The name of the collection.</param>
             <param name="settings">The settings to use to access this collection.</param>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.Aggregate(MongoDB.Driver.AggregateArgs)">
-            <summary>
-            Represents an aggregate framework query. The command is not sent to the server until the result is enumerated.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A sequence of documents.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection.Aggregate(System.Collections.Generic.IEnumerable{MongoDB.Bson.BsonDocument})">
             <summary>
             Runs an aggregation framework command.
             </summary>
-            <param name="pipeline">The pipeline operations.</param>
-            <returns>
-            An AggregateResult.
-            </returns>
+            <param name="operations">The pipeline operations.</param>
+            <returns>An AggregateResult.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Aggregate(MongoDB.Bson.BsonDocument[])">
             <summary>
             Runs an aggregation framework command.
             </summary>
-            <param name="pipeline">The pipeline operations.</param>
+            <param name="operations">The pipeline operations.</param>
             <returns>An AggregateResult.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.AggregateExplain(MongoDB.Driver.AggregateArgs)">
-            <summary>
-            Runs an aggregate command with explain set and returns the explain result.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>The explain result.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.BulkWrite(MongoDB.Driver.BulkWriteArgs)">
-            <summary>
-            Executes multiple write requests.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>
-            A BulkWriteResult.
-            </returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Count">
             <summary>
             Counts the number of documents in this collection.
             </summary>
             <returns>The number of documents in this collection.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.Count(MongoDB.Driver.CountArgs)">
-            <summary>
-            Counts the number of documents in this collection that match a query.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>
-            The number of documents in this collection that match the query.
-            </returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Count(MongoDB.Driver.IMongoQuery)">
             <summary>
@@ -19390,13 +16585,6 @@
             </summary>
             <param name="keyNames">The names of the indexed fields.</param>
             <returns>A WriteConcernResult.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.Distinct``1(MongoDB.Driver.DistinctArgs)">
-            <summary>
-            Returns the distinct values for a given field.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>The distint values of the field.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Distinct(System.String)">
             <summary>
@@ -19544,26 +16732,12 @@
             <param name="upsert">Whether to do an upsert if no matching document is found.</param>
             <returns>A <see cref="T:MongoDB.Driver.FindAndModifyResult"/>.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.FindAndModify(MongoDB.Driver.FindAndModifyArgs)">
-            <summary>
-            Finds one matching document using the supplied arguments and applies the specified update to it.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.FindAndModifyResult"/>.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection.FindAndRemove(MongoDB.Driver.IMongoQuery,MongoDB.Driver.IMongoSortBy)">
             <summary>
             Finds one matching document using the query and sortBy parameters and removes it from this collection.
             </summary>
             <param name="query">The query (usually a QueryDocument or constructed using the Query builder).</param>
             <param name="sortBy">The sort order to select one of the matching documents.</param>
-            <returns>A <see cref="T:MongoDB.Driver.FindAndModifyResult"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.FindAndRemove(MongoDB.Driver.FindAndRemoveArgs)">
-            <summary>
-            Finds one matching document using the supplied args and removes it from this collection.
-            </summary>
-            <param name="args">The args.</param>
             <returns>A <see cref="T:MongoDB.Driver.FindAndModifyResult"/>.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.FindAs``1(MongoDB.Driver.IMongoQuery)">
@@ -19589,14 +16763,6 @@
             <typeparam name="TDocument">The type to deserialize the documents as.</typeparam>
             <returns>A TDocument (or null if not found).</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.FindOneAs``1(MongoDB.Driver.FindOneArgs)">
-            <summary>
-            Returns one document in this collection as a TDocument.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-            <param name="args">The args.</param>
-            <returns>A TDocument (or null if not found).</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection.FindOneAs``1(MongoDB.Driver.IMongoQuery)">
             <summary>
             Returns one document in this collection that matches a query as a TDocument.
@@ -19610,14 +16776,6 @@
             Returns one document in this collection as a TDocument.
             </summary>
             <param name="documentType">The nominal type of the documents.</param>
-            <returns>A document (or null if not found).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.FindOneAs(System.Type,MongoDB.Driver.FindOneArgs)">
-            <summary>
-            Returns one document in this collection as a TDocument.
-            </summary>
-            <param name="documentType">The nominal type of the documents.</param>
-            <param name="args">The args.</param>
             <returns>A document (or null if not found).</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.FindOneAs(System.Type,MongoDB.Driver.IMongoQuery)">
@@ -19654,14 +16812,6 @@
             <param name="options">The options for the geoHaystack search (null if none).</param>
             <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.GeoHaystackSearchAs``1(MongoDB.Driver.GeoHaystackSearchArgs)">
-            <summary>
-            Runs a geoHaystack search command on this collection.
-            </summary>
-            <typeparam name="TDocument">The type of the found documents.</typeparam>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection.GeoHaystackSearchAs(System.Type,System.Double,System.Double,MongoDB.Driver.IMongoGeoHaystackSearchOptions)">
             <summary>
             Runs a geoHaystack search command on this collection.
@@ -19670,22 +16820,6 @@
             <param name="x">The x coordinate of the starting location.</param>
             <param name="y">The y coordinate of the starting location.</param>
             <param name="options">The options for the geoHaystack search (null if none).</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.GeoHaystackSearchAs(System.Type,MongoDB.Driver.GeoHaystackSearchArgs)">
-            <summary>
-            Runs a geoHaystack search command on this collection.
-            </summary>
-            <param name="documentType">The type to deserialize the documents as.</param>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.GeoNearAs``1(MongoDB.Driver.GeoNearArgs)">
-            <summary>
-            Runs a GeoNear command on this collection.
-            </summary>
-            <typeparam name="TDocument">The type to deserialize the documents as.</typeparam>
-            <param name="args">The args.</param>
             <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.GeoNearAs``1(MongoDB.Driver.IMongoQuery,System.Double,System.Double,System.Int32)">
@@ -19709,14 +16843,6 @@
             <param name="y">The y coordinate of the starting location.</param>
             <param name="limit">The maximum number of results returned.</param>
             <param name="options">The GeoNear command options (usually a GeoNearOptionsDocument or constructed using the GeoNearOptions builder).</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.GeoNearAs(System.Type,MongoDB.Driver.GeoNearArgs)">
-            <summary>
-            Runs a GeoNear command on this collection.
-            </summary>
-            <param name="documentType">The type to deserialize the documents as.</param>
-            <param name="args">The args.</param>
             <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.GeoNearAs(System.Type,MongoDB.Driver.IMongoQuery,System.Double,System.Double,System.Int32)">
@@ -19754,13 +16880,6 @@
             </summary>
             <returns>The stats for this collection as a <see cref="T:MongoDB.Driver.CollectionStatsResult"/>.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.GetStats(MongoDB.Driver.GetStatsArgs)">
-            <summary>
-            Gets the stats for this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>The stats for this collection as a <see cref="T:MongoDB.Driver.CollectionStatsResult"/>.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection.GetTotalDataSize">
             <summary>
             Gets the total data size for this collection (data + indexes).
@@ -19772,13 +16891,6 @@
             Gets the total storage size for this collection (data + indexes + overhead).
             </summary>
             <returns>The total storage size.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.Group(MongoDB.Driver.GroupArgs)">
-            <summary>
-            Runs the group command on this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A list of results as BsonDocuments.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Group(MongoDB.Driver.IMongoQuery,MongoDB.Bson.BsonJavaScript,MongoDB.Bson.BsonDocument,MongoDB.Bson.BsonJavaScript,MongoDB.Bson.BsonJavaScript)">
             <summary>
@@ -19833,18 +16945,6 @@
             </summary>
             <param name="indexName">The name of the index.</param>
             <returns>True if the index exists.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.InitializeOrderedBulkOperation">
-            <summary>
-            Creates a fluent builder for an ordered bulk operation.
-            </summary>
-            <returns>A fluent bulk operation builder.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.InitializeUnorderedBulkOperation">
-            <summary>
-            Creates a fluent builder for an unordered bulk operation.
-            </summary>
-            <returns>A fluent bulk operation builder.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.Insert``1(``0)">
             <summary>
@@ -19991,29 +17091,6 @@
             <param name="map">A JavaScript function called for each document.</param>
             <param name="reduce">A JavaScript function called on the values emitted by the map function.</param>
             <returns>A <see cref="T:MongoDB.Driver.MapReduceResult"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.MapReduce(MongoDB.Driver.MapReduceArgs)">
-            <summary>
-            Runs a Map/Reduce command on this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.MapReduceResult"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.ParallelScanAs``1(MongoDB.Driver.ParallelScanArgs)">
-            <summary>
-            Scans an entire collection in parallel using multiple cursors.
-            </summary>
-            <typeparam name="TDocument">The type of the document.</typeparam>
-            <param name="args">The args.</param>
-            <returns>Multiple enumerators, one for each cursor.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection.ParallelScanAs(System.Type,MongoDB.Driver.ParallelScanArgs)">
-            <summary>
-            Scans an entire collection in parallel using multiple cursors.
-            </summary>
-            <param name="documentType">Type of the document.</param>
-            <param name="args">The args.</param>
-            <returns>Multiple enumerators, one for each cursor.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection.ReIndex">
             <summary>
@@ -20181,13 +17258,6 @@
             </summary>
             <returns>A <see cref="T:MongoDB.Driver.ValidateCollectionResult"/>.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection.Validate(MongoDB.Driver.ValidateCollectionArgs)">
-            <summary>
-            Validates the integrity of this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.ValidateCollectionResult"/>.</returns>
-        </member>
         <member name="P:MongoDB.Driver.MongoCollection.Database">
             <summary>
             Gets the database that contains this collection.
@@ -20273,20 +17343,6 @@
             <param name="options">The options for the geoHaystack search (null if none).</param>
             <returns>A <see cref="T:MongoDB.Driver.GeoHaystackSearchResult`1"/>.</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCollection`1.GeoHaystackSearch(MongoDB.Driver.GeoHaystackSearchArgs)">
-            <summary>
-            Runs a geoHaystack search command on this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoHaystackSearchResult`1"/>.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection`1.GeoNear(MongoDB.Driver.GeoNearArgs)">
-            <summary>
-            Runs a GeoNear command on this collection.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>A <see cref="T:MongoDB.Driver.GeoNearResult`1"/>.</returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCollection`1.GeoNear(MongoDB.Driver.IMongoQuery,System.Double,System.Double,System.Int32)">
             <summary>
             Runs a GeoNear command on this collection.
@@ -20353,13 +17409,6 @@
             <param name="documents">The documents to insert.</param>
             <param name="writeConcern">The write concern to use for this Insert.</param>
             <returns>A list of WriteConcernResults (or null if WriteConcern is disabled).</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCollection`1.ParallelScan(MongoDB.Driver.ParallelScanArgs)">
-            <summary>
-            Scans an entire collection in parallel using multiple cursors.
-            </summary>
-            <param name="args">The args.</param>
-            <returns>Multiple enumerators, one for each cursor.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCollection`1.Save(`0)">
             <summary>
@@ -20462,11 +17511,6 @@
         <member name="P:MongoDB.Driver.MongoConnectionStringBuilder.FSync">
             <summary>
             Gets or sets the FSync component of the write concern.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.MongoConnectionStringBuilder.GssapiServiceName">
-            <summary>
-            Gets or sets the GSSAPI service name.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.MongoConnectionStringBuilder.GuidRepresentation">
@@ -20657,7 +17701,7 @@
             <param name="databaseName">Name of the database.</param>
             <param name="username">The username.</param>
             <param name="password">The password.</param>
-            <returns>A credential for MONGODB-CR.</returns>
+            <returns></returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCredential.CreateMongoCRCredential(System.String,System.String,System.Security.SecureString)">
             <summary>
@@ -20666,41 +17710,7 @@
             <param name="databaseName">Name of the database.</param>
             <param name="username">The username.</param>
             <param name="password">The password.</param>
-            <returns>A credential for MONGODB-CR.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCredential.CreateMongoX509Credential(System.String)">
-            <summary>
-            Creates a credential used with MONGODB-CR.
-            </summary>
-            <param name="username">The username.</param>
-            <returns>A credential for MONGODB-X509.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCredential.CreatePlainCredential(System.String,System.String,System.String)">
-            <summary>
-            Creates a PLAIN credential.
-            </summary>
-            <param name="databaseName">Name of the database.</param>
-            <param name="username">The username.</param>
-            <param name="password">The password.</param>
-            <returns>A credential for PLAIN.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCredential.CreatePlainCredential(System.String,System.String,System.Security.SecureString)">
-            <summary>
-            Creates a PLAIN credential.
-            </summary>
-            <param name="databaseName">Name of the database.</param>
-            <param name="username">The username.</param>
-            <param name="password">The password.</param>
-            <returns>A credential for PLAIN.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCredential.GetMechanismProperty``1(System.String,``0)">
-            <summary>
-            Gets the mechanism property.
-            </summary>
-            <typeparam name="T">The type of the mechanism property.</typeparam>
-            <param name="key">The key.</param>
-            <param name="defaultValue">The default value.</param>
-            <returns>The mechanism property if one was set; otherwise the default value.</returns>
+            <returns></returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCredential.Equals(MongoDB.Driver.MongoCredential)">
             <summary>
@@ -20727,14 +17737,6 @@
             Returns a string representation of the credential.
             </summary>
             <returns>A string representation of the credential.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCredential.WithMechanismProperty(System.String,System.Object)">
-            <summary>
-            Creates a new MongoCredential with the specified mechanism property.
-            </summary>
-            <param name="key">The key.</param>
-            <param name="value">The value.</param>
-            <returns>A new MongoCredential with the specified mechanism property.</returns>
         </member>
         <member name="P:MongoDB.Driver.MongoCredential.Evidence">
             <summary>
@@ -21380,13 +18382,6 @@
             <param name="maxScan">The maximum number of documents to scan.</param>
             <returns>The cursor (so you can chain method calls to it).</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCursor.SetMaxTime(System.TimeSpan)">
-            <summary>
-            Sets the maximum time the server should spend on this query.
-            </summary>
-            <param name="maxTime">The max time.</param>
-            <returns></returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCursor.SetMin(MongoDB.Bson.BsonDocument)">
             <summary>
             Sets the min value for the index key range of documents to return (note: the min value itself is included in the range).
@@ -21639,13 +18634,6 @@
             <param name="maxScan">The maximum number of documents to scan.</param>
             <returns>The cursor (so you can chain method calls to it).</returns>
         </member>
-        <member name="M:MongoDB.Driver.MongoCursor`1.SetMaxTime(System.TimeSpan)">
-            <summary>
-            Sets the maximum time the server should spend on this query.
-            </summary>
-            <param name="maxTime">The max time.</param>
-            <returns></returns>
-        </member>
         <member name="M:MongoDB.Driver.MongoCursor`1.SetMin(MongoDB.Bson.BsonDocument)">
             <summary>
             Sets the min value for the index key range of documents to return (note: the min value itself is included in the range).
@@ -21882,13 +18870,6 @@
             </summary>
             <param name="code">The code to evaluate.</param>
             <param name="args">Optional arguments (only used when the code is a function with parameters).</param>
-            <returns>The result of evaluating the code.</returns>
-        </member>
-        <member name="M:MongoDB.Driver.MongoDatabase.Eval(MongoDB.Driver.EvalArgs)">
-            <summary>
-            Evaluates JavaScript code at the server.
-            </summary>
-            <param name="args">The args.</param>
             <returns>The result of evaluating the code.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoDatabase.FetchDBRef(MongoDB.Driver.MongoDBRef)">
@@ -22489,11 +19470,6 @@
             Gets the FSync component of the write concern.
             </summary>
         </member>
-        <member name="P:MongoDB.Driver.MongoUrl.GssapiServiceName">
-            <summary>
-            Gets the GSSAPI service name.
-            </summary>
-        </member>
         <member name="P:MongoDB.Driver.MongoUrl.GuidRepresentation">
             <summary>
             Gets the representation to use for Guids.
@@ -22930,34 +19906,6 @@
             <returns>
             A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
             </returns>
-        </member>
-        <member name="T:MongoDB.Driver.XYPoint">
-            <summary>
-            Represents a 2D point represented using x, y coordinates.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.XYPoint.#ctor(System.Double,System.Double)">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.XYPoint"/> class.
-            </summary>
-            <param name="x">The x value.</param>
-            <param name="y">The y value.</param>
-        </member>
-        <member name="P:MongoDB.Driver.XYPoint.X">
-            <summary>
-            Gets the X value.
-            </summary>
-            <value>
-            The X value.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.XYPoint.Y">
-            <summary>
-            Gets the Y value.
-            </summary>
-            <value>
-            The Y value.
-            </value>
         </member>
         <member name="T:MongoDB.Driver.GetIndexesResult">
             <summary>

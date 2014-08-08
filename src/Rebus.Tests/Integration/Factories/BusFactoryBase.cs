@@ -45,6 +45,11 @@ namespace Rebus.Tests.Integration.Factories
             disposables.Clear();
         }
 
+        protected void RegisterForDisposal(IDisposable disposable)
+        {
+            disposables.Add(disposable);
+        }
+
         public virtual void StartAll()
         {
             startables.ForEach(s => s.Start(1));

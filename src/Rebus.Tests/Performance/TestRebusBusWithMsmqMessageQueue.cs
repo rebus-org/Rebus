@@ -2,14 +2,29 @@
 using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Logging;
+using Rebus.Shared;
 
 namespace Rebus.Tests.Performance
 {
     [TestFixture]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
+        const string SenderQueueName = "perftest.sender";
+        const string RecipientQueueName = "perftest.recipient";
+
+        protected override void DoSetUp()
+        {
+            MsmqUtil.Delete(SenderQueueName);
+            MsmqUtil.Delete(RecipientQueueName);
+        }
+
+        protected override void DoTearDown()
+        {
+            MsmqUtil.Delete(SenderQueueName);
+            MsmqUtil.Delete(RecipientQueueName);
+        }
+
         [TestCase(15, 1000)]
         [TestCase(15, 10000)]
         [TestCase(15, 100000, Ignore = TestCategories.IgnoreLongRunningTests)]
@@ -17,14 +32,11 @@ namespace Rebus.Tests.Performance
         {
             RebusLoggerFactory.Current = new NullLoggerFactory();
 
-            var senderQueueName = "perftest.sender";
-            var recipientQueueName = "perftest.recipient";
-
-            var senderBus = (RebusBus)CreateBus(senderQueueName, new HandlerActivatorForTesting()).Start();
+            var senderBus = CreateBus(SenderQueueName, new HandlerActivatorForTesting()).Start();
             
             var manualResetEvent = new ManualResetEvent(false);
             var receivedMessagesCount = 0;
-            var recipientBus = CreateBus(recipientQueueName,
+            var recipientBus = CreateBus(RecipientQueueName,
                                          new HandlerActivatorForTesting()
                                              .Handle<string>(str =>
                                                                  {
@@ -37,7 +49,7 @@ namespace Rebus.Tests.Performance
 
             // send
             var stopwatch = Stopwatch.StartNew();
-            numberOfMessages.Times(() => senderBus.Routing.Send(recipientQueueName, "woooLALALALALALALA!"));
+            numberOfMessages.Times(() => senderBus.Routing.Send(RecipientQueueName, "woooLALALALALALALA!"));
             var elapsed = stopwatch.Elapsed;
             Console.WriteLine("Sending {0} messages took {1:0.0} s - that's {2:0} msg/sec",
                               numberOfMessages,

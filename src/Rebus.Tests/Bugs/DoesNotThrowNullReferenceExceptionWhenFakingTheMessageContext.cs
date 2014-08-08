@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Testing;
 using Rhino.Mocks;
 using Shouldly;
@@ -30,6 +31,7 @@ namespace Rebus.Tests.Bugs
             var ex = Assert
                 .Throws<ArgumentException>(() =>
                     {
+                        using (TransactionContext.None())
                         using (FakeMessageContext.Establish(fakeContext))
                         {
                             fixture.Handle("w00000t!");

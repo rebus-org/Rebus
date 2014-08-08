@@ -2,6 +2,7 @@
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Shared;
 using Shouldly;
 
 namespace Rebus.Tests.Bugs
@@ -22,6 +23,12 @@ namespace Rebus.Tests.Bugs
             
             recipientHandlers = new HandlerActivatorForTesting();
             recipient = CreateBus(RecipientInputQueueName, recipientHandlers).Start(1);
+        }
+
+        protected override void DoTearDown()
+        {
+            MsmqUtil.Delete(RecipientInputQueueName);
+            MsmqUtil.Delete(SenderInputQueueName);
         }
 
         [Test]

@@ -319,6 +319,12 @@ namespace Rebus.Bus
                     transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
                 }
 
+                // Clean up Bounced header (to avoid problems with re-enqueued messages)
+                if (transportMessage.Headers.ContainsKey(Headers.Bounced))
+                {
+                    transportMessage.Headers.Remove(Headers.Bounced);
+                }
+
                 using (var scope = BeginTransaction())
                 {
                     var message = serializeMessages.Deserialize(transportMessage);

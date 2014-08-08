@@ -374,7 +374,39 @@
 * Added ability for RabbitMQ transport to publish to different exchanges instead of different routing keys - thanks [pruiz]
 * Limit message body size to 32 MB for RabbitMQ transport because publishing larger messages can destabilize the server.
 
+## 0.68.0
 
+* Added additional routing options with RabbitMQ - endpoints can now be adressed on several forms: `topic`, `@exchange`, and `topic@exchange` - thanks [pruiz]
+
+## 0.69.0
+
+* Removed MSMQ error queue existence check when queue is remote (because it can't be done, and because it doesn't make sense for remote queues)
+* Added ability for saga persisters to provide the ability to update more than one saga instance for an incoming message, by implementing `ICanUpdateMultipleSagaDatasAtomically` - thanks [PeteProgrammer]
+
+## 0.70.0
+
+* Made all batch operations obsolete so that you'll get a compiler warning if you use them.
+
+## 0.70.1
+
+* Added container adapter for SimpleInjector - thanks [oguzhaneren]
+
+## 0.70.2
+
+* Fix problem when trying to send Multicast message to error queue - thanks [maeserichar]
+
+## 0.70.3
+
+* Fixed vulnerability that could lead to executing arbitrary SQL statements by injecting it in a correlation property on a saga message when using SQL Server and PostgreSQL saga persisters.
+
+## 0.71.0
+
+* Fixed bug that could result in not automatically binding the error queue topic to the error queue when using RabbitMQ
+* Update MongoDB driver dependency to 1.9.2
+
+## 0.71.1
+
+* Fixed error in build script that did not build the Serilog project. Also fixed it so that Rebus.Serilog is .NET 4 like the rest of Rebus.
 
 
 [pruiz]: https://github.com/pruiz
@@ -386,3 +418,5 @@
 [caspertdk]: https://github.com/caspertdk
 [dev4ce]: https://github.com/dev4ce
 [krivin]: https://github.com/krivin
+[PeteProgrammer]: https://github.com/PeteProgrammer
+[oguzhaneren]: https://github.com/oguzhaneren

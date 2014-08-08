@@ -106,6 +106,7 @@
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="Logging\GhettoFileLoggerFactory.cs" />
     <Compile Include="MultipleSagaHandlersException.cs" />
+    <Compile Include="ObsoleteWarning.cs" />
     <Compile Include="Persistence\HybridSagaPersister.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerStorage.cs" />

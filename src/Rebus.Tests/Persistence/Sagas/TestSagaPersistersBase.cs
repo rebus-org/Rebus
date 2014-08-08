@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Rebus.Bus;
 using Rebus.Shared;
 using Rebus.Testing;
 using Rhino.Mocks;
@@ -9,24 +10,22 @@ namespace Rebus.Tests.Persistence.Sagas
     public class TestSagaPersistersBase<TFactory> : FixtureBase where TFactory : ISagaPersisterFactory
     {
         MessageContext messageContext;
-        TFactory factory;
         protected IStoreSagaData persister;
 
         protected override void DoSetUp()
         {
-            factory = Activator.CreateInstance<TFactory>();
             var headers = new Dictionary<string, object>
                 {
                     {Headers.ReturnAddress, "none"},
                     {Headers.MessageId, "just_some_message_id"},
                 };
+            TrackDisposable(TransactionContext.None());
             messageContext = MessageContext.Establish(headers);
-            persister = factory.CreatePersister();
+            persister = TrackDisposable(Activator.CreateInstance<TFactory>()).CreatePersister();
         }
 
         protected override void DoTearDown()
         {
-            factory.Dispose();
             messageContext.Dispose();
         }
 

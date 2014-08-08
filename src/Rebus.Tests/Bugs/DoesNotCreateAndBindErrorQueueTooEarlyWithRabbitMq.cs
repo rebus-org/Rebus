@@ -26,8 +26,8 @@ namespace Rebus.Tests.Bugs
 
         static void RemoveQueues()
         {
-            DeleteQueue("test.input");
             DeleteQueue("test.error");
+            DeleteQueue("test.input");
         }
 
         [Test]

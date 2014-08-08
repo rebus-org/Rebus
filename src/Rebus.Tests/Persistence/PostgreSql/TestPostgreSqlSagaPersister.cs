@@ -1,15 +1,11 @@
 ﻿using System;
-
 using NUnit.Framework;
-
 using Ponder;
-
 using Rebus.PostgreSql;
+using Shouldly;
 
 namespace Rebus.Tests.Persistence.PostgreSql
 {
-    using Shouldly;
-
     [TestFixture, Category(TestCategories.PostgreSql)]
     public class TestPostgreSqlSagaPersister : PostgreSqlFixtureBase
     {

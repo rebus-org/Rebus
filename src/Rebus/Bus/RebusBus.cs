@@ -100,7 +100,7 @@ namespace Rebus.Bus
             else
             {
                 log.Info("Using internal timeout manager");
-                timeoutManagerAddress = this.receiveMessages.InputQueue;
+                timeoutManagerAddress = this.receiveMessages.InputQueueAddress;
                 dueTimeoutScheduler = new DueTimeoutScheduler(storeTimeouts, new DeferredMessageReDispatcher(this));
             }
         }
@@ -195,7 +195,7 @@ namespace Rebus.Bus
                     " there's no way for the bus to receive the message you're sending.");
             }
 
-            var destinationEndpoint = receiveMessages.InputQueue;
+            var destinationEndpoint = receiveMessages.InputQueueAddress;
 
             PossiblyAttachSagaIdToRequest(message);
 
@@ -253,6 +253,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Gives access to Rebus' batch operations.
         /// </summary>
+        [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
         public IRebusBatchOperations Batch
         {
             get { return batch; }
@@ -726,6 +727,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             transportMessageToSend.Headers[Headers.SourceQueue] = receiveMessages.InputQueueAddress;
             transportMessageToSend.Headers[Headers.ErrorMessage] = errorDetail;
+            transportMessageToSend.Headers[Headers.Bounced] = "";
 
             try
             {

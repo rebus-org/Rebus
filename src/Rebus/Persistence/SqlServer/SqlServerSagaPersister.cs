@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using Newtonsoft.Json;
@@ -13,7 +14,7 @@ namespace Rebus.Persistence.SqlServer
     /// Implements a saga persister for Rebus that stores sagas as a JSON serialized object in one table
     /// and correlation properties in an index table on the side.
     /// </summary>
-    public class SqlServerSagaPersister : SqlServerStorage, IStoreSagaData
+    public class SqlServerSagaPersister : SqlServerStorage, IStoreSagaData, ICanUpdateMultipleSagaDatasAtomically
     {
         static ILog log;
 
@@ -96,7 +97,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
-                    command.CommandText = string.Format(@"insert into [{0}] (id, revision, data) values (@id, @next_revision, @data)", sagaTableName);
+                    command.CommandText = string.Format(@"insert into [{0}] ([id], [revision], [data]) values (@id, @next_revision, @data)", sagaTableName);
                     try
                     {
                         command.ExecuteNonQuery();
@@ -116,37 +117,7 @@ namespace Rebus.Persistence.SqlServer
 
                 if (propertiesToIndex.Any())
                 {
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        var inserts = propertiesToIndex
-                            .Select(a => string.Format(
-                                @"                      insert into [{0}]
-                                                            ([saga_type], [key], value, saga_id) 
-                                                        values 
-                                                            ('{1}', '{2}', '{3}', '{4}')",
-                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
-                                sagaData.Id.ToString()));
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-
-                        try
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                        catch (SqlException sqlException)
-                        {
-                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
-                            {
-                                throw new OptimisticLockingException(sagaData, sqlException);
-                            }
-
-                            throw;
-                        }
-                    }
+                    CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
                 commitAction(connection);
@@ -169,7 +140,7 @@ namespace Rebus.Persistence.SqlServer
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id;", sagaIndexTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [saga_id] = @id;", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -184,7 +155,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Parameters.AddWithValue("next_revision", sagaData.Revision);
                     command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
 
-                    command.CommandText = string.Format(@"update [{0}] set data = @data, revision = @next_revision where id = @id and revision = @current_revision", sagaTableName);
+                    command.CommandText = string.Format(@"update [{0}] set [data] = @data, [revision] = @next_revision where [id] = @id and [revision] = @current_revision", sagaTableName);
                     var rows = command.ExecuteNonQuery();
                     if (rows == 0)
                     {
@@ -196,36 +167,7 @@ namespace Rebus.Persistence.SqlServer
 
                 if (propertiesToIndex.Any())
                 {
-                    // lastly, generate new index
-                    using (var command = connection.CreateCommand())
-                    {
-                        // generate batch insert with SQL for each entry in the index
-                        var inserts = propertiesToIndex
-                            .Select(a => string.Format(
-                                @"                      insert into [{0}]
-                                                            ([saga_type], [key], value, saga_id) 
-                                                        values 
-                                                            ('{1}', '{2}', '{3}', '{4}')",
-                                sagaIndexTableName, GetSagaTypeName(sagaData.GetType()), a.Key, a.Value,
-                                sagaData.Id.ToString()));
-
-                        var sql = string.Join(";" + Environment.NewLine, inserts);
-
-                        command.CommandText = sql;
-                        try
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                        catch (SqlException sqlException)
-                        {
-                            if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
-                            {
-                                throw new OptimisticLockingException(sagaData, sqlException);
-                            }
-
-                            throw;
-                        }
-                    }
+                    CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
                 commitAction(connection);
@@ -234,6 +176,62 @@ namespace Rebus.Persistence.SqlServer
             {
                 releaseConnection(connection);
             }
+        }
+
+        void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, ConnectionHolder connection, ISagaData sagaData)
+        {
+            var sagaTypeName = GetSagaTypeName(sagaData.GetType());
+            var parameters = propertiesToIndex
+                .Select((p, i) => new
+                {
+                    PropertyName = p.Key,
+                    PropertyValue = p.Value ?? "",
+                    PropertyNameParameter = string.Format("@n{0}", i),
+                    PropertyValueParameter = string.Format("@v{0}", i)
+                })
+                .ToList();
+
+            // lastly, generate new index
+            using (var command = connection.CreateCommand())
+            {
+                // generate batch insert with SQL for each entry in the index
+                var inserts = parameters
+                    .Select(a => string.Format(
+                        @"                      insert into [{0}]
+                                                            ([saga_type], [key], [value], [saga_id]) 
+                                                        values 
+                                                            (@saga_type, {1}, {2}, @saga_id)",
+                        sagaIndexTableName, a.PropertyNameParameter, a.PropertyValueParameter))
+                    .ToList();
+
+                var sql = string.Join(";" + Environment.NewLine, inserts);
+
+                command.CommandText = sql;
+
+                foreach (var parameter in parameters)
+                {
+                    command.Parameters.Add(parameter.PropertyNameParameter, SqlDbType.NVarChar).Value = parameter.PropertyName;
+                    command.Parameters.Add(parameter.PropertyValueParameter, SqlDbType.NVarChar).Value = parameter.PropertyValue;
+                }
+
+                command.Parameters.Add("saga_type", SqlDbType.NVarChar).Value = sagaTypeName;
+                command.Parameters.Add("saga_id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+
+                try
+                {
+                    command.ExecuteNonQuery();
+                }
+                catch (SqlException sqlException)
+                {
+                    if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
+                    {
+                        throw new OptimisticLockingException(sagaData, sqlException);
+                    }
+
+                    throw;
+                }
+            }
+
         }
 
         /// <summary>
@@ -246,7 +244,7 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where id = @id and revision = @current_revision;", sagaTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [id] = @id and [revision] = @current_revision;", sagaTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
                     var rows = command.ExecuteNonQuery();
@@ -258,7 +256,7 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"delete from [{0}] where saga_id = @id", sagaIndexTableName);
+                    command.CommandText = string.Format(@"delete from [{0}] where [saga_id] = @id", sagaIndexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.ExecuteNonQuery();
                 }
@@ -284,16 +282,16 @@ namespace Rebus.Persistence.SqlServer
                 {
                     if (sagaDataPropertyPath == idPropertyName)
                     {
-                        command.CommandText = string.Format(@"select s.data from [{0}] s where s.id = @value", sagaTableName);
+                        command.CommandText = string.Format(@"select [s].[data] from [{0}] [s] where [s].[id] = @value", sagaTableName);
                     }
                     else
                     {
-                        command.CommandText = string.Format(@"select s.data 
-                                                    from [{0}] s 
-                                                        join [{1}] i on s.id = i.saga_id 
-                                                    where i.[saga_type] = @saga_type
-                                                        and i.[key] = @key 
-                                                        and i.value = @value", sagaTableName, sagaIndexTableName);
+                        command.CommandText = string.Format(@"select [s].[data] 
+                                                    from [{0}] [s] 
+                                                        join [{1}] [i] on [s].[id] = [i].[saga_id] 
+                                                    where [i].[saga_type] = @saga_type
+                                                        and [i].[key] = @key 
+                                                        and [i].[value] = @value", sagaTableName, sagaIndexTableName);
 
                         command.Parameters.AddWithValue("key", sagaDataPropertyPath);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(typeof(TSagaData)));

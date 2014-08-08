@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using Rebus.Autofac;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Testing;
 
@@ -30,6 +31,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             testMessageContext = new TestMessageContext();
             testMessageContext.Items["AutofacLifetimeScope"] = container.BeginLifetimeScope("UnitOfWorkLifetime");
+            disposables.Add(TransactionContext.None());
             disposables.Add(FakeMessageContext.Establish(testMessageContext));
         }
 

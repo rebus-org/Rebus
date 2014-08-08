@@ -19,6 +19,8 @@ namespace Rebus.Tests
     /// </summary>
     public abstract class RebusBusMsmqIntegrationTestBase : IDetermineMessageOwnership
     {
+        const string ErrorQueueName = "error";
+
         static RebusBusMsmqIntegrationTestBase()
         {
             XmlConfigurator.Configure();
@@ -39,6 +41,7 @@ namespace Rebus.Tests
 
         protected virtual void DoSetUp()
         {
+            MsmqUtil.Delete(ErrorQueueName);
         }
 
         [TearDown]
@@ -52,6 +55,8 @@ namespace Rebus.Tests
             {
                 toDispose.ForEach(b => b.Dispose());
             }
+
+            MsmqUtil.Delete(ErrorQueueName);
         }
 
         protected virtual void DoTearDown()
@@ -63,7 +68,7 @@ namespace Rebus.Tests
             return CreateBus(inputQueueName, activateHandlers,
                              new InMemorySubscriptionStorage(),
                              new SagaDataPersisterForTesting(),
-                             "error");
+                             ErrorQueueName);
         }
 
         protected RebusBus CreateBus(string inputQueueName, IActivateHandlers activateHandlers, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, string errorQueueName)

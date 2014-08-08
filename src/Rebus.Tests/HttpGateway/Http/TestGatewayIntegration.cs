@@ -3,41 +3,48 @@ using System.Threading;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.HttpGateway;
+using Rebus.Logging;
+using Rebus.Shared;
 
 namespace Rebus.Tests.HttpGateway.Http
 {
     [TestFixture]
     public class TestGatewayIntegration : RebusBusMsmqIntegrationTestBase
     {
+        const string PriceDeskInputQueue = "test.pricedesk.input";
+        const string OrderSystemInputQueue = "test.ordersystem.input";
+        const string GatewayListeningQueue = "test.rebus.dmz.gateway";
         RebusBus pricedesk;
         RebusBus ordersystem;
         GatewayService gatewayInDmz;
         GatewayService gatewayInside;
-        string pricedeskInputQueue;
-        string ordersystemInputQueue;
         HandlerActivatorForTesting orderSystemHandlerActivator;
 
         protected override void DoSetUp()
         {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false) { MinLevel = LogLevel.Warn };
+
+            MsmqUtil.Delete(PriceDeskInputQueue);
+            MsmqUtil.Delete(OrderSystemInputQueue);
+            MsmqUtil.Delete(GatewayListeningQueue);
+
             // this one is in DMZ
-            pricedeskInputQueue = "test.pricedesk.input";
-            pricedesk = CreateBus(pricedeskInputQueue, new HandlerActivatorForTesting());
+            pricedesk = CreateBus(PriceDeskInputQueue, new HandlerActivatorForTesting());
 
             // and this one is inside
-            ordersystemInputQueue = "test.ordersystem.input";
             orderSystemHandlerActivator = new HandlerActivatorForTesting();
-            ordersystem = CreateBus(ordersystemInputQueue, orderSystemHandlerActivator);
+            ordersystem = CreateBus(OrderSystemInputQueue, orderSystemHandlerActivator);
 
             // so we set up a one-way gateway service on each side:
             gatewayInDmz = new GatewayService
                 {
-                    ListenQueue = "test.rebus.dmz.gateway",
+                    ListenQueue = GatewayListeningQueue,
                     DestinationUri = "http://localhost:18080",
                 };
             gatewayInside = new GatewayService
                 {
                     ListenUri = "http://+:18080",
-                    DestinationQueue = ordersystemInputQueue
+                    DestinationQueue = OrderSystemInputQueue
                 };
 
             gatewayInDmz.Start();
@@ -51,6 +58,10 @@ namespace Rebus.Tests.HttpGateway.Http
         {
             gatewayInDmz.Stop();
             gatewayInside.Stop();
+
+            MsmqUtil.Delete(PriceDeskInputQueue);
+            MsmqUtil.Delete(OrderSystemInputQueue);
+            MsmqUtil.Delete(GatewayListeningQueue);
         }
 
         [Test]

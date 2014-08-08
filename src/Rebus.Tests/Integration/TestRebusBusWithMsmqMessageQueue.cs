@@ -1,23 +1,57 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
+using Raven.Abstractions.Extensions;
+using Rebus.Shared;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.Integration)]
     public class TestRebusBusWithMsmqMessageQueue : RebusBusMsmqIntegrationTestBase
     {
+        const string SenderInputQueueName = "test.tx.sender";
+        const string ReceiverInputQueueName = "test.tx.receiver";
+        const string RecipientQueueName = "test.recipient";
+        const string AnotherSenderInputQueueName = "test.sender";
+        const string RequestorQueueName = "test.requestor";
+        const string ReplierQueueName = "test.replier";
+        const string PublisherInputQueue = "test.publisher";
+        const string FirstSubscriberInputQueue = "test.subscriber1";
+        const string SecondSubscriberInputQueue = "test.subscriber2";
+
+        static readonly string[] Queues =
+        {
+            SenderInputQueueName,
+            ReceiverInputQueueName,
+            RecipientQueueName,
+            AnotherSenderInputQueueName,
+            RequestorQueueName,
+            ReplierQueueName,
+            PublisherInputQueue,
+            FirstSubscriberInputQueue,
+            SecondSubscriberInputQueue
+        };
+
+        protected override void DoSetUp()
+        {
+            Queues.ForEach(MsmqUtil.Delete);
+        }
+
+        protected override void DoTearDown()
+        {
+            Queues.ForEach(MsmqUtil.Delete);
+        }
+
         [Test]
         public void CanReceiveMessagesInTransaction()
         {
             // arrange
-            var senderBus = CreateBus("test.tx.sender", new HandlerActivatorForTesting()).Start(1);
+            var senderBus = CreateBus(SenderInputQueueName, new HandlerActivatorForTesting()).Start(1);
 
             var resetEvent = new ManualResetEvent(false);
             var receivedMessageCount = 0;
 
-            CreateBus("test.tx.receiver",
+            CreateBus(ReceiverInputQueueName,
                       new HandlerActivatorForTesting()
                           .Handle<string>(str =>
                                               {
@@ -33,7 +67,7 @@ namespace Rebus.Tests.Integration
                                               }))
                 .Start();
 
-            senderBus.Routing.Send("test.tx.receiver", "HELLO!");
+            senderBus.Routing.Send(ReceiverInputQueueName, "HELLO!");
 
             if (!resetEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
@@ -44,13 +78,11 @@ namespace Rebus.Tests.Integration
         [Test]
         public void CanSendAndReceiveMessagesLikeExpected()
         {
-            const string recipientQueueName = "test.recipient";
-
             var recipientWasCalled = false;
             var manualResetEvent = new ManualResetEvent(false);
-            var senderBus = (RebusBus) CreateBus("test.sender", new HandlerActivatorForTesting()).Start();
+            var senderBus = CreateBus(AnotherSenderInputQueueName, new HandlerActivatorForTesting()).Start();
 
-            CreateBus(recipientQueueName, new HandlerActivatorForTesting()
+            CreateBus(RecipientQueueName, new HandlerActivatorForTesting()
                                               .Handle<string>(str =>
                                                                   {
                                                                       recipientWasCalled = true;
@@ -58,7 +90,7 @@ namespace Rebus.Tests.Integration
                                                                   }))
                 .Start();
 
-            senderBus.Routing.Send(recipientQueueName, "yo!");
+            senderBus.Routing.Send(RecipientQueueName, "yo!");
             manualResetEvent.WaitOne(TimeSpan.FromSeconds(5));
             Assert.IsTrue(recipientWasCalled, "The recipient did not receive a call within allotted timeout");
         }
@@ -66,22 +98,19 @@ namespace Rebus.Tests.Integration
         [Test]
         public void RequestReplyWorks()
         {
-            var requestorQueueName = "test.requestor";
-            var replierQueueName = "test.replier";
-
             var requestorGotMessageEvent = new ManualResetEvent(false);
-            var requestorBus = CreateBus(requestorQueueName,
+            var requestorBus = CreateBus(RequestorQueueName,
                                          new HandlerActivatorForTesting().Handle<string>(
                                              str => requestorGotMessageEvent.Set()));
 
             var replierHandlerFactory = new HandlerActivatorForTesting();
-            var replierBus = CreateBus(replierQueueName, replierHandlerFactory);
+            var replierBus = CreateBus(ReplierQueueName, replierHandlerFactory);
 
             replierHandlerFactory.Handle<string>(str => replierBus.Reply("pong!"));
 
             requestorBus.Start();
             replierBus.Start();
-            requestorBus.Routing.Send(replierQueueName, "ping?");
+            requestorBus.Routing.Send(ReplierQueueName, "ping?");
 
             if (!requestorGotMessageEvent.WaitOne(TimeSpan.FromSeconds(3)))
             {
@@ -92,13 +121,11 @@ namespace Rebus.Tests.Integration
         [Test]
         public void PublishSubscribeWorks()
         {
-            var publisherInputQueue = "test.publisher";
-            var publisherBus = CreateBus(publisherInputQueue, new HandlerActivatorForTesting()).Start();
+            var publisherBus = CreateBus(PublisherInputQueue, new HandlerActivatorForTesting()).Start();
 
             var firstSubscriberResetEvent = new AutoResetEvent(false);
             var secondSubscriberResetEvent = new AutoResetEvent(false);
 
-            var firstSubscriberInputQueue = "test.subscriber1";
             var firstSubscriberHandlerFactory = new HandlerActivatorForTesting()
                 .Handle<string>(s =>
                                     {
@@ -109,11 +136,10 @@ namespace Rebus.Tests.Integration
                                     });
 
             var firstSubscriberBus =
-                (RebusBus) CreateBus(firstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
+                CreateBus(FirstSubscriberInputQueue, firstSubscriberHandlerFactory).Start();
 
-            firstSubscriberBus.Routing.Subscribe<string>(publisherInputQueue);
+            firstSubscriberBus.Routing.Subscribe<string>(PublisherInputQueue);
 
-            var secondSubscriberInputQueue = "test.subscriber2";
             var secondSubscriberHandlerFactory = new HandlerActivatorForTesting()
                 .Handle<string>(s =>
                                     {
@@ -124,9 +150,9 @@ namespace Rebus.Tests.Integration
                                     });
 
             var secondSubscriberBus =
-                (RebusBus) CreateBus(secondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
+                CreateBus(SecondSubscriberInputQueue, secondSubscriberHandlerFactory).Start();
 
-            secondSubscriberBus.Routing.Subscribe<string>(publisherInputQueue);
+            secondSubscriberBus.Routing.Subscribe<string>(PublisherInputQueue);
 
             // allow the publisher to receive the subscriptions....
             Thread.Sleep(500);

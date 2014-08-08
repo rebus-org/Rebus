@@ -94,10 +94,16 @@ A more full example configuration snippet can be seen here:
 
             var msmqMessageQueue = new MsmqMessageQueue(inputQueueName);
 
-            var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
+            // since these operations only make sense to perform on a local queue, we'll skip it if the error queue is remote
+            // (read http://blogs.msdn.com/b/johnbreakwell/archive/2008/07/31/checking-if-msmq-queues-exist-is-hard-work-so-should-you-bother.aspx 
+            // for more info...)
+            if (MsmqUtil.IsLocal(errorQueueName))
+            {
+                var errorQueuePath = MsmqUtil.GetPath(errorQueueName);
 
-            MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
-            MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
+                MsmqUtil.EnsureMessageQueueExists(errorQueuePath);
+                MsmqUtil.EnsureMessageQueueIsTransactional(errorQueuePath);
+            }
 
             configurer.UseSender(msmqMessageQueue);
             configurer.UseReceiver(msmqMessageQueue);

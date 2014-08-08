@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Persistence.InMemory;
+using Rebus.Shared;
 using Rebus.Tests.Integration;
 
 namespace Rebus.Tests
@@ -9,28 +10,28 @@ namespace Rebus.Tests
     [TestFixture, Ignore("not a real test - can be used to plant realistic Rebus messages for the Snoop to look at")]
     public class DeliverRealisticMessagesToQueue : RebusBusMsmqIntegrationTestBase
     {
+        const string InputQueueNameA = "a.someQueue";
+        const string InputQueueNameB = "b.someQueue";
+
         [Test]
         public void DoIt()
         {
-            const string inputQueueNameA = "a.someQueue";
-            const string inputQueueNameB = "b.someQueue";
-
-            var a = CreateBus(inputQueueNameA, new HandlerActivatorForTesting()
+            var a = CreateBus(InputQueueNameA, new HandlerActivatorForTesting()
                 .Handle<DoSomething>(s =>
                 {
                     throw new MuahahahaException();
                 }),
                 new InMemorySubscriptionStorage(),
                 new SagaDataPersisterForTesting(),
-                inputQueueNameA + ".error").Start(1);
+                InputQueueNameA + ".error").Start(1);
 
-            var b = CreateBus(inputQueueNameB, new HandlerActivatorForTesting());
+            var b = CreateBus(InputQueueNameB, new HandlerActivatorForTesting());
 
             var someInteger = 1;
 
-            10.Times(() => a.Routing.Send(inputQueueNameB, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
+            10.Times(() => a.Routing.Send(InputQueueNameB, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
 
-            10.Times(() => b.Routing.Send(inputQueueNameA, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
+            10.Times(() => b.Routing.Send(InputQueueNameA, new DoSomething { SomeInteger = someInteger++, WhatToDo = "Hello there!" }));
 
             Thread.Sleep(1500);
         }

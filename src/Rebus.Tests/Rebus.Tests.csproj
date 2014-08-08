@@ -36,9 +36,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Autofac">
+    <Reference Include="Autofac, Version=2.6.3.862, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.2.6.3.862\lib\NET40\Autofac.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Autofac.Configuration, Version=2.6.3.862, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -46,19 +46,21 @@
     </Reference>
     <Reference Include="Castle.Core, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Castle.Core.3.2.0\lib\net45\Castle.Core.dll</HintPath>
+      <HintPath>..\packages\Castle.Core.3.2.0\lib\net40-client\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Castle.Windsor">
-      <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net45\Castle.Windsor.dll</HintPath>
+    <Reference Include="Castle.Windsor, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net40\Castle.Windsor.dll</HintPath>
     </Reference>
-    <Reference Include="log4net">
+    <Reference Include="log4net, Version=1.2.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.2.0.1\lib\net40-full\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Microsoft.Practices.ServiceLocation">
       <HintPath>..\packages\CommonServiceLocator.1.0\lib\NET35\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Practices.Unity">
+    <Reference Include="Microsoft.Practices.Unity, Version=2.1.505.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Unity.2.1.505.2\lib\NET35\Microsoft.Practices.Unity.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.Unity.Configuration, Version=2.1.505.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -74,36 +76,32 @@
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\packages\WindowsAzure.Storage.1.7.0.0\lib\net35-full\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
     </Reference>
-    <Reference Include="MongoDB.Bson, Version=1.9.0.200, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+    <Reference Include="MongoDB.Bson, Version=1.9.2.235, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\mongocsharpdriver.1.9.0\lib\net35\MongoDB.Bson.dll</HintPath>
+      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Bson.dll</HintPath>
     </Reference>
-    <Reference Include="MongoDB.Driver, Version=1.9.0.200, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
-      <HintPath>..\packages\mongocsharpdriver.1.9.0\lib\net35\MongoDB.Driver.dll</HintPath>
+    <Reference Include="MongoDB.Driver">
+      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Driver.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Ninject">
       <HintPath>..\packages\Ninject.3.0.1.10\lib\net40\Ninject.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.5.10.11092, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="nunit.mocks">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\nunit.mocks.dll</HintPath>
-      <Private>True</Private>
     </Reference>
-    <Reference Include="pnunit.framework, Version=1.0.4109.34242, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="pnunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\pnunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="RabbitMQ.Client, Version=3.2.1.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="RabbitMQ.Client">
       <HintPath>..\packages\RabbitMQ.Client.3.2.1\lib\net30\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Abstractions, Version=2.0.3.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\RavenDB.Database.2.0.2370\lib\net40\Raven.Abstractions.dll</HintPath>
+      <HintPath>..\packages\RavenDB.Client.2.0.2370\lib\net40\Raven.Abstractions.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Client.Embedded, Version=2.0.3.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -113,17 +111,22 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\RavenDB.Client.2.0.2370\lib\net40\Raven.Client.Lightweight.dll</HintPath>
     </Reference>
-    <Reference Include="Raven.Database">
+    <Reference Include="Raven.Database, Version=2.0.3.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\RavenDB.Database.2.0.2370\lib\net40\Raven.Database.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="Rhino.Mocks, Version=3.6.0.0, Culture=neutral, PublicKeyToken=0b3305902db7183f, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\RhinoMocks.3.6\lib\Rhino.Mocks.dll</HintPath>
     </Reference>
     <Reference Include="Shouldly, Version=1.1.1.1, Culture=neutral, PublicKeyToken=6042cbcb05cbc941, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Shouldly.1.1.1.1\lib\35\Shouldly.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleInjector">
+      <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleInjector.Diagnostics">
+      <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
     </Reference>
     <Reference Include="StructureMap">
       <HintPath>..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.dll</HintPath>
@@ -161,13 +164,14 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Analysis\TestExceptions.cs" />
-    <Compile Include="Async\TestBasicAsyncHandler.cs" />
     <Compile Include="Bugs\AmbientTransactionContextNeverCleansUp.cs" />
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
+    <Compile Include="Bugs\SqlSagaPersisterVulnerableToSqlInjection.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
+    <Compile Include="Bugs\SupportsRemoteErrorQueue.cs" />
     <Compile Include="Bugs\TestUsingTransactionScope.cs" />
     <Compile Include="Bugs\CorrelatorReturnsFieldsAsStrings.cs" />
     <Compile Include="Bugs\DeferStealsOurTimeoutReplies.cs" />
@@ -197,6 +201,7 @@
     <Compile Include="Contracts\ContainerAdapters\Factories\AutofacContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\BuiltinContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\NinjectContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\SimpleInjectorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\UnityContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\IContainerAdapterFactory.cs" />
@@ -213,13 +218,13 @@
     <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\Serialization\TestSerialization.cs" />
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
+    <Compile Include="DisposableAction.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="DisposableTracker.cs" />
     <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\Http\TestInboundService.cs" />
     <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
-    <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
@@ -275,7 +280,6 @@
     <Compile Include="Persistence\Subscriptions\Factories\PostgreSqlServerSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
-    <Compile Include="Properties\AssemblyInfo.log4net.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
@@ -398,7 +402,9 @@
     <None Include="HttpGateway\Http\ConfigFiles\App01.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Async\Rebus.Async.csproj">
@@ -460,6 +466,10 @@
     <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
       <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
       <Name>Rebus.Serilog</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.SimpleInjector\Rebus.SimpleInjector.csproj">
+      <Project>{44a9cdf9-3a76-4b4c-aa1d-a34ad7fc2bd5}</Project>
+      <Name>Rebus.SimpleInjector</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.StructureMap\Rebus.StructureMap.csproj">
       <Project>{D5263804-AD2A-40E3-B656-5132255883A8}</Project>

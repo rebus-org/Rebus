@@ -23,8 +23,20 @@ namespace Rebus.Bus
         }
 
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
-        readonly ConcurrentQueue<Tuple<Type, int>> maxRetriesForExceptionTypes = new ConcurrentQueue<Tuple<Type, int>>();
+        readonly ConcurrentQueue<CustomizedMaxRetries> maxRetriesForExceptionTypes = new ConcurrentQueue<CustomizedMaxRetries>();
         readonly string errorQueueAddress;
+
+        class CustomizedMaxRetries
+        {
+            public CustomizedMaxRetries(Type exceptionType, int maxRetries)
+            {
+                ExceptionType = exceptionType;
+                MaxRetries = maxRetries;
+            }
+
+            public int MaxRetries { get; private set; }
+            public Type ExceptionType { get; private set; }
+        }
 
         TimeSpan timeoutSpan;
         Timer timer;
@@ -146,7 +158,9 @@ namespace Rebus.Bus
         /// </summary>
         public void SetMaxRetriesFor<TException>(int maxRetriesForThisExceptionType) where TException : Exception
         {
-            maxRetriesForExceptionTypes.Enqueue(Tuple.Create(typeof (TException), maxRetriesForThisExceptionType));
+            var customizedMaxRetries = new CustomizedMaxRetries(typeof (TException), maxRetriesForThisExceptionType);
+            
+            maxRetriesForExceptionTypes.Enqueue(customizedMaxRetries);
         }
 
         /// <summary>
@@ -167,15 +181,20 @@ namespace Rebus.Bus
 
             if (lastException != null)
             {
+                // unwrap actual exception if it's wrapped
                 while (lastException is TargetInvocationException)
+                {
                     lastException = lastException.InnerException;
+                }
 
                 var lastExceptionType = lastException.GetType();
 
                 foreach (var customization in maxRetriesForExceptionTypes)
                 {
-                    if (customization.Item1.IsAssignableFrom(lastExceptionType))
-                        return customization.Item2;
+                    if (customization.ExceptionType.IsAssignableFrom(lastExceptionType))
+                    {
+                        return customization.MaxRetries;
+                    }
                 }
             }
 
