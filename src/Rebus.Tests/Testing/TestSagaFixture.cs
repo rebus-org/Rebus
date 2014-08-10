@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Testing;
 using Shouldly;
@@ -312,6 +313,26 @@ namespace Rebus.Tests.Testing
             exception.Message.ShouldContain("Oh no, something bad happened while processing message with saga data id 23");
         }
 
+        [Test]
+        public void WorksWithAsyncHandling()
+        {
+            // arrange
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
+
+            fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new saga data");
+            fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated with existing saga data");
+            fixture.CouldNotCorrelate += message => Console.WriteLine("Could not correlate");
+
+            // act
+            fixture.Handle(new SomeMessage { SagaDataId = 33 });
+            fixture.Handle(new SomeMessageForAsync { SagaDataId = 33 });
+
+            // assert
+            var availableSagaData = fixture.AvailableSagaData.Single();
+            availableSagaData.SagaDataId.ShouldBe(33);
+            availableSagaData.ReceivedMessages.ShouldBe(2);
+        }
+
         class SomeMessage
         {
             public int SagaDataId { get; set; }
@@ -322,14 +343,21 @@ namespace Rebus.Tests.Testing
             public int SagaDataId { get; set; }
         }
 
+        class SomeMessageForAsync
+        {
+            public int SagaDataId { get; set; }
+        }
+
         class SomeSaga : Saga<SomeSagaData>,
             IAmInitiatedBy<SomeMessage>,
-            IHandleMessages<SomePoisonMessage>
+            IHandleMessages<SomePoisonMessage>,
+            IHandleMessagesAsync<SomeMessageForAsync>
         {
             public override void ConfigureHowToFindSaga()
             {
                 Incoming<SomeMessage>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
                 Incoming<SomePoisonMessage>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
+                Incoming<SomeMessageForAsync>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
             }
 
             public void Handle(SomeMessage message)
@@ -345,6 +373,13 @@ namespace Rebus.Tests.Testing
             public void Handle(SomePoisonMessage message)
             {
                 throw new ApplicationException(string.Format("Oh no, something bad happened while processing message with saga data id {0}", message.SagaDataId));
+            }
+
+            public async Task Handle(SomeMessageForAsync message)
+            {
+                await Task.Yield();
+
+                Data.ReceivedMessages++;
             }
         }
 

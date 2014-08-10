@@ -101,7 +101,10 @@ namespace Rebus.Testing
 
             public IEnumerable<IHandleMessages> GetHandlerInstancesFor<TMessage>()
             {
-                return sagaInstance.OfType<IHandleMessages<TMessage>>();
+                return sagaInstance
+                    .OfType<IHandleMessages<TMessage>>()
+                    .Cast<IHandleMessages>()
+                    .Concat(sagaInstance.OfType<IHandleMessagesAsync<TMessage>>());
             }
 
             public void Release(IEnumerable handlerInstances)
@@ -197,7 +200,11 @@ namespace Rebus.Testing
 
             try
             {
-                dispatcher.Dispatch(message).Wait();
+                var task = (Task) dispatcher.GetType()
+                    .GetMethod("Dispatch").MakeGenericMethod(message.GetType())
+                    .Invoke(dispatcher, new object[] {message});
+
+                task.Wait();
             }
             catch (AggregateException aggregateException)
             {
