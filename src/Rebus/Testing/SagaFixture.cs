@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Persistence.InMemory;
 using System.Linq;
@@ -196,13 +197,11 @@ namespace Rebus.Testing
 
             try
             {
-                dispatcher.GetType()
-                    .GetMethod("Dispatch").MakeGenericMethod(message.GetType())
-                    .Invoke(dispatcher, new object[] { message });
+                dispatcher.Dispatch(message).Wait();
             }
-            catch (TargetInvocationException tie)
+            catch (AggregateException aggregateException)
             {
-                var exception = (Exception)tie;
+                Exception exception = aggregateException;
 
                 if (exception.InnerException is TargetInvocationException)
                     exception = exception.InnerException;
