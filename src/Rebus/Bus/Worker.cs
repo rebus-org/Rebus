@@ -50,6 +50,11 @@ namespace Rebus.Bus
                 LoggingDisabled = true
             };
 
+        /// <summary>
+        /// Caching of dispatcher methods
+        /// </summary>
+        readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
+
         readonly Thread workerThread;
         readonly Dispatcher dispatcher;
         readonly IErrorTracker errorTracker;
@@ -277,7 +282,7 @@ namespace Rebus.Bus
             }
         }
 
-        async Task DoTry() // do or do not?
+        async Task DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
@@ -347,11 +352,15 @@ namespace Rebus.Bus
                             {
                                 BeforeMessage(logicalMessage);
 
+                                var typeToDispatch = logicalMessage.GetType();
+
                                 messageLogger.LogReceive(id, logicalMessage);
 
                                 try
                                 {
-                                    await dispatcher.Dispatch((dynamic)logicalMessage);
+                                    var dispatchMethod = GetDispatchMethod(typeToDispatch);
+                                    var parameters = new[] { logicalMessage };
+                                    await (Task)dispatchMethod.Invoke(this, parameters);
                                 }
                                 catch (TargetInvocationException tie)
                                 {
@@ -507,6 +516,32 @@ namespace Rebus.Bus
                 Timeout = TransactionManager.DefaultTimeout
             };
             return new TransactionScope(TransactionScopeOption.Required, transactionOptions);
+        }
+
+        MethodInfo GetDispatchMethod(Type typeToDispatch)
+        {
+            MethodInfo method;
+            if (dispatchMethodCache.TryGetValue(typeToDispatch, out method))
+            {
+                return method;
+            }
+
+            var newMethod = GetType()
+                .GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
+                .MakeGenericMethod(typeToDispatch);
+
+            dispatchMethodCache.TryAdd(typeToDispatch, newMethod);
+
+            return newMethod;
+        }
+
+        /// <summary>
+        /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
+        /// for some strongly typed interaction from this point and on....
+        /// </summary>
+        internal async Task DispatchGeneric<T>(T message)
+        {
+            await dispatcher.Dispatch(message);
         }
 
         /// <summary>
