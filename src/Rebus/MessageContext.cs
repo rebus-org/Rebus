@@ -54,11 +54,11 @@ namespace Rebus
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
             var messageContext = new MessageContext(headers);
-            Establish(messageContext);
+            Establish(messageContext, overwrite: false);
             return messageContext;
         }
 
-        internal static void Establish(IMessageContext messageContext)
+        internal static void Establish(IMessageContext messageContext, bool overwrite)
         {
             if (TransactionContext.Current == null)
             {
@@ -67,7 +67,7 @@ namespace Rebus
                                   "context - though it might be a NoTransaction transaction context."));
             }
 
-            if (TransactionContext.Current[MessageContextItemKey] != null)
+            if (TransactionContext.Current[MessageContextItemKey] != null && !overwrite)
             {
                 throw new InvalidOperationException(
                     string.Format("Cannot establish new message context when one is already present!"));

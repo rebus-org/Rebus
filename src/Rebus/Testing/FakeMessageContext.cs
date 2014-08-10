@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Testing
 {
@@ -36,7 +37,7 @@ namespace Rebus.Testing
                     + " otherwise stuff would not work.", messageContext));
             }
 
-            MessageContext.Establish(messageContext);
+            MessageContext.Establish(messageContext, overwrite: true);
 
             return messageContext;
         }

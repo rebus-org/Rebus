@@ -360,7 +360,7 @@ namespace Rebus.Bus
                                 {
                                     var dispatchMethod = GetDispatchMethod(typeToDispatch);
                                     var parameters = new[] { logicalMessage };
-                                    await (Task)dispatchMethod.Invoke(this, parameters);
+                                    await (Task)dispatchMethod.Invoke(dispatcher, parameters);
                                 }
                                 catch (TargetInvocationException tie)
                                 {
@@ -526,22 +526,13 @@ namespace Rebus.Bus
                 return method;
             }
 
-            var newMethod = GetType()
-                .GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
+            var newMethod = dispatcher.GetType()
+                .GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.Public)
                 .MakeGenericMethod(typeToDispatch);
 
             dispatchMethodCache.TryAdd(typeToDispatch, newMethod);
 
             return newMethod;
-        }
-
-        /// <summary>
-        /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
-        /// for some strongly typed interaction from this point and on....
-        /// </summary>
-        internal async Task DispatchGeneric<T>(T message)
-        {
-            await dispatcher.Dispatch(message);
         }
 
         /// <summary>
