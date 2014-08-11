@@ -37,13 +37,14 @@ namespace Rebus.Tests.Unit
             ScopedService service1;
             ScopedService service2;
 
-            using(TransactionContext.None())
-            using(MessageContext.Establish())
-                service1 = container.Resolve<ScopedService>();
-
             using (TransactionContext.None())
-            using (MessageContext.Establish())
-                service2 = container.Resolve<ScopedService>();
+            {
+                using (MessageContext.Establish())
+                    service1 = container.Resolve<ScopedService>();
+
+                using (MessageContext.Establish())
+                    service2 = container.Resolve<ScopedService>();
+            }
 
             service1.ShouldNotBe(service2);
         }

@@ -4,7 +4,7 @@ using System.Threading;
 
 namespace Rebus.Bus
 {
-    public class RebusSynchronizationContext : SynchronizationContext
+    internal class RebusSynchronizationContext : SynchronizationContext
     {
         readonly ConcurrentQueue<Tuple<SendOrPostCallback, object, ITransactionContext>> callbacks =
             new ConcurrentQueue<Tuple<SendOrPostCallback, object, ITransactionContext>>();
@@ -22,6 +22,7 @@ namespace Rebus.Bus
             {
                 TransactionContext.Set(tuple.Item3);
                 tuple.Item1(tuple.Item2);
+                TransactionContext.Clear();
             }
         }
     }
