@@ -59,7 +59,7 @@ namespace Rebus.Tests.Bugs
 
                     var errorMessage = serializer.Deserialize(receivedTransportMessage);
                     errorMessage.Messages.Length.ShouldBe(1);
-                    errorMessage.Messages[0].ShouldBeTypeOf<string>();
+                    errorMessage.Messages[0].ShouldBeOfType<string>();
                     ((string)errorMessage.Messages[0]).ShouldBe("hello there!!!");
                 }
             }

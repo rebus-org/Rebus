@@ -40,7 +40,7 @@ namespace Rebus.Tests.Bugs
 
             var bus = unityContainer.Resolve<IBus>();
 
-            bus.ShouldBeTypeOf<RebusBus>();
+            bus.ShouldBeOfType<RebusBus>();
         }
     }
 }

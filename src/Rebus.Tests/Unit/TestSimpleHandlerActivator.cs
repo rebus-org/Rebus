@@ -58,7 +58,7 @@ namespace Rebus.Tests.Unit
 
             // assert
             instances.Count.ShouldBe(1);
-            instances[0].ShouldBeTypeOf<SomeHandler>();
+            instances[0].ShouldBeOfType<SomeHandler>();
         }
 
         [Test]
@@ -75,12 +75,12 @@ namespace Rebus.Tests.Unit
 
             // assert
             stringHandlers.Count.ShouldBe(3);
-            stringHandlers[0].ShouldBeTypeOf<SomeHandler>();
-            stringHandlers[1].ShouldBeTypeOf<AnotherHandler>();
-            stringHandlers[2].ShouldBeTypeOf<ThirdHandler>();
+            stringHandlers[0].ShouldBeOfType<SomeHandler>();
+            stringHandlers[1].ShouldBeOfType<AnotherHandler>();
+            stringHandlers[2].ShouldBeOfType<ThirdHandler>();
 
             dateTimeHandlers.Count.ShouldBe(1);
-            dateTimeHandlers[0].ShouldBeTypeOf<ThirdHandler>();
+            dateTimeHandlers[0].ShouldBeOfType<ThirdHandler>();
         }
 
         [Test]
@@ -95,10 +95,10 @@ namespace Rebus.Tests.Unit
 
             // assert
             stringHandlers.Count.ShouldBe(1);
-            stringHandlers[0].ShouldBeTypeOf<ThirdHandler>();
+            stringHandlers[0].ShouldBeOfType<ThirdHandler>();
 
             dateTimeHandlers.Count.ShouldBe(1);
-            dateTimeHandlers[0].ShouldBeTypeOf<ThirdHandler>();
+            dateTimeHandlers[0].ShouldBeOfType<ThirdHandler>();
         }
 
         class ThirdHandler : IHandleMessages<string>, IHandleMessages<DateTime>

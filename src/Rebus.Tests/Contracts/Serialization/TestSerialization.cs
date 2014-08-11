@@ -79,7 +79,7 @@ namespace Rebus.Tests.Contracts.Serialization
 
             message.Messages.Length.ShouldBe(2);
             message.Messages[0].ShouldBe("primitive string message");
-            message.Messages[1].ShouldBeTypeOf<ComplexObject>();
+            message.Messages[1].ShouldBeOfType<ComplexObject>();
 
             var complexObject = (ComplexObject)message.Messages[1];
             complexObject.NestedObjects.Count.ShouldBe(1);
@@ -106,7 +106,7 @@ namespace Rebus.Tests.Contracts.Serialization
             var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
             var deserializedPerson = (Person)message.Messages[0];
 
-            deserializedPerson.Address.ShouldBeTypeOf<ForeignAddress>();
+            deserializedPerson.Address.ShouldBeOfType<ForeignAddress>();
             var foreignAddress = (ForeignAddress)deserializedPerson.Address;
             foreignAddress.Lines[0].ShouldBe("Torsmark 4");
             foreignAddress.Lines[1].ShouldBe("8700 Horsens");

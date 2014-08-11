@@ -49,11 +49,11 @@ namespace Rebus.Tests.Logging
             RebusLoggerFactory.Current = new TestLoggerFactory();
 
             var anotherClassLog = (TestLogger)AnotherClass.Log;
-            anotherClassLog.ShouldBeTypeOf<TestLogger>();
+            anotherClassLog.ShouldBeOfType<TestLogger>();
             anotherClassLog.Type.ShouldBe(typeof(AnotherClass));
 
             var yetAnotherClassLog = (TestLogger)YetAnotherClass.Log;
-            yetAnotherClassLog.ShouldBeTypeOf<TestLogger>();
+            yetAnotherClassLog.ShouldBeOfType<TestLogger>();
             yetAnotherClassLog.Type.ShouldBe(typeof(YetAnotherClass));
         }
 

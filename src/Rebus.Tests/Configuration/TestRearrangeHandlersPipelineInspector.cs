@@ -114,8 +114,8 @@ namespace Rebus.Tests.Configuration
             var pipeline = inspector.Filter(new SomeMessage(), listOfHandlers).ToArray();
             
             // assert
-            pipeline[0].ShouldBeTypeOf<FirstHandler>();
-            pipeline[1].ShouldBeTypeOf<SecondHandler>();
+            pipeline[0].ShouldBeOfType<FirstHandler>();
+            pipeline[1].ShouldBeOfType<SecondHandler>();
         }
 
         [Test]
@@ -145,9 +145,9 @@ namespace Rebus.Tests.Configuration
             var pipeline = inspector.Filter(new SomeMessage(), listOfHandlers).ToArray();
 
             // assert
-            pipeline[0].ShouldBeTypeOf<AuthenticationHandler>();
-            pipeline[1].ShouldBeTypeOf<FirstHandler>();
-            pipeline[2].ShouldBeTypeOf<SecondHandler>();
+            pipeline[0].ShouldBeOfType<AuthenticationHandler>();
+            pipeline[1].ShouldBeOfType<FirstHandler>();
+            pipeline[2].ShouldBeOfType<SecondHandler>();
         }
 
         static IEnumerable<IHandleMessages<SomeMessage>> Handlers(params IHandleMessages<SomeMessage> [] handlers)

@@ -39,8 +39,8 @@ namespace Rebus.Tests.Unit
 
             // act
             var exception =
-                Assert.Throws<MultipleSagaHandlersFoundException>(
-                    () => dispatcher.Dispatch(messageThatCanBeHandledByBothSagas));
+                Should.Throw<MultipleSagaHandlersFoundException>(
+                    async () => await dispatcher.Dispatch(messageThatCanBeHandledByBothSagas));
 
             // assert
             exception.Message.ShouldContain("FirstSaga");
@@ -105,7 +105,7 @@ namespace Rebus.Tests.Unit
             var theMessage = new SomeMessage();
 
             // act
-            var ex = Assert.Throws<UnhandledMessageException>(() => dispatcher.Dispatch(theMessage));
+            var ex = Should.Throw<UnhandledMessageException>(async () => await dispatcher.Dispatch(theMessage));
 
             // assert
             ex.UnhandledMessage.ShouldBe(theMessage);

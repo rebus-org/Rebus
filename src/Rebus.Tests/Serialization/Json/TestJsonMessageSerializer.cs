@@ -56,7 +56,7 @@ namespace Rebus.Tests.Serialization.Json
             // assert
             deserializedMessage.Messages.Length.ShouldBe(1);
             var message = deserializedMessage.Messages.Single();
-            message.ShouldBeTypeOf<SomeComplexObjectThatRequïresÜnicódeToWørk>();
+            message.ShouldBeOfType<SomeComplexObjectThatRequïresÜnicódeToWørk>();
             ((SomeComplexObjectThatRequïresÜnicódeToWørk)message).ThisIsÜnicøde.ShouldBe("thiß ís jüst tæxt");
         }
 
@@ -120,7 +120,7 @@ namespace Rebus.Tests.Serialization.Json
             var message = RoundtripMessage(new SomeMessage { SomeField = "hello!" });
 
             // assert
-            message.ShouldBeTypeOf<SomeDucktypinglyCompatibleMessage>();
+            message.ShouldBeOfType<SomeDucktypinglyCompatibleMessage>();
             ((SomeDucktypinglyCompatibleMessage)message).SomeField.ShouldBe("hello!");
         }
 
@@ -142,7 +142,7 @@ namespace Rebus.Tests.Serialization.Json
             var message = RoundtripMessage(new SomeMessage { SomeField = "hello!" });
 
             // assert
-            message.ShouldBeTypeOf<SomeDucktypinglyCompatibleMessage>();
+            message.ShouldBeOfType<SomeDucktypinglyCompatibleMessage>();
             ((SomeDucktypinglyCompatibleMessage)message).SomeField.ShouldBe("hello!");
         }
 
