@@ -170,12 +170,28 @@ namespace Rebus.RabbitMQ
                     using (var model = GetConnection().CreateModel())
                     {
                         var headers = GetHeaders(model, message);
+                        // If we are publishing in OneExchangePerType, we have to ensure that
+                        // the exchange exists, if not, the connection get closed abruptly
+                        if (message.Headers.ContainsKey(Headers.Multicast)
+                            && !message.Headers.ContainsKey(Headers.Bounced)
+                            && UsingOneExchangePerMessageTypeRouting)
+                        {
+                            log.Debug("Declaring fanout exchange for: {0}", exchange);
+                            model.ExchangeDeclare(exchange, "fanout", true, false, null);
+                        }
                         model.BasicPublish(exchange, routingKey, headers, message.Body);
                     }
                 }
                 else
                 {
                     var model = GetSenderModel(context);
+                    if (message.Headers.ContainsKey(Headers.Multicast)
+                            && !message.Headers.ContainsKey(Headers.Bounced)
+                            && UsingOneExchangePerMessageTypeRouting)
+                    {
+                        log.Debug("Declaring fanout exchange for: {0}", exchange);
+                        model.ExchangeDeclare(exchange, "fanout", true, false, null);
+                    }
                     model.BasicPublish(exchange, routingKey, GetHeaders(model, message), message.Body);
                 }
             }
