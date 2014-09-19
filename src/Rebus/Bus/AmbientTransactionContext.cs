@@ -125,6 +125,9 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Runs the cleanup method, ensuring that the currently thread-bound transaction context is cleared
+        /// </summary>
         public void RunCleanup()
         {
             try
