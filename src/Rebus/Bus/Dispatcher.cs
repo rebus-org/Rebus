@@ -92,8 +92,10 @@ namespace Rebus.Bus
                     throw new UnhandledMessageException(message);
                 }
 
-                if(!(storeSagaData is ICanUpdateMultipleSagaDatasAtomically))
+                if (!(storeSagaData is ICanUpdateMultipleSagaDatasAtomically))
+                {
                     CheckMultipleSagaHandlers(message, distinctHandlersToExecute);
+                }
 
                 foreach (var handler in distinctHandlersToExecute)
                 {

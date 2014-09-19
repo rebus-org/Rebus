@@ -405,6 +405,10 @@
 * Update MongoDB driver dependency to 1.9.2
 * Fixed error in build script that did not build the Serilog project. Also fixed it so that Rebus.Serilog is .NET 4 like the rest of Rebus.
 
+## 0.71.1
+
+* Ensure declaration of exchange when using `OneExchangePerType` - thanks [maeserichar]
+
 
 
 
