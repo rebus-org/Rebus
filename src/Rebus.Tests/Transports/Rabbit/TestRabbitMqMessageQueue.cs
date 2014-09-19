@@ -113,6 +113,32 @@ namespace Rebus.Tests.Transports.Rabbit
             }
         }
 
+        bool ExchangeExists(string exchangeName)
+        {
+            using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
+            {
+                using (var model = connection.CreateModel())
+                {
+                    try
+                    {
+                        model.ExchangeDeclarePassive(exchangeName);
+
+                        // if the call succeeds, then the queue exists
+                        return true;
+                    }
+                    catch (OperationInterruptedException exception)
+                    {
+                        if (exception.Message.Contains("NOT_FOUND"))
+                        {
+                            return false;
+                        }
+
+                        throw;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// With plain string concatenation
         ///    0,0   System.Stri
@@ -686,6 +712,31 @@ namespace Rebus.Tests.Transports.Rabbit
             if (inputExchange != null) queue.UseExchangeAsInputAddress(inputExchange);
             DisposableTracker.TrackDisposable(queue);
             return queue.PurgeInputQueue();
+        }
+
+        [Test]
+        public void ExchangeCreatedIfPusblishWithExchangePerType()
+        {
+            var exchangeName = typeof(TransportMessageToSend).FullName;
+            using (var adapter = new BuiltinContainerAdapter())
+            {
+                DeleteQueue("test.input");
+                DeleteQueue("test.error");
+                DeleteExchange(exchangeName);
+
+                var msg = new TransportMessageToSend { Body = Encoding.GetBytes("this is a message!") };
+
+                var bus = Configure.With(adapter)
+                         .Transport(t => t.UseRabbitMq(ConnectionString, "test.input", "test.error")
+                             .ManageSubscriptions()
+                             .UseOneExchangePerMessageTypeRouting())
+                        .CreateBus()
+                        .Start();
+
+                bus.Publish(msg);
+
+                Assert.True(ExchangeExists(exchangeName));
+            }
         }
     }
 }
