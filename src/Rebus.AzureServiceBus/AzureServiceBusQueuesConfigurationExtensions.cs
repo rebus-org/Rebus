@@ -53,7 +53,7 @@ namespace Rebus.AzureServiceBus
             return asbOptionsToReturn;
         }
 
-        public static IAsbOptions UseAzureServiceBusWithCustomQueueCredentials(this RebusTransportConfigurer configurer ,
+        public static IAsbOptions UseAzureServiceBusWithCredentialsForEachQueue(this RebusTransportConfigurer configurer ,
             string connectionString, string inputQueueName, string errorQueueName,
             Dictionary<string, string> queueCredentials)
         {
