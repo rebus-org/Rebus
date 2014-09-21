@@ -39,7 +39,9 @@ namespace Rebus.AzureServiceBus
         readonly ConcurrentDictionary<string, QueueClient> queueClients = new ConcurrentDictionary<string, QueueClient>();
         readonly NamespaceManager namespaceManager;
         readonly string connectionString;
-
+        public Dictionary<string,string> QueueCredentials { get; set; }
+        readonly ConcurrentDictionary<string,NamespaceManager> namespaceManagers=new ConcurrentDictionary<string, NamespaceManager>(); 
+        
         TimeSpan peekLockRenewalInterval = TimeSpan.FromMinutes(4.5);
 
         bool disposed;
@@ -77,11 +79,35 @@ namespace Rebus.AzureServiceBus
             }
         }
 
+        string GetConnectionstringForQueueName(string queueName)
+        {
+            if (QueueCredentials != null && QueueCredentials.ContainsKey(queueName))
+                return QueueCredentials[queueName];
+            return connectionString;
+        }
+
+        NamespaceManager GetNamespaceManagerForQueueName(string queueName)
+        {
+            //if custom credentials are provided for the queue- return the appropriate namespacemanager
+            if (QueueCredentials != null && QueueCredentials.ContainsKey(queueName))
+                return namespaceManagers.GetOrAdd(queueName, CreateNamespaceManager);
+
+            
+            //otherwise return the default namespacemanager
+            return namespaceManager;
+        }
+
+        NamespaceManager CreateNamespaceManager(string queueName)
+        {
+            return NamespaceManager.CreateFromConnectionString(GetConnectionstringForQueueName(queueName));
+        }
+
+
         public void EnsureQueueExists(string queueName)
         {
             try
             {
-                if (namespaceManager.QueueExists(queueName)) return;
+                if (GetNamespaceManagerForQueueName(queueName).QueueExists(queueName)) return;
             }
             catch (TimeoutException exception)
             {
@@ -90,7 +116,7 @@ namespace Rebus.AzureServiceBus
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));
 
-                if (namespaceManager.QueueExists(queueName)) return;
+                if (GetNamespaceManagerForQueueName(queueName).QueueExists(queueName)) return;
             }
 
             try
@@ -101,7 +127,7 @@ namespace Rebus.AzureServiceBus
                 log.Info("Queue '{0}' does not exist - it will be created now (with lockDuration={1} and maxDeliveryCount={2})",
                     queueName, lockDuration, maxDeliveryCount);
 
-                namespaceManager.CreateQueue(new QueueDescription(queueName)
+                GetNamespaceManagerForQueueName(queueName).CreateQueue(new QueueDescription(queueName)
                 {
                     LockDuration = lockDuration,
                     MaxDeliveryCount = maxDeliveryCount,
@@ -169,7 +195,7 @@ namespace Rebus.AzureServiceBus
 
         QueueClient CreateNewClient(string queueName)
         {
-            return QueueClient.CreateFromConnectionString(connectionString, queueName);
+            return QueueClient.CreateFromConnectionString(GetConnectionstringForQueueName(queueName), queueName);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -523,7 +549,7 @@ namespace Rebus.AzureServiceBus
         {
             log.Warn("Purging queue '{0}'", InputQueue);
 
-            namespaceManager.DeleteQueue(InputQueue);
+            GetNamespaceManagerForQueueName(InputQueue).DeleteQueue(InputQueue);
             EnsureQueueExists(InputQueue);
 
             return this;
@@ -533,7 +559,7 @@ namespace Rebus.AzureServiceBus
         {
             log.Warn("Deleting queue '{0}'", InputQueue);
 
-            namespaceManager.DeleteQueue(InputQueue);
+            GetNamespaceManagerForQueueName(InputQueue).DeleteQueue(InputQueue);
 
             return this;
         }

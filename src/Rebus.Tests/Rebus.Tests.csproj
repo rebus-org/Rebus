@@ -332,6 +332,7 @@
     <Compile Include="Persistence\Timeouts\ITimeoutStorageFactory.cs" />
     <Compile Include="Persistence\Timeouts\TestTimeoutStorage.cs" />
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
+    <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueAuthenticate.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueue_Queues.cs" />
     <Compile Include="Transports\Azure\TestAzureServiceBusMessageQueueFactory.cs" />
     <Compile Include="Transports\Azure\TestDevelopmentStorageTransport.cs" />
