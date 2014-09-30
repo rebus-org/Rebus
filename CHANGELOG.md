@@ -409,9 +409,13 @@
 
 * Ensure declaration of exchange when using `OneExchangePerType` - thanks [maeserichar]
 
+## 0.71.2
+
+* Fixed SQL Server schema creation issue where querying `sys.tables` would give an error if the database's current collation results in case sensitive table names - thanks [tiipe]
 
 
 
+[tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [fritsduus]: https://github.com/fritsduus
