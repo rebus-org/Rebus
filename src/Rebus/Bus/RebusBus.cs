@@ -236,7 +236,10 @@ namespace Rebus.Bus
                 {
                     var sagaContext = (SagaContext)messageContext.Items[SagaContext.SagaContextItemKey];
 
-                    AttachHeader(message, Headers.AutoCorrelationSagaId, sagaContext.Id.ToString());
+                    if (sagaContext != null)
+                    {
+                        AttachHeader(message, Headers.AutoCorrelationSagaId, sagaContext.Id.ToString());
+                    }
                 }
             }
         }
