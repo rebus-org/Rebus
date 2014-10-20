@@ -413,6 +413,10 @@
 
 * Fixed SQL Server schema creation issue where querying `sys.tables` would give an error if the database's current collation results in case sensitive table names - thanks [tiipe]
 
+## 0.71.3
+
+* Made SQL Server subscription storage & saga persister API accept connection string names (just like the SQL transport config)  - thanks [tiipe]
+
 
 
 [tiipe]: https://github.com/tiipe
