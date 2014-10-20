@@ -24,9 +24,9 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
-        protected SqlServerStorage(string connectionString)
+        protected SqlServerStorage(string connectionStringOrConnectionStringName)
         {
-            getConnection = () => CreateConnection(connectionString);
+            getConnection = () => CreateConnection(connectionStringOrConnectionStringName);
             commitAction = h => h.Commit();
             rollbackAction = h => h.RollBack();
             releaseConnection = c => c.Dispose();
@@ -37,9 +37,10 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        protected static ConnectionHolder CreateConnection(string connectionString)
+        protected static ConnectionHolder CreateConnection(string connectionStringOrConnectionStringName)
         {
-            var connection = new SqlConnection(connectionString);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connection = new SqlConnection(connectionStringToUse);
             connection.Open();
 
             if (Transaction.Current == null)
