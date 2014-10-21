@@ -29,7 +29,7 @@ namespace Rebus.Transports.Sql
         /// </summary>
         public static SqlServerMessageQueueOptions UseSqlServerInOneWayClientMode(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName)
         {
-            var connectionStringToUse = GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
             var sqlServerMessageQueue = SqlServerMessageQueue.Sender(connectionStringToUse, DefaultMessagesTableName);
 
             configurer.UseSender(sqlServerMessageQueue);
@@ -94,7 +94,7 @@ A more full example configuration snippet can be seen here:
 
         static SqlServerMessageQueueOptions DoIt(string connectionStringOrConnectionStringName, RebusTransportConfigurer configurer, string messageTableName, string inputQueueName, string errorQueueName)
         {
-            var connectionStringToUse = GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
 
             if (string.IsNullOrEmpty(inputQueueName))
             {
@@ -108,15 +108,6 @@ A more full example configuration snippet can be seen here:
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
 
             return new SqlServerMessageQueueOptions(sqlServerMessageQueue);
-        }
-
-        static string GetConnectionStringToUse(string connectionStringOrConnectionStringName)
-        {
-            var connectionStringSettings = ConfigurationManager.ConnectionStrings[connectionStringOrConnectionStringName];
-            var connectionStringToUse = connectionStringSettings != null
-                                            ? connectionStringSettings.ConnectionString
-                                            : connectionStringOrConnectionStringName;
-            return connectionStringToUse;
         }
     }
 }
