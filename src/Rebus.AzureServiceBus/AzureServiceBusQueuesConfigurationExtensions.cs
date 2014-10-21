@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
 using Rebus.Bus;
@@ -51,6 +52,35 @@ namespace Rebus.AzureServiceBus
 
             return asbOptionsToReturn;
         }
+
+        public static IAsbOptions UseAzureServiceBusWithCredentialsForEachQueue(this RebusTransportConfigurer configurer ,
+            string connectionString, string inputQueueName, string errorQueueName,
+            Dictionary<string, string> queueCredentials)
+        {
+             var azureServiceBusMessageQueue = new AzureServiceBusMessageQueue(connectionString, inputQueueName);
+            azureServiceBusMessageQueue.QueueCredentials = queueCredentials;
+            configurer.UseSender(azureServiceBusMessageQueue);
+            configurer.UseReceiver(azureServiceBusMessageQueue);
+            configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
+
+            azureServiceBusMessageQueue.EnsureQueueExists(errorQueueName);
+
+            // transfer renew-peek-lock-action from transaction context to message context
+            configurer
+                .Backbone
+                .ConfigureEvents(e =>
+                {
+                    e.MessageContextEstablished += (bus, context) =>
+                    {
+                        var renewAction = TransactionContext.Current[AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction];
+                        
+                        context.Items[AzureServiceBusMessageQueue.AzureServiceBusRenewLeaseAction] = renewAction;
+                    };
+                });
+
+            return new AsbOptions(azureServiceBusMessageQueue);
+        }
+
 
         public static IAsbOptions UseAzureServiceBusAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionString)
         {
