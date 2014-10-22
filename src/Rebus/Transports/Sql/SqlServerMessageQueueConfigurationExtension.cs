@@ -70,18 +70,6 @@ namespace Rebus.Transports.Sql
         /// queue name will be deduced from the Rebus configuration section in the application
         /// configuration file. The input queue will be automatically created if it doesn't exist.
         /// </summary>
-        public static SqlServerMessageQueueOptions UseSqlServerAndGetInputQueueNameAndMessageTableNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName)
-        {            
-            string messageTableNameToUse = RebusConfigurationSection.GetConfigurationValueOrDefault(m => m.MessageTableName, DefaultMessagesTableName);
-            
-            return configurer.UseSqlServerAndGetInputQueueNameFromAppConfig(connectionStringOrConnectionStringName, messageTableNameToUse);
-        }
-
-        /// <summary>
-        /// Specifies that you want to use Sql Server to both send and receive messages. The input
-        /// queue name will be deduced from the Rebus configuration section in the application
-        /// configuration file. The input queue will be automatically created if it doesn't exist.
-        /// </summary>
         public static SqlServerMessageQueueOptions UseSqlServerAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName, string MessageTableName = null)
         {
             try
