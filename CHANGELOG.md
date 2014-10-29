@@ -417,6 +417,12 @@
 
 * Made SQL Server subscription storage & saga persister API accept connection string names (just like the SQL transport config)  - thanks [tiipe]
 
+## 0.71.4
+
+* Allow for specifying the messages table name on the SQL Server transport - thanks [tiipe]
+* Modified SQL server-based persistence things to accept connection string _names_ as well - thanks [tiipe]
+* Fixed subtle bug that would not remove the saga context from the current message context's items - thanks [dimajanzen]
+
 
 
 [tiipe]: https://github.com/tiipe
@@ -431,3 +437,4 @@
 [krivin]: https://github.com/krivin
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [oguzhaneren]: https://github.com/oguzhaneren
+[dimajanzen]: https://github.com/dimajanzen
