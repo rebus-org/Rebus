@@ -423,6 +423,9 @@
 * Modified SQL server-based persistence things to accept connection string _names_ as well - thanks [tiipe]
 * Fixed subtle bug that would not remove the saga context from the current message context's items - thanks [dimajanzen]
 
+## 0.72.0
+
+* Added auditing capability - endpoints can now send a copy of the transport message to an audit queue whenever they have been successfully handled or published (which is the only two times when messages "disappear" - when handling a message, it "disappears", and when publishing to 0 subscribers, it also "disappears"). This can provide the basis for advanced tooling later on, e.g. for tracking correlation across systems, for gathering statistics etc. For now, go audit your messages - more tools will follow :)
 
 
 [tiipe]: https://github.com/tiipe
