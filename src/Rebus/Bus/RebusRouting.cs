@@ -27,7 +27,7 @@ namespace Rebus.Bus
         {
             rebusBus.PossiblyAttachSagaIdToRequest(message);
 
-            rebusBus.InternalSend(destinationEndpoint, new List<object> { message });
+            rebusBus.InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Rebus.Bus
                     Messages = new[] {currentMessage}
                 };
 
-            rebusBus.InternalSend(destinationEndpoint, message);
+            rebusBus.InternalSend(new List<string> { destinationEndpoint }, message);
         }
     }
 }

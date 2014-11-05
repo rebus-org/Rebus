@@ -85,6 +85,7 @@
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
     <Compile Include="Configuration\ConfigureAdditionalBehavior.cs" />
     <Compile Include="Configuration\JsonSerializationOptions.cs" />
+    <Compile Include="Configuration\MessageAuditor.cs" />
     <Compile Include="Configuration\RebusBehaviorConfigurer.cs" />
     <Compile Include="Configuration\RebusTimeoutsConfigurer.cs" />
     <Compile Include="Configuration\SqlServerSagaPersisterFluentConfigurer.cs" />

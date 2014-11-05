@@ -1,4 +1,6 @@
-﻿namespace Rebus.Logging
+﻿using System.Collections.Generic;
+
+namespace Rebus.Logging
 {
     class MessageLogger
     {
@@ -9,9 +11,9 @@
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        public void LogSend(string destination, object messageToSend)
+        public void LogSend(IEnumerable<string> destinations, object messageToSend)
         {
-            log.Debug("Sending {0} to {1}", messageToSend, destination);
+            log.Debug("Sending {0} to {1}", messageToSend, string.Join("; ", destinations));
         }
 
         public void LogReceive(string id, object receivedMessage)

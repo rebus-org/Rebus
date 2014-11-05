@@ -229,8 +229,11 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestMessageAuditConfiguration.cs" />
+    <Compile Include="Integration\TestMessageAuditMulticast.cs" />
     <Compile Include="Integration\TestSagasUsingMsSqlPersistence.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
+    <Compile Include="Integration\TestMessageAudit.cs" />
     <Compile Include="Integration\TestMaxRetriesConfiguration.cs" />
     <Compile Include="Integration\TestRabbitMqAlternativeBackoffBehavior.cs" />
     <Compile Include="Integration\TestUserContext.cs" />
@@ -380,6 +383,7 @@
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
     <Compile Include="Unit\WorkerFixtureBase.cs" />
     <Compile Include="UserIdentityContext.cs" />
+    <Compile Include="Util\MsmqTestHelper.cs" />
     <Compile Include="Util\TestIpUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -399,9 +403,17 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Configuration\RealAppConfigs\App.3.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="HttpGateway\Http\ConfigFiles\App01.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Integration\Config\Audit.App.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
