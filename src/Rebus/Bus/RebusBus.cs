@@ -674,6 +674,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 var auditQueueName = configureAdditionalBehavior.AuditQueueName;
                 
                 InternalSend(new List<string>{auditQueueName}, transportMessage);
+
+                events.RaiseMessageAudited(this, transportMessage);
             }
         }
 

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Logging;
-using Rebus.Shared;
 using Rebus.Timeout;
 
 namespace Rebus.Configuration
@@ -171,57 +170,6 @@ namespace Rebus.Configuration
 
             new MessageAuditor()
                 .Configure(rebusEvents, AdditionalBehavior.AuditQueueName);
-        }
-    }
-
-    class MessageAuditor
-    {
-        static ILog log;
-        static MessageAuditor()
-        {
-            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-        }
-
-        public void Configure(IRebusEvents rebusEvents, string auditQueueName)
-        {
-            log.Info("Configuring Rebus to copy successfully processed messages to {0}", auditQueueName);
-
-            rebusEvents.AfterTransportMessage +=
-                (bus, exceptionOrNull, message) =>
-                    PossiblyCopyToAuditQueue(auditQueueName, exceptionOrNull, bus, message);
-        }
-
-        static void PossiblyCopyToAuditQueue(string auditQueueName, Exception exceptionOrNull, IBus bus, ReceivedTransportMessage message)
-        {
-            // if an error occurred, don't do anything
-            if (exceptionOrNull != null) return;
-
-            // this one will always be non-null - but still
-            if (TransactionContext.Current == null)
-            {
-                log.Warn("Auditor called outside of a proper transaction context!!! This must be an error.");
-                return;
-            }
-
-            var rebusBus = bus as RebusBus;
-            if (rebusBus == null)
-            {
-                log.Warn("Current IBus is not a RebusBus, it's a {0} - cannot use {0} for auditing", bus.GetType().Name);
-                return;
-            }
-
-            var messageCopy = message.ToForwardableMessage();
-
-            messageCopy.Headers[Headers.AuditReason] = Headers.AuditReasons.Handled;
-            messageCopy.Headers[Headers.AuditSourceQueue] = rebusBus.GetInputQueueAddress();
-            messageCopy.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
-
-            rebusBus.InternalSend(new List<string> { auditQueueName }, messageCopy);
-        }
-
-        public void MessagePublished(IBus bus, object message, string auditQueueName, Dictionary<string, object> headers)
-        {
-            
         }
     }
 }

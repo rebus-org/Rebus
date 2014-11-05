@@ -76,6 +76,11 @@ namespace Rebus.Configuration
         public event AfterTransportMessageEventHandler AfterTransportMessage;
 
         /// <summary>
+        /// Event that will be raised whenever the handled/published transport message has been copied to the audit queue
+        /// </summary>
+        public event MessageAuditedEventHandler MessageAudited;
+
+        /// <summary>
         /// Event that will be raised whenever it is determined that a message
         /// has failed too many times.
         /// </summary>
@@ -175,6 +180,14 @@ namespace Rebus.Configuration
                 foreach (var listener in UncorrelatedMessage.GetInvocationList().Cast<UncorrelatedMessageEventHandler>())
                 {
                     rebusEvents.UncorrelatedMessage += listener;
+                }
+            }
+
+            if (MessageAudited != null)
+            {
+                foreach (var listener in MessageAudited.GetInvocationList().Cast<MessageAuditedEventHandler>())
+                {
+                    rebusEvents.MessageAudited += listener;
                 }
             }
 

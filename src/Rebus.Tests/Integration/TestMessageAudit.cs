@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Messaging;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
-using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Tests.Util;
 using Rebus.Transports.Msmq;
 using Shouldly;
-using Message = Rebus.Messages.Message;
 
 namespace Rebus.Tests.Integration
 {
