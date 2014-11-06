@@ -427,6 +427,11 @@
 
 * Added auditing capability - endpoints can now send a copy of the transport message to an audit queue whenever they have been successfully handled or published (which is the only two times when messages "disappear" - when handling a message, it "disappears", and when publishing to 0 subscribers, it also "disappears"). This can provide the basis for advanced tooling later on, e.g. for tracking correlation across systems, for gathering statistics etc. For now, go audit your messages - more tools will follow :)
 
+## 0.73.0
+
+* Updated RabbitMQ dependency - thanks [maxx1337]
+
+
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
@@ -441,3 +446,4 @@
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [oguzhaneren]: https://github.com/oguzhaneren
 [dimajanzen]: https://github.com/dimajanzen
+[maxx1337]: https://github.com/maxx1337
