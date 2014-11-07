@@ -526,5 +526,24 @@ class D : IHandleMessagesAsync<long> {
         interface IFirstInterface { }
         interface ISecondInterface { }
         class PolymorphicMessage : IFirstInterface, ISecondInterface { }
+
+        [Test]
+        public void TransportMessageSentEventIsRaisedWhenMessageIsSent()
+        {
+            // Arrange
+            var bus = CreateTheBus();
+            var fired = false;
+            bus.Events.BeforeInternalSend += (destination, message, published) =>
+                {
+                    fired = true;
+                };
+            bus.Start();
+
+            // Act
+            bus.Send<object>(new Object());
+
+            // Assert
+            Assert.IsTrue(fired);
+        }
     }
 }

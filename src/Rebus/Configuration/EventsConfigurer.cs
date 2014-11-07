@@ -26,6 +26,11 @@ namespace Rebus.Configuration
         public event MessageSentEventHandler MessageSent;
 
         /// <summary>
+        /// Event that will be raised inmediately when the bus is going to send a transport message.
+        /// </summary>
+        public event TransportMessageSentEventHandler BeforeInternalSend;
+
+        /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
         /// if deserialization completed, and the transport message does in fact contain one or more
         /// logical messages).
@@ -87,20 +92,20 @@ namespace Rebus.Configuration
         /// </summary>
         public event PoisonMessageEventHandler PoisonMessage;
 
-		/// <summary>
-		/// Event that is raised when an exception is thrown during the handling of a message.
-		/// </summary>
-		public event OnHandlingErrorEventHandler OnHandlingError;
+        /// <summary>
+        /// Event that is raised when an exception is thrown during the handling of a message.
+        /// </summary>
+        public event OnHandlingErrorEventHandler OnHandlingError;
 
-		/// <summary>
-		/// Event that is raised after the execution of a handler of a message.
-		/// </summary>
-		public event AfterHandlingEventHandler AfterHandling;
+        /// <summary>
+        /// Event that is raised after the execution of a handler of a message.
+        /// </summary>
+        public event AfterHandlingEventHandler AfterHandling;
 
-		/// <summary>
-		/// Event that is raised before the execution of a handler of a message.
-		/// </summary>
-		public event BeforeHandlingEventHandler BeforeHandling;
+        /// <summary>
+        /// Event that is raised before the execution of a handler of a message.
+        /// </summary>
+        public event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
@@ -207,29 +212,29 @@ namespace Rebus.Configuration
                 }
             }
 
-			if (AfterHandling != null)
-			{
-				foreach (var listener in MessageAudited.GetInvocationList().Cast<AfterHandlingEventHandler>())
-				{
-					rebusEvents.AfterHandling += listener;
-				}
-			}
+            if (AfterHandling != null)
+            {
+                foreach (var listener in MessageAudited.GetInvocationList().Cast<AfterHandlingEventHandler>())
+                {
+                    rebusEvents.AfterHandling += listener;
+                }
+            }
 
-			if (BeforeHandling != null)
-			{
-				foreach (var listener in MessageAudited.GetInvocationList().Cast<BeforeHandlingEventHandler>())
-				{
-					rebusEvents.BeforeHandling += listener;
-				}
-			}
+            if (BeforeHandling != null)
+            {
+                foreach (var listener in MessageAudited.GetInvocationList().Cast<BeforeHandlingEventHandler>())
+                {
+                    rebusEvents.BeforeHandling += listener;
+                }
+            }
 
-			if (OnHandlingError != null)
-			{
-				foreach (var listener in MessageAudited.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
-				{
-					rebusEvents.OnHandlingError += listener;
-				}
-			}
+            if (OnHandlingError != null)
+            {
+                foreach (var listener in MessageAudited.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
+                {
+                    rebusEvents.OnHandlingError += listener;
+                }
+            }
 
             foreach (var messageMutator in MessageMutators)
             {
@@ -242,5 +247,5 @@ namespace Rebus.Configuration
             }
         }
 
-	}
+    }
 }

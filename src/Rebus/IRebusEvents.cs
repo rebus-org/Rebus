@@ -18,6 +18,11 @@ namespace Rebus
     /// Delegate type that can listen to whenever the bus sends a logical message.
     /// </summary>
     public delegate void MessageSentEventHandler(IBus bus, string destination, object message);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever the bus sends a transport message.
+    /// </summary>
+    public delegate void TransportMessageSentEventHandler(IEnumerable<string> destinations, object message, bool published);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
@@ -60,20 +65,20 @@ namespace Rebus
     /// </summary>
     public delegate void MessageAuditedEventHandler(IBus bus, TransportMessageToSend transportMessageToSend);
 
-	/// <summary>
-	/// Delegate type that can listen to whenever an exception is thrown during the execution of handler of a message.
-	/// </summary>
-	public delegate void OnHandlingErrorEventHandler(Exception exception);
+    /// <summary>
+    /// Delegate type that can listen to whenever an exception is thrown during the execution of handler of a message.
+    /// </summary>
+    public delegate void OnHandlingErrorEventHandler(Exception exception);
 
-	/// <summary>
-	/// Delegate type that can listen to whenever a message handler has been executed.
-	/// </summary>
-	public delegate void AfterHandlingEventHandler(object message, ISagaData sagadata);
+    /// <summary>
+    /// Delegate type that can listen to whenever a message handler has been executed.
+    /// </summary>
+    public delegate void AfterHandlingEventHandler(object message, ISagaData sagadata);
 
-	/// <summary>
-	/// Delegate type that can listen to whenever a message handler is going to be executed.
-	/// </summary>
-	public delegate bool BeforeHandlingEventHandler(object message, ISagaData sagadata);
+    /// <summary>
+    /// Delegate type that can listen to whenever a message handler is going to be executed.
+    /// </summary>
+    public delegate bool BeforeHandlingEventHandler(object message, ISagaData sagadata);
 
     /// <summary>
     /// Groups the different event hooks that Rebus exposes.
@@ -121,6 +126,11 @@ namespace Rebus
         event MessageSentEventHandler MessageSent;
 
         /// <summary>
+        /// Event that will be raised immediately before a transport message is sent.
+        /// </summary>
+        event TransportMessageSentEventHandler BeforeInternalSend;
+
+        /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
         /// if deserialization completed, and the transport message does in fact contain one or more
         /// logical messages).
@@ -147,20 +157,20 @@ namespace Rebus
         /// </summary>
         event MessageContextEstablishedEventHandler MessageContextEstablished;
 
-		/// <summary>
-		/// Event that is raised when an exception is thrown during the handling of a message.
-		/// </summary>
-		event OnHandlingErrorEventHandler OnHandlingError;
+        /// <summary>
+        /// Event that is raised when an exception is thrown during the handling of a message.
+        /// </summary>
+        event OnHandlingErrorEventHandler OnHandlingError;
 
-		/// <summary>
-		/// Event that is raised after the execution of a handler of a message.
-		/// </summary>
-		event AfterHandlingEventHandler AfterHandling;
+        /// <summary>
+        /// Event that is raised after the execution of a handler of a message.
+        /// </summary>
+        event AfterHandlingEventHandler AfterHandling;
 
-		/// <summary>
-		/// Event that is raised before the execution of a handler of a message.
-		/// </summary>
-		event BeforeHandlingEventHandler BeforeHandling;
+        /// <summary>
+        /// Event that is raised before the execution of a handler of a message.
+        /// </summary>
+        event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Contains a pipeline of message mutators that will be run in order when messages are sent,

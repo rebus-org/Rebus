@@ -14,6 +14,8 @@ namespace Rebus.Bus
 
         public event MessageSentEventHandler MessageSent = delegate { };
 
+        public event TransportMessageSentEventHandler BeforeInternalSend = delegate { };
+
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
 
         public event AfterMessageEventHandler AfterMessage = delegate { };
@@ -34,11 +36,11 @@ namespace Rebus.Bus
 
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
-		public event OnHandlingErrorEventHandler OnHandlingError = delegate { };
+        public event OnHandlingErrorEventHandler OnHandlingError = delegate { };
 
-		public event AfterHandlingEventHandler AfterHandling = delegate { };
+        public event AfterHandlingEventHandler AfterHandling = delegate { };
 
-		public event BeforeHandlingEventHandler BeforeHandling = delegate { return true; };
+        public event BeforeHandlingEventHandler BeforeHandling = delegate { return true; };
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
@@ -60,6 +62,11 @@ namespace Rebus.Bus
         internal void RaiseMessageSent(IBus bus, string destination, object message)
         {
             MessageSent(bus, destination, message);
+        }
+
+        internal void RaiseBeforeInternalSend(IEnumerable<string> destinations, object message, bool published)
+        {
+            BeforeInternalSend(destinations, message, published);
         }
 
         internal void RaiseBeforeMessage(IBus bus, object message)
@@ -107,19 +114,19 @@ namespace Rebus.Bus
             MessageAudited(bus, transportMessage);
         }
 
-		internal void RaiseOnHandlingError(Exception exception)
-		{
-			OnHandlingError(exception);
-		}
+        internal void RaiseOnHandlingError(Exception exception)
+        {
+            OnHandlingError(exception);
+        }
 
-		internal void RaiseAfterHandling(object message, ISagaData sagadata)
-		{
-			AfterHandling(message, sagadata);
-		}
+        internal void RaiseAfterHandling(object message, ISagaData sagadata)
+        {
+            AfterHandling(message, sagadata);
+        }
 
-		internal bool RaiseBeforeHandling(object message, ISagaData sagadata)
-		{
-			return BeforeHandling(message, sagadata);
-		}
+        internal bool RaiseBeforeHandling(object message, ISagaData sagadata)
+        {
+            return BeforeHandling(message, sagadata);
+        }
     }
 }
