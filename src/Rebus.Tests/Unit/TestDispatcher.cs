@@ -283,5 +283,237 @@ namespace Rebus.Tests.Unit
                 calls.Add("YetAnotherHandler: another_interface");
             }
         }
+
+        class DummyHandler : IHandleMessages<object>
+        {
+            public void Handle(object message)
+            {
+                
+            }
+        }
+
+        class DummySaga : Saga<SagaData>, IAmInitiatedBy<object>
+        {
+            public void Handle(object message)
+            {
+
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+                
+            }
+        }
+
+        class BooleanHandler : IHandleMessages<object>
+        {
+            public bool handled = false;
+
+            public void Handle(object message)
+            {
+                handled = true;
+            }
+        }
+
+        class BooleanSaga : Saga<SagaData>, IAmInitiatedBy<object>
+        {
+            public bool Handled = false;
+
+            public void Handle(object message)
+            {
+                Handled = true;
+            }
+
+            public override void ConfigureHowToFindSaga()
+            {
+
+            }
+        }
+
+        [Test]
+        public void BeforeHandlingEventIsFired()
+        {
+            // arrange
+            var fired = false;
+            activator.UseHandler(new DummyHandler());
+            dispatcher.BeforeHandling += (message, sagadata) =>
+                {
+                    fired = true;
+                    return true;
+                };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(fired);
+        }
+
+        [Test]
+        public void BeforeHandlingEventIsFiredForSagas()
+        {
+            // arrange
+            var fired = false;
+            activator.UseHandler(new DummySaga());
+            dispatcher.BeforeHandling += (message, sagadata) =>
+            {
+                fired = true;
+                return true;
+            };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(fired);
+        }
+
+        [Test]
+        public void AfterHandlingEventIsFired()
+        {
+            // arrange
+            var fired = false;
+            activator.UseHandler(new DummyHandler());
+            dispatcher.AfterHandling += (message, sagadata) =>
+            {
+                fired = true;
+            };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(fired);
+        }
+
+        [Test]
+        public void AfterHandlingEventIsFiredForSagas()
+        {
+            // arrange
+            var fired = false;
+            activator.UseHandler(new DummySaga());
+            dispatcher.AfterHandling += (message, sagadata) =>
+            {
+                fired = true;
+            };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(fired);
+        }
+
+        [Test]
+        public void IfBeforeHandlingEventReturnsFalseHandlerNotExecuted()
+        {
+            // arrange
+            var handler = new BooleanHandler();
+            activator.UseHandler(handler);
+            dispatcher.BeforeHandling += (message, sagadata) =>
+            {
+                return false;
+            };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsFalse(handler.handled);
+        }
+
+        [Test]
+        public void IfBeforeHandlingNotDefinedHandlerIsExecuted()
+        {
+            // arrange
+            var handler = new BooleanHandler();
+            activator.UseHandler(handler);
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(handler.handled);
+        }
+
+        [Test]
+        public void IfBeforeHandlerThrowsAfterHandlerGetsException()
+        {
+            // arrange
+            Exception actual = null;
+            var expected = new Exception();
+            var handler = new DummyHandler();
+            activator.UseHandler(handler);
+            dispatcher.BeforeHandling += (message, sagadata) =>
+                {
+                    throw expected;
+                };
+            dispatcher.OnHandlingError += exception =>
+                {
+                    actual = exception;
+                };
+
+            // act
+            var ex = Assert.Throws<Exception>(() => dispatcher.Dispatch(new Object()));
+
+            // assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void IfBeforeHandlerInSagaThrowsAfterHandlerGetsException()
+        {
+            // arrange
+            Exception actual = null;
+            var expected = new Exception();
+            var handler = new DummySaga();
+            activator.UseHandler(handler);
+            dispatcher.BeforeHandling += (message, sagadata) =>
+            {
+                throw expected;
+            };
+            dispatcher.OnHandlingError += exception =>
+            {
+                actual = exception;
+            };
+
+            // act
+            var ex = Assert.Throws<Exception>(() => dispatcher.Dispatch(new Object()));
+
+            // assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        public void IfBeforeHandlingEventReturnsFalseSagaHandlerNotExecuted()
+        {
+            // arrange
+            var handler = new BooleanSaga();
+            activator.UseHandler(handler);
+            dispatcher.BeforeHandling += (message, sagadata) =>
+            {
+                return false;
+            };
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsFalse(handler.Handled);
+        }
+
+        [Test]
+        public void IfBeforeHandlingNotDefinedSagaHandlerIsExecuted()
+        {
+            // arrange
+            var handler = new BooleanSaga();
+            activator.UseHandler(handler);
+
+            // act
+            dispatcher.Dispatch<object>(new Object());
+
+            // assert
+            Assert.IsTrue(handler.Handled);
+        }
     }
 }

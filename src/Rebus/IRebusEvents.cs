@@ -60,6 +60,21 @@ namespace Rebus
     /// </summary>
     public delegate void MessageAuditedEventHandler(IBus bus, TransportMessageToSend transportMessageToSend);
 
+	/// <summary>
+	/// Delegate type that can listen to whenever an exception is thrown during the execution of handler of a message.
+	/// </summary>
+	public delegate void OnHandlingErrorEventHandler(Exception exception);
+
+	/// <summary>
+	/// Delegate type that can listen to whenever a message handler has been executed.
+	/// </summary>
+	public delegate void AfterHandlingEventHandler(object message, ISagaData sagadata);
+
+	/// <summary>
+	/// Delegate type that can listen to whenever a message handler is going to be executed.
+	/// </summary>
+	public delegate bool BeforeHandlingEventHandler(object message, ISagaData sagadata);
+
     /// <summary>
     /// Groups the different event hooks that Rebus exposes.
     /// </summary>
@@ -131,6 +146,21 @@ namespace Rebus
         /// message processing and is disposed at the very end.
         /// </summary>
         event MessageContextEstablishedEventHandler MessageContextEstablished;
+
+		/// <summary>
+		/// Event that is raised when an exception is thrown during the handling of a message.
+		/// </summary>
+		event OnHandlingErrorEventHandler OnHandlingError;
+
+		/// <summary>
+		/// Event that is raised after the execution of a handler of a message.
+		/// </summary>
+		event AfterHandlingEventHandler AfterHandling;
+
+		/// <summary>
+		/// Event that is raised before the execution of a handler of a message.
+		/// </summary>
+		event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Contains a pipeline of message mutators that will be run in order when messages are sent,

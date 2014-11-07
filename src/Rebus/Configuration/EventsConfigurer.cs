@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Rebus.Bus;
 
@@ -85,6 +86,21 @@ namespace Rebus.Configuration
         /// has failed too many times.
         /// </summary>
         public event PoisonMessageEventHandler PoisonMessage;
+
+		/// <summary>
+		/// Event that is raised when an exception is thrown during the handling of a message.
+		/// </summary>
+		public event OnHandlingErrorEventHandler OnHandlingError;
+
+		/// <summary>
+		/// Event that is raised after the execution of a handler of a message.
+		/// </summary>
+		public event AfterHandlingEventHandler AfterHandling;
+
+		/// <summary>
+		/// Event that is raised before the execution of a handler of a message.
+		/// </summary>
+		public event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
@@ -191,6 +207,30 @@ namespace Rebus.Configuration
                 }
             }
 
+			if (AfterHandling != null)
+			{
+				foreach (var listener in MessageAudited.GetInvocationList().Cast<AfterHandlingEventHandler>())
+				{
+					rebusEvents.AfterHandling += listener;
+				}
+			}
+
+			if (BeforeHandling != null)
+			{
+				foreach (var listener in MessageAudited.GetInvocationList().Cast<BeforeHandlingEventHandler>())
+				{
+					rebusEvents.BeforeHandling += listener;
+				}
+			}
+
+			if (OnHandlingError != null)
+			{
+				foreach (var listener in MessageAudited.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
+				{
+					rebusEvents.OnHandlingError += listener;
+				}
+			}
+
             foreach (var messageMutator in MessageMutators)
             {
                 rebusEvents.MessageMutators.Add(messageMutator);
@@ -201,5 +241,6 @@ namespace Rebus.Configuration
                 rebusEvents.AddUnitOfWorkManager(unitOfWorkManager);
             }
         }
-    }
+
+	}
 }

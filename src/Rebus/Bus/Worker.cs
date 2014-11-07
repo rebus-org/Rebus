@@ -78,6 +78,12 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
+		internal event Action<object, ISagaData> AfterHandling = delegate { };
+
+		internal event Action<Exception> OnHandlingError = delegate { };
+
+		internal event Func<object, ISagaData, bool> BeforeHandling = delegate { return true;  };
+
         internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
         volatile bool shouldExit;
@@ -110,6 +116,9 @@ namespace Rebus.Bus
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+			dispatcher.AfterHandling += RaiseAfterHandling;
+			dispatcher.BeforeHandling += RaiseBeforeHandling;
+			dispatcher.OnHandlingError += RaiseOnHandlingError;
             nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
@@ -122,6 +131,21 @@ namespace Rebus.Bus
         {
             UncorrelatedMessage(message, saga);
         }
+
+		void RaiseAfterHandling(object message, ISagaData sagadata)
+		{
+			AfterHandling(message, sagadata);
+		}
+
+		void RaiseOnHandlingError(Exception exception)
+		{
+			OnHandlingError(exception);
+		}
+
+		bool RaiseBeforeHandling(object message, ISagaData sagadata)
+		{
+			return BeforeHandling(message, sagadata);
+		}
 
         /// <summary>
         /// Event that will be raised whenever dispatching a given message has failed MAX number of times

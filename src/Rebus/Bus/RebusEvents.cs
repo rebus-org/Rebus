@@ -34,6 +34,12 @@ namespace Rebus.Bus
 
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
+		public event OnHandlingErrorEventHandler OnHandlingError = delegate { };
+
+		public event AfterHandlingEventHandler AfterHandling = delegate { };
+
+		public event BeforeHandlingEventHandler BeforeHandling = delegate { return true; };
+
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
         public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
@@ -100,5 +106,20 @@ namespace Rebus.Bus
         {
             MessageAudited(bus, transportMessage);
         }
+
+		internal void RaiseOnHandlingError(Exception exception)
+		{
+			OnHandlingError(exception);
+		}
+
+		internal void RaiseAfterHandling(object message, ISagaData sagadata)
+		{
+			AfterHandling(message, sagadata);
+		}
+
+		internal bool RaiseBeforeHandling(object message, ISagaData sagadata)
+		{
+			return BeforeHandling(message, sagadata);
+		}
     }
 }

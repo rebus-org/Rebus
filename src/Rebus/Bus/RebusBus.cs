@@ -875,6 +875,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
                 worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
+				worker.AfterHandling += RaiseAfterHandling;
+				worker.BeforeHandling += RaiseBeforeHandling;
+				worker.OnHandlingError += RaiseOnHandlingError;
                 worker.MessageContextEstablished += RaiseMessageContextEstablished;
                 worker.Start();
             }
@@ -905,6 +908,21 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
             }
         }
+
+		void RaiseOnHandlingError(Exception exception)
+		{
+			events.RaiseOnHandlingError(exception);
+		}
+
+		void RaiseAfterHandling(object message, ISagaData sagadata)
+		{
+			events.RaiseAfterHandling(message, sagadata);
+		}
+
+		bool RaiseBeforeHandling(object message, ISagaData sagadata)
+		{
+			return events.RaiseBeforeHandling(message, sagadata);
+		}
 
         void RaiseMessageContextEstablished(IMessageContext messageContext)
         {
