@@ -59,8 +59,8 @@ namespace Rebus.Bus
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
-        public event Func<object, ISagaData, bool> BeforeHandling = delegate { return true; };
-        public event Action<object, ISagaData> AfterHandling = delegate { };
+        public event Action<object, IHandleMessages> BeforeHandling = delegate { };
+        public event Action<object, IHandleMessages> AfterHandling = delegate { };
         public event Action<Exception> OnHandlingError = delegate { };
 
         /// <summary>
@@ -258,7 +258,7 @@ This most likely indicates that you have configured this Rebus service to use an
         // ReSharper disable UnusedMember.Local
         async Task DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
         {
-            Exception exception = null;
+            IMessageContext context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
 
             var saga = handler as Saga;
             if (saga != null)
@@ -293,21 +293,25 @@ This most likely indicates that you have configured this Rebus service to use an
                 {
                     try
                     {
-                        if (BeforeHandling(message, sagaData))
+                        BeforeHandling(message, handler);
+                        if (context == null || !context.DoNotHandle)
                         {
                             await DoDispatch(message, handler);
                             PerformSaveActions(saga, sagaData);
-                            AfterHandling(message, sagaData); 
+                            AfterHandling(message, handler); 
                         }
                     }
                     catch (Exception ex)
                     {
-                        exception = ex;
+                        OnHandlingError(ex);
                         throw;
                     }
                     finally
                     {
-                        OnHandlingError(exception);
+                        if (context != null)
+                        {
+                            context.DoNotHandle = false;
+                        }
                     }
                 }
 
@@ -316,20 +320,24 @@ This most likely indicates that you have configured this Rebus service to use an
 
             try
             {
-                if (BeforeHandling(message, null))
+                BeforeHandling(message, handler);
+                if (context == null || !context.DoNotHandle)
                 {
                     await DoDispatch(message, handler);
-                    AfterHandling(message, null);
+                    AfterHandling(message, handler);
                 }
             }
             catch (Exception ex)
             {
-                exception = ex;
+                OnHandlingError(ex);
                 throw;
             }
             finally
             {
-                OnHandlingError(exception);
+                if (context != null)
+                {
+                    context.DoNotHandle = false;
+                }
             }
         }
         // ReSharper restore UnusedMember.Local

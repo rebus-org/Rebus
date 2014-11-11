@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Bus;
+using Rebus.Messages;
 
 namespace Rebus
 {
@@ -22,7 +23,7 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever the bus sends a transport message.
     /// </summary>
-    public delegate void TransportMessageSentEventHandler(IEnumerable<string> destinations, object message, bool published);
+    public delegate void TransportMessageSentEventHandler(IEnumerable<string> destinations, Message message, bool published);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
@@ -73,12 +74,12 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever a message handler has been executed.
     /// </summary>
-    public delegate void AfterHandlingEventHandler(object message, ISagaData sagadata);
+    public delegate void AfterHandlingEventHandler(IBus bus, object message, IHandleMessages handler);
 
     /// <summary>
     /// Delegate type that can listen to whenever a message handler is going to be executed.
     /// </summary>
-    public delegate bool BeforeHandlingEventHandler(object message, ISagaData sagadata);
+    public delegate void BeforeHandlingEventHandler(IBus bus, object message, IHandleMessages handler);
 
     /// <summary>
     /// Groups the different event hooks that Rebus exposes.

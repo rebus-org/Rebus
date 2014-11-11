@@ -78,11 +78,11 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
-        internal event Action<object, ISagaData> AfterHandling = delegate { };
+        internal event Action<object, IHandleMessages> AfterHandling = delegate { };
 
         internal event Action<Exception> OnHandlingError = delegate { };
 
-        internal event Func<object, ISagaData, bool> BeforeHandling = delegate { return true;  };
+        internal event Action<object, IHandleMessages> BeforeHandling = delegate { };
 
         internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
@@ -132,9 +132,9 @@ namespace Rebus.Bus
             UncorrelatedMessage(message, saga);
         }
 
-        void RaiseAfterHandling(object message, ISagaData sagadata)
+        void RaiseAfterHandling(object message, IHandleMessages handler)
         {
-            AfterHandling(message, sagadata);
+            AfterHandling(message, handler);
         }
 
         void RaiseOnHandlingError(Exception exception)
@@ -142,9 +142,9 @@ namespace Rebus.Bus
             OnHandlingError(exception);
         }
 
-        bool RaiseBeforeHandling(object message, ISagaData sagadata)
+        void RaiseBeforeHandling(object message, IHandleMessages handler)
         {
-            return BeforeHandling(message, sagadata);
+            BeforeHandling(message, handler);
         }
 
         /// <summary>

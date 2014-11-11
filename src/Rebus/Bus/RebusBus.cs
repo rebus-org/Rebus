@@ -915,14 +915,14 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             events.RaiseOnHandlingError(exception);
         }
 
-        void RaiseAfterHandling(object message, ISagaData sagadata)
+        void RaiseAfterHandling(object message, IHandleMessages handler)
         {
-            events.RaiseAfterHandling(message, sagadata);
+            events.RaiseAfterHandling(this, message, handler);
         }
 
-        bool RaiseBeforeHandling(object message, ISagaData sagadata)
+        void RaiseBeforeHandling(object message, IHandleMessages handler)
         {
-            return events.RaiseBeforeHandling(message, sagadata);
+            events.RaiseBeforeHandling(this, message, handler);
         }
 
         void RaiseMessageContextEstablished(IMessageContext messageContext)

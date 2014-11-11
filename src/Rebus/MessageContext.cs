@@ -141,6 +141,8 @@ namespace Rebus
             }
         }
 
+		public bool DoNotHandle { get; set; }
+
         /// <summary>
         /// Indicates whether message dispatch has been aborted in this message context
         /// </summary>

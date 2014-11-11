@@ -7,6 +7,7 @@ using Rebus.Persistence.InMemory;
 using Rebus.Tests.Persistence.Sagas;
 using Rhino.Mocks;
 using Shouldly;
+using Rebus.Testing;
 
 namespace Rebus.Tests.Unit
 {
@@ -339,7 +340,6 @@ namespace Rebus.Tests.Unit
             dispatcher.BeforeHandling += (message, sagadata) =>
                 {
                     fired = true;
-                    return true;
                 };
 
             // act
@@ -358,7 +358,6 @@ namespace Rebus.Tests.Unit
             dispatcher.BeforeHandling += (message, sagadata) =>
             {
                 fired = true;
-                return true;
             };
 
             // act
@@ -410,14 +409,21 @@ namespace Rebus.Tests.Unit
             // arrange
             var handler = new BooleanHandler();
             activator.UseHandler(handler);
-            dispatcher.BeforeHandling += (message, sagadata) =>
+            var mock = Mock<IMessageContext>();
+            mock.Stub(m => m.DoNotHandle).PropertyBehavior();
+            mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
+            mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
+
+            using (var fake = FakeMessageContext.Establish(mock))
             {
-                return false;
-            };
+                dispatcher.BeforeHandling += (message, sagadata) =>
+                {
+                    MessageContext.GetCurrent().DoNotHandle = true;
+                };
 
-            // act
-            dispatcher.Dispatch<object>(new Object());
-
+                // act
+                dispatcher.Dispatch<object>(new Object());
+            }
             // assert
             Assert.IsFalse(handler.handled);
         }
@@ -492,12 +498,19 @@ namespace Rebus.Tests.Unit
             activator.UseHandler(handler);
             dispatcher.BeforeHandling += (message, sagadata) =>
             {
-                return false;
+                MessageContext.GetCurrent().DoNotHandle = true;
             };
+             var mock = Mock<IMessageContext>();
+            mock.Stub(m => m.DoNotHandle).PropertyBehavior();
+            mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
+            mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
 
-            // act
-            dispatcher.Dispatch<object>(new Object());
+            using (var fake = FakeMessageContext.Establish(mock))
+            {
 
+                // act
+                dispatcher.Dispatch<object>(new Object());
+            }
             // assert
             Assert.IsFalse(handler.Handled);
         }

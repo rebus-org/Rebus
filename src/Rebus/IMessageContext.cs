@@ -46,5 +46,11 @@ namespace Rebus
         /// Contains the headers of the transport message currently being handled.
         /// </summary>
         IDictionary<string, object> Headers { get; }
+
+        /// <summary>
+        /// Avoid the processing of the message for the current handler
+        /// </summary>
+        bool DoNotHandle { get; set; }
+
     }
 }
