@@ -140,6 +140,14 @@ namespace Rebus.Configuration
                 }
             }
 
+            if (TransportMessageSent != null)
+            {
+                foreach (var listener in TransportMessageSent.GetInvocationList().Cast<TransportMessageSentEventHandler>())
+                {
+                    rebusEvents.TransportMessageSent += listener;
+                }
+            }
+
             if (BeforeMessage != null)
             {
                 foreach (var listener in BeforeMessage.GetInvocationList().Cast<BeforeMessageEventHandler>())
@@ -214,7 +222,7 @@ namespace Rebus.Configuration
 
             if (AfterHandling != null)
             {
-                foreach (var listener in MessageAudited.GetInvocationList().Cast<AfterHandlingEventHandler>())
+                foreach (var listener in AfterHandling.GetInvocationList().Cast<AfterHandlingEventHandler>())
                 {
                     rebusEvents.AfterHandling += listener;
                 }
@@ -222,7 +230,7 @@ namespace Rebus.Configuration
 
             if (BeforeHandling != null)
             {
-                foreach (var listener in MessageAudited.GetInvocationList().Cast<BeforeHandlingEventHandler>())
+                foreach (var listener in BeforeHandling.GetInvocationList().Cast<BeforeHandlingEventHandler>())
                 {
                     rebusEvents.BeforeHandling += listener;
                 }
@@ -230,7 +238,7 @@ namespace Rebus.Configuration
 
             if (OnHandlingError != null)
             {
-                foreach (var listener in MessageAudited.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
+                foreach (var listener in OnHandlingError.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
                 {
                     rebusEvents.OnHandlingError += listener;
                 }
