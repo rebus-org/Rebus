@@ -16,7 +16,7 @@ namespace Rebus.Bus
 
         public event MessageSentEventHandler MessageSent = delegate { };
 
-        public event TransportMessageSentEventHandler BeforeInternalSend = delegate { };
+        public event BeforeInternalSendEventHandler BeforeInternalSend = delegate { };
 
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
 

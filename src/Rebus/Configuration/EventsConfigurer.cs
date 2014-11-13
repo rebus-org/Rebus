@@ -28,7 +28,7 @@ namespace Rebus.Configuration
         /// <summary>
         /// Event that will be raised inmediately when the bus is going to send a transport message.
         /// </summary>
-        public event TransportMessageSentEventHandler BeforeInternalSend;
+        public event BeforeInternalSendEventHandler BeforeInternalSend;
 
         /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
@@ -140,11 +140,11 @@ namespace Rebus.Configuration
                 }
             }
 
-            if (TransportMessageSent != null)
+            if (BeforeInternalSend != null)
             {
-                foreach (var listener in TransportMessageSent.GetInvocationList().Cast<TransportMessageSentEventHandler>())
+                foreach (var listener in BeforeInternalSend.GetInvocationList().Cast<BeforeInternalSendEventHandler>())
                 {
-                    rebusEvents.TransportMessageSent += listener;
+                    rebusEvents.BeforeInternalSend += listener;
                 }
             }
 

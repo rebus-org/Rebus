@@ -23,7 +23,7 @@ namespace Rebus
     /// <summary>
     /// Delegate type that can listen to whenever the bus sends a transport message.
     /// </summary>
-    public delegate void TransportMessageSentEventHandler(IEnumerable<string> destinations, Message message, bool published);
+    public delegate void BeforeInternalSendEventHandler(IEnumerable<string> destinations, Message message, bool published);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
@@ -129,7 +129,7 @@ namespace Rebus
         /// <summary>
         /// Event that will be raised immediately before a transport message is sent.
         /// </summary>
-        event TransportMessageSentEventHandler BeforeInternalSend;
+        event BeforeInternalSendEventHandler BeforeInternalSend;
 
         /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
