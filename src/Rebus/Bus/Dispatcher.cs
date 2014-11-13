@@ -297,8 +297,8 @@ This most likely indicates that you have configured this Rebus service to use an
                         if (context == null || !context.DoNotHandle)
                         {
                             await DoDispatch(message, handler);
+                            AfterHandling(message, handler);
                             PerformSaveActions(saga, sagaData);
-                            AfterHandling(message, handler); 
                         }
                     }
                     catch (Exception ex)
