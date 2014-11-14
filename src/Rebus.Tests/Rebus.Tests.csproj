@@ -252,6 +252,7 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestIdempotentSagas.cs" />
     <Compile Include="Integration\TestMessageAuditConfiguration.cs" />
     <Compile Include="Integration\TestMessageAuditMulticast.cs" />
     <Compile Include="Integration\TestSagasUsingMsSqlPersistence.cs" />
@@ -472,6 +473,10 @@
     <ProjectReference Include="..\Rebus.HttpGateway\Rebus.HttpGateway.csproj">
       <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
       <Name>Rebus.HttpGateway</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.IdempotentSagas\Rebus.IdempotentSagas.csproj">
+      <Project>{8e78c97b-4e87-419b-9f9a-4b7d25c0be3f}</Project>
+      <Name>Rebus.IdempotentSagas</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>

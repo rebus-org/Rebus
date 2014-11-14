@@ -41,6 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.AzureServiceBus.nuspec = ..\scripts\Rebus.AzureServiceBus.nuspec
 		..\scripts\Rebus.Castle.Windsor.nuspec = ..\scripts\Rebus.Castle.Windsor.nuspec
 		..\scripts\Rebus.Extensions.nuspec = ..\scripts\Rebus.Extensions.nuspec
+		Rebus.IdempotentSagas.nuspec = Rebus.IdempotentSagas.nuspec
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
 		..\scripts\Rebus.MsmqLoadBalancer.nuspec = ..\scripts\Rebus.MsmqLoadBalancer.nuspec

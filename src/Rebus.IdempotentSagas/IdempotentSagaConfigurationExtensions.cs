@@ -55,6 +55,16 @@ namespace Rebus.IdempotentSagas
             {
                 var idempotentSagaData = handler.GetType().GetProperty("Data").GetValue(handler, null) as IIdempotentSagaData;
 
+                if (idempotentSagaData == null)
+                {
+                    return;
+                }
+
+                if (idempotentSagaData.ProcessedMessages == null)
+                {
+                    idempotentSagaData.ProcessedMessages = new List<ProcessedMessage>();
+                }
+
                 var processedMessage = idempotentSagaData.ProcessedMessages.SingleOrDefault(x => x.Id == MessageContext.GetCurrent().RebusTransportMessageId);
 
                 if (processedMessage != null)
