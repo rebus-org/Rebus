@@ -41,7 +41,7 @@ namespace Rebus.ReturnToSourceQueue.RabbitMQ
         {
             if (!parameters.DryRun.HasValue && parameters.Interactive)
             {
-                var dryrun = PromptChar(new[] { 'd', 'm' }, "Perform a (d)ry dun or actually (m) move messages?");
+                var dryrun = PromptChar(new[] { 'd', 'm' }, "Perform a (d)ry run or actually (m) move messages?");
 
                 switch (dryrun)
                 {
