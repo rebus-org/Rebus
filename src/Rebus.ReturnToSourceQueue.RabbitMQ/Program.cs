@@ -182,39 +182,28 @@ in order to SIMULATE automatically processing all messages (queue transaction wi
                 throw new NiceException("Please specify the hostname");
             }
 
-            using (var tx = new TransactionScope())
+            using (var rabbitMqMessageQueue = new RabbitMqMessageQueue(parameters.Host, parameters.ErrorQueueName))
             {
-                var transactionContext = new AmbientTransactionContext();
-
-
-                var rabbitMqMessageQueue = new RabbitMqMessageQueue(parameters.Host, parameters.ErrorQueueName);
-                var allTheMessages = GetAllTheMessages(rabbitMqMessageQueue, transactionContext);
-
-                foreach (var message in allTheMessages)
+                using (var tx = new TransactionScope())
                 {
-                    var transportMessageToSend = message.ToForwardableMessage();
-                    try
+                    var transactionContext = new AmbientTransactionContext();
+
+                    var allTheMessages = GetAllTheMessages(rabbitMqMessageQueue, transactionContext);
+
+                    foreach (var message in allTheMessages)
                     {
-                        if (!transportMessageToSend.Headers.ContainsKey(Headers.SourceQueue))
+                        var transportMessageToSend = message.ToForwardableMessage();
+                        try
                         {
-                            throw new NiceException("Message {0} does not have a source queue header - it will be moved back to the input queue",
-                                message.Id);
-                        }
+                            if (!transportMessageToSend.Headers.ContainsKey(Headers.SourceQueue))
+                            {
+                                throw new NiceException("Message {0} does not have a source queue header - it will be moved back to the input queue",
+                                    message.Id);
+                            }
 
-                        var sourceQueue = (string)transportMessageToSend.Headers[Headers.SourceQueue];
+                            var sourceQueue = (string)transportMessageToSend.Headers[Headers.SourceQueue];
 
-                        if (parameters.AutoMoveAllMessages.GetValueOrDefault())
-                        {
-                            rabbitMqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
-
-                            Print("Moved {0} to {1}", message.Id, sourceQueue);
-                        }
-                        else
-                        {
-                            var answer = PromptChar(new[] { 'y', 'n' }, "Would you like to move {0} to {1}? (y/n)",
-                                                    message.Id, sourceQueue);
-
-                            if (answer == 'y')
+                            if (parameters.AutoMoveAllMessages.GetValueOrDefault())
                             {
                                 rabbitMqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
 
@@ -222,47 +211,59 @@ in order to SIMULATE automatically processing all messages (queue transaction wi
                             }
                             else
                             {
-                                rabbitMqMessageQueue.Send(rabbitMqMessageQueue.InputQueueAddress,
-                                                      transportMessageToSend,
-                                                      transactionContext);
+                                var answer = PromptChar(new[] { 'y', 'n' }, "Would you like to move {0} to {1}? (y/n)",
+                                                        message.Id, sourceQueue);
 
-                                Print("Moved {0} to {1}", message.Id, rabbitMqMessageQueue.InputQueueAddress);
+                                if (answer == 'y')
+                                {
+                                    rabbitMqMessageQueue.Send(sourceQueue, transportMessageToSend, transactionContext);
+
+                                    Print("Moved {0} to {1}", message.Id, sourceQueue);
+                                }
+                                else
+                                {
+                                    rabbitMqMessageQueue.Send(rabbitMqMessageQueue.InputQueueAddress,
+                                                          transportMessageToSend,
+                                                          transactionContext);
+
+                                    Print("Moved {0} to {1}", message.Id, rabbitMqMessageQueue.InputQueueAddress);
+                                }
                             }
                         }
+                        catch (NiceException e)
+                        {
+                            Print(e.Message);
+
+                            rabbitMqMessageQueue.Send(rabbitMqMessageQueue.InputQueueAddress,
+                                                  transportMessageToSend,
+                                                  transactionContext);
+                        }
                     }
-                    catch (NiceException e)
+
+                    if (parameters.DryRun.GetValueOrDefault())
                     {
-                        Print(e.Message);
-
-                        rabbitMqMessageQueue.Send(rabbitMqMessageQueue.InputQueueAddress,
-                                              transportMessageToSend,
-                                              transactionContext);
+                        Print("Aborting queue transaction");
+                        return;
                     }
+
+                    if (!parameters.Interactive)
+                    {
+                        tx.Complete();
+                        return;
+                    }
+
+                    var commitAnswer = PromptChar(new[] { 'y', 'n' }, "Would you like to commit the queue transaction?");
+
+                    if (commitAnswer == 'y')
+                    {
+                        Print("Committing queue transaction");
+
+                        tx.Complete();
+                        return;
+                    }
+
+                    Print("Queue transaction aborted");
                 }
-
-                if (parameters.DryRun.GetValueOrDefault())
-                {
-                    Print("Aborting queue transaction");
-                    return;
-                }
-
-                if (!parameters.Interactive)
-                {
-                    tx.Complete();
-                    return;
-                }
-
-                var commitAnswer = PromptChar(new[] { 'y', 'n' }, "Would you like to commit the queue transaction?");
-
-                if (commitAnswer == 'y')
-                {
-                    Print("Committing queue transaction");
-
-                    tx.Complete();
-                    return;
-                }
-
-                Print("Queue transaction aborted");
             }
         }
 
