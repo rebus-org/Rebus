@@ -10,6 +10,19 @@ namespace Rebus.Tests.Configuration
     public class TestRebusConfigurationSection : FixtureBase
     {
         [Test]
+        public void CanReadAuditQueueAttribute()
+        {
+            using (AppConfig.Change(GetPathOf("app.3.config")))
+            {
+                var section = RebusConfigurationSection.LookItUp();
+
+                section.InputQueue.ShouldBe("input");
+                section.ErrorQueue.ShouldBe("error");
+                section.AuditQueue.ShouldBe("audit");
+            }
+        }
+
+        [Test]
         public void CanReadSection()
         {
             using (AppConfig.Change(GetPathOf("app.1.config")))

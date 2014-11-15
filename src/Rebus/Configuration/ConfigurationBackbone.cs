@@ -42,13 +42,13 @@ namespace Rebus.Configuration
         /// </summary>
         public TKey LoadFromRegistry<TKey>(Func<TKey> factoryMethod)
         {
-            if (registry.ContainsKey(typeof (TKey)))
+            if (registry.ContainsKey(typeof(TKey)))
             {
-                return (TKey) registry[typeof (TKey)];
+                return (TKey)registry[typeof(TKey)];
             }
 
             var instance = factoryMethod();
-            registry[typeof (TKey)] = instance;
+            registry[typeof(TKey)] = instance;
             return instance;
         }
 
@@ -153,6 +153,23 @@ namespace Rebus.Configuration
             {
                 applyDecorationStep(this);
             }
+        }
+
+        internal void FinishConfiguration(RebusBus bus)
+        {
+            var rebusEvents = bus.Events;
+
+            SetUpAudit(rebusEvents);
+
+            Adapter.SaveBusInstances(bus);
+        }
+
+        void SetUpAudit(IRebusEvents rebusEvents)
+        {
+            if (!AdditionalBehavior.AuditMessages) return;
+
+            new MessageAuditor()
+                .Configure(rebusEvents, AdditionalBehavior.AuditQueueName);
         }
     }
 }

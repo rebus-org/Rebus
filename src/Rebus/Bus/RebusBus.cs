@@ -178,7 +178,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -215,16 +215,14 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
+                var eventName = multicastTransport.GetEventName(message.GetType());
+                InternalSend(new List<string> { eventName }, new List<object> { message }, published: true);
                 return;
             }
 
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
-            foreach (var subscriberInputQueue in subscriberEndpoints)
-            {
-                InternalSend(subscriberInputQueue, new List<object> { message });
-            }
+            InternalSend(subscriberEndpoints.ToList(), new List<object> { message }, published: true);
         }
 
         internal void PossiblyAttachSagaIdToRequest<TCommand>(TCommand message)
@@ -388,7 +386,7 @@ namespace Rebus.Bus
 
             var messages = new List<object> { timeoutRequest };
 
-            InternalSend(timeoutManagerAddress, messages);
+            InternalSend(new List<string> { timeoutManagerAddress }, messages);
         }
 
         /// <summary>
@@ -470,7 +468,7 @@ namespace Rebus.Bus
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> { message });
+            InternalSend(new List<string> { destinationQueue }, new List<object> { message });
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -557,7 +555,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
             }
 
-            InternalSend(returnAddress, messages);
+            InternalSend(new List<string> { returnAddress }, messages);
         }
 
         /// <summary>
@@ -566,7 +564,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        internal void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(List<string> destinations, List<object> messages, bool published = false)
         {
             if (!started)
             {
@@ -584,7 +582,10 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             using (var txc = ManagedTransactionContext.Get())
             {
-                messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+                foreach (var destination in destinations)
+                {
+                    messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+                }
 
                 var messageToSend = new Message {Messages = messages.Select(MutateOutgoing).ToArray(),};
                 var headers = MergeHeaders(messageToSend);
@@ -594,7 +595,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 {
                     if (!configureAdditionalBehavior.OneWayClientMode)
                     {
-                        headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                        headers[Headers.ReturnAddress] = GetInputQueueAddress();
                     }
                 }
 
@@ -634,9 +635,13 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
 
                 messageToSend.Headers = headers;
-
-                InternalSend(destination, messageToSend, txc.Context);
+                InternalSend(destinations, messageToSend, txc.Context, published);
             }
+        }
+
+        internal string GetInputQueueAddress()
+        {
+            return receiveMessages.InputQueueAddress;
         }
 
         object MutateOutgoing(object msg)
@@ -647,20 +652,50 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// <summary>
         /// Internal send method - this one must not change the headers!
         /// </summary>
-        internal void InternalSend(string destination, Message messageToSend, ITransactionContext transactionContext)
+        internal void InternalSend(List<string> destinations, Message messageToSend, ITransactionContext transactionContext, bool published = false)
         {
-            messageLogger.LogSend(destination, messageToSend);
+            messageLogger.LogSend(destinations, messageToSend);
 
-            try
+            var transportMessage = serializeMessages.Serialize(messageToSend);
+
+            InternalSend(destinations, transportMessage, transactionContext);
+
+            if (configureAdditionalBehavior.AuditMessages && published)
             {
-                var transportMessage = serializeMessages.Serialize(messageToSend);
-                sendMessages.Send(destination, transportMessage, transactionContext);
+                transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
+                
+                if (configureAdditionalBehavior.OneWayClientMode)
+                {
+                    transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
+                }
+                else
+                {
+                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                }
+                
+                transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
+                var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+                
+                InternalSend(new List<string>{auditQueueName}, transportMessage, transactionContext);
+
+                events.RaiseMessageAudited(this, transportMessage);
             }
-            catch (Exception exception)
+        }
+
+        internal void InternalSend(List<string> destinations, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            foreach (var destination in destinations)
             {
-                throw new ApplicationException(string.Format(
-                    "An exception occurred while attempting to send {0} to {1} (context: {2})",
-                    messageToSend, destination, transactionContext), exception);
+                try
+                {
+                    sendMessages.Send(destination, transportMessage, transactionContext);
+                }
+                catch (Exception exception)
+                {
+                    throw new ApplicationException(string.Format(
+                        "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
+                        transportMessage, destination, transactionContext), exception);
+                }
             }
         }
 

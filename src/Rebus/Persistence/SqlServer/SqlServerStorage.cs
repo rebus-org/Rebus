@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data.SqlClient;
 using System.Transactions;
 using Rebus.Transports.Sql;
@@ -16,6 +16,10 @@ namespace Rebus.Persistence.SqlServer
         protected Action<ConnectionHolder> rollbackAction;
         protected Action<ConnectionHolder> releaseConnection;
 
+        /// <summary>
+        /// Constructs the storage with the given connection factory method, assuming that commit/rollback and housekeeping is taken
+        /// care of elsewhere
+        /// </summary>
         protected SqlServerStorage(Func<ConnectionHolder> connectionFactoryMethod)
         {
             getConnection = connectionFactoryMethod;
@@ -24,9 +28,9 @@ namespace Rebus.Persistence.SqlServer
             releaseConnection = c => { };
         }
 
-        protected SqlServerStorage(string connectionString)
+        protected SqlServerStorage(string connectionStringOrConnectionStringName)
         {
-            getConnection = () => CreateConnection(connectionString);
+            getConnection = () => CreateConnection(connectionStringOrConnectionStringName);
             commitAction = h => h.Commit();
             rollbackAction = h => h.RollBack();
             releaseConnection = c => c.Dispose();
@@ -37,9 +41,10 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         /// <param name="connectionString"></param>
         /// <returns></returns>
-        protected static ConnectionHolder CreateConnection(string connectionString)
+        protected static ConnectionHolder CreateConnection(string connectionStringOrConnectionStringName)
         {
-            var connection = new SqlConnection(connectionString);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connection = new SqlConnection(connectionStringToUse);
             connection.Open();
 
             if (Transaction.Current == null)

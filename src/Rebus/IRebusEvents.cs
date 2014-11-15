@@ -56,6 +56,11 @@ namespace Rebus
     public delegate void MessageContextEstablishedEventHandler(IBus bus, IMessageContext messageContext);
 
     /// <summary>
+    /// Delegate type that can listen to whenever a message has been audited (i.e. is copied to the audit queue)
+    /// </summary>
+    public delegate void MessageAuditedEventHandler(IBus bus, TransportMessageToSend transportMessageToSend);
+
+    /// <summary>
     /// Groups the different event hooks that Rebus exposes.
     /// </summary>
     public interface IRebusEvents
@@ -83,6 +88,11 @@ namespace Rebus
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
         event AfterTransportMessageEventHandler AfterTransportMessage;
+        
+        /// <summary>
+        /// Event that will be raised whenever the handled/published transport message has been copied to the audit queue
+        /// </summary>
+        event MessageAuditedEventHandler MessageAudited;
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message

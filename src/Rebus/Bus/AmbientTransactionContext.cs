@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Transactions;
 
 namespace Rebus.Bus
@@ -10,6 +11,7 @@ namespace Rebus.Bus
     public class AmbientTransactionContext : IEnlistmentNotification, ITransactionContext
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
+        readonly string threadName;
 
         /// <summary>
         /// Constructs the context, enlists it in the ambient transaction, and sets itself as the current context in <see cref="TransactionContext"/>.
@@ -25,6 +27,15 @@ namespace Rebus.Bus
             Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
 
             TransactionContext.Set(this);
+            threadName = Thread.CurrentThread.Name;
+        }
+
+        /// <summary>
+        /// Formats itself as an 'Ambient transaction on thread 'name-of-thread''
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Format("ambient tx on thread '{0}'", threadName);
         }
 
 
@@ -125,6 +136,9 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Runs the cleanup method, ensuring that the currently thread-bound transaction context is cleared
+        /// </summary>
         public void RunCleanup()
         {
             try

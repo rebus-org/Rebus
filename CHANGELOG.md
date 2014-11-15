@@ -403,12 +403,37 @@
 
 * Fixed bug that could result in not automatically binding the error queue topic to the error queue when using RabbitMQ
 * Update MongoDB driver dependency to 1.9.2
+* Fixed error in build script that did not build the Serilog project. Also fixed it so that Rebus.Serilog is .NET 4 like the rest of Rebus.
 
 ## 0.71.1
 
-* Fixed error in build script that did not build the Serilog project. Also fixed it so that Rebus.Serilog is .NET 4 like the rest of Rebus.
+* Ensure declaration of exchange when using `OneExchangePerType` - thanks [maeserichar]
+
+## 0.71.2
+
+* Fixed SQL Server schema creation issue where querying `sys.tables` would give an error if the database's current collation results in case sensitive table names - thanks [tiipe]
+
+## 0.71.3
+
+* Made SQL Server subscription storage & saga persister API accept connection string names (just like the SQL transport config)  - thanks [tiipe]
+
+## 0.71.4
+
+* Allow for specifying the messages table name on the SQL Server transport - thanks [tiipe]
+* Modified SQL server-based persistence things to accept connection string _names_ as well - thanks [tiipe]
+* Fixed subtle bug that would not remove the saga context from the current message context's items - thanks [dimajanzen]
+
+## 0.72.0
+
+* Added auditing capability - endpoints can now send a copy of the transport message to an audit queue whenever they have been successfully handled or published (which is the only two times when messages "disappear" - when handling a message, it "disappears", and when publishing to 0 subscribers, it also "disappears"). This can provide the basis for advanced tooling later on, e.g. for tracking correlation across systems, for gathering statistics etc. For now, go audit your messages - more tools will follow :)
+
+## 0.73.0
+
+* Updated RabbitMQ dependency - thanks [maxx1337]
 
 
+
+[tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [fritsduus]: https://github.com/fritsduus
@@ -420,3 +445,5 @@
 [krivin]: https://github.com/krivin
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [oguzhaneren]: https://github.com/oguzhaneren
+[dimajanzen]: https://github.com/dimajanzen
+[maxx1337]: https://github.com/maxx1337

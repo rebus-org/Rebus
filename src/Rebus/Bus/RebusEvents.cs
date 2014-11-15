@@ -29,6 +29,8 @@ namespace Rebus.Bus
         public event BeforeTransportMessageEventHandler BeforeTransportMessage = delegate { };
 
         public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
+        
+        public event MessageAuditedEventHandler MessageAudited = delegate { };
 
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
 
@@ -92,6 +94,11 @@ namespace Rebus.Bus
         internal void RaiseUncorrelatedMessage(IBus bus, object message, Saga saga)
         {
             UncorrelatedMessage(bus, message, saga);
+        }
+
+        internal void RaiseMessageAudited(IBus bus, TransportMessageToSend transportMessage)
+        {
+            MessageAudited(bus, transportMessage);
         }
     }
 }

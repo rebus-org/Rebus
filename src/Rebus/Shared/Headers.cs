@@ -112,5 +112,44 @@ namespace Rebus.Shared
             /// </summary>
             public const string GZip = "gzip";
         }
+
+        /// <summary>
+        /// This header is added to audit copies of messages with a value from <see cref="AuditReasons"/> that indicates the nature
+        /// of the audit.
+        /// </summary>
+        public const string AuditReason = "rebus-audit-reason";
+
+        /// <summary>
+        /// Contains reasons for a message to have been copied to the audit queue
+        /// </summary>
+        public class AuditReasons
+        {
+            /// <summary>
+            /// Indicates that the message was copied because it has been successfully processed by the recipient
+            /// </summary>
+            public const string Handled = "handled";
+            
+            /// <summary>
+            /// Indicates that the message was copied because it was published
+            /// </summary>
+            public const string Published = "published";
+        }
+
+        /// <summary>
+        /// This header holds the input queue address of the endpoint that handled the message that was audited. In case the message was audited
+        /// because it was published, there may/may not be an input queue present (i.e. if the transport supports and is running in multicast
+        /// mode)
+        /// </summary>
+        public const string AuditSourceQueue = "rebus-audit-source-queue";
+        
+        /// <summary>
+        /// Header that is added to an audited message when the input queue cannot be added (i.e. the publisher is a one-way client)
+        /// </summary>
+        public const string AuditPublishedByOneWayClient = "rebus-published-by-one-way-client";
+        
+        /// <summary>
+        /// UTC time of when the message was copied to the audit queue
+        /// </summary>
+        public const string AuditMessageCopyTime = "rebus-audit-copy-time";
     }
 }

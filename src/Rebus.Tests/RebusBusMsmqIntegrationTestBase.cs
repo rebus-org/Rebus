@@ -34,6 +34,8 @@ namespace Rebus.Tests
         [SetUp]
         public void SetUp()
         {
+            TimeMachine.Reset();
+
             toDispose = new List<IDisposable>();
 
             DoSetUp();

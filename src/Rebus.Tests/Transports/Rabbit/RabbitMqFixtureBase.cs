@@ -95,6 +95,15 @@ namespace Rebus.Tests.Transports.Rabbit
             }
         }
 
+        public static void WithModel(Action<IModel> modelCallback)
+        {
+            using (var connection = new ConnectionFactory {Uri = ConnectionString}.CreateConnection())
+            using (var model = connection.CreateModel())
+            {
+                modelCallback(model);
+            }
+        }
+
         public static bool DeclareExchange(string exchangeName, string type, bool passive=false)
         {
             using (var connection = new ConnectionFactory { Uri = ConnectionString }.CreateConnection())
