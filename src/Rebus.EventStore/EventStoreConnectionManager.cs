@@ -5,7 +5,7 @@ using EventStore.ClientAPI.SystemData;
 
 namespace Rebus.EventStore
 {
-    class EventStoreConnectionManager
+    public class EventStoreConnectionManager
     {
         private static volatile IEventStoreConnection connection;
         private static readonly object SyncRoot = new Object();

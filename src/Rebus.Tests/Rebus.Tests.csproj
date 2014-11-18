@@ -52,6 +52,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net40\Castle.Windsor.dll</HintPath>
     </Reference>
+    <Reference Include="EventStore.ClientAPI, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Rebus.EventStore\EventStoreDependencies\EventStore.ClientAPI.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.2.0.1\lib\net40-full\log4net.dll</HintPath>
@@ -211,6 +215,7 @@
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueQueuesFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\EventStoreTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
@@ -439,6 +444,10 @@
     <ProjectReference Include="..\Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj">
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.EventStore\Rebus.EventStore.csproj">
+      <Project>{2a9458e4-6373-46ac-b0a2-ef431d39c255}</Project>
+      <Name>Rebus.EventStore</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.HttpGateway\Rebus.HttpGateway.csproj">
       <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
