@@ -16,6 +16,8 @@ namespace Rebus.EventStore
 
         public void Send(string destination, TransportMessageToSend message, ITransactionContext context)
         {
+            var eventStoreQueue = new EventStoreQueue(destination);
+
             if (destination == null) throw new ArgumentNullException("destination");
             if(destination.Contains("-")) throw new ArgumentException("destination stream cannot contain -");
 

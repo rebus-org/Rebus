@@ -41,8 +41,10 @@ namespace Rebus.EventStore
                     throw new ConfigurationErrorsException("You need to specify an input queue.");
                 }
 
-                configurer.UseSender(CreateSender());
-                configurer.UseReceiver(CreateReceiver(inputQueueName, applicationId));
+                var eventStoreMessageQueue = new EventStoreMessageQueue(applicationId, inputQueueName);
+
+                configurer.UseSender(eventStoreMessageQueue);
+                configurer.UseReceiver(eventStoreMessageQueue);
                 configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
             }
             catch (ConfigurationErrorsException e)
@@ -83,9 +85,5 @@ A more full example configuration snippet can be seen here:
             return new EventStoreSendMessages(EventStoreConnectionManager.CreateConnectionAndWait());
         }
 
-        static EventStoreReceiveMessages CreateReceiver(string inputQueue, string applicationId)
-        {
-            return new EventStoreReceiveMessages(applicationId, inputQueue, EventStoreConnectionManager.CreateConnectionAndWait());
-        }
     }
 }

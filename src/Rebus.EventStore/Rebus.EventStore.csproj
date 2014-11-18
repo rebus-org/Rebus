@@ -54,6 +54,8 @@
   <ItemGroup>
     <Compile Include="EventStoreConfigurationExtensions.cs" />
     <Compile Include="EventStoreConnectionManager.cs" />
+    <Compile Include="EventStoreMessageQueue.cs" />
+    <Compile Include="EventStoreQueue.cs" />
     <Compile Include="EventStoreReceiveMessages.cs" />
     <Compile Include="EventStoreSendMessages.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

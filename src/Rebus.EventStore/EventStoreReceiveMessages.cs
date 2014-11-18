@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace Rebus.EventStore
 {
-    public class EventStoreReceiveMessages : IReceiveMessages
+    public class EventStoreReceiveMessages : IReceiveMessages, IDisposable
     {
         readonly IEventStoreConnection connection;
         readonly ConcurrentQueue<MessageContainer> receivedMessages = new ConcurrentQueue<MessageContainer>();
@@ -76,12 +76,7 @@ namespace Rebus.EventStore
             {
                 context.DoCommit += () => subscription.Acknowledge(message.ResolvedEvent);
 
-                context.DoRollback +=
-                    () =>
-                    {
-                        //receivedMessages.Enqueue(message); 
-                        subscription.Fail(message.ResolvedEvent, PersistentSubscriptionNakEventAction.Retry, "Rebus transaction rolled back..");
-                    };
+                context.DoRollback += () => subscription.Fail(message.ResolvedEvent, PersistentSubscriptionNakEventAction.Retry, "Rebus transaction rolled back..");
             }
 
             return message.ReceivedTransportMessage;
@@ -91,6 +86,11 @@ namespace Rebus.EventStore
         {
             public ReceivedTransportMessage ReceivedTransportMessage { get; set; }
             public ResolvedEvent ResolvedEvent { get; set; }
+        }
+
+        public void Dispose()
+        {
+            if(subscription != null) subscription.Stop(TimeSpan.FromSeconds(2));
         }
     }
 }
