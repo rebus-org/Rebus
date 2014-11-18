@@ -2,11 +2,11 @@
 
 namespace Rebus.EventStore
 {
-    internal class EventStoreQueue
+    internal class EventStoreQueueIdentifier
     {
         public readonly string StreamId;
 
-        public EventStoreQueue(string queueId)
+        public EventStoreQueueIdentifier(string queueId)
         {
             if (queueId == null) throw new ArgumentNullException("queueId");
             if(queueId.Contains("-")) throw new ArgumentException("queueId cannot contain '-' since that would probably create a stream category.");

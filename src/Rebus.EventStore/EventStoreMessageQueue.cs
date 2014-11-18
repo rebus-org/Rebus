@@ -21,8 +21,8 @@ namespace Rebus.EventStore
         {
             if (applicationId == null) throw new ArgumentNullException("applicationId");
 
-            InputQueue = new EventStoreQueue(inputQueue).StreamId;
-            InputQueueAddress = new EventStoreQueue(inputQueue).StreamId;
+            InputQueue = new EventStoreQueueIdentifier(inputQueue).StreamId;
+            InputQueueAddress = new EventStoreQueueIdentifier(inputQueue).StreamId;
 
             this.applicationId = applicationId;
             ManagesSubscriptions = true;
