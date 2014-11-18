@@ -83,7 +83,8 @@ namespace Rebus.Bus
         volatile bool shouldExit;
         volatile bool shouldWork;
 
-        public Worker(IErrorTracker errorTracker,
+        public Worker(
+            IErrorTracker errorTracker,
             IReceiveMessages receiveMessages,
             IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,

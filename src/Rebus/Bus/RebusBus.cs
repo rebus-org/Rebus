@@ -67,7 +67,10 @@ namespace Rebus.Bus
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
         /// <param name="storeTimeouts">Optionally provides an internal timeout manager to be used instead of sending timeout requests to an external timeout manager</param>
         /// <param name="configureAdditionalBehavior"></param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
+        public RebusBus(
+            IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData,
+            IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker,
+            IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -827,21 +830,23 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         {
             lock (workers)
             {
-                var worker = new Worker(errorTracker,
-                                        receiveMessages,
-                                        activateHandlers,
-                                        storeSubscriptions,
-                                        serializeMessages,
-                                        storeSagaData,
-                                        inspectHandlerPipeline,
-                                        string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
-                                        new DeferredMessageReDispatcher(this),
-                                        new IncomingMessageMutatorPipeline(Events),
-                                        storeTimeouts,
-                                        events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior,
-                                        messageLogger,
-                                        continuations);
+                var worker = new Worker(
+                    errorTracker,
+                    receiveMessages,
+                    activateHandlers,
+                    storeSubscriptions,
+                    serializeMessages,
+                    storeSagaData,
+                    inspectHandlerPipeline,
+                    string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
+                    new DeferredMessageReDispatcher(this),
+                    new IncomingMessageMutatorPipeline(Events),
+                    storeTimeouts,
+                    events.UnitOfWorkManagers,
+                    configureAdditionalBehavior,
+                    messageLogger,
+                    continuations);
+
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
