@@ -59,26 +59,22 @@ namespace Rebus.EventStore
 
         void SetCurrentTransaction(ITransactionContext context, EventStoreTransaction transaction)
         {
-            if (TransactionIsFresh(context) == false) throw new InvalidOperationException("Overriding existing transaction!");
-
-            context["singleTransaction"] = transaction;
+            new EventStoreTransactionContext().SetCurrentTransaction(context, transaction);
         }
 
         bool TransactionIsFresh(ITransactionContext context)
         {
-            return context["singleTransaction"] == null;
+            return new EventStoreTransactionContext().TransactionIsFresh(context);
         }
 
         bool TransactionAlreadyStarted(ITransactionContext context)
         {
-            return context["singleTransaction"] != null;
+            return new EventStoreTransactionContext().TransactionAlreadyStarted(context);
         }
 
         EventStoreTransaction CurrentTransaction(ITransactionContext context)
         {
-            if(TransactionAlreadyStarted(context) == false) throw new InvalidOperationException("No existing transaction!");
-
-            return context["singleTransaction"] as EventStoreTransaction;
+            return new EventStoreTransactionContext().CurrentTransaction(context);
         }
 
         void WriteAndWait(string destination, TransportMessageToSend message)
