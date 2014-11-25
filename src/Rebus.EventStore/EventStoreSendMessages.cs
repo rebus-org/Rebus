@@ -20,17 +20,17 @@ namespace Rebus.EventStore
         {
             destination = new EventStoreQueueIdentifier(destination).StreamId;
 
-            if (context.IsTransactional && TransactionAlreadyStarted(context))
+            if (context.IsTransactional && TransactionContextIsFresh(context) == false)
             {
-                WriteInTransactionAndWait(message, CurrentTransaction(context));
+                WriteInTransactionAndWait(message, CurrentEventStoreTransactionInContext(context));
             }
-            else if (context.IsTransactional && TransactionIsFresh(context))
+            else if (context.IsTransactional && TransactionContextIsFresh(context))
             {
                 var transaction = StartNewEventStoreTransaction(destination);
                 
-                SetCurrentTransaction(context, transaction);
+                InitializeTransactionContext(context, transaction);
                 
-                SetupTransactionEventHandlers(context, transaction);
+                RegisterTransactionEventHandlers(context, transaction);
 
                 WriteInTransactionAndWait(message, transaction);
             }
@@ -40,11 +40,11 @@ namespace Rebus.EventStore
             }
         }
 
-        private void SetupTransactionEventHandlers(ITransactionContext context, EventStoreTransaction transaction)
+        private void RegisterTransactionEventHandlers(ITransactionContext context, EventStoreTransaction transaction)
         {
             context.DoCommit += () => transaction.CommitAsync().Wait();
             context.DoRollback += transaction.Rollback;
-            context.AfterRollback += () => SetCurrentTransaction(context, null);
+            context.AfterRollback += () => InitializeTransactionContext(context, null);
         }
 
         private EventStoreTransaction StartNewEventStoreTransaction(string destination)
@@ -57,24 +57,23 @@ namespace Rebus.EventStore
             transaction.WriteAsync(CreateMessage(message)).Wait();
         }
 
-        void SetCurrentTransaction(ITransactionContext context, EventStoreTransaction transaction)
+        void InitializeTransactionContext(ITransactionContext context, EventStoreTransaction transaction)
         {
-            new EventStoreTransactionContext().SetCurrentTransaction(context, transaction);
+            if (TransactionContextIsFresh(context) == false) throw new InvalidOperationException("Overriding existing transaction!");
+
+            context["sendTransaction"] = transaction;
         }
 
-        bool TransactionIsFresh(ITransactionContext context)
+        bool TransactionContextIsFresh(ITransactionContext context)
         {
-            return new EventStoreTransactionContext().TransactionIsFresh(context);
+            return context["sendTransaction"] == null;
         }
 
-        bool TransactionAlreadyStarted(ITransactionContext context)
+        EventStoreTransaction CurrentEventStoreTransactionInContext(ITransactionContext context)
         {
-            return new EventStoreTransactionContext().TransactionAlreadyStarted(context);
-        }
+            if (TransactionContextIsFresh(context)) throw new InvalidOperationException("No existing transaction!");
 
-        EventStoreTransaction CurrentTransaction(ITransactionContext context)
-        {
-            return new EventStoreTransactionContext().CurrentTransaction(context);
+            return context["sendTransaction"] as EventStoreTransaction;
         }
 
         void WriteAndWait(string destination, TransportMessageToSend message)

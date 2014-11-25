@@ -58,7 +58,7 @@
     <Compile Include="EventStoreQueueIdentifier.cs" />
     <Compile Include="EventStoreReceiveMessages.cs" />
     <Compile Include="EventStoreSendMessages.cs" />
-    <Compile Include="EventStoreTransactionContext.cs" />
+    <Compile Include="MessageContainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
