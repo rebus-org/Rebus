@@ -5,17 +5,17 @@ using System;
 
 namespace Rebus.EventStore
 {
-    // TODO: Needs to be thread safe?
+    // TODO: Needs to be thread safe? it must be reentrant regarding send and receive..! see mogens commment on github..
     public class EventStoreMessageQueue : IMulticastTransport, IDisposable, INeedInitializationBeforeStart
     {
         IEventStoreConnection connection;
         readonly string applicationId;
         EventStoreReceiveMessages receiveMessages;
+        private EventStoreSendMessages sendMessages;
         public string InputQueue { get; private set; }
         public string InputQueueAddress { get; private set; }
         public bool ManagesSubscriptions { get; private set; }
         readonly ConcurrentDictionary<Type, EventStoreReceiveMessages> subscriptions = new ConcurrentDictionary<Type, EventStoreReceiveMessages>();
-
 
         public EventStoreMessageQueue(string applicationId, string inputQueue)
         {
@@ -30,7 +30,7 @@ namespace Rebus.EventStore
 
         public void Send(string destination, TransportMessageToSend message, ITransactionContext context)
         {
-            new EventStoreSendMessages(connection).Send(destination, message, context);
+            sendMessages.Send(destination, message, context);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -67,15 +67,33 @@ namespace Rebus.EventStore
 
         public void Dispose()
         {
-            if (connection != null) connection.Dispose();
-            if (receiveMessages != null) receiveMessages.Dispose();
+            if (connection != null)
+            {
+                connection.Dispose();
+            }
+            if (receiveMessages != null)
+            {
+                receiveMessages.Dispose();
+            }
         }
 
+        // TODO: make thread safe?
         public void Initialize()
         {
-            connection = EventStoreConnectionManager.CreateConnectionAndWait();
+            if (connection == null)
+            {
+                connection = EventStoreConnectionManager.CreateConnectionAndWait();
+            }
 
-            receiveMessages = new EventStoreReceiveMessages(applicationId, InputQueue, connection);
+            if (receiveMessages == null)
+            {
+                receiveMessages = new EventStoreReceiveMessages(applicationId, InputQueue, connection);
+            }
+
+            if (sendMessages == null)
+            {
+                sendMessages = new EventStoreSendMessages(connection);
+            }
         }
     }
 }
