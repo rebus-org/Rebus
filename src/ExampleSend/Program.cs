@@ -20,7 +20,7 @@ namespace ExampleSend
 
                 var timer = new System.Timers.Timer();
                 timer.Elapsed += delegate { adapter.Bus.Send("karate er en livsstil"); };
-                timer.Interval = 1000;
+                timer.Interval = 3000;
                 timer.Start();
             }
 

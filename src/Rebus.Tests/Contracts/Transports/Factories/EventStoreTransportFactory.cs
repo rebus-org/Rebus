@@ -25,7 +25,9 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         IReceiveMessages CreateEventStoreReceiver(string queueName)
         {
-            return new EventStoreReceiveMessages(UniqueIdentifier("RebusTestsApplicationId"), queueName, eventStoreConnection);
+            var messageQueue = new EventStoreMessageQueue(UniqueIdentifier("RebusTest"), queueName);
+            messageQueue.Initialize();
+            return messageQueue;
         }
 
         public void CleanUp()

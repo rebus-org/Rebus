@@ -9,42 +9,37 @@ using System.Threading.Tasks;
 
 namespace Rebus.EventStore
 {
-    public class EventStoreReceiveMessages : IReceiveMessages, IDisposable
+    public class EventStoreReceiveMessages :IDisposable
     {
+        readonly string applicationId;
+        readonly string streamId;
         readonly IEventStoreConnection connection;
         readonly ConcurrentQueue<MessageContainer> receivedMessages = new ConcurrentQueue<MessageContainer>();
         EventStoreStreamCatchUpSubscription subscription;
-        public string InputQueue { get; private set; }
-        public string InputQueueAddress { get; private set; }
 
-        public EventStoreReceiveMessages(string inputQueueAddress, string inputQueue, IEventStoreConnection connection)
+        public EventStoreReceiveMessages(IEventStoreConnection connection, string applicationId, string streamId)
         {
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
-            if (inputQueue == null) throw new ArgumentNullException("inputQueue");
             if (connection == null) throw new ArgumentNullException("connection");
+            if (applicationId == null) throw new ArgumentNullException("applicationId");
+            if (streamId == null) throw new ArgumentNullException("streamId");
 
             this.connection = connection;
-            InputQueue = inputQueue;
-            InputQueueAddress = inputQueueAddress;
+            this.applicationId = applicationId;
+            this.streamId = streamId;
 
-            SubscribeToInputQueue();
-        }
-
-        string GloballyQualifiedInputQueue()
-        {
-            return InputQueue;
+            SubscribeToStream();
         }
 
         string CheckpointStream()
         {
-            return GloballyQualifiedInputQueue() + "Checkpoints";
+            return streamId + "Checkpoints";
         }
 
-        async void SubscribeToInputQueue()
+        async void SubscribeToStream()
         {
             var slice = await LastCheckpointEventSlice();
             var lastCheckPoint = LastCheckPointFromEventSlice(slice);
-            subscription = connection.SubscribeToStreamFrom(GloballyQualifiedInputQueue(), lastCheckPoint, false, EventAppeared);
+            subscription = connection.SubscribeToStreamFrom(streamId, lastCheckPoint, false, EventAppeared);
         }
 
         int? LastCheckPointFromEventSlice(StreamEventsSlice slice)

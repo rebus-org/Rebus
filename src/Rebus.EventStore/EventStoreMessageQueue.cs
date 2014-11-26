@@ -10,7 +10,7 @@ namespace Rebus.EventStore
     {
         IEventStoreConnection connection;
         readonly string applicationId;
-        EventStoreReceiveMessages receiveMessages;
+        EventStoreReceiveMessages receiveMessagesFromInputQueue;
         private EventStoreSendMessages sendMessages;
         public string InputQueue { get; private set; }
         public string InputQueueAddress { get; private set; }
@@ -35,7 +35,7 @@ namespace Rebus.EventStore
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            var fromInputQueue = receiveMessages.ReceiveMessage(context);
+            var fromInputQueue = receiveMessagesFromInputQueue.ReceiveMessage(context);
 
             if (fromInputQueue != null) return fromInputQueue;
 
@@ -52,7 +52,7 @@ namespace Rebus.EventStore
         public void Subscribe(Type eventType, string inputQueueAddress)
         {
             var inputQueue = GetEventName(eventType);
-            subscriptions[eventType] = new EventStoreReceiveMessages(applicationId, inputQueue, connection);
+            subscriptions[eventType] = new EventStoreReceiveMessages(connection, applicationId, inputQueue);
         }
 
         public void Unsubscribe(Type messageType, string inputQueueAddress)
@@ -71,9 +71,9 @@ namespace Rebus.EventStore
             {
                 connection.Dispose();
             }
-            if (receiveMessages != null)
+            if (receiveMessagesFromInputQueue != null)
             {
-                receiveMessages.Dispose();
+                receiveMessagesFromInputQueue.Dispose();
             }
         }
 
@@ -85,9 +85,9 @@ namespace Rebus.EventStore
                 connection = EventStoreConnectionManager.CreateConnectionAndWait();
             }
 
-            if (receiveMessages == null)
+            if (receiveMessagesFromInputQueue == null)
             {
-                receiveMessages = new EventStoreReceiveMessages(applicationId, InputQueue, connection);
+                receiveMessagesFromInputQueue = new EventStoreReceiveMessages(connection, applicationId, InputQueue);
             }
 
             if (sendMessages == null)
