@@ -1,11 +1,11 @@
 using EventStore.ClientAPI;
-using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Rebus.EventStore
 {
@@ -35,27 +35,51 @@ namespace Rebus.EventStore
             return InputQueue;
         }
 
-        void SubscribeToInputQueue()
+        string CheckpointStream()
         {
-            subscription = connection.SubscribeToStreamFrom(GloballyQualifiedInputQueue(), LastCheckpoint(), false, EventAppeared);
+            return GloballyQualifiedInputQueue() + "Checkpoints";
         }
 
-        private void EventAppeared(EventStoreCatchUpSubscription sub, ResolvedEvent evt)
+        async void SubscribeToInputQueue()
+        {
+            var slice = await LastCheckpointEventSlice();
+            var lastCheckPoint = LastCheckPointFromEventSlice(slice);
+            subscription = connection.SubscribeToStreamFrom(GloballyQualifiedInputQueue(), lastCheckPoint, false, EventAppeared);
+        }
+
+        int? LastCheckPointFromEventSlice(StreamEventsSlice slice)
+        {
+            if (slice.Status == SliceReadStatus.Success)
+            {
+                var data = slice.Events[0].OriginalEvent.Data;
+                var dataAsString = Encoding.UTF8.GetString(data); 
+                return int.Parse(dataAsString);
+            }
+
+            return null; 
+        }
+
+        void EventAppeared(EventStoreCatchUpSubscription sub, ResolvedEvent evt)
         {
             var originalTransportMessage = JsonConvert.DeserializeObject<TransportMessageToSend>(Encoding.UTF8.GetString(evt.OriginalEvent.Data));
             var message = new ReceivedTransportMessage { Id = evt.OriginalEvent.EventId.ToString("N"), Body = originalTransportMessage.Body, Headers = originalTransportMessage.Headers, Label = originalTransportMessage.Label };
             receivedMessages.Enqueue(new MessageContainer { ReceivedTransportMessage = message, ResolvedEvent = evt });
         }
 
-        int? LastCheckpoint()
+        Task<StreamEventsSlice> LastCheckpointEventSlice()
         {
-            // TODO: persist and retrieve from some stream, e.g. (GloballyQualifiedInputQueue + checkpoints)
-            return null;
+            return connection.ReadStreamEventsBackwardAsync(CheckpointStream(), StreamPosition.End, 1, false);
         }
 
-        void UpdateCheckpoint(int? eventNumber)
+        void UpdateCheckpoint(int eventNumber)
         {
+           connection.AppendToStreamAsync(CheckpointStream(), ExpectedVersion.Any, CreateCheckpointEvent(eventNumber));
+        }
 
+        EventData CreateCheckpointEvent(int eventNumber)
+        {
+            var text = Encoding.UTF8.GetBytes(eventNumber.ToString());
+            return new EventData(Guid.NewGuid(), "Checkpoint", true, text, null);
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -93,32 +117,31 @@ namespace Rebus.EventStore
             context.Cleanup += () => Cleanup(context);
         }
 
-        private void Cleanup(ITransactionContext context)
+        void Cleanup(ITransactionContext context)
         {
-            var foo = context;
         }
 
-        private void AfterRollBack(ITransactionContext context)
+        void AfterRollBack(ITransactionContext context)
         {
-            var foo = context;
         }
 
-        private void DoCommit(ITransactionContext context)
+        void DoCommit(ITransactionContext context)
         {
-            UpdateCheckpoint(null);
+            UpdateCheckpoint(LastEventNumberInContext(context));
         }
 
-        private void DoRollBack(ITransactionContext context)
+        int LastEventNumberInContext(ITransactionContext context)
         {
-            //     var allMessages = AllResolvedEventsInTransactionContext(context);
+            return AllResolvedEventsInTransactionContext(context)
+                .Last()
+                .OriginalEventNumber;
+        }
 
-            //     subscription.Fail(allMessages, PersistentSubscriptionNakEventAction.Retry, "Rebus transaction rolled back..");
-
-            //TODO: put back on our own internal queue? event store server doesn't seem to resend it on its own. except when we restart subscription
-
+        void DoRollBack(ITransactionContext context)
+        {
             foreach (var message in AllStoredMessagesInTransactionContext(context))
             {
-                this.receivedMessages.Enqueue(message);
+                receivedMessages.Enqueue(message);
             }
         }
 
