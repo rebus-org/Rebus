@@ -13,6 +13,7 @@ namespace Rebus.Tests.Contracts.Transports
     [TestFixture(typeof(SqlServerTransportFactory), Category = TestCategories.MsSql)]
     [TestFixture(typeof(RabbitMqTransportFactory), Category = TestCategories.Rabbit)]
     [TestFixture(typeof(FileSystemTransportFactory))]
+    [TestFixture(typeof(EventStoreTransportFactory))]
     public class TestTransactionality<TFactory> : FixtureBase where TFactory : ITransportFactory, new()
     {
         readonly Encoding encoding = Encoding.UTF8;
