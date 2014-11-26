@@ -1,13 +1,11 @@
-using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using EventStore.ClientAPI;
 using EventStore.ClientAPI.SystemData;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace Rebus.EventStore
 {
@@ -15,51 +13,49 @@ namespace Rebus.EventStore
     {
         readonly IEventStoreConnection connection;
         readonly ConcurrentQueue<MessageContainer> receivedMessages = new ConcurrentQueue<MessageContainer>();
-        EventStorePersistentSubscription subscription;
+        EventStoreStreamCatchUpSubscription subscription;
         public string InputQueue { get; private set; }
         public string InputQueueAddress { get; private set; }
-        readonly string applicationId;
 
-        public EventStoreReceiveMessages(string applicationId, string inputQueue, IEventStoreConnection connection)
+        public EventStoreReceiveMessages(string inputQueueAddress, string inputQueue, IEventStoreConnection connection)
         {
-            if (applicationId == null) throw new ArgumentNullException("applicationId");
+            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
             if (inputQueue == null) throw new ArgumentNullException("inputQueue");
             if (connection == null) throw new ArgumentNullException("connection");
 
-            this.applicationId = applicationId;
             this.connection = connection;
             InputQueue = inputQueue;
-            InputQueueAddress = inputQueue;
+            InputQueueAddress = inputQueueAddress;
 
             SubscribeToInputQueue();
         }
 
-        private void SubscribeToInputQueue()
+        string GloballyQualifiedInputQueue()
         {
-            var settings = PersistentSubscriptionSettingsBuilder.Create()
-                .StartFromCurrent()
-                .PreferDispatchToSingle()
-                .WithMaxRetriesOf(5)
-                .Build();
-
-            try
-            {
-                var result = connection.CreatePersistentSubscriptionAsync(InputQueue, applicationId, settings,
-                    new UserCredentials("admin", "changeit")).Result;
-            }
-            catch (AggregateException)
-            {
-                // TODO: inspect and make sure its the right exception..
-            }
-
-            subscription = connection.ConnectToPersistentSubscription(applicationId, InputQueue, EventAppeared, autoAck: false);
+            return InputQueue;
         }
 
-        private void EventAppeared(EventStorePersistentSubscription subscription, ResolvedEvent evt)
+        void SubscribeToInputQueue()
+        {
+            subscription = connection.SubscribeToStreamFrom(GloballyQualifiedInputQueue(), LastCheckpoint(), false, EventAppeared);
+        }
+
+        private void EventAppeared(EventStoreCatchUpSubscription sub, ResolvedEvent evt)
         {
             var originalTransportMessage = JsonConvert.DeserializeObject<TransportMessageToSend>(Encoding.UTF8.GetString(evt.OriginalEvent.Data));
             var message = new ReceivedTransportMessage { Id = evt.OriginalEvent.EventId.ToString("N"), Body = originalTransportMessage.Body, Headers = originalTransportMessage.Headers, Label = originalTransportMessage.Label };
             receivedMessages.Enqueue(new MessageContainer { ReceivedTransportMessage = message, ResolvedEvent = evt });
+        }
+
+        int? LastCheckpoint()
+        {
+            // TODO: persist and retrieve from some stream, e.g. (GloballyQualifiedInputQueue + checkpoints)
+            return null;
+        }
+
+        void UpdateCheckpoint(int? eventNumber)
+        {
+
         }
 
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
@@ -85,13 +81,45 @@ namespace Rebus.EventStore
             return message.ReceivedTransportMessage;
         }
 
-       
+
         private void RegisterTransactionEventHandlers(ITransactionContext context)
         {
-            context.DoCommit += () => subscription.Acknowledge(AllResolvedEventsInTransactionContext(context));
+            context.DoCommit += () => DoCommit(context);
 
-            context.DoRollback += () =>
-                subscription.Fail(AllResolvedEventsInTransactionContext(context), PersistentSubscriptionNakEventAction.Retry, "Rebus transaction rolled back..");
+            context.DoRollback += () => DoRollBack(context);
+
+            context.AfterRollback += () => AfterRollBack(context);
+
+            context.Cleanup += () => Cleanup(context);
+        }
+
+        private void Cleanup(ITransactionContext context)
+        {
+            var foo = context;
+        }
+
+        private void AfterRollBack(ITransactionContext context)
+        {
+            var foo = context;
+        }
+
+        private void DoCommit(ITransactionContext context)
+        {
+            UpdateCheckpoint(null);
+        }
+
+        private void DoRollBack(ITransactionContext context)
+        {
+            //     var allMessages = AllResolvedEventsInTransactionContext(context);
+
+            //     subscription.Fail(allMessages, PersistentSubscriptionNakEventAction.Retry, "Rebus transaction rolled back..");
+
+            //TODO: put back on our own internal queue? event store server doesn't seem to resend it on its own. except when we restart subscription
+
+            foreach (var message in AllStoredMessagesInTransactionContext(context))
+            {
+                this.receivedMessages.Enqueue(message);
+            }
         }
 
         IEnumerable<ResolvedEvent> AllResolvedEventsInTransactionContext(ITransactionContext context)
@@ -102,7 +130,7 @@ namespace Rebus.EventStore
         IEnumerable<MessageContainer> AllStoredMessagesInTransactionContext(ITransactionContext context)
         {
             return ((IEnumerable<MessageContainer>)context["receiveTransaction"]);
-        } 
+        }
 
         bool TransactionContextIsFresh(ITransactionContext context)
         {
@@ -121,20 +149,11 @@ namespace Rebus.EventStore
 
         MessageContainer GetNextMessageToConsume()
         {
-            if (receivedMessages.IsEmpty)
-            {
-                return null;
-            }
-
             MessageContainer message;
-            if (receivedMessages.TryDequeue(out message))
-            {
-                return message;
-            }
-
-            return null;
+            receivedMessages.TryDequeue(out message);
+            return message;
         }
-        
+
         public void Dispose()
         {
             if (subscription != null) subscription.Stop(TimeSpan.FromSeconds(2));

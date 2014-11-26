@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using EventStore.ClientAPI;
 using Newtonsoft.Json;
 using System;
@@ -5,8 +6,6 @@ using System.Text;
 
 namespace Rebus.EventStore
 {
-    // TODO: rename *Wait* methods to *Synchrounous* or make async!
-
     public class EventStoreSendMessages : ISendMessages
     {
         readonly IEventStoreConnection connection;
@@ -22,22 +21,27 @@ namespace Rebus.EventStore
 
             if (context.IsTransactional && TransactionContextIsFresh(context) == false)
             {
-                WriteInTransactionAndWait(message, CurrentEventStoreTransactionInContext(context));
+                WriteInTransactionAsync(message, CurrentEventStoreTransactionInContext(context));
             }
             else if (context.IsTransactional && TransactionContextIsFresh(context))
             {
-                var transaction = StartNewEventStoreTransaction(destination);
-                
-                InitializeTransactionContext(context, transaction);
-                
-                RegisterTransactionEventHandlers(context, transaction);
-
-                WriteInTransactionAndWait(message, transaction);
+                StartNewEventStoreTransaction(destination, message, context);
             }
             else
             {
-                WriteAndWait(destination, message);
+                Write(destination, message);
             }
+        }
+
+        async void StartNewEventStoreTransaction(string destination, TransportMessageToSend message, ITransactionContext context)
+        {
+            var transaction = await connection.StartTransactionAsync(destination, ExpectedVersion.Any);
+
+            InitializeTransactionContext(context, transaction);
+
+            RegisterTransactionEventHandlers(context, transaction);
+
+            WriteInTransactionAsync(message, transaction);
         }
 
         private void RegisterTransactionEventHandlers(ITransactionContext context, EventStoreTransaction transaction)
@@ -47,14 +51,9 @@ namespace Rebus.EventStore
             context.AfterRollback += () => InitializeTransactionContext(context, null);
         }
 
-        private EventStoreTransaction StartNewEventStoreTransaction(string destination)
+        private void WriteInTransactionAsync(TransportMessageToSend message, EventStoreTransaction transaction)
         {
-            return connection.StartTransactionAsync(destination, ExpectedVersion.Any).Result;
-        }
-
-        private void WriteInTransactionAndWait(TransportMessageToSend message, EventStoreTransaction transaction)
-        {
-            transaction.WriteAsync(CreateMessage(message)).Wait();
+            transaction.WriteAsync(CreateMessage(message));
         }
 
         void InitializeTransactionContext(ITransactionContext context, EventStoreTransaction transaction)
@@ -76,9 +75,9 @@ namespace Rebus.EventStore
             return context["sendTransaction"] as EventStoreTransaction;
         }
 
-        void WriteAndWait(string destination, TransportMessageToSend message)
+        void Write(string destination, TransportMessageToSend message)
         {
-            var result = connection.AppendToStreamAsync(destination, ExpectedVersion.Any, CreateMessage(message)).Result;
+            connection.AppendToStreamAsync(destination, ExpectedVersion.Any, CreateMessage(message));
         }
 
         EventData CreateMessage(TransportMessageToSend message)
