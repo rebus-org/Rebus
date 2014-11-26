@@ -32,7 +32,7 @@ namespace Rebus.EventStore
 
         string CheckpointStream()
         {
-            return streamId + "Checkpoints";
+            return applicationId + streamId + "Checkpoints";
         }
 
         async void SubscribeToStream()
