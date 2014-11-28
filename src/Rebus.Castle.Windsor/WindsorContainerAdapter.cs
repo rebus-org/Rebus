@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus.Configuration;
@@ -25,7 +26,10 @@ namespace Rebus.Castle.Windsor
 
         public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            return container.ResolveAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> handlers = container.ResolveAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers = container.ResolveAll<IHandleMessagesAsync<T>>();
+
+            return handlers.Union(asyncHandlers);
         }
 
         public void Release(IEnumerable handlerInstances)

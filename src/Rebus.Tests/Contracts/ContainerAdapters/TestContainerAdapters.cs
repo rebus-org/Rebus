@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -144,6 +145,59 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
 
             public void Handle(string message)
             {
+            }
+
+            public static void Reset()
+            {
+                WasDisposed = false;
+            }
+
+            public void Dispose()
+            {
+                WasDisposed = true;
+            }
+        }
+
+        [Test]
+        public void MultipleCallsToGetYieldsNewAsyncHandlerInstances()
+        {
+            // arrange
+            factory.Register<IHandleMessagesAsync<string>, SomeAsyncDisposableHandler>();
+            factory.StartUnitOfWork();
+            var firstInstance = adapter.GetHandlerInstancesFor<string>()
+                                       .Single();
+
+            // act
+            var nextInstance = adapter.GetHandlerInstancesFor<string>()
+                                      .Single();
+
+            // assert
+            nextInstance.ShouldNotBeSameAs(firstInstance);
+        }
+
+        [Test]
+        public void CanGetAsyncHandlerInstancesAndReleaseThemAfterwardsAsExpected()
+        {
+            // arrange
+            factory.Register<IHandleMessagesAsync<string>, SomeAsyncDisposableHandler>();
+            factory.StartUnitOfWork();
+
+            // act
+            var instances = adapter.GetHandlerInstancesFor<string>();
+            adapter.Release(instances);
+            factory.EndUnitOfWork();
+
+            // assert
+            SomeAsyncDisposableHandler.WasDisposed.ShouldBe(true);
+        }
+
+        class SomeAsyncDisposableHandler : IHandleMessagesAsync<string>, IDisposable
+        {
+            public static bool WasDisposed { get; private set; }
+
+            public Task Handle(string message)
+            {
+                return null;
             }
 
             public static void Reset()

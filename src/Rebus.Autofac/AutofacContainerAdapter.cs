@@ -46,7 +46,9 @@ namespace Rebus.Autofac
             var context = MessageContext.GetCurrent();
             var lifetimeScope = (ILifetimeScope)context.Items[ContextKey];
 
-            return lifetimeScope.Resolve<IEnumerable<IHandleMessages<T>>>().ToArray();
+            IEnumerable<IHandleMessages> handlers = lifetimeScope.Resolve<IEnumerable<IHandleMessages<T>>>();
+            IEnumerable<IHandleMessages> asyncHandlers = lifetimeScope.Resolve<IEnumerable<IHandleMessagesAsync<T>>>();
+            return handlers.Union(asyncHandlers).ToArray();
         }
 
         /// <summary>

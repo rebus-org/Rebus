@@ -26,9 +26,10 @@ namespace Rebus.SimpleInjector
 
         public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            var handlers =  container.GetAllInstances(typeof (IHandleMessages<T>)).Cast<IHandleMessages<T>>().ToArray();
+            IEnumerable<IHandleMessages> handlers = container.GetAllInstances(typeof(IHandleMessages<T>)).Cast<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers =  container.GetAllInstances(typeof (IHandleMessagesAsync<T>)).Cast<IHandleMessagesAsync<T>>();
 
-            return handlers;
+            return handlers.Union(asyncHandlers).ToArray();
         }
 
         public void Release(IEnumerable handlerInstances)

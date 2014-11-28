@@ -18,7 +18,9 @@ namespace Rebus.Unity
 
         public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            return unityContainer.ResolveAll<IHandleMessages<T>>().ToArray();
+            IEnumerable<IHandleMessages> handlers = unityContainer.ResolveAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers = unityContainer.ResolveAll<IHandleMessagesAsync<T>>();
+            return handlers.Union(asyncHandlers).ToArray();
         }
 
         public void Release(IEnumerable handlerInstances)
