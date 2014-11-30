@@ -27,7 +27,10 @@ namespace Rebus.Tests.Persistence.Sagas
 
         protected override void DoTearDown()
         {
-            messageContext.Dispose();
+            if (messageContext != null)
+            {
+                messageContext.Dispose();
+            }
         }
 
         protected void ReturnToOriginalMessageContext()
