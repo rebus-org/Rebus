@@ -431,6 +431,9 @@
 
 * Updated RabbitMQ dependency - thanks [maxx1337]
 
+## 0.74.0
+
+* Fixed container adapters to correctly handle resolving async message handlers - thanks [arneeiri]
 
 
 [tiipe]: https://github.com/tiipe
@@ -447,3 +450,4 @@
 [oguzhaneren]: https://github.com/oguzhaneren
 [dimajanzen]: https://github.com/dimajanzen
 [maxx1337]: https://github.com/maxx1337
+[arneeiri]: https://github.com/arneeiri
