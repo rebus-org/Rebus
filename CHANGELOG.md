@@ -434,6 +434,7 @@
 
 ## 0.74.0
 
+* Upgraded to .NET 4.5 !!
 * `IHandleMessagesAsync` introduced - allows for having `async` message handlers
 * Fixed container adapters to correctly handle resolving async message handlers - thanks [arneeiri]
 * This version DOES NOT WORK because of the merge bug fixed in 0.75.0
