@@ -16,19 +16,20 @@ namespace Rebus.Configuration
             HandleMessagesInTransactionScope = false;
             OneWayClientMode = false;
 
+            BackoffBehavior = BackoffBehavior.Default();
+
             PossiblyInitializeFromConfigurationSection();
         }
 
         void PossiblyInitializeFromConfigurationSection()
         {
-            var config = RebusConfigurationSection.LookItUp();
+            var config = RebusConfigurationSection.LookItUp(returnNullIfNotFound: true);
             if (config == null) return;
 
             if (!string.IsNullOrWhiteSpace(config.AuditQueue))
             {
                 PerformMessageAudit(config.AuditQueue);
             }
-            BackoffBehavior = BackoffBehavior.Default();
         }
 
         /// <summary>

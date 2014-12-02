@@ -435,6 +435,10 @@
 
 * Fixed container adapters to correctly handle resolving async message handlers - thanks [arneeiri]
 
+## 0.74.1
+
+* Fixed bug that would not allow for configuring and starting a bus without an XML configuration section.
+
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz

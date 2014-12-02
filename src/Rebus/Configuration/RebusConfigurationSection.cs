@@ -154,11 +154,14 @@ namespace Rebus.Configuration
         /// Looks up the current AppDomain's Rebus configuration section, throwing
         /// an explanatory exception if it isn't present
         /// </summary>
-        public static RebusConfigurationSection LookItUp()
+        public static RebusConfigurationSection LookItUp(bool returnNullIfNotFound = false)
         {
             var section = ConfigurationManager.GetSection(ConfigSectionName);
 
-            if (section == null || !(section is RebusConfigurationSection))
+            if (section == null && returnNullIfNotFound)
+                return null;
+
+            if (!(section is RebusConfigurationSection))
             {
                 throw new ConfigurationErrorsException(@"Could not find configuration section named 'rebus' (or else
 the configuration section was not of the Rebus.Configuration.RebusConfigurationSection type?)
