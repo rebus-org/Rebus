@@ -8,25 +8,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
     {
         public static string ConnectionString
         {
-            get
-            {
-                var connectionStringFile = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "azure_connection_string.txt");
-                
-                if (!File.Exists(connectionStringFile))
-                {
-                    throw new ArgumentException(
-                        string.Format(@"Could not find text file with Azure connection string - looked here: {0}
-
-If you want to run the Azure tests, please provide a text file containing a valid connection string, e.g. something like
-
-Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyName=SomeAccessKeyThatCanAccesTopic;SharedAccessKey=baef57deadbputthekeyinhereb5eb8dfdef8ad
-
-",
-                                      connectionStringFile));
-                }
-
-                return File.ReadAllText(connectionStringFile).Trim("\r\n ".ToCharArray());
-            }
+            get { return AzureUtil.AzureServiceBusConnectionString; }
         }
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
@@ -39,7 +21,7 @@ Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyNam
 
         public void CleanUp()
         {
-            
+
         }
 
         public IReceiveMessages CreateReceiver(string queueName)
