@@ -169,6 +169,7 @@
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
+    <Compile Include="Bugs\CouldNotStartWithoutXml.cs" />
     <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
     <Compile Include="Bugs\SqlSagaPersisterVulnerableToSqlInjection.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
@@ -409,6 +410,9 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Bugs\Cfg\empty-app.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="HttpGateway\Http\ConfigFiles\App01.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
