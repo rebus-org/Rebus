@@ -36,7 +36,7 @@
   <PropertyGroup>
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
-    <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
+    <BuildOutputFolder>..\deploy\NET45</BuildOutputFolder>
     
     <!-- Should be provided from command-line / CI environment -->
     <Version></Version>
@@ -84,8 +84,8 @@
     <Delete Files="$(BuildOutputFolder)\Rebus.dll"/>
     <Delete Files="$(BuildOutputFolder)\Rebus.PostgreSql.dll"/>
     <!-- should probably use variables instead of hardcoded DLL paths here ... -->
-    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
-    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0&quot; /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.dll ..\src\Rebus\bin\Release\Rebus.dll ..\src\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5&quot; /internalize"/>
+    <Exec Command="$(IlMerge) /out:$(BuildOutputFolder)\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Rebus.PostgreSql.dll ..\src\Rebus.PostgreSql\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5&quot; /internalize"/>
   </Target>
 
   <Target Name="createNugetPackage" DependsOnTargets="updateNuspecVersions" Condition="'$(Version)' != ''">

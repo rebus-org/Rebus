@@ -430,14 +430,22 @@
 ## 0.73.0
 
 * Updated RabbitMQ dependency - thanks [maxx1337]
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
 
 ## 0.74.0
 
+* `IHandleMessagesAsync` introduced - allows for having `async` message handlers
 * Fixed container adapters to correctly handle resolving async message handlers - thanks [arneeiri]
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
 
 ## 0.74.1
 
 * Fixed bug that would not allow for configuring and starting a bus without an XML configuration section.
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
+
+## 0.75.0
+
+* Fixed merge bug that made published Rebus core assembly unusable!
 
 
 [tiipe]: https://github.com/tiipe
