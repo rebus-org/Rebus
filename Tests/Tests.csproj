@@ -45,6 +45,7 @@
     <Compile Include="FixtureBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestInjectionist_BasicRegistrations.cs" />
+    <Compile Include="TestInjectionist_Decorators.cs" />
     <Compile Include="TestInjectionist_Dependencies.cs" />
     <Compile Include="TestInjectionist_ServiceAndImplementation.cs" />
   </ItemGroup>
