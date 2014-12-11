@@ -1,5 +1,4 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Playground;
 
 namespace Tests
@@ -17,7 +16,7 @@ namespace Tests
         [Test]
         public void ThrowsWhenResolvingSomethingThatHasNotBeenRegistered()
         {
-            Assert.Throws<ApplicationException>(() => _injectionist.Get<string>());
+            Assert.Throws<ResolutionException>(() => _injectionist.Get<string>());
         }
 
         [Test]

@@ -71,7 +71,7 @@ namespace Playground
             {
                 if (!_resolvers.ContainsKey(typeof(TService)))
                 {
-                    throw new ApplicationException(string.Format("Could not find resolver for {0}", typeof(TService)));
+                    throw new ResolutionException("Could not find resolver for {0}", typeof(TService));
                 }
 
                 if (!_decoratorDepth.ContainsKey(typeof (TService)))
