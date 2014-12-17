@@ -17,9 +17,8 @@ namespace Rebus.Bus
         public bool IsTransactional { get { return false; } }
 
         /// <summary>
-        /// Constructs the context and explicitly does NOT set itself as current in <see cref="TransactionContext"/>, because that would not make sense...
-        /// i.e. when would the "context" end when there's no transaction? The answer is that the <see cref="NoTransaction"/> implementation of
-        /// <see cref="ITransactionContext"/> must never be set as the current transaction context, it must always be constructed when it must be used
+        /// Constructs the context and sets itself as current in <see cref="TransactionContext"/>.
+        /// It must be disposed immediately after use.
         /// </summary>
         public NoTransaction()
         {

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -13,211 +15,222 @@ namespace Rebus.Tests.Async
     [TestFixture]
     public class TestBasicAsyncHandler : FixtureBase
     {
+        BuiltinContainerAdapter adapter;
         const string InputQueue = "test.async.input";
         const string ErrorQueue = "test.async.error";
+
+        protected override void DoSetUp()
+        {
+            adapter = TrackDisposable(new BuiltinContainerAdapter());
+        }
+
+        protected override void DoTearDown()
+        {
+            adapter.Dispose();
+        }
 
         [Test]
         public void RequestReply()
         {
-            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            var replyHandled = new ManualResetEvent(false);
+
+            var bus = StartBus(1);
+
+            adapter.HandleAsync<SomeMessage>(async message =>
             {
-                var replyHandled = new ManualResetEvent(false);
+                var delay = message.Delay;
+                await Task.Delay(delay);
+                bus.Reply("yo!");
+            });
 
-                var bus = Configure.With(adapter)
-                    .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                    .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
-                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
-                    .CreateBus()
-                    .Start(1);
-
-                adapter.HandleAsync<SomeMessage>(async message =>
+            adapter.Handle<string>(str =>
+            {
+                if (str == "yo!")
                 {
-                    var delay = message.Delay;
-                    await Task.Delay(delay);
-                    bus.Reply("yo!");
-                });
+                    Console.WriteLine("Got reply!");
+                    replyHandled.Set();
+                }
+            });
 
-                adapter.Handle<string>(str =>
-                {
-                    if (str == "yo!")
-                    {
-                        Console.WriteLine("Got reply!");
-                        replyHandled.Set();
-                    }
-                });
+            bus.SendLocal(new SomeMessage { Delay = 1.Seconds() });
 
-                adapter.Bus.SendLocal(new SomeMessage { Delay = 1.Seconds() });
+            Console.WriteLine("Waiting for reply...");
+            replyHandled.WaitUntilSetOrDie(2.Seconds());
 
-                Console.WriteLine("Waiting for reply...");
-                replyHandled.WaitUntilSetOrDie(2.Seconds());
-
-                Console.WriteLine("Bam!");
-            }
+            Console.WriteLine("Bam!");
         }
+
 
         [Test]
         public void ContinuesOnWorkerThread()
         {
-            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            var done = new ManualResetEvent(false);
+
+            adapter.HandleAsync<SomeMessage>(async message =>
             {
-                var done = new ManualResetEvent(false);
+                Console.WriteLine("Intro");
+                var thread = Thread.CurrentThread.ManagedThreadId;
 
-                adapter.HandleAsync<SomeMessage>(async message =>
-                {
-                    Console.WriteLine("Intro");
-                    var thread = Thread.CurrentThread.ManagedThreadId;
+                await Task.Delay(message.Delay);
+                Console.WriteLine("First continuation");
+                Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
 
-                    await Task.Delay(message.Delay);
-                    Console.WriteLine("First continuation");
-                    Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
+                await Task.Delay(message.Delay);
+                Console.WriteLine("Second continuation");
+                Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
 
-                    await Task.Delay(message.Delay);
-                    Console.WriteLine("Second continuation");
-                    Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
+                await Task.Delay(message.Delay);
+                Console.WriteLine("Third and final continuation");
+                Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
 
-                    await Task.Delay(message.Delay);
-                    Console.WriteLine("Third and final continuation");
-                    Thread.CurrentThread.ManagedThreadId.ShouldBe(thread);
+                done.Set();
+            });
 
-                    done.Set();
-                });
+            var bus = StartBus(1);
 
-                Configure.With(adapter)
-                    .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                    .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
-                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
-                    .CreateBus()
-                    .Start(1);
+            bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
 
-                adapter.Bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
-
-                done.WaitUntilSetOrDie(5.Seconds());
-            }
+            done.WaitUntilSetOrDie(5.Seconds());
         }
 
         [Test]
         public void RestoresContext()
         {
-            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            var done = new ManualResetEvent(false);
+            var result = "";
+
+            adapter.HandleAsync<SomeMessage>(async message =>
             {
-                var done = new ManualResetEvent(false);
-                var result = "";
+                MessageContext.GetCurrent().Items["somecontext"] = "asger";
 
-                adapter.HandleAsync<SomeMessage>(async message =>
-                {
-                    MessageContext.GetCurrent().Items["somecontext"] = "asger";
+                await Task.Delay(message.Delay);
+                MessageContext.GetCurrent().Items["somecontext"] += " heller";
 
-                    await Task.Delay(message.Delay);
-                    MessageContext.GetCurrent().Items["somecontext"] += " heller";
+                await Task.Delay(message.Delay);
+                MessageContext.GetCurrent().Items["somecontext"] += " hallas";
 
-                    await Task.Delay(message.Delay);
-                    MessageContext.GetCurrent().Items["somecontext"] += " hallas";
+                await Task.Delay(message.Delay);
+                result = MessageContext.GetCurrent().Items["somecontext"] + " waits no more!";
 
-                    await Task.Delay(message.Delay);
-                    result = MessageContext.GetCurrent().Items["somecontext"] + " waits no more!";
+                done.Set();
+            });
 
-                    done.Set();
-                });
+            var bus = StartBus(1);
 
-                Configure.With(adapter)
-                    .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                    .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
-                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
-                    .CreateBus()
-                    .Start(1);
+            bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
 
-                adapter.Bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
+            done.WaitUntilSetOrDie(5.Seconds());
 
-                done.WaitUntilSetOrDie(5.Seconds());
-
-                result.ShouldBe("asger heller hallas waits no more!");
-            }
+            result.ShouldBe("asger heller hallas waits no more!");
         }
 
         [Test]
         public void ContinuesOnAnyWorkerThreadWithContext()
         {
-            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            var done = new ManualResetEvent(false);
+            var result = "";
+            Thread initial = null;
+            Thread final = null;
+
+            adapter.HandleAsync<SomeMessage>(async message =>
             {
-                var done = new ManualResetEvent(false);
-                var result = "";
-                Thread initial = null;
-                Thread final = null;
+                initial = Thread.CurrentThread;
+                MessageContext.GetCurrent().Items["somecontext"] = "inital";
 
-                adapter.HandleAsync<SomeMessage>(async message =>
+                Console.WriteLine("Started on thread " + initial.ManagedThreadId);
+
+                do
                 {
-                    initial = Thread.CurrentThread;
-                    MessageContext.GetCurrent().Items["somecontext"] = "inital";
+                    await Task.Delay(message.Delay);
+                } while (Thread.CurrentThread.ManagedThreadId == initial.ManagedThreadId);
 
-                    Console.WriteLine("Started on thread " + initial.ManagedThreadId);
+                final = Thread.CurrentThread;
+                result = MessageContext.GetCurrent().Items["somecontext"] + "final";
 
-                    do
-                    {
-                        await Task.Delay(message.Delay);
-                    } while (Thread.CurrentThread.ManagedThreadId == initial.ManagedThreadId);
+                Console.WriteLine("Ended on thread " + final.ManagedThreadId);
 
-                    final = Thread.CurrentThread;
-                    result = MessageContext.GetCurrent().Items["somecontext"] + "final";
+                done.Set();
+            });
 
-                    Console.WriteLine("Ended on thread " + final.ManagedThreadId);
+            var bus = StartBus(10);
 
-                    done.Set();
-                });
+            bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
 
-                Configure.With(adapter)
-                    .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                    .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
-                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
-                    .CreateBus()
-                    .Start(10);
+            // wait for a long time, just to be sure some other worker thread will pick it up
+            done.WaitUntilSetOrDie(TimeSpan.FromMinutes(1));
 
-                adapter.Bus.SendLocal(new SomeMessage { Delay = TimeSpan.FromSeconds(1) });
-
-                // wait for a long time, just to be sure some other worker thread will pick it up
-                done.WaitUntilSetOrDie(TimeSpan.FromMinutes(1));
-
-                result.ShouldBe("initalfinal");
-                initial.ShouldNotBe(final);
-                initial.Name.ShouldContain("Rebus 1 worker");
-                final.Name.ShouldContain("Rebus 1 worker");
-            }
+            result.ShouldBe("initalfinal");
+            initial.ShouldNotBe(final);
+            initial.Name.ShouldContain("Rebus 1 worker");
+            final.Name.ShouldContain("Rebus 1 worker");
         }
 
         [Test]
         public void HandlesExceptionsAsUsual()
         {
-            using (var adapter = TrackDisposable(new BuiltinContainerAdapter()))
+            var done = new ManualResetEvent(false);
+            var log = new List<string>();
+            var tries = 0;
+
+            adapter.HandleAsync<SomeMessage>(async message =>
             {
-                var done = new ManualResetEvent(false);
-                var log = new List<string>();
-                var tries = 0;
+                tries++;
+                Console.WriteLine("Handling");
+                await Task.Yield();
+                throw new Exception("failed");
+            });
 
-                adapter.HandleAsync<SomeMessage>(async message =>
-                {
-                    tries++;
-                    Console.WriteLine("Handling");
-                    await Task.Yield();
-                    throw new Exception("failed");
-                });
+            var bus = StartBus(1);
 
-                Configure.With(adapter)
-                    .Logging(l => l.Use(new ListLoggerFactory(log)))
-                    .Behavior(b => b.SetMaxRetriesFor<Exception>(3))
-                    .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
-                    .Events(x => x.PoisonMessage += (bus, message, info) => done.Set())
-                    .CreateBus()
-                    .Start(1);
+            bus.SendLocal(new SomeMessage());
 
-                adapter.Bus.SendLocal(new SomeMessage());
+            done.WaitUntilSetOrDie(1.Seconds());
 
-                done.WaitUntilSetOrDie(1.Seconds());
+            log.ShouldContain(x => x.StartsWith("Rebus.Bus.RebusBus|WARN: User exception in Rebus"));
+            tries.ShouldBe(3);
+        }
 
-                log.ShouldContain(x => x.StartsWith("Rebus.Bus.RebusBus|WARN: User exception in Rebus"));
-                tries.ShouldBe(3);
-            }
+        [Test]
+        public void MessageIsOnlyHandledOnce()
+        {
+            var done = new ManualResetEvent(false);
+
+            var bus = StartBus(1);
+
+            var i = 0;
+            adapter.HandleAsync<SomeMessage>(async message =>
+            {
+                i++;
+                await Task.Delay(5.Seconds());
+                done.Set();
+            });
+
+            bus.SendLocal(new SomeMessage());
+
+            done.WaitUntilSetOrDie(50.Seconds());
+
+            i.ShouldBe(1);
+        }
+
+        IBus StartBus(int numberOfWorkers)
+        {
+            MsmqUtil.PurgeQueue(InputQueue);
+            MsmqUtil.PurgeQueue(ErrorQueue);
+
+            return Configure.With(adapter)
+                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
+                .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
+                .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
+                .CreateBus()
+                .Start(numberOfWorkers);
         }
 
         public class SomeMessage
+        {
+            public TimeSpan Delay { get; set; }
+        }
+
+        public class SomeOtherMessage
         {
             public TimeSpan Delay { get; set; }
         }
