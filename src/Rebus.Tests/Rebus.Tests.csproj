@@ -181,6 +181,7 @@
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
     <Compile Include="Bugs\CouldNotStartWithoutXml.cs" />
+    <Compile Include="Bugs\MessageContextIsNotDisposedTooEarly.cs" />
     <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
     <Compile Include="Bugs\SqlSagaPersisterVulnerableToSqlInjection.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
