@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
+using Rhino.Mocks;
 using Shouldly;
 
 namespace Rebus.Tests.Async
@@ -168,7 +168,6 @@ namespace Rebus.Tests.Async
         [Test]
         public void HandlesExceptionsAsUsual()
         {
-            var done = new ManualResetEvent(false);
             var log = new List<string>();
             var tries = 0;
 
@@ -180,14 +179,18 @@ namespace Rebus.Tests.Async
                 throw new Exception("failed");
             });
 
-            var bus = StartBus(1);
+            var bus = StartBus(1, log, numberOfRetries: 5);
 
             bus.SendLocal(new SomeMessage());
 
-            done.WaitUntilSetOrDie(1.Seconds());
+            Thread.Sleep(1000);
+
+            Console.WriteLine("---------------------------------------------------------------------------");
+            Console.WriteLine(string.Join(Environment.NewLine, log));
+            Console.WriteLine("---------------------------------------------------------------------------");
 
             log.ShouldContain(x => x.StartsWith("Rebus.Bus.RebusBus|WARN: User exception in Rebus"));
-            tries.ShouldBe(3);
+            tries.ShouldBe(5);
         }
 
         [Test]
@@ -212,14 +215,34 @@ namespace Rebus.Tests.Async
             i.ShouldBe(1);
         }
 
-        IBus StartBus(int numberOfWorkers)
+        IBus StartBus(int numberOfWorkers, List<string> log = null, int? numberOfRetries = null)
         {
             MsmqUtil.PurgeQueue(InputQueue);
             MsmqUtil.PurgeQueue(ErrorQueue);
 
             return Configure.With(adapter)
-                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
+                .Logging(l =>
+                {
+                    if (log == null)
+                    {
+                        l.ColoredConsole(minLevel: LogLevel.Warn);
+                    }
+                    else
+                    {
+                        l.Use(new ListLoggerFactory(log));
+                    }
+                })
+                .Behavior(b =>
+                {
+                    if (numberOfRetries != null)
+                    {
+                        b.SetMaxRetriesFor<Exception>(numberOfRetries.Value);
+                    }
+                    else
+                    {
+                        b.SetMaxRetriesFor<Exception>(0);
+                    }
+                })
                 .Transport(t => t.UseMsmq(InputQueue, ErrorQueue))
                 .CreateBus()
                 .Start(numberOfWorkers);
