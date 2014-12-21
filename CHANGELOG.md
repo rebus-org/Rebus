@@ -447,6 +447,9 @@
 ## 0.75.0
 
 * Fixed merge bug that made published Rebus core assembly unusable!
+
+## 0.75.1
+
 * Fixed container adapter registration bug that would make it impossible to have `IMessageContext` injected into more than one handler in the pipeline. Also ensures that the container does not dispose the message context.
 
 
