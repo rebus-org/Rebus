@@ -49,7 +49,7 @@ namespace Rebus.Castle.Windsor
                     .Instance(bus),
 
                 Component.For<IMessageContext>()
-                    .UsingFactoryMethod(k => MessageContext.GetCurrent())
+                    .UsingFactoryMethod(k => MessageContext.GetCurrent(), managedExternally: true)
                     .LifestyleTransient(),
 
                 Component.For<InstanceDisposer>()

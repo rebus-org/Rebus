@@ -20,7 +20,7 @@ namespace Rebus.Tests.Bugs
         const string ErrorQueueName = "error";
 
         [Test]
-        public void ItIsTrue()
+        public void ItIsTrueItIsNot()
         {
             using (var container = new WindsorContainer())
             {
@@ -35,13 +35,16 @@ namespace Rebus.Tests.Bugs
                 unitOfWorkManager.Aborted += () => events.Add("uow aborted");
                 unitOfWorkManager.Disposed += () => events.Add("uow disposed");
                 
-                StringHandler.MessageHandled += () => events.Add("message handled");
+                StringHandler.MessageHandled += () => events.Add("message handled (StringHandler)");
+                AnotherStringHandler.MessageHandled += () => events.Add("message handled (AnotherStringHandler)");
 
                 // put the bad boys to use
                 container.Register(
-                    Component
-                        .For<IHandleMessages<string>>()
-                        .ImplementedBy<StringHandler>()
+                    Component.For<IHandleMessages<string>>()
+                        .ImplementedBy<StringHandler>(),
+
+                    Component.For<IHandleMessages<string>>()
+                        .ImplementedBy<AnotherStringHandler>()
                     );
 
                 Configure.With(new WindsorContainerAdapter(container))
@@ -79,9 +82,20 @@ namespace Rebus.Tests.Bugs
 
             public StringHandler(IMessageContext context /* trigger Windsor's tracking */)
             {
-                int a = 2;
+            }
 
-                context.ToString();
+            public void Handle(string message)
+            {
+                MessageHandled();
+            }
+        }
+
+        class AnotherStringHandler : IHandleMessages<string>
+        {
+            public static event Action MessageHandled = delegate { };
+
+            public AnotherStringHandler(IMessageContext context /* trigger Windsor's tracking */)
+            {
             }
 
             public void Handle(string message)

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Ponder;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
