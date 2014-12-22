@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Playground
+namespace Playground.Injection
 {
     public class ResolutionException : Exception
     {

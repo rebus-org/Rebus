@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Playground
+namespace Playground.Injection
 {
     public class Injectionist
     {

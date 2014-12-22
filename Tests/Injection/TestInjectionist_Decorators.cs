@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
-using Playground;
+using Playground.Injection;
 
-namespace Tests
+namespace Tests.Injection
 {
     [TestFixture]
     public class TestInjectionist_Decorators : FixtureBase
