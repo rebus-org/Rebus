@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Playground.Injection
+namespace Rebus2.Injection
 {
     public class ResolutionException : Exception
     {

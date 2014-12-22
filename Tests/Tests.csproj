@@ -53,9 +53,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Playground\Playground.csproj">
-      <Project>{72B6BF61-F169-4438-83A4-C4C8598CCDEA}</Project>
-      <Name>Playground</Name>
+    <ProjectReference Include="..\Rebus2\Rebus2.csproj">
+      <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
+      <Name>Rebus2</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

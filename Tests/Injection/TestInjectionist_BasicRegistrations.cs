@@ -1,5 +1,5 @@
 ﻿using NUnit.Framework;
-using Playground.Injection;
+using Rebus2.Injection;
 
 namespace Tests.Injection
 {
