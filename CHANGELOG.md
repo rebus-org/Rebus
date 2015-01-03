@@ -452,6 +452,9 @@
 
 * Fixed container adapter registration bug that would make it impossible to have `IMessageContext` injected into more than one handler in the pipeline. Also ensures that the container does not dispose the message context.
 
+## 0.75.2
+
+* Change SQL Server subscription storage command to be truly idempotent - thanks [tobiaxor]
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
@@ -468,3 +471,4 @@
 [dimajanzen]: https://github.com/dimajanzen
 [maxx1337]: https://github.com/maxx1337
 [arneeiri]: https://github.com/arneeiri
+[tobiaxor]: https://github.com/tobiaxor

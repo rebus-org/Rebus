@@ -61,7 +61,7 @@ namespace Rebus.Persistence.SqlServer
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"if not exists
-                                                (select top 1 * from {0} where message_type=@message_type and endpoint=@endpoint)
+                                                (select top 1 * from [{0}] where message_type = @message_type and endpoint = @endpoint)
                                                 insert into [{0}] 
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
