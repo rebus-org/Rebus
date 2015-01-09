@@ -50,8 +50,9 @@
 
     <ReturnToSourceQueueOutputFolder>$(BuildOutputFolder)\ReturnToSourceQueue</ReturnToSourceQueueOutputFolder>
     <ReturnToSourceQueueMsmqProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.Msmq\bin\Release</ReturnToSourceQueueMsmqProjectOutputFolder>
-	<ReturnToSourceQueueRabbitMQProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.RabbitMQ\bin\Release</ReturnToSourceQueueRabbitMQProjectOutputFolder>
-    
+    <ReturnToSourceQueueRabbitMQProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.RabbitMQ\bin\Release</ReturnToSourceQueueRabbitMQProjectOutputFolder>
+    <ReturnToSourceQueueAzureServiceBusProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.AzureServiceBus\bin\Release</ReturnToSourceQueueAzureServiceBusProjectOutputFolder>
+
     <TimeoutOutputFolder>$(BuildOutputFolder)\Timeout</TimeoutOutputFolder>
     <TimeoutProjectOutputFolder>..\src\Rebus.Timeout\bin\Release</TimeoutProjectOutputFolder>
   </PropertyGroup>
@@ -145,7 +146,8 @@
 
   <Target Name="zip_returnToSourceQueue">
     <Exec Command="$(Zip) a $(ReturnToSourceQueueOutputFolder)\returnToSourceQueue.msmq.zip $(ReturnToSourceQueueMsmqProjectOutputFolder)\*.* -tZip -mx=9" />
-	<Exec Command="$(Zip) a $(ReturnToSourceQueueOutputFolder)\returnToSourceQueue.rabbitMQ.zip $(ReturnToSourceQueueRabbitMQProjectOutputFolder)\*.* -tZip -mx=9" />
+    <Exec Command="$(Zip) a $(ReturnToSourceQueueOutputFolder)\returnToSourceQueue.rabbitMQ.zip $(ReturnToSourceQueueRabbitMQProjectOutputFolder)\*.* -tZip -mx=9" />
+    <Exec Command="$(Zip) a $(ReturnToSourceQueueOutputFolder)\returnToSourceQueue.azureSB.zip $(ReturnToSourceQueueAzureServiceBusProjectOutputFolder)\*.* -tZip -mx=9" />
   </Target>
 
   <Target Name="build_timeout" DependsOnTargets="clean_timeout_output_folder;compile_timeout;copy_timeout" />
