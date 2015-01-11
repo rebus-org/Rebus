@@ -1,7 +1,10 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using NUnit.Framework;
+using Raven.Imports.Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Messages;
@@ -333,6 +336,46 @@ Or should it?")]
                                                          m => m.Headers.ContainsKey(Headers.ReturnAddress)
                                                               && m.Headers[Headers.ReturnAddress].ToString() == "my input queue"),
                                                               Arg<ITransactionContext>.Is.Anything));
+        }
+
+        [Test]
+        public void CanScanAssemblyAndSubscribeToMessages()
+        {
+            // arrange
+            // Create an assembly with handlers (see http://stackoverflow.com/a/10181972/2608).
+            var parameters = new CompilerParameters
+            {
+                GenerateExecutable = false,
+                GenerateInMemory = true
+            };
+            parameters.ReferencedAssemblies.Add("Rebus.dll");
+            const string code = "using Rebus; namespace NS { public class A : IHandleMessages<int>, IHandleMessages<string> { public void Handle(int message) { } public void Handle(string message) { } } public class B : IHandleMessages<int> { public void Handle(int message) { } } class C : IHandleMessages<byte> { public void Handle(byte message) { } } }";
+            var assembly = CodeDomProvider
+               .CreateProvider("CSharp")
+               .CompileAssemblyFromSource(parameters, code)
+               .CompiledAssembly;
+
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(int))).Return("int message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(string))).Return("string message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(byte))).Return("byte message endpoint");
+            receiveMessages.SetInputQueue("my input queue");
+
+            // act
+            bus.SubscribeForAssemblyHandlers(assembly);
+
+            // assert
+            Action<Type, string> assertSubscriptionMessageCalledForType = (t, endPointName) =>
+            {
+                sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(endPointName),
+                                         Arg<TransportMessageToSend>.Matches(
+                                             m => m.Label == "Rebus.Messages.SubscriptionMessage"
+                                                  && JsonConvert.DeserializeObject<SubscriptionMessage[]>(Encoding.UTF7.GetString(m.Body))[0].Type == t.AssemblyQualifiedName),
+                                                  Arg<ITransactionContext>.Is.Anything));
+            };
+
+            assertSubscriptionMessageCalledForType(typeof(int), "int message endpoint");
+            assertSubscriptionMessageCalledForType(typeof(string), "string message endpoint");
+            assertSubscriptionMessageCalledForType(typeof(byte), "byte message endpoint");
         }
 
         [Test]

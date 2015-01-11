@@ -6,6 +6,7 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
+using System.Reflection;
 using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
@@ -286,17 +287,50 @@ namespace Rebus.Bus
         /// </summary>
         public void Subscribe<TEvent>()
         {
+            Subscribe(typeof(TEvent));
+        }
+        /// <summary>
+        /// Sends a subscription request for <paramref name="eventType"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Subscribe(Type eventType)
+        {
             var multicastTransport = sendMessages as IMulticastTransport;
 
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
-                multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                multicastTransport.Subscribe(eventType, receiveMessages.InputQueueAddress);
                 return;
             }
 
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(eventType);
 
-            InternalSubscribe<TEvent>(publisherInputQueue);
+            InternalSubscribe(publisherInputQueue, eventType);
+        }
+
+        /// <summary>
+        /// Scans the assemblies supplied in <paramref name="assemblies"/> for handlers that implement 
+        /// <see cref="IHandleMessages{TMessage}"/> and adds a subscription for the handled message types.
+        /// </summary>
+        public void SubscribeForAssemblyHandlers(params Assembly[] assemblies)
+        {
+            foreach (var messageType in assemblies.SelectMany(GetTypesOfMessagesHandledByRebus))
+            {
+                Subscribe(messageType);
+            }
+        }
+
+        private IEnumerable<Type> GetTypesOfMessagesHandledByRebus(Assembly assembly)
+        {
+            return assembly.GetTypes()
+                .SelectMany(x => x.GetInterfaces())
+                .Where(IsGenericRebusHandler)
+                .SelectMany(x => x.GenericTypeArguments)
+                .Distinct();
+        }
+        private bool IsGenericRebusHandler(Type t)
+        {
+            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IHandleMessages<>);
         }
 
         /// <summary>
@@ -441,9 +475,14 @@ namespace Rebus.Bus
 
         internal void InternalSubscribe<TMessage>(string publisherInputQueue)
         {
-            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
+            InternalSubscribe(publisherInputQueue, typeof(TMessage));
         }
-
+        
+        internal void InternalSubscribe(string publisherInputQueue, Type messageType)
+        {
+            SendSubscriptionMessage(messageType, publisherInputQueue, SubscribeAction.Subscribe);
+        }		
+		
         internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
         {
             SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
