@@ -342,18 +342,18 @@ Or should it?")]
         public void CanScanAssemblyAndSubscribeToMessages()
         {
             // arrange
-            // Create an assembly with handlers (see http://stackoverflow.com/a/10181972/2608).
+            // Create two assemblies with handlers for int, string and byte that are declared publicly and privately.
             var parameters = new CompilerParameters
             {
                 GenerateExecutable = false,
                 GenerateInMemory = true
             };
             parameters.ReferencedAssemblies.Add("Rebus.dll");
+
             const string code = "using Rebus; namespace NS { public class A : IHandleMessages<int>, IHandleMessages<string> { public void Handle(int message) { } public void Handle(string message) { } } public class B : IHandleMessages<int> { public void Handle(int message) { } } class C : IHandleMessages<byte> { public void Handle(byte message) { } } }";
-            var assembly = CodeDomProvider
-               .CreateProvider("CSharp")
-               .CompileAssemblyFromSource(parameters, code)
-               .CompiledAssembly;
+            
+            var assembly1 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
+            var assembly2 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
 
             determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(int))).Return("int message endpoint");
             determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(string))).Return("string message endpoint");
@@ -361,7 +361,7 @@ Or should it?")]
             receiveMessages.SetInputQueue("my input queue");
 
             // act
-            bus.SubscribeForAssemblyHandlers(assembly);
+            bus.SubscribeForAssemblyHandlers(assembly1, assembly2);
 
             // assert
             Action<Type, string> assertSubscriptionMessageCalledForType = (t, endPointName) =>

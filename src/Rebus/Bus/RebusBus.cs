@@ -314,15 +314,15 @@ namespace Rebus.Bus
         /// </summary>
         public void SubscribeForAssemblyHandlers(params Assembly[] assemblies)
         {
-            foreach (var messageType in assemblies.SelectMany(GetTypesOfMessagesHandledByRebus))
+            foreach (var messageType in GetTypesOfMessagesHandledByRebus(assemblies))
             {
                 Subscribe(messageType);
             }
         }
 
-        private IEnumerable<Type> GetTypesOfMessagesHandledByRebus(Assembly assembly)
+        private IEnumerable<Type> GetTypesOfMessagesHandledByRebus(Assembly[] assemblies)
         {
-            return assembly.GetTypes()
+            return assemblies.SelectMany(x => x.GetTypes())
                 .SelectMany(x => x.GetInterfaces())
                 .Where(IsGenericRebusHandler)
                 .SelectMany(x => x.GenericTypeArguments)
