@@ -361,7 +361,7 @@ Or should it?")]
             receiveMessages.SetInputQueue("my input queue");
 
             // act
-            bus.SubscribeForAssemblyHandlers(assembly1, assembly2);
+            bus.SubscribeByScanningForHandlers(assembly1, assembly2);
 
             // assert
             Action<Type, string> assertSubscriptionMessageCalledForType = (t, endPointName) =>

@@ -312,7 +312,7 @@ namespace Rebus.Bus
         /// Scans the assemblies supplied in <paramref name="assemblies"/> for handlers that implement 
         /// <see cref="IHandleMessages{TMessage}"/> and adds a subscription for the handled message types.
         /// </summary>
-        public void SubscribeForAssemblyHandlers(params Assembly[] assemblies)
+        public void SubscribeByScanningForHandlers(params Assembly[] assemblies)
         {
             foreach (var messageType in GetTypesOfMessagesHandledByRebus(assemblies))
             {
