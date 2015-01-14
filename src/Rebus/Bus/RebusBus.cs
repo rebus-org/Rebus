@@ -309,31 +309,6 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Scans the assemblies supplied in <paramref name="assemblies"/> for handlers that implement 
-        /// <see cref="IHandleMessages{TMessage}"/> and adds a subscription for the handled message types.
-        /// </summary>
-        public void SubscribeByScanningForHandlers(params Assembly[] assemblies)
-        {
-            foreach (var messageType in GetTypesOfMessagesHandledByRebus(assemblies))
-            {
-                Subscribe(messageType);
-            }
-        }
-
-        private IEnumerable<Type> GetTypesOfMessagesHandledByRebus(Assembly[] assemblies)
-        {
-            return assemblies.SelectMany(x => x.GetTypes())
-                .SelectMany(x => x.GetInterfaces())
-                .Where(IsGenericRebusHandler)
-                .SelectMany(x => x.GenericTypeArguments)
-                .Distinct();
-        }
-        private bool IsGenericRebusHandler(Type t)
-        {
-            return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(IHandleMessages<>);
-        }
-
-        /// <summary>
         /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
         /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
         /// </summary>

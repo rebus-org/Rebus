@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Raven.Imports.Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Testing;
