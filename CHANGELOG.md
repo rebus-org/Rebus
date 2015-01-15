@@ -456,6 +456,11 @@
 
 * Change SQL Server subscription storage command to be truly idempotent - thanks [tobiaxor]
 
+## 0.76.0
+
+* Auto-subscribing extension on `IBus` - thanks [seankearon]
+
+
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
@@ -472,3 +477,4 @@
 [maxx1337]: https://github.com/maxx1337
 [arneeiri]: https://github.com/arneeiri
 [tobiaxor]: https://github.com/tobiaxor
+[seankearon]: https://github.com/seankearon

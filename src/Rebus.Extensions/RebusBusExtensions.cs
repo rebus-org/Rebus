@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using Rebus.Bus;
 
 namespace Rebus.Extensions
 {
@@ -12,13 +11,14 @@ namespace Rebus.Extensions
         ///     Scans the assemblies supplied in <paramref name="assemblies" /> for handlers that implement
         ///     <see cref="IHandleMessages{TMessage}" /> and adds a subscription for the handled message types.
         /// </summary>
-        public static void SubscribeByScanningForHandlers(this RebusBus bus, params Assembly[] assemblies)
+        public static void SubscribeByScanningForHandlers(this IBus bus, params Assembly[] assemblies)
         {
             var typesOfMessagesHandledByRebus = GetTypesOfMessagesHandledByRebus(assemblies);
+            var subscribeMethod = bus.GetType().GetMethod("Subscribe", new Type[0]);
 
             foreach (var messageType in typesOfMessagesHandledByRebus)
             {
-                bus.Subscribe(messageType);
+                subscribeMethod.MakeGenericMethod(messageType).Invoke(bus, new object[0]);
             }
         }
 
@@ -36,13 +36,13 @@ namespace Rebus.Extensions
                 .Select(a =>
                 {
                     var genericTypeArguments = a.Interface.GenericTypeArguments;
-                    
+
                     if (genericTypeArguments.Length != 1)
                     {
                         throw new ApplicationException(string.Format("The type {0} implements {1}, which was detected to be a Rebus message handler - but it has {2} generic type arguments which is not what we expected: {3}",
                             a.Type, a.Interface, genericTypeArguments.Length, string.Join(", ", genericTypeArguments.Select(t => t.FullName))));
                     }
-                    
+
                     return genericTypeArguments[0];
                 })
                 .Distinct();
