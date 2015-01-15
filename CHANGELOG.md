@@ -459,7 +459,7 @@
 ## 0.76.0
 
 * Auto-subscribing extension on `IBus` - thanks [seankearon]
-
+* Updated Azure Service Bus dependency to 2.5.4
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
