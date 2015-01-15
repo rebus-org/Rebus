@@ -215,6 +215,25 @@ namespace Rebus.Tests.Async
             i.ShouldBe(1);
         }
 
+        [Test]
+        public void SyncTaskRunWorks()
+        {
+            var done = new ManualResetEvent(false);
+
+            adapter.Handle<SomeMessage>(message =>
+            {
+                Console.WriteLine("Handling");
+                Task.Run(() => { }).Wait();
+                done.Set();
+            });
+
+            var bus = StartBus(1);
+
+            bus.SendLocal(new SomeMessage());
+
+            done.WaitUntilSetOrDie(1.Seconds());
+        }
+
         IBus StartBus(int numberOfWorkers, List<string> log = null, int? numberOfRetries = null)
         {
             MsmqUtil.PurgeQueue(InputQueue);
