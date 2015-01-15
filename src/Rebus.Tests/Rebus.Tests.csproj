@@ -131,6 +131,14 @@
     <Reference Include="Rhino.Mocks, Version=3.6.0.0, Culture=neutral, PublicKeyToken=0b3305902db7183f, processorArchitecture=MSIL">
       <HintPath>..\packages\RhinoMocks.3.6\lib\Rhino.Mocks.dll</HintPath>
     </Reference>
+    <Reference Include="Serilog, Version=1.4.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Serilog.1.4.118\lib\net45\Serilog.dll</HintPath>
+    </Reference>
+    <Reference Include="Serilog.FullNetFx">
+      <HintPath>..\packages\Serilog.1.4.118\lib\net45\Serilog.FullNetFx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Shouldly, Version=2.1.1.0, Culture=neutral, PublicKeyToken=6042cbcb05cbc941, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Shouldly.2.1.1\lib\net40\Shouldly.dll</HintPath>
@@ -498,7 +506,7 @@
       <Name>Rebus.RavenDb</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
-      <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
+      <Project>{994133F4-799B-4878-8AE8-29F5D7E00B8D}</Project>
       <Name>Rebus.Serilog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.SimpleInjector\Rebus.SimpleInjector.csproj">

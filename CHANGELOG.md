@@ -461,6 +461,10 @@
 * Auto-subscribing extension on `IBus` - thanks [seankearon]
 * Updated Azure Service Bus dependency to 2.5.4
 
+## 0.77.0
+
+* Improved Serilog integration
+
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore

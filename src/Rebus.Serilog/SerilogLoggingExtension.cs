@@ -1,7 +1,9 @@
-﻿using Rebus.Configuration;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Rebus.Configuration;
 using Rebus.Shared;
+using Serilog;
 using Serilog.Context;
-
 
 namespace Rebus.Serilog
 {
@@ -10,59 +12,106 @@ namespace Rebus.Serilog
     /// </summary>
     public static class SerilogLoggingExtension
     {
-        /// <summary>
-        /// Default Serilog context property key to use for setting the correlation ID of the message currently being handled.
-        /// </summary>
-        public const string DefaultCorrelationIdPropertyKey = "CorrelationId";
+        public const string CorrelationIdLoggerProperty = "CorrelationId";
+
+        static readonly Dictionary<string, string> DefaultHeaderKeyToLoggerPropertyMappings =
+            new Dictionary<string, string>
+            {
+                {Headers.CorrelationId, CorrelationIdLoggerProperty}
+            };
 
         /// <summary>
-        /// Configures Rebus to use Serilog for all of its internal logging. Will automatically add a 'CorrelationId' variable as a Serilog
-        /// context property when handling messages, allowing log output to include that.
+        /// Configures Rebus to use Serilog for all of its internal logging. Automatically adds the <see cref="CorrelationIdLoggerProperty"/> 
+        /// logger property to the logging context when handling a message that has a <see cref="Headers.CorrelationId"/> header.
         /// </summary>
         public static void Serilog(this LoggingConfigurer configurer)
         {
             configurer.Use(new SerilogLoggerFactory());
 
-            SetUpEventHandler(configurer, DefaultCorrelationIdPropertyKey);
+            SetUpEventHandler(configurer, DefaultHeaderKeyToLoggerPropertyMappings);
         }
 
         /// <summary>
-        /// Configures Rebus to use Serilog for all of its internal logging. Will automatically add a correlation ID variable as a Serilog
-        /// context property under the key specified by <paramref name="overriddenCorrelationIdPropertyKey"/> when handling messages, 
-        /// allowing log output to include that.
+        /// Configures Rebus to use Serilog for all of its internal logging. Will add as logger properties the headers specified
+        /// as keys in the given <see cref="headerKeyToLoggerPropertyMappings"/> dictionary, using as logger property name the
+        /// value for each given key.
         /// </summary>
-        public static void Serilog(this LoggingConfigurer configurer, string overriddenCorrelationIdPropertyKey)
+        public static void Serilog(this LoggingConfigurer configurer, IDictionary<string,string> headerKeyToLoggerPropertyMappings)
         {
             configurer.Use(new SerilogLoggerFactory());
 
-            SetUpEventHandler(configurer, overriddenCorrelationIdPropertyKey);
+            SetUpEventHandler(configurer, headerKeyToLoggerPropertyMappings);
         }
 
-        static void SetUpEventHandler(BaseConfigurer configurer, string correlationIdPropertyKey)
+        /// <summary>
+        /// Configures Rebus to use Serilog for all of its internal logging, deriving its logger off of the given <see cref="baseLogger"/>.
+        ///  Automatically adds the <see cref="CorrelationIdLoggerProperty"/> 
+        /// logger property to the logging context when handling a message that has a <see cref="Headers.CorrelationId"/> header.
+        /// </summary>
+        public static void Serilog(this LoggingConfigurer configurer, ILogger baseLogger)
+        {
+            configurer.Use(new SerilogLoggerFactory(baseLogger));
+
+            SetUpEventHandler(configurer, DefaultHeaderKeyToLoggerPropertyMappings);
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Serilog for all of its internal logging, deriving its logger off of the given <see cref="baseLogger"/>.
+        /// Will add as logger properties the headers specified
+        /// as keys in the given <see cref="headerKeyToLoggerPropertyMappings"/> dictionary, using as logger property name the
+        /// value for each given key.
+        /// </summary>
+        public static void Serilog(this LoggingConfigurer configurer, ILogger baseLogger, IDictionary<string,string> headerKeyToLoggerPropertyMappings)
+        {
+            configurer.Use(new SerilogLoggerFactory(baseLogger));
+
+            SetUpEventHandler(configurer, headerKeyToLoggerPropertyMappings);
+        }       
+        
+        /// <summary>
+        /// Configures Rebus to use Serilog for all of its internal logging, using the given <see cref="configuration"/> to create
+        /// all of its loggers. Automatically adds the <see cref="CorrelationIdLoggerProperty"/> 
+        /// logger property to the logging context when handling a message that has a <see cref="Headers.CorrelationId"/> header.
+        /// </summary>
+        public static void Serilog(this LoggingConfigurer configurer, LoggerConfiguration configuration)
+        {
+            configurer.Use(new SerilogLoggerFactory(configuration));
+
+            SetUpEventHandler(configurer, DefaultHeaderKeyToLoggerPropertyMappings);
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Serilog for all of its internal logging, using the given <see cref="configuration"/> to create
+        /// all of its loggers. Will add as logger properties the headers specified as keys in the given <see cref="headerKeyToLoggerPropertyMappings"/> 
+        /// dictionary, using as logger property name the value for each given key.
+        /// </summary>
+        public static void Serilog(this LoggingConfigurer configurer, LoggerConfiguration configuration, IDictionary<string, string> headerKeyToLoggerPropertyMappings)
+        {
+            configurer.Use(new SerilogLoggerFactory(configuration));
+
+            SetUpEventHandler(configurer, headerKeyToLoggerPropertyMappings);
+        }
+
+        static void SetUpEventHandler(BaseConfigurer configurer, IDictionary<string, string> headerKeyToLoggerPropertyMappings)
         {
             configurer.Backbone.ConfigureEvents(e =>
                 {
                     e.MessageContextEstablished += 
                         (bus, ctx) => 
                             {
-                                PushHeaderProperty(Headers.CorrelationId, ctx, correlationIdPropertyKey);
-                                PushHeaderProperty(Headers.SourceQueue, ctx);
-                                PushHeaderProperty(Headers.ReturnAddress, ctx);
-                                PushHeaderProperty(Headers.AutoCorrelationSagaId, ctx);
+                                foreach (var key in ctx.Headers.Keys.Intersect(headerKeyToLoggerPropertyMappings.Keys))
+                                {
+                                    PushHeaderProperty(key, ctx, headerKeyToLoggerPropertyMappings[key]);
+                                }
                             };
                 });
         }
 
-        static void PushHeaderProperty(string headerKey, IMessageContext ctx, string serilogPropertyKey = null)
+        static void PushHeaderProperty(string headerKey, IMessageContext ctx, string loggerKey)
         {
-            if (!ctx.Headers.ContainsKey(headerKey)) return;
+            var propertyDisposer = LogContext.PushProperty(loggerKey, ctx.Headers[headerKey]);
 
-            if (string.IsNullOrEmpty(serilogPropertyKey))
-            {
-                serilogPropertyKey = headerKey;
-            }
-
-            ctx.Disposed += LogContext.PushProperty(serilogPropertyKey, ctx.Headers[headerKey]).Dispose;
+            ctx.Disposed += propertyDisposer.Dispose;
         }
     }
 }
