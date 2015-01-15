@@ -457,6 +457,10 @@
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.Extensions\Rebus.Extensions.csproj">
+      <Project>{7551FD46-EAE0-4041-B747-80102FF625F8}</Project>
+      <Name>Rebus.Extensions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.HttpGateway\Rebus.HttpGateway.csproj">
       <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
       <Name>Rebus.HttpGateway</Name>

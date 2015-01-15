@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Rebus.Configuration;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
-using System.Linq;
 using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
-using Rebus.Extensions;
 using Rebus.Timeout;
 using Timer = System.Timers.Timer;
 
@@ -286,17 +286,26 @@ namespace Rebus.Bus
         /// </summary>
         public void Subscribe<TEvent>()
         {
+            Subscribe(typeof(TEvent));
+        }
+
+        /// <summary>
+        /// Sends a subscription request for <paramref name="eventType"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Subscribe(Type eventType)
+        {
             var multicastTransport = sendMessages as IMulticastTransport;
 
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
-                multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                multicastTransport.Subscribe(eventType, receiveMessages.InputQueueAddress);
                 return;
             }
 
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(eventType);
 
-            InternalSubscribe<TEvent>(publisherInputQueue);
+            InternalSubscribe(publisherInputQueue, eventType);
         }
 
         /// <summary>
@@ -305,17 +314,26 @@ namespace Rebus.Bus
         /// </summary>
         public void Unsubscribe<TEvent>()
         {
+            Unsubscribe(typeof (TEvent));
+        }
+
+        /// <summary>
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Unsubscribe(Type eventType)
+        {
             var multicastTransport = sendMessages as IMulticastTransport;
 
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
-                multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                multicastTransport.Unsubscribe(eventType, receiveMessages.InputQueueAddress);
                 return;
             }
 
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(eventType);
 
-            InternalUnsubscribe<TEvent>(publisherInputQueue);
+            InternalUnsubscribe(publisherInputQueue, eventType);
         }
 
         /// <summary>
@@ -438,15 +456,15 @@ namespace Rebus.Bus
         /// Gain access to more advanced and less commonly used features of the bus
         /// </summary>
         public IAdvancedBus Advanced { get { return this; } }
-
-        internal void InternalSubscribe<TMessage>(string publisherInputQueue)
+        
+        internal void InternalSubscribe(string publisherInputQueue, Type eventType)
         {
-            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
-        }
-
-        internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
+            SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Subscribe);
+        }		
+		
+        internal void InternalUnsubscribe(string publisherInputQueue, Type eventType)
         {
-            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
+            SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Unsubscribe);
         }
 
         internal void SendSubscriptionMessage(Type messageType, SubscribeAction subscribeAction)
