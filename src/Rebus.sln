@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
@@ -107,6 +107,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.PostgreSql", "Rebus.PostgreSql\Rebus.PostgreSql.csproj", "{BA89E035-AD58-42A9-AC55-443EAD2527CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.SimpleInjector", "Rebus.SimpleInjector\Rebus.SimpleInjector.csproj", "{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Extensions", "Rebus.Extensions\Rebus.Extensions.csproj", "{7551FD46-EAE0-4041-B747-80102FF625F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.AzureServiceBus", "Rebus.ReturnToSourceQueue.AzureServiceBus\Rebus.ReturnToSourceQueue.AzureServiceBus.csproj", "{B8575888-A82F-4D06-AAEA-B4E8D34587DA}"
 EndProject
@@ -366,6 +368,16 @@ Global
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5}.Release|x86.ActiveCfg = Release|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{7551FD46-EAE0-4041-B747-80102FF625F8}.Release|x86.ActiveCfg = Release|Any CPU
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
@@ -410,6 +422,7 @@ Global
 		{994133F4-799B-4878-8AE8-29F5D7E00B8D} = {48006958-82E0-46B0-81CB-0A6FC7BA1A75}
 		{BA89E035-AD58-42A9-AC55-443EAD2527CE} = {9FAD5BC1-8B70-4E51-816C-CEE718EB5E5C}
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
+		{7551FD46-EAE0-4041-B747-80102FF625F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA} = {35C585ED-8CB0-48D1-83FC-375548298233}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

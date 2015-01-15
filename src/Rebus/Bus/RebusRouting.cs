@@ -37,7 +37,7 @@ namespace Rebus.Bus
         /// </summary>
         public void Subscribe<TEvent>(string publisherInputQueue)
         {
-            rebusBus.InternalSubscribe<TEvent>(publisherInputQueue);
+            rebusBus.InternalSubscribe(publisherInputQueue, typeof(TEvent));
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Rebus.Bus
         /// </summary>
         public void Unsubscribe<TEvent>(string publisherInputQueue)
         {
-            rebusBus.InternalUnsubscribe<TEvent>(publisherInputQueue);
+            rebusBus.InternalUnsubscribe(publisherInputQueue, typeof(TEvent));
         }
 
         /// <summary>
