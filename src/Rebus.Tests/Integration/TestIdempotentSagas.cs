@@ -105,7 +105,7 @@ namespace Rebus.Tests.Integration
 
             public int Revision { get; set; }
 
-            public IList<ProcessedMessage> ProcessedMessages { get; set; }
+            public IList<IdempotentMessageData> HandledMessages { get; set; }
         }
 
         public class MyIdempotentSaga : IdempotentSaga<MyIdempotentSagaData>, IAmInitiatedBy<DummyMessage>

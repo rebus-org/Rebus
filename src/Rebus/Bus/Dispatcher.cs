@@ -258,8 +258,6 @@ This most likely indicates that you have configured this Rebus service to use an
         // ReSharper disable UnusedMember.Local
         async Task DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
         {
-            IMessageContext context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
-
             var saga = handler as Saga;
             if (saga != null)
             {
@@ -291,39 +289,38 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 using (new SagaContext(sagaData.Id))
                 {
-                    try
-                    {
-                        BeforeHandling(message, handler);
-                        if (context == null || !context.DoNotHandle)
-                        {
-                            await DoDispatch(message, handler);
-                            AfterHandling(message, handler);
-                            PerformSaveActions(saga, sagaData);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        OnHandlingError(ex);
-                        throw;
-                    }
-                    finally
-                    {
-                        if (context != null)
-                        {
-                            context.DoNotHandle = false;
-                        }
-                    }
+                    await DoDispatch(message, handler);
+                    PerformSaveActions(saga, sagaData);
                 }
 
                 return;
             }
+
+            await DoDispatch(message, handler);
+        }
+        // ReSharper restore UnusedMember.Local
+
+        async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
+        {
+            IMessageContext context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
 
             try
             {
                 BeforeHandling(message, handler);
                 if (context == null || !context.DoNotHandle)
                 {
-                    await DoDispatch(message, handler);
+                    var ordinaryHandler = handler as IHandleMessages<TMessage>;
+                    if (ordinaryHandler != null)
+                    {
+                        ordinaryHandler.Handle(message);
+                    }
+
+                    var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
+                    if (asyncHandler != null)
+                    {
+                        await asyncHandler.Handle(message);
+                    }
+
                     AfterHandling(message, handler);
                 }
             }
@@ -339,22 +336,7 @@ This most likely indicates that you have configured this Rebus service to use an
                     context.DoNotHandle = false;
                 }
             }
-        }
-        // ReSharper restore UnusedMember.Local
 
-        static async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
-        {
-            var ordinaryHandler = handler as IHandleMessages<TMessage>;
-            if (ordinaryHandler != null)
-            {
-                ordinaryHandler.Handle(message);
-            }
-
-            var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
-            if (asyncHandler != null)
-            {
-                await asyncHandler.Handle(message);
-            }
         }
 
         void PerformSaveActions(Saga saga, ISagaData sagaData)

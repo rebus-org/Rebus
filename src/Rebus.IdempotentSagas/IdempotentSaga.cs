@@ -14,7 +14,7 @@ namespace Rebus.IdempotentSagas
         /// <summary>
         /// The processed messages for this saga.
         /// </summary>
-        IList<ProcessedMessage> ProcessedMessages { get; set; }
+        IList<IdempotentMessageData> HandledMessages { get; set; }
     }
 
     /// <summary>
