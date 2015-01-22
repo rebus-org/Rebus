@@ -14,11 +14,11 @@ namespace Rebus.IdempotentSagas
         /// <summary>
         /// Contains the original id of the message to be replayed.
         /// </summary>
-        public const string ReplayMessageId = "replay-message-id";
+        public const string OriginalMessageId = "idempotent-saga-original-msg-id";
 
         /// <summary>
         /// 
         /// </summary>
-        public const string IdempotentSagaContext = "idempotent-saga-context";
+        public const string IdempotentSagaResults = "idempotent-saga-results";
     }
 }

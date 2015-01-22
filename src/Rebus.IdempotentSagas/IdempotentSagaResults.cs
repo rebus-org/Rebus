@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 namespace Rebus.IdempotentSagas
 {
     /// <summary>
-    /// A message processed by an idempotent saga.
+    /// Results (side effects) of handling a message by an idempotent saga.
     /// </summary>
-    public class IdempotentMessageData
+    public class IdempotentSagaResults
     {
         #region SideEffects inner class
         /// <summary>
@@ -26,19 +26,27 @@ namespace Rebus.IdempotentSagas
             /// </summary>
             public IDictionary<string, object> Headers { get; private set; }
             /// <summary>
-            /// The logical messages inside the transport message.
+            /// The logical message's body inside the transport message.
             /// </summary>
-            public IDictionary<string, string> Messages { get; private set; }
+            public byte[] Message { get; private set; }
+            /// <summary>
+            /// Gets the type of the serializer.
+            /// </summary>
+            /// <value>
+            /// The type of the serializer.
+            /// </value>
+            public string Serializer { get; private set; }
 
             public SideEffect()
             {
             }
 
-            public SideEffect(IEnumerable<string> destinations, IDictionary<string, object> headers, IDictionary<string, string> messages)
+            public SideEffect(IEnumerable<string> destinations, IDictionary<string, object> headers, byte[] message, Type serializerType)
             {
                 Destinations = destinations;
                 Headers = headers;
-                Messages = messages;
+                Message = message;
+                Serializer = serializerType.AssemblyQualifiedName;
             }
         }
         #endregion
@@ -57,19 +65,19 @@ namespace Rebus.IdempotentSagas
         public IList<SideEffect> SideEffects { get; private set; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IdempotentMessageData"/> class.
+        /// Initializes a new instance of the <see cref="IdempotentSagaResults"/> class.
         /// </summary>
-        public IdempotentMessageData()
+        public IdempotentSagaResults()
         {
             SideEffects = new List<SideEffect>();
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IdempotentMessageData"/> class.
+        /// Initializes a new instance of the <see cref="IdempotentSagaResults"/> class.
         /// </summary>
         /// <param name="id">The id.</param>
         /// <param name="message">The message.</param>
-        public IdempotentMessageData(string id, object message)
+        public IdempotentSagaResults(string id, object message)
             : base()
         {
             Id = id;

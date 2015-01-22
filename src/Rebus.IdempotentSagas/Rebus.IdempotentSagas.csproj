@@ -47,8 +47,9 @@
     </Compile>
     <Compile Include="Headers.cs" />
     <Compile Include="IdempotentSaga.cs" />
-    <Compile Include="IdempotentSagaConfigurationExtensions.cs" />
-    <Compile Include="ProcessedMessage.cs" />
+    <Compile Include="IdempotentSagaExtensions.cs" />
+    <Compile Include="IdempotentSagasManager.cs" />
+    <Compile Include="IdempotentSagaResults.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

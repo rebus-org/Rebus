@@ -33,9 +33,11 @@ namespace Rebus.Tests.Integration
 
             Configure.With(adapter)
                      .Transport(t => t.UseRabbitMq(ConnectionString, QueueName, "error"))
-                     .Sagas(x => x.Use(sagaStorage))
+                     .Sagas(x => {
+                         x.Use(sagaStorage);
+                         x.WithIdempotentSagas();
+                     })
                      .MessageOwnership(o => o.Use(this))
-                     .Events(e => e.ConfigureIdempotentSagas())
                      .CreateBus()
                      .Start();
 
@@ -105,7 +107,7 @@ namespace Rebus.Tests.Integration
 
             public int Revision { get; set; }
 
-            public IList<IdempotentMessageData> HandledMessages { get; set; }
+            public IList<IdempotentSagaResults> ExecutionResults { get; set; }
         }
 
         public class MyIdempotentSaga : IdempotentSaga<MyIdempotentSagaData>, IAmInitiatedBy<DummyMessage>
