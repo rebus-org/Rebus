@@ -465,6 +465,11 @@
 
 * Improved Serilog integration
 
+## 0.77.1
+
+* Made `PoisonMessageInfo` ctor public so that the `IErrorTracker` can actually be implemented outside of Rebus - thanks [bchavez]
+
+
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
@@ -482,3 +487,4 @@
 [arneeiri]: https://github.com/arneeiri
 [tobiaxor]: https://github.com/tobiaxor
 [seankearon]: https://github.com/seankearon
+[bchavez]: https://github.com/bchavez
