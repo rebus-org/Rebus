@@ -46,7 +46,7 @@ namespace Rebus.Bus
         string ErrorQueueAddress { get; }
 
         /// <summary>
-        /// Retrieves the poison message information collected so far for the message with the specfied id.
+        /// Retrieves the poison message information collected so far for the message with the specified id.
         /// </summary>
         PoisonMessageInfo GetPoisonMessageInfo(string id);
 
@@ -62,7 +62,12 @@ namespace Rebus.Bus
     /// </summary>
     public class PoisonMessageInfo
     {
-        internal PoisonMessageInfo(string id, IEnumerable<Timed<Exception>> exceptions)
+        /// <summary>
+        /// Constructs a poison message info
+        /// </summary>
+        /// <param name="id">ID of the tracked message</param>
+        /// <param name="exceptions">Timed exceptions that were caught wile attempting to process the message</param>
+        public PoisonMessageInfo(string id, IEnumerable<Timed<Exception>> exceptions)
         {
             Id = id;
             Exceptions = exceptions.ToArray();
