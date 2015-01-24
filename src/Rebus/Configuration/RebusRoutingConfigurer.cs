@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Rebus.Configuration
 {
@@ -42,6 +43,22 @@ namespace Rebus.Configuration
         public void FromRebusConfigurationSectionWithFilter(Func<Type, bool> typeFilter)
         {
             Use(new DetermineMessageOwnershipFromRebusConfigurationSection(typeFilter));
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings from several sources by using specified message ownership determiners.
+        /// </summary>
+        public void FromSeveralSources(params IDetermineMessageOwnership[] messageOwnershipDeterminers)
+        {
+            Use(new DetermineMessageOwnershipFromOtherDeterminers(messageOwnershipDeterminers));
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings from several sources by using specified message ownership determiners.
+        /// </summary>
+        public void FromSeveralSources(IEnumerable<IDetermineMessageOwnership> messageOwnershipDeterminers)
+        {
+            Use(new DetermineMessageOwnershipFromOtherDeterminers(messageOwnershipDeterminers));
         }
     }
 }
