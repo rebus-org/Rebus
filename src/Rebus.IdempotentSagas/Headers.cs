@@ -12,11 +12,6 @@ namespace Rebus.IdempotentSagas
     public class Headers
     {
         /// <summary>
-        /// Contains the original id of the message to be replayed.
-        /// </summary>
-        public const string OriginalMessageId = "idempotent-saga-original-msg-id";
-
-        /// <summary>
         /// 
         /// </summary>
         public const string IdempotentSagaResults = "idempotent-saga-results";
