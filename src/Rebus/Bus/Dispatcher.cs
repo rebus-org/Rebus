@@ -308,28 +308,26 @@ This most likely indicates that you have configured this Rebus service to use an
             try
             {
                 BeforeHandling(message, handler);
-                if (context == null)
+
+                if (context != null && context.HandlersToSkip.Contains(handlerType))
                 {
-                    if (context != null && context.HandlersToSkip.Contains(handlerType))
-                    {
-                        log.Info("Skipping invocation of handler: {0}", handlerType);
-                        return;
-                    }
-
-                    var ordinaryHandler = handler as IHandleMessages<TMessage>;
-                    if (ordinaryHandler != null)
-                    {
-                        ordinaryHandler.Handle(message);
-                    }
-
-                    var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
-                    if (asyncHandler != null)
-                    {
-                        await asyncHandler.Handle(message);
-                    }
-
-                    AfterHandling(message, handler);
+                    log.Info("Skipping invocation of handler: {0}", handlerType);
+                    return;
                 }
+
+                var ordinaryHandler = handler as IHandleMessages<TMessage>;
+                if (ordinaryHandler != null)
+                {
+                    ordinaryHandler.Handle(message);
+                }
+
+                var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
+                if (asyncHandler != null)
+                {
+                    await asyncHandler.Handle(message);
+                }
+
+                AfterHandling(message, handler);
             }
             catch (Exception ex)
             {
