@@ -302,13 +302,20 @@ This most likely indicates that you have configured this Rebus service to use an
 
         async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
         {
-            IMessageContext context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
+            var handlerType = handler.GetType();
+            var context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
 
             try
             {
                 BeforeHandling(message, handler);
-                if (context == null || !context.DoNotHandle)
+                if (context == null)
                 {
+                    if (context != null && context.HandlersToSkip.Contains(handlerType))
+                    {
+                        log.Info("Skipping invocation of handler: {0}", handlerType);
+                        return;
+                    }
+
                     var ordinaryHandler = handler as IHandleMessages<TMessage>;
                     if (ordinaryHandler != null)
                     {
@@ -329,14 +336,6 @@ This most likely indicates that you have configured this Rebus service to use an
                 OnHandlingError(ex);
                 throw;
             }
-            finally
-            {
-                if (context != null)
-                {
-                    context.DoNotHandle = false;
-                }
-            }
-
         }
 
         void PerformSaveActions(Saga saga, ISagaData sagaData)

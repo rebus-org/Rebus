@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -343,7 +343,7 @@ namespace Rebus.Tests.Unit
                 };
 
             // act
-            dispatcher.Dispatch<object>(new Object());
+            dispatcher.Dispatch<object>(new Object()).Wait();
 
             // assert
             Assert.IsTrue(fired);
@@ -361,7 +361,7 @@ namespace Rebus.Tests.Unit
             };
 
             // act
-            dispatcher.Dispatch<object>(new Object());
+            dispatcher.Dispatch<object>(new Object()).Wait();
 
             // assert
             Assert.IsTrue(fired);
@@ -379,7 +379,7 @@ namespace Rebus.Tests.Unit
             };
 
             // act
-            dispatcher.Dispatch<object>(new Object());
+            dispatcher.Dispatch<object>(new Object()).Wait();
 
             // assert
             Assert.IsTrue(fired);
@@ -397,35 +397,10 @@ namespace Rebus.Tests.Unit
             };
 
             // act
-            dispatcher.Dispatch<object>(new Object());
+            dispatcher.Dispatch<object>(new Object()).Wait();
 
             // assert
             Assert.IsTrue(fired);
-        }
-
-        [Test]
-        public void IfBeforeHandlingEventReturnsFalseHandlerNotExecuted()
-        {
-            // arrange
-            var handler = new BooleanHandler();
-            activator.UseHandler(handler);
-            var mock = Mock<IMessageContext>();
-            mock.Stub(m => m.DoNotHandle).PropertyBehavior();
-            mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
-            mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
-
-            using (var fake = FakeMessageContext.Establish(mock))
-            {
-                dispatcher.BeforeHandling += (message, sagadata) =>
-                {
-                    MessageContext.GetCurrent().DoNotHandle = true;
-                };
-
-                // act
-                dispatcher.Dispatch<object>(new Object());
-            }
-            // assert
-            Assert.IsFalse(handler.handled);
         }
 
         [Test]
@@ -436,14 +411,28 @@ namespace Rebus.Tests.Unit
             activator.UseHandler(handler);
 
             // act
-            dispatcher.Dispatch<object>(new Object());
+            dispatcher.Dispatch<object>(new Object()).Wait();
 
             // assert
             Assert.IsTrue(handler.handled);
         }
 
         [Test]
-        public void IfBeforeHandlerThrowsAfterHandlerGetsException()
+        public void IfBeforeHandlingNotDefinedSagaHandlerIsExecuted()
+        {
+            // arrange
+            var handler = new BooleanSaga();
+            activator.UseHandler(handler);
+
+            // act
+            dispatcher.Dispatch<object>(new Object()).Wait();
+
+            // assert
+            Assert.IsTrue(handler.Handled);
+        }
+
+        [Test]
+        public void OnHandlingErrorGetsCalledWhenBeforeHandlingThrowsException()
         {
             // arrange
             Exception actual = null;
@@ -451,23 +440,25 @@ namespace Rebus.Tests.Unit
             var handler = new DummyHandler();
             activator.UseHandler(handler);
             dispatcher.BeforeHandling += (message, sagadata) =>
-                {
-                    throw expected;
-                };
+            {
+                throw expected;
+            };
             dispatcher.OnHandlingError += exception =>
-                {
-                    actual = exception;
-                };
+            {
+                actual = exception;
+            };
 
             // act
-            var ex = Assert.Throws<Exception>(() => dispatcher.Dispatch(new Object()));
+            var task = dispatcher.Dispatch(new Object());
+
+            Assert.Throws<AggregateException>(() => task.Wait());
 
             // assert
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void IfBeforeHandlerInSagaThrowsAfterHandlerGetsException()
+        public void OnHandlingErrorGetsCalledWhenBeforeHandlingThrowsExceptionForSagas()
         {
             // arrange
             Exception actual = null;
@@ -484,49 +475,116 @@ namespace Rebus.Tests.Unit
             };
 
             // act
-            var ex = Assert.Throws<Exception>(() => dispatcher.Dispatch(new Object()));
+            var task = dispatcher.Dispatch(new Object());
+
+            Assert.Throws<AggregateException>(() => task.Wait());
 
             // assert
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        public void IfBeforeHandlingEventReturnsFalseSagaHandlerNotExecuted()
+        public void OnHandlingErrorGetsCalledWhenHandlingThrowsException()
         {
             // arrange
-            var handler = new BooleanSaga();
+            Exception actual = null;
+            var msg = new Object();
+            var expected = new Exception();
+            var handler = Mock<IHandleMessages<object>>();
+            handler.Expect(x => x.Handle(msg)).Throw(expected);
             activator.UseHandler(handler);
-            dispatcher.BeforeHandling += (message, sagadata) =>
+            dispatcher.OnHandlingError += exception =>
             {
-                MessageContext.GetCurrent().DoNotHandle = true;
+                actual = exception;
             };
-             var mock = Mock<IMessageContext>();
-            mock.Stub(m => m.DoNotHandle).PropertyBehavior();
+
+            // act
+            var task = dispatcher.Dispatch(msg);
+
+            Assert.Throws<AggregateException>(() => task.Wait());
+
+            // assert
+            Assert.AreEqual(expected, actual);
+            handler.VerifyAllExpectations();
+        }
+
+        [Test]
+        public void OnHandlingErrorGetsCalledWhenHandlingThrowsExceptionForSagas()
+        {
+            // arrange
+            Exception actual = null;
+            var msg = new Object();
+            var expected = new Exception();
+            var handler = Mock<IHandleMessages<object>>();
+            handler.Expect(x => x.Handle(msg)).Throw(expected);
+            activator.UseHandler(handler);
+            dispatcher.OnHandlingError += exception =>
+            {
+                actual = exception;
+            };
+
+            // act
+            var task = dispatcher.Dispatch(msg);
+
+            Assert.Throws<AggregateException>(() => task.Wait());
+
+            // assert
+            Assert.AreEqual(expected, actual);
+            handler.VerifyAllExpectations();
+        }
+
+        [Test]
+        public void RegisteringHandlersToSkipDuringBeforeHandleSkipsHandlerInvokation()
+        {
+            // arrange
+            TrackDisposable(TransactionContext.None());
+            var handler = new BooleanHandler();
+            activator.UseHandler(handler);
+            var mock = Mock<IMessageContext>();
             mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
             mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
 
             using (var fake = FakeMessageContext.Establish(mock))
             {
+                dispatcher.BeforeHandling += (message, hndl) =>
+                {
+                    var ctx = MessageContext.GetCurrent();
+                    mock.Stub(m => m.HandlersToSkip).Return(new List<Type>() { hndl.GetType() }.AsReadOnly());
+                };
 
                 // act
-                dispatcher.Dispatch<object>(new Object());
+                dispatcher.Dispatch<object>(new Object()).Wait();
             }
             // assert
-            Assert.IsFalse(handler.Handled);
+            Assert.IsFalse(handler.handled);
         }
 
         [Test]
-        public void IfBeforeHandlingNotDefinedSagaHandlerIsExecuted()
+        public void RegisteringHandlersToSkipDuringBeforeHandleSkipsHandlerInvokationForSagas()
         {
             // arrange
+            TrackDisposable(TransactionContext.None());
             var handler = new BooleanSaga();
             activator.UseHandler(handler);
 
-            // act
-            dispatcher.Dispatch<object>(new Object());
+            var mock = Mock<IMessageContext>();
+            mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
+            mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
 
+            dispatcher.BeforeHandling += (message, hndl) =>
+            {
+                var ctx = MessageContext.GetCurrent();
+                mock.Stub(m => m.HandlersToSkip).Return(new List<Type>() { hndl.GetType() }.AsReadOnly());
+            };
+
+            using (var fake = FakeMessageContext.Establish(mock))
+            {
+
+                // act
+                dispatcher.Dispatch<object>(new Object()).Wait();
+            }
             // assert
-            Assert.IsTrue(handler.Handled);
+            Assert.IsFalse(handler.Handled);
         }
     }
 }

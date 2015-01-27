@@ -26,6 +26,11 @@ namespace Rebus
         IDictionary<string, object> Items { get; }
 
         /// <summary>
+        /// Gets the handlers to skip.
+        /// </summary>
+        IReadOnlyCollection<Type> HandlersToSkip { get; }
+
+        /// <summary>
         /// Aborts processing the current message - i.e., after exiting from the
         /// current handler, no more handlers will be called. Note that this does
         /// not cause the current transaction to be rolled back.
@@ -48,9 +53,17 @@ namespace Rebus
         IDictionary<string, object> Headers { get; }
 
         /// <summary>
-        /// Avoid the processing of the message for the current handler
+        /// Instructs rebus handling infraestructure to skips the handler 
+        /// specified by type on it's current invocation.
         /// </summary>
-        bool DoNotHandle { get; set; }
+        /// <param name="type">The type of handler.</param>
+        void SkipHandler(Type type);
+
+        /// <summary>
+        /// Removes the specified handler type from the list of handlers to skip.
+        /// </summary>
+        /// <param name="type">The type of handler.</param>
+        void DoNotSkipHandler(Type type);
 
     }
 }

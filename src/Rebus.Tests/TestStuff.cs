@@ -88,6 +88,26 @@ namespace Rebus.Tests
             }
 
             #endregion
+
+            #region IMessageContext Members
+
+
+            public IReadOnlyCollection<Type> HandlersToSkip
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public void SkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void DoNotSkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+
+            #endregion
         }
 
         class HasDependencyOnMessageContext

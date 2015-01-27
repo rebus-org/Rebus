@@ -1,7 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\build.proj = ..\scripts\build.proj
@@ -41,7 +39,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "nuspec", "nuspec", "{9A835F
 		..\scripts\Rebus.AzureServiceBus.nuspec = ..\scripts\Rebus.AzureServiceBus.nuspec
 		..\scripts\Rebus.Castle.Windsor.nuspec = ..\scripts\Rebus.Castle.Windsor.nuspec
 		..\scripts\Rebus.Extensions.nuspec = ..\scripts\Rebus.Extensions.nuspec
-		Rebus.IdempotentSagas.nuspec = Rebus.IdempotentSagas.nuspec
+		..\scripts\Rebus.IdempotentSagas.nuspec = ..\scripts\Rebus.IdempotentSagas.nuspec
 		..\scripts\Rebus.Log4Net.nuspec = ..\scripts\Rebus.Log4Net.nuspec
 		..\scripts\Rebus.MongoDb.nuspec = ..\scripts\Rebus.MongoDb.nuspec
 		..\scripts\Rebus.MsmqLoadBalancer.nuspec = ..\scripts\Rebus.MsmqLoadBalancer.nuspec
@@ -112,6 +110,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Extensions", "Rebus.Extensions\Rebus.Extensions.csproj", "{7551FD46-EAE0-4041-B747-80102FF625F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.AzureServiceBus", "Rebus.ReturnToSourceQueue.AzureServiceBus\Rebus.ReturnToSourceQueue.AzureServiceBus.csproj", "{B8575888-A82F-4D06-AAEA-B4E8D34587DA}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "idempotence", "idempotence", "{A021C7D1-3224-48D0-AAA8-4E8B5531B858}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.IdempotentSagas", "Rebus.IdempotentSagas\Rebus.IdempotentSagas.csproj", "{8E78C97B-4E87-419B-9F9A-4B7D25C0BE3F}"
@@ -427,14 +426,14 @@ Global
 		{3A6809FD-C23D-4B29-AC96-930E289B17F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{C2359E91-35C1-4D48-B089-97EF739A08F5} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{77AB0C4F-C839-4BD1-BB49-19357A42A82B} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{7551FD46-EAE0-4041-B747-80102FF625F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{B8575888-A82F-4D06-AAEA-B4E8D34587DA} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{D5263804-AD2A-40E3-B656-5132255883A8} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{539812E2-0F65-49ED-8F26-1736CF6CBFDA} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{2178D256-94D6-4443-B23B-53F723184441} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{9FDF3178-567A-4EF1-81C6-5FF42AE103DF} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
-		{7551FD46-EAE0-4041-B747-80102FF625F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
-		{B8575888-A82F-4D06-AAEA-B4E8D34587DA} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{5836C347-90FC-4628-B4A1-16926B6CA781} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 		{A56BFC05-A8B5-4ABA-BA3F-90BD30C13E1A} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}
 		{761D59D5-5073-4AF0-AFDD-1D255F1EF594} = {7C390738-715E-49DC-BA7B-CB5EF16F9C75}

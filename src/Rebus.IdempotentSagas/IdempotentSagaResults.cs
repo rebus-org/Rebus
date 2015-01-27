@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using Rebus;
 
 namespace Rebus.IdempotentSagas
 {
@@ -18,6 +17,10 @@ namespace Rebus.IdempotentSagas
         public class SideEffect
         {
             /// <summary>
+            /// Gets the date.
+            /// </summary>
+            public DateTime Date { get; private set; }
+            /// <summary>
             /// The destinations of the message.
             /// </summary>
             public IEnumerable<string> Destinations { get; private set; }
@@ -32,9 +35,9 @@ namespace Rebus.IdempotentSagas
             /// <summary>
             /// Gets the type of the serializer.
             /// </summary>
-            /// <value>
-            /// The type of the serializer.
-            /// </value>
+            /// <remarks>
+            /// This may be usefull in case of migrations so we can perform in-place upgrades, etc.
+            /// </remarks>
             public string Serializer { get; private set; }
 
             public SideEffect()
@@ -43,6 +46,7 @@ namespace Rebus.IdempotentSagas
 
             public SideEffect(IEnumerable<string> destinations, IDictionary<string, object> headers, byte[] message, Type serializerType)
             {
+                Date = DateTime.UtcNow;
                 Destinations = destinations;
                 Headers = headers;
                 Message = message;
@@ -56,9 +60,20 @@ namespace Rebus.IdempotentSagas
         /// </summary>
         public string Id { get; private set; }
         /// <summary>
+        /// Gets the message's headers.
+        /// </summary>
+        public IDictionary<string, object> Headers { get; private set; }
+        /// <summary>
         /// The message.
         /// </summary>
-        public object Message { get; private set; }
+        public byte[] Message { get; private set; }
+        /// <summary>
+        /// The serializer type used to serialize the <see cref="Message"/>.
+        /// </summary>
+        /// <remarks>
+        /// This may be usefull in case of migrations so we can perform in-place upgrades, etc.
+        /// </remarks>
+        public string Serializer { get; private set; }
         /// <summary>
         /// The messages sent during the processed message handling.
         /// </summary>
@@ -73,15 +88,18 @@ namespace Rebus.IdempotentSagas
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="IdempotentSagaResults"/> class.
+        /// Initializes a new instance of the <see cref="IdempotentSagaResults" /> class.
         /// </summary>
         /// <param name="id">The id.</param>
         /// <param name="message">The message.</param>
-        public IdempotentSagaResults(string id, object message)
-            : base()
+        /// <param name="serializerType">Type of the serializer.</param>
+        public IdempotentSagaResults(string id, TransportMessageToSend message, Type serializerType)
+            : this()
         {
             Id = id;
-            Message = message;
+            Headers = message.Headers;
+            Message = message.Body;
+            Serializer = serializerType.AssemblyQualifiedName;
         }
     }
 }

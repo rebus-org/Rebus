@@ -66,6 +66,18 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             public object CurrentMessage { get; private set; }
             public IDictionary<string, object> Headers { get; private set; }
             public string StackTrace { get; private set; }
+            public IReadOnlyCollection<Type> HandlersToSkip
+            {
+                get { throw new NotImplementedException(); }
+            }
+            public void SkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+            public void DoNotSkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public void Register<TService, TImplementation>() where TService : class where TImplementation : TService

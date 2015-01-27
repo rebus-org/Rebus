@@ -6,6 +6,7 @@ using Ponder;
 
 using Rebus;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Configuration;
 
@@ -16,14 +17,16 @@ namespace Rebus.IdempotentSagas
     /// </summary>
     public class IdempotentSagasManager
     {
-        private ConfigurationBackbone _backbone = null;
-        private static string sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
+        private static readonly string sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
+        private static ILog log;
+        private readonly ConfigurationBackbone _backbone = null;
 
         internal IdempotentSagasManager(ConfigurationBackbone backbone)
         {
             if (backbone == null) throw new ArgumentNullException("backbone");
 
             _backbone = backbone;
+            RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
             _backbone.ConfigureEvents(x => AttachEventHandlers(x));
         }
 
@@ -34,7 +37,6 @@ namespace Rebus.IdempotentSagas
         {
             events.BeforeHandling += OnBeforeHandlingEvent;
             events.BeforeInternalSend += StoreHandlingSideEffects;
-            events.BeforeInternalSend += RestoreMessageIdBeforeResend;
             events.AfterHandling += OnAfterHandlingEvent;
 
             return events;
@@ -60,7 +62,19 @@ namespace Rebus.IdempotentSagas
         /// <param name="messageContext">The message context.</param>
         private void EstablishIdempotencyContextFor(IIdempotentSagaData idempotentSagaData, IMessageContext messageContext)
         {
-            var executionResults = new IdempotentSagaResults(messageContext.RebusTransportMessageId, messageContext.CurrentMessage);
+            var id = messageContext.RebusTransportMessageId;
+            var serializer = _backbone.SerializeMessages;
+
+            log.Debug("Established idempotent saga context for: {0} (Handler: {1})", id, idempotentSagaData.GetType());
+
+            var message = new Message()
+            {
+                Headers = messageContext.Headers,
+                Messages = new object[] { messageContext.CurrentMessage }
+            };
+            var serializedMessage = serializer.Serialize(message);
+
+            var executionResults = new IdempotentSagaResults(id, serializedMessage, serializer.GetType());
             messageContext.Items.Add(Headers.IdempotentSagaResults, executionResults);
         }
 
@@ -82,6 +96,9 @@ namespace Rebus.IdempotentSagas
 
                     if (handlingData != null)
                     {
+                        log.Debug("Intercepting message {0} to [{1}] as an idempotent side-effect.", 
+                            published ? "publication" : "transmission", destinations.Aggregate((cur, next) => cur + ", " + next));
+
                         var serializer = _backbone.SerializeMessages;
                         var serializedMessage = serializer.Serialize(message);
                         handlingData.SideEffects.Add(
@@ -130,7 +147,7 @@ namespace Rebus.IdempotentSagas
                 ResendStoredSideEffects(bus, handlingResults, mcontext);
 
                 // Avoid bus worker from handling (again) this message with current handler.
-                mcontext.DoNotHandle = true;
+                mcontext.SkipHandler(handler.GetType());
             }
 
         }
@@ -151,10 +168,14 @@ namespace Rebus.IdempotentSagas
                 return;
             }
 
-            var icontext = MessageContext.GetCurrent().Items[Headers.IdempotentSagaResults] as IdempotentSagaResults;
+            var mcontext = MessageContext.GetCurrent();
+            var icontext = mcontext.Items[Headers.IdempotentSagaResults] as IdempotentSagaResults;
 
             if (icontext != null)
             {
+                log.Debug("Saving results for idempotent invocation of message: {0} (Handler: {1})", 
+                    mcontext.RebusTransportMessageId, handler.GetType());
+
                 // Store results of current message handling into our idempotency store.
                 idempotentSagaData.ExecutionResults.Add(icontext);
             }
@@ -168,10 +189,11 @@ namespace Rebus.IdempotentSagas
         /// <param name="messageContext">The message context.</param>
         private void ResendStoredSideEffects(IBus bus, IdempotentSagaResults handlingData, IMessageContext messageContext)
         {
+            log.Info("Replaying {0} side-effects relating to a previous idempotent handling of message: {1}.", 
+                handlingData.SideEffects.Count, messageContext.RebusTransportMessageId);
+
             foreach (var item in handlingData.SideEffects)
             {
-                // TODO: Ensure current serializer matches the one used during previous steps.
-
                 var toSend = new TransportMessageToSend()
                 {
                     Headers = item.Headers,
@@ -182,49 +204,6 @@ namespace Rebus.IdempotentSagas
                 {
                     _backbone.SendMessages.Send(destination, toSend, TransactionContext.Current);
                 }
-
-#if false
-                foreach (var outgoingMessage in item.Messages)
-                {
-                    var deserializedMessage = JsonConvert.DeserializeObject(outgoingMessage.Value, Type.GetType(outgoingMessage.Key));
-
-                    foreach (var header in item.Headers)
-                    {
-                        if (header.Key == Rebus.Shared.Headers.MessageId)
-                        {
-                            bus.AttachHeader(deserializedMessage, Headers.OriginalMessageId, header.Value.ToString());
-                            continue;
-                        }
-
-                        bus.AttachHeader(deserializedMessage, header.Key, header.Value.ToString());
-                    }
-
-                    foreach (var destination in item.Destinations)
-                    {
-                        bus.Advanced.Routing.Send(destination, deserializedMessage);
-                    }
-                }
-#endif
-            }
-        }
-
-        /// <summary>
-        /// Fixes up the message id before resending.
-        /// </summary>
-        /// <param name="destinations">The destinations.</param>
-        /// <param name="message">The message.</param>
-        /// <param name="published">if set to <c>true</c> [published].</param>
-        /// <remarks>
-        /// This is needed by ResendStoredSideEffects in order to send messages using the original message-id, 
-        /// as otherwise, the message-id get's overwritten by rebus's internals.
-        /// </remarks>
-        private void RestoreMessageIdBeforeResend(IEnumerable<string> destinations, Message message, bool published)
-        {
-            if (message.Headers.ContainsKey(Headers.OriginalMessageId))
-            {
-                // If we are replaying a message, use original message id.
-                message.Headers[Rebus.Shared.Headers.MessageId] = message.Headers[Headers.OriginalMessageId];
-                message.Headers.Remove(Headers.OriginalMessageId);
             }
         }
     }
