@@ -38,8 +38,32 @@ namespace Rebus.IdempotentSagas
             events.BeforeHandling += OnBeforeHandlingEvent;
             events.BeforeInternalSend += StoreHandlingSideEffects;
             events.AfterHandling += OnAfterHandlingEvent;
+            events.OnHandlingError += OnHandlingError;
 
             return events;
+        }
+
+        /// <summary>
+        /// Removes the idempotency context.
+        /// </summary>
+        private void RemoveIdempotencyContext()
+        {
+            if (MessageContext.HasCurrent)
+            {
+                var mcontext = MessageContext.GetCurrent();
+
+                if (mcontext.Items.ContainsKey(Headers.IdempotentSagaResults))
+                    mcontext.Items.Remove(Headers.IdempotentSagaResults);
+            }
+        }
+
+        /// <summary>
+        /// Called when [handling error].
+        /// </summary>
+        /// <param name="exception">The exception.</param>
+        private void OnHandlingError(Exception exception)
+        {
+            RemoveIdempotencyContext();
         }
 
         /// <summary>
@@ -75,7 +99,7 @@ namespace Rebus.IdempotentSagas
             var serializedMessage = serializer.Serialize(message);
 
             var executionResults = new IdempotentSagaResults(id, serializedMessage, serializer.GetType());
-            messageContext.Items.Add(Headers.IdempotentSagaResults, executionResults);
+            messageContext.Items[Headers.IdempotentSagaResults] = executionResults;
         }
 
         /// <summary>
@@ -179,6 +203,8 @@ namespace Rebus.IdempotentSagas
                 // Store results of current message handling into our idempotency store.
                 idempotentSagaData.ExecutionResults.Add(icontext);
             }
+
+            RemoveIdempotencyContext();
         }
 
         /// <summary>

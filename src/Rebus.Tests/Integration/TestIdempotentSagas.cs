@@ -31,7 +31,7 @@ namespace Rebus.Tests.Integration
             adapter = new BuiltinContainerAdapter();
             sagaStorage = new CanFailSagaStorage();
 
-            Configure.With(adapter)
+            bus = Configure.With(adapter)
                      .Transport(t => t.UseRabbitMq(ConnectionString, QueueName, "error"))
                      .Sagas(x => {
                          x.Use(sagaStorage);
@@ -41,7 +41,7 @@ namespace Rebus.Tests.Integration
                      .CreateBus()
                      .Start();
 
-            bus = adapter.Bus;
+            adapter.Bus = bus;
             MyIdempotentSaga.bus = bus;
         }
 
@@ -54,6 +54,7 @@ namespace Rebus.Tests.Integration
 
         public class DummyMessage
         {
+            public Guid Id { get; set; }
             public string Message { get; set; }
         }
 
@@ -107,6 +108,8 @@ namespace Rebus.Tests.Integration
 
             public int Revision { get; set; }
 
+            public Guid Identifier { get; set; }
+
             public IList<IdempotentSagaResults> ExecutionResults { get; set; }
         }
 
@@ -116,14 +119,24 @@ namespace Rebus.Tests.Integration
             public static ManualResetEvent FirstHandle;
             public static ManualResetEvent SecondHandle;
             public static IBus bus;
+            public static int TimesDummyMessageHandlerExecuted = 0;
 
-            public override void ConfigureHowToFindSaga() { }
+            public override void ConfigureHowToFindSaga() 
+            {
+                Incoming<DummyMessage>(m => m.Id).CorrelatesWith(s => s.Identifier);
+                Incoming<MessageSentBySaga>(m => m.Id).CorrelatesWith(s => s.Identifier);
+            }
 
             public void Handle(DummyMessage message)
             {
+                Data.Identifier = message.Id;
+                TimesDummyMessageHandlerExecuted++;
                 if (FirstHandle != null)
                     FirstHandle.Set();
-                bus.Send(new MessageSentBySaga());
+                bus.Send(new MessageSentBySaga()
+                    {
+                        Id = message.Id
+                    });
             }
 
             public void Handle(MessageSentBySaga message)
@@ -224,7 +237,7 @@ namespace Rebus.Tests.Integration
 
         public class MessageSentBySaga
         {
-
+            public Guid Id { get; set; }
         }
         
         [Test]
@@ -234,14 +247,16 @@ namespace Rebus.Tests.Integration
             var resetEvent = new ManualResetEvent(false);
             DeclareQueue(QueueName);
             MyIdempotentSaga.SecondHandle = resetEvent;
+            MyIdempotentSaga.TimesDummyMessageHandlerExecuted = 0;
             adapter.Register(typeof(MyIdempotentSaga));
 
             // Set the saga storage to simulate an exception after saving.
             sagaStorage.ThrowAfterModification = true;
 
             // Act
-            adapter.Bus.Send(new DummyMessage
+            bus.Send(new DummyMessage
             {
+                Id = Guid.NewGuid(),
                 Message = "hello there!"
             });
 
@@ -250,11 +265,40 @@ namespace Rebus.Tests.Integration
             {
                 Assert.Fail("Did not receive message within 10 seconds of waiting!");
             }
+
+            Assert.AreEqual(1, MyIdempotentSaga.TimesDummyMessageHandlerExecuted);
         }
 
         public override string GetEndpointFor(Type messageType)
         {
             return QueueName;
+        }
+
+        [Test]
+        public void IdempotentSagaMultipleHandlersWorksWithoutProblem()
+        {
+            // Arrange
+            var sagaResetEvent = new ManualResetEvent(false);
+            var handlerResetEvent = new ManualResetEvent(false);
+            DeclareQueue(QueueName);
+            MyIdempotentSaga.FirstHandle = sagaResetEvent;
+            adapter.Register(typeof(MyIdempotentSaga));
+            adapter.Handle<DummyMessage>(req =>
+            {
+                handlerResetEvent.Set();
+            });
+
+            // Act
+            adapter.Bus.Send(new DummyMessage
+            {
+                Message = "hello there!"
+            });
+
+            // Assert
+            if (!WaitHandle.WaitAll(new WaitHandle[] { sagaResetEvent, handlerResetEvent }, 10.Seconds()))
+            {
+                Assert.Fail("Did not receive message within 10 seconds of waiting!");
+            }
         }
 
     }
