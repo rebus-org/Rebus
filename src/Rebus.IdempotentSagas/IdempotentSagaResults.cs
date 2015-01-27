@@ -19,26 +19,26 @@ namespace Rebus.IdempotentSagas
             /// <summary>
             /// Gets the date.
             /// </summary>
-            public DateTime Date { get; private set; }
+            public DateTime Date { get; set; }
             /// <summary>
             /// The destinations of the message.
             /// </summary>
-            public IEnumerable<string> Destinations { get; private set; }
+            public IEnumerable<string> Destinations { get; set; }
             /// <summary>
             /// The headers of the message.
             /// </summary>
-            public IDictionary<string, object> Headers { get; private set; }
+            public IDictionary<string, object> Headers { get; set; }
             /// <summary>
             /// The logical message's body inside the transport message.
             /// </summary>
-            public byte[] Message { get; private set; }
+            public byte[] Message { get; set; }
             /// <summary>
             /// Gets the type of the serializer.
             /// </summary>
             /// <remarks>
             /// This may be usefull in case of migrations so we can perform in-place upgrades, etc.
             /// </remarks>
-            public string Serializer { get; private set; }
+            public string Serializer { get; set; }
 
             public SideEffect()
             {
@@ -58,26 +58,26 @@ namespace Rebus.IdempotentSagas
         /// <summary>
         /// The id of the processed message.
         /// </summary>
-        public string Id { get; private set; }
+        public string Id { get; set; }
         /// <summary>
         /// Gets the message's headers.
         /// </summary>
-        public IDictionary<string, object> Headers { get; private set; }
+        public IDictionary<string, object> Headers { get; set; }
         /// <summary>
         /// The message.
         /// </summary>
-        public byte[] Message { get; private set; }
+        public byte[] Message { get; set; }
         /// <summary>
         /// The serializer type used to serialize the <see cref="Message"/>.
         /// </summary>
         /// <remarks>
         /// This may be usefull in case of migrations so we can perform in-place upgrades, etc.
         /// </remarks>
-        public string Serializer { get; private set; }
+        public string Serializer { get; set; }
         /// <summary>
         /// The messages sent during the processed message handling.
         /// </summary>
-        public IList<SideEffect> SideEffects { get; private set; }
+        public IList<SideEffect> SideEffects { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IdempotentSagaResults"/> class.
