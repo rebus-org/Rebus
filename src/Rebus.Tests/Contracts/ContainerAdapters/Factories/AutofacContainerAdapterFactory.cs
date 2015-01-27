@@ -54,7 +54,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
                 Disposed();
             }
 
-            public bool DoNotHandle { get; set; }
             public string ReturnAddress { get; private set; }
             public string RebusTransportMessageId { get; private set; }
             public IDictionary<string, object> Items { get; private set; }

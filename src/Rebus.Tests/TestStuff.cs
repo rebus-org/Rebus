@@ -73,25 +73,6 @@ namespace Rebus.Tests
                 get { throw new NotImplementedException(); }
             }
 
-            #region IMessageContext Members
-
-            public bool DoNotHandle
-            {
-                get
-                {
-                    throw new NotImplementedException();
-                }
-                set
-                {
-                    throw new NotImplementedException();
-                }
-            }
-
-            #endregion
-
-            #region IMessageContext Members
-
-
             public IReadOnlyCollection<Type> HandlersToSkip
             {
                 get { throw new NotImplementedException(); }
@@ -106,8 +87,6 @@ namespace Rebus.Tests
             {
                 throw new NotImplementedException();
             }
-
-            #endregion
         }
 
         class HasDependencyOnMessageContext
