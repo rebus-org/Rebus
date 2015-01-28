@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rebus.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace Rebus.Extensions
             }
         }
 
-        static IEnumerable<Type> GetTypesOfMessagesHandledByRebus(IEnumerable<Assembly> assemblies)
+        private static IEnumerable<Type> GetTypesOfMessagesHandledByRebus(IEnumerable<Assembly> assemblies)
         {
             return assemblies
                 .SelectMany(assembly => assembly.GetTypes())
@@ -48,7 +49,7 @@ namespace Rebus.Extensions
                 .Distinct();
         }
 
-        static bool IsGenericRebusHandler(Type implementedInterface)
+        private static bool IsGenericRebusHandler(Type implementedInterface)
         {
             if (!implementedInterface.IsGenericType) return false;
 
@@ -58,6 +59,22 @@ namespace Rebus.Extensions
             var isAsyncMessageHandler = genericTypeDefinition == typeof(IHandleMessagesAsync<>);
 
             return isOrdinaryMessageHandler || isAsyncMessageHandler;
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings from several sources by using specified message ownership determiners.
+        /// </summary>
+        public static void FromSeveralSources(this RebusRoutingConfigurer configurer, params IDetermineMessageOwnership[] messageOwnershipDeterminers)
+        {
+            configurer.Use(new DetermineMessageOwnershipFromOtherDeterminers(messageOwnershipDeterminers));
+        }
+
+        /// <summary>
+        /// Configures Rebus to expect endpoint mappings from several sources by using specified message ownership determiners.
+        /// </summary>
+        public static void FromSeveralSources(this RebusRoutingConfigurer configurer, IEnumerable<IDetermineMessageOwnership> messageOwnershipDeterminers)
+        {
+            configurer.Use(new DetermineMessageOwnershipFromOtherDeterminers(messageOwnershipDeterminers));
         }
     }
 }
