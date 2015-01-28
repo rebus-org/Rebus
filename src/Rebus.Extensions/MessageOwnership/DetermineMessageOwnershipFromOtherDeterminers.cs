@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Rebus.Extensions
+namespace Rebus.Extensions.MessageOwnership
 {
     /// <summary>
     /// Implementation of <see cref="IDetermineMessageOwnership"/> that uses other implementations
