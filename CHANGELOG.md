@@ -469,9 +469,10 @@
 
 * Made `PoisonMessageInfo` ctor public so that the `IErrorTracker` can actually be implemented outside of Rebus - thanks [bchavez]
 
-## 0.77.2
+## 0.78.0
 
 * Added extension that allows for composing a chain-of-responsiblity-like way of determining message ownership - thanks [DixonD-git]
+* Introduced a little bit of structure in the `Rebus.Extensions` package - might not be the final way, but it should do for now
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
