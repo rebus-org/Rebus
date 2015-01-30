@@ -1,18 +1,27 @@
-using System;
 using Rebus.Bus;
+using System;
+using System.Threading.Tasks;
 
 namespace Rebus.Transports
 {
     /// <summary>
-    /// Dummy implementation of <see cref="IReceiveMessages"/> that gags the service, causing it
-    /// to experience all kinds of exceptions if it attempts to receive a message.
+    /// Dummy implementation of <see cref="IReceiveMessages"/> and <see cref="IReceiveMessagesAsync"/> that gags
+    /// the service, causing it to experience all kinds of exceptions if it attempts to receive a message.
     /// </summary>
-    public class OneWayClientGag : IReceiveMessages, IErrorTracker
+    public class OneWayClientGag : IReceiveMessages, IReceiveMessagesAsync, IErrorTracker
     {
         /// <summary>
         /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
         /// </summary>
         public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
+        {
+            throw GagException();
+        }
+
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
+        public Task<ReceivedTransportMessage> ReceiveMessageAsync(ITransactionContext context)
         {
             throw GagException();
         }
@@ -80,7 +89,7 @@ namespace Rebus.Transports
         /// </summary>
         public string ErrorQueueAddress { get { throw GagException(); } }
 
-        static InvalidOperationException GagException()
+        private static InvalidOperationException GagException()
         {
             return
                 new InvalidOperationException(

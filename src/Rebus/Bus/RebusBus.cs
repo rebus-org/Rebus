@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Rebus.Configuration;
+﻿using Rebus.Configuration;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Timeout;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.Bus
@@ -19,39 +19,41 @@ namespace Rebus.Bus
     /// </summary>
     public class RebusBus : IStartableBus, IBus, IAdvancedBus
     {
-        static ILog log;
+        private static ILog log;
 
         static RebusBus()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        readonly ISendMessages sendMessages;
-        readonly IReceiveMessages receiveMessages;
-        readonly IStoreSubscriptions storeSubscriptions;
-        readonly IDetermineMessageOwnership determineMessageOwnership;
-        readonly IActivateHandlers activateHandlers;
-        readonly ISerializeMessages serializeMessages;
-        readonly IStoreSagaData storeSagaData;
-        readonly IInspectHandlerPipeline inspectHandlerPipeline;
-        readonly List<Worker> workers = new List<Worker>();
-        readonly IErrorTracker errorTracker;
-        readonly IStoreTimeouts storeTimeouts;
-        readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
-        readonly HeaderContext headerContext = new HeaderContext();
-        readonly RebusEvents events = new RebusEvents();
-        readonly MessageLogger messageLogger = new MessageLogger();
-        readonly RebusBatchOperations batch;
-        readonly DueTimeoutScheduler dueTimeoutScheduler;
-        readonly IRebusRouting routing;
-        readonly RebusSynchronizationContext continuations;
+        private readonly ISendMessages sendMessages;
+        private readonly IReceiveMessages receiveMessages;
+        private readonly ISendMessagesAsync sendMessagesAsync;
+        private readonly IReceiveMessagesAsync receiveMessagesAsync;
+        private readonly IStoreSubscriptions storeSubscriptions;
+        private readonly IDetermineMessageOwnership determineMessageOwnership;
+        private readonly IActivateHandlers activateHandlers;
+        private readonly ISerializeMessages serializeMessages;
+        private readonly IStoreSagaData storeSagaData;
+        private readonly IInspectHandlerPipeline inspectHandlerPipeline;
+        private readonly List<Worker> workers = new List<Worker>();
+        private readonly IErrorTracker errorTracker;
+        private readonly IStoreTimeouts storeTimeouts;
+        private readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
+        private readonly HeaderContext headerContext = new HeaderContext();
+        private readonly RebusEvents events = new RebusEvents();
+        private readonly MessageLogger messageLogger = new MessageLogger();
+        private readonly RebusBatchOperations batch;
+        private readonly DueTimeoutScheduler dueTimeoutScheduler;
+        private readonly IRebusRouting routing;
+        private readonly RebusSynchronizationContext continuations;
 
-        readonly object workerCountAdjustmentLock = new object();
+        private readonly object workerCountAdjustmentLock = new object();
 
-        static int rebusIdCounter;
-        readonly int rebusId;
-        readonly string timeoutManagerAddress;
-        bool started;
+        private static int rebusIdCounter;
+        private readonly int rebusId;
+        private readonly string timeoutManagerAddress;
+        private bool started;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -59,6 +61,8 @@ namespace Rebus.Bus
         /// <param name="activateHandlers">The bus will use this to construct handlers for received messages.</param>
         /// <param name="sendMessages">Will be used to send transport messages when you send, publish, and reply.</param>
         /// <param name="receiveMessages">Will be used to receive transport messages. If the bus is configured to run with multiple threads, this one should be reentrant.</param>
+        /// <param name="sendMessagesAsync">Will be used to send transport messages when you send, publish, and reply asynchronously</param>
+        /// <param name="receiveMessagesAsync">Will be used to receive transport messages asynchronously. If the bus is configured to run with multiple threads, this one should be reentrant.</param>
         /// <param name="storeSubscriptions">Will be used to store subscription information. Is only relevant if the bus is a publisher, i.e. it publishes messages and other services assume they can subscribe to its messages.</param>
         /// <param name="storeSagaData">Will be used to store saga data. Is only relevant if one or more handlers are derived from <see cref="Saga"/>.</param>
         /// <param name="determineMessageOwnership">Will be used to resolve a destination in cases where the message destination is not explicitly specified as part of a send/subscribe operation.</param>
@@ -68,13 +72,17 @@ namespace Rebus.Bus
         /// <param name="storeTimeouts">Optionally provides an internal timeout manager to be used instead of sending timeout requests to an external timeout manager</param>
         /// <param name="configureAdditionalBehavior"></param>
         public RebusBus(
-            IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData,
+            IActivateHandlers activateHandlers,
+            ISendMessages sendMessages, IReceiveMessages receiveMessages, ISendMessagesAsync sendMessagesAsync, IReceiveMessagesAsync receiveMessagesAsync,
+            IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData,
             IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker,
             IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
             this.receiveMessages = receiveMessages;
+            this.sendMessagesAsync = sendMessagesAsync;
+            this.receiveMessagesAsync = receiveMessagesAsync;
             this.storeSubscriptions = storeSubscriptions;
             this.determineMessageOwnership = determineMessageOwnership;
             this.serializeMessages = serializeMessages;
@@ -108,7 +116,7 @@ namespace Rebus.Bus
             }
         }
 
-        IEnumerable<object> InjectedServices()
+        private IEnumerable<object> InjectedServices()
         {
             return new object[]
                        {
@@ -314,7 +322,7 @@ namespace Rebus.Bus
         /// </summary>
         public void Unsubscribe<TEvent>()
         {
-            Unsubscribe(typeof (TEvent));
+            Unsubscribe(typeof(TEvent));
         }
 
         /// <summary>
@@ -372,7 +380,6 @@ namespace Rebus.Bus
                         " {0} header",
                         Headers.ReturnAddress));
             }
-
 
             var attachedHeaders = headerContext.GetHeadersFor(message);
             var customData = TimeoutReplyHandler.Serialize(new Message { Headers = attachedHeaders, Messages = new[] { message } });
@@ -456,12 +463,12 @@ namespace Rebus.Bus
         /// Gain access to more advanced and less commonly used features of the bus
         /// </summary>
         public IAdvancedBus Advanced { get { return this; } }
-        
+
         internal void InternalSubscribe(string publisherInputQueue, Type eventType)
         {
             SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Subscribe);
-        }		
-		
+        }
+
         internal void InternalUnsubscribe(string publisherInputQueue, Type eventType)
         {
             SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Unsubscribe);
@@ -519,7 +526,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
             log.Info("Bus started");
         }
 
-        void InitializeServicesThatMustBeInitialized()
+        private void InitializeServicesThatMustBeInitialized()
         {
             foreach (var mustBeInitialized in InjectedServices().OfType<INeedInitializationBeforeStart>())
             {
@@ -608,7 +615,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
                 }
 
-                var messageToSend = new Message {Messages = messages.Select(MutateOutgoing).ToArray(),};
+                var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
                 var headers = MergeHeaders(messageToSend);
 
                 // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
@@ -665,7 +672,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return receiveMessages.InputQueueAddress;
         }
 
-        object MutateOutgoing(object msg)
+        private object MutateOutgoing(object msg)
         {
             return Events.MessageMutators.Aggregate(msg, (current, mutator) => mutator.MutateOutgoing(current));
         }
@@ -684,7 +691,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             if (configureAdditionalBehavior.AuditMessages && published)
             {
                 transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
-                
+
                 if (configureAdditionalBehavior.OneWayClientMode)
                 {
                     transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
@@ -693,11 +700,11 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 {
                     transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
                 }
-                
+
                 transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
                 var auditQueueName = configureAdditionalBehavior.AuditQueueName;
-                
-                InternalSend(new List<string>{auditQueueName}, transportMessage, transactionContext);
+
+                InternalSend(new List<string> { auditQueueName }, transportMessage, transactionContext);
 
                 events.RaiseMessageAudited(this, transportMessage);
             }
@@ -720,7 +727,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        IDictionary<string, object> MergeHeaders(Message messageToSend)
+        private IDictionary<string, object> MergeHeaders(Message messageToSend)
         {
             var transportMessageHeaders = messageToSend.Headers.Clone();
 
@@ -742,7 +749,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return transportMessageHeaders;
         }
 
-        void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
+        private void AssertReturnAddressIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.ReturnAddress)))
             {
@@ -755,7 +762,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
+        private void AssertTimeToBeReceivedIsNotInconsistent(List<Tuple<object, Dictionary<string, object>>> messages)
         {
             if (messages.Any(m => m.Item2.ContainsKey(Headers.TimeToBeReceived)))
             {
@@ -775,7 +782,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage receivedTransportMessage, string errorDetail)
+        private void HandleMessageFailedMaxNumberOfTimes(ReceivedTransportMessage receivedTransportMessage, string errorDetail)
         {
             var transportMessageToSend = receivedTransportMessage.ToForwardableMessage();
 
@@ -844,7 +851,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             return determineMessageOwnership.GetEndpointFor(messageType);
         }
 
-        void AddWorker()
+        private void AddWorker()
         {
             lock (workers)
             {
@@ -880,7 +887,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        void RemoveWorker()
+        private void RemoveWorker()
         {
             lock (workers)
             {
@@ -906,71 +913,71 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        void RaiseMessageContextEstablished(IMessageContext messageContext)
+        private void RaiseMessageContextEstablished(IMessageContext messageContext)
         {
             events.RaiseMessageContextEstablished(this, messageContext);
         }
 
-        void RaiseUncorrelatedMessage(object message, Saga saga)
+        private void RaiseUncorrelatedMessage(object message, Saga saga)
         {
             events.RaiseUncorrelatedMessage(this, message, saga);
         }
 
-        void RaiseBeforeMessage(object message)
+        private void RaiseBeforeMessage(object message)
         {
             events.RaiseBeforeMessage(this, message);
         }
 
-        void RaiseAfterMessage(Exception exception, object message)
+        private void RaiseAfterMessage(Exception exception, object message)
         {
             events.RaiseAfterMessage(this, exception, message);
         }
 
-        void RaiseBusStarted()
+        private void RaiseBusStarted()
         {
             events.RaiseBusStarted(this);
         }
 
-        void RaiseBusStopped()
+        private void RaiseBusStopped()
         {
             events.RaiseBusStopped(this);
         }
 
-        void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)
+        private void RaiseBeforeTransportMessage(ReceivedTransportMessage transportMessage)
         {
             events.RaiseBeforeTransportMessage(this, transportMessage);
         }
 
-        void RaiseAfterTransportMessage(Exception exception, ReceivedTransportMessage transportMessage)
+        private void RaiseAfterTransportMessage(Exception exception, ReceivedTransportMessage transportMessage)
         {
             events.RaiseAfterTransportMessage(this, exception, transportMessage);
         }
 
-        void RaisePosionMessage(ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
+        private void RaisePosionMessage(ReceivedTransportMessage transportMessage, PoisonMessageInfo poisonMessageInfo)
         {
             events.RaisePoisonMessage(this, transportMessage, poisonMessageInfo);
         }
 
-        void LogSystemException(Worker worker, Exception exception)
+        private void LogSystemException(Worker worker, Exception exception)
         {
             log.Error(exception, "Unhandled system exception in {0}", worker.WorkerThreadName);
         }
 
-        void LogUserException(Worker worker, Exception exception)
+        private void LogUserException(Worker worker, Exception exception)
         {
             log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
         }
 
         internal class HeaderContext
         {
-            const int MaxBucketCount = 512;
+            private const int MaxBucketCount = 512;
             internal readonly ConcurrentDictionary<int, List<HeaderItem>> headers = new ConcurrentDictionary<int, List<HeaderItem>>();
             internal readonly Timer cleanupTimer;
 
             internal class HeaderItem
             {
-                readonly WeakReference weakReference;
-                readonly Dictionary<string, object> headers;
+                private readonly WeakReference weakReference;
+                private readonly Dictionary<string, object> headers;
 
                 public HeaderItem(object target)
                 {
@@ -981,6 +988,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 public object Target { get { return weakReference.Target; } }
 
                 public Dictionary<string, object> Headers { get { return headers; } }
+
                 public bool IsDead { get { return !weakReference.IsAlive; } }
             }
 
@@ -1038,7 +1046,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 return message.GetHashCode() % MaxBucketCount;
             }
 
-            void RemoveDeadHeaderItems()
+            private void RemoveDeadHeaderItems()
             {
                 foreach (var kvp in headers)
                 {

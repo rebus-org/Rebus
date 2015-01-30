@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Timeout;
+using System;
+using System.Collections.Generic;
 
 namespace Rebus.Configuration
 {
@@ -11,10 +11,10 @@ namespace Rebus.Configuration
     /// </summary>
     public class ConfigurationBackbone
     {
-        readonly List<EventsConfigurer> eventsConfigurers = new List<EventsConfigurer>();
-        readonly List<Action<ConfigurationBackbone>> decorationSteps = new List<Action<ConfigurationBackbone>>();
-        readonly Dictionary<Type, object> registry = new Dictionary<Type, object>();
-        readonly IContainerAdapter adapter;
+        private readonly List<EventsConfigurer> eventsConfigurers = new List<EventsConfigurer>();
+        private readonly List<Action<ConfigurationBackbone>> decorationSteps = new List<Action<ConfigurationBackbone>>();
+        private readonly Dictionary<Type, object> registry = new Dictionary<Type, object>();
+        private readonly IContainerAdapter adapter;
 
         /// <summary>
         /// Creates the backbone and installs the specified <see cref="IContainerAdapter"/> as the
@@ -66,9 +66,19 @@ namespace Rebus.Configuration
         public ISendMessages SendMessages { get; set; }
 
         /// <summary>
+        /// Determines how Rebus will send messages asynchronously
+        /// </summary>
+        public ISendMessagesAsync SendMessagesAsync { get; set; }
+
+        /// <summary>
         /// Determines how Rebus will receive messages
         /// </summary>
         public IReceiveMessages ReceiveMessages { get; set; }
+
+        /// <summary>
+        /// Determines how Rebus will receive messages
+        /// </summary>
+        public IReceiveMessagesAsync ReceiveMessagesAsync { get; set; }
 
         /// <summary>
         /// Determines how Rebus will get handler instances when an incoming message needs to be dispatched
@@ -164,7 +174,7 @@ namespace Rebus.Configuration
             Adapter.SaveBusInstances(bus);
         }
 
-        void SetUpAudit(IRebusEvents rebusEvents)
+        private void SetUpAudit(IRebusEvents rebusEvents)
         {
             if (!AdditionalBehavior.AuditMessages) return;
 
