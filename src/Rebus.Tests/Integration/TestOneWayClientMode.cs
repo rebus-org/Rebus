@@ -1,12 +1,12 @@
-﻿using System;
-using System.Threading;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Performance.StressMongo.Factories;
 using Shouldly;
+using System;
+using System.Threading;
 
 namespace Rebus.Tests.Integration
 {
@@ -14,8 +14,8 @@ namespace Rebus.Tests.Integration
     [TestFixture(typeof(RabbitMqMessageQueueFactory), Category = TestCategories.Rabbit)]
     public class TestOneWayClientMode<TFactory> : FixtureBase, IDetermineMessageOwnership where TFactory : IMessageQueueFactory, new()
     {
-        TFactory factory;
-        const string ReceiverInputQueueName = "test.oneWayClientMode.receiver";
+        private TFactory factory;
+        private const string ReceiverInputQueueName = "test.oneWayClientMode.receiver";
 
         protected override void DoSetUp()
         {
@@ -53,7 +53,6 @@ namespace Rebus.Tests.Integration
                 .MessageOwnership(d => d.Use(this))
                 .CreateBus()
                 .Start();
-
 
             // act
             var exception = Assert.Throws<InvalidOperationException>(() => bus.SendLocal("w00t this should throw!!!"));
@@ -120,10 +119,11 @@ namespace Rebus.Tests.Integration
             throw new ArgumentException(string.Format("Cannot route {0} - not an expected message type", messageType));
         }
 
-        void CreateBus(string inputQueueName, HandlerActivatorForTesting handlerActivator)
+        private void CreateBus(string inputQueueName, HandlerActivatorForTesting handlerActivator)
         {
             var queue = factory.GetQueue(inputQueueName);
-            var bus = new RebusBus(handlerActivator, queue.Item1, queue.Item2, new InMemorySubscriptionStorage(),
+            var bus = new RebusBus(handlerActivator, queue.Item1, queue.Item2, null, null,
+                                   new InMemorySubscriptionStorage(),
                                    new InMemorySagaPersister(),
                                    this, new JsonMessageSerializer(), new TrivialPipelineInspector(),
                                    new ErrorTracker(inputQueueName + ".error"),
@@ -133,7 +133,7 @@ namespace Rebus.Tests.Integration
             bus.Start();
         }
 
-        IContainerAdapter CreateAdapter()
+        private IContainerAdapter CreateAdapter()
         {
             var adapter = new BuiltinContainerAdapter();
             TrackDisposable(adapter);

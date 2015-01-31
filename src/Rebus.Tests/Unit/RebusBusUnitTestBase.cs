@@ -35,6 +35,8 @@ namespace Rebus.Tests.Unit
             return new RebusBus(activateHandlers,
                                 sendMessages,
                                 receiveMessages,
+                                null,
+                                null,
                                 storeSubscriptions,
                                 storeSagaData,
                                 determineMessageOwnership, serializeMessages, inspectHandlerPipeline,

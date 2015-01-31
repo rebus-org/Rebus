@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.MongoDb;
@@ -9,15 +7,17 @@ using Rebus.Serialization.Json;
 using Rebus.Tests.Persistence;
 using Rebus.Transports.Msmq;
 using Shouldly;
+using System;
 using System.Linq;
+using System.Threading;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture, Category(TestCategories.Integration), Category(TestCategories.Mongo)]
     public class TestBusAndDispatcherWithMongoSaga : MongoDbFixtureBase
     {
-        RebusBus bus;
-        HandlerActivatorForTesting handlers;
+        private RebusBus bus;
+        private HandlerActivatorForTesting handlers;
 
         protected override void DoSetUp()
         {
@@ -25,12 +25,16 @@ namespace Rebus.Tests.Integration
 
             var msmqMessageQueue = new MsmqMessageQueue("test.dispatcher.and.mongo");
             handlers = new HandlerActivatorForTesting().UseHandler(new MySaga());
-            
+
             var persister = new MongoDbSagaPersister(ConnectionString)
                 .SetCollectionName<MySagaData>("sagas");
-            
-            bus = new RebusBus(handlers, msmqMessageQueue,
-                               msmqMessageQueue, new InMemorySubscriptionStorage(),
+
+            bus = new RebusBus(handlers,
+                               msmqMessageQueue,
+                               msmqMessageQueue,
+                               null,
+                               null,
+                               new InMemorySubscriptionStorage(),
                                persister,
                                null,
                                new JsonMessageSerializer(),
@@ -51,11 +55,11 @@ namespace Rebus.Tests.Integration
         {
             var id1 = Guid.NewGuid();
             var id2 = Guid.NewGuid();
-            bus.SendLocal(new HasGuid{Guid = id1});
-            bus.SendLocal(new HasGuid{Guid = id1});
-            bus.SendLocal(new HasGuid{Guid = id2});
-            bus.SendLocal(new HasGuid{Guid = id2});
-            bus.SendLocal(new HasGuid{Guid = id2});
+            bus.SendLocal(new HasGuid { Guid = id1 });
+            bus.SendLocal(new HasGuid { Guid = id1 });
+            bus.SendLocal(new HasGuid { Guid = id2 });
+            bus.SendLocal(new HasGuid { Guid = id2 });
+            bus.SendLocal(new HasGuid { Guid = id2 });
 
             Thread.Sleep(5.Seconds());
 
@@ -69,7 +73,7 @@ namespace Rebus.Tests.Integration
             saga2.NestedData.Counter.ShouldBe(3);
         }
 
-        class MySaga : Saga<MySagaData>, IAmInitiatedBy<HasGuid>
+        private class MySaga : Saga<MySagaData>, IAmInitiatedBy<HasGuid>
         {
             public override void ConfigureHowToFindSaga()
             {
@@ -78,7 +82,7 @@ namespace Rebus.Tests.Integration
 
             public void Handle(HasGuid message)
             {
-                if (Data.NestedData == null) 
+                if (Data.NestedData == null)
                     Data.NestedData = new NestedData();
 
                 Data.NestedData.CorrelationId = message.Guid;
@@ -86,21 +90,23 @@ namespace Rebus.Tests.Integration
             }
         }
 
-        class MySagaData : ISagaData
+        private class MySagaData : ISagaData
         {
             public Guid Id { get; set; }
+
             public int Revision { get; set; }
 
             public NestedData NestedData { get; set; }
         }
 
-        class NestedData
+        private class NestedData
         {
             public Guid CorrelationId { get; set; }
+
             public int Counter { get; set; }
         }
 
-        class HasGuid
+        private class HasGuid
         {
             public Guid Guid { get; set; }
 
@@ -110,5 +116,4 @@ namespace Rebus.Tests.Integration
             }
         }
     }
-
 }

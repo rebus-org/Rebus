@@ -1,13 +1,7 @@
-﻿using System;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Raven.Imports.Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Configuration;
-using Rebus.Extensions;
 using Rebus.Extensions.AssemblyScanning;
 using Rebus.Messages;
 using Rebus.Shared;
@@ -15,6 +9,11 @@ using Rebus.Testing;
 using Rebus.Transports;
 using Rhino.Mocks;
 using Shouldly;
+using System;
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 
 namespace Rebus.Tests.Unit
 {
@@ -42,7 +41,6 @@ namespace Rebus.Tests.Unit
 
             // assert
             invalidOperationException.Message.ShouldContain("cannot start bus twice");
-
         }
 
         [Test, Description(@"Tests that multiple message types will be properly batched if they are owned by the same endpoint. This
@@ -68,7 +66,6 @@ is just because there was a bug some time when the grouping of the messages was 
                                                      Arg<ITransactionContext>.Is.Anything),
                                          o => o.Repeat.Once());
         }
-
 
         [Test, Description(@"Tests that multiple message types will be properly batched if they are owned by the same endpoint. This
 is just because there was a bug some time when the grouping of the messages was wrong.")]
@@ -111,7 +108,7 @@ is just because there was a bug some time when the grouping of the messages was 
             using (new NoTransaction())
             using (FakeMessageContext.Establish(fakeContext))
             {
-                bus.Batch.Reply(new object[] {firstMessage, secondMessage, someRandomMessage});
+                bus.Batch.Reply(new object[] { firstMessage, secondMessage, someRandomMessage });
             }
 
             // assert
@@ -210,8 +207,9 @@ Or should it?")]
                 Arg<TransportMessageToSend>.Matches(t => t.Headers.ContainsKey("secondMessage1") && t.Headers.ContainsKey("secondMessage2")), Arg<ITransactionContext>.Is.Anything));
         }
 
-        class FirstMessage { }
-        class SecondMessage { }
+        private class FirstMessage { }
+
+        private class SecondMessage { }
 
         [Test]
         public void ThrowsIfInconsistentTimeToBeReceivedHeadersAreIncluded()
@@ -282,7 +280,7 @@ Or should it?")]
                                                      Arg<ITransactionContext>.Is.Anything));
         }
 
-        class SomeRandomMessage { }
+        private class SomeRandomMessage { }
 
         [Test]
         public void SendsMessagesToTheRightDestination()
@@ -356,25 +354,25 @@ Or should it?")]
 using Rebus;
 using System.Threading.Tasks;
 
-namespace NS { 
-public class A : IHandleMessages<int>, IHandleMessages<string> { 
-    public void Handle(int message) { } 
+namespace NS {
+public class A : IHandleMessages<int>, IHandleMessages<string> {
+    public void Handle(int message) { }
     public void Handle(string message) { }
 }
 
-public class B : IHandleMessages<int> { 
+public class B : IHandleMessages<int> {
     public void Handle(int message) { }
-} 
+}
 
-class C : IHandleMessages<byte> { 
-    public void Handle(byte message) { } 
-} 
+class C : IHandleMessages<byte> {
+    public void Handle(byte message) { }
+}
 
-class D : IHandleMessagesAsync<long> { 
-    public async Task Handle(long message) { } 
-} 
+class D : IHandleMessagesAsync<long> {
+    public async Task Handle(long message) { }
+}
 }";
-            
+
             var assembly1 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
             var assembly2 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
 
@@ -433,7 +431,7 @@ class D : IHandleMessagesAsync<long> {
             IBus bus = CreateBusInOneWayMode().Start();
             TimeSpan deferTime = TimeSpan.FromMinutes(5);
 
-            Assert.That(() => bus.Defer(deferTime, new {msg = "foo"}), Throws.InvalidOperationException);
+            Assert.That(() => bus.Defer(deferTime, new { msg = "foo" }), Throws.InvalidOperationException);
         }
 
         [Test]
@@ -467,8 +465,8 @@ class D : IHandleMessagesAsync<long> {
 
             var message = new FirstMessage();
 
-            using(new NoTransaction())
-            using(MessageContext.Establish(headers))
+            using (new NoTransaction())
+            using (MessageContext.Establish(headers))
             {
                 bus.Defer(TimeSpan.Zero, message);
             }
@@ -482,18 +480,18 @@ class D : IHandleMessagesAsync<long> {
             Should.Throw<ArgumentException>(() => bus.AttachHeader(new object(), Headers.MessageId, "anything"));
         }
 
-
-        RebusBus CreateBusInOneWayMode()
+        private RebusBus CreateBusInOneWayMode()
         {
             var behavior = new ConfigureAdditionalBehavior();
             behavior.EnterOneWayClientMode();
-            return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(), storeSubscriptions, storeSagaData, determineMessageOwnership,
+            return new RebusBus(activateHandlers, sendMessages, new OneWayClientGag(),
+                null, null, storeSubscriptions, storeSagaData, determineMessageOwnership,
                 serializeMessages, inspectHandlerPipeline, new ErrorTracker("error"), null, behavior);
         }
 
-        class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>
+        private class SomeHandler : IHandleMessages<IFirstInterface>, IHandleMessages<ISecondInterface>
         {
-            readonly ManualResetEvent manualResetEvent;
+            private readonly ManualResetEvent manualResetEvent;
 
             public SomeHandler(ManualResetEvent manualResetEvent)
             {
@@ -501,6 +499,7 @@ class D : IHandleMessagesAsync<long> {
             }
 
             public bool FirstMessageHandled { get; set; }
+
             public bool SecondMessageHandled { get; set; }
 
             public void Handle(IFirstInterface message)
@@ -515,7 +514,7 @@ class D : IHandleMessagesAsync<long> {
                 PossiblyRaiseEvent();
             }
 
-            void PossiblyRaiseEvent()
+            private void PossiblyRaiseEvent()
             {
                 if (FirstMessageHandled && SecondMessageHandled)
                 {
@@ -524,8 +523,10 @@ class D : IHandleMessagesAsync<long> {
             }
         }
 
-        interface IFirstInterface { }
-        interface ISecondInterface { }
-        class PolymorphicMessage : IFirstInterface, ISecondInterface { }
+        private interface IFirstInterface { }
+
+        private interface ISecondInterface { }
+
+        private class PolymorphicMessage : IFirstInterface, ISecondInterface { }
     }
 }

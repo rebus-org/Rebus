@@ -152,6 +152,7 @@ namespace Rebus.Configuration
             Backbone.ApplyDecorators();
 
             var bus = new RebusBus(Backbone.ActivateHandlers, Backbone.SendMessages, Backbone.ReceiveMessages,
+                                   Backbone.SendMessagesAsync, Backbone.ReceiveMessagesAsync,
                                    Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineMessageOwnership,
                                    Backbone.SerializeMessages, Backbone.InspectHandlerPipeline, Backbone.ErrorTracker,
                                    Backbone.StoreTimeouts, Backbone.AdditionalBehavior);
