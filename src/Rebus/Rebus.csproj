@@ -99,6 +99,7 @@
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="IDuplexAsyncTransport.cs" />
+    <Compile Include="IReceiveMessageBase.cs" />
     <Compile Include="IReceiveMessagesAsync.cs" />
     <Compile Include="ISendMessagesAsync.cs" />
     <Compile Include="Logging\MessageLogger.cs" />
