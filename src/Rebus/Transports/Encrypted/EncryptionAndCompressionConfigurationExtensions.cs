@@ -1,5 +1,5 @@
-using System.Configuration;
 using Rebus.Configuration;
+using System.Configuration;
 using ConfigurationException = Rebus.Configuration.ConfigurationException;
 
 namespace Rebus.Transports.Encrypted
@@ -9,7 +9,7 @@ namespace Rebus.Transports.Encrypted
     /// </summary>
     public static class EncryptionAndCompressionConfigurationExtensions
     {
-        const int DefaultCompressionThresholdBytes = 2048;
+        private const int DefaultCompressionThresholdBytes = 2048;
 
         /// <summary>
         /// Configures that message bodies should be compressed in the event that the body size exceeds the default
@@ -21,7 +21,7 @@ namespace Rebus.Transports.Encrypted
         }
 
         /// <summary>
-        /// Configures that message bodies should be compressed in the event that the body size exceeds the specified 
+        /// Configures that message bodies should be compressed in the event that the body size exceeds the specified
         /// threshold in bytes.
         /// </summary>
         public static void CompressMessageBodies(this DecoratorsConfigurer configurer, int compressionThresholdBytes)
@@ -30,13 +30,7 @@ namespace Rebus.Transports.Encrypted
                 {
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(() =>
-                            {
-                                var instance = new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages);
-                                b.SendMessages = instance;
-                                b.ReceiveMessages = instance;
-                                return instance;
-                            });
+                        .LoadFromRegistry(() => ApplyEncryptionAndCompressionTransportDecorator(b));
 
                     decorator.EnableCompression(compressionThresholdBytes);
                 });
@@ -51,16 +45,21 @@ namespace Rebus.Transports.Encrypted
                 {
                     var decorator = configurer
                         .Backbone
-                        .LoadFromRegistry(() =>
-                            {
-                                var instance = new EncryptionAndCompressionTransportDecorator(b.SendMessages, b.ReceiveMessages);
-                                b.SendMessages = instance;
-                                b.ReceiveMessages = instance;
-                                return instance;
-                            });
+                        .LoadFromRegistry(() => ApplyEncryptionAndCompressionTransportDecorator(b));
 
                     decorator.EnableEncryption(keyBase64);
                 });
+        }
+
+        private static EncryptionAndCompressionTransportDecorator ApplyEncryptionAndCompressionTransportDecorator(ConfigurationBackbone backbone)
+        {
+            var instance = new EncryptionAndCompressionTransportDecorator(backbone.SendMessages, backbone.ReceiveMessages,
+                backbone.SendMessagesAsync, backbone.ReceiveMessagesAsync);
+            backbone.SendMessages = instance;
+            backbone.ReceiveMessages = instance;
+            backbone.SendMessagesAsync = instance;
+            backbone.ReceiveMessagesAsync = instance;
+            return instance;
         }
 
         /// <summary>
@@ -126,7 +125,7 @@ A more full example configuration snippet can be seen here:
             }
         }
 
-        static string GenerateRijndaelHelp()
+        private static string GenerateRijndaelHelp()
         {
             return
                 string.Format(

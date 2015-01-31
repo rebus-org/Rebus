@@ -1,41 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Extensions;
 using Rebus.Shared;
 using Rebus.Transports.Encrypted;
 using Shouldly;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using Rebus.Extensions;
+using System.Text;
 
 namespace Rebus.Tests.Transports.Encrypted
 {
     [TestFixture]
     public class TestEncryptionAndCompressionTransportDecorator : FixtureBase
     {
-        const string KeyBase64 = "0Y67WrbVDnZurwljr9nI7RuWMiNtctEU3CMZ71NcKuA=";
-        const int CompressionThresholdBytes = 2048;
+        private const string KeyBase64 = "0Y67WrbVDnZurwljr9nI7RuWMiNtctEU3CMZ71NcKuA=";
+        private const int CompressionThresholdBytes = 2048;
 
-        EncryptionAndCompressionTransportDecorator transport;
-        Sender sender;
-        Receiver receiver;
+        private EncryptionAndCompressionTransportDecorator transport;
+        private Sender sender;
+        private Receiver receiver;
 
         protected override void DoSetUp()
         {
             sender = new Sender();
             receiver = new Receiver();
-            transport = new EncryptionAndCompressionTransportDecorator(sender, receiver);
+            transport = new EncryptionAndCompressionTransportDecorator(sender, receiver, null, null);
 
             Console.WriteLine(RijndaelHelper.GenerateNewKey());
         }
 
-        void EnableEncryption()
+        private void EnableEncryption()
         {
             transport.EnableEncryption(KeyBase64);
         }
 
-        void EnableCompression()
+        private void EnableCompression()
         {
             transport.EnableCompression(CompressionThresholdBytes);
         }
@@ -51,7 +51,7 @@ namespace Rebus.Tests.Transports.Encrypted
 
             // act
             var bodyBytes = Enumerable.Range(0, messageSizeBytes)
-                                      .Select(i => (byte) (i%256))
+                                      .Select(i => (byte)(i % 256))
                                       .ToArray();
 
             transport.Send("wherever",
@@ -91,7 +91,7 @@ namespace Rebus.Tests.Transports.Encrypted
         {
             var key = EncryptionAndCompressionTransportDecorator.GenerateKeyBase64();
 
-            var localInstance = new EncryptionAndCompressionTransportDecorator(sender, receiver)
+            var localInstance = new EncryptionAndCompressionTransportDecorator(sender, receiver, null, null)
                 .EnableEncryption(key);
 
             var toSend = new TransportMessageToSend
@@ -222,7 +222,7 @@ namespace Rebus.Tests.Transports.Encrypted
         /// Received transport message:
         ///     headers: some random header: b270caeb-43ad-4f0c-b154-6f5dfdd41cc9, another random header: 4a7e7ffe-0426-46cc-80ba-831663d9a537
         ///     body size: 1600000
-        /// 
+        ///
         /// 100000 (bytes -> encryption -> compression):
         /// Transport message to send:
         ///    headers: some random header: fd5a4d0a-4723-4866-a9a3-d271bc90c23e, another random header: d17fa3e9-4fdd-4eca-801e-75d926d1a123
@@ -235,7 +235,7 @@ namespace Rebus.Tests.Transports.Encrypted
         /// Received transport message:
         ///    headers: some random header: fd5a4d0a-4723-4866-a9a3-d271bc90c23e, another random header: d17fa3e9-4fdd-4eca-801e-75d926d1a123
         ///    body size: 1600000
-        /// 
+        ///
         /// CONCLUSION: FIRST, we compress. THEN we encrypt.
         /// </summary>
         [TestCase(1)]
@@ -302,12 +302,12 @@ Received transport message:
             receivedMessage.Body.ShouldBe(messageToSend.Body);
         }
 
-        static string FormatHeaders(IEnumerable<KeyValuePair<string, object>> headers)
+        private static string FormatHeaders(IEnumerable<KeyValuePair<string, object>> headers)
         {
             return string.Join(", ", headers.Select(kvp => string.Format("{0}: {1}", kvp.Key, kvp.Value)));
         }
 
-        class Sender : ISendMessages
+        private class Sender : ISendMessages
         {
             public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
             {
@@ -317,7 +317,7 @@ Received transport message:
             public TransportMessageToSend SentMessage { get; set; }
         }
 
-        class Receiver : IReceiveMessages
+        private class Receiver : IReceiveMessages
         {
             public void SetUpReceive(ReceivedTransportMessage receivedTransportMessage)
             {
