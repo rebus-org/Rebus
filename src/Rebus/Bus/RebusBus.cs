@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.Bus
@@ -121,7 +122,9 @@ namespace Rebus.Bus
             return new object[]
                        {
                            activateHandlers,
-                           headerContext, sendMessages, receiveMessages,
+                           headerContext,
+                           sendMessages, receiveMessages,
+                           sendMessagesAsync, receiveMessagesAsync,
                            storeSubscriptions, storeSagaData,
                            dueTimeoutScheduler, determineMessageOwnership,
                            serializeMessages,
@@ -193,6 +196,21 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Asynchronously sends the specified message to the destination as specified by the currently
+        /// used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public async Task SendAsync<TCommand>(TCommand message)
+        {
+            Guard.NotNull(message, "message");
+
+            var destinationEndpoint = GetMessageOwnerEndpointFor(message.GetType());
+
+            PossiblyAttachSagaIdToRequest(message);
+
+            await InternalSendAsync(new List<string> { destinationEndpoint }, new List<object> { message });
+        }
+
+        /// <summary>
         /// Sends the specified message to the bus' own input queue.
         /// </summary>
         public void SendLocal<TCommand>(TCommand message)
@@ -211,6 +229,27 @@ namespace Rebus.Bus
             PossiblyAttachSagaIdToRequest(message);
 
             InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
+        }
+
+        /// <summary>
+        /// Asynchronously sends the specified message to the bus' own input queue.
+        /// </summary>
+        public async Task SendLocalAsync<TCommand>(TCommand message)
+        {
+            Guard.NotNull(message, "message");
+
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                throw new InvalidOperationException(
+                    "You cannot SendLocalAsync when running in one-way client mode, because" +
+                    " there's no way for the bus to receive the message you're sending.");
+            }
+
+            var destinationEndpoint = receiveMessages.InputQueueAddress;
+
+            PossiblyAttachSagaIdToRequest(message);
+
+            await InternalSendAsync(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -594,6 +633,44 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// </summary>
         internal void InternalSend(List<string> destinations, List<object> messages, bool published = false)
         {
+            CheckBusStartedBeforeSend();
+
+            using (var txc = ManagedTransactionContext.Get())
+            {
+                foreach (var destination in destinations)
+                {
+                    messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+                }
+
+                var messageToSend = PrepareMessageToSend(messages);
+                InternalSend(destinations, messageToSend, txc.Context, published);
+            }
+        }
+
+        /// <summary>
+        /// Core async send method. This should be the only place where calls to the bus'
+        /// <see cref="ISendMessagesAsync"/> instance gets called, except for when moving
+        /// messages to the error queue. This method will bundle the specified batch
+        /// of messages inside one single transport message, which it will send.
+        /// </summary>
+        internal async Task InternalSendAsync(List<string> destinations, List<object> messages, bool published = false)
+        {
+            CheckBusStartedBeforeSend();
+
+            using (var txc = ManagedTransactionContext.Get())
+            {
+                foreach (var destination in destinations)
+                {
+                    messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+                }
+
+                var messageToSend = PrepareMessageToSend(messages);
+                await InternalSendAsync(destinations, messageToSend, txc.Context, published);
+            }
+        }
+
+        private void CheckBusStartedBeforeSend()
+        {
             if (!started)
             {
                 throw new InvalidOperationException(
@@ -607,64 +684,59 @@ for the ONE-WAY CLIENT MODE of the bus, which is what you get if
 you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
+        }
 
-            using (var txc = ManagedTransactionContext.Get())
+        private Message PrepareMessageToSend(IEnumerable<object> messages)
+        {
+            var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
+            var headers = MergeHeaders(messageToSend);
+
+            // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
+            if (!headers.ContainsKey(Headers.ReturnAddress))
             {
-                foreach (var destination in destinations)
+                if (!configureAdditionalBehavior.OneWayClientMode)
                 {
-                    messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
+                    headers[Headers.ReturnAddress] = GetInputQueueAddress();
                 }
+            }
 
-                var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
-                var headers = MergeHeaders(messageToSend);
+            if (MessageContext.HasCurrent)
+            {
+                var messageContext = MessageContext.GetCurrent();
 
-                // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
-                if (!headers.ContainsKey(Headers.ReturnAddress))
-                {
-                    if (!configureAdditionalBehavior.OneWayClientMode)
-                    {
-                        headers[Headers.ReturnAddress] = GetInputQueueAddress();
-                    }
-                }
-
-                if (MessageContext.HasCurrent)
-                {
-                    var messageContext = MessageContext.GetCurrent();
-
-                    // if we're currently handling a message with a correlation ID, make sure it flows...
-                    if (!headers.ContainsKey(Headers.CorrelationId))
-                    {
-                        if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
-                        {
-                            headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
-                        }
-                    }
-
-                    // if we're currently handling a message with a user name, make sure it flows...
-                    if (!headers.ContainsKey(Headers.UserName))
-                    {
-                        if (messageContext.Headers.ContainsKey(Headers.UserName))
-                        {
-                            headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
-                        }
-                    }
-                }
-
-                // if, at this point, there's no correlation ID in a header, just provide one
+                // if we're currently handling a message with a correlation ID, make sure it flows...
                 if (!headers.ContainsKey(Headers.CorrelationId))
                 {
-                    headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
+                    if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                    {
+                        headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                    }
                 }
 
-                // if, at this point, there's no rebus message ID in a header, just provide one
-                if (!headers.ContainsKey(Headers.MessageId))
+                // if we're currently handling a message with a user name, make sure it flows...
+                if (!headers.ContainsKey(Headers.UserName))
                 {
-                    headers[Headers.MessageId] = Guid.NewGuid().ToString();
+                    if (messageContext.Headers.ContainsKey(Headers.UserName))
+                    {
+                        headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
+                    }
                 }
-
-                messageToSend.Headers = headers;
-                InternalSend(destinations, messageToSend, txc.Context, published);
             }
+
+            // if, at this point, there's no correlation ID in a header, just provide one
+            if (!headers.ContainsKey(Headers.CorrelationId))
+            {
+                headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
+            }
+
+            // if, at this point, there's no rebus message ID in a header, just provide one
+            if (!headers.ContainsKey(Headers.MessageId))
+            {
+                headers[Headers.MessageId] = Guid.NewGuid().ToString();
+            }
+
+            messageToSend.Headers = headers;
+            return messageToSend;
         }
 
         internal string GetInputQueueAddress()
@@ -690,24 +762,61 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             if (configureAdditionalBehavior.AuditMessages && published)
             {
-                transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
-
-                if (configureAdditionalBehavior.OneWayClientMode)
-                {
-                    transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
-                }
-                else
-                {
-                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
-                }
-
-                transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
-                var auditQueueName = configureAdditionalBehavior.AuditQueueName;
-
-                InternalSend(new List<string> { auditQueueName }, transportMessage, transactionContext);
-
-                events.RaiseMessageAudited(this, transportMessage);
+                InternalSendToAudit(transportMessage, transactionContext);
             }
+        }
+
+        /// <summary>
+        /// Internal send method asynchronously - this one must not change the headers!
+        /// </summary>
+        internal async Task InternalSendAsync(List<string> destinations, Message messageToSend, ITransactionContext transactionContext, bool published = false)
+        {
+            messageLogger.LogSend(destinations, messageToSend);
+
+            var transportMessage = serializeMessages.Serialize(messageToSend);
+
+            await InternalSendAsync(destinations, transportMessage, transactionContext);
+
+            if (configureAdditionalBehavior.AuditMessages && published)
+            {
+                await InternalSendAsyncToAudit(transportMessage, transactionContext);
+            }
+        }
+
+        private void InternalSendToAudit(TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            AddAuditHeaders(transportMessage);
+            var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+
+            InternalSend(new List<string> { auditQueueName }, transportMessage, transactionContext);
+
+            events.RaiseMessageAudited(this, transportMessage);
+        }
+
+        private async Task InternalSendAsyncToAudit(TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            AddAuditHeaders(transportMessage);
+            var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+
+            await InternalSendAsync(new List<string> { auditQueueName }, transportMessage, transactionContext);
+
+            events.RaiseMessageAudited(this, transportMessage);
+        }
+
+        private void AddAuditHeaders(TransportMessageToSend transportMessage)
+        {
+            transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
+
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
+            }
+            else
+            {
+                transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+            }
+
+            transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
         }
 
         internal void InternalSend(List<string> destinations, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
@@ -720,11 +829,34 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 }
                 catch (Exception exception)
                 {
-                    throw new ApplicationException(string.Format(
-                        "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
-                        transportMessage, destination, transactionContext), exception);
+                    throw WrapSendException(exception, destination, transportMessage, transactionContext);
                 }
             }
+        }
+
+        internal async Task InternalSendAsync(List<string> destinations, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            await Task.WhenAll(destinations.Select(destination => InternalSendAsync(destination, transportMessage, transactionContext)));
+        }
+
+        private async Task InternalSendAsync(string destination, TransportMessageToSend transportMessage,
+            ITransactionContext transactionContext)
+        {
+            try
+            {
+                await sendMessagesAsync.SendAsync(destination, transportMessage, transactionContext);
+            }
+            catch (Exception exception)
+            {
+                throw WrapSendException(exception, destination, transportMessage, transactionContext);
+            }
+        }
+
+        private static ApplicationException WrapSendException(Exception exception, string destination, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
+        {
+            return new ApplicationException(string.Format(
+                "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
+                transportMessage, destination, transactionContext), exception);
         }
 
         private IDictionary<string, object> MergeHeaders(Message messageToSend)

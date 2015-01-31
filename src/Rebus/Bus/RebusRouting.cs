@@ -1,8 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Transactions;
-using Rebus.Extensions;
+﻿using Rebus.Extensions;
 using Rebus.Messages;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Rebus.Bus
 {
@@ -11,7 +11,7 @@ namespace Rebus.Bus
     /// </summary>
     public class RebusRouting : IRebusRouting
     {
-        readonly RebusBus rebusBus;
+        private readonly RebusBus rebusBus;
 
         /// <summary>
         /// Constructs the routing API with the specified <see cref="RebusBus"/>
@@ -32,7 +32,17 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
+        /// Asynchronously sends the specified message to the specified destination.
+        /// </summary>
+        public async Task SendAsync<TCommand>(string destinationEndpoint, TCommand message)
+        {
+            rebusBus.PossiblyAttachSagaIdToRequest(message);
+
+            await rebusBus.InternalSendAsync(new List<string> { destinationEndpoint }, new List<object> { message });
+        }
+
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified
         /// destination.
         /// </summary>
         public void Subscribe<TEvent>(string publisherInputQueue)
@@ -41,7 +51,7 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the specified 
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the specified
         /// destination
         /// </summary>
         public void Unsubscribe<TEvent>(string publisherInputQueue)
@@ -91,19 +101,39 @@ namespace Rebus.Bus
         {
             using (var transactionContext = ManagedTransactionContext.Get())
             {
-                var messageContext = MessageContext.GetCurrent();
-
-                var currentMessage = messageContext.CurrentMessage;
-                var headers = messageContext.Headers.Clone();
-
-                var message = new Message
-                {
-                    Headers = headers,
-                    Messages = new[] {currentMessage}
-                };
+                var message = GetMessageToForward();
 
                 rebusBus.InternalSend(new List<string> { destinationEndpoint }, message, transactionContext.Context);
             }
+        }
+
+        /// <summary>
+        /// Asynchronously sends the message currently being handled to the specified endpoint, preserving all
+        /// of the transport level headers.
+        /// </summary>
+        public async Task ForwardCurrentMessageAsync(string destinationEndpoint)
+        {
+            using (var transactionContext = ManagedTransactionContext.Get())
+            {
+                var message = GetMessageToForward();
+
+                await rebusBus.InternalSendAsync(new List<string> { destinationEndpoint }, message, transactionContext.Context);
+            }
+        }
+
+        private static Message GetMessageToForward()
+        {
+            var messageContext = MessageContext.GetCurrent();
+
+            var currentMessage = messageContext.CurrentMessage;
+            var headers = messageContext.Headers.Clone();
+
+            var message = new Message
+            {
+                Headers = headers,
+                Messages = new[] { currentMessage }
+            };
+            return message;
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Rebus.Testing
 {
@@ -10,15 +11,15 @@ namespace Rebus.Testing
     /// </summary>
     public class FakeBus : IBus
     {
-        readonly List<object> sentMessages = new List<object>();
-        readonly List<object> publishedMessages = new List<object>();
-        readonly List<object> locallySentMessages = new List<object>();
-        readonly List<object> replies = new List<object>();
-        readonly List<Type> subscriptions = new List<Type>();
-        readonly List<Type> unsubscriptions = new List<Type>();
-        readonly List<DeferredMessage> deferredMessages = new List<DeferredMessage>();
+        private readonly List<object> sentMessages = new List<object>();
+        private readonly List<object> publishedMessages = new List<object>();
+        private readonly List<object> locallySentMessages = new List<object>();
+        private readonly List<object> replies = new List<object>();
+        private readonly List<Type> subscriptions = new List<Type>();
+        private readonly List<Type> unsubscriptions = new List<Type>();
+        private readonly List<DeferredMessage> deferredMessages = new List<DeferredMessage>();
 
-        readonly Dictionary<object, Dictionary<string, string>> attachedHeaders = new Dictionary<object, Dictionary<string, string>>();
+        private readonly Dictionary<object, Dictionary<string, string>> attachedHeaders = new Dictionary<object, Dictionary<string, string>>();
 
         /// <summary>
         /// Stores the message in the list of implicitly routed sent messages: <see cref="SentMessages"/>
@@ -29,11 +30,29 @@ namespace Rebus.Testing
         }
 
         /// <summary>
+        /// Stores the message in the list of implicitly routed sent messages: <see cref="SentMessages"/>
+        /// </summary>
+        public Task SendAsync<TCommand>(TCommand message)
+        {
+            sentMessages.Add(message);
+            return Task.FromResult(true);
+        }
+
+        /// <summary>
         /// Stores the message in the list of message explicitly sent to self: <see cref="LocallySentMessages"/>
         /// </summary>
         public void SendLocal<TCommand>(TCommand message)
         {
             locallySentMessages.Add(message);
+        }
+
+        /// <summary>
+        /// Stores the message in the list of message explicitly sent to self: <see cref="LocallySentMessages"/>
+        /// </summary>
+        public Task SendLocalAsync<TCommand>(TCommand message)
+        {
+            locallySentMessages.Add(message);
+            return Task.FromResult(true);
         }
 
         /// <summary>
@@ -57,7 +76,7 @@ namespace Rebus.Testing
         /// </summary>
         public void Unsubscribe<TEvent>()
         {
-            unsubscriptions.Add(typeof (TEvent));
+            unsubscriptions.Add(typeof(TEvent));
         }
 
         /// <summary>
@@ -190,7 +209,7 @@ namespace Rebus.Testing
             /// Gets the message that was deferred
             /// </summary>
             public object Message { get; private set; }
-            
+
             /// <summary>
             /// Gets the delay by which this message was deferred
             /// </summary>

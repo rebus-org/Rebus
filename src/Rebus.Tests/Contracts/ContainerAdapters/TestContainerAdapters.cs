@@ -1,15 +1,15 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Tests.Contracts.ContainerAdapters.Factories;
+using Rebus.Transports.Msmq;
 using Rhino.Mocks;
 using Shouldly;
+using System;
 using System.Linq;
-using Rebus.Transports.Msmq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters
 {
@@ -22,8 +22,8 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
     [TestFixture(typeof(BuiltinContainerAdapterFactory))]
     public class TestContainerAdapters<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
-        IContainerAdapter adapter;
-        TFactory factory;
+        private IContainerAdapter adapter;
+        private TFactory factory;
 
         protected override void DoSetUp()
         {
@@ -70,7 +70,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             }
         }
 
-        class SomeHandler : IHandleMessages<string>
+        private class SomeHandler : IHandleMessages<string>
         {
             public static bool HadContext { get; private set; }
 
@@ -82,7 +82,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 WaitieThingie = new ManualResetEvent(false);
             }
 
-            readonly IMessageContext context;
+            private readonly IMessageContext context;
 
             public SomeHandler(IMessageContext context)
             {
@@ -139,7 +139,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeDisposableHandler.WasDisposed.ShouldBe(true);
         }
 
-        class SomeDisposableHandler : IHandleMessages<string>, IDisposable
+        private class SomeDisposableHandler : IHandleMessages<string>, IDisposable
         {
             public static bool WasDisposed { get; private set; }
 
@@ -191,7 +191,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeAsyncDisposableHandler.WasDisposed.ShouldBe(true);
         }
 
-        class SomeAsyncDisposableHandler : IHandleMessagesAsync<string>, IDisposable
+        private class SomeAsyncDisposableHandler : IHandleMessagesAsync<string>, IDisposable
         {
             public static bool WasDisposed { get; private set; }
 
@@ -226,7 +226,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             SomeDisposableSingleton.Disposed.ShouldBe(true);
         }
 
-        class SomeDisposableSingleton : IBus, IAdvancedBus
+        private class SomeDisposableSingleton : IBus, IAdvancedBus
         {
             public static bool Disposed { get; set; }
 
@@ -250,7 +250,17 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 throw new NotImplementedException();
             }
 
+            public Task SendAsync<TCommand>(TCommand message)
+            {
+                throw new NotImplementedException();
+            }
+
             public void SendLocal<TCommand>(TCommand message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task SendLocalAsync<TCommand>(TCommand message)
             {
                 throw new NotImplementedException();
             }
@@ -291,6 +301,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
 
             [Obsolete(ObsoleteWarning.BatchOpsDeprecated)]
             public IRebusBatchOperations Batch { get; private set; }
+
             public IRebusRouting Routing { get; private set; }
         }
     }
