@@ -52,6 +52,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net45\Castle.Windsor.dll</HintPath>
     </Reference>
+    <Reference Include="DryIoc">
+      <HintPath>..\packages\DryIoc.dll.1.4.1\lib\net40\DryIoc.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.2.0.1\lib\net40-full\log4net.dll</HintPath>
@@ -222,6 +225,7 @@
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\AutofacContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\BuiltinContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\DryIocContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\NinjectContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\SimpleInjectorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
@@ -306,6 +310,7 @@
     <Compile Include="Persistence\Subscriptions\Factories\PostgreSqlServerSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
+    <Compile Include="Properties\InternalsVisibleToDryIocFactoryCompilerDynamicAssembly.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
@@ -464,6 +469,10 @@
     <ProjectReference Include="..\Rebus.Castle.Windsor\Rebus.Castle.Windsor.csproj">
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.DryIoc\Rebus.DryIoc.csproj">
+      <Project>{17EACCD3-62DA-4997-BA2F-FD7FEC497979}</Project>
+      <Name>Rebus.DryIoc</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Extensions\Rebus.Extensions.csproj">
       <Project>{7551FD46-EAE0-4041-B747-80102FF625F8}</Project>
