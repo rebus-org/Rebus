@@ -4,7 +4,7 @@ $scriptDir=[System.IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)
 pushd $scriptDir
 Try 
 {
-    $assemblyPath="..\lib\net40\*.dll"
+    $assemblyPath="..\lib\**\*.dll"
 	$packagesDir="..\.."
     $nuget="..\..\..\.nuget\NuGet.exe"
 	$snkFile=".\DryIoc.snk"

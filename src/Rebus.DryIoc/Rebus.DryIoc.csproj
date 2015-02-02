@@ -30,8 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DryIoc">
-      <HintPath>..\packages\DryIoc.dll.1.4.1\lib\net40\DryIoc.dll</HintPath>
+    <Reference Include="DryIoc, Version=2.0.0.181, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\DryIoc.dll.2.0.0-preview181\lib\net45\DryIoc.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

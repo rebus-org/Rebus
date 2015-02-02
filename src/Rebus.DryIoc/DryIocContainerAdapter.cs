@@ -16,29 +16,10 @@ namespace Rebus.DryIoc
             this.container = container;
         }
 
-        private IEnumerable<T> ResolveAll<T>()
-        {
-            var defaultInstance = container.Resolve<T>(IfUnresolved.ReturnNull);
-            if (defaultInstance != null)
-            {
-                yield return defaultInstance;
-            }
-
-            var keys = ((IRegistry)container).GetKeys(typeof(T), null).OfType<string>();
-            foreach (var key in keys)
-            {
-                var namedInstance = container.Resolve<T>(key, IfUnresolved.ReturnNull);
-                if (namedInstance != null)
-                {
-                    yield return namedInstance;
-                }
-            }
-        }
-
         public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            IEnumerable<IHandleMessages> handlers = ResolveAll<IHandleMessages<T>>();
-            IEnumerable<IHandleMessages> asyncHandlers = ResolveAll<IHandleMessagesAsync<T>>();
+            IEnumerable<IHandleMessages> handlers = container.ResolveMany<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers = container.ResolveMany<IHandleMessagesAsync<T>>();
             return handlers.Union(asyncHandlers);
         }
 
@@ -52,8 +33,11 @@ namespace Rebus.DryIoc
 
         public void SaveBusInstances(IBus bus)
         {
-            container.RegisterDelegate(resolver => bus, Reuse.Singleton);
+            container.RegisterInstance(bus, Reuse.Singleton);
             container.RegisterDelegate(resolver => MessageContext.GetCurrent());
+
+            // workaround for the issue in DryIoc when the singleton instance is not disposed, if it was never resolved
+            container.Resolve<IBus>();
         }
     }
 }
