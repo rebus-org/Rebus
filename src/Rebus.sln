@@ -112,6 +112,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Extensions", "Rebus.E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.AzureServiceBus", "Rebus.ReturnToSourceQueue.AzureServiceBus\Rebus.ReturnToSourceQueue.AzureServiceBus.csproj", "{B8575888-A82F-4D06-AAEA-B4E8D34587DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.DryIoc", "Rebus.DryIoc\Rebus.DryIoc.csproj", "{17EACCD3-62DA-4997-BA2F-FD7FEC497979}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -388,6 +390,16 @@ Global
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA}.Release|x86.ActiveCfg = Release|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -424,6 +436,7 @@ Global
 		{44A9CDF9-3A76-4B4C-AA1D-A34AD7FC2BD5} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{7551FD46-EAE0-4041-B747-80102FF625F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{B8575888-A82F-4D06-AAEA-B4E8D34587DA} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{17EACCD3-62DA-4997-BA2F-FD7FEC497979} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35
