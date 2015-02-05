@@ -42,7 +42,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="FixtureBase.cs" />
+    <Compile Include="Msmq\TestMsmqTransport.cs" />
+    <Compile Include="TransportMessageHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Injection\TestInjectionist_BasicRegistrations.cs" />
     <Compile Include="Injection\TestInjectionist_Decorators.cs" />

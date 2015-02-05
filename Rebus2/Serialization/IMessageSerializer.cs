@@ -1,6 +1,6 @@
 ﻿namespace Rebus2.Serialization
 {
-    public interface IMessageSerializer
+    public interface ISerializer
     {
          
     }
