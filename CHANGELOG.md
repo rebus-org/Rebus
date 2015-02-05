@@ -474,6 +474,11 @@
 * Added extension that allows for composing a chain-of-responsiblity-like way of determining message ownership - thanks [DixonD-git]
 * Introduced a little bit of structure in the `Rebus.Extensions` package - might not be the final way, but it should do for now
 
+## 0.78.1
+
+* Added support for DryIoC - thanks [DixonD-git]
+
+
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
