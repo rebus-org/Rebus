@@ -27,6 +27,9 @@
         <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
 
         <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
+        <NuSpecFilesForPrereleases Include="$(ScriptsFolder)\Rebus.DryIoc.nuspec"/>
+        <NuSpecFilesWithAutoVersion Include="$(ScriptsFolder)\*.nuspec" Exclude="@(NuSpecFilesForPrereleases)"/>
+        
         <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
 
         <SnoopProjects Include="..\src\Rebus.Snoop\*.csproj"/>
@@ -102,7 +105,8 @@
 
     <Target Name="updateNuspecVersions" Condition="'$(Version)' != ''">
         <Message Text="Updating NuSpec version..."/>
-        <XmlPoke XmlInputPath="%(NuSpecFiles.FullPath)" Query="//version" Value="$(Version)" />
+        <XmlPoke XmlInputPath="%(NuSpecFilesWithAutoVersion.FullPath)" Query="//version" Value="$(Version)" />
+        <XmlPoke XmlInputPath="%(NuSpecFilesForPrereleases.FullPath)" Query="//version" Value="$(Version)-pre" />
         <XmlPoke XmlInputPath="%(DependantNuSpecFiles.FullPath)" Query="//dependency[@id='Rebus']/@version" Value="$(Version)" />
     </Target>
 
