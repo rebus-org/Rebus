@@ -482,6 +482,10 @@
 
 * Fixed DryIoc nuget package
 
+## 0.79.0
+
+* Changed `IStoreTimeouts` API to return a `DueTimeoutsResult` instead of an `IEnumerable<DueTimeout>`
+* Made `SqlServerTimeoutStorage` grab row locks on found due timeouts, allowing for "competing timeout consumers"
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz

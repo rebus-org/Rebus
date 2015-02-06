@@ -41,7 +41,7 @@ namespace Rebus.Persistence.InMemory
         /// <summary>
         /// Retrieves all due timeouts
         /// </summary>
-        public IEnumerable<DueTimeout> GetDueTimeouts()
+        public DueTimeoutsResult GetDueTimeouts()
         {
             lock (listLock)
             {
@@ -51,23 +51,22 @@ namespace Rebus.Persistence.InMemory
 
                 log.Debug("Returning {0} timeouts", timeoutsToRemove.Count);
 
-                return timeoutsToRemove
+                return new DueTimeoutsResult(timeoutsToRemove
                     .Select(t => new DueInMemoryTimeout(t.ReplyTo,
-                                                        t.CorrelationId,
-                                                        t.TimeToReturn,
-                                                        t.SagaId,
-                                                        t.CustomData,
-                                                        () =>
-                                                            {
-                                                                lock (listLock)
-                                                                {
-                                                                    log.Debug("Removing timeout {0} -> {1}: {2}",
-                                                                              t.TimeToReturn, t.ReplyTo, t.CustomData);
+                        t.CorrelationId,
+                        t.TimeToReturn,
+                        t.SagaId,
+                        t.CustomData,
+                        () =>
+                        {
+                            lock (listLock)
+                            {
+                                log.Debug("Removing timeout {0} -> {1}: {2}", t.TimeToReturn, t.ReplyTo, t.CustomData);
 
-                                                                    timeouts.Remove(t);
-                                                                }
-                                                            }))
-                    .ToList();
+                                timeouts.Remove(t);
+                            }
+                        }))
+                    .ToList());
             }
         }
 

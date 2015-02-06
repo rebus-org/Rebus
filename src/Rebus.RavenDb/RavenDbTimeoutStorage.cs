@@ -32,7 +32,7 @@ namespace Rebus.RavenDb
             }
         }
 
-        public IEnumerable<DueTimeout> GetDueTimeouts()
+        public DueTimeoutsResult GetDueTimeouts()
         {
             using (var session = store.OpenSession())
             {
@@ -55,8 +55,8 @@ namespace Rebus.RavenDb
                     .ToList();
 
                 session.SaveChanges();
-                
-                return rebusTimeouts;
+
+                return new DueTimeoutsResult(rebusTimeouts);
             }
         }
 
