@@ -478,6 +478,10 @@
 
 * Added support for DryIoC - thanks [DixonD-git]
 
+## 0.78.2
+
+* Fixed DryIoc nuget package
+
 
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
