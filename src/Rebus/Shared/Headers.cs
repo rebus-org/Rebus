@@ -151,5 +151,10 @@ namespace Rebus.Shared
         /// UTC time of when the message was copied to the audit queue
         /// </summary>
         public const string AuditMessageCopyTime = "rebus-audit-copy-time";
+
+        /// <summary>
+        /// Header that is added to a message indicating the type of the object
+        /// </summary>
+        public const string AssemblyQualifiedName = "assembly-qualified-name";
     }
 }
