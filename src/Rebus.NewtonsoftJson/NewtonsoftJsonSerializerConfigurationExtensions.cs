@@ -3,6 +3,9 @@ using Rebus.Configuration;
 
 namespace Rebus.NewtonsoftJson
 {
+    /// <summary>
+    /// Configuration extensions for <see cref="NewtonsoftJsonMessageSerializer"/>
+    /// </summary>
     public static class NewtonsoftJsonSerializerConfigurationExtensions
     {
         /// <summary>
@@ -11,7 +14,11 @@ namespace Rebus.NewtonsoftJson
         /// </summary>
         public static void UseNewtonsoftJsonSerializer(this RebusSerializationConfigurer configurer, JsonSerializerSettings settings = null)
         {
-            configurer.Use(new NewtonsoftJsonMessageSerializer(settings));
+            var serializer = settings != null
+                ? new NewtonsoftJsonMessageSerializer(settings)
+                : new NewtonsoftJsonMessageSerializer();
+
+            configurer.Use(serializer);
         }
     }
 }
