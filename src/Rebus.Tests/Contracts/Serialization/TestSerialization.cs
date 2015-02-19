@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.NewtonsoftJson;
 using Rebus.Serialization.Binary;
 using Rebus.Serialization.Json;
 using Shouldly;
@@ -13,7 +14,7 @@ namespace Rebus.Tests.Contracts.Serialization
 {
     [TestFixture(typeof(JsonMessageSerializer))]
     [TestFixture(typeof(BinaryMessageSerializer))]
-    [TestFixture(typeof(NewtonSoftJsonMessageSerializer))]
+    [TestFixture(typeof(NewtonsoftJsonMessageSerializer))]
     public class TestSerialization<TSerializer> : FixtureBase where TSerializer : ISerializeMessages, new()
     {
         TSerializer instance;

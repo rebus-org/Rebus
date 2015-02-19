@@ -27,15 +27,6 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
-        /// Configures Rebus to use <see cref="NewtonSoftJsonSerializer"/> to serialize messages. Can pass in a <see cref="JsonSerializerSettings"/> object, 
-        /// to configure details around how the JSON serialization should work
-        /// </summary>
-        public void UseNewtonSoftJsonSerializer(JsonSerializerSettings settings = null)
-        {
-            Use(new NewtonSoftJsonMessageSerializer(settings));
-        }
-
-        /// <summary>
         /// Configures Rebus to use <see cref="BinaryMessageSerializer"/> which internally uses the BCL <see cref="BinaryMessageFormatter"/>
         /// to serialize messages
         /// </summary>

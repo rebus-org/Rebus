@@ -6,12 +6,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Shared;
 
-namespace Rebus.Serialization.Json
+namespace Rebus.NewtonsoftJson
 {
     /// <summary>
     /// Implementation of <see cref="ISerializeMessages"/> that uses Newtonsoft JSON.NET internally to serialize transport messages.
@@ -35,7 +33,7 @@ namespace Rebus.Serialization.Json
     /// ----------------------------------------------------------------------------------------------------------------------------
     /// Bam!1 Thanks James :)
     /// </summary>
-    public class NewtonSoftJsonMessageSerializer : ISerializeMessages
+    public class NewtonsoftJsonMessageSerializer : ISerializeMessages
     {
         const string JsonContentTypeName = "text/json";
 
@@ -56,14 +54,14 @@ namespace Rebus.Serialization.Json
         /// <summary>
         /// Constructs the serializer with default serializer settings
         /// </summary>
-        public NewtonSoftJsonMessageSerializer()
+        public NewtonsoftJsonMessageSerializer()
         {
         }
 
         /// <summary>
         /// Constructs the serializer with the given serializer settings
         /// </summary>
-        public NewtonSoftJsonMessageSerializer(JsonSerializerSettings settings)
+        public NewtonsoftJsonMessageSerializer(JsonSerializerSettings settings)
         {
             if (settings == null) throw new ArgumentNullException("settings");
             this.settings = settings;
@@ -78,7 +76,7 @@ namespace Rebus.Serialization.Json
             {
                 var encodingToUse = customEncoding ?? DefaultEncoding;
 
-                var headers = message.Headers.Clone();
+                var headers = new Dictionary<string, object>(message.Headers);
 
                 // one line of JSON object per logical message
                 var logicalMessageLines = string.Join(LineSeparator.ToString(), message.Messages.Select(m => JsonConvert.SerializeObject(m, Formatting.None, settings)));
@@ -113,7 +111,7 @@ namespace Rebus.Serialization.Json
 
             using (new CultureContext(serializationCulture))
             {
-                var headers = transportMessage.Headers.Clone();
+                var headers = new Dictionary<string, object>(transportMessage.Headers);
                 var encodingToUse = GetEncodingOrThrow(headers);
 
                 var serializedTransportMessage = encodingToUse.GetString(transportMessage.Body);

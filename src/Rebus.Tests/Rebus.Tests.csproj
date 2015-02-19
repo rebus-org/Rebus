@@ -495,6 +495,10 @@
       <Project>{C2359E91-35C1-4D48-B089-97EF739A08F5}</Project>
       <Name>Rebus.MsmqLoadBalancer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.NewtonsoftJson\Rebus.NewtonsoftJson.csproj">
+      <Project>{1E2F369E-D903-47FE-8E07-C3C9509F5EE5}</Project>
+      <Name>Rebus.NewtonsoftJson</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.Ninject\Rebus.Ninject.csproj">
       <Project>{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}</Project>
       <Name>Rebus.Ninject</Name>

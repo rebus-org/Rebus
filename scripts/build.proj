@@ -13,6 +13,7 @@
         <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
         <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
         <RebusProjects Include="..\src\Rebus.MsmqLoadBalancer\*.csproj"/>
+        <RebusProjects Include="..\src\Rebus.NewtonsoftJson\*.csproj"/>
         <RebusProjects Include="..\src\Rebus.Ninject\*.csproj"/>
         <RebusProjects Include="..\src\Rebus.NLog\*.csproj"/>
         <RebusProjects Include="..\src\Rebus.PostgreSql\*.csproj"/>
