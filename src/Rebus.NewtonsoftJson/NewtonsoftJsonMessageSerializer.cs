@@ -47,8 +47,6 @@ namespace Rebus.NewtonsoftJson
 
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
 
-        Encoding customEncoding;
-        
         const char LineSeparator = '\r';
 
         /// <summary>
@@ -74,7 +72,7 @@ namespace Rebus.NewtonsoftJson
         {
             using (new CultureContext(serializationCulture))
             {
-                var encodingToUse = customEncoding ?? DefaultEncoding;
+                var encodingToUse = DefaultEncoding;
 
                 var headers = new Dictionary<string, object>(message.Headers);
 

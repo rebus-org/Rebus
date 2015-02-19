@@ -487,6 +487,12 @@
 * Changed `IStoreTimeouts` API to return a `DueTimeoutsResult` instead of an `IEnumerable<DueTimeout>`
 * Made `SqlServerTimeoutStorage` grab row locks on found due timeouts, allowing for "competing timeout consumers"
 
+## 0.80.0
+
+* Changed default encoding of outgoing messages to be UTF8 instead of UTF7 when using the built-in JSON serializer
+* Added `NewtonsoftJsonMessageSerializer` that is honest about its dependency on Newtonsoft JSON.NET and thus lets you customize the serialization settings - thanks [joshua5822]
+
+
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
@@ -506,3 +512,4 @@
 [seankearon]: https://github.com/seankearon
 [bchavez]: https://github.com/bchavez
 [DixonD-git]: https://github.com/DixonD-git
+[joshua5822]: https://github.com/joshua5822
