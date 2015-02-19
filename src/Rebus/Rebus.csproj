@@ -111,6 +111,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerStorage.cs" />
     <Compile Include="SagaContext.cs" />
+    <Compile Include="Serialization\Json\NewtonSoftJsonMessageSerializer.cs" />
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
     <Compile Include="Shared\ConnectionStringUtil.cs" />
     <Compile Include="Testing\FakeBus.cs" />
