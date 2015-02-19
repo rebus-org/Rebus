@@ -95,6 +95,9 @@ namespace Rebus.NewtonsoftJson
             }
         }
 
+        /// <summary>
+        /// Gets an assembly-qualified name without the version and public key token stuff
+        /// </summary>
         static string GetMinimalAssemblyQualifiedName(Type type)
         {
             return string.Format("{0},{1}", type.FullName, type.Assembly.GetName().Name);
