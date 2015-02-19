@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-using Rebus.Messages;
+using Newtonsoft.Json.Linq;
 using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Shared;
 
 namespace Rebus.Serialization.Json
@@ -38,27 +39,34 @@ namespace Rebus.Serialization.Json
     {
         const string JsonContentTypeName = "text/json";
 
-        static readonly Encoding DefaultEncoding = Encoding.UTF7;
+        static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
         /// <summary>
         /// Used as the default serailizer setting if settings is not passed into the constructor.
         /// </summary>
-        readonly JsonSerializerSettings settings = 
+        readonly JsonSerializerSettings settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
-        
+
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
-        
+
         Encoding customEncoding;
+        
+        const char LineSeparator = '\r';
 
         /// <summary>
-        /// Constructs the serializer
+        /// Constructs the serializer with default serializer settings
+        /// </summary>
+        public NewtonSoftJsonMessageSerializer()
+        {
+        }
+
+        /// <summary>
+        /// Constructs the serializer with the given serializer settings
         /// </summary>
         public NewtonSoftJsonMessageSerializer(JsonSerializerSettings settings)
         {
-            if(settings != null)
-            {
-                this.settings = settings;
-            }
+            if (settings == null) throw new ArgumentNullException("settings");
+            this.settings = settings;
         }
 
         /// <summary>
@@ -68,21 +76,32 @@ namespace Rebus.Serialization.Json
         {
             using (new CultureContext(serializationCulture))
             {
-                var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, settings);
                 var encodingToUse = customEncoding ?? DefaultEncoding;
 
                 var headers = message.Headers.Clone();
-                headers[Headers.AssemblyQualifiedName] = message.Messages.GetType().AssemblyQualifiedName;
+
+                // one line of JSON object per logical message
+                var logicalMessageLines = string.Join(LineSeparator.ToString(), message.Messages.Select(m => JsonConvert.SerializeObject(m, Formatting.None, settings)));
+
+                // include the types of the messages
+                var messageTypes = string.Join(";", message.Messages.Select(m => GetMinimalAssemblyQualifiedName(m.GetType())));
+
+                headers[Headers.MessageTypes] = messageTypes;
                 headers[Headers.ContentType] = JsonContentTypeName;
                 headers[Headers.Encoding] = encodingToUse.WebName;
 
                 return new TransportMessageToSend
                            {
-                               Body = encodingToUse.GetBytes(messageAsString),
+                               Body = encodingToUse.GetBytes(logicalMessageLines),
                                Headers = headers,
                                Label = message.GetLabel(),
                            };
             }
+        }
+
+        static string GetMinimalAssemblyQualifiedName(Type type)
+        {
+            return string.Format("{0},{1}", type.FullName, type.Assembly.GetName().Name);
         }
 
         /// <summary>
@@ -91,22 +110,49 @@ namespace Rebus.Serialization.Json
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
             if (transportMessage == null) throw new ArgumentNullException("transportMessage", "A transport message must be passed to this function in order to deserialize");
-            
+
             using (new CultureContext(serializationCulture))
             {
                 var headers = transportMessage.Headers.Clone();
                 var encodingToUse = GetEncodingOrThrow(headers);
 
                 var serializedTransportMessage = encodingToUse.GetString(transportMessage.Body);
+
+                if (!headers.ContainsKey(Headers.MessageTypes))
+                {
+                    throw new SerializationException(string.Format("Could not find the '{0}' header in the message", Headers.MessageTypes));
+                }
+
                 try
                 {
-                    var typeName = headers[Headers.AssemblyQualifiedName].ToString();
-                    var messages = (object[]) JsonConvert.DeserializeObject(serializedTransportMessage, Type.GetType(typeName), settings);
+                    var concatenatedTypeNames = headers[Headers.MessageTypes].ToString();
+                    var typeNames = concatenatedTypeNames.Split(';');
+                    var jsonLines = serializedTransportMessage.Split(LineSeparator);
+
+                    if (typeNames.Length != jsonLines.Length)
+                    {
+                        throw new SerializationException(string.Format("Number of message types in the '{0}' header does not correspond to the number of lines in the body - here's the header: '{1}' - here's the body: {2}", 
+                            Headers.MessageTypes, concatenatedTypeNames, serializedTransportMessage));
+                    }
+
+                    var messages = typeNames
+                        .Zip(jsonLines, (typeName, jsonLine) =>
+                        {
+                            var messageType = Type.GetType(typeName);
+                            if (messageType == null)
+                            {
+                                throw new SerializationException(string.Format("Could not find message type '{0}' in the current AppDomain", typeName));
+                            }
+
+                            var message = JsonConvert.DeserializeObject(jsonLine, messageType, settings);
+
+                            return message;
+                        });
 
                     return new Message
                                {
                                    Headers = headers,
-                                   Messages = messages
+                                   Messages = messages.ToArray()
                                };
                 }
                 catch (Exception e)

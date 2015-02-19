@@ -153,8 +153,8 @@ namespace Rebus.Shared
         public const string AuditMessageCopyTime = "rebus-audit-copy-time";
 
         /// <summary>
-        /// Header that is added to a message indicating the type of the object
+        /// Header that can be used by serializers that need to know the type of the logical messages before deserializing
         /// </summary>
-        public const string AssemblyQualifiedName = "assembly-qualified-name";
+        public const string MessageTypes = "message-types";
     }
 }

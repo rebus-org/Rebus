@@ -13,6 +13,7 @@ namespace Rebus.Tests.Contracts.Serialization
 {
     [TestFixture(typeof(JsonMessageSerializer))]
     [TestFixture(typeof(BinaryMessageSerializer))]
+    [TestFixture(typeof(NewtonSoftJsonMessageSerializer))]
     public class TestSerialization<TSerializer> : FixtureBase where TSerializer : ISerializeMessages, new()
     {
         TSerializer instance;
@@ -87,6 +88,29 @@ namespace Rebus.Tests.Contracts.Serialization
             complexObject.NestedObjects[0].StringProperty.ShouldBe("some string");
             complexObject.NestedObjects[0].DateTimeProperty.ShouldBe(new DateTime(2006, 09, 11));
             complexObject.NestedObjects[0].TimeSpanProperty.ShouldBe(new TimeSpan(14, 20, 00, 00));
+        }
+
+        [Test]
+        public void CanSerializeTransportMessageWithMultipleLogicalMessagesInside()
+        {
+            var multipleLogicalMessages = new object[]
+            {
+                new Person(),
+                new ForeignAddress(),
+                new Person(),
+            };
+
+            var transportMessageToSend = instance.Serialize(new Message
+            {
+                Messages = multipleLogicalMessages
+            });
+
+            var message = instance.Deserialize(transportMessageToSend.ToReceivedTransportMessage());
+
+            Assert.That(message.Messages.Length, Is.EqualTo(3));
+            Assert.That(message.Messages[0], Is.TypeOf<Person>());
+            Assert.That(message.Messages[1], Is.TypeOf<ForeignAddress>());
+            Assert.That(message.Messages[2], Is.TypeOf<Person>());
         }
 
         [Test]
