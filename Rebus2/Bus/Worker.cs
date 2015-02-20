@@ -17,16 +17,16 @@ namespace Rebus2.Bus
         }
 
         readonly ITransport _transport;
-        readonly IPipelineManager _pipelineManager;
+        readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly PipelineInvoker _pipelineInvoker = new PipelineInvoker();
 
         volatile bool _keepWorking = true;
 
-        public Worker(ITransport transport, IPipelineManager pipelineManager, string workerName)
+        public Worker(ITransport transport, IPipeline pipeline, string workerName)
         {
             _transport = transport;
-            _pipelineManager = pipelineManager;
+            _pipeline = pipeline;
             _workerThread = new Thread(() =>
             {
                 while (_keepWorking)
@@ -65,7 +65,7 @@ namespace Rebus2.Bus
                 var context = new StepContext(message);
                 transactionContext.Items[StepContext.StepContextKey] = context;
                 
-                var stagedReceiveSteps = _pipelineManager.ReceivePipeline();
+                var stagedReceiveSteps = _pipeline.ReceivePipeline();
                 _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
             }
         }

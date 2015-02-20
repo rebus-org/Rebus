@@ -26,15 +26,15 @@ namespace Rebus2.Bus
         readonly IRouter _router;
         readonly ITransport _transport;
         readonly ISerializer _serializer;
-        readonly IPipelineManager _pipelineManager;
+        readonly IPipeline _pipeline;
 
-        public RebusBus(IRouter router, ITransport transport, ISerializer serializer, IPipelineManager pipelineManager)
+        public RebusBus(IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline)
         {
             // we do not control the lifetime of the handler activator - it controls us!
             _router = router;
             _transport = transport;
             _serializer = serializer;
-            _pipelineManager = pipelineManager;
+            _pipeline = pipeline;
         }
 
         public void Start()
@@ -157,7 +157,7 @@ namespace Rebus2.Bus
             {
                 var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
-                _workers.Add(new Worker(_transport, _pipelineManager, workerName));
+                _workers.Add(new Worker(_transport, _pipeline, workerName));
             }
         }
 

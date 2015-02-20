@@ -2,7 +2,7 @@
 
 namespace Rebus2.Pipeline
 {
-    public interface IPipelineManager
+    public interface IPipeline
     {
         IEnumerable<IStep> SendPipeline();
         IEnumerable<StagedReceiveStep> ReceivePipeline();

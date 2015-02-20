@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rebus2.Pipeline
 {
-    public class DefaultPipelineManager : IPipelineManager
+    public class DefaultPipeline : IPipeline
     {
         readonly List<RegisteredStep> _sendSteps = new List<RegisteredStep>();
         readonly List<RegisteredStep> _receiveSteps = new List<RegisteredStep>();
@@ -20,13 +20,13 @@ namespace Rebus2.Pipeline
             return _receiveSteps.Select(s => new StagedReceiveStep(s.Step, (ReceiveStage)s.Stage));
         }
 
-        public DefaultPipelineManager OnReceive(IStep step, ReceiveStage stage)
+        public DefaultPipeline OnReceive(IStep step, ReceiveStage stage)
         {
             _receiveSteps.Add(new RegisteredStep(step, (int)stage));
             return this;
         }
 
-        public DefaultPipelineManager OnReceive(Action<StepContext, Func<Task>> step, ReceiveStage stage, string stepDescription = null)
+        public DefaultPipeline OnReceive(Action<StepContext, Func<Task>> step, ReceiveStage stage, string stepDescription = null)
         {
             return OnReceive(new StepContainer(step, stepDescription), stage);
         }

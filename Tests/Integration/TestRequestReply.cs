@@ -36,7 +36,7 @@ namespace Tests.Integration
             var transport = new MsmqTransport(InputQueueName);
             var serializer = new JsonSerializer();
             
-            var pipelineManager = new DefaultPipelineManager()
+            var pipelineManager = new DefaultPipeline()
                 .OnReceive(new DeserializationStep(serializer), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DispatchStep(_handlerActivator), ReceiveStage.MessageDeserialized);
 
