@@ -7,11 +7,11 @@ using Rebus2.Transport;
 
 namespace Rebus2.Bus
 {
-    public class Worker : IDisposable
+    public class ThreadWorker : IWorker
     {
         static ILog _log;
 
-        static Worker()
+        static ThreadWorker()
         {
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
@@ -23,7 +23,7 @@ namespace Rebus2.Bus
 
         volatile bool _keepWorking = true;
 
-        public Worker(ITransport transport, IPipeline pipeline, string workerName)
+        public ThreadWorker(ITransport transport, IPipeline pipeline, string workerName)
         {
             _transport = transport;
             _pipeline = pipeline;

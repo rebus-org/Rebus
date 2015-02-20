@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using Rebus2.Messages;
 
-namespace Rebus2.Routing
+namespace Rebus2.Routing.TypeBased
 {
     public class SimpleTypeBasedRouter : IRouter
     {

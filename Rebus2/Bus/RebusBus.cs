@@ -10,10 +10,11 @@ using Rebus2.Pipeline;
 using Rebus2.Routing;
 using Rebus2.Serialization;
 using Rebus2.Transport;
+using Rebus2.Workers;
 
 namespace Rebus2.Bus
 {
-    public class RebusBus : IDisposable
+    public class RebusBus : IBus
     {
         static ILog _log;
 
@@ -22,27 +23,30 @@ namespace Rebus2.Bus
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly List<Worker> _workers = new List<Worker>();
+        readonly List<IWorker> _workers = new List<IWorker>();
+
+        readonly IWorkerFactory _workerFactory;
         readonly IRouter _router;
         readonly ITransport _transport;
         readonly ISerializer _serializer;
         readonly IPipeline _pipeline;
 
-        public RebusBus(IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline)
         {
             // we do not control the lifetime of the handler activator - it controls us!
+            _workerFactory = workerFactory;
             _router = router;
             _transport = transport;
             _serializer = serializer;
             _pipeline = pipeline;
         }
 
-        public void Start()
+        public IBus Start()
         {
-            Start(1);
+            return Start(1);
         }
 
-        public void Start(int numberOfWorkers)
+        public IBus Start(int numberOfWorkers)
         {
             _log.Info("Starting bus");
 
@@ -54,9 +58,11 @@ namespace Rebus2.Bus
                     i.Initialize();
                 });
 
-            SetNumberOfWorkers(5);
+            SetNumberOfWorkers(numberOfWorkers);
 
             _log.Info("Started");
+
+            return this;
         }
 
         IEnumerable InjectedServicesWhoseLifetimeToControl
@@ -72,6 +78,12 @@ namespace Rebus2.Bus
         public async Task Send(object message)
         {
             var headers = new Dictionary<string, string>();
+
+            if (!string.IsNullOrWhiteSpace(_transport.Address) && !headers.ContainsKey(Headers.ReturnAddress))
+            {
+                headers[Headers.ReturnAddress] = _transport.Address;
+            }
+
             var logicalMessage = new Message(headers, message);
             var destinationAddress = _router.GetDestinationAddress(logicalMessage);
 
@@ -157,7 +169,7 @@ namespace Rebus2.Bus
             {
                 var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
-                _workers.Add(new Worker(_transport, _pipeline, workerName));
+                _workers.Add(_workerFactory.CreateWorker(workerName));
             }
         }
 

@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Bus;
-using Rebus2.Logging;
+using Rebus2.Config;
 using Rebus2.Msmq;
-using Rebus2.Pipeline;
-using Rebus2.Pipeline.Receive;
-using Rebus2.Routing;
-using Rebus2.Serialization;
+using Rebus2.Routing.TypeBased;
 using Tests.Extensions;
 
 namespace Tests.Integration
@@ -20,31 +16,21 @@ namespace Tests.Integration
     {
         const string InputQueueName = "test.input";
 
-        RebusBus _bus;
+        IBus _bus;
         BuiltinHandlerActivator _handlerActivator;
 
         protected override void SetUp()
         {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
-            {
-                MinLevel = LogLevel.Debug
-            };
-
             _handlerActivator = new BuiltinHandlerActivator();
 
-            var router = new SimpleTypeBasedRouter().Map<string>(InputQueueName);
-            var transport = new MsmqTransport(InputQueueName);
-            var serializer = new JsonSerializer();
-            
-            var pipelineManager = new DefaultPipeline()
-                .OnReceive(new DeserializationStep(serializer), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchStep(_handlerActivator), ReceiveStage.MessageDeserialized);
-
-            _bus = new RebusBus(router, transport, serializer, pipelineManager);
+            _bus = Configure.With(_handlerActivator)
+                .Logging(l => l.Console())
+                .Transport(t => t.UseMsmq(InputQueueName, "test.error"))
+                .Routing(r => r.SimpleTypeBased().Map<string>(InputQueueName))
+                .Options(o => o.SetNumberOfWorkers(1))
+                .Start();
 
             TrackDisposable(_bus);
-
-            _bus.Start();
         }
 
         [Test]

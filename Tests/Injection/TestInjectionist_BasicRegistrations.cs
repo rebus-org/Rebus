@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System;
+using NUnit.Framework;
 using Rebus2.Injection;
 
 namespace Tests.Injection
@@ -11,6 +12,15 @@ namespace Tests.Injection
         protected override void SetUp()
         {
             _injectionist = new Injectionist();
+        }
+
+        [Test]
+        public void CanDetermineWhetherServiceIsRegistered_Empty()
+        {
+            _injectionist.Register(context => DateTime.Now);
+
+            Assert.That(_injectionist.Has<string>(), Is.False);
+            Assert.That(_injectionist.Has<DateTime>(), Is.True);
         }
 
         [Test]

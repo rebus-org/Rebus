@@ -7,5 +7,6 @@ namespace Rebus2.Transport
     {
         Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context);
         Task<TransportMessage> Receive(ITransactionContext context);
+        string Address { get; }
     }
 }

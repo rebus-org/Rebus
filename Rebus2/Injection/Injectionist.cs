@@ -15,12 +15,13 @@ namespace Rebus2.Injection
 
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator = false)
         {
-            if (!_resolvers.ContainsKey(typeof(TService)))
+            var key = typeof(TService);
+            if (!_resolvers.ContainsKey(key))
             {
-                _resolvers.Add(typeof(TService), new List<Resolver>());
+                _resolvers.Add(key, new List<Resolver>());
             }
 
-            var resolverList = _resolvers[typeof(TService)];
+            var resolverList = _resolvers[key];
             var resolver = new Resolver<TService>(resolverMethod, isDecorator: isDecorator);
 
             if (!resolver.IsDecorator)
@@ -31,6 +32,12 @@ namespace Rebus2.Injection
             {
                 resolverList.Insert(0, resolver);
             }
+        }
+
+        public bool Has<TService>()
+        {
+            var key = typeof(TService);
+            return _resolvers.ContainsKey(key) && _resolvers[key].Count > 0;
         }
 
         abstract class Resolver { }
