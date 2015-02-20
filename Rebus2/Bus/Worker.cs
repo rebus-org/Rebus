@@ -1,10 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Dispatch;
 using Rebus2.Extensions;
 using Rebus2.Logging;
 using Rebus2.Messages;
+using Rebus2.Pipeline;
 using Rebus2.Serialization;
 using Rebus2.Transport;
 
@@ -20,14 +24,16 @@ namespace Rebus2.Bus
         }
 
         readonly ITransport _transport;
+        readonly IPipelineManager _pipelineManager;
         readonly Thread _workerThread;
         readonly Dispatcher _dispatcher;
 
         volatile bool _keepWorking = true;
 
-        public Worker(IHandlerActivator handlerActivator, ITransport transport, ISerializer serializer, string workerName)
+        public Worker(IHandlerActivator handlerActivator, ITransport transport, ISerializer serializer, string workerName, IPipelineManager pipelineManager)
         {
             _transport = transport;
+            _pipelineManager = pipelineManager;
             _dispatcher = new Dispatcher(handlerActivator, serializer);
             _workerThread = new Thread(() =>
             {
@@ -61,6 +67,10 @@ namespace Rebus2.Bus
                     Thread.Sleep(TimeSpan.FromSeconds(0.5));
                     return;
                 }
+
+
+                var context = new StepContext();
+                new PipelineInvoker().Invoke(context, _pipelineManager.ReceivePipeline());
 
                 _log.Debug("Received message {0}", message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no ID>");
                 _dispatcher.Dispatch(message).Wait();

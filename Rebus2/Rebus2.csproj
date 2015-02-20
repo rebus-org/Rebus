@@ -67,6 +67,10 @@
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="Messages\Headers.cs" />
+    <Compile Include="Pipeline\DefaultPipelineManager.cs" />
+    <Compile Include="Pipeline\IStep.cs" />
+    <Compile Include="Pipeline\IPipelineManager.cs" />
+    <Compile Include="Pipeline\PipelineInvoker.cs" />
     <Compile Include="Routing\SimpleTypeBasedRouter.cs" />
     <Compile Include="Transport\ITransport.cs" />
     <Compile Include="Msmq\MsmqTransport.cs" />

@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Logging;
+using Rebus2.Messages;
+using Rebus2.Pipeline;
 using Rebus2.Serialization;
 
 namespace Rebus2.Dispatch
