@@ -12,6 +12,8 @@ namespace Rebus2.Pipeline
 
     public class StepContext
     {
+        public const string StepContextKey = "stepContext";
+
         readonly Dictionary<string, object> _items = new Dictionary<string, object>();
 
         public StepContext(TransportMessage receivedTransportMessage)

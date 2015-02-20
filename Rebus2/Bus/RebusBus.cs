@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Rebus2.Activation;
 using Rebus2.Extensions;
 using Rebus2.Logging;
 using Rebus2.Messages;
@@ -24,16 +23,14 @@ namespace Rebus2.Bus
         }
 
         readonly List<Worker> _workers = new List<Worker>();
-        readonly IHandlerActivator _handlerActivator;
         readonly IRouter _router;
         readonly ITransport _transport;
         readonly ISerializer _serializer;
         readonly IPipelineManager _pipelineManager;
 
-        public RebusBus(IHandlerActivator handlerActivator, IRouter router, ITransport transport, ISerializer serializer, IPipelineManager pipelineManager)
+        public RebusBus(IRouter router, ITransport transport, ISerializer serializer, IPipelineManager pipelineManager)
         {
             // we do not control the lifetime of the handler activator - it controls us!
-            _handlerActivator = handlerActivator;
             _router = router;
             _transport = transport;
             _serializer = serializer;
@@ -78,17 +75,46 @@ namespace Rebus2.Bus
             var logicalMessage = new Message(headers, message);
             var destinationAddress = _router.GetDestinationAddress(logicalMessage);
 
+            await InnerSend(destinationAddress, logicalMessage);
+        }
+
+        public async Task Reply(object message)
+        {
+            var currentTransactionContext = AmbientTransactionContext.Current;
+
+            if (currentTransactionContext == null)
+            {
+                throw new InvalidOperationException("Could not find the current transaction context - this might happen if you try to reply to a message outside of a message handler");
+            }
+
+            var stepContext = currentTransactionContext.Items
+                .GetOrThrow <StepContext>(StepContext.StepContextKey);
+
+            var headersOfIncomingMessage = stepContext.Load<TransportMessage>().Headers;
+            var headers = new Dictionary<string, string>();
+            var logicalMessage = new Message(headers, message);
+            var returnAddress = headersOfIncomingMessage[Headers.ReturnAddress];
+
+            await InnerSend(returnAddress, logicalMessage);
+        }
+
+        async Task InnerSend(string destinationAddress, Message logicalMessage)
+        {
             var transportMessage = await _serializer.Serialize(logicalMessage);
+
+            var currentTransactionContext = AmbientTransactionContext.Current;
+
+            if (currentTransactionContext != null)
+            {
+                await _transport.Send(destinationAddress, transportMessage, currentTransactionContext);
+                return;
+            }
 
             using (var defaultTransactionContext = new DefaultTransactionContext())
             {
                 await _transport.Send(destinationAddress, transportMessage, defaultTransactionContext);
                 defaultTransactionContext.Commit();
             }
-        }
-
-        public async Task Reply(object message)
-        {
         }
 
         ~RebusBus()
@@ -131,7 +157,7 @@ namespace Rebus2.Bus
             {
                 var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
-                _workers.Add(new Worker(_handlerActivator, _transport, _pipelineManager, workerName));
+                _workers.Add(new Worker(_transport, _pipelineManager, workerName));
             }
         }
 

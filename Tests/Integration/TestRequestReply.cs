@@ -40,7 +40,7 @@ namespace Tests.Integration
                 .OnReceive(new DeserializationStep(serializer), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DispatchStep(_handlerActivator), ReceiveStage.MessageDeserialized);
 
-            _bus = new RebusBus(_handlerActivator, router, transport, serializer, pipelineManager);
+            _bus = new RebusBus(router, transport, serializer, pipelineManager);
 
             TrackDisposable(_bus);
 

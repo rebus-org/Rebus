@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Logging;
-using Rebus2.Serialization;
 
 namespace Rebus2.Dispatch
 {
@@ -37,13 +36,6 @@ namespace Rebus2.Dispatch
             await dispatchAwaitable;
         }
 
-        MethodInfo GetDispatchMethod(Type messageType)
-        {
-            return GetType()
-                .GetMethod("InnerDispatch", BindingFlags.NonPublic | BindingFlags.Instance)
-                .MakeGenericMethod(messageType);
-        }
-
         // ReSharper disable once UnusedMember.Local
         async Task InnerDispatch<TMessage>(TMessage message)
         {
@@ -53,6 +45,13 @@ namespace Rebus2.Dispatch
             {
                 await handler.Handle(message);
             }
+        }
+
+        MethodInfo GetDispatchMethod(Type messageType)
+        {
+            return GetType()
+                .GetMethod("InnerDispatch", BindingFlags.NonPublic | BindingFlags.Instance)
+                .MakeGenericMethod(messageType);
         }
     }
 }

@@ -9,4 +9,16 @@ namespace Rebus2.Transport
 
         event Action Committed;
     }
+
+    public static class AmbientTransactionContext
+    {
+        [ThreadStatic]
+        static ITransactionContext _current;
+
+        public static ITransactionContext Current
+        {
+            get { return _current; }
+            set { _current = value; }
+        }
+    }
 }

@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Rebus2.Activation;
-using Rebus2.Dispatch;
-using Rebus2.Extensions;
 using Rebus2.Logging;
-using Rebus2.Messages;
 using Rebus2.Pipeline;
 using Rebus2.Transport;
 
@@ -25,15 +19,14 @@ namespace Rebus2.Bus
         readonly ITransport _transport;
         readonly IPipelineManager _pipelineManager;
         readonly Thread _workerThread;
-        readonly Dispatcher _dispatcher;
+        readonly PipelineInvoker _pipelineInvoker = new PipelineInvoker();
 
         volatile bool _keepWorking = true;
 
-        public Worker(IHandlerActivator handlerActivator, ITransport transport, IPipelineManager pipelineManager, string workerName)
+        public Worker(ITransport transport, IPipelineManager pipelineManager, string workerName)
         {
             _transport = transport;
             _pipelineManager = pipelineManager;
-            _dispatcher = new Dispatcher(handlerActivator);
             _workerThread = new Thread(() =>
             {
                 while (_keepWorking)
@@ -59,6 +52,8 @@ namespace Rebus2.Bus
         {
             using (var transactionContext = new DefaultTransactionContext())
             {
+                AmbientTransactionContext.Current = transactionContext;
+
                 var message = _transport.Receive(transactionContext).Result;
 
                 if (message == null)
@@ -68,11 +63,10 @@ namespace Rebus2.Bus
                 }
 
                 var context = new StepContext(message);
+                transactionContext.Items[StepContext.StepContextKey] = context;
+                
                 var stagedReceiveSteps = _pipelineManager.ReceivePipeline();
-                new PipelineInvoker().Invoke(context, stagedReceiveSteps.Select(s => s.Step));
-
-                _log.Debug("Received message {0}", message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no ID>");
-                _dispatcher.Dispatch(message).Wait();
+                _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
             }
         }
 

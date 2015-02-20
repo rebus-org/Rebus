@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Rebus2.Extensions
 {
@@ -46,6 +47,24 @@ namespace Rebus2.Extensions
             this IEnumerable<TValue> items, Func<TValue, TKey> keyFunction)
         {
             return new ConcurrentDictionary<TKey, TValue>(items.Select(i => new KeyValuePair<TKey, TValue>(keyFunction(i), i)));
-        } 
+        }
+
+        public static T GetOrThrow<T>(this Dictionary<string, object> dictionary, string key)
+        {
+            object item;
+
+            if (!dictionary.TryGetValue(key, out item))
+            {
+                throw new KeyNotFoundException(string.Format("Could not find an item with the key '{0}'", key));
+            }
+
+            if (!(item is T))
+            {
+                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
+                    key, item.GetType(), typeof(T)));
+            }
+
+            return (T) item;
+        }
     }
 }
