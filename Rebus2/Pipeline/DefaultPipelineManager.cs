@@ -15,20 +15,20 @@ namespace Rebus2.Pipeline
             return _sendSteps.Select(s => s.Step);
         }
 
-        public IEnumerable<IStep> ReceivePipeline()
+        public IEnumerable<StagedReceiveStep> ReceivePipeline()
         {
-            return _receiveSteps.Select(s => s.Step);
+            return _receiveSteps.Select(s => new StagedReceiveStep(s.Step, (ReceiveStage)s.Stage));
         }
 
-        public DefaultPipelineManager Receive(IStep step)
+        public DefaultPipelineManager OnReceive(IStep step, ReceiveStage stage)
         {
-            _receiveSteps.Add(new RegisteredStep { Step = step });
+            _receiveSteps.Add(new RegisteredStep(step, (int)stage));
             return this;
         }
 
-        public DefaultPipelineManager Receive(Action<StepContext, Func<Task>> step, string stepDescription = null)
+        public DefaultPipelineManager OnReceive(Action<StepContext, Func<Task>> step, ReceiveStage stage, string stepDescription = null)
         {
-            return Receive(new StepContainer(step, stepDescription));
+            return OnReceive(new StepContainer(step, stepDescription), stage);
         }
 
         public class StepContainer : IStep
@@ -55,7 +55,14 @@ namespace Rebus2.Pipeline
 
         class RegisteredStep
         {
-            public IStep Step { get; set; }
+            public RegisteredStep(IStep step, int stage)
+            {
+                Step = step;
+                Stage = stage;
+            }
+
+            public IStep Step { get; private set; }
+            public int Stage { get; private set; }
         }
     }
 }

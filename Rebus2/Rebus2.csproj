@@ -71,6 +71,8 @@
     <Compile Include="Pipeline\IStep.cs" />
     <Compile Include="Pipeline\IPipelineManager.cs" />
     <Compile Include="Pipeline\PipelineInvoker.cs" />
+    <Compile Include="Pipeline\Receive\DeserializationStep.cs" />
+    <Compile Include="Pipeline\Receive\DispatchStep.cs" />
     <Compile Include="Routing\SimpleTypeBasedRouter.cs" />
     <Compile Include="Transport\ITransport.cs" />
     <Compile Include="Msmq\MsmqTransport.cs" />
@@ -85,7 +87,9 @@
     <Compile Include="Transport\DefaultTransactionContext.cs" />
     <Compile Include="Transport\ITransactionContext.cs" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Pipeline\Send\" />
+  </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

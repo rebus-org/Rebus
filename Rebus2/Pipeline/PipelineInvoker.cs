@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Rebus2.Pipeline
 {
+    /// <summary>
+    /// give me a pipeline and I'll invoke it
+    /// </summary>
     public class PipelineInvoker
     {
         public void Invoke(StepContext context, IEnumerable<IStep> pipeline)
@@ -21,7 +24,6 @@ namespace Rebus2.Pipeline
             }
 
             step();
-
         }
     }
 }

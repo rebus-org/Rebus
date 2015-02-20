@@ -34,7 +34,7 @@ namespace Rebus2.Bus
         {
             _transport = transport;
             _pipelineManager = pipelineManager;
-            _dispatcher = new Dispatcher(handlerActivator, serializer);
+            _dispatcher = new Dispatcher(handlerActivator);
             _workerThread = new Thread(() =>
             {
                 while (_keepWorking)
@@ -68,9 +68,9 @@ namespace Rebus2.Bus
                     return;
                 }
 
-
-                var context = new StepContext();
-                new PipelineInvoker().Invoke(context, _pipelineManager.ReceivePipeline());
+                var context = new StepContext(message);
+                var stagedReceiveSteps = _pipelineManager.ReceivePipeline();
+                new PipelineInvoker().Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                 _log.Debug("Received message {0}", message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no ID>");
                 _dispatcher.Dispatch(message).Wait();

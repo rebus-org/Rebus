@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus2.Messages;
 using Rebus2.Pipeline;
 
 namespace Tests.Pipeline
@@ -14,7 +16,7 @@ namespace Tests.Pipeline
         {
             var invoker = new PipelineInvoker();
 
-            var stepContext = new StepContext();
+            var stepContext = new StepContext(new TransportMessage(new Dictionary<string, string>(), new MemoryStream()));
 
             invoker.Invoke(stepContext, new IStep[]
             {

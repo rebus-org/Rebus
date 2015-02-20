@@ -1,15 +1,17 @@
-﻿namespace Rebus2.Routing
+﻿using Rebus2.Messages;
+
+namespace Rebus2.Routing
 {
     public interface IRouter
     {
         /// <summary>
         /// Called when sending messages
         /// </summary>
-        string GetDestinationAddress(object message);
+        string GetDestinationAddress(Message message);
 
         /// <summary>
         /// Called when subscribing to messages
         /// </summary>
-        string GetOwnerAddress(object message);
+        string GetOwnerAddress(Message message);
     }
 }

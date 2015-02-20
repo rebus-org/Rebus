@@ -74,16 +74,21 @@ namespace Rebus2.Bus
 
         public async Task Send(object message)
         {
-            var destinationAddress = _router.GetDestinationAddress(message);
-
             var headers = new Dictionary<string, string>();
-            var transportMessage = await _serializer.Serialize(new Message(headers, message));
+            var logicalMessage = new Message(headers, message);
+            var destinationAddress = _router.GetDestinationAddress(logicalMessage);
+
+            var transportMessage = await _serializer.Serialize(logicalMessage);
 
             using (var defaultTransactionContext = new DefaultTransactionContext())
             {
                 await _transport.Send(destinationAddress, transportMessage, defaultTransactionContext);
                 defaultTransactionContext.Commit();
             }
+        }
+
+        public async Task Reply(object message)
+        {
         }
 
         ~RebusBus()

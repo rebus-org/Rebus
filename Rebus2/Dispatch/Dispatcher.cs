@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Logging;
-using Rebus2.Messages;
-using Rebus2.Pipeline;
 using Rebus2.Serialization;
 
 namespace Rebus2.Dispatch
@@ -22,12 +19,10 @@ namespace Rebus2.Dispatch
 
         readonly ConcurrentDictionary<Type, MethodInfo> _dispatchMethods = new ConcurrentDictionary<Type, MethodInfo>();
         readonly IHandlerActivator _handlerActivator;
-        readonly ISerializer _serializer;
 
-        public Dispatcher(IHandlerActivator handlerActivator, ISerializer serializer)
+        public Dispatcher(IHandlerActivator handlerActivator)
         {
             _handlerActivator = handlerActivator;
-            _serializer = serializer;
         }
 
         public async Task Dispatch(object message)

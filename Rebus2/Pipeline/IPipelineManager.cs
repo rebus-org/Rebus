@@ -5,6 +5,24 @@ namespace Rebus2.Pipeline
     public interface IPipelineManager
     {
         IEnumerable<IStep> SendPipeline();
-        IEnumerable<IStep> ReceivePipeline();
+        IEnumerable<StagedReceiveStep> ReceivePipeline();
+    }
+
+    public class StagedReceiveStep
+    {
+        public StagedReceiveStep(IStep step, ReceiveStage stage)
+        {
+            Step = step;
+            Stage = stage;
+        }
+
+        public IStep Step { get; private set; }
+        public ReceiveStage Stage { get; private set; }
+    }
+
+    public enum ReceiveStage
+    {
+        TransportMessageReceived = 1000,
+        MessageDeserialized = 2000,
     }
 }

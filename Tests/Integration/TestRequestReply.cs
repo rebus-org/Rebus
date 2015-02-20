@@ -8,6 +8,7 @@ using Rebus2.Bus;
 using Rebus2.Logging;
 using Rebus2.Msmq;
 using Rebus2.Pipeline;
+using Rebus2.Pipeline.Receive;
 using Rebus2.Routing;
 using Rebus2.Serialization;
 using Tests.Extensions;
@@ -34,27 +35,15 @@ namespace Tests.Integration
             var router = new SimpleTypeBasedRouter().Map<string>(InputQueueName);
             var transport = new MsmqTransport(InputQueueName);
             var serializer = new JsonSerializer();
+            
             var pipelineManager = new DefaultPipelineManager()
-                .Receive(async (context, next) =>
-                {
-                    Console.WriteLine("First");
-                    await next();
-                }, "first")
-                .Receive(async (context, next) =>
-                {
-                    Console.WriteLine("Second");
-                    await next();
-                }, "second")
-                .Receive(async (context, next) =>
-                {
-                    Console.WriteLine("Third");
-                    await next();
-                }, "third");
+                .OnReceive(new DeserializationStep(serializer), ReceiveStage.TransportMessageReceived)
+                .OnReceive(new DispatchStep(_handlerActivator), ReceiveStage.MessageDeserialized);
 
             _bus = new RebusBus(_handlerActivator, router, transport, serializer, pipelineManager);
-            
+
             TrackDisposable(_bus);
-            
+
             _bus.Start();
         }
 
@@ -62,12 +51,21 @@ namespace Tests.Integration
         public async Task CanSendAndReceive()
         {
             var gotMessage = new ManualResetEvent(false);
-            
+
             _handlerActivator
                 .Handle<string>(async str =>
                 {
-                    Console.WriteLine("w00t!");
-                    gotMessage.Set();
+                    if (str == "hej med dig min ven!")
+                    {
+                        Console.WriteLine("w00t!");
+
+                        await _bus.Reply("t00t!");
+                    }
+
+                    if (str == "t00t!")
+                    {
+                        gotMessage.Set();
+                    }
                 });
 
             await _bus.Send("hej med dig min ven!");
