@@ -20,8 +20,8 @@ namespace Rebus2.Transport
 
         public void Commit()
         {
-            var handlers = Committed;
-            if (handlers != null) handlers();
+            var committed = Committed;
+            if (committed != null) committed();
         }
     }
 }

@@ -112,6 +112,8 @@ namespace Rebus2.Bus
 
         async Task InnerSend(string destinationAddress, Message logicalMessage)
         {
+            _log.Debug("Sending {0} -> {1}", logicalMessage.Body ?? "<empty message>", destinationAddress);
+
             var transportMessage = await _serializer.Serialize(logicalMessage);
 
             var currentTransactionContext = AmbientTransactionContext.Current;

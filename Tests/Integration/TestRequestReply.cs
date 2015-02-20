@@ -33,6 +33,11 @@ namespace Tests.Integration
             TrackDisposable(_bus);
         }
 
+        protected override void TearDown()
+        {
+            MsmqUtil.Delete(InputQueueName);
+        }
+
         [Test]
         public async Task CanSendAndReceive()
         {
@@ -50,13 +55,15 @@ namespace Tests.Integration
 
                     if (str == "t00t!")
                     {
+                        Console.WriteLine("got t++t!!!");
+
                         gotMessage.Set();
                     }
                 });
 
             await _bus.Send("hej med dig min ven!");
 
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(3));
+            gotMessage.WaitOrDie(TimeSpan.FromSeconds(30));
         }
     }
 }

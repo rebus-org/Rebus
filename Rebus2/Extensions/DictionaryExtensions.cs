@@ -16,11 +16,11 @@ namespace Rebus2.Extensions
         public static string GetValue(this Dictionary<string, string> dictionary, string key)
         {
             string value;
-            
-            if (dictionary.TryGetValue(key, out value)) 
+
+            if (dictionary.TryGetValue(key, out value))
                 return value;
 
-            throw new KeyNotFoundException(string.Format("Could not find the key '{0}' - have the following keys only: {1}", 
+            throw new KeyNotFoundException(string.Format("Could not find the key '{0}' - have the following keys only: {1}",
                 key, dictionary.Keys.Select(k => string.Format("'{0}'", k))));
         }
 
@@ -33,7 +33,7 @@ namespace Rebus2.Extensions
                 : null;
         }
 
-        public static T GetOrAdd<T, U>(this Dictionary<string, U> dictionary, string key, Func<T> newItemFactory) where T:U
+        public static T GetOrAdd<T, U>(this Dictionary<string, U> dictionary, string key, Func<T> newItemFactory) where T : U
         {
             U item;
             if (dictionary.TryGetValue(key, out item)) return (T)item;
@@ -64,7 +64,25 @@ namespace Rebus2.Extensions
                     key, item.GetType(), typeof(T)));
             }
 
-            return (T) item;
+            return (T)item;
+        }
+
+        public static T GetOrNull<T>(this Dictionary<string, object> dictionary, string key) where T : class
+        {
+            object item;
+
+            if (!dictionary.TryGetValue(key, out item))
+            {
+                return default(T);
+            }
+
+            if (!(item is T))
+            {
+                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
+                    key, item.GetType(), typeof(T)));
+            }
+
+            return (T)item;
         }
     }
 }

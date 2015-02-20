@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Messaging;
+using System.Security.Principal;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus2.Bus;
@@ -15,6 +17,7 @@ namespace Rebus2.Msmq
     public class MsmqTransport : ITransport, IInitializable
     {
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
+        const string CurrentMessageQueueKey = "msmqtransport-messagequeue";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
 
@@ -27,8 +30,8 @@ namespace Rebus2.Msmq
 
         static string MakeGloballyAddressable(string inputQueueName)
         {
-            return inputQueueName.Contains("@") 
-                ? inputQueueName 
+            return inputQueueName.Contains("@")
+                ? inputQueueName
                 : string.Format("{0}@{1}", inputQueueName, Environment.MachineName);
         }
 
@@ -39,18 +42,25 @@ namespace Rebus2.Msmq
 
         public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
         {
+            var message = new Message
+            {
+                Extension = _extensionSerializer.Serialize(msg.Headers),
+                BodyStream = msg.Body,
+                UseJournalQueue = false,
+                Recoverable = true,
+            };
+
+            var messageQueueTransaction = GetOrCreateTransaction(context);
+            var currentQueue = context.Items.GetOrNull<MessageQueue>(CurrentMessageQueueKey);
+
+            if (currentQueue != null)
+            {
+                currentQueue.Send(message, messageQueueTransaction);
+                return;
+            }
+
             using (var queue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send))
             {
-                var message = new Message
-                {
-                    Extension = _extensionSerializer.Serialize(msg.Headers),
-                    BodyStream = msg.Body,
-                    UseJournalQueue = false,
-                    Recoverable = true,
-                };
-
-                var messageQueueTransaction = GetOrCreateTransaction(context);
-
                 queue.Send(message, messageQueueTransaction);
             }
         }
@@ -67,12 +77,19 @@ namespace Rebus2.Msmq
             var messageQueueTransaction = new MessageQueueTransaction();
             messageQueueTransaction.Begin();
 
+            context.Committed += messageQueueTransaction.Commit;
+
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
+            context.Items[CurrentMessageQueueKey] = queue;
 
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(1));
-                if (message == null) return null;
+                var message = queue.Receive(TimeSpan.FromSeconds(1), messageQueueTransaction);
+                if (message == null)
+                {
+                    messageQueueTransaction.Abort();
+                    return null;
+                }
 
                 var headers = _extensionSerializer.Deserialize(message.Extension);
 
@@ -103,13 +120,20 @@ namespace Rebus2.Msmq
                 if (_inputQueue != null) return _inputQueue;
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
-                
+
                 if (!MessageQueue.Exists(inputQueuePath))
                 {
                     var newQueue = MessageQueue.Create(inputQueuePath, true);
+
+                    newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                                               MessageQueueAccessRights.GenericWrite);
+
+                    var administratorAccountName = GetAdministratorAccountName();
+
+                    newQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
                 }
 
-                _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.ReceiveAndAdmin)
+                _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {
                     MessageReadPropertyFilter = new MessagePropertyFilter
                     {
@@ -123,15 +147,29 @@ namespace Rebus2.Msmq
             }
         }
 
+        static string GetAdministratorAccountName()
+        {
+            try
+            {
+                return new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
+                    .Translate(typeof(NTAccount))
+                    .ToString();
+            }
+            catch (Exception e)
+            {
+                throw new ApplicationException(string.Format("An error occurred while attempting to figure out the name of the local administrators group!"), e);
+            }
+        }
+
         MessageQueueTransaction GetOrCreateTransaction(ITransactionContext context)
         {
             return context.Items.GetOrAdd(CurrentTransactionKey, () =>
             {
                 var messageQueueTransaction = new MessageQueueTransaction();
                 messageQueueTransaction.Begin();
-                
+
                 context.Committed += messageQueueTransaction.Commit;
-                
+
                 return messageQueueTransaction;
             });
         }

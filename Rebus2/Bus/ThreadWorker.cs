@@ -52,21 +52,30 @@ namespace Rebus2.Bus
         {
             using (var transactionContext = new DefaultTransactionContext())
             {
-                AmbientTransactionContext.Current = transactionContext;
-
-                var message = _transport.Receive(transactionContext).Result;
-
-                if (message == null)
+                try
                 {
-                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                    return;
-                }
+                    AmbientTransactionContext.Current = transactionContext;
 
-                var context = new StepContext(message);
-                transactionContext.Items[StepContext.StepContextKey] = context;
-                
-                var stagedReceiveSteps = _pipeline.ReceivePipeline();
-                _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+                    var message = _transport.Receive(transactionContext).Result;
+
+                    if (message == null)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                        return;
+                    }
+
+                    var context = new StepContext(message);
+                    transactionContext.Items[StepContext.StepContextKey] = context;
+
+                    var stagedReceiveSteps = _pipeline.ReceivePipeline();
+                    _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+
+                    transactionContext.Commit();
+                }
+                finally
+                {
+                    AmbientTransactionContext.Current = null;
+                }
             }
         }
 
