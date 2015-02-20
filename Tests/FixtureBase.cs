@@ -1,17 +1,19 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Collections.Generic;
+using NUnit.Framework;
 
 namespace Tests
 {
     public abstract class FixtureBase
     {
+        readonly List<IDisposable> _disposables = new List<IDisposable>();
+
         [SetUp]
         public void _SetUp()
         {
-            SetUp();
-        }
+            _disposables.Clear();
 
-        protected virtual void SetUp()
-        {
+            SetUp();
         }
 
         [TearDown]
@@ -20,8 +22,29 @@ namespace Tests
             TearDown();
         }
 
+        protected virtual void SetUp()
+        {
+        }
+
+        protected TDisposable TrackDisposable<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
+        {
+            _disposables.Add(disposable);
+            return disposable;
+        }
+
         protected virtual void TearDown()
         {
+            CleanUpDisposables();
+        }
+
+        protected void CleanUpDisposables()
+        {
+            _disposables.ForEach(d =>
+            {
+                Console.WriteLine("Disposing {0}", d);
+                d.Dispose();
+            });
+            _disposables.Clear();
         }
     }
 }
