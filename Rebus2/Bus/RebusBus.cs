@@ -131,7 +131,7 @@ namespace Rebus2.Bus
             {
                 var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
-                _workers.Add(new Worker(_handlerActivator, _transport, _serializer, workerName, _pipelineManager));
+                _workers.Add(new Worker(_handlerActivator, _transport, _pipelineManager, workerName));
             }
         }
 

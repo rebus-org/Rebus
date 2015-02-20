@@ -9,7 +9,6 @@ using Rebus2.Extensions;
 using Rebus2.Logging;
 using Rebus2.Messages;
 using Rebus2.Pipeline;
-using Rebus2.Serialization;
 using Rebus2.Transport;
 
 namespace Rebus2.Bus
@@ -30,7 +29,7 @@ namespace Rebus2.Bus
 
         volatile bool _keepWorking = true;
 
-        public Worker(IHandlerActivator handlerActivator, ITransport transport, ISerializer serializer, string workerName, IPipelineManager pipelineManager)
+        public Worker(IHandlerActivator handlerActivator, ITransport transport, IPipelineManager pipelineManager, string workerName)
         {
             _transport = transport;
             _pipelineManager = pipelineManager;

@@ -29,9 +29,12 @@ namespace Rebus2.Dispatch
         {
             var messageType = message.GetType();
 
-            _dispatchMethods
-                .GetOrAdd(messageType, type => GetDispatchMethod(messageType))
-                .Invoke(this, new[] {message});
+            var methodToInvoke = _dispatchMethods
+                .GetOrAdd(messageType, type => GetDispatchMethod(messageType));
+
+            var dispatchAwaitable = (Task)methodToInvoke.Invoke(this, new[] { message });
+
+            await dispatchAwaitable;
         }
 
         MethodInfo GetDispatchMethod(Type messageType)
@@ -42,9 +45,14 @@ namespace Rebus2.Dispatch
         }
 
         // ReSharper disable once UnusedMember.Local
-        void InnerDispatch<TMessage>(TMessage message)
+        async Task InnerDispatch<TMessage>(TMessage message)
         {
             _log.Info("Dispatching message {0}", message);
+
+            foreach (var handler in _handlerActivator.GetHandlers<TMessage>())
+            {
+                await handler.Handle(message);
+            }
         }
     }
 }
