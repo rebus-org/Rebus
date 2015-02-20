@@ -10,7 +10,7 @@ namespace Rebus2.Pipeline
     /// </summary>
     public class PipelineInvoker
     {
-        public void Invoke(StepContext context, IEnumerable<IStep> pipeline)
+        public async Task Invoke(StepContext context, IEnumerable<IStep> pipeline)
         {
             var receivePipeline = pipeline.ToList();
 
@@ -20,10 +20,10 @@ namespace Rebus2.Pipeline
             {
                 var nextStep = step;
                 var stepToInvoke = receivePipeline[index];
-                step = () => stepToInvoke.Process(context, () => nextStep());
+                step = async () => await stepToInvoke.Process(context, async () => await nextStep());
             }
 
-            step();
+            await step();
         }
     }
 }

@@ -50,6 +50,7 @@
     <Compile Include="Bus\IWorker.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Bus\ThreadWorker.cs" />
+    <Compile Include="Bus\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\OptionsConfigurer.cs" />

@@ -50,6 +50,7 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Extensions\TestEx.cs" />
     <Compile Include="FixtureBase.cs" />
+    <Compile Include="Integration\TestAsyncHandler.cs" />
     <Compile Include="Integration\TestRequestReply.cs" />
     <Compile Include="Msmq\TestMsmqTransport.cs" />
     <Compile Include="Pipeline\TestPipelineInvoker.cs" />

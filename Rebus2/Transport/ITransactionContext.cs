@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
 
 namespace Rebus2.Transport
 {
@@ -12,13 +13,18 @@ namespace Rebus2.Transport
 
     public static class AmbientTransactionContext
     {
-        [ThreadStatic]
-        static ITransactionContext _current;
+        const string TransactionContextKey = "current-transaction-context";
 
         public static ITransactionContext Current
         {
-            get { return _current; }
-            set { _current = value; }
+            get
+            {
+                return CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
+            }
+            set
+            {
+                CallContext.LogicalSetData(TransactionContextKey, value);
+            }
         }
     }
 }
