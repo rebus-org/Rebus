@@ -73,6 +73,11 @@ namespace Rebus2.Msmq
             }
             catch (MessageQueueException exception)
             {
+                if (exception.MessageQueueErrorCode == MessageQueueErrorCode.IOTimeout)
+                {
+                    return null;
+                }
+
                 throw;
             }
         }
@@ -92,7 +97,15 @@ namespace Rebus2.Msmq
                     var newQueue = MessageQueue.Create(inputQueuePath, true);
                 }
 
-                _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.ReceiveAndAdmin);
+                _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.ReceiveAndAdmin)
+                {
+                    MessageReadPropertyFilter = new MessagePropertyFilter
+                    {
+                        Id = true,
+                        Extension = true,
+                        Body = true,
+                    }
+                };
 
                 return _inputQueue;
             }

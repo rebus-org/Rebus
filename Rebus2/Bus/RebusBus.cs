@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Extensions;
+using Rebus2.Logging;
 using Rebus2.Messages;
 using Rebus2.Routing;
 using Rebus2.Serialization;
@@ -14,6 +15,13 @@ namespace Rebus2.Bus
 {
     public class RebusBus : IDisposable
     {
+        static ILog _log;
+
+        static RebusBus()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
         readonly List<Worker> _workers = new List<Worker>();
         readonly IHandlerActivator _handlerActivator;
         readonly IRouter _router;
@@ -31,11 +39,19 @@ namespace Rebus2.Bus
 
         public void Start()
         {
+            _log.Info("Starting bus");
+
             InjectedServicesWhoseLifetimeToControl
                 .OfType<IInitializable>()
-                .ForEach(i => i.Initialize());
+                .ForEach(i =>
+                {
+                    _log.Debug("Initializing {0}", i);
+                    i.Initialize();
+                });
 
             SetNumberOfWorkers(10);
+
+            _log.Info("Started");
         }
 
         IEnumerable InjectedServicesWhoseLifetimeToControl
@@ -46,7 +62,7 @@ namespace Rebus2.Bus
                 yield return _transport;
                 yield return _serializer;
             }
-        } 
+        }
 
         public async Task Send(object message)
         {
@@ -54,7 +70,7 @@ namespace Rebus2.Bus
 
             var headers = new Dictionary<string, string>();
             var transportMessage = await _serializer.Serialize(new Message(headers, message));
-            
+
             using (var defaultTransactionContext = new DefaultTransactionContext())
             {
                 await _transport.Send(destinationAddress, transportMessage, defaultTransactionContext);
@@ -77,7 +93,13 @@ namespace Rebus2.Bus
         {
             if (disposing)
             {
-                
+
+            }
+
+            // signal to all the workers that they must stop
+            lock (_workers)
+            {
+                _workers.ForEach(w => w.Stop());
             }
 
             SetNumberOfWorkers(0);
@@ -85,6 +107,7 @@ namespace Rebus2.Bus
 
         void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {
+            _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > _workers.Count) AddWorker();
             while (desiredNumberOfWorkers < _workers.Count) RemoveWorker();
         }
@@ -93,7 +116,9 @@ namespace Rebus2.Bus
         {
             lock (_workers)
             {
-                _workers.Add(new Worker(_handlerActivator, _transport, _serializer));
+                var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
+                _log.Debug("Adding worker {0}", workerName);
+                _workers.Add(new Worker(_handlerActivator, _transport, _serializer, workerName));
             }
         }
 
@@ -103,12 +128,13 @@ namespace Rebus2.Bus
             {
                 if (_workers.Count == 0) return;
 
+                _log.Debug("Removing worker");
                 using (var lastWorker = _workers.Last())
                 {
                     _workers.Remove(lastWorker);
                 }
             }
-            
+
         }
     }
 }

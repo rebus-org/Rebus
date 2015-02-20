@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading;
-using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Dispatch;
+using Rebus2.Extensions;
+using Rebus2.Logging;
 using Rebus2.Messages;
 using Rebus2.Serialization;
 using Rebus2.Transport;
@@ -11,20 +12,23 @@ namespace Rebus2.Bus
 {
     public class Worker : IDisposable
     {
-        readonly IHandlerActivator _handlerActivator;
+        static ILog _log;
+
+        static Worker()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
         readonly ITransport _transport;
-        readonly ISerializer _serializer;
         readonly Thread _workerThread;
         readonly Dispatcher _dispatcher;
 
-        volatile bool _keepWorking;
+        volatile bool _keepWorking = true;
 
-        public Worker(IHandlerActivator handlerActivator, ITransport transport, ISerializer serializer)
+        public Worker(IHandlerActivator handlerActivator, ITransport transport, ISerializer serializer, string workerName)
         {
-            _handlerActivator = handlerActivator;
             _transport = transport;
-            _serializer = serializer;
-            _dispatcher = new Dispatcher();
+            _dispatcher = new Dispatcher(handlerActivator, serializer);
             _workerThread = new Thread(() =>
             {
                 while (_keepWorking)
@@ -35,34 +39,37 @@ namespace Rebus2.Bus
                     }
                     catch (Exception exception)
                     {
-                        
+                        _log.Error(exception, "Error while attempting to do work");
                     }
                 }
-            });
+            })
+            {
+                Name = workerName
+            };
+            _log.Debug("Starting worker {0}", workerName);
             _workerThread.Start();
         }
 
         void DoWork()
         {
-            try
+            using (var transactionContext = new DefaultTransactionContext())
             {
-                using (var transactionContext = new DefaultTransactionContext())
+                var message = _transport.Receive(transactionContext).Result;
+
+                if (message == null)
                 {
-                    var message = _transport.Receive(transactionContext).Result;
-
-                    if (message == null)
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
-                        return;
-                    }
-
-                    _dispatcher.Dispatch(message).Wait();
+                    Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                    return;
                 }
+
+                _log.Debug("Received message {0}", message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no ID>");
+                _dispatcher.Dispatch(message).Wait();
             }
-            catch (Exception exception)
-            {
-                
-            }
+        }
+
+        public void Stop()
+        {
+            _keepWorking = false;
         }
 
         public void Dispose()

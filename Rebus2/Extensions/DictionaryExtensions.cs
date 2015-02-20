@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Rebus2.Extensions
 {
@@ -22,6 +21,15 @@ namespace Rebus2.Extensions
 
             throw new KeyNotFoundException(string.Format("Could not find the key '{0}' - have the following keys only: {1}", 
                 key, dictionary.Keys.Select(k => string.Format("'{0}'", k))));
+        }
+
+        public static string GetValueOrNull(this Dictionary<string, string> dictionary, string key)
+        {
+            string value;
+
+            return dictionary.TryGetValue(key, out value)
+                ? value
+                : null;
         }
 
         public static T GetOrAdd<T, U>(this Dictionary<string, U> dictionary, string key, Func<T> newItemFactory) where T:U

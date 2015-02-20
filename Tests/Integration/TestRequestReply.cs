@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Bus;
+using Rebus2.Logging;
 using Rebus2.Msmq;
 using Rebus2.Routing;
 using Rebus2.Serialization;
@@ -12,11 +13,17 @@ namespace Tests.Integration
     [TestFixture]
     public class TestRequestReply : FixtureBase
     {
-        RebusBus _bus;
         const string InputQueueName = "test.input";
+
+        RebusBus _bus;
 
         protected override void SetUp()
         {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
+            {
+                MinLevel = LogLevel.Debug
+            };
+
             var handlerActivator = new BuiltinHandlerActivator()
                 .Handle<string>(async str =>
                 {
