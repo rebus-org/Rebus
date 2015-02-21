@@ -1,7 +1,6 @@
 ﻿using Rebus2.Config;
-using Rebus2.Transport;
 
-namespace Rebus2.Msmq
+namespace Rebus2.Transport.Msmq
 {
     public static class MsmqTransportConfigurationExtensions
     {

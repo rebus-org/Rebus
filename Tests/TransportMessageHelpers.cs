@@ -2,7 +2,6 @@
 using System.IO;
 using System.Text;
 using Rebus2.Messages;
-using Rebus2.Msmq;
 
 namespace Tests
 {

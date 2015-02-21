@@ -9,8 +9,8 @@ using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus2.Extensions;
-using Rebus2.Msmq;
 using Rebus2.Transport;
+using Rebus2.Transport.Msmq;
 using Tests.Extensions;
 using Timer = System.Timers.Timer;
 

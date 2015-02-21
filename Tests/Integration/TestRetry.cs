@@ -4,8 +4,8 @@ using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
-using Rebus2.Msmq;
 using Rebus2.Routing.TypeBased;
+using Rebus2.Transport.Msmq;
 
 namespace Tests.Integration
 {

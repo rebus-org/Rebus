@@ -4,7 +4,7 @@ using System.Messaging;
 using System.Security.Principal;
 using System.Threading;
 
-namespace Rebus2.Msmq
+namespace Rebus2.Transport.Msmq
 {
     public static class MsmqUtil
     {

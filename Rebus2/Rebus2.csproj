@@ -74,7 +74,7 @@
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="Messages\Headers.cs" />
-    <Compile Include="Msmq\MsmqTransportConfigurationExtensions.cs" />
+    <Compile Include="Transport\Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Pipeline\DefaultPipeline.cs" />
     <Compile Include="Pipeline\IPipelineInvoker.cs" />
     <Compile Include="Pipeline\IStep.cs" />
@@ -88,9 +88,9 @@
     <Compile Include="Routing\TypeBased\SimpleTypeBasedRouter.cs" />
     <Compile Include="Routing\TypeBased\SimpleTypeBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Transport\ITransport.cs" />
-    <Compile Include="Msmq\MsmqTransport.cs" />
+    <Compile Include="Transport\Msmq\MsmqTransport.cs" />
     <Compile Include="Messages\TransportMessage.cs" />
-    <Compile Include="Msmq\MsmqUtil.cs" />
+    <Compile Include="Transport\Msmq\MsmqUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions\DictionaryExtensions.cs" />
     <Compile Include="Routing\IRouter.cs" />

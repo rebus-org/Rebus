@@ -9,10 +9,9 @@ using Newtonsoft.Json;
 using Rebus2.Bus;
 using Rebus2.Extensions;
 using Rebus2.Messages;
-using Rebus2.Transport;
 using Message = System.Messaging.Message;
 
-namespace Rebus2.Msmq
+namespace Rebus2.Transport.Msmq
 {
     public class MsmqTransport : ITransport, IInitializable
     {
