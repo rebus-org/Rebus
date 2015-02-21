@@ -40,7 +40,7 @@ namespace Rebus2.Serialization
             using (var reader = new StreamReader(transportMessage.Body, DefaultEncoding))
             {
                 var bodyString = await reader.ReadToEndAsync();
-                var bodyObject = JsonConvert.DeserializeObject(bodyString);
+                var bodyObject = JsonConvert.DeserializeObject(bodyString, Settings);
                 var headers = transportMessage.Headers.Clone();
                 return new Message(headers, bodyObject);
             }

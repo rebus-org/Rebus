@@ -158,7 +158,7 @@ namespace Rebus2.Bus
             SetNumberOfWorkers(0);
         }
 
-        void SetNumberOfWorkers(int desiredNumberOfWorkers)
+        public void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {
             _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > _workers.Count) AddWorker();

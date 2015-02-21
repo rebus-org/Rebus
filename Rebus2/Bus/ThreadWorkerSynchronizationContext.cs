@@ -13,10 +13,12 @@ namespace Rebus2.Bus
         public override void Post(SendOrPostCallback d, object state)
         {
             var context = AmbientTransactionContext.Current;
+            
             if (context == null)
             {
                 throw new InvalidOperationException("Attempted to Post without a transaction context, but that should not be possible!");
             }
+            
             _callbacks.Enqueue(Tuple.Create(d, state, context));
         }
 
