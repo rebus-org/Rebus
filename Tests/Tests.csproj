@@ -49,6 +49,7 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Extensions\TestEx.cs" />
+    <Compile Include="Extensions\TestTransportEx.cs" />
     <Compile Include="FixtureBase.cs" />
     <Compile Include="Integration\TestAsyncHandler.cs" />
     <Compile Include="Integration\TestConfigurationApi.cs" />

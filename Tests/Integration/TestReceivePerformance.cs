@@ -33,7 +33,7 @@ namespace Tests.Integration
 
             var bus = (RebusBus)Configure.With(activator)
                 .Logging(l => l.None())
-                .Transport(t => t.UseMsmq(InputQueueName, "test.error"))
+                .Transport(t => t.UseMsmq(InputQueueName))
                 .Routing(t => t.SimpleTypeBased().Map<SomeMessage>(InputQueueName))
                 .Options(o => o.SetNumberOfWorkers(0))
                 .Start();

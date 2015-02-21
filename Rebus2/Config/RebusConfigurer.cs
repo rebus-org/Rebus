@@ -6,6 +6,8 @@ using Rebus2.Logging;
 using Rebus2.Pipeline;
 using Rebus2.Pipeline.Receive;
 using Rebus2.Pipeline.Send;
+using Rebus2.Retry;
+using Rebus2.Retry.Simple;
 using Rebus2.Routing;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Serialization;
@@ -44,7 +46,7 @@ namespace Rebus2.Config
 
         public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
         {
-            configurer(new OptionsConfigurer(_options));
+            configurer(new OptionsConfigurer(_options, _injectionist));
             return this;
         }
 
@@ -58,9 +60,13 @@ namespace Rebus2.Config
 
             PossiblyRegisterDefault<IWorkerFactory>(c => new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>()));
 
+            PossiblyRegisterDefault<IRetryStrategy>(c => new SimpleRetryStrategy(c.Get<ITransport>(), c.Get<SimpleRetryStrategySettings>()));
+
+            PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
+
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
-                .OnReceive(new SimpleRetryStrategyStep(c.Get<ITransport>()), ReceiveStage.TransportMessageReceived)
+                .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializationStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DispatchStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized)
 
@@ -71,7 +77,8 @@ namespace Rebus2.Config
 
             PossiblyRegisterDefault<IBus>(c =>
             {
-                var bus = new RebusBus(c.Get<IWorkerFactory>(),
+                var bus = new RebusBus(
+                    c.Get<IWorkerFactory>(),
                     c.Get<IRouter>(),
                     c.Get<ITransport>(),
                     c.Get<ISerializer>(),

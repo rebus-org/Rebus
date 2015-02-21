@@ -19,6 +19,8 @@ namespace Tests
         [TearDown]
         public void _TearDown()
         {
+            CleanUpDisposables();
+
             TearDown();
         }
 
@@ -34,7 +36,6 @@ namespace Tests
 
         protected virtual void TearDown()
         {
-            CleanUpDisposables();
         }
 
         protected void CleanUpDisposables()

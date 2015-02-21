@@ -13,7 +13,7 @@ using Message = System.Messaging.Message;
 
 namespace Rebus2.Transport.Msmq
 {
-    public class MsmqTransport : ITransport, IInitializable
+    public class MsmqTransport : ITransport, IInitializable, IDisposable
     {
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
@@ -26,6 +26,11 @@ namespace Rebus2.Transport.Msmq
             if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
 
             _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
+        }
+
+        ~MsmqTransport()
+        {
+            Dispose(false);
         }
 
         static string MakeGloballyAddressable(string inputQueueName)
@@ -185,6 +190,20 @@ namespace Rebus2.Transport.Msmq
             public Dictionary<string, string> Deserialize(byte[] bytes)
             {
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_inputQueue != null)
+            {
+                _inputQueue.Dispose();
+                _inputQueue = null;
             }
         }
     }

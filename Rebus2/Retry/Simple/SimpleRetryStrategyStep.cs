@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 using Rebus2.Extensions;
 using Rebus2.Logging;
 using Rebus2.Messages;
+using Rebus2.Pipeline;
 using Rebus2.Transport;
 
-namespace Rebus2.Pipeline.Receive
+namespace Rebus2.Retry.Simple
 {
     public class SimpleRetryStrategyStep : IStep
     {
@@ -21,11 +22,13 @@ namespace Rebus2.Pipeline.Receive
         }
 
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
+        readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
         readonly ITransport _transport;
 
-        public SimpleRetryStrategyStep(ITransport transport)
+        public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings)
         {
             _transport = transport;
+            _simpleRetryStrategySettings = simpleRetryStrategySettings;
         }
 
         public async Task Process(StepContext context, Func<Task> next)
@@ -85,7 +88,7 @@ namespace Rebus2.Pipeline.Receive
             headers[Headers.SourceQueue] = _transport.Address;
 
             var moveToErrorQueueFailed = false;
-            var errorQueueAddress = "error";
+            var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
 
             try
             {
@@ -111,7 +114,7 @@ namespace Rebus2.Pipeline.Receive
             ErrorTracking existingTracking;
             
             return _trackedErrors.TryGetValue(messageId, out existingTracking)
-                   && existingTracking.ErrorCount >= 5;
+                   && existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
         }
 
         class ErrorTracking
