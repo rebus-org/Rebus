@@ -19,7 +19,7 @@ namespace Rebus2.Pipeline.Receive
         {
             var message = context.Load<Message>();
             
-            await _dispatcher.Dispatch(message.Body);
+            await _dispatcher.Dispatch(message);
             
             await next();
         }

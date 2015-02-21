@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using Rebus2.Logging;
 
 namespace Tests
 {
@@ -11,9 +12,19 @@ namespace Tests
         [SetUp]
         public void _SetUp()
         {
+            AdjustLogging(LogLevel.Debug);
+
             _disposables.Clear();
 
             SetUp();
+        }
+
+        protected static void AdjustLogging(LogLevel minLevel)
+        {
+            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
+            {
+                MinLevel = minLevel
+            };
         }
 
         [TearDown]

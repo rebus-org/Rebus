@@ -4,6 +4,7 @@ using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Injection;
 using Rebus2.Logging;
+using Rebus2.Persistence.InMem;
 using Rebus2.Pipeline;
 using Rebus2.Pipeline.Receive;
 using Rebus2.Pipeline.Send;
@@ -62,6 +63,13 @@ namespace Rebus2.Config
 
             PossiblyRegisterDefault<IRouter>(c => new SimpleTypeBasedRouter());
 
+            PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage(
+                c.Get<IRouter>(), 
+                c.Get<ITransport>(), 
+                c.Get<IPipeline>(), 
+                c.Get<IPipelineInvoker>(), 
+                c.Get<ISerializer>()));
+            
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
@@ -91,7 +99,8 @@ namespace Rebus2.Config
                     c.Get<ITransport>(),
                     c.Get<ISerializer>(),
                     c.Get<IPipeline>(),
-                    c.Get<IPipelineInvoker>());
+                    c.Get<IPipelineInvoker>(),
+                    c.Get<ISubscriptionStorage>());
 
                 bus.Start(_options.NumberOfWorkers);
 

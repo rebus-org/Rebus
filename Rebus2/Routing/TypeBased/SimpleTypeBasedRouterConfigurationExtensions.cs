@@ -26,6 +26,12 @@ namespace Rebus2.Routing.TypeBased
                 _router.Map<TMessage>(destinationAddress);
                 return this;
             }
+
+            public SimpleTypeBasedRouterConfigurationBuilder Map(string topic, string ownerAddress)
+            {
+                _router.Map(topic, ownerAddress);
+                return this;
+            }
         }
     }
 }

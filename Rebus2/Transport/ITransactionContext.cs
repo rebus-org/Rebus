@@ -10,8 +10,10 @@ namespace Rebus2.Transport
 
         event Action Committed;
 
+        event Action Aborted;
+
         event Action Cleanup;
-        
+   
         void Abort();
     }
 

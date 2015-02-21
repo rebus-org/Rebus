@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
+using Rebus2.Extensions;
 using Rebus2.Messages;
 
 namespace Rebus2.Transport.InMem
@@ -9,17 +11,40 @@ namespace Rebus2.Transport.InMem
     /// </summary>
     public class InMemNetwork
     {
+        static int NetworkId;
+
+        readonly string _networkId;
+
         readonly ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>> _queues = 
             new ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>>(StringComparer.InvariantCultureIgnoreCase);
+
+        readonly bool _outputEventsToConsole;
+
+        public InMemNetwork(bool outputEventsToConsole = false)
+        {
+            _networkId = string.Format("In-mem network {0}", Interlocked.Increment(ref NetworkId));
+            _outputEventsToConsole = outputEventsToConsole;
+
+            if (_outputEventsToConsole)
+            {
+                Console.WriteLine("Created in-mem network '{0}'", _networkId);
+            }
+        }
 
         public void Deliver(string destinationAddress, TransportMessage msg)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
             if (msg == null) throw new ArgumentNullException("msg");
 
-            _queues
-                .GetOrAdd(destinationAddress, address => new ConcurrentQueue<TransportMessage>())
-                .Enqueue(msg);
+            if (_outputEventsToConsole)
+            {
+                Console.WriteLine("{0} -> {1} ({2})", msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", destinationAddress, _networkId);
+            }
+
+            var messageQueue = _queues
+                .GetOrAdd(destinationAddress, address => new ConcurrentQueue<TransportMessage>());
+
+            messageQueue.Enqueue(msg);
         }
 
         public TransportMessage GetNextOrNull(string inputQueueName)
@@ -28,11 +53,26 @@ namespace Rebus2.Transport.InMem
 
             TransportMessage message;
 
-            return _queues
-                .GetOrAdd(inputQueueName, address => new ConcurrentQueue<TransportMessage>())
-                .TryDequeue(out message)
-                ? message
-                : null;
+            var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<TransportMessage>());
+
+            if (!messageQueue.TryDequeue(out message)) return null;
+
+            if (_outputEventsToConsole)
+            {
+                Console.WriteLine("{0} -> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
+            }
+
+            return message;
+        }
+
+        public bool HasQueue(string address)
+        {
+            return _queues.ContainsKey(address);
+        }
+
+        public void CreateQueue(string address)
+        {
+            _queues.TryAdd(address, new ConcurrentQueue<TransportMessage>());
         }
     }
 }

@@ -9,5 +9,6 @@ namespace Rebus2.Bus
         Task Reply(object replyMessage);
         
         Task Publish(string topic, object eventMessage);
+        Task Subscribe(string topic);
     }
 }

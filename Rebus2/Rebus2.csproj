@@ -74,11 +74,15 @@
     <Compile Include="Logging\NullLoggerFactory.cs" />
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
+    <Compile Include="Messages\Control\SubscribeRequest.cs" />
+    <Compile Include="Messages\Control\UnsubscribeRequest.cs" />
     <Compile Include="Messages\Headers.cs" />
+    <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
     <Compile Include="Retry\IRetryStrategy.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrageConfigurationExtensions.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
+    <Compile Include="Routing\ISubscriptionStorage.cs" />
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />
     <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />

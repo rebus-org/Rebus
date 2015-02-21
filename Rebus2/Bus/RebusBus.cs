@@ -31,16 +31,17 @@ namespace Rebus2.Bus
         readonly ISerializer _serializer;
         readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly ISubscriptionStorage _subscriptionStorage;
 
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline, IPipelineInvoker pipelineInvoker)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage)
         {
-            // we do not control the lifetime of the handler activator - it controls us!
             _workerFactory = workerFactory;
             _router = router;
             _transport = transport;
             _serializer = serializer;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
+            _subscriptionStorage = subscriptionStorage;
         }
 
         public IBus Start(int numberOfWorkers)
@@ -69,6 +70,10 @@ namespace Rebus2.Bus
                 yield return _router;
                 yield return _transport;
                 yield return _serializer;
+                yield return _pipeline;
+                yield return _pipelineInvoker;
+                yield return _subscriptionStorage;
+                yield return _workerFactory;
             }
         }
 
@@ -76,23 +81,18 @@ namespace Rebus2.Bus
         {
             var headers = new Dictionary<string, string>();
             var logicalMessage = new Message(headers, commandMessage);
-            var destinationAddress = _router.GetDestinationAddress(logicalMessage);
+            var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
-            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
-
-            await InnerSend(destinationAddress, logicalMessage);
+            await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
         public async Task Publish(string topic, object eventMessage)
         {
             var headers = new Dictionary<string, string>();
             var logicalMessage = new Message(headers, eventMessage);
-            var subscribers = _router.GetSubscribers(topic);
+            var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
 
-            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
-
-            await Task.WhenAll(subscribers
-                .Select(subscriberAddress => InnerSend(subscriberAddress, logicalMessage)));
+            await InnerSend(subscriberAddresses, logicalMessage);
         }
 
         public async Task Reply(object replyMessage)
@@ -112,9 +112,17 @@ namespace Rebus2.Bus
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
-            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
+            await InnerSend(new[] { returnAddress }, logicalMessage);
+        }
 
-            await InnerSend(returnAddress, logicalMessage);
+        public async Task Subscribe(string topic)
+        {
+            await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
+        }
+
+        public async Task Unsubscribe(string topic)
+        {
+            await _subscriptionStorage.UnregisterSubscriber(topic, _transport.Address);
         }
 
         static string GetReturnAddress(TransportMessage transportMessage)
@@ -146,23 +154,37 @@ namespace Rebus2.Bus
             }
         }
 
-        async Task InnerSend(string destinationAddress, Message logicalMessage)
+        async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
-            _log.Debug("Sending {0} -> {1}", logicalMessage.Body ?? "<empty message>", destinationAddress);
+            var destinationAddressesList = destinationAddresses.ToList();
+            var hasOneOrMoreDestinations = destinationAddressesList.Any();
 
+            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
+            
+            _log.Debug("Sending {0} -> {1}", 
+                logicalMessage.Body ?? "<empty message>",
+                hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
+
+            if (!hasOneOrMoreDestinations) return;
+            
             var transportMessage = await _serializer.Serialize(logicalMessage);
 
             var currentTransactionContext = AmbientTransactionContext.Current;
 
             if (currentTransactionContext != null)
             {
-                await _transport.Send(destinationAddress, transportMessage, currentTransactionContext);
+                await Task.WhenAll(destinationAddressesList
+                    .Select(destinationAddress => _transport.Send(destinationAddress, transportMessage, currentTransactionContext)));
+
                 return;
             }
 
             using (var defaultTransactionContext = new DefaultTransactionContext())
             {
-                await _transport.Send(destinationAddress, transportMessage, defaultTransactionContext);
+                // ReSharper disable once AccessToDisposedClosure
+                await Task.WhenAll(destinationAddressesList
+                    .Select(destinationAddress => _transport.Send(destinationAddress, transportMessage, defaultTransactionContext)));
+                
                 defaultTransactionContext.Complete();
             }
         }
@@ -192,6 +214,14 @@ namespace Rebus2.Bus
             }
 
             SetNumberOfWorkers(0);
+
+            InjectedServicesWhoseLifetimeToControl
+                .OfType<IDisposable>()
+                .ForEach(d =>
+                {
+                    _log.Debug("Disposing {0}", d);
+                    d.Dispose();
+                });
         }
 
         public void SetNumberOfWorkers(int desiredNumberOfWorkers)

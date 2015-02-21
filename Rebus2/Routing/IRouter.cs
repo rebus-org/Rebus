@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rebus2.Messages;
 
 namespace Rebus2.Routing
@@ -8,16 +9,16 @@ namespace Rebus2.Routing
         /// <summary>
         /// Called when sending messages
         /// </summary>
-        string GetDestinationAddress(Message message);
+        Task<string> GetDestinationAddress(Message message);
 
         /// <summary>
         /// Called when subscribing to messages
         /// </summary>
-        string GetOwnerAddress(Message message);
+        Task<string> GetOwnerAddress(string topic);
 
         /// <summary>
         /// Gets the subscriber addresses for the given topic
         /// </summary>
-        IEnumerable<string> GetSubscribers(string topic);
+        Task<IEnumerable<string>> GetSubscriberAddresses(string topic);
     }
 }
