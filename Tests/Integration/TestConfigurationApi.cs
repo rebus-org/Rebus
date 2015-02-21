@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Configuration;
+using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Config;
 
@@ -10,7 +11,7 @@ namespace Tests.Integration
         [Test]
         public void ThrowsIfNoTransportIsSpecified()
         {
-            Configure.With(new BuiltinHandlerActivator()).Start();
+            Assert.Throws<ConfigurationErrorsException>(() => Configure.With(new BuiltinHandlerActivator()).Start());
         }
     }
 }

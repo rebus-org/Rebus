@@ -92,15 +92,45 @@ namespace Rebus2.Bus
                 throw new InvalidOperationException("Could not find the current transaction context - this might happen if you try to reply to a message outside of a message handler");
             }
 
-            var stepContext = currentTransactionContext.Items
-                .GetOrThrow <StepContext>(StepContext.StepContextKey);
+            var stepContext = GetCurrentReceiveContext(currentTransactionContext);
 
-            var headersOfIncomingMessage = stepContext.Load<TransportMessage>().Headers;
             var headers = new Dictionary<string, string>();
             var logicalMessage = new Message(headers, message);
-            var returnAddress = headersOfIncomingMessage[Headers.ReturnAddress];
+            var transportMessage = stepContext.Load<TransportMessage>();
+            var returnAddress = GetReturnAddress(transportMessage);
+
+            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
 
             await InnerSend(returnAddress, logicalMessage);
+        }
+
+        static string GetReturnAddress(TransportMessage transportMessage)
+        {
+            var headers = transportMessage.Headers;
+            try
+            {
+                return headers.GetValue(Headers.ReturnAddress);
+
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException(string.Format("Could not get the return address from the '{0}' header of the incoming message with ID {1}",
+                    Headers.ReturnAddress, transportMessage.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>"), exception);
+            }
+        }
+
+        static StepContext GetCurrentReceiveContext(ITransactionContext currentTransactionContext)
+        {
+            try
+            {
+                return currentTransactionContext
+                    .Items.GetOrThrow<StepContext>(StepContext.StepContextKey);
+            }
+            catch (Exception exception)
+            {
+                throw new InvalidOperationException(string.Format("Attempted to reply, but could not get the current receive context - are you calling Reply outside of a message handler? Reply can only be called within a message handler because the destination address is found as the '{0}' header on the incoming message",
+                    Headers.ReturnAddress), exception);
+            }
         }
 
         async Task InnerSend(string destinationAddress, Message logicalMessage)
@@ -175,7 +205,7 @@ namespace Rebus2.Bus
                 if (_workers.Count == 0) return;
 
                 _log.Debug("Removing worker");
-             
+
                 using (var lastWorker = _workers.Last())
                 {
                     _workers.Remove(lastWorker);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Injection;
@@ -12,6 +13,7 @@ using Rebus2.Routing;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Serialization;
 using Rebus2.Transport;
+using Rebus2.Transport.InMem;
 using Rebus2.Workers;
 
 namespace Rebus2.Config
@@ -52,6 +54,12 @@ namespace Rebus2.Config
 
         public IBus Start()
         {
+            if (!_injectionist.Has<ITransport>())
+            {
+                throw new ConfigurationErrorsException(
+                    "No transport has been configured! You need to call .Transport(t => t.Use***) in order to select which kind of queueing system you want to use to transport messages. If you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
+            }
+
             PossiblyRegisterDefault<IRouter>(c => new SimpleTypeBasedRouter());
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());

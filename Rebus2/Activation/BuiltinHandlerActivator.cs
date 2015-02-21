@@ -18,7 +18,7 @@ namespace Rebus2.Activation
 
         readonly List<object> _handlers = new List<object>();
 
-        public IEnumerable<IHandleMessages<TMessage>> GetHandlers<TMessage>()
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>()
         {
             return _handlers.OfType<Handler<TMessage>>();
         }

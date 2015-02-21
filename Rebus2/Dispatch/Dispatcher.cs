@@ -41,7 +41,7 @@ namespace Rebus2.Dispatch
         {
             _log.Info("Dispatching message {0}", message);
 
-            foreach (var handler in _handlerActivator.GetHandlers<TMessage>())
+            foreach (var handler in await _handlerActivator.GetHandlers<TMessage>())
             {
                 await handler.Handle(message);
             }
