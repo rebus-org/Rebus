@@ -9,6 +9,8 @@ namespace Rebus2.Transport
         Dictionary<string, object> Items { get; }
 
         event Action Committed;
+
+        event Action Cleanup;
     }
 
     public static class AmbientTransactionContext

@@ -16,7 +16,7 @@ using Timer = System.Timers.Timer;
 
 namespace Tests.Msmq
 {
-    [TestFixture]
+    [TestFixture, Ignore]
     public class TestMsmqTransport : FixtureBase
     {
         const string QueueName = "test.performance";

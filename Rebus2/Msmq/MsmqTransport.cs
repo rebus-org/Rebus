@@ -78,6 +78,7 @@ namespace Rebus2.Msmq
             messageQueueTransaction.Begin();
 
             context.Committed += messageQueueTransaction.Commit;
+            context.Cleanup += messageQueueTransaction.Dispose;
 
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
             context.Items[CurrentMessageQueueKey] = queue;

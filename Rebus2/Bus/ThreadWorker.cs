@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using Rebus2.Logging;
 using Rebus2.Pipeline;
 using Rebus2.Transport;
@@ -92,7 +91,7 @@ namespace Rebus2.Bus
                 }
                 finally
                 {
-                    //AmbientTransactionContext.Current = null;
+                    AmbientTransactionContext.Current = null;
                 }
             }
         }

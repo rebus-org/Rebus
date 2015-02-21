@@ -25,6 +25,7 @@ namespace Rebus2.Config
 
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
+            configurer(new RebusLoggingConfigurer());
             return this;
         }
 
@@ -49,11 +50,11 @@ namespace Rebus2.Config
         public IBus Start()
         {
             PossiblyRegisterDefault<IRouter>(c => new SimpleTypeBasedRouter());
-            
+
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
-            
+
             PossiblyRegisterDefault<IWorkerFactory>(c => new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>()));
-            
+
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
                 .OnReceive(new DeserializationStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DispatchStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized));
@@ -86,20 +87,33 @@ namespace Rebus2.Config
     {
         public void Console(LogLevel minLevel = LogLevel.Debug)
         {
-            ConsoleLogging(minLevel, false);
+            UseLoggerFactory(new ConsoleLoggerFactory(false)
+            {
+                MinLevel = minLevel
+            });
         }
 
         public void ColoredConsole(LogLevel minLevel = LogLevel.Debug)
         {
-            ConsoleLogging(minLevel, true);
-        }
-
-        static void ConsoleLogging(LogLevel minLevel, bool colored)
-        {
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(colored)
+            UseLoggerFactory(new ConsoleLoggerFactory(true)
             {
                 MinLevel = minLevel
-            };
+            });
+        }
+
+        public void Trace()
+        {
+            UseLoggerFactory(new TraceLoggerFactory());
+        }
+
+        public void None()
+        {
+            UseLoggerFactory(new NullLoggerFactory());
+        }
+
+        static void UseLoggerFactory(IRebusLoggerFactory consoleLoggerFactory)
+        {
+            RebusLoggerFactory.Current = consoleLoggerFactory;
         }
     }
 

@@ -13,9 +13,12 @@ namespace Rebus2.Transport
         public Dictionary<string, object> Items { get; private set; }
         
         public event Action Committed;
+        public event Action Cleanup;
 
         public void Dispose()
         {
+            var cleanup = Cleanup;
+            if (cleanup != null) cleanup();
         }
 
         public void Commit()
