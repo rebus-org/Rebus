@@ -8,5 +8,10 @@ namespace Rebus2.Injection
             : base(string.Format(message, objs))
         {
         }
+
+        public ResolutionException(Exception innerException, string message, params object[] objs)
+            : base(string.Format(message, objs), innerException)
+        {
+        }
     }
 }

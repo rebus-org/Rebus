@@ -98,6 +98,7 @@ namespace Rebus2.Transport.Msmq
             if (queueName.Contains("@"))
             {
                 var tokens = queueName.Split('@');
+                
                 if (tokens.Length != 2)
                 {
                     throw new ArgumentException(string.Format(@"The specified MSMQ queue name is invalid!: {0} - please format queue names according to one of the following examples:

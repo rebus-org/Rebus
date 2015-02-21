@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Bus;
@@ -6,14 +8,16 @@ using Rebus2.Config;
 using Rebus2.Logging;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport.InMem;
+using Rebus2.Transport.Msmq;
+using Tests.Extensions;
 
 namespace Tests.Integration
 {
     [TestFixture]
     public class TestPublishSubscribe : FixtureBase
     {
-        const string SubscriberInputQueue = "test.pubsub.subscriber";
-        const string PublisherInputQueue = "test.pubsub.publisher";
+        static readonly string SubscriberInputQueue = "test.pubsub.subscriber@" + Environment.MachineName;
+        static readonly string PublisherInputQueue = "test.pubsub.publisher@" + Environment.MachineName;
 
         BuiltinHandlerActivator _subscriberHandlers;
 
@@ -22,21 +26,24 @@ namespace Tests.Integration
 
         protected override void SetUp()
         {
-            AdjustLogging(LogLevel.Warn);
+            AdjustLogging(LogLevel.Info);
 
             var network = new InMemNetwork(true);
 
             _subscriberHandlers = new BuiltinHandlerActivator();
 
             _subscriberBus = Configure.With(_subscriberHandlers)
-                .Transport(t => t.UseInMemoryTransport(network, SubscriberInputQueue))
+                //.Transport(t => t.UseInMemoryTransport(network, SubscriberInputQueue))
+                .Transport(t => t.UseMsmq(SubscriberInputQueue))
                 .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
             TrackDisposable(_subscriberBus);
 
             _publisherBus = Configure.With(new BuiltinHandlerActivator())
-                .Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
+                //.Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
+                .Transport(t => t.UseMsmq(PublisherInputQueue))
+                .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
             TrackDisposable(_publisherBus);
@@ -62,22 +69,21 @@ namespace Tests.Integration
         [Test]
         public async Task SusbcriberReceivesMessagesWhenItHasSubscribed()
         {
+            var subscriberReceivedMessage = new ManualResetEvent(false);
             const string topicName = "someTopic";
-
-            var receivedStringMessage = false;
 
             await _subscriberBus.Subscribe(topicName);
 
             _subscriberHandlers.Handle<string>(async str =>
             {
-                receivedStringMessage = true;
+                subscriberReceivedMessage.Set();
             });
+
+            await Task.Delay(1000);
 
             await _publisherBus.Publish(topicName, "hej med dig min ven!!!!!");
 
-            await Task.Delay(20000);
-
-            Assert.That(receivedStringMessage, Is.True, "Expected to have received a string");
+            subscriberReceivedMessage.WaitOrDie(TimeSpan.FromSeconds(3), "Expected to have received a message");
         }
     }
 }

@@ -96,7 +96,7 @@ namespace Rebus2.Retry.Simple
             }
             catch (Exception exception)
             {
-                _log.Error(exception, "Could not move message with ID {0} to error queue {1} - will pause {2} to avoid thrashing", 
+                _log.Error(exception, "Could not move message with ID {0} to error queue '{1}' - will pause {2} to avoid thrashing", 
                     messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
 
                 moveToErrorQueueFailed = true;

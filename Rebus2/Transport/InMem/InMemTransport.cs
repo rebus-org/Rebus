@@ -20,6 +20,11 @@ namespace Rebus2.Transport.InMem
             _network.CreateQueue(inputQueueAddress);
         }
 
+        public void CreateQueue(string address)
+        {
+            _network.CreateQueue(address);
+        }
+
         public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");

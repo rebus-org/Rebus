@@ -78,7 +78,7 @@ namespace Rebus2.Bus
 
                     if (message == null)
                     {
-                        Thread.Sleep(TimeSpan.FromSeconds(0.5));
+                        Thread.Sleep(TimeSpan.FromSeconds(0.1));
                         return;
                     }
 

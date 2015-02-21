@@ -2,6 +2,7 @@
 using System.Configuration;
 using Rebus2.Activation;
 using Rebus2.Bus;
+using Rebus2.Handlers;
 using Rebus2.Injection;
 using Rebus2.Logging;
 using Rebus2.Persistence.InMem;
@@ -66,8 +67,6 @@ namespace Rebus2.Config
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage(
                 c.Get<IRouter>(), 
                 c.Get<ITransport>(), 
-                c.Get<IPipeline>(), 
-                c.Get<IPipelineInvoker>(), 
                 c.Get<ISerializer>()));
             
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
@@ -106,6 +105,8 @@ namespace Rebus2.Config
 
                 return bus;
             });
+
+            _injectionist.Register<IHandlerActivator>(c => new InternalHandlersContributor(c.Get<IHandlerActivator>(), c.Get<ISubscriptionStorage>()), isDecorator: true);
 
             return _injectionist.Get<IBus>();
         }

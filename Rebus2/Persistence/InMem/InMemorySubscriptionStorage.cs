@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus2.Messages;
 using Rebus2.Messages.Control;
@@ -14,27 +15,28 @@ namespace Rebus2.Persistence.InMem
 {
     public class InMemorySubscriptionStorage : ISubscriptionStorage
     {
+        static int Counter = 0;
         static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
+
         readonly IRouter _router;
         readonly ITransport _transport;
-        readonly IPipeline _pipeline;
-        readonly IPipelineInvoker _pipelineInvoker;
         readonly ISerializer _serializer;
+
+        readonly int _id = Interlocked.Increment(ref Counter);
 
         readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers
             = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>(StringComparer);
 
-        public InMemorySubscriptionStorage(IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISerializer serializer)
+        public InMemorySubscriptionStorage(IRouter router, ITransport transport, ISerializer serializer)
         {
             _router = router;
             _transport = transport;
-            _pipeline = pipeline;
-            _pipelineInvoker = pipelineInvoker;
             _serializer = serializer;
         }
 
         public async Task<IEnumerable<string>> GetSubscriberAddresses(string topic)
         {
+            Console.WriteLine("Getting subscribers {0}", _id);
             ConcurrentDictionary<string, object> subscriberAddresses;
 
             return _subscribers.TryGetValue(topic, out subscriberAddresses)
@@ -44,6 +46,7 @@ namespace Rebus2.Persistence.InMem
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
+            Console.WriteLine("Registering subscriber {0}", _id);
             var ownerAddress = await _router.GetOwnerAddress(topic);
             var ownAddress = _transport.Address;
 
@@ -55,10 +58,16 @@ namespace Rebus2.Persistence.InMem
             }
             else
             {
-                var headers = new Dictionary<string, string>();
-                var logicalMessage = new Message(headers, new SubscribeRequest { SubscriberAddress = ownAddress });
+                var headers = new Dictionary<string, string>
+                {
+                    {Headers.MessageId, Guid.NewGuid().ToString()}
+                };
 
-                await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
+                var logicalMessage = new Message(headers, new SubscribeRequest
+                {
+                    SubscriberAddress = ownAddress,
+                    Topic = topic
+                });
 
                 var transportMessage = await _serializer.Serialize(logicalMessage);
 

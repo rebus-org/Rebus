@@ -73,8 +73,10 @@ namespace Tests.Integration
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(5)]
+        [TestCase(40)]
+        [TestCase(70)]
         [TestCase(90)]
-        public async Task CanConfigureNumberOfRetriesS(int numberOfRetries)
+        public async Task CanConfigureNumberOfRetries(int numberOfRetries)
         {
             InitializeBus(numberOfRetries);
 

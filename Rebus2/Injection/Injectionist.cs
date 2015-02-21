@@ -95,6 +95,7 @@ namespace Rebus2.Injection
         {
             readonly Dictionary<Type, int> _decoratorDepth = new Dictionary<Type, int>();
             readonly Dictionary<Type, List<Resolver>> _resolvers;
+            readonly Dictionary<Type, object> _instances = new Dictionary<Type, object>();
 
             public ResolutionContext(Dictionary<Type, List<Resolver>> resolvers)
             {
@@ -103,31 +104,46 @@ namespace Rebus2.Injection
 
             public TService Get<TService>()
             {
-                if (!_resolvers.ContainsKey(typeof(TService)))
+                var serviceType = typeof(TService);
+
+                if (_instances.ContainsKey(serviceType))
                 {
-                    throw new ResolutionException("Could not find resolver for {0}", typeof(TService));
+                    return (TService) _instances[serviceType];
                 }
 
-                if (!_decoratorDepth.ContainsKey(typeof(TService)))
+                if (!_resolvers.ContainsKey(serviceType))
                 {
-                    _decoratorDepth[typeof(TService)] = 0;
+                    throw new ResolutionException("Could not find resolver for {0}", serviceType);
                 }
 
-                var resolversForThisType = _resolvers[typeof(TService)];
+                if (!_decoratorDepth.ContainsKey(serviceType))
+                {
+                    _decoratorDepth[serviceType] = 0;
+                }
+
+                var resolversForThisType = _resolvers[serviceType];
+                var depth = _decoratorDepth[serviceType]++;
 
                 try
                 {
-                    var depth = _decoratorDepth[typeof(TService)]++;
-
-                    return resolversForThisType
+                    var instance = resolversForThisType
                         .Cast<Resolver<TService>>()
                         .Skip(depth)
                         .First()
                         .InvokeResolver(this);
+
+                    _instances[serviceType] = instance;
+
+                    return instance;
+                }
+                catch (Exception exception)
+                {
+                    throw new ResolutionException(exception, "Could not resolve {0} with decorator depth {1} - registrations: {2}",
+                        serviceType, depth, string.Join("; ", resolversForThisType));
                 }
                 finally
                 {
-                    _decoratorDepth[typeof(TService)]--;
+                    _decoratorDepth[serviceType]--;
                 }
             }
         }

@@ -15,6 +15,10 @@ namespace Rebus2.Retry.Simple
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
+
+            var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
+            
+            _transport.CreateQueue(errorQueueAddress);
         }
 
         public IStep GetRetryStep()

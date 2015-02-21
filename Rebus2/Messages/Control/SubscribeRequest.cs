@@ -2,6 +2,7 @@
 {
     public class SubscribeRequest
     {
-        public string SubscriberAddress { get; set; } 
+        public string SubscriberAddress { get; set; }
+        public string Topic { get; set; }
     }
 }

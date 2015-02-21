@@ -45,6 +45,15 @@ namespace Rebus2.Transport.Msmq
             GetInputQueue();
         }
 
+        public void CreateQueue(string address)
+        {
+            if (!MsmqUtil.IsLocal(address)) return;
+
+            var inputQueuePath = MsmqUtil.GetPath(address);
+
+            EnsureQueueExists(inputQueuePath);
+        }
+
         public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
@@ -125,17 +134,7 @@ namespace Rebus2.Transport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                if (!MessageQueue.Exists(inputQueuePath))
-                {
-                    var newQueue = MessageQueue.Create(inputQueuePath, true);
-
-                    newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                                               MessageQueueAccessRights.GenericWrite);
-
-                    var administratorAccountName = GetAdministratorAccountName();
-
-                    newQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
-                }
+                EnsureQueueExists(inputQueuePath);
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {
@@ -148,6 +147,21 @@ namespace Rebus2.Transport.Msmq
                 };
 
                 return _inputQueue;
+            }
+        }
+
+        static void EnsureQueueExists(string inputQueuePath)
+        {
+            if (!MessageQueue.Exists(inputQueuePath))
+            {
+                var newQueue = MessageQueue.Create(inputQueuePath, true);
+
+                newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
+                    MessageQueueAccessRights.GenericWrite);
+
+                var administratorAccountName = GetAdministratorAccountName();
+
+                newQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
             }
         }
 

@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Rebus2.Extensions;
 using Rebus2.Logging;
@@ -226,6 +227,8 @@ namespace Rebus2.Bus
 
         public void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {
+            if (desiredNumberOfWorkers == _workers.Count) return;
+
             _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > _workers.Count) AddWorker();
             while (desiredNumberOfWorkers < _workers.Count) RemoveWorker();
