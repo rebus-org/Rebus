@@ -31,6 +31,17 @@ namespace Rebus2.Pipeline
             return OnReceive(new StepContainer(step, stepDescription), stage);
         }
 
+        public DefaultPipeline OnSend(IStep step)
+        {
+            _sendSteps.Add(new RegisteredStep(step, 0));
+            return this;
+        }
+
+        public DefaultPipeline OnSend(Action<StepContext, Func<Task>> step, string stepDescription = null)
+        {
+            return OnSend(new StepContainer(step, stepDescription));
+        }
+
         public class StepContainer : IStep
         {
             readonly Action<StepContext, Func<Task>> _step;

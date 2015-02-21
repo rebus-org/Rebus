@@ -11,6 +11,8 @@ namespace Rebus2.Transport
         event Action Committed;
 
         event Action Cleanup;
+        
+        void Abort();
     }
 
     public static class AmbientTransactionContext

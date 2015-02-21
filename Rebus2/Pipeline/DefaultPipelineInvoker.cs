@@ -8,7 +8,7 @@ namespace Rebus2.Pipeline
     /// <summary>
     /// give me a pipeline and I'll invoke it
     /// </summary>
-    public class PipelineInvoker
+    public class DefaultPipelineInvoker : IPipelineInvoker
     {
         public async Task Invoke(StepContext context, IEnumerable<IStep> pipeline)
         {

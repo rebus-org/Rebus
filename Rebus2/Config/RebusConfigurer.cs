@@ -5,6 +5,7 @@ using Rebus2.Injection;
 using Rebus2.Logging;
 using Rebus2.Pipeline;
 using Rebus2.Pipeline.Receive;
+using Rebus2.Pipeline.Send;
 using Rebus2.Routing;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Serialization;
@@ -53,11 +54,20 @@ namespace Rebus2.Config
 
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
-            PossiblyRegisterDefault<IWorkerFactory>(c => new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>()));
+            PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
+
+            PossiblyRegisterDefault<IWorkerFactory>(c => new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>()));
 
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
+
+                .OnReceive(new SimpleRetryStrategyStep(c.Get<ITransport>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializationStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized));
+                .OnReceive(new DispatchStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized)
+
+                .OnSend(new AssignGuidMessageIdStep())
+                .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
+
+                );
 
             PossiblyRegisterDefault<IBus>(c =>
             {
@@ -65,7 +75,8 @@ namespace Rebus2.Config
                     c.Get<IRouter>(),
                     c.Get<ITransport>(),
                     c.Get<ISerializer>(),
-                    c.Get<IPipeline>());
+                    c.Get<IPipeline>(),
+                    c.Get<IPipelineInvoker>());
 
                 bus.Start(_options.NumberOfWorkers);
 
@@ -126,7 +137,7 @@ namespace Rebus2.Config
             _injectionist = injectionist;
         }
 
-        public void Register(Func<IResolutionContext, TService> factoryMethod)
+        internal void Register(Func<IResolutionContext, TService> factoryMethod)
         {
             _injectionist.Register(factoryMethod);
         }

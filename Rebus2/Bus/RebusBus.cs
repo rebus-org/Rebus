@@ -30,8 +30,9 @@ namespace Rebus2.Bus
         readonly ITransport _transport;
         readonly ISerializer _serializer;
         readonly IPipeline _pipeline;
+        readonly IPipelineInvoker _pipelineInvoker;
 
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline, IPipelineInvoker pipelineInvoker)
         {
             // we do not control the lifetime of the handler activator - it controls us!
             _workerFactory = workerFactory;
@@ -39,11 +40,7 @@ namespace Rebus2.Bus
             _transport = transport;
             _serializer = serializer;
             _pipeline = pipeline;
-        }
-
-        public IBus Start()
-        {
-            return Start(1);
+            _pipelineInvoker = pipelineInvoker;
         }
 
         public IBus Start(int numberOfWorkers)
@@ -78,14 +75,10 @@ namespace Rebus2.Bus
         public async Task Send(object message)
         {
             var headers = new Dictionary<string, string>();
-
-            if (!string.IsNullOrWhiteSpace(_transport.Address) && !headers.ContainsKey(Headers.ReturnAddress))
-            {
-                headers[Headers.ReturnAddress] = _transport.Address;
-            }
-
             var logicalMessage = new Message(headers, message);
             var destinationAddress = _router.GetDestinationAddress(logicalMessage);
+
+            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
 
             await InnerSend(destinationAddress, logicalMessage);
         }
@@ -127,7 +120,7 @@ namespace Rebus2.Bus
             using (var defaultTransactionContext = new DefaultTransactionContext())
             {
                 await _transport.Send(destinationAddress, transportMessage, defaultTransactionContext);
-                defaultTransactionContext.Commit();
+                defaultTransactionContext.Complete();
             }
         }
 

@@ -492,7 +492,7 @@ namespace Tests.Msmq
                         transport.Send(QueueName, TransportMessageHelpers.FromString(JsonConvert.SerializeObject(msg)),
                             defaultTransactionContext);
 
-                        defaultTransactionContext.Commit();
+                        defaultTransactionContext.Complete();
 
                         sendIds.Add(msg.Id);
                     }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus2.Messages;
+using Rebus2.Transport;
 
 namespace Rebus2.Pipeline
 {
@@ -16,9 +17,15 @@ namespace Rebus2.Pipeline
 
         readonly Dictionary<string, object> _items = new Dictionary<string, object>();
 
-        public StepContext(TransportMessage receivedTransportMessage)
+        public StepContext(TransportMessage receivedTransportMessage, ITransactionContext transactionContext)
         {
             Save(receivedTransportMessage);
+            Save(transactionContext);
+        }
+
+        public StepContext(Message outgoingLogicalMessage)
+        {
+            Save(outgoingLogicalMessage);
         }
 
         public T Save<T>(T instance)

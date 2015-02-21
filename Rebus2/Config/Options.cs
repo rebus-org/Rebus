@@ -4,7 +4,7 @@
     {
         public Options()
         {
-            NumberOfWorkers = 5;
+            NumberOfWorkers = 1;
         }
 
         public int NumberOfWorkers { get; set; } 

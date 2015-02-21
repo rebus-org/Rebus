@@ -17,7 +17,6 @@ namespace Rebus2.Msmq
     public class MsmqTransport : ITransport, IInitializable
     {
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
-        const string CurrentMessageQueueKey = "msmqtransport-messagequeue";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
 
@@ -25,6 +24,8 @@ namespace Rebus2.Msmq
 
         public MsmqTransport(string inputQueueName)
         {
+            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
+
             _inputQueueName = MakeGloballyAddressable(inputQueueName);
         }
 
@@ -42,6 +43,10 @@ namespace Rebus2.Msmq
 
         public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
         {
+            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
+            if (msg == null) throw new ArgumentNullException("msg");
+            if (context == null) throw new ArgumentNullException("context");
+
             var message = new Message
             {
                 Extension = _extensionSerializer.Serialize(msg.Headers),
@@ -51,13 +56,6 @@ namespace Rebus2.Msmq
             };
 
             var messageQueueTransaction = GetOrCreateTransaction(context);
-            var currentQueue = context.Items.GetOrNull<MessageQueue>(CurrentMessageQueueKey);
-
-            if (currentQueue != null)
-            {
-                currentQueue.Send(message, messageQueueTransaction);
-                return;
-            }
 
             using (var queue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send))
             {
@@ -67,6 +65,8 @@ namespace Rebus2.Msmq
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
+            if (context == null) throw new ArgumentNullException("context");
+
             var queue = GetInputQueue();
 
             if (context.Items.ContainsKey(CurrentTransactionKey))
@@ -81,7 +81,6 @@ namespace Rebus2.Msmq
             context.Cleanup += messageQueueTransaction.Dispose;
 
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
-            context.Items[CurrentMessageQueueKey] = queue;
 
             try
             {

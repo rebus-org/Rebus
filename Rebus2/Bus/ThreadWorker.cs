@@ -20,14 +20,15 @@ namespace Rebus2.Bus
         readonly IPipeline _pipeline;
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
         readonly Thread _workerThread;
-        readonly PipelineInvoker _pipelineInvoker = new PipelineInvoker();
+        readonly IPipelineInvoker _pipelineInvoker;
 
         volatile bool _keepWorking = true;
 
-        public ThreadWorker(ITransport transport, IPipeline pipeline, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext)
+        public ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext)
         {
             _transport = transport;
             _pipeline = pipeline;
+            _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _workerThread = new Thread(() =>
             {
@@ -81,17 +82,21 @@ namespace Rebus2.Bus
                         return;
                     }
 
-                    var context = new StepContext(message);
+                    var context = new StepContext(message, transactionContext);
                     transactionContext.Items[StepContext.StepContextKey] = context;
 
                     var stagedReceiveSteps = _pipeline.ReceivePipeline();
                     await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
-                    transactionContext.Commit();
+                    transactionContext.Complete();
+                }
+                catch (Exception exception)
+                {
+                    _log.Error(exception, "Unhandled exception in thread worker");
                 }
                 finally
                 {
-                    AmbientTransactionContext.Current = null;
+                    //AmbientTransactionContext.Current = null;
                 }
             }
         }

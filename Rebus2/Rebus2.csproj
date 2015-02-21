@@ -76,11 +76,15 @@
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Pipeline\DefaultPipeline.cs" />
+    <Compile Include="Pipeline\IPipelineInvoker.cs" />
     <Compile Include="Pipeline\IStep.cs" />
     <Compile Include="Pipeline\IPipeline.cs" />
-    <Compile Include="Pipeline\PipelineInvoker.cs" />
+    <Compile Include="Pipeline\DefaultPipelineInvoker.cs" />
     <Compile Include="Pipeline\Receive\DeserializationStep.cs" />
     <Compile Include="Pipeline\Receive\DispatchStep.cs" />
+    <Compile Include="Pipeline\Receive\SimpleRetryStrategyStep.cs" />
+    <Compile Include="Pipeline\Send\AssignGuidMessageIdStep.cs" />
+    <Compile Include="Pipeline\Send\AssignReturnAddressStep.cs" />
     <Compile Include="Routing\TypeBased\SimpleTypeBasedRouter.cs" />
     <Compile Include="Routing\TypeBased\SimpleTypeBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Transport\ITransport.cs" />
@@ -98,9 +102,7 @@
     <Compile Include="Workers\IWorkerFactory.cs" />
     <Compile Include="Workers\ThreadWorkerFactory.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Pipeline\Send\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

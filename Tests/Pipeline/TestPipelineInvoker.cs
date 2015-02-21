@@ -12,13 +12,13 @@ namespace Tests.Pipeline
     public class TestPipelineInvoker : FixtureBase
     {
         [Test]
-        public void InvokesInOrder()
+        public async Task InvokesInOrder()
         {
-            var invoker = new PipelineInvoker();
+            var invoker = new DefaultPipelineInvoker();
 
-            var stepContext = new StepContext(new TransportMessage(new Dictionary<string, string>(), new MemoryStream()));
+            var stepContext = new StepContext(new TransportMessage(new Dictionary<string, string>(), new MemoryStream()), null);
 
-            invoker.Invoke(stepContext, new IStep[]
+            await invoker.Invoke(stepContext, new IStep[]
             {
                 new NamedStep("first"),
                 new NamedStep("second"),
