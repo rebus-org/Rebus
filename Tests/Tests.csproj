@@ -54,6 +54,7 @@
     <Compile Include="FixtureBase.cs" />
     <Compile Include="Integration\TestAsyncHandler.cs" />
     <Compile Include="Integration\TestConfigurationApi.cs" />
+    <Compile Include="Integration\TestPublishSubscribe.cs" />
     <Compile Include="Integration\TestReceivePerformance.cs" />
     <Compile Include="Integration\TestRequestReply.cs" />
     <Compile Include="Integration\TestRetry.cs" />

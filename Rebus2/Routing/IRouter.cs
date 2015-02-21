@@ -1,4 +1,5 @@
-﻿using Rebus2.Messages;
+﻿using System.Collections.Generic;
+using Rebus2.Messages;
 
 namespace Rebus2.Routing
 {
@@ -13,5 +14,10 @@ namespace Rebus2.Routing
         /// Called when subscribing to messages
         /// </summary>
         string GetOwnerAddress(Message message);
+
+        /// <summary>
+        /// Gets the subscriber addresses for the given topic
+        /// </summary>
+        IEnumerable<string> GetSubscribers(string topic);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rebus2.Messages;
 
 namespace Rebus2.Routing.TypeBased
@@ -22,6 +23,11 @@ namespace Rebus2.Routing.TypeBased
         public string GetOwnerAddress(Message message)
         {
             return GetAddress(message);
+        }
+
+        public IEnumerable<string> GetSubscribers(string topic)
+        {
+            return Enumerable.Empty<string>();
         }
 
         string GetAddress(Message message)

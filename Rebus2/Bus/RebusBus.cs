@@ -72,10 +72,10 @@ namespace Rebus2.Bus
             }
         }
 
-        public async Task Send(object message)
+        public async Task Send(object commandMessage)
         {
             var headers = new Dictionary<string, string>();
-            var logicalMessage = new Message(headers, message);
+            var logicalMessage = new Message(headers, commandMessage);
             var destinationAddress = _router.GetDestinationAddress(logicalMessage);
 
             await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
@@ -83,8 +83,21 @@ namespace Rebus2.Bus
             await InnerSend(destinationAddress, logicalMessage);
         }
 
-        public async Task Reply(object message)
+        public async Task Publish(string topic, object eventMessage)
         {
+            var headers = new Dictionary<string, string>();
+            var logicalMessage = new Message(headers, eventMessage);
+            var subscribers = _router.GetSubscribers(topic);
+
+            await _pipelineInvoker.Invoke(new StepContext(logicalMessage), _pipeline.SendPipeline());
+
+            await Task.WhenAll(subscribers
+                .Select(subscriberAddress => InnerSend(subscriberAddress, logicalMessage)));
+        }
+
+        public async Task Reply(object replyMessage)
+        {
+            // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
             var currentTransactionContext = AmbientTransactionContext.Current;
 
             if (currentTransactionContext == null)
@@ -95,7 +108,7 @@ namespace Rebus2.Bus
             var stepContext = GetCurrentReceiveContext(currentTransactionContext);
 
             var headers = new Dictionary<string, string>();
-            var logicalMessage = new Message(headers, message);
+            var logicalMessage = new Message(headers, replyMessage);
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
