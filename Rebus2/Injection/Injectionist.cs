@@ -22,6 +22,18 @@ namespace Rebus2.Injection
             }
 
             var resolverList = _resolvers[key];
+
+            if (!isDecorator)
+            {
+                var existingPrimaryRegistration = resolverList.FirstOrDefault(r => !r.IsDecorator);
+
+                if (existingPrimaryRegistration != null)
+                {
+                    throw new InvalidOperationException(string.Format("Attempted to register {0} as primary implementation of {1}, but a primary registration already exists: {2}",
+                        resolverMethod, typeof(TService), existingPrimaryRegistration));
+                }
+            }
+
             var resolver = new Resolver<TService>(resolverMethod, isDecorator: isDecorator);
 
             if (!resolver.IsDecorator)
@@ -40,16 +52,12 @@ namespace Rebus2.Injection
             return _resolvers.ContainsKey(key) && _resolvers[key].Count > 0;
         }
 
-        abstract class Resolver { }
-
-        class Resolver<TService> : Resolver
+        abstract class Resolver
         {
-            readonly Func<IResolutionContext, TService> _resolver;
             readonly bool _isDecorator;
 
-            public Resolver(Func<IResolutionContext, TService> resolver, bool isDecorator)
+            protected Resolver(bool isDecorator)
             {
-                _resolver = resolver;
                 _isDecorator = isDecorator;
             }
 
@@ -57,10 +65,29 @@ namespace Rebus2.Injection
             {
                 get { return _isDecorator; }
             }
+        }
+
+        class Resolver<TService> : Resolver
+        {
+            readonly Func<IResolutionContext, TService> _resolver;
+
+            public Resolver(Func<IResolutionContext, TService> resolver, bool isDecorator)
+                : base(isDecorator)
+            {
+                _resolver = resolver;
+            }
 
             public TService InvokeResolver(IResolutionContext context)
             {
                 return _resolver(context);
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0} ({1} {2})",
+                    _resolver,
+                    IsDecorator ? "decorator ->" : "primary ->",
+                    typeof (TService));
             }
         }
 
@@ -81,16 +108,16 @@ namespace Rebus2.Injection
                     throw new ResolutionException("Could not find resolver for {0}", typeof(TService));
                 }
 
-                if (!_decoratorDepth.ContainsKey(typeof (TService)))
+                if (!_decoratorDepth.ContainsKey(typeof(TService)))
                 {
-                    _decoratorDepth[typeof (TService)] = 0;
+                    _decoratorDepth[typeof(TService)] = 0;
                 }
 
                 var resolversForThisType = _resolvers[typeof(TService)];
 
                 try
                 {
-                    var depth = _decoratorDepth[typeof (TService)]++;
+                    var depth = _decoratorDepth[typeof(TService)]++;
 
                     return resolversForThisType
                         .Cast<Resolver<TService>>()
@@ -100,7 +127,7 @@ namespace Rebus2.Injection
                 }
                 finally
                 {
-                    _decoratorDepth[typeof (TService)]--;
+                    _decoratorDepth[typeof(TService)]--;
                 }
             }
         }

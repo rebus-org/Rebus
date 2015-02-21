@@ -74,6 +74,9 @@
     <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="Messages\Headers.cs" />
+    <Compile Include="Transport\InMem\InMemNetwork.cs" />
+    <Compile Include="Transport\InMem\InMemTransport.cs" />
+    <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Pipeline\DefaultPipeline.cs" />
     <Compile Include="Pipeline\IPipelineInvoker.cs" />

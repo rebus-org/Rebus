@@ -15,6 +15,16 @@ namespace Tests.Injection
         }
 
         [Test]
+        public void CannotRegisterTwoPrimaryImplementations()
+        {
+            _injectionist.Register(c => DateTime.Now);
+
+            var ex = Assert.Throws<InvalidOperationException>(() => _injectionist.Register(c => DateTime.Now));
+
+            Console.WriteLine("Got expected exception: {0}", ex);
+        }
+
+        [Test]
         public void CanDetermineWhetherServiceIsRegistered_Empty()
         {
             _injectionist.Register(context => DateTime.Now);
