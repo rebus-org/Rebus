@@ -21,11 +21,11 @@ namespace Rebus2.Transport.Msmq
 
         MessageQueue _inputQueue;
 
-        public MsmqTransport(string inputQueueName)
+        public MsmqTransport(string inputQueueAddress)
         {
-            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
+            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
 
-            _inputQueueName = MakeGloballyAddressable(inputQueueName);
+            _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
         }
 
         static string MakeGloballyAddressable(string inputQueueName)

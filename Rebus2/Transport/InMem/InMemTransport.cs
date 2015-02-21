@@ -6,12 +6,12 @@ namespace Rebus2.Transport.InMem
     public class InMemTransport : ITransport
     {
         readonly InMemNetwork _network;
-        readonly string _inputQueueName;
+        readonly string _inputQueueAddress;
 
-        public InMemTransport(InMemNetwork network, string inputQueueName)
+        public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
             _network = network;
-            _inputQueueName = inputQueueName;
+            _inputQueueAddress = inputQueueAddress;
         }
 
         public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
@@ -24,7 +24,7 @@ namespace Rebus2.Transport.InMem
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var nextMessage = _network.GetNextOrNull(_inputQueueName);
+            var nextMessage = _network.GetNextOrNull(_inputQueueAddress);
             if (nextMessage != null) return nextMessage;
 
             await Task.Delay(200);
@@ -34,7 +34,7 @@ namespace Rebus2.Transport.InMem
 
         public string Address
         {
-            get { return _inputQueueName; }
+            get { return _inputQueueAddress; }
         }
     }
 }

@@ -55,7 +55,7 @@
     <Compile Include="Integration\TestReceivePerformance.cs" />
     <Compile Include="Integration\TestRequestReply.cs" />
     <Compile Include="Integration\TestRetry.cs" />
-    <Compile Include="Msmq\TestMsmqTransport.cs" />
+    <Compile Include="Transport\Msmq\TestMsmqTransport.cs" />
     <Compile Include="Pipeline\TestPipelineInvoker.cs" />
     <Compile Include="TransportMessageHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

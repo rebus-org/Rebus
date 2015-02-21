@@ -14,7 +14,7 @@ using Rebus2.Transport.Msmq;
 using Tests.Extensions;
 using Timer = System.Timers.Timer;
 
-namespace Tests.Msmq
+namespace Tests.Transport.Msmq
 {
     [TestFixture, Ignore]
     public class TestMsmqTransport : FixtureBase
