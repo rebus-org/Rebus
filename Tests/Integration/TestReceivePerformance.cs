@@ -67,7 +67,18 @@ namespace Tests.Integration
                 numberOfMessages, elapsedReceiving.TotalSeconds, numberOfMessages/elapsedReceiving.TotalSeconds);
 
             var sentButNotReceived = sentmessageIds.Keys.Except(receivedMessageIds.Keys).ToList();
-            var receivedMoreThanOnce = receivedMessageIds.Where(kvp => kvp.Value > 1).Select(kvp => kvp.Key).ToList();
+            var receivedMoreThanOnce = receivedMessageIds.Where(kvp => kvp.Value > 1).ToList();
+
+            if (sentButNotReceived.Any())
+            {
+                Assert.Fail("The following IDs were sent but not received: {0}", string.Join(", ", sentButNotReceived));
+            }
+
+            if (receivedMoreThanOnce.Any())
+            {
+                Assert.Fail("The following IDs were received more than once: {0}", 
+                    receivedMoreThanOnce.Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value)));
+            }
         }
 
         class SomeMessage
