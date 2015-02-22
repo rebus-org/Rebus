@@ -62,7 +62,7 @@ namespace Rebus2.Config
                     "No transport has been configured! You need to call .Transport(t => t.Use***) in order to select which kind of queueing system you want to use to transport messages. If you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
             }
 
-            PossiblyRegisterDefault<IRouter>(c => new SimpleTypeBasedRouter());
+            PossiblyRegisterDefault<IRouter>(c => new TypeBasedRouter());
 
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage(
                 c.Get<IRouter>(), 

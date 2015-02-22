@@ -6,9 +6,9 @@ using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Logging;
+using Rebus2.Routing.TopicBased;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport.InMem;
-using Rebus2.Transport.Msmq;
 using Tests.Extensions;
 
 namespace Tests.Integration
@@ -35,7 +35,7 @@ namespace Tests.Integration
             _subscriberBus = Configure.With(_subscriberHandlers)
                 .Transport(t => t.UseInMemoryTransport(network, SubscriberInputQueue))
                 //.Transport(t => t.UseMsmq(SubscriberInputQueue))
-                .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
+                .Routing(r => r.TopicBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
             TrackDisposable(_subscriberBus);
@@ -43,7 +43,7 @@ namespace Tests.Integration
             _publisherBus = Configure.With(new BuiltinHandlerActivator())
                 .Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
                 //.Transport(t => t.UseMsmq(PublisherInputQueue))
-                .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
+                .Routing(r => r.TopicBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
             TrackDisposable(_publisherBus);

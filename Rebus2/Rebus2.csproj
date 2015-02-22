@@ -84,6 +84,8 @@
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
     <Compile Include="Routing\ISubscriptionStorage.cs" />
+    <Compile Include="Routing\TopicBased\TopicBasedRouter.cs" />
+    <Compile Include="Routing\TopicBased\TopicBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />
     <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />
@@ -98,8 +100,8 @@
     <Compile Include="Retry\Simple\SimpleRetryStrategyStep.cs" />
     <Compile Include="Pipeline\Send\AssignGuidMessageIdStep.cs" />
     <Compile Include="Pipeline\Send\AssignReturnAddressStep.cs" />
-    <Compile Include="Routing\TypeBased\SimpleTypeBasedRouter.cs" />
-    <Compile Include="Routing\TypeBased\SimpleTypeBasedRouterConfigurationExtensions.cs" />
+    <Compile Include="Routing\TypeBased\TypeBasedRouter.cs" />
+    <Compile Include="Routing\TypeBased\TypeBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Transport\ITransport.cs" />
     <Compile Include="Transport\Msmq\MsmqTransport.cs" />
     <Compile Include="Messages\TransportMessage.cs" />

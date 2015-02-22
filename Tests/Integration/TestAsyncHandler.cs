@@ -24,7 +24,7 @@ namespace Tests.Integration
         {
             _handlerActivator = new BuiltinHandlerActivator();
             _bus = Configure.With(_handlerActivator)
-                .Routing(r => r.SimpleTypeBased().Map<string>(InputQueueName))
+                .Routing(r => r.TypeBased().Map<string>(InputQueueName))
                 .Transport(t => t.UseMsmq(InputQueueName))
                 .Options(o => o.SetNumberOfWorkers(1))
                 .Start();
