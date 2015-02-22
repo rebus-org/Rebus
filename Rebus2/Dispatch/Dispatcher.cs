@@ -47,7 +47,7 @@ namespace Rebus2.Dispatch
 
             var messageWasHandled = false;
 
-            foreach (var handler in await _handlerActivator.GetHandlers<TMessage>())
+            foreach (var handler in await _handlerActivator.GetHandlers(message))
             {
                 await handler.Handle(message);
 
@@ -56,7 +56,7 @@ namespace Rebus2.Dispatch
 
             if (!messageWasHandled)
             {
-                throw new ApplicationException(string.Format("Message with ID {0} could not be handled by any handlers!", messageId));
+                throw new ApplicationException(string.Format("Message {0} with ID {1} could not be handled by any handlers!", message, messageId));
             }
         }
 

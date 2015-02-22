@@ -123,8 +123,6 @@ namespace Rebus2.Bus
         public async Task Subscribe(string topic)
         {
             await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
-
-            int a = 2;
         }
 
         public async Task Unsubscribe(string topic)

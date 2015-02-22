@@ -85,5 +85,31 @@ namespace Tests.Integration
 
             subscriberReceivedMessage.WaitOrDie(TimeSpan.FromSeconds(30), "Expected to have received a message");
         }
+
+        [Test]
+        public async Task SubcriberDoesNotReceiveMessagesWhenItHasSubscribedAndUnsubscribed()
+        {
+            var receivedStringMessage = false;
+            const string topicName = "someTopic";
+
+            _subscriberHandlers.Handle<string>(async str =>
+            {
+                receivedStringMessage = true;
+            });
+
+            await _subscriberBus.Subscribe(topicName);
+            
+            await Task.Delay(1000);
+
+            await _subscriberBus.Unsubscribe(topicName);
+
+            await Task.Delay(1000);
+
+            await _publisherBus.Publish(topicName, "hej med dig min ven!!!!!");
+
+            await Task.Delay(1000);
+
+            Assert.That(receivedStringMessage, Is.False, "Did not expect to receive the string message in the subscriber because it has been unsubscribed");
+        }
     }
 }

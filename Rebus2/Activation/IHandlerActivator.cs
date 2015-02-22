@@ -6,6 +6,6 @@ namespace Rebus2.Activation
 {
     public interface IHandlerActivator
     {
-        Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>();
+        Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message);
     }
 }

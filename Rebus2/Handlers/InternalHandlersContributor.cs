@@ -27,16 +27,11 @@ namespace Rebus2.Handlers
             };
         }
 
-        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>()
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message)
         {
             var ownHandlers = GetOwnHandlersFor<TMessage>();
 
-            if (typeof(TMessage) == typeof(SubscribeRequest))
-            {
-                int a = 2;
-            }
-
-            var handlers = await _innerHandlerActivator.GetHandlers<TMessage>();
+            var handlers = await _innerHandlerActivator.GetHandlers(message);
 
             return handlers.Concat(ownHandlers);
         }
@@ -65,7 +60,7 @@ namespace Rebus2.Handlers
             }
         }
 
-        class UnsubscribeRequestHandler : IHandleMessages<SubscribeRequest>
+        class UnsubscribeRequestHandler : IHandleMessages<UnsubscribeRequest>
         {
             readonly ISubscriptionStorage _subscriptionStorage;
 
@@ -74,7 +69,7 @@ namespace Rebus2.Handlers
                 _subscriptionStorage = subscriptionStorage;
             }
 
-            public async Task Handle(SubscribeRequest message)
+            public async Task Handle(UnsubscribeRequest message)
             {
                 await _subscriptionStorage.UnregisterSubscriber(message.Topic, message.SubscriberAddress);
             }

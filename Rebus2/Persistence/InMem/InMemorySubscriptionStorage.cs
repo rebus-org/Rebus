@@ -45,7 +45,6 @@ namespace Rebus2.Persistence.InMem
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            Console.WriteLine("Registering subscriber {0}", _id);
             var ownerAddress = await _router.GetOwnerAddress(topic);
             var ownAddress = _transport.Address;
 
@@ -90,10 +89,48 @@ namespace Rebus2.Persistence.InMem
 
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            object dummy;
+            var ownerAddress = await _router.GetOwnerAddress(topic);
+            var ownAddress = _transport.Address;
 
-            _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
-                .TryRemove(topic, out dummy);
+            // see if it's necessary to send a request to someone else
+            if (ownerAddress == ownAddress)
+            {
+                object dummy;
+
+                _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
+                    .TryRemove(subscriberAddress, out dummy);
+            }
+            else
+            {
+                var headers = new Dictionary<string, string>
+                {
+                    {Headers.MessageId, Guid.NewGuid().ToString()}
+                };
+
+                var logicalMessage = new Message(headers, new UnsubscribeRequest
+                {
+                    SubscriberAddress = ownAddress,
+                    Topic = topic
+                });
+
+                var transportMessage = await _serializer.Serialize(logicalMessage);
+
+                var transactionContext = AmbientTransactionContext.Current;
+
+                if (transactionContext == null)
+                {
+                    using (var defaultTransactionContext = new DefaultTransactionContext())
+                    {
+                        await _transport.Send(ownerAddress, transportMessage, defaultTransactionContext);
+
+                        defaultTransactionContext.Complete();
+                    }
+                }
+                else
+                {
+                    await _transport.Send(ownerAddress, transportMessage, transactionContext);
+                }
+            }
         }
     }
 }
