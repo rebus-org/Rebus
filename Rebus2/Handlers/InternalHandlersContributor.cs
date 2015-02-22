@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Messages.Control;
@@ -23,8 +22,8 @@ namespace Rebus2.Handlers
 
             _internalHandlers = new Dictionary<Type, IEnumerable>
             {
-                {typeof (SubscribeRequest), new object[] {new SubscribeHandler(subscriptionStorage)}},
-                {typeof (UnsubscribeRequest), new object[] {new UnsubscribeHandler(subscriptionStorage)}}
+                {typeof (SubscribeRequest), new object[] {new SubscribeRequestHandler(subscriptionStorage)}},
+                {typeof (UnsubscribeRequest), new object[] {new UnsubscribeRequestHandler(subscriptionStorage)}}
             };
         }
 
@@ -51,11 +50,11 @@ namespace Rebus2.Handlers
                 : Enumerable.Empty<IHandleMessages<TMessage>>();
         }
 
-        class SubscribeHandler : IHandleMessages<SubscribeRequest>
+        class SubscribeRequestHandler : IHandleMessages<SubscribeRequest>
         {
             readonly ISubscriptionStorage _subscriptionStorage;
 
-            public SubscribeHandler(ISubscriptionStorage subscriptionStorage)
+            public SubscribeRequestHandler(ISubscriptionStorage subscriptionStorage)
             {
                 _subscriptionStorage = subscriptionStorage;
             }
@@ -66,11 +65,11 @@ namespace Rebus2.Handlers
             }
         }
 
-        class UnsubscribeHandler : IHandleMessages<SubscribeRequest>
+        class UnsubscribeRequestHandler : IHandleMessages<SubscribeRequest>
         {
             readonly ISubscriptionStorage _subscriptionStorage;
 
-            public UnsubscribeHandler(ISubscriptionStorage subscriptionStorage)
+            public UnsubscribeRequestHandler(ISubscriptionStorage subscriptionStorage)
             {
                 _subscriptionStorage = subscriptionStorage;
             }

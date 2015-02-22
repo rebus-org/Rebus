@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Rebus2.Messages;
 using Rebus2.Messages.Control;
-using Rebus2.Pipeline;
 using Rebus2.Routing;
 using Rebus2.Serialization;
 using Rebus2.Transport;

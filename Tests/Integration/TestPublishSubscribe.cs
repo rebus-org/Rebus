@@ -33,16 +33,16 @@ namespace Tests.Integration
             _subscriberHandlers = new BuiltinHandlerActivator();
 
             _subscriberBus = Configure.With(_subscriberHandlers)
-                //.Transport(t => t.UseInMemoryTransport(network, SubscriberInputQueue))
-                .Transport(t => t.UseMsmq(SubscriberInputQueue))
+                .Transport(t => t.UseInMemoryTransport(network, SubscriberInputQueue))
+                //.Transport(t => t.UseMsmq(SubscriberInputQueue))
                 .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
             TrackDisposable(_subscriberBus);
 
             _publisherBus = Configure.With(new BuiltinHandlerActivator())
-                //.Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
-                .Transport(t => t.UseMsmq(PublisherInputQueue))
+                .Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
+                //.Transport(t => t.UseMsmq(PublisherInputQueue))
                 .Routing(r => r.SimpleTypeBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
@@ -67,7 +67,7 @@ namespace Tests.Integration
         }
 
         [Test]
-        public async Task SusbcriberReceivesMessagesWhenItHasSubscribed()
+        public async Task SubcriberReceivesMessagesWhenItHasSubscribed()
         {
             var subscriberReceivedMessage = new ManualResetEvent(false);
             const string topicName = "someTopic";
@@ -83,7 +83,7 @@ namespace Tests.Integration
 
             await _publisherBus.Publish(topicName, "hej med dig min ven!!!!!");
 
-            subscriberReceivedMessage.WaitOrDie(TimeSpan.FromSeconds(3), "Expected to have received a message");
+            subscriberReceivedMessage.WaitOrDie(TimeSpan.FromSeconds(30), "Expected to have received a message");
         }
     }
 }

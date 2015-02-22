@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Messaging;
 using NUnit.Framework;
 using Rebus2.Extensions;
 using Rebus2.Messages;
@@ -23,16 +22,11 @@ namespace Tests.Transport.InMem
         public void CanSendAndReceive()
         {
             var messageId = Guid.NewGuid().ToString();
-
-            var transportMessageToSend = new TransportMessage(new Dictionary<string, string>
-            {
-                {Headers.MessageId, messageId}
-            }, new MemoryStream());
+            var transportMessageToSend = GetTransportMessage(messageId);
 
             _network.Deliver("bimse", transportMessageToSend);
 
             var receivedTransportMessage = _network.GetNextOrNull("bimse");
-            
             Assert.That(receivedTransportMessage, Is.Not.Null);
             Assert.That(receivedTransportMessage.Headers.GetValue(Headers.MessageId), Is.EqualTo(messageId));
         }
@@ -41,18 +35,31 @@ namespace Tests.Transport.InMem
         public void CanSendAndReceive_IsCaseInsensitive()
         {
             var messageId = Guid.NewGuid().ToString();
-
-            var transportMessageToSend = new TransportMessage(new Dictionary<string, string>
-            {
-                {Headers.MessageId, messageId}
-            }, new MemoryStream());
+            var transportMessageToSend = GetTransportMessage(messageId);
 
             _network.Deliver("bImSe", transportMessageToSend);
 
             var receivedTransportMessage = _network.GetNextOrNull("BiMsE");
-            
             Assert.That(receivedTransportMessage, Is.Not.Null);
             Assert.That(receivedTransportMessage.Headers.GetValue(Headers.MessageId), Is.EqualTo(messageId));
+        }
+
+        [Test]
+        public void EmptyQueueYieldsNull()
+        {
+            Assert.That(_network.GetNextOrNull("bimse"), Is.Null);
+        }
+
+        static TransportMessage GetTransportMessage(string messageId)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                {Headers.MessageId, messageId}
+            };
+
+            var emptyMessageBody = new MemoryStream();
+
+            return new TransportMessage(headers, emptyMessageBody);
         }
     }
 }

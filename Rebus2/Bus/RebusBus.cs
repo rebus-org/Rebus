@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus2.Extensions;
 using Rebus2.Logging;
@@ -23,6 +23,10 @@ namespace Rebus2.Bus
         {
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
+
+        static int _busIdCounter;
+
+        readonly int _busId = Interlocked.Increment(ref _busIdCounter);
 
         readonly List<IWorker> _workers = new List<IWorker>();
 
@@ -119,6 +123,8 @@ namespace Rebus2.Bus
         public async Task Subscribe(string topic)
         {
             await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
+
+            int a = 2;
         }
 
         public async Task Unsubscribe(string topic)
@@ -238,7 +244,7 @@ namespace Rebus2.Bus
         {
             lock (_workers)
             {
-                var workerName = string.Format("Rebus worker {0}", _workers.Count + 1);
+                var workerName = string.Format("Rebus {0} worker {1}", _busId, _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
                 _workers.Add(_workerFactory.CreateWorker(workerName));
             }

@@ -58,7 +58,7 @@ namespace Rebus2.Transport.InMem
                 return nextMessage;
             }
 
-            await Task.Delay(200);
+            await Task.Delay(20);
             
             return null;
         }

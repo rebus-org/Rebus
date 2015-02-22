@@ -59,6 +59,7 @@ namespace Rebus2.Bus
                 }
 
                 TryProcessMessage();
+
             }
             catch (Exception exception)
             {
@@ -66,8 +67,18 @@ namespace Rebus2.Bus
             }
         }
 
+        int _continuationsWaitingToBePosted;
+
         async void TryProcessMessage()
         {
+            if (_continuationsWaitingToBePosted > 20)
+            {
+                Thread.Sleep(100);
+                return;
+            }
+
+            _continuationsWaitingToBePosted++;
+
             using (var transactionContext = new DefaultTransactionContext())
             {
                 try
@@ -76,11 +87,7 @@ namespace Rebus2.Bus
 
                     var message = await _transport.Receive(transactionContext);
 
-                    if (message == null)
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(0.1));
-                        return;
-                    }
+                    if (message == null) return;
 
                     var context = new StepContext(message, transactionContext);
                     transactionContext.Items[StepContext.StepContextKey] = context;
@@ -97,6 +104,7 @@ namespace Rebus2.Bus
                 finally
                 {
                     //AmbientTransactionContext.Current = null;
+                    _continuationsWaitingToBePosted--;
                 }
             }
         }

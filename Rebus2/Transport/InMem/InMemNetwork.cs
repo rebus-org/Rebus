@@ -11,9 +11,9 @@ namespace Rebus2.Transport.InMem
     /// </summary>
     public class InMemNetwork
     {
-        static int NetworkId;
+        static int _networkIdCounter;
 
-        readonly string _networkId;
+        readonly string _networkId = string.Format("In-mem network {0}", Interlocked.Increment(ref _networkIdCounter));
 
         readonly ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>> _queues = 
             new ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>>(StringComparer.InvariantCultureIgnoreCase);
@@ -22,7 +22,6 @@ namespace Rebus2.Transport.InMem
 
         public InMemNetwork(bool outputEventsToConsole = false)
         {
-            _networkId = string.Format("In-mem network {0}", Interlocked.Increment(ref NetworkId));
             _outputEventsToConsole = outputEventsToConsole;
 
             if (_outputEventsToConsole)
