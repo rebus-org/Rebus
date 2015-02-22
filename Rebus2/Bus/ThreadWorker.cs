@@ -89,7 +89,7 @@ namespace Rebus2.Bus
 
                     if (message == null) return;
 
-                    var context = new StepContext(message, transactionContext);
+                    var context = new IncomingStepContext(message, transactionContext);
                     transactionContext.Items[StepContext.StepContextKey] = context;
 
                     var stagedReceiveSteps = _pipeline.ReceivePipeline();

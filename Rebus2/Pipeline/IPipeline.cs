@@ -4,19 +4,19 @@ namespace Rebus2.Pipeline
 {
     public interface IPipeline
     {
-        IEnumerable<IStep> SendPipeline();
-        IEnumerable<StagedReceiveStep> ReceivePipeline();
+        IEnumerable<IOutgoingStep> SendPipeline();
+        IEnumerable<StagedReceiveStep<IIncomingStep>> ReceivePipeline();
     }
 
-    public class StagedReceiveStep
+    public class StagedReceiveStep<T> where T:IStep
     {
-        public StagedReceiveStep(IStep step, ReceiveStage stage)
+        public StagedReceiveStep(T step, ReceiveStage stage)
         {
             Step = step;
             Stage = stage;
         }
 
-        public IStep Step { get; private set; }
+        public T Step { get; private set; }
         public ReceiveStage Stage { get; private set; }
     }
 

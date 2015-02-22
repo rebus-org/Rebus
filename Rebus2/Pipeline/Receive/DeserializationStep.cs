@@ -5,7 +5,7 @@ using Rebus2.Serialization;
 
 namespace Rebus2.Pipeline.Receive
 {
-    public class DeserializationStep : IStep
+    public class DeserializationStep : IIncomingStep
     {
         readonly ISerializer _serializer;
 
@@ -14,7 +14,7 @@ namespace Rebus2.Pipeline.Receive
             _serializer = serializer;
         }
 
-        public async Task Process(StepContext context, Func<Task> next)
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();
             var message = await _serializer.Deserialize(transportMessage);

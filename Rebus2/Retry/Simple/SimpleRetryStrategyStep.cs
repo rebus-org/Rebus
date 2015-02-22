@@ -11,7 +11,7 @@ using Rebus2.Transport;
 
 namespace Rebus2.Retry.Simple
 {
-    public class SimpleRetryStrategyStep : IStep
+    public class SimpleRetryStrategyStep : IIncomingStep
     {
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
         static ILog _log;
@@ -31,7 +31,7 @@ namespace Rebus2.Retry.Simple
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
         }
 
-        public async Task Process(StepContext context, Func<Task> next)
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();
             var transactionContext = context.Load<ITransactionContext>();

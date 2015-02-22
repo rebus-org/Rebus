@@ -6,7 +6,7 @@ using Rebus2.Messages;
 
 namespace Rebus2.Pipeline.Receive
 {
-    public class DispatchStep : IStep
+    public class DispatchStep : IIncomingStep
     {
         readonly Dispatcher _dispatcher;
 
@@ -15,7 +15,7 @@ namespace Rebus2.Pipeline.Receive
             _dispatcher = new Dispatcher(handlerActivator);
         }
 
-        public async Task Process(StepContext context, Func<Task> next)
+        public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();
             

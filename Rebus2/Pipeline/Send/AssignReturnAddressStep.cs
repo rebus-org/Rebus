@@ -5,7 +5,7 @@ using Rebus2.Transport;
 
 namespace Rebus2.Pipeline.Send
 {
-    public class AssignReturnAddressStep : IStep
+    public class AssignReturnAddressStep : IOutgoingStep
     {
         readonly ITransport _transport;
 
@@ -14,7 +14,7 @@ namespace Rebus2.Pipeline.Send
             _transport = transport;
         }
 
-        public async Task Process(StepContext context, Func<Task> next)
+        public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();
             var headers = message.Headers;

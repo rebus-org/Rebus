@@ -6,31 +6,55 @@ using Rebus2.Transport;
 
 namespace Rebus2.Pipeline
 {
-    public interface IStep
+    public interface IStep { }
+
+    public interface IIncomingStep : IStep
     {
-        Task Process(StepContext context, Func<Task> next);
+        Task Process(IncomingStepContext context, Func<Task> next);
     }
 
-    public class StepContext
+    public interface IOutgoingStep : IStep
+    {
+        Task Process(OutgoingStepContext context, Func<Task> next);
+    }
+
+    public class IncomingStepContext : StepContext
+    {
+        public IncomingStepContext(TransportMessage message, ITransactionContext transactionContext)
+        {
+            Save(message);
+            Save(transactionContext);
+        }
+    }
+
+    public class OutgoingStepContext : StepContext
+    {
+        public OutgoingStepContext(Message logicalMessage)
+        {
+            Save(logicalMessage);
+        }
+    }
+
+    public abstract class StepContext
     {
         public const string StepContextKey = "stepContext";
 
         readonly Dictionary<string, object> _items = new Dictionary<string, object>();
 
-        public StepContext(TransportMessage receivedTransportMessage, ITransactionContext transactionContext)
-        {
-            Save(receivedTransportMessage);
-            Save(transactionContext);
-        }
+        //protected StepContext(TransportMessage receivedTransportMessage, ITransactionContext transactionContext)
+        //{
+        //    Save(receivedTransportMessage);
+        //    Save(transactionContext);
+        //}
 
-        public StepContext(Message outgoingLogicalMessage)
-        {
-            Save(outgoingLogicalMessage);
-        }
+        //protected StepContext(Message outgoingLogicalMessage)
+        //{
+        //    Save(outgoingLogicalMessage);
+        //}
 
         public T Save<T>(T instance)
         {
-            return Save(typeof (T).FullName, instance);
+            return Save(typeof(T).FullName, instance);
         }
 
         public T Save<T>(string key, T instance)
@@ -41,14 +65,14 @@ namespace Rebus2.Pipeline
 
         public T Load<T>()
         {
-            return Load<T>(typeof (T).FullName);
+            return Load<T>(typeof(T).FullName);
         }
 
         public T Load<T>(string key)
         {
             object instance;
             return _items.TryGetValue(key, out instance)
-                ? (T) instance
+                ? (T)instance
                 : default(T);
         }
     }

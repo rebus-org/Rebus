@@ -5,6 +5,7 @@ namespace Rebus2.Pipeline
 {
     public interface IPipelineInvoker
     {
-        Task Invoke(StepContext context, IEnumerable<IStep> pipeline);
+        Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline);
+        Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline);
     }
 }

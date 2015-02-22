@@ -10,14 +10,14 @@ namespace Rebus2.Pipeline
         readonly List<RegisteredStep> _sendSteps = new List<RegisteredStep>();
         readonly List<RegisteredStep> _receiveSteps = new List<RegisteredStep>();
 
-        public IEnumerable<IStep> SendPipeline()
+        public IEnumerable<IOutgoingStep> SendPipeline()
         {
-            return _sendSteps.Select(s => s.Step);
+            return _sendSteps.Select(s => s.Step).Cast<IOutgoingStep>();
         }
 
-        public IEnumerable<StagedReceiveStep> ReceivePipeline()
+        public IEnumerable<StagedReceiveStep<IIncomingStep>> ReceivePipeline()
         {
-            return _receiveSteps.Select(s => new StagedReceiveStep(s.Step, (ReceiveStage)s.Stage));
+            return _receiveSteps.Select(s => new StagedReceiveStep<IIncomingStep>((IIncomingStep)s.Step, (ReceiveStage)s.Stage));
         }
 
         public DefaultPipeline OnReceive(IStep step, ReceiveStage stage)

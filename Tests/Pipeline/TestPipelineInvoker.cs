@@ -16,9 +16,9 @@ namespace Tests.Pipeline
         {
             var invoker = new DefaultPipelineInvoker();
 
-            var stepContext = new StepContext(new TransportMessage(new Dictionary<string, string>(), new MemoryStream()), null);
+            var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new MemoryStream()), null);
 
-            await invoker.Invoke(stepContext, new IStep[]
+            await invoker.Invoke(stepContext, new IIncomingStep[]
             {
                 new NamedStep("first"),
                 new NamedStep("second"),
@@ -28,7 +28,7 @@ namespace Tests.Pipeline
             Console.WriteLine(string.Join(Environment.NewLine, stepContext.Load<List<string>>()));
         }
 
-        class NamedStep : IStep
+        class NamedStep : IIncomingStep
         {
             readonly string _name;
 
@@ -37,7 +37,7 @@ namespace Tests.Pipeline
                 _name = name;
             }
 
-            public async Task Process(StepContext context, Func<Task> next)
+            public async Task Process(IncomingStepContext context, Func<Task> next)
             {
                 GetActionList(context).Add(string.Format("enter {0}", _name));
 

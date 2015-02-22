@@ -4,6 +4,6 @@ namespace Rebus2.Retry
 {
     public interface IRetryStrategy
     {
-        IStep GetRetryStep();
+        IIncomingStep GetRetryStep();
     }
 }

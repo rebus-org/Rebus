@@ -4,9 +4,9 @@ using Rebus2.Messages;
 
 namespace Rebus2.Pipeline.Send
 {
-    public class AssignGuidMessageIdStep : IStep
+    public class AssignGuidMessageIdStep : IOutgoingStep
     {
-        public async Task Process(StepContext context, Func<Task> next)
+        public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();
             var headers = message.Headers;
