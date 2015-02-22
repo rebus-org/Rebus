@@ -164,7 +164,7 @@ namespace Rebus2.Bus
             var destinationAddressesList = destinationAddresses.ToList();
             var hasOneOrMoreDestinations = destinationAddressesList.Any();
 
-            await _pipelineInvoker.Invoke(new OutgoingStepContext(logicalMessage), _pipeline.SendPipeline());
+            await _pipelineInvoker.Invoke(new OutgoingStepContext(logicalMessage), _pipeline.SendPipeline().Select(s => s.Step));
             
             _log.Debug("Sending {0} -> {1}", 
                 logicalMessage.Body ?? "<empty message>",
