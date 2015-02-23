@@ -5,11 +5,11 @@ using Rebus2.Serialization;
 
 namespace Rebus2.Pipeline.Receive
 {
-    public class DeserializationStep : IIncomingStep
+    public class DeserializeIncomingMessageStep : IIncomingStep
     {
         readonly ISerializer _serializer;
 
-        public DeserializationStep(ISerializer serializer)
+        public DeserializeIncomingMessageStep(ISerializer serializer)
         {
             _serializer = serializer;
         }

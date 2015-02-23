@@ -6,11 +6,11 @@ using Rebus2.Messages;
 
 namespace Rebus2.Pipeline.Receive
 {
-    public class DispatchStep : IIncomingStep
+    public class DispatchIncomingMessageStep : IIncomingStep
     {
         readonly Dispatcher _dispatcher;
 
-        public DispatchStep(IHandlerActivator handlerActivator)
+        public DispatchIncomingMessageStep(IHandlerActivator handlerActivator)
         {
             _dispatcher = new Dispatcher(handlerActivator);
         }

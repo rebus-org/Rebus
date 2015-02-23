@@ -97,8 +97,8 @@
     <Compile Include="Pipeline\IStep.cs" />
     <Compile Include="Pipeline\IPipeline.cs" />
     <Compile Include="Pipeline\DefaultPipelineInvoker.cs" />
-    <Compile Include="Pipeline\Receive\DeserializationStep.cs" />
-    <Compile Include="Pipeline\Receive\DispatchStep.cs" />
+    <Compile Include="Pipeline\Receive\DeserializeIncomingMessageStep.cs" />
+    <Compile Include="Pipeline\Receive\DispatchIncomingMessageStep.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategyStep.cs" />
     <Compile Include="Pipeline\Send\AssignGuidMessageIdStep.cs" />
     <Compile Include="Pipeline\Send\AssignReturnAddressStep.cs" />

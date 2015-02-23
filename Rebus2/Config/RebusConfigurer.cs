@@ -84,8 +84,8 @@ namespace Rebus2.Config
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
                 .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DeserializationStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized)
+                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
+                .OnReceive(new DispatchIncomingMessageStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized)
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
