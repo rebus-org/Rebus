@@ -93,6 +93,7 @@ namespace Rebus2.Bus
                     transactionContext.Items[StepContext.StepContextKey] = context;
 
                     var stagedReceiveSteps = _pipeline.ReceivePipeline();
+                    
                     await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                     transactionContext.Complete();
@@ -103,7 +104,7 @@ namespace Rebus2.Bus
                 }
                 finally
                 {
-                    //AmbientTransactionContext.Current = null;
+                    AmbientTransactionContext.Current = null;
                     _continuationsWaitingToBePosted--;
                 }
             }
