@@ -7,7 +7,6 @@ using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Logging;
 using Rebus2.Routing.TopicBased;
-using Rebus2.Routing.TypeBased;
 using Rebus2.Transport.InMem;
 using Tests.Extensions;
 

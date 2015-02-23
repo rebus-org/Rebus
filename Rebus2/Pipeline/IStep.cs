@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus2.Messages;
+using Rebus2.Pipeline.Send;
 using Rebus2.Transport;
 
 namespace Rebus2.Pipeline
@@ -29,9 +30,11 @@ namespace Rebus2.Pipeline
 
     public class OutgoingStepContext : StepContext
     {
-        public OutgoingStepContext(Message logicalMessage)
+        public OutgoingStepContext(Message logicalMessage, IEnumerable<string> destinationAddresses, ITransactionContext transactionContext)
         {
             Save(logicalMessage);
+            Save(new DestinationAddresses(destinationAddresses));
+            Save(transactionContext);
         }
     }
 

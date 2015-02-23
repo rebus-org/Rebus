@@ -79,6 +79,8 @@
     <Compile Include="Messages\Control\UnsubscribeRequest.cs" />
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
+    <Compile Include="Pipeline\Send\SendOutgoingMessageStep.cs" />
+    <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />
     <Compile Include="Retry\IRetryStrategy.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrageConfigurationExtensions.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />

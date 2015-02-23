@@ -15,7 +15,6 @@ using Rebus2.Routing;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Serialization;
 using Rebus2.Transport;
-using Rebus2.Transport.InMem;
 using Rebus2.Workers;
 
 namespace Rebus2.Config
@@ -87,6 +86,8 @@ namespace Rebus2.Config
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
+                .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
+                .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
 
                 );
 

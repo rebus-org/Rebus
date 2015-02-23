@@ -8,7 +8,7 @@ using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport;
-using Rebus2.Transport.Msmq;
+using Rebus2.Transport.InMem;
 using Tests.Extensions;
 
 namespace Tests.Integration
@@ -25,16 +25,11 @@ namespace Tests.Integration
             _handlerActivator = new BuiltinHandlerActivator();
             _bus = Configure.With(_handlerActivator)
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
-                .Transport(t => t.UseMsmq(InputQueueName))
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), InputQueueName))
                 .Options(o => o.SetNumberOfWorkers(1))
                 .Start();
 
             TrackDisposable(_bus);
-        }
-
-        protected override void TearDown()
-        {
-            MsmqUtil.Delete(InputQueueName);
         }
 
         [Test]
@@ -45,13 +40,10 @@ namespace Tests.Integration
 
             _handlerActivator.Handle<string>(async str =>
             {
-                AppendEvent(events);
-                await Task.Delay(200);
-                AppendEvent(events);
-                await Task.Delay(200);
-                AppendEvent(events);
-                await Task.Delay(200);
-                AppendEvent(events);
+                await AppendEvent(events, "1");
+                await AppendEvent(events, "2");
+                await AppendEvent(events, "3");
+                await AppendEvent(events, "4");
                 finishedHandled.Set();
             });
 
@@ -60,14 +52,27 @@ namespace Tests.Integration
             await _bus.Send("hej med dig!");
 
             finishedHandled.WaitOrDie(TimeSpan.FromSeconds(10));
+
+            Assert.That(events.Count, Is.EqualTo(4));
+            Assert.That(events[0], Is.StringStarting("event=1"));
+            Assert.That(events[1], Is.StringStarting("event=2"));
+            Assert.That(events[2], Is.StringStarting("event=3"));
+            Assert.That(events[3], Is.StringStarting("event=4"));
         }
 
-        void AppendEvent(List<string> events)
+        async Task AppendEvent(List<string> events, string eventNumber)
         {
-            var text = string.Format("thread={0};time={1};context={2}", 
-                Thread.CurrentThread.ManagedThreadId, DateTime.UtcNow.ToString("mm:ss"), AmbientTransactionContext.Current);
+            var text = string.Format("event={0};thread={1};time={2};context={3}", 
+                eventNumber,
+                Thread.CurrentThread.ManagedThreadId, 
+                DateTime.UtcNow.ToString("mm:ss"), 
+                AmbientTransactionContext.Current);
+
             Console.WriteLine(text);
+
             events.Add(text);
+
+            await Task.Delay(10);
         }
     }
 }

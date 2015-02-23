@@ -161,37 +161,28 @@ namespace Rebus2.Bus
 
         async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
-            var destinationAddressesList = destinationAddresses.ToList();
-            var hasOneOrMoreDestinations = destinationAddressesList.Any();
-
-            await _pipelineInvoker.Invoke(new OutgoingStepContext(logicalMessage), _pipeline.SendPipeline().Select(s => s.Step));
+            var transactionContext = AmbientTransactionContext.Current;
             
-            _log.Debug("Sending {0} -> {1}", 
-                logicalMessage.Body ?? "<empty message>",
-                hasOneOrMoreDestinations ? string.Join(";", destinationAddressesList) : "<no destinations>");
-
-            if (!hasOneOrMoreDestinations) return;
-            
-            var transportMessage = await _serializer.Serialize(logicalMessage);
-
-            var currentTransactionContext = AmbientTransactionContext.Current;
-
-            if (currentTransactionContext != null)
+            if (transactionContext != null)
             {
-                await Task.WhenAll(destinationAddressesList
-                    .Select(destinationAddress => _transport.Send(destinationAddress, transportMessage, currentTransactionContext)));
-
-                return;
+                await SendUsingBimmelime(destinationAddresses, logicalMessage, transactionContext);
             }
-
-            using (var defaultTransactionContext = new DefaultTransactionContext())
+            else
             {
-                // ReSharper disable once AccessToDisposedClosure
-                await Task.WhenAll(destinationAddressesList
-                    .Select(destinationAddress => _transport.Send(destinationAddress, transportMessage, defaultTransactionContext)));
-                
-                defaultTransactionContext.Complete();
+                using (var context = new DefaultTransactionContext())
+                {
+                    await SendUsingBimmelime(destinationAddresses, logicalMessage, context);
+                    
+                    context.Complete();
+                }
             }
+        }
+
+        async Task SendUsingBimmelime(IEnumerable<string> destinationAddresses, Message logicalMessage, ITransactionContext transactionContext)
+        {
+            var context = new OutgoingStepContext(logicalMessage, destinationAddresses, transactionContext);
+
+            await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline().Select(s => s.Step));
         }
 
         ~RebusBus()
