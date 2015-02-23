@@ -16,20 +16,22 @@ namespace Rebus2.Bus
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
+        readonly int _maxParallelismPerWorker;
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
-        readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
 
         volatile bool _keepWorking = true;
 
-        public ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext)
+        public ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, int maxParallelismPerWorker)
         {
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
+            _maxParallelismPerWorker = maxParallelismPerWorker;
             _workerThread = new Thread(() =>
             {
                 SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
@@ -71,7 +73,7 @@ namespace Rebus2.Bus
 
         async void TryProcessMessage()
         {
-            if (_continuationsWaitingToBePosted > 20)
+            if (_continuationsWaitingToBePosted >= _maxParallelismPerWorker)
             {
                 Thread.Sleep(100);
                 return;

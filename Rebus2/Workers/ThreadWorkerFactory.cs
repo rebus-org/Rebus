@@ -18,9 +18,11 @@ namespace Rebus2.Workers
             _pipelineInvoker = pipelineInvoker;
         }
 
+        public int MaxParallelismPerWorker { get; set; }
+
         public IWorker CreateWorker(string workerName)
         {
-            return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext);
+            return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext, MaxParallelismPerWorker);
         }
     }
 }

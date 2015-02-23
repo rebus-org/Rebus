@@ -55,11 +55,7 @@ namespace Rebus2.Config
 
         public IBus Start()
         {
-            if (!_injectionist.Has<ITransport>())
-            {
-                throw new ConfigurationErrorsException(
-                    "No transport has been configured! You need to call .Transport(t => t.Use***) in order to select which kind of queueing system you want to use to transport messages. If you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
-            }
+            VerifyRequirements();
 
             PossiblyRegisterDefault<IRouter>(c => new TypeBasedRouter());
 
@@ -72,7 +68,14 @@ namespace Rebus2.Config
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
 
-            PossiblyRegisterDefault<IWorkerFactory>(c => new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>()));
+            PossiblyRegisterDefault<IWorkerFactory>(c =>
+            {
+                var factory = new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>())
+                {
+                    MaxParallelismPerWorker = _options.MaxParallelism
+                };
+                return factory;
+            });
 
             PossiblyRegisterDefault<IRetryStrategy>(c => new SimpleRetryStrategy(c.Get<ITransport>(), c.Get<SimpleRetryStrategySettings>()));
 
@@ -110,6 +113,17 @@ namespace Rebus2.Config
             _injectionist.Register<IHandlerActivator>(c => new InternalHandlersContributor(c.Get<IHandlerActivator>(), c.Get<ISubscriptionStorage>()), isDecorator: true);
 
             return _injectionist.Get<IBus>();
+        }
+
+        void VerifyRequirements()
+        {
+            if (!_injectionist.Has<ITransport>())
+            {
+                throw new ConfigurationErrorsException(
+                    "No transport has been configured! You need to call .Transport(t => t.Use***) in order" +
+                    " to select which kind of queueing system you want to use to transport messages. If" +
+                    " you want something lightweight (possibly for testing?) you can use .Transport(t => t.UseInMemoryTransport(...))");
+            }
         }
 
         void PossiblyRegisterDefault<TService>(Func<IResolutionContext, TService> factoryMethod)
