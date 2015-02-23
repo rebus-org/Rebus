@@ -165,20 +165,20 @@ namespace Rebus2.Bus
             
             if (transactionContext != null)
             {
-                await SendUsingBimmelime(destinationAddresses, logicalMessage, transactionContext);
+                await SendUsingTransactionContext(destinationAddresses, logicalMessage, transactionContext);
             }
             else
             {
                 using (var context = new DefaultTransactionContext())
                 {
-                    await SendUsingBimmelime(destinationAddresses, logicalMessage, context);
+                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
                     
                     context.Complete();
                 }
             }
         }
 
-        async Task SendUsingBimmelime(IEnumerable<string> destinationAddresses, Message logicalMessage, ITransactionContext transactionContext)
+        async Task SendUsingTransactionContext(IEnumerable<string> destinationAddresses, Message logicalMessage, ITransactionContext transactionContext)
         {
             var context = new OutgoingStepContext(logicalMessage, destinationAddresses, transactionContext);
 
