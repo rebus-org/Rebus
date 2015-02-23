@@ -43,7 +43,7 @@ namespace Rebus2.Pipeline.Send
             await next();
         }
 
-        async Task Send(IEnumerable<string> destinationAddressesList, 
+        async Task Send(IEnumerable<string> destinationAddressesList,
             TransportMessage transportMessage,
             ITransactionContext currentTransactionContext)
         {
