@@ -89,6 +89,7 @@ namespace Rebus2.Config
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
+                .OnSend(new FlowCorrelationIdStep())
                 .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
                 .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
 
