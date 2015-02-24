@@ -1,26 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Rebus2.Activation;
-using Rebus2.Dispatch;
-using Rebus2.Messages;
 
 namespace Rebus2.Pipeline.Receive
 {
     public class DispatchIncomingMessageStep : IIncomingStep
     {
-        readonly Dispatcher _dispatcher;
-
-        public DispatchIncomingMessageStep(IHandlerActivator handlerActivator)
-        {
-            _dispatcher = new Dispatcher(handlerActivator);
-        }
-
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var message = context.Load<Message>();
-            
-            await _dispatcher.Dispatch(message);
-            
+            var invokers = context.Load<List<HandlerInvoker>>();
+
+            foreach (var invoker in invokers)
+            {
+                await invoker.Invoke();
+            }
+
             await next();
         }
     }

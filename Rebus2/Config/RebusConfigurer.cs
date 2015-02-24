@@ -85,7 +85,8 @@ namespace Rebus2.Config
 
                 .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchIncomingMessageStep(c.Get<IHandlerActivator>()), ReceiveStage.MessageDeserialized)
+                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
+                .OnReceive(new DispatchIncomingMessageStep(), ReceiveStage.MessageDeserialized)
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
