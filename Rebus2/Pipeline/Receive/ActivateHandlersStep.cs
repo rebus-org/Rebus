@@ -6,8 +6,8 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Rebus2.Activation;
 using Rebus2.Extensions;
-using Rebus2.Handlers;
 using Rebus2.Messages;
+using Rebus2.Sagas;
 
 namespace Rebus2.Pipeline.Receive
 {
@@ -40,15 +40,12 @@ namespace Rebus2.Pipeline.Receive
         }
 
         // ReSharper disable once UnusedMember.Local
-        async Task<List<HandlerInvoker>>  GetHandlerInvokers<TMessage>(string messageId, TMessage message)
+        async Task<List<HandlerInvoker>> GetHandlerInvokers<TMessage>(string messageId, TMessage message)
         {
             var handlers = await _handlerActivator.GetHandlers(message);
 
             return handlers
-                .Select(handler => new HandlerInvoker<TMessage>(messageId, async () =>
-                {
-                    await handler.Handle(message);
-                }))
+                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler))
                 .Cast<HandlerInvoker>()
                 .ToList();
         }
@@ -64,22 +61,79 @@ namespace Rebus2.Pipeline.Receive
     public abstract class HandlerInvoker
     {
         public abstract Task Invoke();
+        public abstract bool HasSaga { get; }
+        public abstract Saga Saga { get; }
+
+        public abstract void SetSagaData(ISagaData sagaData);
+        public abstract bool CanBeInitiatedBy(Type messageType);
+
+        public abstract void SkipInvocation();
     }
 
     public class HandlerInvoker<TMessage> : HandlerInvoker
     {
         readonly string _messageId;
         readonly Func<Task> _action;
+        readonly object _handler;
+        ISagaData _sagaData;
+        bool _invokeHandler = true;
 
-        public HandlerInvoker(string messageId, Func<Task> action)
+        public HandlerInvoker(string messageId, Func<Task> action, object handler)
         {
             _messageId = messageId;
             _action = action;
+            _handler = handler;
+        }
+
+        public override bool HasSaga
+        {
+            get { return _handler is Saga; }
+        }
+
+        public override Saga Saga
+        {
+            get
+            {
+                if (!HasSaga) throw new InvalidOperationException(string.Format("Attempted to get {0} as saga, it's not a saga!", _handler));
+                
+                return (Saga)_handler;
+            }
         }
 
         public override async Task Invoke()
         {
+            if (!_invokeHandler) return;
+
             await _action();
+        }
+
+        public override void SetSagaData(ISagaData sagaData)
+        {
+            if (!HasSaga) throw new InvalidOperationException(string.Format("Attempted to set {0} as saga data on handler {1}, but the handler is not a saga!",
+                sagaData, _handler));
+
+            var dataProperty = _handler.GetType().GetProperty("Data");
+
+            if (dataProperty == null)
+            {
+                throw new ApplicationException(string.Format("Could not find the 'Data' property on {0}...", _handler));
+            }
+
+            dataProperty.SetValue(_handler, sagaData);
+
+            _sagaData = sagaData;
+        }
+
+        public override bool CanBeInitiatedBy(Type messageType)
+        {
+            var handlerTypeToLookFor = typeof(IAmInitiatedBy<>).MakeGenericType(messageType);
+
+            return _handler.GetType().GetInterfaces().Contains(handlerTypeToLookFor);
+        }
+
+        public override void SkipInvocation()
+        {
+            _invokeHandler = false;
         }
     }
 }

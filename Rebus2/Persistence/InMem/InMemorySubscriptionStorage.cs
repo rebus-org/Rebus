@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Rebus2.Messages;
 using Rebus2.Messages.Control;
@@ -14,14 +13,11 @@ namespace Rebus2.Persistence.InMem
 {
     public class InMemorySubscriptionStorage : ISubscriptionStorage
     {
-        static int Counter = 0;
         static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
 
         readonly IRouter _router;
         readonly ITransport _transport;
         readonly ISerializer _serializer;
-
-        readonly int _id = Interlocked.Increment(ref Counter);
 
         readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers
             = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>(StringComparer);
@@ -35,7 +31,6 @@ namespace Rebus2.Persistence.InMem
 
         public async Task<IEnumerable<string>> GetSubscriberAddresses(string topic)
         {
-            Console.WriteLine("Getting subscribers {0}", _id);
             ConcurrentDictionary<string, object> subscriberAddresses;
 
             return _subscribers.TryGetValue(topic, out subscriberAddresses)

@@ -2,7 +2,9 @@
 
 namespace Rebus2.Handlers
 {
-    public interface IHandleMessages<TMessage>
+    public interface IHandleMessages { }
+    
+    public interface IHandleMessages<TMessage> : IHandleMessages
     {
         Task Handle(TMessage message);
     }

@@ -20,6 +20,12 @@ namespace Rebus2.Config
             return this;
         }
 
+        public OptionsConfigurer SetMaxParallelism(int maxParallelism)
+        {
+            _options.MaxParallelism = maxParallelism;
+            return this;
+        }
+
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
         {
             _injectionist.Register(resolverMethod);

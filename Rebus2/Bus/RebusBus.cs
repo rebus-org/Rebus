@@ -82,25 +82,31 @@ namespace Rebus2.Bus
             }
         }
 
-        public async Task Send(object commandMessage)
+        public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var headers = new Dictionary<string, string>();
-            var logicalMessage = new Message(headers, commandMessage);
+            var logicalMessage = new Message(GetHeaders(optionalHeaders), commandMessage);
+            var destinationAddress = _transport.Address;
+
+            await InnerSend(new[] { destinationAddress }, logicalMessage);
+        }
+
+        public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = new Message(GetHeaders(optionalHeaders), commandMessage);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
-        public async Task Publish(string topic, object eventMessage)
+        public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var headers = new Dictionary<string, string>();
-            var logicalMessage = new Message(headers, eventMessage);
+            var logicalMessage = new Message(GetHeaders(optionalHeaders), eventMessage);
             var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
 
             await InnerSend(subscriberAddresses, logicalMessage);
         }
 
-        public async Task Reply(object replyMessage)
+        public async Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
         {
             // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
             var currentTransactionContext = AmbientTransactionContext.Current;
@@ -112,12 +118,16 @@ namespace Rebus2.Bus
 
             var stepContext = GetCurrentReceiveContext(currentTransactionContext);
 
-            var headers = new Dictionary<string, string>();
-            var logicalMessage = new Message(headers, replyMessage);
+            var logicalMessage = new Message(GetHeaders(optionalHeaders), replyMessage);
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
             await InnerSend(new[] { returnAddress }, logicalMessage);
+        }
+
+        static Dictionary<string, string> GetHeaders(Dictionary<string, string> headers)
+        {
+            return headers ?? new Dictionary<string, string>();
         }
 
         public async Task Subscribe(string topic)
@@ -162,7 +172,7 @@ namespace Rebus2.Bus
         async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
             var transactionContext = AmbientTransactionContext.Current;
-            
+
             if (transactionContext != null)
             {
                 await SendUsingTransactionContext(destinationAddresses, logicalMessage, transactionContext);
@@ -172,7 +182,7 @@ namespace Rebus2.Bus
                 using (var context = new DefaultTransactionContext())
                 {
                     await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
-                    
+
                     context.Complete();
                 }
             }

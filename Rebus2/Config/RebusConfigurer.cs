@@ -13,6 +13,7 @@ using Rebus2.Retry;
 using Rebus2.Retry.Simple;
 using Rebus2.Routing;
 using Rebus2.Routing.TypeBased;
+using Rebus2.Sagas;
 using Rebus2.Serialization;
 using Rebus2.Transport;
 using Rebus2.Workers;
@@ -63,6 +64,8 @@ namespace Rebus2.Config
                 c.Get<IRouter>(), 
                 c.Get<ITransport>(), 
                 c.Get<ISerializer>()));
+
+            PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
             
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
@@ -86,6 +89,7 @@ namespace Rebus2.Config
                 .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DispatchIncomingMessageStep(), ReceiveStage.MessageDeserialized)
 
                 .OnSend(new AssignGuidMessageIdStep())

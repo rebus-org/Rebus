@@ -16,17 +16,20 @@ namespace Rebus2.Activation
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly List<object> _handlers = new List<object>();
+        readonly List<object> _handlerInstances = new List<object>();
+        readonly List<Delegate> _handlerFactories = new List<Delegate>();
 
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message)
         {
-            return _handlers.OfType<Handler<TMessage>>();
+            var factories = _handlerFactories.OfType<Func<IHandleMessages<TMessage>>>();
+            var handlers = factories.Select(factory => factory());
+            return _handlerInstances.OfType<Handler<TMessage>>().Concat(handlers);
         }
 
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
-            _log.Debug("Adding handler for {0}", typeof(TMessage));
-            _handlers.Add(new Handler<TMessage>(handlerFunction));
+            _log.Debug("Adding handler for message type {0}", typeof(TMessage));
+            _handlerInstances.Add(new Handler<TMessage>(handlerFunction));
             return this;
         }
 
@@ -43,6 +46,13 @@ namespace Rebus2.Activation
             {
                 return _handlerFunction(message);
             }
+        }
+
+        public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
+        {
+            _log.Debug("Adding handler factory for handler type {0}", typeof(THandler));
+            _handlerFactories.Add(handlerFactory);
+            return this;
         }
     }
 }
