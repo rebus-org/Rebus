@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration.Internal;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus2.Activation;
@@ -19,12 +19,13 @@ namespace Tests.Integration
     {
         BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
+        List<string> _recordedCalls;
 
         protected override void SetUp()
         {
+            _recordedCalls = new List<string>();
             _handlerActivator = new BuiltinHandlerActivator();
-
-            _handlerActivator.Register(() => new MySaga());
+            _handlerActivator.Register(() => new MySaga(_recordedCalls));
 
             _bus = Configure.With(_handlerActivator)
                 .Logging(l => l.Console(minLevel: LogLevel.Debug))
@@ -64,6 +65,35 @@ namespace Tests.Integration
                 );
 
             await Task.Delay(2000);
+
+            Console.WriteLine("----------------------------------------------------------------");
+            Console.WriteLine(" Recorded calls");
+            Console.WriteLine("----------------------------------------------------------------");
+            Console.WriteLine(string.Join(Environment.NewLine, _recordedCalls));
+            Console.WriteLine("----------------------------------------------------------------");
+
+            Assert.That(_recordedCalls.Count, Is.EqualTo(9));
+            
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga1:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga1:InitiatingMessage",
+                "saga1:CorrelatedMessage",
+                "saga1:CorrelatedMessage",
+                "saga1:CorrelatedMessage",
+            }));
+
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga2:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga2:InitiatingMessage",
+                "saga2:CorrelatedMessage",
+                "saga2:CorrelatedMessage",
+            }));
+
+            Assert.That(_recordedCalls.Where(c => c.StartsWith("saga3:")).ToArray(), Is.EqualTo(new[]
+            {
+                "saga3:InitiatingMessage",
+                "saga3:CorrelatedMessage",
+            }));
         }
 
         static Dictionary<string, string> Id(string id)
@@ -83,6 +113,13 @@ namespace Tests.Integration
 
         class MySaga : Saga<MySagaData>, IAmInitiatedBy<InitiatingMessage>, IHandleMessages<CorrelatedMessage>
         {
+            readonly List<string> _recordedCalls;
+
+            public MySaga(List<string> recordedCalls)
+            {
+                _recordedCalls = recordedCalls;
+            }
+
             protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
             {
                 config.Correlate<InitiatingMessage>(m => m.CorrelationId, d => d.CorrelationId);
@@ -93,20 +130,22 @@ namespace Tests.Integration
             {
                 Data.CorrelationId = message.CorrelationId;
 
-                Increment(message.GetType());
+                Increment(message.GetType(), message.CorrelationId);
             }
 
             public async Task Handle(CorrelatedMessage message)
             {
-                Increment(message.GetType());
+                Increment(message.GetType(), message.CorrelationId);
             }
 
-            void Increment(Type type)
+            void Increment(Type type, string correlationId)
             {
                 if (!Data.ProcessedMessages.ContainsKey(type))
                     Data.ProcessedMessages[type] = 0;
 
                 Data.ProcessedMessages[type]++;
+
+                _recordedCalls.Add(string.Format("{0}:{1}", correlationId, type.Name));
             }
         }
 
