@@ -35,6 +35,8 @@ namespace Rebus2.Pipeline.Receive
             var message = context.Load<Message>();
             var messageId = message.Headers.GetValue(Headers.MessageId);
             var body = message.Body;
+            var loadedSagaData = new List<ISagaData>();
+            var newlyCreatedSagaData = new List<ISagaData>();
 
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
@@ -42,12 +44,14 @@ namespace Rebus2.Pipeline.Receive
 
                 foreach (var correlationProperty in _sagaHelper.GetCorrelationProperties(sagaInvoker, body))
                 {
-                    var sagaData = await _sagaStorage.Find(correlationProperty.PropertyName, correlationProperty.ValueFromMessage);
+                    var valueFromMessage = correlationProperty.ValueFromMessage(body);
+                    var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
 
                     if (sagaData == null) continue;
 
                     sagaInvoker.SetSagaData(sagaData);
                     foundExistingSagaData = true;
+                    loadedSagaData.Add(sagaData);
 
                     _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, messageId);
                     break;
@@ -62,6 +66,7 @@ namespace Rebus2.Pipeline.Receive
                         var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
                         sagaInvoker.SetSagaData(newSagaData);
                         _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, messageId);
+                        newlyCreatedSagaData.Add(newSagaData);
                     }
                     else
                     {
@@ -73,6 +78,16 @@ namespace Rebus2.Pipeline.Receive
             }
 
             await next();
+
+            foreach (var sagaDataToInsert in newlyCreatedSagaData)
+            {
+                await _sagaStorage.Insert(sagaDataToInsert);
+            }
+            
+            foreach (var sagaDataToInsert in loadedSagaData)
+            {
+                await _sagaStorage.Update(sagaDataToInsert);
+            }
         }
     }
 }

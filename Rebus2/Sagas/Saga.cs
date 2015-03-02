@@ -83,5 +83,6 @@ namespace Rebus2.Sagas
     public interface ISagaData
     {
         Guid Id { get; set; }
+        int Revision { get; set; }
     }
 }

@@ -91,6 +91,8 @@ namespace Tests.Integration
 
             public async Task Handle(InitiatingMessage message)
             {
+                Data.CorrelationId = message.CorrelationId;
+
                 Increment(message.GetType());
             }
 
@@ -116,6 +118,7 @@ namespace Tests.Integration
             }
 
             public Guid Id { get; set; }
+            public int Revision { get; set; }
 
             public string CorrelationId { get; set; }
 
