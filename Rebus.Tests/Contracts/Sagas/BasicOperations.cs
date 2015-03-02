@@ -6,7 +6,6 @@ using Rebus2.Sagas;
 
 namespace Tests.Contracts.Sagas
 {
-    [TestFixture]
     public class BasicOperations : FixtureBase
     {
         InMemorySagaStorage _sagaStorage;

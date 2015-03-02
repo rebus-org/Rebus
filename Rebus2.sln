@@ -3,9 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{959C65AB-D21A-4582-BC4F-06D1425FF274}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus2", "Rebus2\Rebus2.csproj", "{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{63AB64A3-A453-4663-BDB6-530F2136609D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "integration", "integration", "{5D634D12-95B9-4413-99DD-AED4E5D6BBFC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mongodb", "mongodb", "{43F292B0-F058-416C-AE66-DE70B1A5B034}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MongoDb", "Rebus.MongoDb\Rebus.MongoDb.csproj", "{5102E171-2CED-4B6B-A8A5-8791F90C9797}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MongoDb.Tests", "Rebus.MongoDb.Tests\Rebus.MongoDb.Tests.csproj", "{4FA3FD37-73E7-4E6A-9416-3A3673EE7250}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Tests", "Rebus.Tests\Rebus.Tests.csproj", "{959C65AB-D21A-4582-BC4F-06D1425FF274}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,16 +23,31 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5102E171-2CED-4B6B-A8A5-8791F90C9797}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5102E171-2CED-4B6B-A8A5-8791F90C9797}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5102E171-2CED-4B6B-A8A5-8791F90C9797}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5102E171-2CED-4B6B-A8A5-8791F90C9797}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4FA3FD37-73E7-4E6A-9416-3A3673EE7250}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4FA3FD37-73E7-4E6A-9416-3A3673EE7250}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4FA3FD37-73E7-4E6A-9416-3A3673EE7250}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4FA3FD37-73E7-4E6A-9416-3A3673EE7250}.Release|Any CPU.Build.0 = Release|Any CPU
+		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{959C65AB-D21A-4582-BC4F-06D1425FF274}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12} = {63AB64A3-A453-4663-BDB6-530F2136609D}
+		{43F292B0-F058-416C-AE66-DE70B1A5B034} = {5D634D12-95B9-4413-99DD-AED4E5D6BBFC}
+		{5102E171-2CED-4B6B-A8A5-8791F90C9797} = {43F292B0-F058-416C-AE66-DE70B1A5B034}
+		{4FA3FD37-73E7-4E6A-9416-3A3673EE7250} = {43F292B0-F058-416C-AE66-DE70B1A5B034}
+		{959C65AB-D21A-4582-BC4F-06D1425FF274} = {63AB64A3-A453-4663-BDB6-530F2136609D}
 	EndGlobalSection
 EndGlobal
