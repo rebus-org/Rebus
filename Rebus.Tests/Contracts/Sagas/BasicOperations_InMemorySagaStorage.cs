@@ -1,10 +1,21 @@
 ﻿using NUnit.Framework;
+using Rebus2.Persistence.InMem;
+using Rebus2.Sagas;
 
-namespace Tests.Contracts.Sagas
+namespace Rebus.Tests.Contracts.Sagas
 {
     [TestFixture]
-    public class TestInMemorySagaStorage
+    public class TestInMemorySagaStorage : ISagaStorageFactory
     {
-        public class BasicOperations : Sagas.BasicOperations { }
+        public class BasicOperations : BasicOperations<TestInMemorySagaStorage> { }
+
+        public ISagaStorage GetSagaStorage()
+        {
+            return new InMemorySagaStorage();
+        }
+
+        public void Cleanup()
+        {
+        }
     }
 }

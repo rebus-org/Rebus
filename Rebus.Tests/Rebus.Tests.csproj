@@ -52,6 +52,7 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Contracts\Sagas\BasicOperations.cs" />
     <Compile Include="Contracts\Sagas\BasicOperations_InMemorySagaStorage.cs" />
+    <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
     <Compile Include="Extensions\TestEx.cs" />
     <Compile Include="Extensions\TestTransportEx.cs" />
     <Compile Include="FixtureBase.cs" />

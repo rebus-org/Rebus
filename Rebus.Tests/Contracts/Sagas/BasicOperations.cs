@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus2.Persistence.InMem;
 using Rebus2.Sagas;
+using Tests;
 
-namespace Tests.Contracts.Sagas
+namespace Rebus.Tests.Contracts.Sagas
 {
-    public class BasicOperations : FixtureBase
+    public class BasicOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
-        InMemorySagaStorage _sagaStorage;
+        ISagaStorage _sagaStorage;
+        TFactory _factory;
 
         protected override void SetUp()
         {
-            _sagaStorage = new InMemorySagaStorage();
+            _factory = new TFactory();
+            _sagaStorage = _factory.GetSagaStorage();
         }
 
         [Test]
@@ -111,6 +113,28 @@ namespace Tests.Contracts.Sagas
             await _sagaStorage.Update(loadedSagaData1);
             var loadedSagaData2 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
             Assert.That(loadedSagaData2.Revision, Is.EqualTo(2));
+        }
+
+        [Test]
+        public async Task CanDeleteSagaData()
+        {
+            var sagaId = Guid.NewGuid();
+
+            await _sagaStorage.Insert(new TestSagaData
+            {
+                Id = sagaId,
+                Data = "yes, den kender jeg"
+            });
+
+            var loadedSagaData = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
+
+            Assert.That(loadedSagaData, Is.Not.Null);
+
+            await _sagaStorage.Delete(loadedSagaData);
+
+            var loadedSagaDataAfterDelete = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
+
+            Assert.That(loadedSagaDataAfterDelete, Is.Null);
         }
 
 

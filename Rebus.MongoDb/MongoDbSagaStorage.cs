@@ -20,5 +20,10 @@ namespace Rebus.MongoDb
         {
             throw new NotImplementedException();
         }
+
+        public async Task Delete(ISagaData sagaData)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

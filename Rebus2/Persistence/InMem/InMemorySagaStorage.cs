@@ -83,6 +83,22 @@ namespace Rebus2.Persistence.InMem
             }
         }
 
+        public async Task Delete(ISagaData sagaData)
+        {
+            var id = sagaData.Id;
+
+            lock (_lock)
+            {
+                if (!_data.ContainsKey(id))
+                {
+                    throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be deleted", id);
+                }
+
+                ISagaData temp;
+                _data.TryRemove(id, out temp);
+            }
+        }
+
         ISagaData Clone(ISagaData sagaData)
         {
             var serializedObject = JsonConvert.SerializeObject(sagaData, _serializerSettings);

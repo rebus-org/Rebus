@@ -8,5 +8,6 @@ namespace Rebus2.Sagas
         Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue);
         Task Insert(ISagaData sagaData);
         Task Update(ISagaData sagaData);
+        Task Delete(ISagaData sagaData);
     }
 }
