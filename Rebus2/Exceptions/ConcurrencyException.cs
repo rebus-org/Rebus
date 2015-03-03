@@ -11,6 +11,11 @@ namespace Rebus2.Exceptions
         {
         }
 
+        public ConcurrencyException(Exception innerException, string message, params object[] objs)
+            : base(string.Format(message, objs), innerException)
+        {
+        }
+
         public ConcurrencyException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

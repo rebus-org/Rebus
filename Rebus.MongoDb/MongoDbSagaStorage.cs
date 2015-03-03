@@ -23,17 +23,58 @@ namespace Rebus.MongoDb
         {
             var collection = GetCollection(sagaDataType);
 
-            return null;
+            if (propertyName == "Id") propertyName = "_id";
+
+            var criteria = Query.EQ(propertyName, BsonValue.Create(propertyValue));
+
+            var result = collection.FindOneAs(sagaDataType, new FindOneArgs {Query = criteria});
+
+            return (ISagaData)result;
         }
 
         public async Task Insert(ISagaData sagaData)
         {
+            if (sagaData.Id == Guid.Empty)
+            {
+                throw new InvalidOperationException(string.Format("Attempted to insert saga data {0} without an ID", sagaData.GetType()));
+            }
+
             var collection = GetCollection(sagaData.GetType());
+
+            var result = collection.Insert(sagaData);
+
+            try
+            {
+                CheckResult(result,0);
+            }
+            catch (Exception exception)
+            {
+                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be inserted!", 
+                    sagaData.GetType(), sagaData.Id, collection.Name);
+            }
         }
 
         public async Task Update(ISagaData sagaData)
         {
             var collection = GetCollection(sagaData.GetType());
+
+            var criteria = Query.And(
+                Query.EQ("_id", sagaData.Id),
+                Query.EQ("Revision", sagaData.Revision));
+
+            sagaData.Revision++;
+
+            var result = collection.Update(criteria, MongoDB.Driver.Builders.Update.Replace(sagaData));
+
+            try
+            {
+                CheckResult(result, 1);
+            }
+            catch (Exception exception)
+            {
+                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be updated!",
+                    sagaData.GetType(), sagaData.Id, collection.Name);
+            }
         }
 
         public async Task Delete(ISagaData sagaData)
@@ -41,11 +82,28 @@ namespace Rebus.MongoDb
             var collection = GetCollection(sagaData.GetType());
 
             var result = collection.Remove(Query.EQ("_id", sagaData.Id));
-            
-            if (!result.UpdatedExisting)
+
+            try
             {
-                throw new ConcurrencyException("Saga data with ID {0} in collection {1} could not be deleted because it was already removed",
-                    sagaData.Id, collection.Name);
+                CheckResult(result, 1);
+            }
+            catch (Exception exception)
+            {
+                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be deleted", 
+                    sagaData.GetType(), sagaData.Id, collection.Name);
+            }
+        }
+
+        void CheckResult(WriteConcernResult result, int expectedNumberOfAffectedDocuments)
+        {
+            if (!result.Ok)
+            {
+                throw new WriteConcernException("Not OK result returned from the server", result);
+            }
+
+            if (result.DocumentsAffected != expectedNumberOfAffectedDocuments)
+            {
+                throw new WriteConcernException(string.Format("DocumentsAffected != {0}", expectedNumberOfAffectedDocuments), result);
             }
         }
 

@@ -9,10 +9,17 @@ namespace Rebus.Tests.Contracts.Sagas
     public class BasicOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         ISagaStorage _sagaStorage;
+        TFactory _factory;
 
         protected override void SetUp()
         {
-            _sagaStorage = new TFactory().GetSagaStorage();
+            _factory = new TFactory();
+            _sagaStorage = _factory.GetSagaStorage();
+        }
+
+        protected override void TearDown()
+        {
+            _factory.Cleanup();
         }
 
         [Test]

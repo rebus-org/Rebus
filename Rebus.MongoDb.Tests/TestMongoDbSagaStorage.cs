@@ -9,11 +9,26 @@ namespace Rebus.MongoDb.Tests
     [TestFixture]
     public class TestMongoDbSagaStorage : ISagaStorageFactory
     {
+        MongoDatabase _mongoDatabase;
+
         public class BasicOperations : BasicOperations<TestMongoDbSagaStorage> { }
 
         public class ConcurrencyHandling : ConcurrencyHandling<TestMongoDbSagaStorage> { }
 
         public ISagaStorage GetSagaStorage()
+        {
+            _mongoDatabase = GetMongoDatabase();
+
+            return new MongoDbSagaStorage(_mongoDatabase);
+        }
+
+        public void Cleanup()
+        {
+            _mongoDatabase.Drop();
+            _mongoDatabase = null;
+        }
+
+        static MongoDatabase GetMongoDatabase()
         {
             var url = new MongoUrl("mongodb://localhost/rebus2_test");
             var settings = new MongoDatabaseSettings
@@ -22,12 +37,7 @@ namespace Rebus.MongoDb.Tests
                 WriteConcern = WriteConcern.Acknowledged
             };
             var mongoDatabase = new MongoClient(url).GetServer().GetDatabase(url.DatabaseName, settings);
-            return new MongoDbSagaStorage(mongoDatabase);
-        }
-
-        public void Cleanup()
-        {
-            
+            return mongoDatabase;
         }
     }
 }
