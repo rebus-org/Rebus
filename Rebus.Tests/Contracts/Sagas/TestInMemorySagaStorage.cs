@@ -9,6 +9,8 @@ namespace Rebus.Tests.Contracts.Sagas
     {
         public class BasicOperations : BasicOperations<TestInMemorySagaStorage> { }
 
+        public class ConcurrencyHandling : ConcurrencyHandling<TestInMemorySagaStorage> { }
+
         public ISagaStorage GetSagaStorage()
         {
             return new InMemorySagaStorage();

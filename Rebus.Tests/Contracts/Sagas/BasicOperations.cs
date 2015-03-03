@@ -9,12 +9,18 @@ namespace Rebus.Tests.Contracts.Sagas
     public class BasicOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         ISagaStorage _sagaStorage;
-        TFactory _factory;
 
         protected override void SetUp()
         {
-            _factory = new TFactory();
-            _sagaStorage = _factory.GetSagaStorage();
+            _sagaStorage = new TFactory().GetSagaStorage();
+        }
+
+        [Test]
+        public async Task ThrowsIfIdHasNotBeenSet()
+        {
+            var sagaDataWithDefaultId = new AnotherSagaData { Id = Guid.Empty };
+
+            Assert.Throws<InvalidOperationException>(async () => await _sagaStorage.Insert(sagaDataWithDefaultId));
         }
 
         [Test]

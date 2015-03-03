@@ -39,7 +39,7 @@ namespace Rebus2.Persistence.InMem
 
         public async Task Insert(ISagaData sagaData)
         {
-            var id = sagaData.Id;
+            var id = GetId(sagaData);
 
             lock (_lock)
             {
@@ -60,7 +60,7 @@ namespace Rebus2.Persistence.InMem
 
         public async Task Update(ISagaData sagaData)
         {
-            var id = sagaData.Id;
+            var id = GetId(sagaData);
 
             lock (_lock)
             {
@@ -85,7 +85,7 @@ namespace Rebus2.Persistence.InMem
 
         public async Task Delete(ISagaData sagaData)
         {
-            var id = sagaData.Id;
+            var id = GetId(sagaData);
 
             lock (_lock)
             {
@@ -97,6 +97,15 @@ namespace Rebus2.Persistence.InMem
                 ISagaData temp;
                 _data.TryRemove(id, out temp);
             }
+        }
+
+        static Guid GetId(ISagaData sagaData)
+        {
+            var id = sagaData.Id;
+            
+            if (id != Guid.Empty) return id;
+
+            throw new InvalidOperationException("Saga data must be provided with an ID in order to do this!");
         }
 
         ISagaData Clone(ISagaData sagaData)
