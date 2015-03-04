@@ -22,6 +22,7 @@ namespace Rebus2.Bus
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly string _workerName;
 
         volatile bool _keepWorking = true;
 
@@ -30,23 +31,19 @@ namespace Rebus2.Bus
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
+            _workerName = workerName;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _maxParallelismPerWorker = maxParallelismPerWorker;
             _workerThread = new Thread(() =>
             {
-                try
-                {
-                    SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
+                SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
 
-                    while (_keepWorking)
-                    {
-                        DoWork();
-                    }
-                }
-                catch (ThreadAbortException)
+                while (_keepWorking)
                 {
-                    _log.Info("Worker {0} aborted", workerName);
+                    DoWork();
                 }
+            
+                _log.Debug("Worker {0} stopped", workerName);
             })
             {
                 Name = workerName
@@ -68,7 +65,11 @@ namespace Rebus2.Bus
                 }
 
                 TryProcessMessage();
-
+            }
+            catch (ThreadAbortException)
+            {
+                _log.Debug("Aborting worker {0}", _workerName);
+                _keepWorking = false;
             }
             catch (Exception exception)
             {
@@ -102,7 +103,7 @@ namespace Rebus2.Bus
                     transactionContext.Items[StepContext.StepContextKey] = context;
 
                     var stagedReceiveSteps = _pipeline.ReceivePipeline();
-                    
+
                     await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                     transactionContext.Complete();
