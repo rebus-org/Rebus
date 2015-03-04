@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using Rebus2.Messages;
 
-namespace Tests
+namespace Rebus.Tests
 {
     public static class TransportMessageHelpers
     {

@@ -8,18 +8,18 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Rebus.Tests.Extensions;
 using Rebus2.Extensions;
 using Rebus2.Transport;
 using Rebus2.Transport.Msmq;
-using Tests.Extensions;
 using Timer = System.Timers.Timer;
 
-namespace Tests.Transport.Msmq
+namespace Rebus.Tests.Transport.Msmq
 {
     [TestFixture, Ignore]
     public class TestMsmqTransport : FixtureBase
     {
-        const string QueueName = "test.performance";
+        static readonly string QueueName = MsmqHelper.QueueName("test.performance");
 
         [TestCase(100)]
         public void HowFast(int messageCount)

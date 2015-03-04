@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus2.Exceptions;
 using Rebus2.Sagas;
-using Tests;
 
 namespace Rebus.Tests.Contracts.Sagas
 {

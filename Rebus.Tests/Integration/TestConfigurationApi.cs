@@ -3,7 +3,7 @@ using NUnit.Framework;
 using Rebus2.Activation;
 using Rebus2.Config;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestConfigurationApi

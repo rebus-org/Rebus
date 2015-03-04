@@ -1,6 +1,6 @@
 ﻿using NUnit.Framework;
 
-namespace Tests.Assumptions
+namespace Rebus.Tests.Assumptions
 {
     [TestFixture]
     public class TestString

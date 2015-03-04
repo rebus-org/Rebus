@@ -2,7 +2,7 @@
 using System.Threading;
 using NUnit.Framework;
 
-namespace Tests.Extensions
+namespace Rebus.Tests.Extensions
 {
     public static class TestEx
     {

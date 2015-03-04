@@ -2,21 +2,22 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Extensions;
+using Rebus.Tests.Transport.Msmq;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Logging;
 using Rebus2.Routing.TopicBased;
 using Rebus2.Transport.InMem;
-using Tests.Extensions;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestPublishSubscribe : FixtureBase
     {
-        static readonly string SubscriberInputQueue = "test.pubsub.subscriber@" + Environment.MachineName;
-        static readonly string PublisherInputQueue = "test.pubsub.publisher@" + Environment.MachineName;
+        static readonly string SubscriberInputQueue = MsmqHelper.QueueName("test.pubsub.subscriber@" + Environment.MachineName);
+        static readonly string PublisherInputQueue = MsmqHelper.QueueName("test.pubsub.publisher@" + Environment.MachineName);
 
         BuiltinHandlerActivator _subscriberHandlers;
 

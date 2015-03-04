@@ -6,7 +6,7 @@ using NUnit.Framework;
 using Rebus2.Messages;
 using Rebus2.Pipeline;
 
-namespace Tests.Pipeline
+namespace Rebus.Tests.Pipeline
 {
     [TestFixture]
     public class TestPipelineInvoker : FixtureBase

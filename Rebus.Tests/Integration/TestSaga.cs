@@ -12,7 +12,7 @@ using Rebus2.Messages;
 using Rebus2.Sagas;
 using Rebus2.Transport.InMem;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestSaga : FixtureBase

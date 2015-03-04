@@ -30,7 +30,7 @@ namespace Rebus.MongoDb.Tests
 
         static MongoDatabase GetMongoDatabase()
         {
-            var url = new MongoUrl("mongodb://localhost/rebus2_test");
+            var url = MongoTestHelper.GetUrl();
             var settings = new MongoDatabaseSettings
             {
                 GuidRepresentation = GuidRepresentation.Standard,

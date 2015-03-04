@@ -6,7 +6,7 @@ using Rebus2.Extensions;
 using Rebus2.Messages;
 using Rebus2.Transport.InMem;
 
-namespace Tests.Transport.InMem
+namespace Rebus.Tests.Transport.InMem
 {
     [TestFixture]
     public class TestInMemNetwork : FixtureBase

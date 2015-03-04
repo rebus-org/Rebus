@@ -64,7 +64,9 @@
     <Compile Include="Integration\TestRequestReply.cs" />
     <Compile Include="Integration\TestRetry.cs" />
     <Compile Include="Integration\TestSaga.cs" />
+    <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
+    <Compile Include="Transport\Msmq\MsmqHelper.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransport.cs" />
     <Compile Include="Pipeline\TestPipelineInvoker.cs" />
     <Compile Include="TransportMessageHelpers.cs" />

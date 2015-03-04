@@ -3,20 +3,21 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Extensions;
+using Rebus.Tests.Transport.Msmq;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport;
 using Rebus2.Transport.InMem;
-using Tests.Extensions;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestAsyncHandler : FixtureBase
     {
-        const string InputQueueName = "test.async.input";
+        static readonly string InputQueueName = MsmqHelper.QueueName("test.async.input");
         IBus _bus;
         BuiltinHandlerActivator _handlerActivator;
 

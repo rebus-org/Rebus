@@ -4,19 +4,19 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Transport.Msmq;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Routing.TypeBased;
-using Rebus2.Transport.InMem;
 using Rebus2.Transport.Msmq;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestReceivePerformance : FixtureBase
     {
-        const string InputQueueName = "test.performance.input";
+        static readonly string InputQueueName = MsmqHelper.QueueName("test.performance.input");
 
         [TestCase(10000, 5)]
         public async Task NizzleName(int numberOfMessages, int numberOfWorkers)

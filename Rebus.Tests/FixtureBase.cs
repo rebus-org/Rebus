@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus2.Logging;
 
-namespace Tests
+namespace Rebus.Tests
 {
     public abstract class FixtureBase
     {

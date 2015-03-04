@@ -2,19 +2,20 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Extensions;
+using Rebus.Tests.Transport.Msmq;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport.Msmq;
-using Tests.Extensions;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestRequestReply : FixtureBase
     {
-        const string InputQueueName = "test.input";
+        static readonly string InputQueueName = MsmqHelper.QueueName("test.input");
 
         IBus _bus;
         BuiltinHandlerActivator _handlerActivator;

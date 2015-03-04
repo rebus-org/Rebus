@@ -1,7 +1,7 @@
 ﻿using NUnit.Framework;
 using Rebus2.Injection;
 
-namespace Tests.Injection
+namespace Rebus.Tests.Injection
 {
     [TestFixture]
     public class TestInjectionist_ServiceAndImplementation : FixtureBase

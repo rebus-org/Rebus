@@ -2,6 +2,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Tests.Extensions;
+using Rebus.Tests.Transport.Msmq;
 using Rebus2.Activation;
 using Rebus2.Bus;
 using Rebus2.Config;
@@ -11,14 +13,13 @@ using Rebus2.Messages;
 using Rebus2.Retry.Simple;
 using Rebus2.Routing.TypeBased;
 using Rebus2.Transport.Msmq;
-using Tests.Extensions;
 
-namespace Tests.Integration
+namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestRetry : FixtureBase
     {
-        static readonly string InputQueueName = string.Format("test.retries.input@{0}", Environment.MachineName);
+        static readonly string InputQueueName = MsmqHelper.QueueName(string.Format("test.retries.input@{0}", Environment.MachineName));
 
         BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
