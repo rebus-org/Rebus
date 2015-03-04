@@ -34,11 +34,18 @@ namespace Rebus2.Bus
             _maxParallelismPerWorker = maxParallelismPerWorker;
             _workerThread = new Thread(() =>
             {
-                SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
-
-                while (_keepWorking)
+                try
                 {
-                    DoWork();
+                    SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
+
+                    while (_keepWorking)
+                    {
+                        DoWork();
+                    }
+                }
+                catch (ThreadAbortException)
+                {
+                    _log.Info("Worker {0} aborted", workerName);
                 }
             })
             {
