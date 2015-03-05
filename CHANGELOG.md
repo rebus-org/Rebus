@@ -492,7 +492,11 @@
 * Changed default encoding of outgoing messages to be UTF8 instead of UTF7 when using the built-in JSON serializer
 * Added `NewtonsoftJsonMessageSerializer` that is honest about its dependency on Newtonsoft JSON.NET and thus lets you customize the serialization settings - thanks [joshua5822]
 
+## 0.80.1
 
+* Support async initiation of sagas via `IAmInitiatedByAsync<>` - thanks [AndreaCuneo]
+
+[AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
