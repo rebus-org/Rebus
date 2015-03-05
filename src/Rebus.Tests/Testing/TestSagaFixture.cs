@@ -333,7 +333,32 @@ namespace Rebus.Tests.Testing
             availableSagaData.ReceivedMessages.ShouldBe(2);
         }
 
+        [Test]
+        public void WorksWithAsyncInitiator()
+        {
+            // arrange
+            var fixture = new SagaFixture<SomeSagaData>(new SomeSaga());
+
+            fixture.CreatedNewSagaData += (message, data) => Console.WriteLine("Created new saga data");
+            fixture.CorrelatedWithExistingSagaData += (message, data) => Console.WriteLine("Correlated with existing saga data");
+            fixture.CouldNotCorrelate += message => Console.WriteLine("Could not correlate");
+
+            // act
+            fixture.Handle(new SomeAsyncMessage { SagaDataId = 33 });
+            fixture.Handle(new SomeMessage { SagaDataId = 33 });
+
+            // assert
+            var availableSagaData = fixture.AvailableSagaData.Single();
+            availableSagaData.SagaDataId.ShouldBe(33);
+            availableSagaData.ReceivedMessages.ShouldBe(2);
+        }
+
         class SomeMessage
+        {
+            public int SagaDataId { get; set; }
+        }
+
+        class SomeAsyncMessage
         {
             public int SagaDataId { get; set; }
         }
@@ -350,18 +375,32 @@ namespace Rebus.Tests.Testing
 
         class SomeSaga : Saga<SomeSagaData>,
             IAmInitiatedBy<SomeMessage>,
+            IAmInitiatedByAsync<SomeAsyncMessage>,
             IHandleMessages<SomePoisonMessage>,
             IHandleMessagesAsync<SomeMessageForAsync>
         {
             public override void ConfigureHowToFindSaga()
             {
                 Incoming<SomeMessage>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
+                Incoming<SomeAsyncMessage>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
                 Incoming<SomePoisonMessage>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
                 Incoming<SomeMessageForAsync>(m => m.SagaDataId).CorrelatesWith(d => d.SagaDataId);
             }
 
             public void Handle(SomeMessage message)
             {
+                if (IsNew)
+                {
+                    Data.SagaDataId = message.SagaDataId;
+                }
+
+                Data.ReceivedMessages++;
+            }
+
+            public async Task Handle(SomeAsyncMessage message)
+            {
+                await Task.Yield();
+
                 if (IsNew)
                 {
                     Data.SagaDataId = message.SagaDataId;
