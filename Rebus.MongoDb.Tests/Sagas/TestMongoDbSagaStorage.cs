@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using NUnit.Framework;
 using Rebus.MongoDb.Sagas;
 using Rebus.Sagas;
@@ -19,7 +18,7 @@ namespace Rebus.MongoDb.Tests.Sagas
 
         public ISagaStorage GetSagaStorage()
         {
-            _mongoDatabase = GetMongoDatabase();
+            _mongoDatabase = MongoTestHelper.GetMongoDatabase();
 
             return new MongoDbSagaStorage(_mongoDatabase);
         }
@@ -28,18 +27,6 @@ namespace Rebus.MongoDb.Tests.Sagas
         {
             _mongoDatabase.Drop();
             _mongoDatabase = null;
-        }
-
-        static MongoDatabase GetMongoDatabase()
-        {
-            var url = MongoTestHelper.GetUrl();
-            var settings = new MongoDatabaseSettings
-            {
-                GuidRepresentation = GuidRepresentation.Standard,
-                WriteConcern = WriteConcern.Acknowledged
-            };
-            var mongoDatabase = new MongoClient(url).GetServer().GetDatabase(url.DatabaseName, settings);
-            return mongoDatabase;
         }
     }
 }

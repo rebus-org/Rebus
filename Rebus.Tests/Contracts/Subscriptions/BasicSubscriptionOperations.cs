@@ -8,11 +8,17 @@ namespace Rebus.Tests.Contracts.Subscriptions
     public class BasicSubscriptionOperations<TSubscriptionStorageFactory> : FixtureBase where TSubscriptionStorageFactory : ISubscriptionStorageFactory, new()
     {
         ISubscriptionStorage _storage;
+        TSubscriptionStorageFactory _factory;
 
         protected override void SetUp()
         {
-            var factory = new TSubscriptionStorageFactory();
-            _storage = factory.Create();
+            _factory = new TSubscriptionStorageFactory();
+            _storage = _factory.Create();
+        }
+
+        protected override void TearDown()
+        {
+            _factory.Cleanup();
         }
 
         [Test]

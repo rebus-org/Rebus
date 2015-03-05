@@ -16,5 +16,9 @@ namespace Rebus.Tests.Persistence.InMem
         {
             return new InMemorySubscriptionStorage();
         }
+
+        public void Cleanup()
+        {
+        }
     }
 }
