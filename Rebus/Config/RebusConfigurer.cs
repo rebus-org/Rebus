@@ -61,10 +61,7 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IRouter>(c => new TypeBasedRouter());
 
-            PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage(
-                c.Get<IRouter>(), 
-                c.Get<ITransport>(), 
-                c.Get<ISerializer>()));
+            PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
 
             PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
             

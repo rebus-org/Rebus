@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Messages.Control;
 using Rebus.Pipeline;
 using Rebus.Routing;
 using Rebus.Serialization;
@@ -133,12 +134,42 @@ namespace Rebus.Bus
 
         public async Task Subscribe(string topic)
         {
-            await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
+            if (_subscriptionStorage.IsCentralized)
+            {
+                await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
+            }
+            else
+            {
+                var logicalMessage = new Message(GetHeaders(null), new SubscribeRequest
+                {
+                    Topic = topic,
+                    SubscriberAddress = _transport.Address,
+                });
+
+                var destinationAddress = await _router.GetOwnerAddress(topic);
+
+                await InnerSend(new[] { destinationAddress }, logicalMessage);
+            }
         }
 
         public async Task Unsubscribe(string topic)
         {
-            await _subscriptionStorage.UnregisterSubscriber(topic, _transport.Address);
+            if (_subscriptionStorage.IsCentralized)
+            {
+                await _subscriptionStorage.UnregisterSubscriber(topic, _transport.Address);
+            }
+            else
+            {
+                var logicalMessage = new Message(GetHeaders(null), new UnsubscribeRequest
+                {
+                    Topic = topic,
+                    SubscriberAddress = _transport.Address,
+                });
+
+                var destinationAddress = await _router.GetOwnerAddress(topic);
+
+                await InnerSend(new[] { destinationAddress }, logicalMessage);
+            }
         }
 
         static string GetReturnAddress(TransportMessage transportMessage)

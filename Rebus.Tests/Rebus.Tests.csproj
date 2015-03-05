@@ -51,7 +51,7 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Contracts\Sagas\BasicOperations.cs" />
-    <Compile Include="Contracts\Subscriptions\BasicOperations.cs" />
+    <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
