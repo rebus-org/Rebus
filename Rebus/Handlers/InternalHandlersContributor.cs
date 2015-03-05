@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Messages.Control;
 using Rebus.Routing;
+using Rebus.Subscriptions;
 
 namespace Rebus.Handlers
 {

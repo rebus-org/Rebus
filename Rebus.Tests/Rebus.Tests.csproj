@@ -51,6 +51,8 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Contracts\Sagas\BasicOperations.cs" />
+    <Compile Include="Contracts\Subscriptions\BasicOperations.cs" />
+    <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
@@ -64,6 +66,7 @@
     <Compile Include="Integration\TestRequestReply.cs" />
     <Compile Include="Integration\TestRetry.cs" />
     <Compile Include="Integration\TestSaga.cs" />
+    <Compile Include="Persistence\InMem\InMemorySubscriptionStorageFactory.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
     <Compile Include="Transport\Msmq\MsmqHelper.cs" />

@@ -90,7 +90,7 @@
     <Compile Include="Retry\Simple\SimpleRetryStrageConfigurationExtensions.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
-    <Compile Include="Routing\ISubscriptionStorage.cs" />
+    <Compile Include="Subscriptions\ISubscriptionStorage.cs" />
     <Compile Include="Routing\TopicBased\TopicBasedRouter.cs" />
     <Compile Include="Routing\TopicBased\TopicBasedRouterConfigurationExtensions.cs" />
     <Compile Include="Sagas\CorrelationProperty.cs" />

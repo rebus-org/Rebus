@@ -15,6 +15,7 @@ using Rebus.Routing;
 using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
 using Rebus.Serialization;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 using Rebus.Workers;
 

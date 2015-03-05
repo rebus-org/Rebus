@@ -7,6 +7,7 @@ using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Routing;
 using Rebus.Serialization;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 
 namespace Rebus.Persistence.InMem
@@ -125,6 +126,15 @@ namespace Rebus.Persistence.InMem
                 {
                     await _transport.Send(ownerAddress, transportMessage, transactionContext);
                 }
+            }
+        }
+
+        public bool IsCentralized
+        {
+            get
+            {
+                // in-mem subscription storage is decentralized
+                return false;
             }
         }
     }

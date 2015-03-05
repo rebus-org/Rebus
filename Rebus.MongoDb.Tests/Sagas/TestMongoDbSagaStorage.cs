@@ -1,10 +1,11 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Rebus.MongoDb.Sagas;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
-namespace Rebus.MongoDb.Tests
+namespace Rebus.MongoDb.Tests.Sagas
 {
     [TestFixture]
     public class BasicOperations : BasicOperations<TestMongoDbSagaStorage> { }

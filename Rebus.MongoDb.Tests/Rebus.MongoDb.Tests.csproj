@@ -49,7 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MongoTestHelper.cs" />
-    <Compile Include="TestMongoDbSagaStorage.cs" />
+    <Compile Include="Sagas\TestMongoDbSagaStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

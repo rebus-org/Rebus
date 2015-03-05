@@ -6,7 +6,7 @@ using MongoDB.Driver.Builders;
 using Rebus.Exceptions;
 using Rebus.Sagas;
 
-namespace Rebus.MongoDb
+namespace Rebus.MongoDb.Sagas
 {
     public class MongoDbSagaStorage : ISagaStorage
     {

@@ -10,6 +10,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Routing;
 using Rebus.Serialization;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 using Rebus.Workers;
 
