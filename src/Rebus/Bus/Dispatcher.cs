@@ -263,7 +263,7 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 if (sagaData == null)
                 {
-                    if (handler is IAmInitiatedBy<TMessage>)
+                    if (handler is IAmInitiatedBy<TMessage> || handler is IAmInitiatedByAsync<TMessage>)
                     {
                         saga.IsNew = true;
                         saga.Complete = false;
