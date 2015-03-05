@@ -8,4 +8,8 @@ namespace Rebus
     public interface IAmInitiatedBy<TMessage> : IHandleMessages<TMessage>
     {
     }
+
+    public interface IAmInitiatedByAsync<TMessage> : IHandleMessagesAsync<TMessage>
+    {
+    }
 }
