@@ -8,7 +8,7 @@ using Rebus.Tests.Contracts.Sagas;
 namespace Rebus.MongoDb.Tests.Sagas
 {
     [TestFixture]
-    public class BasicOperations : BasicOperations<TestMongoDbSagaStorage> { }
+    public class BasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<TestMongoDbSagaStorage> { }
 
     [TestFixture]
     public class ConcurrencyHandling : ConcurrencyHandling<TestMongoDbSagaStorage> { }

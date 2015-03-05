@@ -6,7 +6,7 @@ using Rebus.Tests.Contracts.Sagas;
 namespace Rebus.Tests.Persistence.InMem
 {
     [TestFixture]
-    public class BasicOperations : BasicOperations<InMemorySagaStorageFactory> { }
+    public class BasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<InMemorySagaStorageFactory> { }
 
     [TestFixture]
     public class ConcurrencyHandling : ConcurrencyHandling<InMemorySagaStorageFactory> { }
