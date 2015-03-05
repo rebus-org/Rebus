@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NUnit.Framework;
-using Rebus2.Logging;
+using Rebus.Logging;
 
 namespace Rebus.Tests
 {

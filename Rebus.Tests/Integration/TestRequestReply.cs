@@ -2,13 +2,13 @@
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Activation;
+using Rebus.Bus;
+using Rebus.Config;
+using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
 using Rebus.Tests.Transport.Msmq;
-using Rebus2.Activation;
-using Rebus2.Bus;
-using Rebus2.Config;
-using Rebus2.Routing.TypeBased;
-using Rebus2.Transport.Msmq;
+using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration
 {

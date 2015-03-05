@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus2.Messages;
-using Rebus2.Pipeline;
+using Rebus.Messages;
+using Rebus.Pipeline;
 
 namespace Rebus.Tests.Pipeline
 {

@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus2.Activation;
-using Rebus2.Bus;
-using Rebus2.Config;
-using Rebus2.Handlers;
-using Rebus2.Logging;
-using Rebus2.Messages;
-using Rebus2.Sagas;
-using Rebus2.Transport.InMem;
+using Rebus.Activation;
+using Rebus.Bus;
+using Rebus.Config;
+using Rebus.Handlers;
+using Rebus.Logging;
+using Rebus.Messages;
+using Rebus.Sagas;
+using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration
 {

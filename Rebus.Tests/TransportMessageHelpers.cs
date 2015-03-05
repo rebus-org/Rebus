@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Rebus2.Messages;
+using Rebus.Messages;
 
 namespace Rebus.Tests
 {

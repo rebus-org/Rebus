@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using MongoDB.Driver.Builders;
-using Rebus2.Exceptions;
-using Rebus2.Sagas;
+using Rebus.Exceptions;
+using Rebus.Sagas;
 
 namespace Rebus.MongoDb
 {

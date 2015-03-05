@@ -51,7 +51,7 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Contracts\Sagas\BasicOperations.cs" />
-    <Compile Include="Contracts\Sagas\TestInMemorySagaStorage.cs" />
+    <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
     <Compile Include="Extensions\TestEx.cs" />
@@ -80,9 +80,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rebus2\Rebus2.csproj">
+    <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
-      <Name>Rebus2</Name>
+      <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

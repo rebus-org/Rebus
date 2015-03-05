@@ -1,7 +1,7 @@
 ﻿using System.Configuration;
 using NUnit.Framework;
-using Rebus2.Activation;
-using Rebus2.Config;
+using Rebus.Activation;
+using Rebus.Config;
 
 namespace Rebus.Tests.Integration
 {

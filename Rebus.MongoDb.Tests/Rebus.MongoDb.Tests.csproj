@@ -64,9 +64,9 @@
       <Project>{959c65ab-d21a-4582-bc4f-06d1425ff274}</Project>
       <Name>Rebus.Tests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus2\Rebus2.csproj">
+    <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
-      <Name>Rebus2</Name>
+      <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

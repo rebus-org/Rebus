@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus2.Exceptions;
-using Rebus2.Sagas;
+using Rebus.Exceptions;
+using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
 {

@@ -1,4 +1,4 @@
-﻿using Rebus2.Sagas;
+﻿using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
 {

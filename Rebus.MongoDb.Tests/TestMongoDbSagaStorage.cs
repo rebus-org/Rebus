@@ -1,19 +1,20 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Driver;
 using NUnit.Framework;
+using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
-using Rebus2.Sagas;
 
 namespace Rebus.MongoDb.Tests
 {
     [TestFixture]
+    public class BasicOperations : BasicOperations<TestMongoDbSagaStorage> { }
+
+    [TestFixture]
+    public class ConcurrencyHandling : ConcurrencyHandling<TestMongoDbSagaStorage> { }
+
     public class TestMongoDbSagaStorage : ISagaStorageFactory
     {
         MongoDatabase _mongoDatabase;
-
-        public class BasicOperations : BasicOperations<TestMongoDbSagaStorage> { }
-
-        public class ConcurrencyHandling : ConcurrencyHandling<TestMongoDbSagaStorage> { }
 
         public ISagaStorage GetSagaStorage()
         {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
-using Rebus2.Injection;
+using Rebus.Injection;
 
 namespace Rebus.Tests.Injection
 {

@@ -8,10 +8,10 @@ using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
+using Rebus.Extensions;
 using Rebus.Tests.Extensions;
-using Rebus2.Extensions;
-using Rebus2.Transport;
-using Rebus2.Transport.Msmq;
+using Rebus.Transport;
+using Rebus.Transport.Msmq;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Transport.Msmq

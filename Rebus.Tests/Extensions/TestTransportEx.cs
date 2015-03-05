@@ -2,8 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus2.Messages;
-using Rebus2.Transport;
+using Rebus.Messages;
+using Rebus.Transport;
 
 namespace Rebus.Tests.Extensions
 {
