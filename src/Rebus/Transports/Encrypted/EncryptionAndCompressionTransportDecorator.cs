@@ -1,31 +1,37 @@
-﻿using System;
-using Rebus.Extensions;
+﻿using Rebus.Extensions;
 using Rebus.Shared;
+using System;
+using System.Threading.Tasks;
 
 namespace Rebus.Transports.Encrypted
 {
     /// <summary>
-    /// Decoration for <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/> that encrypts/decrypts
-    /// message bodies. When a message is encrypted, the header <see cref="Headers.Encrypted"/> is added along
+    /// Decoration for <see cref="ISendMessages"/>, <see cref="IReceiveMessages"/>, <see cref="ISendMessagesAsync"/>, <see cref="IReceiveMessagesAsync"/>
+    ///  that encrypts/decrypts message bodies. When a message is encrypted, the header <see cref="Headers.Encrypted"/> is added along
     /// with the salt used to encrypt the message which is stored in <see cref="Headers.EncryptionSalt"/>.
     /// Only messages with the <see cref="Headers.Encrypted"/> header are decrypted.
     /// </summary>
-    public class EncryptionAndCompressionTransportDecorator : ISendMessages, IReceiveMessages, IDisposable
+    public class EncryptionAndCompressionTransportDecorator : IDuplexTransport, IDuplexAsyncTransport, IDisposable
     {
-        readonly ISendMessages innerSendMessages;
-        readonly IReceiveMessages innerReceiveMessages;
+        private readonly ISendMessages innerSendMessages;
+        private readonly IReceiveMessages innerReceiveMessages;
+        private readonly ISendMessagesAsync innerSendMessagesAsync;
+        private readonly IReceiveMessagesAsync innerReceiveMessagesAsync;
 
-        RijndaelHelper encryptionHelper;
-        GZipHelper compressionHelper;
+        private RijndaelHelper encryptionHelper;
+        private GZipHelper compressionHelper;
 
         /// <summary>
-        /// Constructs the decorator with the specified implementations of <see cref="ISendMessages"/> and <see cref="IReceiveMessages"/>,
+        /// Constructs the decorator with the specified implementations of <see cref="ISendMessages"/>, <see cref="IReceiveMessages"/>, <see cref="ISendMessagesAsync"/>, <see cref="IReceiveMessagesAsync"/>,
         /// storing the specified base 64-encoded key to be used when encrypting/decrypting messages
         /// </summary>
-        public EncryptionAndCompressionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages)
+        public EncryptionAndCompressionTransportDecorator(ISendMessages innerSendMessages, IReceiveMessages innerReceiveMessages,
+            ISendMessagesAsync innerSendMessagesAsync, IReceiveMessagesAsync innerReceiveMessagesAsync)
         {
             this.innerSendMessages = innerSendMessages;
             this.innerReceiveMessages = innerReceiveMessages;
+            this.innerSendMessagesAsync = innerSendMessagesAsync;
+            this.innerReceiveMessagesAsync = innerReceiveMessagesAsync;
         }
 
         /// <summary>
@@ -34,12 +40,30 @@ namespace Rebus.Transports.Encrypted
         /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
+            var clone = PrepareMessageToSend(message);
+
+            innerSendMessages.Send(destinationQueueName, clone, context);
+        }
+
+        /// <summary>
+        /// Asynchronously sends a copy of the specified <see cref="TransportMessageToSend"/> using the underlying implementation of <see cref="ISendMessages"/>
+        /// with an encrypted message body and additional headers
+        /// </summary>
+        public async Task SendAsync(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
+        {
+            var clone = PrepareMessageToSend(message);
+
+            await innerSendMessagesAsync.SendAsync(destinationQueueName, clone, context);
+        }
+
+        private TransportMessageToSend PrepareMessageToSend(TransportMessageToSend message)
+        {
             var clone = new TransportMessageToSend
-                            {
-                                Headers = message.Headers.Clone(),
-                                Label = message.Label,
-                                Body = message.Body,
-                            };
+            {
+                Headers = message.Headers.Clone(),
+                Label = message.Label,
+                Body = message.Body,
+            };
 
             if (compressionHelper != null)
             {
@@ -58,8 +82,7 @@ namespace Rebus.Transports.Encrypted
                 clone.Headers[Headers.Encrypted] = null;
                 clone.Headers[Headers.EncryptionSalt] = iv;
             }
-
-            innerSendMessages.Send(destinationQueueName, clone, context);
+            return clone;
         }
 
         /// <summary>
@@ -70,15 +93,31 @@ namespace Rebus.Transports.Encrypted
         {
             var message = innerReceiveMessages.ReceiveMessage(context);
 
+            return ProcessReceivedMessage(message);
+        }
+
+        /// <summary>
+        /// Asynchronously receives a <see cref="ReceivedTransportMessage"/> using the underlying implementation of <see cref="IReceiveMessages"/>
+        /// decrypting the message body if necessary, and remove the additional encryption headers
+        /// </summary>
+        public async Task<ReceivedTransportMessage> ReceiveMessageAsync(ITransactionContext context)
+        {
+            var message = await innerReceiveMessagesAsync.ReceiveMessageAsync(context);
+
+            return ProcessReceivedMessage(message);
+        }
+
+        private ReceivedTransportMessage ProcessReceivedMessage(ReceivedTransportMessage message)
+        {
             if (message == null) return null;
 
             var clone = new ReceivedTransportMessage
-                            {
-                                Body = message.Body,
-                                Headers = message.Headers.Clone(),
-                                Label = message.Label,
-                                Id = message.Id
-                            };
+            {
+                Body = message.Body,
+                Headers = message.Headers.Clone(),
+                Label = message.Label,
+                Id = message.Id
+            };
 
             var headers = clone.Headers;
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Rebus
 {
@@ -13,13 +14,18 @@ namespace Rebus
         void Send<TCommand>(string destinationEndpoint, TCommand message);
 
         /// <summary>
-        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified 
+        /// Asynchronously sends the specified message to the specified destination.
+        /// </summary>
+        Task SendAsync<TCommand>(string destinationEndpoint, TCommand message);
+
+        /// <summary>
+        /// Sends a subscription request for <typeparamref name="TEvent"/> to the specified
         /// destination.
         /// </summary>
         void Subscribe<TEvent>(string publisherInputQueue);
 
         /// <summary>
-        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the specified 
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the specified
         /// destination
         /// </summary>
         void Unsubscribe<TEvent>(string publisherInputQueue);
@@ -51,5 +57,11 @@ namespace Rebus
         /// of the transport level headers.
         /// </summary>
         void ForwardCurrentMessage(string destinationEndpoint);
+
+        /// <summary>
+        /// Asynchronously sends the message currently being handled to the specified endpoint, preserving all
+        /// of the transport level headers.
+        /// </summary>
+        Task ForwardCurrentMessageAsync(string destinationEndpoint);
     }
 }

@@ -1,24 +1,24 @@
-using System;
-using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Timeout;
+using System;
+using System.Collections.Generic;
 
 namespace Rebus.Tests.Integration.Factories
 {
-    abstract class BusFactoryBase : IBusFactory
+    internal abstract class BusFactoryBase : IBusFactory
     {
         protected const string ErrorQueueName = "error";
-        readonly List<RebusBus> startables = new List<RebusBus>();
-        readonly List<IDisposable> disposables = new List<IDisposable>();
+        private readonly List<RebusBus> startables = new List<RebusBus>();
+        private readonly List<IDisposable> disposables = new List<IDisposable>();
 
         public IBus CreateBus(string inputQueueName, IActivateHandlers handlerActivator, IStoreTimeouts storeTimeouts)
         {
             var transport = CreateTransport(inputQueueName);
 
-            var bus = new RebusBus(handlerActivator, transport, transport,
+            var bus = new RebusBus(handlerActivator, transport, transport, null, null,
                                    new InMemorySubscriptionStorage(),
                                    new InMemorySagaPersister(),
                                    new ThrowingEndpointMapper(),

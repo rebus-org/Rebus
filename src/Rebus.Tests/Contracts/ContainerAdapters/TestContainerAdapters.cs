@@ -251,7 +251,17 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 throw new NotImplementedException();
             }
 
+            public Task SendAsync<TCommand>(TCommand message)
+            {
+                throw new NotImplementedException();
+            }
+
             public void SendLocal<TCommand>(TCommand message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task SendLocalAsync<TCommand>(TCommand message)
             {
                 throw new NotImplementedException();
             }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Threading;
-using Castle.MicroKernel.Registration;
+﻿using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -22,8 +17,13 @@ using Rebus.Tests.Performance.StressMongo.Legal;
 using Rebus.Tests.Performance.StressMongo.Legal.Messages;
 using Rebus.Tests.Persistence;
 using Rebus.Timeout;
-using System.Linq;
 using Shouldly;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 
 namespace Rebus.Tests.Performance.StressMongo
 {
@@ -33,15 +33,15 @@ namespace Rebus.Tests.Performance.StressMongo
     [TestFixture(typeof(RabbitMqMessageQueueFactory), Category = TestCategories.Rabbit)]
     public class TestStressMongo<TFactory> : MongoDbFixtureBase, IDetermineMessageOwnership, IFlowLog where TFactory : IMessageQueueFactory, new()
     {
-        const string CreditSagasCollectionName = "check_credit_sagas";
-        const string LegalSagasCollectionName = "check_legal_sagas";
-        const string CustomerInformationSagasCollectionName = "customer_information_sagas";
-        const string TimeoutsCollectionName = "rebus.timeouts";
-        const string SubscriptionsCollectionName = "rebus.subscriptions";
+        private const string CreditSagasCollectionName = "check_credit_sagas";
+        private const string LegalSagasCollectionName = "check_legal_sagas";
+        private const string CustomerInformationSagasCollectionName = "customer_information_sagas";
+        private const string TimeoutsCollectionName = "rebus.timeouts";
+        private const string SubscriptionsCollectionName = "rebus.subscriptions";
 
-        readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
+        private readonly ConcurrentDictionary<string, ConcurrentQueue<string>> log = new ConcurrentDictionary<string, ConcurrentQueue<string>>();
 
-        readonly Dictionary<Type, string> endpointMappings =
+        private readonly Dictionary<Type, string> endpointMappings =
             new Dictionary<Type, string>
                 {
                     {typeof (CustomerCreated), GetEndpoint("crm")},
@@ -49,14 +49,14 @@ namespace Rebus.Tests.Performance.StressMongo
                     {typeof (CustomerLegallyApproved), GetEndpoint("legal")},
                 };
 
-        readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
+        private readonly List<IDisposable> stuffToDispose = new List<IDisposable>();
 
-        IBus crm;
-        IBus caf;
-        IBus legal;
-        IBus dcc;
-        TimeoutService timeout;
-        TFactory messageQueueFactory;
+        private IBus crm;
+        private IBus caf;
+        private IBus legal;
+        private IBus dcc;
+        private TimeoutService timeout;
+        private TFactory messageQueueFactory;
 
         protected override void DoSetUp()
         {
@@ -116,12 +116,12 @@ namespace Rebus.Tests.Performance.StressMongo
             allSagas.Count(s => s.LegalStatus.Complete).ShouldBe(count);
         }
 
-        string FormatLogContents()
+        private string FormatLogContents()
         {
             return string.Join(Environment.NewLine + Environment.NewLine, FormatLog(log));
         }
 
-        static IEnumerable<string> FormatLog(ConcurrentDictionary<string, ConcurrentQueue<string>> log)
+        private static IEnumerable<string> FormatLog(ConcurrentDictionary<string, ConcurrentQueue<string>> log)
         {
             return log.Select(
                 kvp =>
@@ -129,7 +129,7 @@ namespace Rebus.Tests.Performance.StressMongo
 {1}", kvp.Key, FormatLog(kvp.Value)));
         }
 
-        static string FormatLog(IEnumerable<string> value)
+        private static string FormatLog(IEnumerable<string> value)
         {
             return string.Join(Environment.NewLine, value.Select(l => "    " + l));
         }
@@ -150,7 +150,7 @@ namespace Rebus.Tests.Performance.StressMongo
             timeout.Stop();
         }
 
-        WindsorContainerAdapter ContainerAdapterWith(string serviceName, params Type[] types)
+        private WindsorContainerAdapter ContainerAdapterWith(string serviceName, params Type[] types)
         {
             var container = new WindsorContainer();
 
@@ -165,10 +165,10 @@ namespace Rebus.Tests.Performance.StressMongo
             return new WindsorContainerAdapter(container);
         }
 
-        class MessageLogger : IHandleMessages<object>
+        private class MessageLogger : IHandleMessages<object>
         {
-            readonly IFlowLog flowLog;
-            readonly string id;
+            private readonly IFlowLog flowLog;
+            private readonly string id;
 
             public MessageLogger(IFlowLog flowLog, string id)
             {
@@ -181,14 +181,14 @@ namespace Rebus.Tests.Performance.StressMongo
                 flowLog.LogSequence(id, "Received {0}", FormatMessage(message));
             }
 
-            string FormatMessage(object message)
+            private string FormatMessage(object message)
             {
                 var name = message.GetType().Name;
 
                 return string.Format("{0}: {1}", name, GetInfo(message));
             }
 
-            string GetInfo(object message)
+            private string GetInfo(object message)
             {
                 if (message is SimulatedCreditCheckComplete)
                 {
@@ -228,7 +228,7 @@ namespace Rebus.Tests.Performance.StressMongo
             }
         }
 
-        Type[] GetServices(Type type)
+        private Type[] GetServices(Type type)
         {
             return type.GetInterfaces()
                 .Where(i => i.IsGenericType &&
@@ -245,7 +245,7 @@ namespace Rebus.Tests.Performance.StressMongo
             throw new ArgumentException(string.Format("Cannot determine owner of message type {0}", messageType));
         }
 
-        IBus CreateBus(string serviceName, WindsorContainerAdapter containerAdapter)
+        private IBus CreateBus(string serviceName, WindsorContainerAdapter containerAdapter)
         {
             DropCollection(SubscriptionsCollectionName);
 
@@ -258,7 +258,7 @@ namespace Rebus.Tests.Performance.StressMongo
                 .SetCollectionName<CheckSomeLegalStuffSagaData>(LegalSagasCollectionName)
                 .SetCollectionName<CustomerInformationSagaData>(CustomerInformationSagasCollectionName);
 
-            var bus = new RebusBus(containerAdapter, queue.Item1, queue.Item2,
+            var bus = new RebusBus(containerAdapter, queue.Item1, queue.Item2, null, null,
                                    new MongoDbSubscriptionStorage(ConnectionString, SubscriptionsCollectionName),
                                    sagaPersister, this,
                                    new JsonMessageSerializer(), new TrivialPipelineInspector(),
@@ -273,7 +273,7 @@ namespace Rebus.Tests.Performance.StressMongo
             return bus.Start(3);
         }
 
-        static string GetEndpoint(string serviceName)
+        private static string GetEndpoint(string serviceName)
         {
             return "test_stress_mongo_" + serviceName;
         }
@@ -290,7 +290,7 @@ namespace Rebus.Tests.Performance.StressMongo
             Log(id, message, objs);
         }
 
-        void Log(string id, string message, object[] objs)
+        private void Log(string id, string message, object[] objs)
         {
             log.TryAdd(id, new ConcurrentQueue<string>());
 
@@ -304,6 +304,7 @@ namespace Rebus.Tests.Performance.StressMongo
     public interface IFlowLog
     {
         void LogFlow(Guid correlationId, string message, params object[] objs);
+
         void LogSequence(string id, string message, params object[] objs);
     }
 }

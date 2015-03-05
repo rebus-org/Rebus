@@ -1,6 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Messaging;
+using log4net.Config;
 using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Configuration;
@@ -9,7 +7,9 @@ using Rebus.Serialization.Json;
 using Rebus.Shared;
 using Rebus.Tests.Integration;
 using Rebus.Transports.Msmq;
-using log4net.Config;
+using System;
+using System.Collections.Generic;
+using System.Messaging;
 
 namespace Rebus.Tests
 {
@@ -19,15 +19,15 @@ namespace Rebus.Tests
     /// </summary>
     public abstract class RebusBusMsmqIntegrationTestBase : IDetermineMessageOwnership
     {
-        const string ErrorQueueName = "error";
+        private const string ErrorQueueName = "error";
 
         static RebusBusMsmqIntegrationTestBase()
         {
             XmlConfigurator.Configure();
         }
 
-        List<IDisposable> toDispose;
-        
+        private List<IDisposable> toDispose;
+
         protected JsonMessageSerializer serializer;
         protected RearrangeHandlersPipelineInspector pipelineInspector = new RearrangeHandlersPipelineInspector();
 
@@ -78,13 +78,13 @@ namespace Rebus.Tests
             var messageQueue = new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
             MsmqUtil.PurgeQueue(errorQueueName);
             serializer = new JsonMessageSerializer();
-            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue,
+            var bus = new RebusBus(activateHandlers, messageQueue, messageQueue, null, null,
                                    storeSubscriptions, storeSagaData,
                                    this, serializer, pipelineInspector,
                                    new ErrorTracker(errorQueueName),
                                    null,
                                    new ConfigureAdditionalBehavior());
-            
+
             EnsureProperDisposal(bus);
             EnsureProperDisposal(messageQueue);
 

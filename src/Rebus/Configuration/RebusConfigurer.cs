@@ -1,9 +1,9 @@
-using System;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
+using System;
 
 namespace Rebus.Configuration
 {
@@ -12,7 +12,7 @@ namespace Rebus.Configuration
     /// </summary>
     public class RebusConfigurer : BaseConfigurer
     {
-        static ILog log;
+        private static ILog log;
 
         static RebusConfigurer()
         {
@@ -49,7 +49,9 @@ namespace Rebus.Configuration
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)
         {
             AssertIsNull(Backbone.SendMessages, "Transport");
+            AssertIsNull(Backbone.SendMessagesAsync, "Transport");
             AssertIsNull(Backbone.ReceiveMessages, "Transport");
+            AssertIsNull(Backbone.ReceiveMessagesAsync, "Transport");
             configure(new RebusTransportConfigurer(Backbone));
             return this;
         }
@@ -115,7 +117,7 @@ namespace Rebus.Configuration
             return this;
         }
 
-        void AssertIsNull(object serviceReference, string configurationThingie)
+        private void AssertIsNull(object serviceReference, string configurationThingie)
         {
             if (serviceReference == null) return;
 
@@ -150,6 +152,7 @@ namespace Rebus.Configuration
             Backbone.ApplyDecorators();
 
             var bus = new RebusBus(Backbone.ActivateHandlers, Backbone.SendMessages, Backbone.ReceiveMessages,
+                                   Backbone.SendMessagesAsync, Backbone.ReceiveMessagesAsync,
                                    Backbone.StoreSubscriptions, Backbone.StoreSagaData, Backbone.DetermineMessageOwnership,
                                    Backbone.SerializeMessages, Backbone.InspectHandlerPipeline, Backbone.ErrorTracker,
                                    Backbone.StoreTimeouts, Backbone.AdditionalBehavior);
@@ -161,9 +164,9 @@ namespace Rebus.Configuration
             return bus;
         }
 
-        static void VerifyComponents(ConfigurationBackbone backbone)
+        private static void VerifyComponents(ConfigurationBackbone backbone)
         {
-            if (backbone.SendMessages == null && backbone.ReceiveMessages == null)
+            if (backbone.SendMessages == null && backbone.ReceiveMessages == null && backbone.SendMessagesAsync == null && backbone.ReceiveMessagesAsync == null)
             {
                 throw new ConfigurationException(
                     @"You need to configure Rebus to be able to at least either SEND or RECEIVE messages - otherwise it wouldn't be that useful, would it?
@@ -192,7 +195,7 @@ In this case, you must supply an implementation of {0} to the configuration back
             }
         }
 
-        static void FillInDefaults(ConfigurationBackbone backbone)
+        private static void FillInDefaults(ConfigurationBackbone backbone)
         {
             if (backbone.SerializeMessages == null)
             {

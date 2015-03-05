@@ -1,6 +1,7 @@
-using System;
 using Rebus.Bus;
 using Rebus.Persistence.SqlServer;
+using System;
+using System.Threading.Tasks;
 
 namespace Rebus
 {
@@ -17,9 +18,20 @@ namespace Rebus
         void Send<TCommand>(TCommand message);
 
         /// <summary>
+        /// Asynchronously sends the specified message to the destination as specified by the currently
+        /// used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        Task SendAsync<TCommand>(TCommand message);
+
+        /// <summary>
         /// Sends the specified message to the bus' own input queue.
         /// </summary>
         void SendLocal<TCommand>(TCommand message);
+
+        /// <summary>
+        /// Asynchronously sends the specified message to the bus' own input queue.
+        /// </summary>
+        Task SendLocalAsync<TCommand>(TCommand message);
 
         /// <summary>
         /// Sends a reply back to the sender of the message currently being handled. Can only

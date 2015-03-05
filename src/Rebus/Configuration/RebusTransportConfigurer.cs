@@ -26,12 +26,35 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Uses the specified implementation of <see cref="ISendMessagesAsync"/> to send messages
+        /// </summary>
+        public void UseAsyncSender(ISendMessagesAsync sendMessagesAsync)
+        {
+            Backbone.SendMessagesAsync = sendMessagesAsync;
+        }
+
+        /// <summary>
         /// Uses the specified implementation of <see cref="IReceiveMessages"/> to receive messages
         /// </summary>
         public void UseReceiver(IReceiveMessages receiveMessages)
         {
             Backbone.ReceiveMessages = receiveMessages;
 
+            ConfigureOneWayModeIfNeeded(receiveMessages);
+        }
+
+        /// <summary>
+        /// Uses the specified implementation of <see cref="IReceiveMessagesAsync"/> to receive messages
+        /// </summary>
+        public void UseAsyncReceiver(IReceiveMessagesAsync receiveMessagesAsync)
+        {
+            Backbone.ReceiveMessagesAsync = receiveMessagesAsync;
+
+            ConfigureOneWayModeIfNeeded(receiveMessagesAsync);
+        }
+
+        private void ConfigureOneWayModeIfNeeded(IReceiveMessageBase receiveMessages)
+        {
             // if we see the OneWayClientGag, the bus will not be able to receive messages
             // - therefore, we configure the behavior
             if (receiveMessages is OneWayClientGag)
