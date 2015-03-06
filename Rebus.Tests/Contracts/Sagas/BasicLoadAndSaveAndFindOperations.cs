@@ -5,7 +5,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
-    public class BasicLoadAndSaveAndFindOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
+    public abstract class BasicLoadAndSaveAndFindOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         ISagaStorage _sagaStorage;
         TFactory _factory;

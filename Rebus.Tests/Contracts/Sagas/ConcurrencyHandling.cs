@@ -6,7 +6,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
-    public class ConcurrencyHandling<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
+    public abstract class ConcurrencyHandling<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         ISagaStorage _sagaStorage;
         TFactory _factory;

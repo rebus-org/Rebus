@@ -67,6 +67,8 @@
     <Compile Include="Integration\TestRetry.cs" />
     <Compile Include="Integration\TestSaga.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageFactory.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageFactory.cs" />
+    <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
     <Compile Include="Transport\Msmq\MsmqHelper.cs" />
@@ -88,6 +90,7 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
