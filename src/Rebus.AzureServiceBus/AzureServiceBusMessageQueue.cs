@@ -196,7 +196,6 @@ namespace Rebus.AzureServiceBus
                         }
 
                         context[AzureServiceBusReceivedMessage] = brokeredMessage;
-                        context[AzureServiceBusMessageBatch] = new List<Tuple<string, Envelope>>();
 
                         // inject method into message context to allow for long-running message handling operations to have their lock renewed
                         var peekLockRenewalAction = (Action)(() => RenewPeekLock(context, messageId));
@@ -398,7 +397,7 @@ namespace Rebus.AzureServiceBus
                     .Select(seconds => TimeSpan.FromSeconds(seconds))
                     .ToArray();
 
-                if (messagesToSend.Any())
+                if (messagesToSend != null && messagesToSend.Any())
                 {
                     var messagesForEachRecipient = messagesToSend
                         .GroupBy(g => g.Item1)
