@@ -35,14 +35,18 @@ namespace Rebus.Pipeline.Receive
             var message = context.Load<Message>();
             var messageId = message.Headers.GetValue(Headers.MessageId);
             var body = message.Body;
-            var loadedSagaData = new List<ISagaData>();
-            var newlyCreatedSagaData = new List<ISagaData>();
+            var loadedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
+            var newlyCreatedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
 
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
                 var foundExistingSagaData = false;
+                
+                var correlationProperties = _sagaHelper
+                    .GetCorrelationProperties(body, sagaInvoker.Saga)
+                    .ToList();
 
-                foreach (var correlationProperty in _sagaHelper.GetCorrelationProperties(sagaInvoker, body))
+                foreach (var correlationProperty in correlationProperties)
                 {
                     var valueFromMessage = correlationProperty.ValueFromMessage(body);
                     var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
@@ -51,7 +55,7 @@ namespace Rebus.Pipeline.Receive
 
                     sagaInvoker.SetSagaData(sagaData);
                     foundExistingSagaData = true;
-                    loadedSagaData.Add(sagaData);
+                    loadedSagaData.Add(Tuple.Create(sagaData, correlationProperties));
 
                     _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, messageId);
                     break;
@@ -66,7 +70,7 @@ namespace Rebus.Pipeline.Receive
                         var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
                         sagaInvoker.SetSagaData(newSagaData);
                         _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, messageId);
-                        newlyCreatedSagaData.Add(newSagaData);
+                        newlyCreatedSagaData.Add(Tuple.Create(newSagaData, correlationProperties));
                     }
                     else
                     {
@@ -81,12 +85,12 @@ namespace Rebus.Pipeline.Receive
 
             foreach (var sagaDataToInsert in newlyCreatedSagaData)
             {
-                await _sagaStorage.Insert(sagaDataToInsert);
+                await _sagaStorage.Insert(sagaDataToInsert.Item1, sagaDataToInsert.Item2);
             }
             
-            foreach (var sagaDataToInsert in loadedSagaData)
+            foreach (var sagaDataToUpdate in loadedSagaData)
             {
-                await _sagaStorage.Update(sagaDataToInsert);
+                await _sagaStorage.Update(sagaDataToUpdate.Item1, sagaDataToUpdate.Item2);
             }
         }
     }

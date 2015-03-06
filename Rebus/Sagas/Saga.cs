@@ -28,7 +28,7 @@ namespace Rebus.Sagas
 
         internal override IEnumerable<CorrelationProperty> GenerateCorrelationProperties()
         {
-            var configuration = new CorrelationConfiguration();
+            var configuration = new CorrelationConfiguration(GetType());
             
             CorrelateMessages(configuration);
             
@@ -37,6 +37,13 @@ namespace Rebus.Sagas
 
         class CorrelationConfiguration : ICorrelationConfig<TSagaData>
         {
+            readonly Type _sagaType;
+
+            public CorrelationConfiguration(Type sagaType)
+            {
+                _sagaType = sagaType;
+            }
+
             readonly List<CorrelationProperty> _correlationProperties = new List<CorrelationProperty>();
             
             public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractor, Expression<Func<TSagaData, object>> sagaDataValueExpression)
@@ -55,7 +62,7 @@ namespace Rebus.Sagas
                     }
                 };
 
-                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName));
+                _correlationProperties.Add(new CorrelationProperty(typeof(TMessage), neutralMessageValueExtractor, typeof(TSagaData), propertyName, _sagaType));
             }
 
             public IEnumerable<CorrelationProperty> GetCorrelationProperties()

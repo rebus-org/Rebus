@@ -82,6 +82,7 @@
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\DbConnectionProvider.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
     <Compile Include="Pipeline\Receive\LoadSagaDataStep.cs" />

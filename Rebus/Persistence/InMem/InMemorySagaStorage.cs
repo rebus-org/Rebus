@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Exceptions;
@@ -37,7 +38,7 @@ namespace Rebus.Persistence.InMem
             }
         }
 
-        public async Task Insert(ISagaData sagaData)
+        public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var id = GetId(sagaData);
 
@@ -58,7 +59,7 @@ namespace Rebus.Persistence.InMem
             }
         }
 
-        public async Task Update(ISagaData sagaData)
+        public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var id = GetId(sagaData);
 

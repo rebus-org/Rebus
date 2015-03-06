@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Exceptions;
@@ -8,6 +10,8 @@ namespace Rebus.Tests.Contracts.Sagas
 {
     public abstract class ConcurrencyHandling<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
+        readonly IEnumerable<ISagaCorrelationProperty> NoCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
+
         ISagaStorage _sagaStorage;
         TFactory _factory;
 
@@ -27,15 +31,15 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var id = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new SomeSagaData{Id = id});
+            await _sagaStorage.Insert(new SomeSagaData { Id = id }, NoCorrelationProperties);
 
             var loadedData1 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
-            
+
             var loadedData2 = await _sagaStorage.Find(typeof(SomeSagaData), "Id", id);
 
-            await _sagaStorage.Update(loadedData1);
+            await _sagaStorage.Update(loadedData1, NoCorrelationProperties);
 
-            Assert.Throws<ConcurrencyException>(async () => await _sagaStorage.Update(loadedData2));
+            Assert.Throws<ConcurrencyException>(async () => await _sagaStorage.Update(loadedData2, NoCorrelationProperties));
         }
 
         class SomeSagaData : ISagaData

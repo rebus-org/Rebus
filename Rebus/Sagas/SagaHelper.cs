@@ -2,18 +2,16 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Rebus.Pipeline.Receive;
 
 namespace Rebus.Sagas
 {
-    public  class SagaHelper
+    public class SagaHelper
     {
         readonly ConcurrentDictionary<Type, Dictionary<Type, CorrelationProperty[]>> _cachedCorrelationProperties
                 = new ConcurrentDictionary<Type, Dictionary<Type, CorrelationProperty[]>>();
 
-        public IEnumerable<CorrelationProperty> GetCorrelationProperties(HandlerInvoker sagaInvoker, object message)
+        public IEnumerable<CorrelationProperty> GetCorrelationProperties(object message, Saga saga)
         {
-            var saga = sagaInvoker.Saga;
             var sagaDataType = saga.GetSagaDataType();
             var messageType = message.GetType();
 
@@ -29,16 +27,16 @@ namespace Rebus.Sagas
             return potentialCorrelationproperties;
         }
 
+        public ISagaData CreateNewSagaData(Saga saga)
+        {
+            return saga.CreateNewSagaData();
+        }
+
         Dictionary<Type, CorrelationProperty[]> GetCorrelationProperties(Saga saga)
         {
             return saga.GenerateCorrelationProperties()
                 .ToLookup(p => p.MessageType)
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.ToArray());
-        }
-
-        public ISagaData CreateNewSagaData(Saga saga)
-        {
-            return saga.CreateNewSagaData();
         }
     }
 }

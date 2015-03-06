@@ -53,6 +53,7 @@
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
+    <Compile Include="Extensions\Ponder.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="Integration\TestRetry.cs" />
     <Compile Include="Integration\TestSaga.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageFactory.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSagaStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />

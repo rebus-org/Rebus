@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Sagas;
+using Rebus.Tests.Extensions;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
     public abstract class BasicLoadAndSaveAndFindOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
+        readonly IEnumerable<ISagaCorrelationProperty> NoCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
         ISagaStorage _sagaStorage;
         TFactory _factory;
 
@@ -26,7 +31,7 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaDataWithDefaultId = new AnotherSagaData { Id = Guid.Empty };
 
-            Assert.Throws<InvalidOperationException>(async () => await _sagaStorage.Insert(sagaDataWithDefaultId));
+            Assert.Throws<InvalidOperationException>(async () => await _sagaStorage.Insert(sagaDataWithDefaultId, NoCorrelationProperties));
         }
 
         [Test]
@@ -48,7 +53,7 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public async Task GetsNullWhenValueDoesNotExist()
         {
-            await _sagaStorage.Insert(new TestSagaData { Id = Guid.NewGuid(), CorrelationId = "existing" });
+            await _sagaStorage.Insert(new TestSagaData { Id = Guid.NewGuid(), CorrelationId = "existing" }, NoCorrelationProperties);
 
             var data = await _sagaStorage.Find(typeof(TestSagaData), "CorrelationId", "non-existing");
 
@@ -60,7 +65,8 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" });
+            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" }, 
+                CorrelationPropertiesFor<TestSagaData>(d => d.CorrelationId));
 
             var data = await _sagaStorage.Find(typeof(TestSagaData), "CorrelationId", "existing");
 
@@ -73,7 +79,8 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" });
+            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" },
+                CorrelationPropertiesFor<TestSagaData>(d => d.CorrelationId));
 
             var data = await _sagaStorage.Find(typeof(AnotherSagaData), "CorrelationId", "existing");
 
@@ -85,7 +92,8 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" });
+            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" },
+                CorrelationPropertiesFor<TestSagaData>(d => d.CorrelationId));
 
             var data = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
 
@@ -102,7 +110,7 @@ namespace Rebus.Tests.Contracts.Sagas
             {
                 Id = sagaId,
                 Data = "yes, den kender jeg"
-            });
+            }, NoCorrelationProperties);
 
             var loadedSagaData = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
 
@@ -114,15 +122,15 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, Data = "yes, den kender jeg" });
+            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, Data = "yes, den kender jeg" }, NoCorrelationProperties);
             var loadedSagaData0 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
             Assert.That(loadedSagaData0.Revision, Is.EqualTo(0));
 
-            await _sagaStorage.Update(loadedSagaData0);
+            await _sagaStorage.Update(loadedSagaData0, NoCorrelationProperties);
             var loadedSagaData1 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
             Assert.That(loadedSagaData1.Revision, Is.EqualTo(1));
 
-            await _sagaStorage.Update(loadedSagaData1);
+            await _sagaStorage.Update(loadedSagaData1, NoCorrelationProperties);
             var loadedSagaData2 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
             Assert.That(loadedSagaData2.Revision, Is.EqualTo(2));
         }
@@ -136,7 +144,7 @@ namespace Rebus.Tests.Contracts.Sagas
             {
                 Id = sagaId,
                 Data = "yes, den kender jeg"
-            });
+            }, NoCorrelationProperties);
 
             var loadedSagaData = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
 
@@ -162,6 +170,25 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             public Guid Id { get; set; }
             public int Revision { get; set; }
+        }
+
+        IEnumerable<ISagaCorrelationProperty> CorrelationPropertiesFor<TSagaData>(params Expression<Func<TSagaData, object>>[] properties)
+        {
+            return properties
+                .Select(Reflect.Path)
+                .Select(propertyName => new CorrelationProperty(propertyName, typeof (TSagaData)));
+        }
+
+        class CorrelationProperty : ISagaCorrelationProperty
+        {
+            public CorrelationProperty(string propertyName, Type sagaDataType)
+            {
+                PropertyName = propertyName;
+                SagaDataType = sagaDataType;
+            }
+
+            public string PropertyName { get; private set; }
+            public Type SagaDataType { get; private set; }
         }
     }
 }

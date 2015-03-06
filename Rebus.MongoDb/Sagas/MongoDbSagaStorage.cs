@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -32,7 +33,7 @@ namespace Rebus.MongoDb.Sagas
             return (ISagaData)result;
         }
 
-        public async Task Insert(ISagaData sagaData)
+        public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             if (sagaData.Id == Guid.Empty)
             {
@@ -54,7 +55,7 @@ namespace Rebus.MongoDb.Sagas
             }
         }
 
-        public async Task Update(ISagaData sagaData)
+        public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var collection = GetCollection(sagaData.GetType());
 
