@@ -81,6 +81,7 @@ namespace Rebus.Persistence.InMem
                 var clone = Clone(sagaData);
                 clone.Revision++;
                 _data[id] = clone;
+                sagaData.Revision++;
             }
         }
 
