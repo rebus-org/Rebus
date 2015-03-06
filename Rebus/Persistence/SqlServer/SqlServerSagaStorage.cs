@@ -147,6 +147,11 @@ where [index].[saga_type] = @saga_type
 
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
+            if (sagaData.Id == Guid.Empty)
+            {
+                throw new InvalidOperationException(string.Format("Saga data {0} has an uninitialized Id property!", sagaData.GetType()));
+            }
+
             using (var connection = await _connectionProvider.GetConnection())
             {
                 using (var command = connection.CreateCommand())
@@ -179,8 +184,6 @@ where [index].[saga_type] = @saga_type
                 }
 
                 connection.Complete();
-
-                sagaData.Revision++;
             }
         }
 
@@ -188,46 +191,55 @@ where [index].[saga_type] = @saga_type
         {
             using (var connection = await _connectionProvider.GetConnection())
             {
-                // first, delete existing index
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
-                    command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.ExecuteNonQuery();
-                }
+                var revisionToUpdate = sagaData.Revision;
+                sagaData.Revision++;
 
-                // next, update or insert the saga
-                using (var command = connection.CreateCommand())
+                try
                 {
-                    command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.Parameters.AddWithValue("current_revision", sagaData.Revision);
-                    
-                    command.Parameters.AddWithValue("next_revision", sagaData.Revision + 1);
-                    command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
+                    // first, delete existing index
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
+                        command.Parameters.AddWithValue("id", sagaData.Id);
+                        command.ExecuteNonQuery();
+                    }
 
-                    command.CommandText = string.Format(@"
+                    // next, update or insert the saga
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.Parameters.AddWithValue("id", sagaData.Id);
+                        command.Parameters.AddWithValue("current_revision", revisionToUpdate);
+                        command.Parameters.AddWithValue("next_revision", sagaData.Revision);
+                        command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
+
+                        command.CommandText = string.Format(@"
 UPDATE [{0}] 
     SET [data] = @data, [revision] = @next_revision 
     WHERE [id] = @id AND [revision] = @current_revision", _dataTableName);
 
-                    var rows = command.ExecuteNonQuery();
-    
-                    if (rows == 0)
-                    {
-                        throw new ConcurrencyException("Update of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
+                        var rows = command.ExecuteNonQuery();
+
+                        if (rows == 0)
+                        {
+                            throw new ConcurrencyException("Update of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
+                        }
                     }
+
+                    var propertiesToIndex = GetPropertiesToIndex(sagaData, correlationProperties);
+
+                    if (propertiesToIndex.Any())
+                    {
+                        CreateIndex(propertiesToIndex, connection, sagaData);
+                    }
+
+                    connection.Complete();
+
                 }
-
-                var propertiesToIndex = GetPropertiesToIndex(sagaData, correlationProperties);
-
-                if (propertiesToIndex.Any())
+                catch
                 {
-                    CreateIndex(propertiesToIndex, connection, sagaData);
+                    sagaData.Revision--;
+                    throw;
                 }
-
-                connection.Complete();
-
-                sagaData.Revision++;
             }
         }
 

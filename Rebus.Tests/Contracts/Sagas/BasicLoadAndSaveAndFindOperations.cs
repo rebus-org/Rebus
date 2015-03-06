@@ -122,16 +122,26 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, Data = "yes, den kender jeg" }, NoCorrelationProperties);
+            var initialTransientInstance = new TestSagaData { Id = sagaId, Data = "yes, den kender jeg" };
+
+            Assert.That(initialTransientInstance.Revision, Is.EqualTo(0));
+
+            await _sagaStorage.Insert(initialTransientInstance, NoCorrelationProperties);
             var loadedSagaData0 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
+            
             Assert.That(loadedSagaData0.Revision, Is.EqualTo(0));
+            Assert.That(initialTransientInstance.Revision, Is.EqualTo(0));
 
             await _sagaStorage.Update(loadedSagaData0, NoCorrelationProperties);
             var loadedSagaData1 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
+            
+            Assert.That(loadedSagaData0.Revision, Is.EqualTo(1));
             Assert.That(loadedSagaData1.Revision, Is.EqualTo(1));
 
             await _sagaStorage.Update(loadedSagaData1, NoCorrelationProperties);
             var loadedSagaData2 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
+            
+            Assert.That(loadedSagaData1.Revision, Is.EqualTo(2));
             Assert.That(loadedSagaData2.Revision, Is.EqualTo(2));
         }
 
