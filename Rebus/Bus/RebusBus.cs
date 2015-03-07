@@ -53,7 +53,7 @@ namespace Rebus.Bus
 
         public IBus Start(int numberOfWorkers)
         {
-            _log.Info("Starting bus");
+            _log.Info("Starting bus {0}", _busId);
 
             InjectedServicesWhoseLifetimeToControl
                 .OfType<IInitializable>()
@@ -287,10 +287,10 @@ namespace Rebus.Bus
             {
                 if (_workers.Count == 0) return;
 
-                _log.Debug("Removing worker");
-
                 using (var lastWorker = _workers.Last())
                 {
+                    _log.Debug("Removing worker {0}", lastWorker.Name);
+
                     _workers.Remove(lastWorker);
                 }
             }

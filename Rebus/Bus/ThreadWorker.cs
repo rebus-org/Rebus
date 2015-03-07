@@ -22,33 +22,31 @@ namespace Rebus.Bus
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
-        readonly string _workerName;
 
         volatile bool _keepWorking = true;
 
         public ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, int maxParallelismPerWorker)
         {
+            Name = workerName;
+
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
-            _workerName = workerName;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _maxParallelismPerWorker = maxParallelismPerWorker;
             _workerThread = new Thread(() =>
             {
                 SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
-
+                _log.Debug("Starting worker {0}", Name);
                 while (_keepWorking)
                 {
                     DoWork();
                 }
-            
-                _log.Debug("Worker {0} stopped", workerName);
+                _log.Debug("Worker {0} stopped", Name);
             })
             {
                 Name = workerName
             };
-            _log.Debug("Starting worker {0}", workerName);
             _workerThread.Start();
         }
 
@@ -68,7 +66,7 @@ namespace Rebus.Bus
             }
             catch (ThreadAbortException)
             {
-                _log.Debug("Aborting worker {0}", _workerName);
+                _log.Debug("Aborting worker {0}", Name);
                 _keepWorking = false;
             }
             catch (Exception exception)
@@ -119,6 +117,8 @@ namespace Rebus.Bus
                 }
             }
         }
+
+        public string Name { get; private set; }
 
         public void Stop()
         {
