@@ -49,6 +49,7 @@
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Bus\IWorker.cs" />
+    <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
     <Compile Include="Bus\ThreadWorker.cs" />
     <Compile Include="Bus\ThreadWorkerSynchronizationContext.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Sagas\ISagaStorage.cs" />
     <Compile Include="Sagas\Saga.cs" />
     <Compile Include="Sagas\SagaHelper.cs" />
+    <Compile Include="Time\RebusTime.cs" />
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />
     <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />

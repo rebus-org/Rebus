@@ -31,7 +31,13 @@ namespace Rebus.Bus
         /// by calling <see cref="ISubscriptionStorage.GetSubscriberAddresses"/> but the transport may override this behavior if it has special capabilities.
         /// </summary>
         Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null);
-        
+
+        /// <summary>
+        /// Defers the delivery of the message by attaching a <see cref="Headers.DeferredUntil"/> header to it and delivering it to the configured timeout manager endpoint
+        /// (defaults to be ourselves). When the time is right, the deferred message is returned to the address indicated by the <see cref="Headers.ReturnAddress"/> header.
+        /// </summary>
+        Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
+
         /// <summary>
         /// Subscribes the current endpoint to the given topic. If the <see cref="ISubscriptionStorage"/> is centralized (determined by checking <see cref="ISubscriptionStorage.IsCentralized"/>),
         /// the subscription is registered immediately. If not, the owner of the given topic is checked (by calling <see cref="IRouter.GetOwnerAddress"/>), and a

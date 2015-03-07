@@ -12,6 +12,7 @@ using Rebus.Pipeline;
 using Rebus.Routing;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
+using Rebus.Time;
 using Rebus.Transport;
 using Rebus.Workers;
 
@@ -113,6 +114,22 @@ namespace Rebus.Bus
             await InnerSend(subscriberAddresses, logicalMessage);
         }
 
+        public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = CreateMessage(message, optionalHeaders);
+
+            if (!logicalMessage.HasReturnAddress())
+            {
+                logicalMessage.SetReturnAddressFromTransport(_transport);
+            }
+
+            logicalMessage.SetDeferHeader(RebusTime.Now + delay);
+
+            var timeoutManagerAddress = GetTimeoutManagerAddress();
+
+            await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
+        }
+
         public async Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
         {
             // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
@@ -172,14 +189,21 @@ namespace Rebus.Bus
             }
         }
 
-        static Dictionary<string, string> GetHeaders(Dictionary<string, string> headers)
+        string GetTimeoutManagerAddress()
         {
-            return headers ?? new Dictionary<string, string>();
+            var address = _transport.Address;
+            if (string.IsNullOrWhiteSpace(address))
+            {
+                throw new InvalidOperationException("Cannot use ourselves as timeout manager because we're a one-way client");
+            }
+            return address;
         }
 
         static Message CreateMessage(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            return new Message(GetHeaders(optionalHeaders), commandMessage);
+            var headers = optionalHeaders ?? new Dictionary<string, string>();
+
+            return new Message(headers, commandMessage);
         }
 
         static string GetReturnAddress(TransportMessage transportMessage)

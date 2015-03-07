@@ -54,6 +54,7 @@
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
     <Compile Include="Extensions\Ponder.cs" />
+    <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
