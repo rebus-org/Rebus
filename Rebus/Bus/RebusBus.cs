@@ -86,15 +86,20 @@ namespace Rebus.Bus
 
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = new Message(GetHeaders(optionalHeaders), commandMessage);
+            var logicalMessage = CreateMessage(commandMessage, optionalHeaders);
             var destinationAddress = _transport.Address;
+
+            if (string.IsNullOrWhiteSpace(destinationAddress))
+            {
+                throw new InvalidOperationException("It's not possible to send the message to ourselves, because this is a one-way client!");
+            }
 
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
         public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = new Message(GetHeaders(optionalHeaders), commandMessage);
+            var logicalMessage = CreateMessage(commandMessage, optionalHeaders);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
             await InnerSend(new[] { destinationAddress }, logicalMessage);
@@ -102,7 +107,7 @@ namespace Rebus.Bus
 
         public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = new Message(GetHeaders(optionalHeaders), eventMessage);
+            var logicalMessage = CreateMessage(eventMessage, optionalHeaders);
             var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
 
             await InnerSend(subscriberAddresses, logicalMessage);
@@ -120,16 +125,11 @@ namespace Rebus.Bus
 
             var stepContext = GetCurrentReceiveContext(currentTransactionContext);
 
-            var logicalMessage = new Message(GetHeaders(optionalHeaders), replyMessage);
+            var logicalMessage = CreateMessage(replyMessage, optionalHeaders);
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
             await InnerSend(new[] { returnAddress }, logicalMessage);
-        }
-
-        static Dictionary<string, string> GetHeaders(Dictionary<string, string> headers)
-        {
-            return headers ?? new Dictionary<string, string>();
         }
 
         public async Task Subscribe(string topic)
@@ -140,7 +140,7 @@ namespace Rebus.Bus
             }
             else
             {
-                var logicalMessage = new Message(GetHeaders(null), new SubscribeRequest
+                var logicalMessage = CreateMessage(new SubscribeRequest
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
@@ -160,7 +160,7 @@ namespace Rebus.Bus
             }
             else
             {
-                var logicalMessage = new Message(GetHeaders(null), new UnsubscribeRequest
+                var logicalMessage = CreateMessage(new UnsubscribeRequest
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
@@ -170,6 +170,16 @@ namespace Rebus.Bus
 
                 await InnerSend(new[] { destinationAddress }, logicalMessage);
             }
+        }
+
+        static Dictionary<string, string> GetHeaders(Dictionary<string, string> headers)
+        {
+            return headers ?? new Dictionary<string, string>();
+        }
+
+        static Message CreateMessage(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            return new Message(GetHeaders(optionalHeaders), commandMessage);
         }
 
         static string GetReturnAddress(TransportMessage transportMessage)
