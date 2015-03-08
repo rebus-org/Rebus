@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Extensions;
@@ -14,11 +15,19 @@ namespace Rebus.Persistence.InMem
     {
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
 
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
+        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body)
         {
             _deferredMessages
                 .AddOrUpdate(headers.GetValue(Headers.MessageId),
-                    id => new DeferredMessage(approximateDueTime, headers, body),
+                    id =>
+                    {
+                        using (body)
+                        {
+                            var buffer = new byte[body.Length];
+                            body.Read(buffer, 0, buffer.Length);
+                            return new DeferredMessage(approximateDueTime, headers, buffer);
+                        }
+                    },
                     (id, existing) => existing);
         }
 
@@ -31,7 +40,7 @@ namespace Rebus.Persistence.InMem
                     .ToList();
 
                 var result = new DueMessagesResult(keyValuePairsToRemove
-                    .Select(kvp => new DueMessage(kvp.Value.Headers, kvp.Value.Body)));
+                    .Select(kvp => new DueMessage(kvp.Value.Headers, new MemoryStream(kvp.Value.Body))));
 
                 foreach (var kvp in keyValuePairsToRemove)
                 {

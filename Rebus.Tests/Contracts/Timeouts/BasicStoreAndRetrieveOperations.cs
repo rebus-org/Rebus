@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -92,9 +92,9 @@ namespace Rebus.Tests.Contracts.Timeouts
             };
         }
 
-        static byte[] EmptyBody()
+        static Stream EmptyBody()
         {
-            return new byte[0];
+            return new MemoryStream(new byte[0]);
         }
     }
 }

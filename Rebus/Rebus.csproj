@@ -87,6 +87,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
+    <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
     <Compile Include="Pipeline\Receive\LoadSagaDataStep.cs" />
     <Compile Include="Pipeline\Send\FlowCorrelationIdStep.cs" />
     <Compile Include="Pipeline\Send\SendOutgoingMessageStep.cs" />
@@ -105,6 +106,7 @@
     <Compile Include="Sagas\Saga.cs" />
     <Compile Include="Sagas\SagaHelper.cs" />
     <Compile Include="Timeouts\ITimeoutManager.cs" />
+    <Compile Include="Timers\BackgroundTimer.cs" />
     <Compile Include="Time\RebusTime.cs" />
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />

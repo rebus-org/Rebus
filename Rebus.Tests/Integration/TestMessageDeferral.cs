@@ -41,13 +41,15 @@ namespace Rebus.Tests.Integration
             });
 
             var sendTime = DateTime.UtcNow;
-            await _bus.Defer(TimeSpan.FromSeconds(20), "hej med dig!");
+            var delay = TimeSpan.FromSeconds(5);
 
-            messageReceived.WaitOrDie(TimeSpan.FromSeconds(30));
+            await _bus.Defer(delay, "hej med dig!");
+
+            messageReceived.WaitOrDie(TimeSpan.FromSeconds(8));
 
             var timeToBeDelivered = deliveryTime - sendTime;
 
-            Assert.That(timeToBeDelivered, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(19)));
+            Assert.That(timeToBeDelivered, Is.GreaterThanOrEqualTo(delay));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Rebus.Messages;
+using Rebus.Pipeline.Receive;
 using Rebus.Transport;
 
 namespace Rebus.Bus
@@ -25,7 +26,7 @@ namespace Rebus.Bus
 
         public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
         {
-            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToString("O");
+            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToString(HandleDeferredMessagesStep.DateTimeOffsetFormat);
         }
     }
 }

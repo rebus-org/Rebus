@@ -16,6 +16,7 @@ using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
+using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
 
@@ -82,9 +83,12 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
 
+            PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
+
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
                 .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
+                .OnReceive(new HandleDeferredMessagesStep(c.Get<ITimeoutManager>(), c.Get<ITransport>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()), ReceiveStage.TransportMessageReceived)
@@ -95,7 +99,6 @@ namespace Rebus.Config
                 .OnSend(new FlowCorrelationIdStep())
                 .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
                 .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
-
                 );
 
             PossiblyRegisterDefault<IBus>(c =>
