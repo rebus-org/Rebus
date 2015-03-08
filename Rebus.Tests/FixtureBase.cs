@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Logging;
+using Rebus.Time;
 
 namespace Rebus.Tests
 {
@@ -12,6 +13,8 @@ namespace Rebus.Tests
         [SetUp]
         public void _SetUp()
         {
+            RebusTimeMachine.Reset();
+
             AdjustLogging(LogLevel.Debug);
 
             _disposables.Clear();

@@ -20,7 +20,7 @@ namespace Rebus.Extensions
                 return value;
 
             throw new KeyNotFoundException(string.Format("Could not find the key '{0}' - have the following keys only: {1}",
-                key, dictionary.Keys.Select(k => string.Format("'{0}'", k))));
+                key, string.Join(", ", dictionary.Keys.Select(k => string.Format("'{0}'", k)))));
         }
 
         public static string GetValueOrNull(this Dictionary<string, string> dictionary, string key)

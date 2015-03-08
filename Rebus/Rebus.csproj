@@ -81,6 +81,7 @@
     <Compile Include="Messages\Headers.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorage.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorage.cs" />
+    <Compile Include="Persistence\InMem\InMemoryTimeoutManager.cs" />
     <Compile Include="Persistence\SqlServer\DbConnectionProvider.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
