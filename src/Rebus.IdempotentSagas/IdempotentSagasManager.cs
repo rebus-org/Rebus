@@ -1,14 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
-using Ponder;
-
-using Rebus;
 using Rebus.Bus;
+using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Configuration;
 
 namespace Rebus.IdempotentSagas
 {
@@ -17,17 +13,16 @@ namespace Rebus.IdempotentSagas
     /// </summary>
     public class IdempotentSagasManager
     {
-        private static readonly string sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
-        private static ILog log;
-        private readonly ConfigurationBackbone _backbone = null;
+        static ILog log;
+        readonly ConfigurationBackbone backbone;
 
         internal IdempotentSagasManager(ConfigurationBackbone backbone)
         {
             if (backbone == null) throw new ArgumentNullException("backbone");
 
-            _backbone = backbone;
+            this.backbone = backbone;
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
-            _backbone.ConfigureEvents(x => AttachEventHandlers(x));
+            this.backbone.ConfigureEvents(x => AttachEventHandlers(x));
         }
 
         /// <summary>
@@ -87,7 +82,7 @@ namespace Rebus.IdempotentSagas
         private void EstablishIdempotencyContextFor(IIdempotentSagaData idempotentSagaData, IMessageContext messageContext)
         {
             var id = messageContext.RebusTransportMessageId;
-            var serializer = _backbone.SerializeMessages;
+            var serializer = backbone.SerializeMessages;
 
             log.Debug("Established idempotent saga context for: {0} (Handler: {1})", id, idempotentSagaData.GetType());
 
@@ -123,7 +118,7 @@ namespace Rebus.IdempotentSagas
                         log.Debug("Intercepting message {0} to [{1}] as an idempotent side-effect.", 
                             published ? "publication" : "transmission", destinations.Aggregate((cur, next) => cur + ", " + next));
 
-                        var serializer = _backbone.SerializeMessages;
+                        var serializer = backbone.SerializeMessages;
                         var serializedMessage = serializer.Serialize(message);
                         handlingData.SideEffects.Add(
                             new IdempotentSagaResults.SideEffect(
@@ -228,7 +223,7 @@ namespace Rebus.IdempotentSagas
 
                 foreach (var destination in item.Destinations)
                 {
-                    _backbone.SendMessages.Send(destination, toSend, TransactionContext.Current);
+                    backbone.SendMessages.Send(destination, toSend, TransactionContext.Current);
                 }
             }
         }

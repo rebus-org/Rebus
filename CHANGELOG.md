@@ -496,6 +496,10 @@
 
 * Support async initiation of sagas via `IAmInitiatedByAsync<>` - thanks [AndreaCuneo]
 
+## 0.81.0
+
+* Support for idempotent sagas via the Rebus.IdempotentSagas packages - thanks [pruiz]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz

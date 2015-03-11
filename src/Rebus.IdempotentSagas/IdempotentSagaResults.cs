@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Rebus;
-
 namespace Rebus.IdempotentSagas
 {
     /// <summary>

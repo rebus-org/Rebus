@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Rebus;
-using Rebus.Messages;
-using Rebus.Configuration;
+﻿using Rebus.Configuration;
 
 namespace Rebus.IdempotentSagas
 {
