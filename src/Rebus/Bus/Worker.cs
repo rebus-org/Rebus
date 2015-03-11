@@ -78,6 +78,12 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
+        internal event Action<object, IHandleMessages> AfterHandling = delegate { };
+
+        internal event Action<Exception> OnHandlingError = delegate { };
+
+        internal event Action<object, IHandleMessages> BeforeHandling = delegate { };
+
         internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
         volatile bool shouldExit;
@@ -110,6 +116,9 @@ namespace Rebus.Bus
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+            dispatcher.AfterHandling += RaiseAfterHandling;
+            dispatcher.BeforeHandling += RaiseBeforeHandling;
+            dispatcher.OnHandlingError += RaiseOnHandlingError;
             nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
@@ -121,6 +130,21 @@ namespace Rebus.Bus
         void RaiseUncorrelatedMessage(object message, Saga saga)
         {
             UncorrelatedMessage(message, saga);
+        }
+
+        void RaiseAfterHandling(object message, IHandleMessages handler)
+        {
+            AfterHandling(message, handler);
+        }
+
+        void RaiseOnHandlingError(Exception exception)
+        {
+            OnHandlingError(exception);
+        }
+
+        void RaiseBeforeHandling(object message, IHandleMessages handler)
+        {
+            BeforeHandling(message, handler);
         }
 
         /// <summary>

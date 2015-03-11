@@ -72,6 +72,21 @@ namespace Rebus.Tests
             {
                 get { throw new NotImplementedException(); }
             }
+
+            public IReadOnlyCollection<Type> HandlersToSkip
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public void SkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void DoNotSkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         class HasDependencyOnMessageContext

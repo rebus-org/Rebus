@@ -15,6 +15,7 @@ namespace Rebus
         const string DispatchMessageToHandlersKey = "rebus-DispatchMessageToHandlers";
         const string MessageContextItemKey = "rebus-message-context";
         readonly IDictionary<string, object> headers;
+        readonly ISet<Type> handlersToSkip;
         static ILog log;
 
         static MessageContext()
@@ -26,6 +27,7 @@ namespace Rebus
         {
             this.headers = headers;
             Items = new Dictionary<string, object>();
+            handlersToSkip = new HashSet<Type>();
         }
 
         /// <summary>
@@ -99,6 +101,11 @@ namespace Rebus
         /// for the duration of the handling of this transport message.
         /// </summary>
         public IDictionary<string, object> Items { get; private set; }
+
+        /// <summary>
+        /// Gets the handlers to skip.
+        /// </summary>
+        public IReadOnlyCollection<Type> HandlersToSkip { get { return new List<Type>(handlersToSkip).AsReadOnly(); } }
 
         /// <summary>
         /// Gets the current thread-bound message context if one is available, throwing an <see cref="InvalidOperationException"/>
@@ -196,6 +203,31 @@ namespace Rebus
         public void ClearLogicalMessage()
         {
             CurrentMessage = null;
+        }
+
+        /// <summary>
+        /// Instructs rebus handling infraestructure to skips the handler 
+        /// specified by type on it's current invocation.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public void SkipHandler(Type type)
+        {
+            if (!handlersToSkip.Contains(type))
+            {
+                handlersToSkip.Add(type);
+            }
+        }
+
+        /// <summary>
+        /// Removes the specified handler type from the list of handlers to skip.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public void DoNotSkipHandler(Type type)
+        {
+            if (handlersToSkip.Contains(type))
+            {
+                handlersToSkip.Remove(type);
+            }
         }
     }
 }

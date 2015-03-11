@@ -59,6 +59,9 @@ namespace Rebus.Bus
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
+        public event Action<object, IHandleMessages> BeforeHandling = delegate { };
+        public event Action<object, IHandleMessages> AfterHandling = delegate { };
+        public event Action<Exception> OnHandlingError = delegate { };
 
         /// <summary>
         /// Main entry point of the dispatcher. Dispatches the given message, doing handler
@@ -297,18 +300,39 @@ This most likely indicates that you have configured this Rebus service to use an
         }
         // ReSharper restore UnusedMember.Local
 
-        static async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
+        async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
         {
-            var ordinaryHandler = handler as IHandleMessages<TMessage>;
-            if (ordinaryHandler != null)
-            {
-                ordinaryHandler.Handle(message);
-            }
+            var handlerType = handler.GetType();
+            var context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
 
-            var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
-            if (asyncHandler != null)
+            try
             {
-                await asyncHandler.Handle(message);
+                BeforeHandling(message, handler);
+
+                if (context != null && context.HandlersToSkip.Contains(handlerType))
+                {
+                    log.Info("Skipping invocation of handler: {0}", handlerType);
+                    return;
+                }
+
+                var ordinaryHandler = handler as IHandleMessages<TMessage>;
+                if (ordinaryHandler != null)
+                {
+                    ordinaryHandler.Handle(message);
+                }
+
+                var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
+                if (asyncHandler != null)
+                {
+                    await asyncHandler.Handle(message);
+                }
+
+                AfterHandling(message, handler);
+            }
+            catch (Exception ex)
+            {
+                OnHandlingError(ex);
+                throw;
             }
         }
 
