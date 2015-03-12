@@ -1,6 +1,6 @@
 ﻿using System;
 using Serilog;
-using RebusLog=Rebus.Logging.ILog;
+using RebusLog = Rebus.Logging.ILog;
 
 namespace Rebus.Serilog
 {
