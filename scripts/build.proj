@@ -10,6 +10,7 @@
         <RebusProjects Include="..\src\Rebus.AzureServiceBus\*.csproj"/>
         <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
         <RebusProjects Include="..\src\Rebus.Extensions\*.csproj"/>
+        <RebusProjects Include="..\src\Rebus.IdempotentSagas\*.csproj" />
         <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
         <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
         <RebusProjects Include="..\src\Rebus.MsmqLoadBalancer\*.csproj"/>
@@ -23,7 +24,6 @@
         <RebusProjects Include="..\src\Rebus.SimpleInjector\*.csproj" />
         <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
         <RebusProjects Include="..\src\Rebus.Unity\*.csproj"/>
-        <RebusProjects Include="..\src\Rebus.IdempotentSagas\*.csproj" />
 
         <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
         <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
