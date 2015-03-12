@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-using NUnit.Framework;
-
-using Rebus.IdempotentSagas;
-using Rebus.Bus;
-using Rebus.Configuration;
-using Rebus.Persistence.InMemory;
-using Rebus.Tests.Transports.Rabbit;
-using Rebus.RabbitMQ;
 using System.Threading;
+using NUnit.Framework;
+using Rebus.Configuration;
+using Rebus.IdempotentSagas;
+using Rebus.Persistence.InMemory;
+using Rebus.RabbitMQ;
+using Rebus.Tests.Transports.Rabbit;
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
+    [Category(TestCategories.Rabbit)]
     public class TestIdempotentSagas : RabbitMqFixtureBase
     {
         BuiltinContainerAdapter adapter;

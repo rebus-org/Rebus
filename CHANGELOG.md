@@ -498,7 +498,7 @@
 
 ## 0.81.0
 
-* Support for idempotent sagas via the Rebus.IdempotentSagas packages - thanks [pruiz]
+* Support for idempotent sagas via the `Rebus.IdempotentSagas` packages - thanks [pruiz]
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe

@@ -27,6 +27,7 @@ namespace Rebus.Tests.Bugs
             var mock = Mock<IMessageContext>();
             mock.Stub(m => m.Items).Return(new Dictionary<string, object>());
             mock.Stub(m => m.Headers).Return(new Dictionary<string, object>());
+            mock.Stub(m => m.HandlersToSkip).Return(new List<Type>());
 
             // act
             using(TransactionContext.None())
