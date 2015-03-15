@@ -31,6 +31,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         public void Cleanup()
         {
             _disposables.ForEach(d => d.Dispose());
+            _disposables.Clear();
 
             SqlTestHelper.DropTable(TableName);
         }

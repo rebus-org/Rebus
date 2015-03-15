@@ -74,6 +74,7 @@
     <Compile Include="Persistence\InMem\InMemoryTimeoutManagerFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageFactory.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerTimeoutManagerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />

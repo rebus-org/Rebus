@@ -37,10 +37,19 @@ namespace Rebus.Persistence.InMem
             {
                 var keyValuePairsToRemove = _deferredMessages
                     .Where(v => RebusTime.Now >= v.Value.DueTime)
-                    .ToList();
+                    .ToHashSet();
 
                 var result = new DueMessagesResult(keyValuePairsToRemove
-                    .Select(kvp => new DueMessage(kvp.Value.Headers, new MemoryStream(kvp.Value.Body))));
+                    .Select(kvp => new DueMessage(kvp.Value.Headers, new MemoryStream(kvp.Value.Body),
+                        () => keyValuePairsToRemove.Remove(kvp))),
+                    () =>
+                    {
+                        // put back if the result was not completed
+                        foreach (var kvp in keyValuePairsToRemove)
+                        {
+                            _deferredMessages[kvp.Key] = kvp.Value;
+                        }
+                    });
 
                 foreach (var kvp in keyValuePairsToRemove)
                 {

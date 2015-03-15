@@ -36,24 +36,23 @@ namespace Rebus.Pipeline.Receive
         {
             using (var result = _timeoutManager.GetDueMessages().Result)
             {
-                using (var defaultTransactionContext = new DefaultTransactionContext())
+                foreach (var dueMessage in result)
                 {
-                    foreach (var dueMessage in result)
+                    var transportMessage = dueMessage.ToTransportMessage();
+                    var returnAddress = transportMessage.Headers[Headers.ReturnAddress];
+
+                    _log.Debug("Sending due message {0} to {1}",
+                        transportMessage.Headers[Headers.MessageId],
+                        returnAddress);
+
+                    using (var defaultTransactionContext = new DefaultTransactionContext())
                     {
-                        var transportMessage = dueMessage.ToTransportMessage();
-                        var returnAddress = transportMessage.Headers[Headers.ReturnAddress];
-
-                        _log.Debug("Sending due message {0} to {1}",
-                            transportMessage.Headers[Headers.MessageId],
-                            returnAddress);
-
                         _transport.Send(returnAddress, transportMessage, defaultTransactionContext).Wait();
+                        defaultTransactionContext.Complete();
                     }
 
-                    defaultTransactionContext.Complete();
+                    dueMessage.MarkAsCompleted();
                 }
-
-                result.Complete();
             }
         }
 
@@ -67,7 +66,7 @@ namespace Rebus.Pipeline.Receive
             var transportMessage = context.Load<TransportMessage>();
 
             string deferredUntil;
-            
+
             var headers = transportMessage.Headers;
 
             if (!headers.TryGetValue(Headers.DeferredUntil, out deferredUntil))

@@ -17,14 +17,25 @@ namespace Rebus.Timeouts
 
     public class DueMessage
     {
-        public DueMessage(Dictionary<string, string> headers, Stream body)
+        readonly Action _completeAction;
+
+        public DueMessage(Dictionary<string, string> headers, Stream body, Action completeAction = null)
         {
+            _completeAction = completeAction;
             Headers = headers;
             Body = body;
         }
 
-        public Dictionary<string,string> Headers { get; private set; }
+        public Dictionary<string, string> Headers { get; private set; }
+
         public Stream Body { get; private set; }
+
+        public void MarkAsCompleted()
+        {
+            if (_completeAction == null) return;
+
+            _completeAction();
+        }
 
         public TransportMessage ToTransportMessage()
         {
@@ -34,19 +45,20 @@ namespace Rebus.Timeouts
 
     public class DueMessagesResult : IEnumerable<DueMessage>, IDisposable
     {
+        readonly Action _cleanupAction;
         readonly List<DueMessage> _dueMessages;
 
-        public DueMessagesResult(IEnumerable<DueMessage> dueMessages)
+        public DueMessagesResult(IEnumerable<DueMessage> dueMessages, Action cleanupAction = null)
         {
+            _cleanupAction = cleanupAction;
             _dueMessages = dueMessages.ToList();
-        }
-
-        public void Complete()
-        {
         }
 
         public void Dispose()
         {
+            if (_cleanupAction == null) return;
+
+            _cleanupAction();
         }
 
 

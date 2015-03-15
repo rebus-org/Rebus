@@ -1,5 +1,8 @@
 ﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Rebus.Tests.Extensions
@@ -20,6 +23,20 @@ namespace Rebus.Tests.Extensions
             {
                 action();
             }
+        }
+
+        public static async Task<byte[]> GetBytes(this Stream stream)
+        {
+            var buffer = new byte[stream.Length];
+
+            await stream.ReadAsync(buffer, 0, buffer.Length);
+
+            return buffer;
+        }
+
+        public static Stream ToStream(this byte[] bytes)
+        {
+            return new MemoryStream(bytes);
         }
     }
 }

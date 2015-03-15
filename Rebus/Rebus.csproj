@@ -86,6 +86,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerTimeoutManager.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
     <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
     <Compile Include="Pipeline\Receive\LoadSagaDataStep.cs" />
