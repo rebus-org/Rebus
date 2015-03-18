@@ -405,7 +405,7 @@ which will make the persister use the type of the saga to come up with collectio
                 var exceptionMessage = string.Format("Tried to {0}, but apparently the operation didn't succeed.",
                                                      string.Format(message, objs));
 
-                throw new WriteConcernException(exceptionMessage, writeConcernResult);
+                throw new MongoWriteConcernException(exceptionMessage, writeConcernResult);
             }
 
             if (writeConcernResult.DocumentsAffected != expectedNumberOfAffectedDocuments)
@@ -414,7 +414,7 @@ which will make the persister use the type of the saga to come up with collectio
                                                      string.Format(message, objs),
                                                      expectedNumberOfAffectedDocuments);
 
-                throw new WriteConcernException(exceptionMessage, writeConcernResult);
+                throw new MongoWriteConcernException(exceptionMessage, writeConcernResult);
             }
         }
     }
