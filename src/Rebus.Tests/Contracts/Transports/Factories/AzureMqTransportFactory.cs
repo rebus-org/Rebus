@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.WindowsAzure;
 using Rebus.Azure;
 
 namespace Rebus.Tests.Contracts.Transports.Factories
@@ -19,7 +18,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
 
         static AzureMessageQueue GetQueue(string inputQueueName)
         {
-            return new AzureMessageQueue(CloudStorageAccount.DevelopmentStorageAccount, inputQueueName, "error").PurgeInputQueue();
+            return new AzureMessageQueue(AzureUtil.CloudStorageAccount, inputQueueName, "error").PurgeInputQueue();
         }
 
         public IReceiveMessages CreateReceiver(string queueName)

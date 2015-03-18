@@ -11,8 +11,25 @@ using Shouldly;
 namespace Rebus.Tests.Bugs
 {
     [TestFixture, Category(TestCategories.Rabbit)]
+    [Description("Verifies that RabbitMQ can create&bind error queue at the right time, even when configured to use a non-default exchange")]
     public class DoesNotCreateAndBindErrorQueueTooEarlyWithRabbitMq : RabbitMqFixtureBase
     {
+        protected override void DoSetUp()
+        {
+            RemoveQueues();
+        }
+
+        protected override void DoTearDown()
+        {
+            RemoveQueues();
+        }
+
+        static void RemoveQueues()
+        {
+            DeleteQueue("test.error");
+            DeleteQueue("test.input");
+        }
+
         [Test]
         public void ItHasBeenFixed()
         {
@@ -42,7 +59,7 @@ namespace Rebus.Tests.Bugs
 
                     var errorMessage = serializer.Deserialize(receivedTransportMessage);
                     errorMessage.Messages.Length.ShouldBe(1);
-                    errorMessage.Messages[0].ShouldBeTypeOf<string>();
+                    errorMessage.Messages[0].ShouldBeOfType<string>();
                     ((string)errorMessage.Messages[0]).ShouldBe("hello there!!!");
                 }
             }

@@ -12,15 +12,38 @@ namespace Rebus.Tests.Transports.Rabbit
     [TestFixture, Category(TestCategories.Rabbit), Description("Verifies that RabbitMQ can be used to implement pub/sub, thus using it to store subscriptions")]
     public class TestRabbitSubscriptions : RabbitMqFixtureBase
     {
-        [Test]
-        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThem()
+        static readonly string[] Queues = { "test.rabbitsub.sub1", "test.rabbitsub.sub2", "test.rabbitsub.sub3", "test.rabbitsub.publisher" };
+
+        protected override void DoSetUp()
         {
-            // arrange
+            RemoveQueuesAndExchanges();
+        }
+
+        protected override void DoTearDown()
+        {
+            RemoveQueuesAndExchanges();
+        }
+
+        static void RemoveQueuesAndExchanges()
+        {
+            DeleteExchange("Rebus");
+            foreach (var queue in Queues)
+            {
+                DeleteQueue(queue);
+                DeleteQueue("ex-" + queue);
+                DeleteExchange("ex-" + queue);
+            }
+
             DeleteQueue("test.rabbitsub.publisher");
             DeleteQueue("test.rabbitsub.sub1");
             DeleteQueue("test.rabbitsub.sub2");
             DeleteQueue("test.rabbitsub.sub3");
+        }
 
+        [Test]
+        public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThem()
+        {
+            // arrange
             var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher");
 
             var receivedSub1 = new List<int>();
@@ -72,9 +95,6 @@ namespace Rebus.Tests.Transports.Rabbit
         public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemAlsoWhenPublishingWithGenericTypeOtherThanActualType()
         {
             // arrange
-            DeleteQueue("test.rabbitsub.publisher");
-            DeleteQueue("test.rabbitsub.sub1");
-
             var receivedSub1 = new List<int>();
             var sub1 = PullOneOutOfTheHat("test.rabbitsub.sub1", receivedSub1.Add);
             var publisher = PullOneOutOfTheHat("test.rabbitsub.publisher");
@@ -99,26 +119,16 @@ namespace Rebus.Tests.Transports.Rabbit
         [TestCase(true)]
         public void SubscriptionsWorkLikeExpectedWhenRabbitManagesThemUsingOneExchangePerMessageType(bool usingExchangeAsInput)
         {
-            var queues = new[] { "test.rabbitsub.sub1", "test.rabbitsub.sub2", "test.rabbitsub.sub3", "test.rabbitsub.publisher" };
-
             // arrange
-            DeleteExchange("Rebus");
-            foreach (var q in queues)
-            {
-                DeleteQueue(q);
-			    DeleteQueue("ex-" + q);
-                DeleteExchange("ex-" + q);
-            }
-
-            var publisher = PullOneOutOfTheHat(queues[3], oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[3] : null);
+            var publisher = PullOneOutOfTheHat(Queues[3], oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + Queues[3] : null);
 
             var receivedSub1 = new List<int>();
             var receivedSub2 = new List<int>();
             var receivedSub3 = new List<int>();
 
-            var sub1 = PullOneOutOfTheHat(queues[0], receivedSub1.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[0] : null);
-            var sub2 = PullOneOutOfTheHat(queues[1], receivedSub2.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[1] : null);
-            var sub3 = PullOneOutOfTheHat(queues[2], receivedSub3.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + queues[2] : null);
+            var sub1 = PullOneOutOfTheHat(Queues[0], receivedSub1.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + Queues[0] : null);
+            var sub2 = PullOneOutOfTheHat(Queues[1], receivedSub2.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + Queues[1] : null);
+            var sub3 = PullOneOutOfTheHat(Queues[2], receivedSub3.Add, oneExchangePerType: true, inputExchange: usingExchangeAsInput ? "ex-" + Queues[2] : null);
 
             // act
             publisher.Publish(new SomeEvent { Number = 1 });
@@ -157,7 +167,7 @@ namespace Rebus.Tests.Transports.Rabbit
             receivedSub3.OrderBy(i => i).ToArray().ShouldBe(new[] { 4 });
             DeclareExchange("Rebus", "topic", passive: true).ShouldBe(false);
             DeclareExchange(typeof(SomeEvent).FullName, "topic", passive: true).ShouldBe(true);
-            foreach (var q in queues)
+            foreach (var q in Queues)
             {
                 DeclareExchange("ex-" + q, "fanout", passive: true).ShouldBe(usingExchangeAsInput);
 			    // Ensure no spurious queue names are created.

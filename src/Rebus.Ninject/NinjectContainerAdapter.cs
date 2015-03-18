@@ -15,10 +15,12 @@ namespace Rebus.Ninject
         {
             this.kernel = kernel;
         }
-
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            return kernel.GetAll<IHandleMessages<T>>().ToArray();
+            IEnumerable<IHandleMessages> handlers = kernel.GetAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asynchandlers = kernel.GetAll<IHandleMessagesAsync<T>>();
+            return handlers.Union(asynchandlers).ToArray();
         }
 
         public void Release(IEnumerable handlerInstances)

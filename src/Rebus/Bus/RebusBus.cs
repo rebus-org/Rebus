@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
-using System.Transactions;
 using Rebus.Configuration;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
-using System.Linq;
 using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
-using Rebus.Extensions;
 using Rebus.Timeout;
 using Timer = System.Timers.Timer;
 
@@ -45,6 +44,7 @@ namespace Rebus.Bus
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
+        readonly RebusSynchronizationContext continuations;
 
         readonly object workerCountAdjustmentLock = new object();
 
@@ -67,7 +67,10 @@ namespace Rebus.Bus
         /// <param name="errorTracker">Will be used to track failed delivery attempts.</param>
         /// <param name="storeTimeouts">Optionally provides an internal timeout manager to be used instead of sending timeout requests to an external timeout manager</param>
         /// <param name="configureAdditionalBehavior"></param>
-        public RebusBus(IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData, IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker, IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
+        public RebusBus(
+            IActivateHandlers activateHandlers, ISendMessages sendMessages, IReceiveMessages receiveMessages, IStoreSubscriptions storeSubscriptions, IStoreSagaData storeSagaData,
+            IDetermineMessageOwnership determineMessageOwnership, ISerializeMessages serializeMessages, IInspectHandlerPipeline inspectHandlerPipeline, IErrorTracker errorTracker,
+            IStoreTimeouts storeTimeouts, ConfigureAdditionalBehavior configureAdditionalBehavior)
         {
             this.activateHandlers = activateHandlers;
             this.sendMessages = sendMessages;
@@ -85,6 +88,7 @@ namespace Rebus.Bus
             routing = new RebusRouting(this);
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
+            continuations = new RebusSynchronizationContext();
 
             log.Info("Rebus bus {0} created", rebusId);
 
@@ -177,7 +181,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -198,7 +202,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(new List<string> { destinationEndpoint }, new List<object> { message });
         }
 
         /// <summary>
@@ -214,16 +218,14 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
+                var eventName = multicastTransport.GetEventName(message.GetType());
+                InternalSend(new List<string> { eventName }, new List<object> { message }, published: true);
                 return;
             }
 
             var subscriberEndpoints = storeSubscriptions.GetSubscribers(message.GetType());
 
-            foreach (var subscriberInputQueue in subscriberEndpoints)
-            {
-                InternalSend(subscriberInputQueue, new List<object> { message });
-            }
+            InternalSend(subscriberEndpoints.ToList(), new List<object> { message }, published: true);
         }
 
         internal void PossiblyAttachSagaIdToRequest<TCommand>(TCommand message)
@@ -284,17 +286,26 @@ namespace Rebus.Bus
         /// </summary>
         public void Subscribe<TEvent>()
         {
+            Subscribe(typeof(TEvent));
+        }
+
+        /// <summary>
+        /// Sends a subscription request for <paramref name="eventType"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Subscribe(Type eventType)
+        {
             var multicastTransport = sendMessages as IMulticastTransport;
 
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
-                multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                multicastTransport.Subscribe(eventType, receiveMessages.InputQueueAddress);
                 return;
             }
 
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(eventType);
 
-            InternalSubscribe<TEvent>(publisherInputQueue);
+            InternalSubscribe(publisherInputQueue, eventType);
         }
 
         /// <summary>
@@ -303,17 +314,26 @@ namespace Rebus.Bus
         /// </summary>
         public void Unsubscribe<TEvent>()
         {
+            Unsubscribe(typeof (TEvent));
+        }
+
+        /// <summary>
+        /// Sends an unsubscription request for <typeparamref name="TEvent"/> to the destination as
+        /// specified by the currently used implementation of <see cref="IDetermineMessageOwnership"/>.
+        /// </summary>
+        public void Unsubscribe(Type eventType)
+        {
             var multicastTransport = sendMessages as IMulticastTransport;
 
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
-                multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
+                multicastTransport.Unsubscribe(eventType, receiveMessages.InputQueueAddress);
                 return;
             }
 
-            var publisherInputQueue = GetMessageOwnerEndpointFor(typeof(TEvent));
+            var publisherInputQueue = GetMessageOwnerEndpointFor(eventType);
 
-            InternalUnsubscribe<TEvent>(publisherInputQueue);
+            InternalUnsubscribe(publisherInputQueue, eventType);
         }
 
         /// <summary>
@@ -387,7 +407,7 @@ namespace Rebus.Bus
 
             var messages = new List<object> { timeoutRequest };
 
-            InternalSend(timeoutManagerAddress, messages);
+            InternalSend(new List<string> { timeoutManagerAddress }, messages);
         }
 
         /// <summary>
@@ -436,15 +456,15 @@ namespace Rebus.Bus
         /// Gain access to more advanced and less commonly used features of the bus
         /// </summary>
         public IAdvancedBus Advanced { get { return this; } }
-
-        internal void InternalSubscribe<TMessage>(string publisherInputQueue)
+        
+        internal void InternalSubscribe(string publisherInputQueue, Type eventType)
         {
-            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Subscribe);
-        }
-
-        internal void InternalUnsubscribe<TMessage>(string publisherInputQueue)
+            SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Subscribe);
+        }		
+		
+        internal void InternalUnsubscribe(string publisherInputQueue, Type eventType)
         {
-            SendSubscriptionMessage(typeof(TMessage), publisherInputQueue, SubscribeAction.Unsubscribe);
+            SendSubscriptionMessage(eventType, publisherInputQueue, SubscribeAction.Unsubscribe);
         }
 
         internal void SendSubscriptionMessage(Type messageType, SubscribeAction subscribeAction)
@@ -469,7 +489,7 @@ namespace Rebus.Bus
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> { message });
+            InternalSend(new List<string> { destinationQueue }, new List<object> { message });
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -556,7 +576,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
             }
 
-            InternalSend(returnAddress, messages);
+            InternalSend(new List<string> { returnAddress }, messages);
         }
 
         /// <summary>
@@ -565,7 +585,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        internal void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(List<string> destinations, List<object> messages, bool published = false)
         {
             if (!started)
             {
@@ -581,58 +601,69 @@ you omit the inputQueue, errorQueue and workers attributes of the Rebus XML
 element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
 
-            messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
-
-            var messageToSend = new Message { Messages = messages.Select(MutateOutgoing).ToArray(), };
-            var headers = MergeHeaders(messageToSend);
-
-            // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
-            if (!headers.ContainsKey(Headers.ReturnAddress))
+            using (var txc = ManagedTransactionContext.Get())
             {
-                if (!configureAdditionalBehavior.OneWayClientMode)
+                foreach (var destination in destinations)
                 {
-                    headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
+                    messages.ForEach(m => events.RaiseMessageSent(this, destination, m));
                 }
-            }
 
-            if (MessageContext.HasCurrent)
-            {
-                var messageContext = MessageContext.GetCurrent();
+                var messageToSend = new Message {Messages = messages.Select(MutateOutgoing).ToArray(),};
+                var headers = MergeHeaders(messageToSend);
 
-                // if we're currently handling a message with a correlation ID, make sure it flows...
+                // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
+                if (!headers.ContainsKey(Headers.ReturnAddress))
+                {
+                    if (!configureAdditionalBehavior.OneWayClientMode)
+                    {
+                        headers[Headers.ReturnAddress] = GetInputQueueAddress();
+                    }
+                }
+
+                if (MessageContext.HasCurrent)
+                {
+                    var messageContext = MessageContext.GetCurrent();
+
+                    // if we're currently handling a message with a correlation ID, make sure it flows...
+                    if (!headers.ContainsKey(Headers.CorrelationId))
+                    {
+                        if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                        {
+                            headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                        }
+                    }
+
+                    // if we're currently handling a message with a user name, make sure it flows...
+                    if (!headers.ContainsKey(Headers.UserName))
+                    {
+                        if (messageContext.Headers.ContainsKey(Headers.UserName))
+                        {
+                            headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
+                        }
+                    }
+                }
+
+                // if, at this point, there's no correlation ID in a header, just provide one
                 if (!headers.ContainsKey(Headers.CorrelationId))
                 {
-                    if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
-                    {
-                        headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
-                    }
+                    headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
                 }
 
-                // if we're currently handling a message with a user name, make sure it flows...
-                if (!headers.ContainsKey(Headers.UserName))
+                // if, at this point, there's no rebus message ID in a header, just provide one
+                if (!headers.ContainsKey(Headers.MessageId))
                 {
-                    if (messageContext.Headers.ContainsKey(Headers.UserName))
-                    {
-                        headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
-                    }
+                    headers[Headers.MessageId] = Guid.NewGuid().ToString();
                 }
+
+                messageToSend.Headers = headers;
+                events.RaiseBeforeInternalSend(destinations, messageToSend, published);
+                InternalSend(destinations, messageToSend, txc.Context, published);
             }
+        }
 
-            // if, at this point, there's no correlation ID in a header, just provide one
-            if (!headers.ContainsKey(Headers.CorrelationId))
-            {
-                headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
-            }
-
-            // if, at this point, there's no rebus message ID in a header, just provide one
-            if (!headers.ContainsKey(Headers.MessageId))
-            {
-                headers[Headers.MessageId] = Guid.NewGuid().ToString();
-            }
-
-            messageToSend.Headers = headers;
-
-            InternalSend(destination, messageToSend);
+        internal string GetInputQueueAddress()
+        {
+            return receiveMessages.InputQueueAddress;
         }
 
         object MutateOutgoing(object msg)
@@ -643,32 +674,51 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         /// <summary>
         /// Internal send method - this one must not change the headers!
         /// </summary>
-        internal void InternalSend(string destination, Message messageToSend)
+        internal void InternalSend(List<string> destinations, Message messageToSend, ITransactionContext transactionContext, bool published = false)
         {
-            messageLogger.LogSend(destination, messageToSend);
+            messageLogger.LogSend(destinations, messageToSend);
 
-            var transactionContext = GetTransactionContext();
+            var transportMessage = serializeMessages.Serialize(messageToSend);
 
-            try
+            InternalSend(destinations, transportMessage, transactionContext);
+
+            if (configureAdditionalBehavior.AuditMessages && published)
             {
-                var transportMessage = serializeMessages.Serialize(messageToSend);
-                sendMessages.Send(destination, transportMessage, transactionContext);
-            }
-            catch (Exception exception)
-            {
-                throw new ApplicationException(string.Format(
-                    "An exception occurred while attempting to send {0} to {1} (context: {2})",
-                    messageToSend, destination, transactionContext), exception);
+                transportMessage.Headers[Headers.AuditReason] = Headers.AuditReasons.Published;
+                
+                if (configureAdditionalBehavior.OneWayClientMode)
+                {
+                    transportMessage.Headers[Headers.AuditPublishedByOneWayClient] = "";
+                }
+                else
+                {
+                    transportMessage.Headers[Headers.AuditSourceQueue] = GetInputQueueAddress();
+                }
+                
+                transportMessage.Headers[Headers.AuditMessageCopyTime] = RebusTimeMachine.Now().ToString("u");
+                var auditQueueName = configureAdditionalBehavior.AuditQueueName;
+                
+                InternalSend(new List<string>{auditQueueName}, transportMessage, transactionContext);
+
+                events.RaiseMessageAudited(this, transportMessage);
             }
         }
 
-        ITransactionContext GetTransactionContext()
+        internal void InternalSend(List<string> destinations, TransportMessageToSend transportMessage, ITransactionContext transactionContext)
         {
-            if (TransactionContext.Current != null) return TransactionContext.Current;
-
-            if (Transaction.Current == null) return new NoTransaction();
-
-            return new AmbientTransactionContext();
+            foreach (var destination in destinations)
+            {
+                try
+                {
+                    sendMessages.Send(destination, transportMessage, transactionContext);
+                }
+                catch (Exception exception)
+                {
+                    throw new ApplicationException(string.Format(
+                        "An exception occurred while attempting to send {0} to {1} (transaction context: {2})",
+                        transportMessage, destination, transactionContext), exception);
+                }
+            }
         }
 
         IDictionary<string, object> MergeHeaders(Message messageToSend)
@@ -738,7 +788,10 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             try
             {
-                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, GetTransactionContext());
+                using (var txc = ManagedTransactionContext.Get())
+                {
+                    sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, txc.Context);
+                }
             }
             catch (Exception e)
             {
@@ -796,20 +849,23 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
         {
             lock (workers)
             {
-                var worker = new Worker(errorTracker,
-                                        receiveMessages,
-                                        activateHandlers,
-                                        storeSubscriptions,
-                                        serializeMessages,
-                                        storeSagaData,
-                                        inspectHandlerPipeline,
-                                        string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
-                                        new DeferredMessageReDispatcher(this),
-                                        new IncomingMessageMutatorPipeline(Events),
-                                        storeTimeouts,
-                                        events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior,
-                                        messageLogger);
+                var worker = new Worker(
+                    errorTracker,
+                    receiveMessages,
+                    activateHandlers,
+                    storeSubscriptions,
+                    serializeMessages,
+                    storeSagaData,
+                    inspectHandlerPipeline,
+                    string.Format("Rebus {0} worker {1}", rebusId, workers.Count + 1),
+                    new DeferredMessageReDispatcher(this),
+                    new IncomingMessageMutatorPipeline(Events),
+                    storeTimeouts,
+                    events.UnitOfWorkManagers,
+                    configureAdditionalBehavior,
+                    messageLogger,
+                    continuations);
+
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -820,6 +876,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 worker.BeforeMessage += RaiseBeforeMessage;
                 worker.AfterMessage += RaiseAfterMessage;
                 worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
+                worker.AfterHandling += RaiseAfterHandling;
+                worker.BeforeHandling += RaiseBeforeHandling;
+                worker.OnHandlingError += RaiseOnHandlingError;
                 worker.MessageContextEstablished += RaiseMessageContextEstablished;
                 worker.Start();
             }
@@ -849,6 +908,21 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     }
                 }
             }
+        }
+
+        void RaiseOnHandlingError(Exception exception)
+        {
+            events.RaiseOnHandlingError(exception);
+        }
+
+        void RaiseAfterHandling(object message, IHandleMessages handler)
+        {
+            events.RaiseAfterHandling(this, message, handler);
+        }
+
+        void RaiseBeforeHandling(object message, IHandleMessages handler)
+        {
+            events.RaiseBeforeHandling(this, message, handler);
         }
 
         void RaiseMessageContextEstablished(IMessageContext messageContext)

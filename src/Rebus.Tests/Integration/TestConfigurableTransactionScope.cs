@@ -2,6 +2,7 @@
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Shared;
 using Rebus.Transports.Msmq;
 using Shouldly;
 
@@ -12,6 +13,18 @@ namespace Rebus.Tests.Integration
     {
         const string InputQueueName = "test.txscope.input";
         const string ErrorQueueName = "error";
+
+        protected override void DoSetUp()
+        {
+            MsmqUtil.Delete(InputQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
+        }
+
+        protected override void DoTearDown()
+        {
+            MsmqUtil.Delete(InputQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
+        }
 
         [Test]
         public void DoesNotUseTransactionScopeByDefault()

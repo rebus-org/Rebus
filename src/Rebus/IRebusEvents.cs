@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Bus;
+using Rebus.Messages;
 
 namespace Rebus
 {
@@ -18,6 +19,11 @@ namespace Rebus
     /// Delegate type that can listen to whenever the bus sends a logical message.
     /// </summary>
     public delegate void MessageSentEventHandler(IBus bus, string destination, object message);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever the bus sends a transport message.
+    /// </summary>
+    public delegate void BeforeInternalSendEventHandler(IEnumerable<string> destinations, Message message, bool published);
     
     /// <summary>
     /// Delegate type that can listen to whenever the bus received a logical message.
@@ -56,6 +62,26 @@ namespace Rebus
     public delegate void MessageContextEstablishedEventHandler(IBus bus, IMessageContext messageContext);
 
     /// <summary>
+    /// Delegate type that can listen to whenever a message has been audited (i.e. is copied to the audit queue)
+    /// </summary>
+    public delegate void MessageAuditedEventHandler(IBus bus, TransportMessageToSend transportMessageToSend);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever an exception is thrown during the execution of handler of a message.
+    /// </summary>
+    public delegate void OnHandlingErrorEventHandler(Exception exception);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever a message handler has been executed.
+    /// </summary>
+    public delegate void AfterHandlingEventHandler(IBus bus, object message, IHandleMessages handler);
+
+    /// <summary>
+    /// Delegate type that can listen to whenever a message handler is going to be executed.
+    /// </summary>
+    public delegate void BeforeHandlingEventHandler(IBus bus, object message, IHandleMessages handler);
+
+    /// <summary>
     /// Groups the different event hooks that Rebus exposes.
     /// </summary>
     public interface IRebusEvents
@@ -83,6 +109,11 @@ namespace Rebus
         /// listeners. If no errors occur, the passed exception will be null.
         /// </summary>
         event AfterTransportMessageEventHandler AfterTransportMessage;
+        
+        /// <summary>
+        /// Event that will be raised whenever the handled/published transport message has been copied to the audit queue
+        /// </summary>
+        event MessageAuditedEventHandler MessageAudited;
 
         /// <summary>
         /// Event that will be raised whenever it is determined that a message
@@ -94,6 +125,11 @@ namespace Rebus
         /// Event that will be raised immediately when the bus is used to send a logical message.
         /// </summary>
         event MessageSentEventHandler MessageSent;
+
+        /// <summary>
+        /// Event that will be raised immediately before a transport message is sent.
+        /// </summary>
+        event BeforeInternalSendEventHandler BeforeInternalSend;
 
         /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
@@ -121,6 +157,21 @@ namespace Rebus
         /// message processing and is disposed at the very end.
         /// </summary>
         event MessageContextEstablishedEventHandler MessageContextEstablished;
+
+        /// <summary>
+        /// Event that is raised when an exception is thrown during the handling of a message.
+        /// </summary>
+        event OnHandlingErrorEventHandler OnHandlingError;
+
+        /// <summary>
+        /// Event that is raised after the execution of a handler of a message.
+        /// </summary>
+        event AfterHandlingEventHandler AfterHandling;
+
+        /// <summary>
+        /// Event that is raised before the execution of a handler of a message.
+        /// </summary>
+        event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Contains a pipeline of message mutators that will be run in order when messages are sent,

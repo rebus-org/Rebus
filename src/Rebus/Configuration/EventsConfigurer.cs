@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Rebus.Bus;
 
@@ -23,6 +24,11 @@ namespace Rebus.Configuration
         /// Event that will be raised immediately when the bus is used to send a logical message.
         /// </summary>
         public event MessageSentEventHandler MessageSent;
+
+        /// <summary>
+        /// Event that will be raised inmediately when the bus is going to send a transport message.
+        /// </summary>
+        public event BeforeInternalSendEventHandler BeforeInternalSend;
 
         /// <summary>
         /// Event that will be raised for each received logical message (i.e. it will only be called
@@ -76,10 +82,30 @@ namespace Rebus.Configuration
         public event AfterTransportMessageEventHandler AfterTransportMessage;
 
         /// <summary>
+        /// Event that will be raised whenever the handled/published transport message has been copied to the audit queue
+        /// </summary>
+        public event MessageAuditedEventHandler MessageAudited;
+
+        /// <summary>
         /// Event that will be raised whenever it is determined that a message
         /// has failed too many times.
         /// </summary>
         public event PoisonMessageEventHandler PoisonMessage;
+
+        /// <summary>
+        /// Event that is raised when an exception is thrown during the handling of a message.
+        /// </summary>
+        public event OnHandlingErrorEventHandler OnHandlingError;
+
+        /// <summary>
+        /// Event that is raised after the execution of a handler of a message.
+        /// </summary>
+        public event AfterHandlingEventHandler AfterHandling;
+
+        /// <summary>
+        /// Event that is raised before the execution of a handler of a message.
+        /// </summary>
+        public event BeforeHandlingEventHandler BeforeHandling;
 
         /// <summary>
         /// Gets the list of message mutators that should be used to mutate incoming/outgoing messages.
@@ -111,6 +137,14 @@ namespace Rebus.Configuration
                 foreach (var listener in MessageSent.GetInvocationList().Cast<MessageSentEventHandler>())
                 {
                     rebusEvents.MessageSent += listener;
+                }
+            }
+
+            if (BeforeInternalSend != null)
+            {
+                foreach (var listener in BeforeInternalSend.GetInvocationList().Cast<BeforeInternalSendEventHandler>())
+                {
+                    rebusEvents.BeforeInternalSend += listener;
                 }
             }
 
@@ -178,6 +212,38 @@ namespace Rebus.Configuration
                 }
             }
 
+            if (MessageAudited != null)
+            {
+                foreach (var listener in MessageAudited.GetInvocationList().Cast<MessageAuditedEventHandler>())
+                {
+                    rebusEvents.MessageAudited += listener;
+                }
+            }
+
+            if (AfterHandling != null)
+            {
+                foreach (var listener in AfterHandling.GetInvocationList().Cast<AfterHandlingEventHandler>())
+                {
+                    rebusEvents.AfterHandling += listener;
+                }
+            }
+
+            if (BeforeHandling != null)
+            {
+                foreach (var listener in BeforeHandling.GetInvocationList().Cast<BeforeHandlingEventHandler>())
+                {
+                    rebusEvents.BeforeHandling += listener;
+                }
+            }
+
+            if (OnHandlingError != null)
+            {
+                foreach (var listener in OnHandlingError.GetInvocationList().Cast<OnHandlingErrorEventHandler>())
+                {
+                    rebusEvents.OnHandlingError += listener;
+                }
+            }
+
             foreach (var messageMutator in MessageMutators)
             {
                 rebusEvents.MessageMutators.Add(messageMutator);
@@ -188,5 +254,6 @@ namespace Rebus.Configuration
                 rebusEvents.AddUnitOfWorkManager(unitOfWorkManager);
             }
         }
+
     }
 }

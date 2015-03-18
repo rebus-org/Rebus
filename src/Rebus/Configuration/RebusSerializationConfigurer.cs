@@ -1,4 +1,5 @@
 using System.Messaging;
+using Newtonsoft.Json;
 using Rebus.Serialization.Binary;
 using Rebus.Serialization.Json;
 
@@ -16,7 +17,7 @@ namespace Rebus.Configuration
 
         /// <summary>
         /// Configures Rebus to use <see cref="JsonMessageSerializer"/> to serialize messages. A <see cref="JsonSerializationOptions"/>
-        /// object is returned, which can be used to configure detailes around how the JSON serialization should work
+        /// object is returned, which can be used to configure details around how the JSON serialization should work
         /// </summary>
         public JsonSerializationOptions UseJsonSerializer()
         {

@@ -25,7 +25,8 @@ namespace Rebus.Persistence.SqlServer
         /// Constructs the storage with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the storage will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
-        public SqlServerSubscriptionStorage(string connectionString, string subscriptionsTableName):base(connectionString)
+        public SqlServerSubscriptionStorage(string connectionStringOrConnectionStringName, string subscriptionsTableName)
+            : base(connectionStringOrConnectionStringName)
         {
             this.subscriptionsTableName = subscriptionsTableName;
         }
@@ -35,7 +36,8 @@ namespace Rebus.Persistence.SqlServer
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the storage will assume
         /// that someone else manages the connection's lifetime.
         /// </summary>
-        public SqlServerSubscriptionStorage(Func<ConnectionHolder> connectionFactoryMethod, string subscriptionsTableName):base(connectionFactoryMethod)
+        public SqlServerSubscriptionStorage(Func<ConnectionHolder> connectionFactoryMethod, string subscriptionsTableName)
+            : base(connectionFactoryMethod)
         {
             this.subscriptionsTableName = subscriptionsTableName;
         }
@@ -58,21 +60,15 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"insert into [{0}] 
+                    command.CommandText = string.Format(@"if not exists
+                                                (select top 1 * from [{0}] where message_type = @message_type and endpoint = @endpoint)
+                                                insert into [{0}] 
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
 
                     command.Parameters.AddWithValue("message_type", eventType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
-
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {
-                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
-                    }
+                    command.ExecuteNonQuery();
                 }
 
                 commitAction(connection);

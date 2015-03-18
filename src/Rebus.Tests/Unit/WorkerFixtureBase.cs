@@ -15,20 +15,22 @@ namespace Rebus.Tests.Unit
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers = null,
             IErrorTracker errorTracker = null)
         {
-            return new Worker(errorTracker ??  new ErrorTracker("error"),
-                              receiveMessages,
-                              activateHandlers,
-                              new InMemorySubscriptionStorage(),
-                              new JsonMessageSerializer(),
-                              new SagaDataPersisterForTesting(), 
-                              inspectHandlerPipeline ?? new TrivialPipelineInspector(), 
-                              "Just some test worker",
-                              new DeferredMessageHandlerForTesting(),
-                              new IncomingMessageMutatorPipelineForTesting(),
-                              null,
-                              unitOfWorkManagers ?? new IUnitOfWorkManager[0],
-                              new ConfigureAdditionalBehavior(),
-                              new MessageLogger());
+            return new Worker(
+                errorTracker ?? new ErrorTracker("error"),
+                receiveMessages,
+                activateHandlers,
+                new InMemorySubscriptionStorage(),
+                new JsonMessageSerializer(),
+                new SagaDataPersisterForTesting(),
+                inspectHandlerPipeline ?? new TrivialPipelineInspector(),
+                "Just some test worker",
+                new DeferredMessageHandlerForTesting(),
+                new IncomingMessageMutatorPipelineForTesting(),
+                null,
+                unitOfWorkManagers ?? new IUnitOfWorkManager[0],
+                new ConfigureAdditionalBehavior(),
+                new MessageLogger(),
+                new RebusSynchronizationContext());
         }
     }
 }

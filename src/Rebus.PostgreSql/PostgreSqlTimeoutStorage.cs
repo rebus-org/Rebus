@@ -89,7 +89,7 @@ namespace Rebus.PostgreSql
         /// <summary>
         /// Queries the underlying table and returns due timeouts, removing them at the same time
         /// </summary>
-        public IEnumerable<DueTimeout> GetDueTimeouts()
+        public DueTimeoutsResult GetDueTimeouts()
         {
             var dueTimeouts = new List<DueTimeout>();
             var connection = getConnection();
@@ -127,7 +127,7 @@ ORDER BY ""time_to_return"" ASC
                 releaseConnection(connection);
             }
 
-            return dueTimeouts;
+            return new DueTimeoutsResult(dueTimeouts);
         }
 
         void MarkAsProcessed(DuePostgreSqlTimeout dueTimeout)

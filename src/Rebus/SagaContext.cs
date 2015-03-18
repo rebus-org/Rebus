@@ -44,7 +44,7 @@ namespace Rebus
         {
             if (messageContext != null)
             {
-                messageContext.Items[SagaContextItemKey] = null;
+                messageContext.Items.Remove(SagaContextItemKey);
             }
         }
     }

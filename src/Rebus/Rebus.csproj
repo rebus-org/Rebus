@@ -10,10 +10,11 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
     <RestorePackages>true</RestorePackages>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,6 +25,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Debug\Rebus.XML</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,11 +35,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Rebus.XML</DocumentationFile>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.4.5.11\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -68,11 +71,13 @@
     <Compile Include="Bus\IncomingMessageMutatorPipeline.cs" />
     <Compile Include="Bus\IUnitOfWork.cs" />
     <Compile Include="Bus\IUnitOfWorkManager.cs" />
+    <Compile Include="Bus\ManagedTransactionContext.cs" />
     <Compile Include="Bus\NoTransaction.cs" />
     <Compile Include="Bus\QueueCommitException.cs" />
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
+    <Compile Include="Bus\RebusSynchronizationContext.cs" />
     <Compile Include="Bus\TimeoutRequestHandler.cs" />
     <Compile Include="Bus\TransactionContext.cs" />
     <Compile Include="Bus\TxBomkarl.cs" />
@@ -85,11 +90,13 @@
     <Compile Include="Configuration\DecoratorsConfigurer.cs" />
     <Compile Include="Configuration\ConfigureAdditionalBehavior.cs" />
     <Compile Include="Configuration\JsonSerializationOptions.cs" />
+    <Compile Include="Configuration\MessageAuditor.cs" />
     <Compile Include="Configuration\RebusBehaviorConfigurer.cs" />
     <Compile Include="Configuration\RebusTimeoutsConfigurer.cs" />
     <Compile Include="Configuration\SqlServerSagaPersisterFluentConfigurer.cs" />
     <Compile Include="Configuration\SqlServerSubscriptionStorageFluentConfigurer.cs" />
     <Compile Include="Configuration\SqlServerTimeoutStorageFluentConfigurer.cs" />
+    <Compile Include="Disposable.cs" />
     <Compile Include="ExceptionExtensions.cs" />
     <Compile Include="Guard.cs" />
     <Compile Include="Logging\MessageLogger.cs" />
@@ -106,6 +113,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerStorage.cs" />
     <Compile Include="SagaContext.cs" />
     <Compile Include="Serialization\Json\TypeDescriptor.cs" />
+    <Compile Include="Shared\ConnectionStringUtil.cs" />
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="TimedExtensions.cs" />

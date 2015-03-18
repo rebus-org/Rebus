@@ -7,7 +7,10 @@ namespace Rebus.Tests.Integration.Factories
     {
         protected override IDuplexTransport CreateTransport(string inputQueueName)
         {
+            RegisterForDisposal(new DisposableAction(() => MsmqUtil.Delete(inputQueueName)));
+            RegisterForDisposal(new DisposableAction(() => MsmqUtil.Delete(ErrorQueueName)));
             MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(ErrorQueueName));
+
             return new MsmqMessageQueue(inputQueueName).PurgeInputQueue();
         }
     }

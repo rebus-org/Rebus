@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Testing
 {
@@ -36,9 +37,9 @@ namespace Rebus.Testing
                     + " otherwise stuff would not work.", messageContext));
             }
 
-            MessageContext.current = messageContext;
-            
-            return new MessageContextResetter(messageContext);
+            MessageContext.Establish(messageContext, overwrite: true);
+
+            return messageContext;
         }
 
         /// <summary>
@@ -46,31 +47,9 @@ namespace Rebus.Testing
         /// </summary>
         public static void Reset()
         {
-            MessageContext.current = null;
-        }
-
-        class MessageContextResetter : IDisposable
-        {
-            readonly IMessageContext messageContext;
-            bool disposed;
-
-            public MessageContextResetter(IMessageContext messageContext)
+            if (MessageContext.HasCurrent)
             {
-                this.messageContext = messageContext;
-            }
-
-            public void Dispose()
-            {
-                if (disposed) return;
-
-                if (!ReferenceEquals(messageContext, MessageContext.current))
-                {
-                    throw new InvalidOperationException("Message context was disposed from another thread than the thread that established it!");
-                }
-
-                Reset();
-
-                disposed = true;
+                MessageContext.GetCurrent().Dispose();
             }
         }
     }

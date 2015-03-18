@@ -46,17 +46,22 @@
     </Reference>
     <Reference Include="Castle.Core, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Castle.Core.3.2.0\lib\net40-client\Castle.Core.dll</HintPath>
+      <HintPath>..\packages\Castle.Core.3.2.0\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
     <Reference Include="Castle.Windsor, Version=3.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net40\Castle.Windsor.dll</HintPath>
+      <HintPath>..\packages\Castle.Windsor.3.2.0\lib\net45\Castle.Windsor.dll</HintPath>
+    </Reference>
+    <Reference Include="DryIoc, Version=2.0.0.181, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\DryIoc.dll.2.0.0-preview181\lib\net45\DryIoc.dll</HintPath>
     </Reference>
     <Reference Include="log4net, Version=1.2.12.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\log4net.2.0.1\lib\net40-full\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Practices.ServiceLocation">
+    <Reference Include="Microsoft.Practices.ServiceLocation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CommonServiceLocator.1.0\lib\NET35\Microsoft.Practices.ServiceLocation.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Practices.Unity, Version=2.1.505.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -67,26 +72,36 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Unity.2.1.505.2\lib\NET35\Microsoft.Practices.Unity.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.ServiceBus, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\WindowsAzure.ServiceBus.2.2.3.0\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
+    <Reference Include="Microsoft.ServiceBus, Version=2.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\WindowsAzure.ServiceBus.2.5.4\lib\net40-full\Microsoft.ServiceBus.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.WindowsAzure.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.WindowsAzure.Configuration">
       <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.3\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.StorageClient, Version=1.7.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\WindowsAzure.Storage.1.7.0.0\lib\net35-full\Microsoft.WindowsAzure.StorageClient.dll</HintPath>
     </Reference>
-    <Reference Include="MongoDB.Bson, Version=1.9.0.200, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+    <Reference Include="MongoDB.Bson, Version=1.9.2.235, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\mongocsharpdriver.1.9.0\lib\net35\MongoDB.Bson.dll</HintPath>
+      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Bson.dll</HintPath>
     </Reference>
-    <Reference Include="MongoDB.Driver, Version=1.9.0.200, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
+    <Reference Include="MongoDB.Driver, Version=1.9.2.235, Culture=neutral, PublicKeyToken=f686731cfb9cc103, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\mongocsharpdriver.1.9.0\lib\net35\MongoDB.Driver.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\mongocsharpdriver.1.9.2\lib\net35\MongoDB.Driver.dll</HintPath>
+    </Reference>
+    <Reference Include="Mono.Security, Version=4.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Npgsql.2.1.3\lib\net45\Mono.Security.dll</HintPath>
     </Reference>
     <Reference Include="Ninject">
       <HintPath>..\packages\Ninject.3.0.1.10\lib\net40\Ninject.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql, Version=2.1.3.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Npgsql.2.1.3\lib\net45\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\nunit.framework.dll</HintPath>
@@ -97,8 +112,9 @@
     <Reference Include="pnunit.framework">
       <HintPath>..\packages\NUnit.2.5.10.11092\lib\pnunit.framework.dll</HintPath>
     </Reference>
-    <Reference Include="RabbitMQ.Client">
-      <HintPath>..\packages\RabbitMQ.Client.3.2.1\lib\net30\RabbitMQ.Client.dll</HintPath>
+    <Reference Include="RabbitMQ.Client, Version=3.4.0.0, Culture=neutral, PublicKeyToken=89e7d7c5feba84ce, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\RabbitMQ.Client.3.4.0\lib\net35\RabbitMQ.Client.dll</HintPath>
     </Reference>
     <Reference Include="Raven.Abstractions, Version=2.0.3.0, Culture=neutral, PublicKeyToken=37f41c7f99471593, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -119,27 +135,33 @@
     <Reference Include="Rhino.Mocks, Version=3.6.0.0, Culture=neutral, PublicKeyToken=0b3305902db7183f, processorArchitecture=MSIL">
       <HintPath>..\packages\RhinoMocks.3.6\lib\Rhino.Mocks.dll</HintPath>
     </Reference>
-    <Reference Include="Shouldly, Version=1.1.1.1, Culture=neutral, PublicKeyToken=6042cbcb05cbc941, processorArchitecture=MSIL">
+    <Reference Include="Serilog, Version=1.4.0.0, Culture=neutral, PublicKeyToken=24c2f752a8e58a10, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Shouldly.1.1.1.1\lib\35\Shouldly.dll</HintPath>
+      <HintPath>..\packages\Serilog.1.4.118\lib\net45\Serilog.dll</HintPath>
     </Reference>
-    <Reference Include="SimpleInjector">
+    <Reference Include="Serilog.FullNetFx">
+      <HintPath>..\packages\Serilog.1.4.118\lib\net45\Serilog.FullNetFx.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Shouldly, Version=2.1.1.0, Culture=neutral, PublicKeyToken=6042cbcb05cbc941, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Shouldly.2.1.1\lib\net40\Shouldly.dll</HintPath>
+    </Reference>
+    <Reference Include="SimpleInjector, Version=2.5.0.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.dll</HintPath>
     </Reference>
-    <Reference Include="SimpleInjector.Diagnostics">
+    <Reference Include="SimpleInjector.Diagnostics, Version=2.5.0.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\SimpleInjector.2.5.0\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
     </Reference>
-    <Reference Include="StructureMap">
+    <Reference Include="StructureMap, Version=3.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.dll</HintPath>
     </Reference>
-    <Reference Include="StructureMap.Net4">
+    <Reference Include="StructureMap.Net4, Version=3.0.3.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\structuremap.3.0.3.116\lib\net40\StructureMap.Net4.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Security">
-      <HintPath>..\packages\Npgsql.2.1.3\lib\net40\Mono.Security.dll</HintPath>
-    </Reference>
-    <Reference Include="Npgsql">
-      <HintPath>..\packages\Npgsql.2.1.3\lib\net40\Npgsql.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -148,6 +170,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data.Services.Client" />
     <Reference Include="System.Messaging" />
+    <Reference Include="System.Runtime" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
@@ -165,10 +188,13 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Analysis\TestExceptions.cs" />
+    <Compile Include="Async\TestBasicAsyncHandler.cs" />
     <Compile Include="Bugs\AmbientTransactionContextNeverCleansUp.cs" />
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
     <Compile Include="Bugs\CanDoManualRoutingWhenIncludingTheHostname.cs" />
     <Compile Include="Bugs\CanDoTheFullConfigurationSpellWithUnity.cs" />
+    <Compile Include="Bugs\CouldNotStartWithoutXml.cs" />
+    <Compile Include="Bugs\MessageContextIsNotDisposedTooEarly.cs" />
     <Compile Include="Bugs\PolymorphicDoubleDispatchVerification.cs" />
     <Compile Include="Bugs\SqlSagaPersisterVulnerableToSqlInjection.cs" />
     <Compile Include="Bugs\SqlServerMessageQueueDoesNotLeakConnectionsWhenUsingAmbientTransaction.cs" />
@@ -201,6 +227,7 @@
     <Compile Include="Configuration\TestStandardAppConfigLoader.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\AutofacContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\BuiltinContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\ContainerAdapters\Factories\DryIocContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\NinjectContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\SimpleInjectorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\StructureMapContainerAdapterFactory.cs" />
@@ -209,8 +236,8 @@
     <Compile Include="Contracts\ContainerAdapters\TestContainerAdapters.cs" />
     <Compile Include="Contracts\ContainerAdapters\Factories\WindsorContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureMqTransportFactory.cs" />
-    <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueQueuesFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\AzureServiceBusMessageQueueFactory.cs" />
+    <Compile Include="Contracts\Transports\Factories\AzureUtil.cs" />
     <Compile Include="Contracts\Transports\Factories\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\MsmqTransportFactory.cs" />
     <Compile Include="Contracts\Transports\Factories\RabbitMqTransportFactory.cs" />
@@ -219,19 +246,23 @@
     <Compile Include="Contracts\Transports\TestSendAndReceive.cs" />
     <Compile Include="Contracts\Serialization\TestSerialization.cs" />
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
+    <Compile Include="DisposableAction.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="DisposableTracker.cs" />
     <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\Http\TestInboundService.cs" />
     <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
-    <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestIdempotentSagas.cs" />
+    <Compile Include="Integration\TestMessageAuditConfiguration.cs" />
+    <Compile Include="Integration\TestMessageAuditMulticast.cs" />
     <Compile Include="Integration\TestSagasUsingMsSqlPersistence.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
+    <Compile Include="Integration\TestMessageAudit.cs" />
     <Compile Include="Integration\TestMaxRetriesConfiguration.cs" />
     <Compile Include="Integration\TestRabbitMqAlternativeBackoffBehavior.cs" />
     <Compile Include="Integration\TestUserContext.cs" />
@@ -281,6 +312,7 @@
     <Compile Include="Persistence\Subscriptions\Factories\PostgreSqlServerSubscriptionStoreFactory.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
     <Compile Include="Persistence\Timeouts\Factories\PostgreSqlServerSagaPersisterFactory.cs" />
+    <Compile Include="Properties\InternalsVisibleToDryIocFactoryCompilerDynamicAssembly.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
@@ -381,6 +413,7 @@
     <Compile Include="Unit\TestWorker_UnitOfWork.cs" />
     <Compile Include="Unit\WorkerFixtureBase.cs" />
     <Compile Include="UserIdentityContext.cs" />
+    <Compile Include="Util\MsmqTestHelper.cs" />
     <Compile Include="Util\TestIpUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -400,9 +433,20 @@
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Configuration\RealAppConfigs\App.3.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Bugs\Cfg\empty-app.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="HttpGateway\Http\ConfigFiles\App01.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Content Include="Integration\Config\Audit.App.config">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
@@ -428,9 +472,21 @@
       <Project>{2178D256-94D6-4443-B23B-53F723184441}</Project>
       <Name>Rebus.Castle.Windsor</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rebus.DryIoc\Rebus.DryIoc.csproj">
+      <Project>{17EACCD3-62DA-4997-BA2F-FD7FEC497979}</Project>
+      <Name>Rebus.DryIoc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.Extensions\Rebus.Extensions.csproj">
+      <Project>{7551FD46-EAE0-4041-B747-80102FF625F8}</Project>
+      <Name>Rebus.Extensions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.HttpGateway\Rebus.HttpGateway.csproj">
       <Project>{3E817332-6161-46A1-8597-0E54BAD23DE0}</Project>
       <Name>Rebus.HttpGateway</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.IdempotentSagas\Rebus.IdempotentSagas.csproj">
+      <Project>{8e78c97b-4e87-419b-9f9a-4b7d25c0be3f}</Project>
+      <Name>Rebus.IdempotentSagas</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
       <Project>{2AFAE434-5CD2-494E-8341-005CD637FE2D}</Project>
@@ -443,6 +499,10 @@
     <ProjectReference Include="..\Rebus.MsmqLoadBalancer\Rebus.MsmqLoadBalancer.csproj">
       <Project>{C2359E91-35C1-4D48-B089-97EF739A08F5}</Project>
       <Name>Rebus.MsmqLoadBalancer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.NewtonsoftJson\Rebus.NewtonsoftJson.csproj">
+      <Project>{1E2F369E-D903-47FE-8E07-C3C9509F5EE5}</Project>
+      <Name>Rebus.NewtonsoftJson</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Ninject\Rebus.Ninject.csproj">
       <Project>{9FDF3178-567A-4EF1-81C6-5FF42AE103DF}</Project>
@@ -465,7 +525,7 @@
       <Name>Rebus.RavenDb</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Serilog\Rebus.Serilog.csproj">
-      <Project>{994133f4-799b-4878-8ae8-29f5d7e00b8d}</Project>
+      <Project>{994133F4-799B-4878-8AE8-29F5D7E00B8D}</Project>
       <Name>Rebus.Serilog</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.SimpleInjector\Rebus.SimpleInjector.csproj">

@@ -28,8 +28,8 @@ namespace Rebus.Tests.Persistence.Sagas
             var anotherKindOfSagaLoaded = persister.Find<AnotherKindOfSaga>(someFieldPathAnother, someString);
 
             // assert
-            oneKindOfSagaLoaded.ShouldBeTypeOf<OneKindOfSaga>();
-            anotherKindOfSagaLoaded.ShouldBeTypeOf<AnotherKindOfSaga>();
+            oneKindOfSagaLoaded.ShouldBeOfType<OneKindOfSaga>();
+            anotherKindOfSagaLoaded.ShouldBeOfType<AnotherKindOfSaga>();
         }
 
         class OneKindOfSaga : ISagaData

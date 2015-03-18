@@ -1,5 +1,6 @@
 using System;
 using System.Configuration;
+using Rebus.Shared;
 
 namespace Rebus.Configuration
 {
@@ -121,6 +122,19 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Configures the name of a queue to which all successfully processed messages will be copied upon completion, and to
+        /// which all published messages will be copied when they are published. Messages sent to this queue will have had the
+        /// <see cref="Headers.AuditReason"/> header added with a value of either <see cref="Headers.AuditReasons.Handled"/> or
+        /// <see cref="Headers.AuditReasons.Published"/>, depending on the reason why the message was copied.
+        /// </summary>
+        [ConfigurationProperty(AuditQueueAttributeName)]
+        public string AuditQueue
+        {
+            get { return (string) this[AuditQueueAttributeName]; }
+            set { this[AuditQueueAttributeName] = value; }
+        }
+
+        /// <summary>
         /// Gets an example configuration XML snippet that can be used in error messages
         /// </summary>
         public const string ExampleSnippetForErrorMessages = @"
@@ -134,15 +148,20 @@ namespace Rebus.Configuration
     </rebus>
 ";
 
+        const string AuditQueueAttributeName = "auditQueue";
+
         /// <summary>
         /// Looks up the current AppDomain's Rebus configuration section, throwing
         /// an explanatory exception if it isn't present
         /// </summary>
-        public static RebusConfigurationSection LookItUp()
+        public static RebusConfigurationSection LookItUp(bool returnNullIfNotFound = false)
         {
             var section = ConfigurationManager.GetSection(ConfigSectionName);
 
-            if (section == null || !(section is RebusConfigurationSection))
+            if (section == null && returnNullIfNotFound)
+                return null;
+
+            if (!(section is RebusConfigurationSection))
             {
                 throw new ConfigurationErrorsException(@"Could not find configuration section named 'rebus' (or else
 the configuration section was not of the Rebus.Configuration.RebusConfigurationSection type?)

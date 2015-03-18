@@ -87,43 +87,61 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Queries the underlying table and returns due timeouts, removing them at the same time
         /// </summary>
-        public IEnumerable<DueTimeout> GetDueTimeouts()
+        public DueTimeoutsResult GetDueTimeouts()
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = new SqlConnection(connectionString);
+            connection.Open();
+            var transaction = connection.BeginTransaction();
+
+            var dueTimeouts = new List<DueTimeout>();
+
+            using (var command = connection.CreateCommand())
             {
-                connection.Open();
+                command.Transaction = transaction;
+                command.CommandText =
+                    string.Format(
+                        @"
+select 
+    id, 
+    time_to_return, 
+    correlation_id, 
+    saga_id, 
+    reply_to, 
+    custom_data 
 
-                var dueTimeouts = new List<DueTimeout>();
+from [{0}] with (updlock, readpast, rowlock)
 
-                using (var command = connection.CreateCommand())
+where time_to_return <= @current_time 
+
+order by time_to_return asc
+",
+                        timeoutsTableName);
+
+                command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
+
+                using (var reader = command.ExecuteReader())
                 {
-                    command.CommandText =
-                        string.Format(
-                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time order by time_to_return asc",
-                            timeoutsTableName);
-
-                    command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
-
-                    using (var reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            var id = (long)reader["id"];
-                            var correlationId = (string)reader["correlation_id"];
-                            var sagaId = (Guid)reader["saga_id"];
-                            var replyTo = (string)reader["reply_to"];
-                            var timeToReturn = (DateTime)reader["time_to_return"];
-                            var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
+                        var id = (long)reader["id"];
+                        var correlationId = (string)reader["correlation_id"];
+                        var sagaId = (Guid)reader["saga_id"];
+                        var replyTo = (string)reader["reply_to"];
+                        var timeToReturn = (DateTime)reader["time_to_return"];
+                        var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            var sqlTimeout = new DueSqlTimeout(id, replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
+                        var sqlTimeout = new DueSqlTimeout(id, replyTo, correlationId, timeToReturn, sagaId, customData, timeoutsTableName, connection, transaction);
 
-                            dueTimeouts.Add(sqlTimeout);
-                        }
+                        dueTimeouts.Add(sqlTimeout);
                     }
-
                 }
 
-                return dueTimeouts;
+                return new DueTimeoutsResult(dueTimeouts, () =>
+                {
+                    transaction.Commit();
+                    transaction.Dispose();
+                    connection.Dispose();
+                });
             }
         }
 
@@ -187,32 +205,28 @@ CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
 
         class DueSqlTimeout : DueTimeout
         {
-            readonly string connectionString;
             readonly string timeoutsTableName;
+            readonly SqlConnection connection;
+            readonly SqlTransaction transaction;
             readonly long id;
 
-            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
+            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string timeoutsTableName, SqlConnection connection, SqlTransaction transaction)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
                 this.id = id;
-                this.connectionString = connectionString;
                 this.timeoutsTableName = timeoutsTableName;
+                this.connection = connection;
+                this.transaction = transaction;
             }
 
             public override void MarkAsProcessed()
             {
-                using (var connection = new SqlConnection(connectionString))
+                using (var command = connection.CreateCommand())
                 {
-                    connection.Open();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
-
-                        command.Parameters.Add("id", SqlDbType.BigInt).Value = id;
-
-                        command.ExecuteNonQuery();
-                    }
+                    command.Transaction = transaction;
+                    command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
+                    command.Parameters.Add("id", SqlDbType.BigInt).Value = id;
+                    command.ExecuteNonQuery();
                 }
             }
         }

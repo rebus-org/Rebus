@@ -38,8 +38,8 @@ namespace Rebus.Persistence.SqlServer
         /// Constructs the persister with the ability to create connections to SQL Server using the specified connection string.
         /// This also means that the persister will manage the connection by itself, closing it when it has stopped using it.
         /// </summary>
-        public SqlServerSagaPersister(string connectionString, string sagaIndexTableName, string sagaTableName)
-            : base(connectionString)
+        public SqlServerSagaPersister(string connectionStringOrConnectionStringName, string sagaIndexTableName, string sagaTableName)
+            : base(connectionStringOrConnectionStringName)
         {
             Initialize(sagaIndexTableName, sagaTableName);
         }

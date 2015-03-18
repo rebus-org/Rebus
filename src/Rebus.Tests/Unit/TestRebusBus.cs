@@ -1,9 +1,14 @@
 ﻿using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using NUnit.Framework;
+using Raven.Imports.Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Extensions;
+using Rebus.Extensions.AssemblyScanning;
 using Rebus.Messages;
 using Rebus.Shared;
 using Rebus.Testing;
@@ -103,9 +108,10 @@ is just because there was a bug some time when the grouping of the messages was 
             fakeContext.Stub(s => s.Items).Return(new Dictionary<string, object>());
 
             // act
+            using (new NoTransaction())
             using (FakeMessageContext.Establish(fakeContext))
             {
-                bus.Batch.Reply(new object[] { firstMessage, secondMessage, someRandomMessage });
+                bus.Batch.Reply(new object[] {firstMessage, secondMessage, someRandomMessage});
             }
 
             // assert
@@ -335,6 +341,69 @@ Or should it?")]
         }
 
         [Test]
+        public void CanScanAssemblyAndSubscribeToMessages()
+        {
+            // arrange
+            // Create two assemblies with handlers for int, string and byte that are declared publicly and privately.
+            var parameters = new CompilerParameters
+            {
+                GenerateExecutable = false,
+                GenerateInMemory = true
+            };
+            parameters.ReferencedAssemblies.Add("Rebus.dll");
+
+            const string code = @"
+using Rebus;
+using System.Threading.Tasks;
+
+namespace NS { 
+public class A : IHandleMessages<int>, IHandleMessages<string> { 
+    public void Handle(int message) { } 
+    public void Handle(string message) { }
+}
+
+public class B : IHandleMessages<int> { 
+    public void Handle(int message) { }
+} 
+
+class C : IHandleMessages<byte> { 
+    public void Handle(byte message) { } 
+} 
+
+class D : IHandleMessagesAsync<long> { 
+    public async Task Handle(long message) { } 
+} 
+}";
+            
+            var assembly1 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
+            var assembly2 = CodeDomProvider.CreateProvider("CSharp").CompileAssemblyFromSource(parameters, code).CompiledAssembly;
+
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(int))).Return("int message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(string))).Return("string message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(byte))).Return("byte message endpoint");
+            determineMessageOwnership.Stub(d => d.GetEndpointFor(typeof(long))).Return("long message endpoint");
+            receiveMessages.SetInputQueue("my input queue");
+
+            // act
+            bus.SubscribeByScanningForHandlers(assembly1, assembly2);
+
+            // assert
+            Action<Type, string> assertSubscriptionMessageCalledForType = (t, endPointName) =>
+            {
+                sendMessages.AssertWasCalled(s => s.Send(Arg<string>.Is.Equal(endPointName),
+                                         Arg<TransportMessageToSend>.Matches(
+                                             m => m.Label == "Rebus.Messages.SubscriptionMessage"
+                                                  && JsonConvert.DeserializeObject<SubscriptionMessage[]>(Encoding.UTF7.GetString(m.Body))[0].Type == t.AssemblyQualifiedName),
+                                                  Arg<ITransactionContext>.Is.Anything));
+            };
+
+            assertSubscriptionMessageCalledForType(typeof(int), "int message endpoint");
+            assertSubscriptionMessageCalledForType(typeof(string), "string message endpoint");
+            assertSubscriptionMessageCalledForType(typeof(byte), "byte message endpoint");
+            assertSubscriptionMessageCalledForType(typeof(long), "long message endpoint");
+        }
+
+        [Test]
         public void CanDoPolymorphicMessageDispatch()
         {
             var manualResetEvent = new ManualResetEvent(false);
@@ -398,7 +467,8 @@ Or should it?")]
 
             var message = new FirstMessage();
 
-            using (MessageContext.Establish(headers))
+            using(new NoTransaction())
+            using(MessageContext.Establish(headers))
             {
                 bus.Defer(TimeSpan.Zero, message);
             }
@@ -457,5 +527,24 @@ Or should it?")]
         interface IFirstInterface { }
         interface ISecondInterface { }
         class PolymorphicMessage : IFirstInterface, ISecondInterface { }
+
+        [Test]
+        public void TransportMessageSentEventIsRaisedWhenMessageIsSent()
+        {
+            // Arrange
+            var bus = CreateTheBus();
+            var fired = false;
+            bus.Events.BeforeInternalSend += (destination, message, published) =>
+                {
+                    fired = true;
+                };
+            bus.Start();
+
+            // Act
+            bus.Send<object>(new Object());
+
+            // Assert
+            Assert.IsTrue(fired);
+        }
     }
 }

@@ -5,7 +5,7 @@ namespace Rebus
     /// <summary>
     /// Defines a context of a transaction, allowing transports to hook operations up on transaction events
     /// </summary>
-    public interface ITransactionContext
+    public interface ITransactionContext : IDisposable
     {
         /// <summary>
         /// Indicates whether the current context is actually transactional. If it is not transactional,

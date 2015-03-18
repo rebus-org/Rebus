@@ -12,9 +12,24 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(TestCategories.Integration)]
     public class TestRebusEvents : RebusBusMsmqIntegrationTestBase
     {
+        const string ErrorQueueName = "error";
+        const string ReceiverInputQueueName = "test.events.receiver";
+        const string SenderInputQueueName = "test.events.sender";
+
         protected override void DoSetUp()
         {
-            MsmqUtil.EnsureMessageQueueExists(PrivateQueueNamed("error"));
+            MsmqUtil.Delete(SenderInputQueueName);
+            MsmqUtil.Delete(ReceiverInputQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
+
+            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(ErrorQueueName));
+        }
+
+        protected override void DoTearDown()
+        {
+            MsmqUtil.Delete(SenderInputQueueName);
+            MsmqUtil.Delete(ReceiverInputQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
         }
 
         [Test]
@@ -23,17 +38,16 @@ namespace Rebus.Tests.Integration
             // arrange
             var senderEvents = new List<string>();
             var receiverEvents = new List<string>();
-            const string receiverInputQueueName = "test.events.receiver";
-            var receiver = CreateBus(receiverInputQueueName, new HandlerActivatorForTesting().Handle<string>(s => {}));
+            var receiver = CreateBus(ReceiverInputQueueName, new HandlerActivatorForTesting().Handle<string>(s => {}));
             receiver.Events.BeforeMessage += (b, m) => receiverEvents.Add("received: " + m);
             receiver.Start();
 
-            var sender = CreateBus("test.events.sender", new HandlerActivatorForTesting());
+            var sender = CreateBus(SenderInputQueueName, new HandlerActivatorForTesting());
             sender.Events.MessageSent += (b, e, m) => senderEvents.Add("sent: " + m);
             sender.Start();
 
             // act
-            sender.Routing.Send(receiverInputQueueName, "whoa!!");
+            sender.Routing.Send(ReceiverInputQueueName, "whoa!!");
             Thread.Sleep(0.5.Seconds());
 
             // assert
@@ -48,7 +62,6 @@ namespace Rebus.Tests.Integration
         public void RebusRaisesEventsInAllTheRightPlacesWhenReceivingMessages()
         {
             var events = new List<string>();
-            const string receiverInputQueueName = "events.receiver";
 
             var receiverHandlerActivator = new HandlerActivatorForTesting()
                 .Handle<string>(str =>
@@ -61,14 +74,14 @@ namespace Rebus.Tests.Integration
                                         }
                                     });
 
-            var receiver = CreateBus(receiverInputQueueName, receiverHandlerActivator).Start(1);
+            var receiver = CreateBus(ReceiverInputQueueName, receiverHandlerActivator).Start(1);
             receiver.Events.BeforeTransportMessage += (b, m) => events.Add("Before message");
             receiver.Events.AfterTransportMessage += (b, e, m) => events.Add(string.Format("After message: {0} - has context: {1}", e, MessageContext.HasCurrent));
             receiver.Events.PoisonMessage += (b, m, i) => events.Add(string.Format("Poison! - {0} exceptions caught", i.Exceptions.Length));
             
-            var sender = CreateBus("events.sender", new HandlerActivatorForTesting()).Start(1);
-            sender.Routing.Send(receiverInputQueueName, "test");
-            sender.Routing.Send(receiverInputQueueName, "throw");
+            var sender = CreateBus(SenderInputQueueName, new HandlerActivatorForTesting()).Start(1);
+            sender.Routing.Send(ReceiverInputQueueName, "test");
+            sender.Routing.Send(ReceiverInputQueueName, "throw");
 
             Thread.Sleep(1.Seconds());
 
@@ -130,7 +143,7 @@ Events:
         public void RebusRaisesEventsWhenStartingAndStopping()
         {
             var busEvents = new List<string>();
-            var bus = CreateBus("test.events.receiver", new TestConfigurationApi.TestContainerAdapter());
+            var bus = CreateBus(ReceiverInputQueueName, new TestConfigurationApi.TestContainerAdapter());
             bus.Events.BusStarted += x => busEvents.Add("bus started");
             bus.Events.BusStopped += x => busEvents.Add("bus stopped");
 

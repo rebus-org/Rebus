@@ -86,7 +86,7 @@ namespace Rebus.Tests.Integration
 
             // act
             bus.SendLocal(message);
-            resetEvent.WaitOne();
+            resetEvent.WaitOne(1000);
 
             // assert
             currentPrincipal.ShouldNotBe(null);

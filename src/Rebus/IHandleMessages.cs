@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace Rebus
 {
     /// <summary>
@@ -19,5 +21,21 @@ namespace Rebus
         /// Handler method that will be called by the dispatcher for each logical message contained in the received transport message
         /// </summary>
         void Handle(TMessage message);
+    }
+
+    /// <summary>
+    /// Special message handler interface that returns a <see cref="Task"/> which enables doing <code>async</code>/<code>await</code> inside
+    /// message handlers
+    /// </summary>
+    public interface IHandleMessagesAsync<in TMessage> : IHandleMessages
+    {
+        /// <summary>
+        /// Handler method that will be called by the dispatcher for each logical message contained in the received transport message.
+        /// Must either return a <see cref="Task"/> explicitly, or implicitly by declaring the method with the <code>async</code> keyword -
+        /// e.g. <code>async Task Handle(MyMessage message) {
+        ///     await SomethingAsync();
+        /// }</code>
+        /// </summary>
+        Task Handle(TMessage message);
     }
 }

@@ -1,14 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Rebus.Bus
 {
     /// <summary>
     /// Special implementation of <see cref="ITransactionContext"/> that is designed to work with message handlers
     /// </summary>
-    class TxBomkarl : ITransactionContext, IDisposable
+    class TxBomkarl : ITransactionContext
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
+        readonly string threadName;
 
         public event Action DoCommit = delegate { };
         
@@ -26,6 +28,12 @@ namespace Rebus.Bus
         public TxBomkarl()
         {
             TransactionContext.Set(this);
+            threadName = Thread.CurrentThread.Name;
+        }
+
+        public override string ToString()
+        {
+            return string.Format("handler tx on thread '{0}'", threadName);
         }
 
         public bool IsTransactional { get { return true; } }

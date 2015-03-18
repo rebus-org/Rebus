@@ -51,19 +51,20 @@ namespace Rebus.MongoDb
         /// Gets all timeouts that are due by now. Doesn't remove the timeouts or change them or anything,
         /// each individual timeout can be marked as processed by calling <see cref="DueTimeout.MarkAsProcessed"/>
         /// </summary>
-        public IEnumerable<DueTimeout> GetDueTimeouts()
+        public DueTimeoutsResult GetDueTimeouts()
         {
             var result = collection.Find(Query.LTE(TimeProperty, RebusTimeMachine.Now()))
                                    .SetSortOrder(SortBy.Ascending(TimeProperty));
 
-            return result
+            return new DueTimeoutsResult(result
                 .Select(r => new DueMongoTimeout(r[ReplyToProperty].AsString,
-                                                 GetString(r, CorrIdProperty),
-                                                 r[TimeProperty].ToUniversalTime(),
-                                                 GetGuid(r, SagaIdProperty),
-                                                 GetString(r, DataProperty),
-                                                 collection,
-                                                 (ObjectId) r[IdProperty]));
+                    GetString(r, CorrIdProperty),
+                    r[TimeProperty].ToUniversalTime(),
+                    GetGuid(r, SagaIdProperty),
+                    GetString(r, DataProperty),
+                    collection,
+                    (ObjectId) r[IdProperty]))
+                .ToList());
         }
 
         static Guid GetGuid(BsonDocument doc, string propertyName)

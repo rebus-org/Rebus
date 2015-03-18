@@ -16,12 +16,21 @@ namespace Rebus.Transports.Sql
         public const string DefaultMessagesTableName = "RebusMessages";
 
         /// <summary>
-        /// Specifies that you want to use MSMQ to both send and receive messages. The input
+        /// Specifies that you want to use Sql Server to both send and receive messages. The input
         /// queue will be automatically created if it doesn't exist.
         /// </summary>
         public static SqlServerMessageQueueOptions UseSqlServer(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName, string inputQueue, string errorQueue)
         {
-            return DoIt(connectionStringOrConnectionStringName, configurer, DefaultMessagesTableName, inputQueue, errorQueue);
+            return configurer.UseSqlServer(connectionStringOrConnectionStringName, DefaultMessagesTableName, inputQueue, errorQueue);
+        }
+
+        /// <summary>
+        /// Specifies that you want to use Sql Server to both send and receive messages. The input
+        /// queue will be automatically created if it doesn't exist.
+        /// </summary>
+        public static SqlServerMessageQueueOptions UseSqlServer(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName, string MessageTableName, string inputQueue, string errorQueue)
+        {
+            return DoIt(connectionStringOrConnectionStringName, configurer, MessageTableName, inputQueue, errorQueue);
         }
 
         /// <summary>
@@ -29,7 +38,7 @@ namespace Rebus.Transports.Sql
         /// </summary>
         public static SqlServerMessageQueueOptions UseSqlServerInOneWayClientMode(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName)
         {
-            var connectionStringToUse = GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
             var sqlServerMessageQueue = SqlServerMessageQueue.Sender(connectionStringToUse, DefaultMessagesTableName);
 
             configurer.UseSender(sqlServerMessageQueue);
@@ -41,23 +50,41 @@ namespace Rebus.Transports.Sql
         }
 
         /// <summary>
-        /// Specifies that you want to use MSMQ to both send and receive messages. The input
+        /// Configures Rebus to run in one-way client mode, which means that the bus is capable only of sending messages.
+        /// </summary>
+        public static SqlServerMessageQueueOptions UseSqlServerInOneWayClientMode(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName, string MessageTableName)
+        {
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var sqlServerMessageQueue = SqlServerMessageQueue.Sender(connectionStringToUse, MessageTableName);
+
+            configurer.UseSender(sqlServerMessageQueue);
+            var gag = new OneWayClientGag();
+            configurer.UseReceiver(gag);
+            configurer.UseErrorTracker(gag);
+
+            return new SqlServerMessageQueueOptions(sqlServerMessageQueue);
+        }
+
+        /// <summary>
+        /// Specifies that you want to use Sql Server to both send and receive messages. The input
         /// queue name will be deduced from the Rebus configuration section in the application
         /// configuration file. The input queue will be automatically created if it doesn't exist.
         /// </summary>
-        public static SqlServerMessageQueueOptions UseSqlServerAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName)
+        public static SqlServerMessageQueueOptions UseSqlServerAndGetInputQueueNameFromAppConfig(this RebusTransportConfigurer configurer, string connectionStringOrConnectionStringName, string MessageTableName = null)
         {
             try
             {
+                string messageTableNameToUse = string.IsNullOrEmpty(MessageTableName) ? DefaultMessagesTableName : MessageTableName;
+
                 var section = RebusConfigurationSection.LookItUp();
 
                 section.VerifyPresenceOfInputQueueConfig();
-                section.VerifyPresenceOfErrorQueueConfig();
+                section.VerifyPresenceOfErrorQueueConfig();                
 
                 var inputQueueName = section.InputQueue;
                 var errorQueueName = section.ErrorQueue;
 
-                return DoIt(connectionStringOrConnectionStringName, configurer, DefaultMessagesTableName, inputQueueName, errorQueueName);
+                return DoIt(connectionStringOrConnectionStringName, configurer, messageTableNameToUse, inputQueueName, errorQueueName);
             }
             catch(ConfigurationErrorsException e)
             {
@@ -94,11 +121,16 @@ A more full example configuration snippet can be seen here:
 
         static SqlServerMessageQueueOptions DoIt(string connectionStringOrConnectionStringName, RebusTransportConfigurer configurer, string messageTableName, string inputQueueName, string errorQueueName)
         {
-            var connectionStringToUse = GetConnectionStringToUse(connectionStringOrConnectionStringName);
+            var connectionStringToUse = Rebus.Shared.ConnectionStringUtil.GetConnectionStringToUse(connectionStringOrConnectionStringName);
 
             if (string.IsNullOrEmpty(inputQueueName))
             {
                 throw new ConfigurationErrorsException("You need to specify an input queue.");
+            }
+
+            if(string.IsNullOrEmpty(messageTableName))
+            {
+                throw new ConfigurationException("You need to specify message table name.");
             }
 
             var sqlServerMessageQueue = new SqlServerMessageQueue(connectionStringToUse, messageTableName, inputQueueName);
@@ -108,15 +140,6 @@ A more full example configuration snippet can be seen here:
             configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
 
             return new SqlServerMessageQueueOptions(sqlServerMessageQueue);
-        }
-
-        static string GetConnectionStringToUse(string connectionStringOrConnectionStringName)
-        {
-            var connectionStringSettings = ConfigurationManager.ConnectionStrings[connectionStringOrConnectionStringName];
-            var connectionStringToUse = connectionStringSettings != null
-                                            ? connectionStringSettings.ConnectionString
-                                            : connectionStringOrConnectionStringName;
-            return connectionStringToUse;
         }
     }
 }

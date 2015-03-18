@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus.Configuration;
@@ -23,9 +24,12 @@ namespace Rebus.Castle.Windsor
 
         public IWindsorContainer Container { get { return container; } }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            return container.ResolveAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> handlers = container.ResolveAll<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers = container.ResolveAll<IHandleMessagesAsync<T>>();
+
+            return handlers.Union(asyncHandlers);
         }
 
         public void Release(IEnumerable handlerInstances)
@@ -45,7 +49,7 @@ namespace Rebus.Castle.Windsor
                     .Instance(bus),
 
                 Component.For<IMessageContext>()
-                    .UsingFactoryMethod(k => MessageContext.GetCurrent())
+                    .UsingFactoryMethod(k => MessageContext.GetCurrent(), managedExternally: true)
                     .LifestyleTransient(),
 
                 Component.For<InstanceDisposer>()
