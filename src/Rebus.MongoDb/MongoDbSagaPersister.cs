@@ -157,7 +157,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -194,7 +194,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -226,7 +226,7 @@ namespace Rebus.MongoDb
                                    sagaData.Id,
                                    sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
