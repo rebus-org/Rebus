@@ -157,7 +157,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -194,7 +194,7 @@ namespace Rebus.MongoDb
                        sagaData.Id,
                        sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -226,7 +226,7 @@ namespace Rebus.MongoDb
                                    sagaData.Id,
                                    sagaData.Revision);
             }
-            catch (WriteConcernException ex)
+            catch (MongoWriteConcernException ex)
             {
                 // in case of race conditions, we get a duplicate key error because the upsert
                 // cannot proceed to insert a document with the same _id as an existing document
@@ -405,7 +405,7 @@ which will make the persister use the type of the saga to come up with collectio
                 var exceptionMessage = string.Format("Tried to {0}, but apparently the operation didn't succeed.",
                                                      string.Format(message, objs));
 
-                throw new WriteConcernException(exceptionMessage, writeConcernResult);
+                throw new MongoWriteConcernException(exceptionMessage, writeConcernResult);
             }
 
             if (writeConcernResult.DocumentsAffected != expectedNumberOfAffectedDocuments)
@@ -414,7 +414,7 @@ which will make the persister use the type of the saga to come up with collectio
                                                      string.Format(message, objs),
                                                      expectedNumberOfAffectedDocuments);
 
-                throw new WriteConcernException(exceptionMessage, writeConcernResult);
+                throw new MongoWriteConcernException(exceptionMessage, writeConcernResult);
             }
         }
     }
