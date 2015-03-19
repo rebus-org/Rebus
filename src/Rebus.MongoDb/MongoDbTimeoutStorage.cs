@@ -13,12 +13,9 @@ namespace Rebus.MongoDb
     /// </summary>
     public class MongoDbTimeoutStorage : IStoreTimeouts
     {
-        const string ReplyToProperty = "reply_to";
-        const string CorrIdProperty = "corr_id";
-        const string TimeProperty = "time";
-        const string SagaIdProperty = "saga_id";
-        const string DataProperty = "data";
-        const string IdProperty = "_id";
+
+        public const string StateProperty = "state";
+        public const string LeaseProperty = "lease";
         readonly MongoCollection<BsonDocument> collection;
 
         /// <summary>
@@ -29,7 +26,7 @@ namespace Rebus.MongoDb
         {
             var database = MongoHelper.GetDatabase(connectionString);
             collection = database.GetCollection(collectionName);
-            collection.CreateIndex(IndexKeys.Ascending(TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
+            collection.CreateIndex(IndexKeys.Ascending(DueMongoTimeout.TimeProperty), IndexOptions.SetBackground(true).SetUnique(false));
         }
 
         /// <summary>
@@ -37,34 +34,41 @@ namespace Rebus.MongoDb
         /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
-            var doc = new BsonDocument()
-                .Add(CorrIdProperty, newTimeout.CorrelationId)
-                .Add(SagaIdProperty, newTimeout.SagaId)
-                .Add(TimeProperty, newTimeout.TimeToReturn)
-                .Add(DataProperty, newTimeout.CustomData)
-                .Add(ReplyToProperty, newTimeout.ReplyTo);
+            var doc = DueMongoTimeout.ToBsonDocument(newTimeout.ReplyTo, newTimeout.CorrelationId,
+                newTimeout.TimeToReturn, newTimeout.SagaId,
+                newTimeout.CustomData)
+                .ToBsonDocument();
 
             collection.Insert(doc);
         }
 
         /// <summary>
-        /// Gets all timeouts that are due by now. Doesn't remove the timeouts or change them or anything,
-        /// each individual timeout can be marked as processed by calling <see cref="DueTimeout.MarkAsProcessed"/>
+        /// Queries the underlying timeout collection and returns due timeouts, removing them at the same time
         /// </summary>
         public DueTimeoutsResult GetDueTimeouts()
         {
-            var result = collection.Find(Query.LTE(TimeProperty, RebusTimeMachine.Now()))
-                                   .SetSortOrder(SortBy.Ascending(TimeProperty));
+            BsonDocument timeoutDocument;
+            var boundTo = Guid.NewGuid();
+            var lease = RebusTimeMachine.Now().AddMilliseconds(500);
+            var timeoutDocuments = new List<BsonDocument>();
+            do
+            {
+                timeoutDocument = collection.FindAndModify(new FindAndModifyArgs
+                {
+                    Query = Query.And(Query.LTE(DueMongoTimeout.TimeProperty, RebusTimeMachine.Now()),
+                        Query.NE(StateProperty, boundTo), //make sure the same timeout is not picked over and over
+                        Query.LTE(LeaseProperty, lease)), //under active lease
+                    SortBy = SortBy.Ascending(DueMongoTimeout.TimeProperty),
+                    Update = new UpdateBuilder()
+                        .Set(StateProperty, boundTo)
+                        .Set(LeaseProperty, lease)
+                }).ModifiedDocument;
 
-            return new DueTimeoutsResult(result
-                .Select(r => new DueMongoTimeout(r[ReplyToProperty].AsString,
-                    GetString(r, CorrIdProperty),
-                    r[TimeProperty].ToUniversalTime(),
-                    GetGuid(r, SagaIdProperty),
-                    GetString(r, DataProperty),
-                    collection,
-                    (ObjectId) r[IdProperty]))
-                .ToList());
+                timeoutDocuments.Add(timeoutDocument);
+            } while (timeoutDocument != null);
+
+            return new DueTimeoutsResult(timeoutDocuments.Where(bsonDocument => bsonDocument != null)
+                .Select(bsonDocument => DueMongoTimeout.Create(bsonDocument, collection)));
         }
 
         static Guid GetGuid(BsonDocument doc, string propertyName)
@@ -82,7 +86,35 @@ namespace Rebus.MongoDb
             readonly MongoCollection<BsonDocument> collection;
             readonly ObjectId objectId;
 
-            public DueMongoTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, MongoCollection<BsonDocument> collection, ObjectId objectId) 
+            public const string ReplyToProperty = "reply_to";
+            public const string CorrIdProperty = "corr_id";
+            public const string TimeProperty = "time";
+            public const string SagaIdProperty = "saga_id";
+            public const string DataProperty = "data";
+            public const string IdProperty = "_id";
+
+            public static BsonDocument ToBsonDocument(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData)
+            {
+                return new BsonDocument()
+                .Add(CorrIdProperty, correlationId)
+                .Add(SagaIdProperty, sagaId)
+                .Add(TimeProperty, timeToReturn)
+                .Add(DataProperty, customData)
+                .Add(ReplyToProperty, replyTo);
+            }
+
+            public static DueMongoTimeout Create(BsonDocument timeoutBsonDocument, MongoCollection<BsonDocument> collection)
+            {
+                return new DueMongoTimeout(timeoutBsonDocument[ReplyToProperty].AsString,
+                    GetString(timeoutBsonDocument, CorrIdProperty),
+                    timeoutBsonDocument[TimeProperty].ToUniversalTime(),
+                    GetGuid(timeoutBsonDocument, SagaIdProperty),
+                    GetString(timeoutBsonDocument, DataProperty),
+                    collection,
+                    (ObjectId)timeoutBsonDocument[IdProperty]);
+            }
+
+            public DueMongoTimeout(string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, MongoCollection<BsonDocument> collection, ObjectId objectId)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
                 this.collection = collection;
