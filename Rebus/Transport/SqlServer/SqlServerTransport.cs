@@ -27,6 +27,8 @@ namespace Rebus.Transport.SqlServer
         }
 
         const string CurrentConnectionKey = "sql-server-transport-current-connection";
+        const int RecipientColumnSize = 200;
+
         readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
         readonly DbConnectionProvider _connectionProvider;
         readonly string _tableName;
@@ -46,12 +48,15 @@ namespace Rebus.Transport.SqlServer
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = string.Format(@"
-INSERT INTO [{0}] (
+INSERT INTO [{0}]
+(
     [recipient],
     [headers],
     [body],
     [priority]
-) VALUES (
+)
+VALUES
+(
     @recipient,
     @headers,
     @body,
@@ -61,10 +66,10 @@ INSERT INTO [{0}] (
 
                 var priority = GetMessagePriority(message);
 
-                command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationAddress;
+                command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = destinationAddress;
                 command.Parameters.Add("headers", SqlDbType.VarBinary).Value = _headerSerializer.Serialize(message.Headers);
                 command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
-                command.Parameters.Add("priority", SqlDbType.TinyInt, 1).Value = priority;
+                command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
 
                 command.ExecuteNonQuery();
             }
@@ -84,8 +89,7 @@ INSERT INTO [{0}] (
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
             }
         }
-
-
+        
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             var connection = await GetConnection(context);
@@ -105,7 +109,7 @@ ORDER BY [priority] ASC, [id] asc
 
 ", _tableName);
 
-                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = _inputQueueName;
+                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
                 using (var reader = await selectCommand.ExecuteReaderAsync())
                 {
@@ -185,7 +189,8 @@ ORDER BY [priority] ASC, [id] asc
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}](
+CREATE TABLE [dbo].[{0}]
+(
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
 	[priority] [int] NOT NULL,
