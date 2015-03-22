@@ -14,6 +14,11 @@ namespace Rebus.Transport.SqlServer
 {
     public class SqlServerTransport : ITransport
     {
+        /// <summary>
+        /// Special message priority header that can be used with the <see cref="SqlServerTransport"/>. The value must be an <see cref="Int32"/>
+        /// </summary>
+        public const string MessagePriorityHeaderKey = "rbs2-msg-priority";
+
         static ILog _log;
 
         static SqlServerTransport()
@@ -87,8 +92,8 @@ VALUES (
         {
             var connection = await GetConnection(context);
 
-            var idOfMessageToDelete = default(long?);
-            TransportMessage receivedTransportMessage = null;
+            long? idOfMessageToDelete;
+            TransportMessage receivedTransportMessage;
 
             using (var selectCommand = connection.CreateCommand())
             {
@@ -109,29 +114,38 @@ ORDER BY [priority] ASC, [id] asc
                     if (!await reader.ReadAsync()) return null;
 
                     var headers = reader["headers"];
-                    idOfMessageToDelete = (long)reader["id"];
-
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
+
+                    idOfMessageToDelete = (long)reader["id"];
                     receivedTransportMessage = new TransportMessage(headersDictionary, reader.GetStream(reader.GetOrdinal("body")));
                 }
             }
 
-            if (idOfMessageToDelete.HasValue)
+            if (!idOfMessageToDelete.HasValue) return null;
+
+            using (var deleteCommand = connection.CreateCommand())
             {
-                using (var deleteCommand = connection.CreateCommand())
-                {
-                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                    deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-                    await deleteCommand.ExecuteNonQueryAsync();
-                }
+                deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
+                await deleteCommand.ExecuteNonQueryAsync();
             }
 
             return receivedTransportMessage;
         }
 
-        int GetMessagePriority(object message)
+        int GetMessagePriority(TransportMessage message)
         {
-            return 0;
+            var valueOrNull = message.Headers.GetValueOrNull(MessagePriorityHeaderKey);
+            if (valueOrNull == null) return 0;
+
+            try
+            {
+                return int.Parse(valueOrNull);
+            }
+            catch (Exception exception)
+            {
+                throw new FormatException(string.Format("Could not parse '{0}' into an Int32!", valueOrNull), exception);
+            }
         }
 
         Task<DbConnection> GetConnection(ITransactionContext context)
@@ -176,7 +190,7 @@ ORDER BY [priority] ASC, [id] asc
 CREATE TABLE [dbo].[{0}](
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
-	[priority] [tinyint] NOT NULL,
+	[priority] [int] NOT NULL,
 	[headers] [varbinary](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
     CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
