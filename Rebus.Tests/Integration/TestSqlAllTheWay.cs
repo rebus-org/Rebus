@@ -29,8 +29,8 @@ namespace Rebus.Tests.Integration
                 .Sagas(x => x.StoreInSqlServer(ConnectionString, "Sagas", "SagaIndex"))
                 .Options(x =>
                 {
-                    x.SetNumberOfWorkers(1);
-                    x.SetMaxParallelism(1);
+                    x.SetNumberOfWorkers(5);
+                    x.SetMaxParallelism(20);
                 })
                 .Start();
 
@@ -41,9 +41,11 @@ namespace Rebus.Tests.Integration
         public async Task SendAndReceiveOneSingleMessage()
         {
             var gotTheMessage = new ManualResetEvent(false);
+            var receivedMessageCount = 0;
 
             _handlerActivator.Handle<string>(async message =>
             {
+                Interlocked.Increment(ref receivedMessageCount);
                 Console.WriteLine("w00000t! Got message: {0}", message);
                 gotTheMessage.Set();
             });
@@ -51,6 +53,10 @@ namespace Rebus.Tests.Integration
             await _bus.SendLocal("hej med dig min ven!");
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(10));
+
+            await Task.Delay(500);
+
+            Assert.That(receivedMessageCount, Is.EqualTo(1));
         }
     }
 }

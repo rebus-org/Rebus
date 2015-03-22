@@ -87,6 +87,9 @@ VALUES (
         {
             var connection = await GetConnection(context);
 
+            var idOfMessageToDelete = default(long?);
+            TransportMessage receivedTransportMessage = null;
+
             using (var selectCommand = connection.CreateCommand())
             {
                 selectCommand.CommandText =
@@ -106,24 +109,24 @@ ORDER BY [priority] ASC, [id] asc
                     if (!await reader.ReadAsync()) return null;
 
                     var headers = reader["headers"];
-                    var id = (long)reader["id"];
+                    idOfMessageToDelete = (long)reader["id"];
 
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
-                    var receivedTransportMessage = new TransportMessage(headersDictionary, reader.GetStream(reader.GetOrdinal("body")));
-
-                    context.Committed += () =>
-                    {
-                        using (var deleteCommand = connection.CreateCommand())
-                        {
-                            deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                            deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = id;
-                            deleteCommand.ExecuteNonQuery();
-                        }
-                    };
-
-                    return receivedTransportMessage;
+                    receivedTransportMessage = new TransportMessage(headersDictionary, reader.GetStream(reader.GetOrdinal("body")));
                 }
             }
+
+            if (idOfMessageToDelete.HasValue)
+            {
+                using (var deleteCommand = connection.CreateCommand())
+                {
+                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                    deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
+                    await deleteCommand.ExecuteNonQueryAsync();
+                }
+            }
+
+            return receivedTransportMessage;
         }
 
         int GetMessagePriority(object message)
