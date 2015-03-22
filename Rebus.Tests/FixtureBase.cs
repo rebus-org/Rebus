@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Time;
@@ -8,7 +8,7 @@ namespace Rebus.Tests
 {
     public abstract class FixtureBase
     {
-        readonly List<IDisposable> _disposables = new List<IDisposable>();
+        readonly ConcurrentStack<IDisposable> _disposables = new ConcurrentStack<IDisposable>();
 
         [SetUp]
         public void _SetUp()
@@ -42,9 +42,9 @@ namespace Rebus.Tests
         {
         }
 
-        protected TDisposable TrackDisposable<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
+        protected TDisposable Using<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
         {
-            _disposables.Add(disposable);
+            _disposables.Push(disposable);
             return disposable;
         }
 
@@ -54,12 +54,14 @@ namespace Rebus.Tests
 
         protected void CleanUpDisposables()
         {
-            _disposables.ForEach(d =>
+            IDisposable disposable;
+
+            while (_disposables.TryPop(out disposable))
             {
-                Console.WriteLine("Disposing {0}", d);
-                d.Dispose();
-            });
-            _disposables.Clear();
+                Console.WriteLine("Disposing {0}", disposable);
+                
+                disposable.Dispose();
+            }
         }
     }
 }

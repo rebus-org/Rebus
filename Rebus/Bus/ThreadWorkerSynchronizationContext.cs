@@ -16,6 +16,7 @@ namespace Rebus.Bus
             
             if (context == null)
             {
+                Console.WriteLine("POST WITHOUT A TRANSACTION CONTEXT!");
                 throw new InvalidOperationException("Attempted to Post without a transaction context, but that should not be possible!");
             }
             

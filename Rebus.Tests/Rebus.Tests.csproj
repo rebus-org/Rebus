@@ -50,13 +50,17 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
+    <Compile Include="Categories.cs" />
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
     <Compile Include="Contracts\Timeouts\BasicStoreAndRetrieveOperations.cs" />
     <Compile Include="Contracts\Timeouts\ITimeoutManagerFactory.cs" />
+    <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
+    <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Extensions\Ponder.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
+    <Compile Include="Integration\TestSqlAllTheWay.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />

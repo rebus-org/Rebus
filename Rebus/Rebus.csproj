@@ -84,6 +84,7 @@
     <Compile Include="Persistence\InMem\InMemoryTimeoutManager.cs" />
     <Compile Include="Persistence\SqlServer\DbConnectionProvider.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerMagic.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerPersistenceConfigurationExtensions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorage.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManager.cs" />
@@ -137,6 +138,8 @@
     <Compile Include="Messages\Message.cs" />
     <Compile Include="Transport\DefaultTransactionContext.cs" />
     <Compile Include="Transport\ITransactionContext.cs" />
+    <Compile Include="Transport\SqlServer\SqlServerTransport.cs" />
+    <Compile Include="Transport\SqlServer\SqlServerTransportConfigurationExtensions.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
     <Compile Include="Workers\ThreadWorkerFactory.cs" />
   </ItemGroup>

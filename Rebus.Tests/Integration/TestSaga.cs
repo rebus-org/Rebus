@@ -37,7 +37,7 @@ namespace Rebus.Tests.Integration
                 })
                 .Start();
 
-            TrackDisposable(_bus);
+            Using(_bus);
         }
 
         [Test]

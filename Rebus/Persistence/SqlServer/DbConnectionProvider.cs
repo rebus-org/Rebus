@@ -49,6 +49,17 @@ namespace Rebus.Persistence.SqlServer
             return _connection.GetTableNames(_currentTransaction);
         }
 
+        public void Complete()
+        {
+            if (_managedExternally) return;
+
+            if (_currentTransaction != null)
+            {
+                _currentTransaction.Commit();
+                _currentTransaction = null;
+            }
+        }
+
         public void Dispose()
         {
             if (_managedExternally) return;
@@ -60,17 +71,6 @@ namespace Rebus.Persistence.SqlServer
             }
 
             _connection.Dispose();
-        }
-
-        public void Complete()
-        {
-            if (_managedExternally) return;
-
-            if (_currentTransaction != null)
-            {
-                _currentTransaction.Commit();
-                _currentTransaction = null;
-            }
         }
     }
 }

@@ -35,7 +35,7 @@ namespace Rebus.Tests.Integration
                 .Options(o => o.SimpleRetryStrategy(maxDeliveryAttempts: numberOfRetries))
                 .Start();
 
-            TrackDisposable(_bus);
+            Using(_bus);
         }
 
         protected override void TearDown()

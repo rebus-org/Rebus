@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rebus.Extensions
 {
@@ -38,6 +39,16 @@ namespace Rebus.Extensions
             if (dictionary.TryGetValue(key, out item)) return (T)item;
 
             var newItem = newItemFactory();
+            dictionary[key] = newItem;
+            return newItem;
+        }
+
+        public static async Task<T> GetOrAddAsync<T, U>(this Dictionary<string, U> dictionary, string key, Func<Task<T>> newItemFactory) where T : U
+        {
+            U item;
+            if (dictionary.TryGetValue(key, out item)) return (T)item;
+
+            var newItem = await newItemFactory();
             dictionary[key] = newItem;
             return newItem;
         }

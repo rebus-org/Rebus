@@ -30,7 +30,7 @@ namespace Rebus.Tests.Integration
                 .Options(o => o.SetNumberOfWorkers(1))
                 .Start();
 
-            TrackDisposable(_bus);
+            Using(_bus);
         }
 
         [Test]

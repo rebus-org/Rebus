@@ -38,7 +38,7 @@ namespace Rebus.Tests.Integration
                 .Routing(r => r.TopicBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
-            TrackDisposable(_subscriberBus);
+            Using(_subscriberBus);
 
             _publisherBus = Configure.With(new BuiltinHandlerActivator())
                 .Transport(t => t.UseInMemoryTransport(network, PublisherInputQueue))
@@ -46,7 +46,7 @@ namespace Rebus.Tests.Integration
                 .Routing(r => r.TopicBased().Map("someTopic", PublisherInputQueue))
                 .Start();
 
-            TrackDisposable(_publisherBus);
+            Using(_publisherBus);
         }
 
         [Test]

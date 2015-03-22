@@ -50,6 +50,12 @@ namespace Rebus.Config
             return this;
         }
 
+        public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
+        {
+            configurer(new StandardConfigurer<ISagaStorage>(_injectionist));
+            return this;
+        }
+
         public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
         {
             configurer(new OptionsConfigurer(_options, _injectionist));

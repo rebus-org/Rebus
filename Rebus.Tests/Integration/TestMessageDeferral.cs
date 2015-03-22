@@ -25,7 +25,7 @@ namespace Rebus.Tests.Integration
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "test.message.deferral"))
                 .Start();
 
-            TrackDisposable(_bus);
+            Using(_bus);
         }
 
         [Test]
