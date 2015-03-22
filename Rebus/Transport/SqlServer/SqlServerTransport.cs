@@ -46,14 +46,12 @@ namespace Rebus.Transport.SqlServer
             using (var command = connection.CreateCommand())
             {
                 command.CommandText = string.Format(@"
-INSERT INTO [{0}] 
-(
+INSERT INTO [{0}] (
     [recipient],
     [headers],
     [body],
     [priority]
-) 
-VALUES (
+) VALUES (
     @recipient,
     @headers,
     @body,
