@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -92,27 +91,35 @@ VALUES (
             {
                 selectCommand.CommandText =
                     string.Format(@"
-SELECT TOP 1 [seq], [headers], [body], [priority]
+SELECT TOP 1 [id], [headers], [body]
 FROM [{0}]
 WITH (UPDLOCK, READPAST, ROWLOCK)
 WHERE [recipient] = @recipient
-ORDER BY [priority] ASC, [seq] asc
+ORDER BY [priority] ASC, [id] asc
 
 ", _tableName);
 
-                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = _tableName;
+                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = _inputQueueName;
 
-                using (var reader = selectCommand.ExecuteReader())
+                using (var reader = await selectCommand.ExecuteReaderAsync())
                 {
-                    if (!reader.Read()) return null;
+                    if (!await reader.ReadAsync()) return null;
 
                     var headers = reader["headers"];
-                    var seq = (long)reader["seq"];
+                    var id = (long)reader["id"];
 
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
-                    var messageId = seq.ToString(CultureInfo.InvariantCulture);
-
                     var receivedTransportMessage = new TransportMessage(headersDictionary, reader.GetStream(reader.GetOrdinal("body")));
+
+                    context.Committed += () =>
+                    {
+                        using (var deleteCommand = connection.CreateCommand())
+                        {
+                            deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                            deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = id;
+                            deleteCommand.ExecuteNonQuery();
+                        }
+                    };
 
                     return receivedTransportMessage;
                 }
@@ -164,8 +171,8 @@ ORDER BY [priority] ASC, [seq] asc
                 {
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
+	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
-	[seq] [bigint] IDENTITY(1,1) NOT NULL,
 	[priority] [tinyint] NOT NULL,
 	[headers] [varbinary](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
@@ -173,7 +180,7 @@ CREATE TABLE [dbo].[{0}](
     (
 	    [recipient] ASC,
 	    [priority] ASC,
-	    [seq] ASC
+	    [id] ASC
     )
 )
 ", _tableName);

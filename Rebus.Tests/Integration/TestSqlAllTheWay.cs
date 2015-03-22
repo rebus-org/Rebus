@@ -27,7 +27,11 @@ namespace Rebus.Tests.Integration
             _bus = Configure.With(_handlerActivator)
                 .Transport(x => x.UseSqlServer(ConnectionString, "RebusMessages", "test.input"))
                 .Sagas(x => x.StoreInSqlServer(ConnectionString, "Sagas", "SagaIndex"))
-                .Options(x => x.SetNumberOfWorkers(1))
+                .Options(x =>
+                {
+                    x.SetNumberOfWorkers(1);
+                    x.SetMaxParallelism(1);
+                })
                 .Start();
 
             Using(_bus);
