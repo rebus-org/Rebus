@@ -10,8 +10,9 @@ namespace Rebus.Tests.Contracts.Transports
 {
     public class BasicSendReceive<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
-        TTransportFactory _factory;
         readonly Encoding _defaultEncoding = Encoding.UTF8;
+
+        TTransportFactory _factory;
 
         protected override void SetUp()
         {
@@ -21,6 +22,21 @@ namespace Rebus.Tests.Contracts.Transports
         protected override void TearDown()
         {
             _factory.CleanUp();
+        }
+
+        [Test]
+        public async Task EmptyQueueReturnsNull()
+        {
+            var emptyQueue = _factory.Create("empty");
+
+            using (var context = new DefaultTransactionContext())
+            {
+                var transportMessage = await emptyQueue.Receive(context);
+
+                Assert.That(transportMessage, Is.Null);
+
+                context.Complete();
+            }
         }
 
         [Test]
