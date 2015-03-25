@@ -81,7 +81,7 @@ namespace Rebus.AzureServiceBus
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var brokeredMessage = await _inputQueueClient.ReceiveAsync();
+            var brokeredMessage = await _inputQueueClient.ReceiveAsync(TimeSpan.FromSeconds(1));
 
             if (brokeredMessage == null) return null;
 
