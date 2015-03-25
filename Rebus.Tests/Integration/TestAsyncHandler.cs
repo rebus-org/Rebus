@@ -8,7 +8,6 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
-using Rebus.Tests.Transport.Msmq;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
@@ -17,7 +16,7 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestAsyncHandler : FixtureBase
     {
-        static readonly string InputQueueName = MsmqHelper.QueueName("test.async.input");
+        static readonly string InputQueueName = TestConfig.QueueName("test.async.input");
         IBus _bus;
         BuiltinHandlerActivator _handlerActivator;
 

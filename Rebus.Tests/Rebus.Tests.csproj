@@ -82,7 +82,6 @@
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
-    <Compile Include="Transport\Msmq\MsmqHelper.cs" />
     <Compile Include="Transport\Msmq\MsmqTests.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransport.cs" />
     <Compile Include="Pipeline\TestPipelineInvoker.cs" />

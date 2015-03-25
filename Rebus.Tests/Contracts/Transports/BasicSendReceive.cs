@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task EmptyQueueReturnsNull()
         {
-            var emptyQueue = _factory.Create("empty");
+            var emptyQueue = _factory.Create(TestConfig.QueueName("empty"));
 
             using (var context = new DefaultTransactionContext())
             {
@@ -42,12 +42,15 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task CanSendAndReceive()
         {
-            var input1 = _factory.Create("input1");
-            var input2 = _factory.Create("input2");
+            var input1QueueName = TestConfig.QueueName("input1");
+            var input2QueueName = TestConfig.QueueName("input2");
+            
+            var input1 = _factory.Create(input1QueueName);
+            var input2 = _factory.Create(input2QueueName);
 
             using (var context = new DefaultTransactionContext())
             {
-                await input1.Send("input2", MessageWith("hej"), context);
+                await input1.Send(input2QueueName, MessageWith("hej"), context);
                 
                 context.Complete();
             }
@@ -66,8 +69,11 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task MessageIsNotSentWhenTransactionIsNotCompleted()
         {
-            var input1 = _factory.Create("input1");
-            var input2 = _factory.Create("input2");
+            var input1QueueName = TestConfig.QueueName("input1");
+            var input2QueueName = TestConfig.QueueName("input2");
+
+            var input1 = _factory.Create(input1QueueName);
+            var input2 = _factory.Create(input2QueueName);
 
             using (var context = new DefaultTransactionContext())
             {
@@ -89,8 +95,11 @@ namespace Rebus.Tests.Contracts.Transports
         [Test]
         public async Task MessageIsReturnedToQueueWhenReceivingTransactionIsNotCommitted()
         {
-            var input1 = _factory.Create("input1");
-            var input2 = _factory.Create("input2");
+            var input1QueueName = TestConfig.QueueName("input1");
+            var input2QueueName = TestConfig.QueueName("input2");
+
+            var input1 = _factory.Create(input1QueueName);
+            var input2 = _factory.Create(input2QueueName);
 
             using (var context = new DefaultTransactionContext())
             {

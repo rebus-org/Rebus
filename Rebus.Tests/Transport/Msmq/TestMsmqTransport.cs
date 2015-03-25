@@ -19,7 +19,7 @@ namespace Rebus.Tests.Transport.Msmq
     [TestFixture, Ignore]
     public class TestMsmqTransport : FixtureBase
     {
-        static readonly string QueueName = MsmqHelper.QueueName("test.performance");
+        static readonly string QueueName = TestConfig.QueueName("test.performance");
 
         [TestCase(100)]
         public void HowFast(int messageCount)

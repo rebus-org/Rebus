@@ -8,7 +8,6 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Routing.TopicBased;
 using Rebus.Tests.Extensions;
-using Rebus.Tests.Transport.Msmq;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration
@@ -16,8 +15,8 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestPublishSubscribe : FixtureBase
     {
-        static readonly string SubscriberInputQueue = MsmqHelper.QueueName("test.pubsub.subscriber@" + Environment.MachineName);
-        static readonly string PublisherInputQueue = MsmqHelper.QueueName("test.pubsub.publisher@" + Environment.MachineName);
+        static readonly string SubscriberInputQueue = TestConfig.QueueName("test.pubsub.subscriber@" + Environment.MachineName);
+        static readonly string PublisherInputQueue = TestConfig.QueueName("test.pubsub.publisher@" + Environment.MachineName);
 
         BuiltinHandlerActivator _subscriberHandlers;
 
