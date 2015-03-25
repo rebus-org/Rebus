@@ -6,7 +6,7 @@ namespace Rebus.Transport
     public interface ITransport
     {
         void CreateQueue(string address);
-        Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context);
+        Task Send(string destinationAddress, TransportMessage message, ITransactionContext context);
         Task<TransportMessage> Receive(ITransactionContext context);
         string Address { get; }
     }

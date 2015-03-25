@@ -23,7 +23,7 @@ namespace Rebus.MongoDb.Tests.Sagas
             return new MongoDbSagaStorage(_mongoDatabase);
         }
 
-        public void Cleanup()
+        public void CleanUp()
         {
             _mongoDatabase.Drop();
             _mongoDatabase = null;

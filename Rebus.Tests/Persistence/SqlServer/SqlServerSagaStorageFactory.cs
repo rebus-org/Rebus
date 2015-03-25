@@ -25,7 +25,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             return storage;
         }
 
-        public void Cleanup()
+        public void CleanUp()
         {
             SqlTestHelper.DropTable(IndexTableName);
             SqlTestHelper.DropTable(DataTableName);

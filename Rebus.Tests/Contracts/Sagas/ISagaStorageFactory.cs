@@ -6,6 +6,6 @@ namespace Rebus.Tests.Contracts.Sagas
     {
         ISagaStorage GetSagaStorage();
 
-        void Cleanup();
+        void CleanUp();
     }
 }

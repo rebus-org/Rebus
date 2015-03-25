@@ -225,7 +225,7 @@ namespace Rebus.Tests.Transport.Msmq
 
                 timer.Elapsed += delegate
                 {
-                    AppendStatus(messageCount- sentIds.Count, stopwatch, fileName);
+                    AppendStatus(messageCount - sentIds.Count, stopwatch, fileName);
                 };
 
                 timer.Start();

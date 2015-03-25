@@ -54,16 +54,16 @@ namespace Rebus.Transport.Msmq
             EnsureQueueExists(inputQueuePath);
         }
 
-        public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
+        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (msg == null) throw new ArgumentNullException("msg");
+            if (message == null) throw new ArgumentNullException("message");
             if (context == null) throw new ArgumentNullException("context");
 
-            var message = new Message
+            var logicalMessage = new Message
             {
-                Extension = _extensionSerializer.Serialize(msg.Headers),
-                BodyStream = msg.Body,
+                Extension = _extensionSerializer.Serialize(message.Headers),
+                BodyStream = message.Body,
                 UseJournalQueue = false,
                 Recoverable = true,
             };
@@ -72,7 +72,7 @@ namespace Rebus.Transport.Msmq
 
             using (var queue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send))
             {
-                queue.Send(message, messageQueueTransaction);
+                queue.Send(logicalMessage, messageQueueTransaction);
             }
         }
 

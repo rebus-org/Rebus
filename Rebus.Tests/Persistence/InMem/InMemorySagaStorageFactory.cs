@@ -18,7 +18,7 @@ namespace Rebus.Tests.Persistence.InMem
             return new InMemorySagaStorage();
         }
 
-        public void Cleanup()
+        public void CleanUp()
         {
         }
     }

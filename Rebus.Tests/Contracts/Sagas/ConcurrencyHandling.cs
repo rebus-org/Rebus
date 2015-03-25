@@ -23,7 +23,7 @@ namespace Rebus.Tests.Contracts.Sagas
 
         protected override void TearDown()
         {
-            _factory.Cleanup();
+            _factory.CleanUp();
         }
 
         [Test]

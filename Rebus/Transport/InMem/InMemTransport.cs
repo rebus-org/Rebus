@@ -25,10 +25,10 @@ namespace Rebus.Transport.InMem
             _network.CreateQueue(address);
         }
 
-        public async Task Send(string destinationAddress, TransportMessage msg, ITransactionContext context)
+        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (msg == null) throw new ArgumentNullException("msg");
+            if (message == null) throw new ArgumentNullException("message");
             if (context == null) throw new ArgumentNullException("context");
 
             if (!_network.HasQueue(destinationAddress))
@@ -38,7 +38,7 @@ namespace Rebus.Transport.InMem
 
             context.Committed += () =>
             {
-                _network.Deliver(destinationAddress, msg);
+                _network.Deliver(destinationAddress, message);
             };
         }
 
