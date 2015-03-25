@@ -6,6 +6,7 @@ namespace Rebus.Transport
     public class DefaultTransactionContext : ITransactionContext
     {
         bool _aborted;
+        bool _completed;
 
         public DefaultTransactionContext()
         {
@@ -30,8 +31,19 @@ namespace Rebus.Transport
 
         public void Dispose()
         {
-            var cleanup = Cleanup;
-            if (cleanup != null) cleanup();
+            try
+            {
+                if (!_completed)
+                {
+                    var aborted = Aborted;
+                    if (aborted != null) aborted();
+                }
+            }
+            finally
+            {
+                var cleanup = Cleanup;
+                if (cleanup != null) cleanup();
+            }
         }
 
         /// <summary>
@@ -48,6 +60,8 @@ namespace Rebus.Transport
 
             var committed = Committed;
             if (committed != null) committed();
+
+            _completed = true;
         }
     }
 }

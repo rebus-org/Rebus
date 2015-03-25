@@ -80,8 +80,18 @@ namespace Rebus.AzureServiceBus
 
             if (brokeredMessage == null) return null;
 
-            context.Aborted += () => brokeredMessage.Abandon();
-            context.Committed += () => brokeredMessage.Complete();
+            _log.Debug("Received message with ID {0}", brokeredMessage.MessageId);
+
+            context.Aborted += () =>
+            {
+                _log.Debug("Abandoning message with ID {0}", brokeredMessage.MessageId);
+                brokeredMessage.Abandon();
+            };
+            context.Committed += () =>
+            {
+                _log.Debug("Completing message with ID {0}", brokeredMessage.MessageId);
+                brokeredMessage.Complete();
+            };
             context.Cleanup += () => brokeredMessage.Dispose();
 
             return new TransportMessage(new Dictionary<string, string>(), brokeredMessage.GetBody<Stream>());
