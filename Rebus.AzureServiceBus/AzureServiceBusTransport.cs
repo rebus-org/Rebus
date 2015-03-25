@@ -74,20 +74,22 @@ namespace Rebus.AzureServiceBus
             context.Cleanup += () => brokeredMessage.Dispose();
         }
 
-        QueueClient GetQueueClient(string queueAddress)
-        {
-            return _queueClients.GetOrAdd(queueAddress, address => QueueClient.CreateFromConnectionString(_connectionString, address));
-        }
-
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             var brokeredMessage = await _inputQueueClient.ReceiveAsync(TimeSpan.FromSeconds(1));
 
             if (brokeredMessage == null) return null;
 
+            context.Aborted += () => brokeredMessage.Abandon();
+            context.Committed += () => brokeredMessage.Complete();
             context.Cleanup += () => brokeredMessage.Dispose();
 
             return new TransportMessage(new Dictionary<string, string>(), brokeredMessage.GetBody<Stream>());
+        }
+
+        QueueClient GetQueueClient(string queueAddress)
+        {
+            return _queueClients.GetOrAdd(queueAddress, address => QueueClient.CreateFromConnectionString(_connectionString, address));
         }
 
         public string Address

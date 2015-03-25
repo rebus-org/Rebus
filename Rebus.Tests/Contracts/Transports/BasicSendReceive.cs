@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -140,6 +141,11 @@ namespace Rebus.Tests.Contracts.Transports
 
         string GetStringBody(TransportMessage transportMessage)
         {
+            if (transportMessage == null)
+            {
+                throw new InvalidOperationException("Cannot get string body out of null message!");
+            }
+
             using (var reader = new StreamReader(transportMessage.Body, _defaultEncoding))
             {
                 return reader.ReadToEnd();
