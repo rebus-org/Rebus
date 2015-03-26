@@ -8,6 +8,9 @@ using Rebus.Subscriptions;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// This is the main bus API
+    /// </summary>
     public interface IBus : IDisposable
     {
         /// <summary>

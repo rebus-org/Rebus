@@ -7,6 +7,10 @@ using Rebus.Transport;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// Implementation of <see cref="IWorker"/> that has a dedicated thread the continuously polls the given <see cref="ThreadWorkerSynchronizationContext"/> for work,
+    /// and in case it doesn't find any, it'll try to receive a new message and invoke a receive pipeline on that
+    /// </summary>
     public class ThreadWorker : IWorker
     {
         static ILog _log;

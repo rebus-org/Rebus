@@ -1,30 +1,30 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Messages.Control;
-using Rebus.Routing;
 using Rebus.Subscriptions;
 
 namespace Rebus.Handlers
 {
-    public class InternalHandlersContributor : IHandlerActivator
+    /// <summary>
+    /// Decoration of <see cref="IHandlerActivator"/> that adds a few special handlers when an incoming message can be recognized
+    /// as a special Rebus message
+    /// </summary>
+    class InternalHandlersContributor : IHandlerActivator
     {
         readonly IHandlerActivator _innerHandlerActivator;
-        readonly ISubscriptionStorage _subscriptionStorage;
-        readonly Dictionary<Type, IEnumerable> _internalHandlers;
+        readonly Dictionary<Type, IEnumerable<IHandleMessages>> _internalHandlers;
 
         public InternalHandlersContributor(IHandlerActivator innerHandlerActivator, ISubscriptionStorage subscriptionStorage)
         {
             _innerHandlerActivator = innerHandlerActivator;
-            _subscriptionStorage = subscriptionStorage;
 
-            _internalHandlers = new Dictionary<Type, IEnumerable>
+            _internalHandlers = new Dictionary<Type, IEnumerable<IHandleMessages>>
             {
-                {typeof (SubscribeRequest), new object[] {new SubscribeRequestHandler(subscriptionStorage)}},
-                {typeof (UnsubscribeRequest), new object[] {new UnsubscribeRequestHandler(subscriptionStorage)}}
+                {typeof (SubscribeRequest), new IHandleMessages[] {new SubscribeRequestHandler(subscriptionStorage)}},
+                {typeof (UnsubscribeRequest), new IHandleMessages[] {new UnsubscribeRequestHandler(subscriptionStorage)}}
             };
         }
 
@@ -39,9 +39,9 @@ namespace Rebus.Handlers
 
         IEnumerable<IHandleMessages<TMessage>> GetOwnHandlersFor<TMessage>()
         {
-            IEnumerable ownHandlers;
+            IEnumerable<IHandleMessages> ownHandlers;
 
-            return _internalHandlers.TryGetValue(typeof (TMessage), out ownHandlers)
+            return _internalHandlers.TryGetValue(typeof(TMessage), out ownHandlers)
                 ? ownHandlers.OfType<IHandleMessages<TMessage>>()
                 : Enumerable.Empty<IHandleMessages<TMessage>>();
         }

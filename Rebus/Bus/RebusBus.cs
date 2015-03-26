@@ -18,6 +18,9 @@ using Rebus.Workers;
 
 namespace Rebus.Bus
 {
+    /// <summary>
+    /// This is the main bus thing which you'll most likely hold on to
+    /// </summary>
     public class RebusBus : IBus
     {
         static ILog _log;

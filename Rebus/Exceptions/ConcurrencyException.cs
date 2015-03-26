@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace Rebus.Exceptions
 {
+    /// <summary>
+    /// Special exception that signals that some kind of optimistic lock has been violated, and work must most likely be aborted & retried
+    /// </summary>
     [Serializable]
     public class ConcurrencyException : ApplicationException
     {

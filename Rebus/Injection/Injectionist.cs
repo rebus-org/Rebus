@@ -4,6 +4,11 @@ using System.Linq;
 
 namespace Rebus.Injection
 {
+    /// <summary>
+    /// Dependency injectionist that can be used for configuring a system of injected service implementations, possibly with decorators,
+    /// with caching of instances so that the same instance of each class is used throughout the tree. Should probably not be used for
+    /// anything at runtime, is only meant to be used in configuration scenarios.
+    /// </summary>
     public class Injectionist
     {
         readonly Dictionary<Type, List<Resolver>> _resolvers = new Dictionary<Type, List<Resolver>>();
@@ -147,10 +152,5 @@ namespace Rebus.Injection
                 }
             }
         }
-    }
-
-    public interface IResolutionContext
-    {
-        TService Get<TService>();
     }
 }

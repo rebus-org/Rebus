@@ -7,6 +7,10 @@ using Rebus.Logging;
 
 namespace Rebus.Activation
 {
+    /// <summary>
+    /// Built-in handler activator that can be used when dependency injection is not required, or when inline
+    /// lambda-based handler are wanted
+    /// </summary>
     public class BuiltinHandlerActivator : IHandlerActivator
     {
         static ILog _log;

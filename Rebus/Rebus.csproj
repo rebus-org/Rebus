@@ -60,9 +60,10 @@
     <Compile Include="Exceptions\ConcurrencyException.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Activation\IHandlerActivator.cs" />
-    <Compile Include="Handlers\IMessageHandler.cs" />
+    <Compile Include="Handlers\IHandleMessages.cs" />
     <Compile Include="Handlers\InternalHandlersContributor.cs" />
     <Compile Include="Injection\Injectionist.cs" />
+    <Compile Include="Injection\IResolutionContext.cs" />
     <Compile Include="Injection\ResolutionException.cs" />
     <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
