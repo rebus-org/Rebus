@@ -331,7 +331,11 @@ namespace Rebus.Bus
                     _workers.Remove(lastWorker);
                 }
             }
+        }
 
+        public override string ToString()
+        {
+            return string.Format("RebusBus {0}", _busId);
         }
     }
 }

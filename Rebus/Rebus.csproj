@@ -57,6 +57,7 @@
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\OptionsConfigurer.cs" />
     <Compile Include="Config\RebusConfigurer.cs" />
+    <Compile Include="Config\StandardConfigurer.cs" />
     <Compile Include="Exceptions\ConcurrencyException.cs" />
     <Compile Include="Extensions\EnumerableExtensions.cs" />
     <Compile Include="Activation\IHandlerActivator.cs" />
@@ -114,6 +115,8 @@
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />
     <Compile Include="Transport\InMem\InMemTransportConfigurationExtensions.cs" />
+    <Compile Include="Transport\InMem\InMemTransportMessage.cs" />
+    <Compile Include="Transport\InMem\InMemTransportMessageExtensions.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Pipeline\DefaultPipeline.cs" />
     <Compile Include="Pipeline\IPipelineInvoker.cs" />

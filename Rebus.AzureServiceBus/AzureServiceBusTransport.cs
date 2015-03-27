@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -70,6 +71,11 @@ namespace Rebus.AzureServiceBus
         {
             var brokeredMessage = new BrokeredMessage(message.Body);
 
+            foreach (var kvp in message.Headers)
+            {
+                brokeredMessage.Properties[kvp.Key] = kvp.Value;
+            }
+
             context.Committed += () => GetQueueClient(destinationAddress).Send(brokeredMessage);
             context.Cleanup += () => brokeredMessage.Dispose();
         }
@@ -92,9 +98,17 @@ namespace Rebus.AzureServiceBus
                 _log.Debug("Completing message with ID {0}", brokeredMessage.MessageId);
                 brokeredMessage.Complete();
             };
-            context.Cleanup += () => brokeredMessage.Dispose();
+            context.Cleanup += () =>
+            {
+                _log.Debug("Disposing brokered message with ID {0}", brokeredMessage.MessageId);
+                brokeredMessage.Dispose();
+            };
 
-            return new TransportMessage(new Dictionary<string, string>(), brokeredMessage.GetBody<Stream>());
+            var headers = brokeredMessage.Properties
+                .Where(kvp => kvp.Value is string)
+                .ToDictionary(kvp => kvp.Key, kvp => (string) kvp.Value);
+
+            return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
         }
 
         QueueClient GetQueueClient(string queueAddress)

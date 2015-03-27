@@ -15,8 +15,8 @@ namespace Rebus.Transport.InMem
 
         readonly string _networkId = string.Format("In-mem network {0}", Interlocked.Increment(ref _networkIdCounter));
 
-        readonly ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>> _queues = 
-            new ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>>(StringComparer.InvariantCultureIgnoreCase);
+        readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues =
+            new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.InvariantCultureIgnoreCase);
 
         readonly bool _outputEventsToConsole;
 
@@ -30,29 +30,35 @@ namespace Rebus.Transport.InMem
             }
         }
 
-        public void Deliver(string destinationAddress, TransportMessage msg)
+        public void Reset()
+        {
+            Console.WriteLine("Resetting in-mem network '{0}'", _networkId);
+            _queues.Clear();
+        }
+
+        public void Deliver(string destinationAddress, InMemTransportMessage msg, bool alwaysQuiet = false)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
             if (msg == null) throw new ArgumentNullException("msg");
 
-            if (_outputEventsToConsole)
+            if (_outputEventsToConsole && !alwaysQuiet)
             {
                 Console.WriteLine("{0} -> {1} ({2})", msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", destinationAddress, _networkId);
             }
 
             var messageQueue = _queues
-                .GetOrAdd(destinationAddress, address => new ConcurrentQueue<TransportMessage>());
+                .GetOrAdd(destinationAddress, address => new ConcurrentQueue<InMemTransportMessage>());
 
             messageQueue.Enqueue(msg);
         }
 
-        public TransportMessage GetNextOrNull(string inputQueueName)
+        public InMemTransportMessage GetNextOrNull(string inputQueueName)
         {
             if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
 
-            TransportMessage message;
+            InMemTransportMessage message;
 
-            var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<TransportMessage>());
+            var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<InMemTransportMessage>());
 
             if (!messageQueue.TryDequeue(out message)) return null;
 
@@ -71,7 +77,7 @@ namespace Rebus.Transport.InMem
 
         public void CreateQueue(string address)
         {
-            _queues.TryAdd(address, new ConcurrentQueue<TransportMessage>());
+            _queues.TryAdd(address, new ConcurrentQueue<InMemTransportMessage>());
         }
     }
 }

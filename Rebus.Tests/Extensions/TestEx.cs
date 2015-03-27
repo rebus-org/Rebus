@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -9,6 +8,13 @@ namespace Rebus.Tests.Extensions
 {
     public static class TestEx
     {
+        public static string Limit(this string line, int maxNumberOfChars)
+        {
+            if (line.Length + 3 <= maxNumberOfChars) return line;
+
+            return line.Substring(0, maxNumberOfChars - 3) + "...";
+        }
+        
         public static void WaitOrDie(this ManualResetEvent resetEvent, TimeSpan timeout, string errorMessage = null)
         {
             if (!resetEvent.WaitOne(timeout))

@@ -59,8 +59,10 @@
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Extensions\Ponder.cs" />
+    <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />
+    <Compile Include="ListLoggerFactory.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Contracts\Sagas\ISagaStorageFactory.cs" />
@@ -81,6 +83,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManagerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
+    <Compile Include="Transport\InMem\InMemNetworkTests.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
     <Compile Include="Transport\Msmq\MsmqTests.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransport.cs" />

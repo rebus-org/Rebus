@@ -180,19 +180,4 @@ namespace Rebus.Config
             RebusLoggerFactory.Current = consoleLoggerFactory;
         }
     }
-
-    public class StandardConfigurer<TService>
-    {
-        readonly Injectionist _injectionist;
-
-        public StandardConfigurer(Injectionist injectionist)
-        {
-            _injectionist = injectionist;
-        }
-
-        internal void Register(Func<IResolutionContext, TService> factoryMethod)
-        {
-            _injectionist.Register(factoryMethod);
-        }
-    }
 }

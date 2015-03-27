@@ -5,8 +5,9 @@ namespace Rebus.Transport
 {
     public class DefaultTransactionContext : ITransactionContext
     {
-        bool _aborted;
+        bool _mustAbort;
         bool _completed;
+        bool _aborted;
 
         public DefaultTransactionContext()
         {
@@ -26,7 +27,7 @@ namespace Rebus.Transport
         /// </summary>
         public void Abort()
         {
-            _aborted = true;
+            _mustAbort = true;
         }
 
         public void Dispose()
@@ -35,8 +36,7 @@ namespace Rebus.Transport
             {
                 if (!_completed)
                 {
-                    var aborted = Aborted;
-                    if (aborted != null) aborted();
+                    RaiseAborted();
                 }
             }
             finally
@@ -46,15 +46,22 @@ namespace Rebus.Transport
             }
         }
 
+        void RaiseAborted()
+        {
+            if (_aborted) return;
+            var aborted = Aborted;
+            if (aborted != null) aborted();
+            _aborted = true;
+        }
+
         /// <summary>
         /// Ends the current transaction but either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
         public void Complete()
         {
-            if (_aborted)
+            if (_mustAbort)
             {
-                var aborted = Aborted;
-                if (aborted != null) aborted();
+                RaiseAborted();
                 return;
             }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Rebus.Extensions;
 using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
@@ -38,7 +39,7 @@ namespace Rebus.Transport.InMem
 
             context.Committed += () =>
             {
-                _network.Deliver(destinationAddress, message);
+                _network.Deliver(destinationAddress, message.ToInMemTransportMessage());
             };
         }
 
@@ -52,10 +53,10 @@ namespace Rebus.Transport.InMem
             {
                 context.Aborted += () =>
                 {
-                    _network.Deliver(_inputQueueAddress, nextMessage);
+                    _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
                 };
 
-                return nextMessage;
+                return nextMessage.ToTransportMessage();
             }
 
             await Task.Delay(20);

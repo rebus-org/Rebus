@@ -40,14 +40,20 @@ namespace Rebus.Retry.Simple
             if (string.IsNullOrWhiteSpace(messageId))
             {
                 await MoveMessageToErrorQueue("<no message ID>", transportMessage, 
-                    string.Format("Received message with empty or absent '{0}' header!", Headers.MessageId),
+                    string.Format("Received message with empty or absent '{0}' header! All messages must be" +
+                                  " supplied with an ID . If no ID is present, the message cannot be tracked" +
+                                  " between delivery attempts, and other stuff would also be much harder to" +
+                                  " do - therefore, it is a requirement that messages be supplied with an ID.",
+                    Headers.MessageId),
                     transactionContext);
+
                 return;
             }
 
             if (HasFailedTooManyTimes(messageId))
             {
                 await MoveMessageToErrorQueue(messageId, transportMessage, GetErrorDescriptionFor(messageId), transactionContext);
+                
                 return;
             }
 
@@ -92,6 +98,8 @@ namespace Rebus.Retry.Simple
 
             try
             {
+                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, errorDescription);
+
                 await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
             }
             catch (Exception exception)
@@ -112,9 +120,13 @@ namespace Rebus.Retry.Simple
         bool HasFailedTooManyTimes(string messageId)
         {
             ErrorTracking existingTracking;
+            var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out existingTracking);
             
-            return _trackedErrors.TryGetValue(messageId, out existingTracking)
-                   && existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
+            if (!hasTrackingForThisMessage) return false;
+
+            var hasFailedTooManyTimes = existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
+
+            return hasFailedTooManyTimes;
         }
 
         class ErrorTracking

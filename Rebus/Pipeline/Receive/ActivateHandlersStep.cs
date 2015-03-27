@@ -45,7 +45,7 @@ namespace Rebus.Pipeline.Receive
             var handlers = await _handlerActivator.GetHandlers(message);
 
             return handlers
-                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler))
+                .Select(handler => new HandlerInvoker<TMessage>(messageId, async () => await handler.Handle(message), handler))
                 .Cast<HandlerInvoker>()
                 .ToList();
         }

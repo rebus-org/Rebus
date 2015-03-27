@@ -46,9 +46,9 @@ namespace Rebus.Activation
                 _handlerFunction = handlerFunction;
             }
 
-            public Task Handle(TMessage message)
+            public async Task Handle(TMessage message)
             {
-                return _handlerFunction(message);
+                await _handlerFunction(message);
             }
         }
 

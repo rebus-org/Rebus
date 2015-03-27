@@ -24,7 +24,7 @@ namespace Rebus.Tests.Transport.InMem
             var messageId = Guid.NewGuid().ToString();
             var transportMessageToSend = GetTransportMessage(messageId);
 
-            _network.Deliver("bimse", transportMessageToSend);
+            _network.Deliver("bimse", transportMessageToSend.ToInMemTransportMessage());
 
             var receivedTransportMessage = _network.GetNextOrNull("bimse");
             Assert.That(receivedTransportMessage, Is.Not.Null);
@@ -37,7 +37,7 @@ namespace Rebus.Tests.Transport.InMem
             var messageId = Guid.NewGuid().ToString();
             var transportMessageToSend = GetTransportMessage(messageId);
 
-            _network.Deliver("bImSe", transportMessageToSend);
+            _network.Deliver("bImSe", transportMessageToSend.ToInMemTransportMessage());
 
             var receivedTransportMessage = _network.GetNextOrNull("BiMsE");
             Assert.That(receivedTransportMessage, Is.Not.Null);

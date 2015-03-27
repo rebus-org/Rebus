@@ -24,7 +24,7 @@ namespace Rebus.Logging
         /// </summary>
         public GhettoFileLoggerFactory(string filePath)
         {
-            this._filePath = filePath;
+            _filePath = filePath;
 
             _flushTimer.Interval = 500;
             _flushTimer.Elapsed += delegate { Flush(); };
@@ -89,14 +89,12 @@ namespace Rebus.Logging
 
         string FormatMessage(LogMessage message)
         {
-            return string.Join("|",
-                               new[]
-                                   {
-                                       message.Time.ToString(CultureInfo.InvariantCulture),
-                                       message.Level.ToString(),
-                                       message.LoggerType.Name,
-                                       message.Message
-                                   });
+            var time = message.Time.ToString(CultureInfo.InvariantCulture);
+            var level = message.Level.ToString();
+            var name = message.LoggerType.Name;
+            var msg = message.Message;
+
+            return string.Join("|", time, level, name, msg);
         }
 
         /// <summary>
@@ -143,15 +141,15 @@ namespace Rebus.Logging
 
         class CrudeFileLogger : ILog
         {
-            readonly Type type;
-            readonly ConcurrentQueue<LogMessage> messages;
-            readonly List<Func<LogMessage, bool>> filters;
+            readonly Type _type;
+            readonly ConcurrentQueue<LogMessage> _messages;
+            readonly List<Func<LogMessage, bool>> _filters;
 
             public CrudeFileLogger(Type type, ConcurrentQueue<LogMessage> messages, List<Func<LogMessage, bool>> filters)
             {
-                this.type = type;
-                this.messages = messages;
-                this.filters = filters;
+                _type = type;
+                _messages = messages;
+                _filters = filters;
             }
 
             public void Debug(string message, params object[] objs)
@@ -192,14 +190,14 @@ namespace Rebus.Logging
                     stringToWrite = "ERROR FORMATTING: " + message;
                 }
 
-                var logMessage = new LogMessage(type, stringToWrite, level);
+                var logMessage = new LogMessage(_type, stringToWrite, level);
 
-                if (filters.Any(filter => !filter(logMessage)))
+                if (_filters.Any(filter => !filter(logMessage)))
                 {
                     return;
                 }
 
-                messages.Enqueue(logMessage);
+                _messages.Enqueue(logMessage);
             }
         }
     }

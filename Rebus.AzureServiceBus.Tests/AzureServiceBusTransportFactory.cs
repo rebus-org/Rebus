@@ -13,7 +13,7 @@ namespace Rebus.AzureServiceBus.Tests
 
     public class AzureServiceBusTransportFactory : ITransportFactory
     {
-        const string ConnectionString = "Endpoint=sb://rebus2.servicebus.windows.net/;SharedAccessKeyName=Tests;SharedAccessKey=Z3/e1CLzRYSX1SWVHIv0W3nZPp3n6DHcL/gDG5E8BO4=";
+        public const string ConnectionString = "Endpoint=sb://rebus2.servicebus.windows.net/;SharedAccessKeyName=Tests;SharedAccessKey=Z3/e1CLzRYSX1SWVHIv0W3nZPp3n6DHcL/gDG5E8BO4=";
         
         readonly HashSet<string> _queuesToDelete = new HashSet<string>();
 

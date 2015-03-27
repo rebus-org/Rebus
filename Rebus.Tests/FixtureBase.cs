@@ -42,14 +42,14 @@ namespace Rebus.Tests
         {
         }
 
+        protected virtual void TearDown()
+        {
+        }
+
         protected TDisposable Using<TDisposable>(TDisposable disposable) where TDisposable : IDisposable
         {
             _disposables.Push(disposable);
             return disposable;
-        }
-
-        protected virtual void TearDown()
-        {
         }
 
         protected void CleanUpDisposables()
