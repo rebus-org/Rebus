@@ -154,7 +154,12 @@ namespace Rebus.Tests.Contracts.Transports
 
         TransportMessage MessageWith(string stringBody)
         {
-            return new TransportMessage(new Dictionary<string, string>(), new MemoryStream(_defaultEncoding.GetBytes(stringBody)));
+            var headers = new Dictionary<string, string>
+            {
+                {Headers.MessageId, Guid.NewGuid().ToString()}
+            };
+            var body = new MemoryStream(_defaultEncoding.GetBytes(stringBody));
+            return new TransportMessage(headers, body);
         }
     }
 }

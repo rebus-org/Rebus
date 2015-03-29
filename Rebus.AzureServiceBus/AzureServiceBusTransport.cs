@@ -104,7 +104,7 @@ namespace Rebus.AzureServiceBus
                 .Where(kvp => kvp.Value is string)
                 .ToDictionary(kvp => kvp.Key, kvp => (string) kvp.Value);
 
-            var messageId = headers.GetValue(Headers.MessageId);
+            var messageId = headers.GetValueOrNull(Headers.MessageId);
 
             _log.Debug("Received brokered message with ID {0}", messageId);
 

@@ -15,24 +15,27 @@ namespace Rebus.AzureServiceBus.Tests
     {
         public const string ConnectionString = "Endpoint=sb://rebus2.servicebus.windows.net/;SharedAccessKeyName=Tests;SharedAccessKey=Z3/e1CLzRYSX1SWVHIv0W3nZPp3n6DHcL/gDG5E8BO4=";
         
-        readonly HashSet<string> _queuesToDelete = new HashSet<string>();
+        readonly Dictionary<string, AzureServiceBusTransport> _queuesToDelete = new Dictionary<string, AzureServiceBusTransport>();
 
         public ITransport Create(string inputQueueAddress)
         {
-            var transport = new AzureServiceBusTransport(ConnectionString, inputQueueAddress);
+            return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
+            {
+                var transport = new AzureServiceBusTransport(ConnectionString, inputQueueAddress);
 
-            _queuesToDelete.Add(inputQueueAddress);
+                transport.PurgeInputQueue();
 
-            transport.Initialize();
-            
-            return transport;
+                transport.Initialize();
+
+                return transport;
+            });
         }
 
         public void CleanUp()
         {
             var namespaceManager = NamespaceManager.CreateFromConnectionString(ConnectionString);
 
-            _queuesToDelete.ForEach(queueName =>
+            _queuesToDelete.Keys.ForEach(queueName =>
             {
                 if (!namespaceManager.QueueExists(queueName)) return;
 
