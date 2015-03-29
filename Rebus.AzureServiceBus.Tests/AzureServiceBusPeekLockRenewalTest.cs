@@ -5,6 +5,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
@@ -18,9 +20,13 @@ namespace Rebus.AzureServiceBus.Tests
 
         BuiltinHandlerActivator _activator;
         IBus _bus;
+        AzureServiceBusTransport _transport;
 
         protected override void SetUp()
         {
+            _transport = new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, QueueName);
+            _transport.PurgeInputQueue();
+
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
@@ -45,7 +51,8 @@ namespace Rebus.AzureServiceBus.Tests
                 Console.WriteLine("waiting 6 minutes....");
 
                 // longer than the longest asb peek lock in the world...
-                await Task.Delay(TimeSpan.FromSeconds(6));
+                //await Task.Delay(TimeSpan.FromSeconds(3));
+                await Task.Delay(TimeSpan.FromMinutes(6));
 
                 Console.WriteLine("done waiting");
 
@@ -54,19 +61,20 @@ namespace Rebus.AzureServiceBus.Tests
 
             await _bus.SendLocal("hej med dig min ven!");
 
-            gotMessage.WaitOrDie(TimeSpan.FromMinutes(10));
+            gotMessage.WaitOrDie(TimeSpan.FromMinutes(6.5));
 
             // shut down bus
             CleanUpDisposables();
 
             // see if queue is empty
-            var transport = new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, QueueName);
-
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var message = await transport.Receive(transactionContext);
+                var message = await _transport.Receive(transactionContext);
 
-                Assert.That(message, Is.Null);
+                if (message != null)
+                {
+                    throw new AssertionException(string.Format("Did not expect to receive a message - got one with ID {0}", message.Headers.GetValue(Headers.MessageId)));    
+                }
 
                 transactionContext.Complete();
             }

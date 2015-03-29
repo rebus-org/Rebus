@@ -3,10 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Bus;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -28,6 +31,9 @@ namespace Rebus.AzureServiceBus
         readonly string _inputQueueAddress;
         readonly QueueClient _inputQueueClient;
 
+        readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
+        readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
+
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
@@ -43,6 +49,14 @@ namespace Rebus.AzureServiceBus
             CreateQueue(_inputQueueAddress);
         }
 
+        public void PurgeInputQueue()
+        {
+            _log.Info("Purging queue '{0}'", _inputQueueAddress);
+            _namespaceManager.DeleteQueue(_inputQueueAddress);
+
+            CreateQueue(_inputQueueAddress);
+        }
+
         public void CreateQueue(string address)
         {
             if (_namespaceManager.QueueExists(address)) return;
@@ -51,7 +65,7 @@ namespace Rebus.AzureServiceBus
             {
                 MaxSizeInMegabytes = 1024,
                 MaxDeliveryCount = 100,
-                LockDuration = TimeSpan.FromMinutes(5),
+                LockDuration = _peekLockDuration,
             };
 
             try
@@ -86,27 +100,56 @@ namespace Rebus.AzureServiceBus
 
             if (brokeredMessage == null) return null;
 
-            _log.Debug("Received message with ID {0}", brokeredMessage.MessageId);
+            var headers = brokeredMessage.Properties
+                .Where(kvp => kvp.Value is string)
+                .ToDictionary(kvp => kvp.Key, kvp => (string) kvp.Value);
+
+            var messageId = headers.GetValue(Headers.MessageId);
+
+            _log.Debug("Received brokered message with ID {0}", messageId);
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            var cancellationToken = cancellationTokenSource.Token;
+
+            var task = Task.Factory.StartNew(async () =>
+            {
+                while (true)
+                {
+                    _log.Info("WAITING");
+                    await Task.Delay(_peekLockRenewalInterval, cancellationToken);
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        _log.Info("CANCELLED  ___ WOOT");
+                        break;
+                    }
+
+                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
+                    await brokeredMessage.RenewLockAsync();
+                }
+            }, cancellationToken);
+
+            context.Items
+                .GetOrAdd("asb-transport-peek-lock-renewers", () => new List<Task>())
+                .Add(task);
 
             context.Aborted += () =>
             {
-                _log.Debug("Abandoning message with ID {0}", brokeredMessage.MessageId);
+                _log.Debug("Abandoning message with ID {0}", messageId);
                 brokeredMessage.Abandon();
             };
             context.Committed += () =>
             {
-                _log.Debug("Completing message with ID {0}", brokeredMessage.MessageId);
+                _log.Debug("Completing message with ID {0}", messageId);
                 brokeredMessage.Complete();
             };
             context.Cleanup += () =>
             {
-                _log.Debug("Disposing brokered message with ID {0}", brokeredMessage.MessageId);
+                cancellationTokenSource.Cancel();    
+
+                _log.Debug("Disposing message with ID {0}", messageId);
                 brokeredMessage.Dispose();
             };
-
-            var headers = brokeredMessage.Properties
-                .Where(kvp => kvp.Value is string)
-                .ToDictionary(kvp => kvp.Key, kvp => (string) kvp.Value);
 
             return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
         }
