@@ -18,14 +18,23 @@ namespace Rebus.Tests.Assumptions
 
             var task = Task.Factory.StartNew(async () =>
             {
-                events.Add("task started");
-
-                while (true)
+                try
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    events.Add("task started");
 
-                    events.Add("waiting...");
-                    await Task.Delay(1000, cancellationToken);
+                    while (true)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        events.Add("waiting...");
+                        await Task.Delay(1000, cancellationToken);
+                    }
+
+                }
+                catch (Exception exception)
+                {
+                    events.Add(exception.ToString());
+                    throw;
                 }
             }, cancellationToken);
 
