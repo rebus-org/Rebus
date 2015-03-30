@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
+    <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />

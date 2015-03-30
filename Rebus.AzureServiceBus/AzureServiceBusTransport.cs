@@ -115,23 +115,15 @@ namespace Rebus.AzureServiceBus
             {
                 while (true)
                 {
-                    _log.Info("WAITING");
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     await Task.Delay(_peekLockRenewalInterval, cancellationToken);
 
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        _log.Info("CANCELLED  ___ WOOT");
-                        break;
-                    }
-
                     _log.Info("Renewing peek lock for message with ID {0}", messageId);
+                    
                     await brokeredMessage.RenewLockAsync();
                 }
             }, cancellationToken);
-
-            context.Items
-                .GetOrAdd("asb-transport-peek-lock-renewers", () => new List<Task>())
-                .Add(task);
 
             context.Aborted += () =>
             {
@@ -145,7 +137,8 @@ namespace Rebus.AzureServiceBus
             };
             context.Cleanup += () =>
             {
-                cancellationTokenSource.Cancel();    
+                cancellationTokenSource.Cancel();
+                task.Wait();
 
                 _log.Debug("Disposing message with ID {0}", messageId);
                 brokeredMessage.Dispose();
