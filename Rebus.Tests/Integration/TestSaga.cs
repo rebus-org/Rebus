@@ -40,6 +40,11 @@ namespace Rebus.Tests.Integration
             Using(_bus);
         }
 
+        protected override void TearDown()
+        {
+            CleanUpDisposables();
+        }
+
         [Test]
         public async Task CanHitSaga()
         {
@@ -164,5 +169,4 @@ namespace Rebus.Tests.Integration
             public Dictionary<Type, int> ProcessedMessages { get; set; }
         }
     }
-
 }

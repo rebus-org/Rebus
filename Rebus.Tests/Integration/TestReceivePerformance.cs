@@ -47,6 +47,8 @@ namespace Rebus.Tests.Integration
                 .Options(o => o.SetNumberOfWorkers(0))
                 .Start();
 
+            Using(bus);
+
             var sendStopwatch = Stopwatch.StartNew();
 
             Console.WriteLine("Sending {0} messages", numberOfMessages);
