@@ -23,6 +23,8 @@ namespace Rebus.Tests.Contracts.Sagas
 
         protected override void TearDown()
         {
+            CleanUpDisposables();
+
             _factory.CleanUp();
         }
 
