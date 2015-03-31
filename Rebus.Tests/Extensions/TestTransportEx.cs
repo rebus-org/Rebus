@@ -17,28 +17,12 @@ namespace Rebus.Tests.Extensions
             while (stopwatch.Elapsed < timeout)
             {
                 TransportMessage receivedTransportMessage = null;
-                
+
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    Exception caughtException = null;
+                    receivedTransportMessage = await transport.Receive(transactionContext);
 
-                    try
-                    {
-                        receivedTransportMessage = await transport.Receive(transactionContext);
-
-                        await transactionContext.Complete();
-                    }
-                    catch (Exception exception)
-                    {
-                        caughtException = exception;
-                    }
-
-                    await transactionContext.CleanUp();
-
-                    if (caughtException != null)
-                    {
-                        throw caughtException;
-                    }
+                    await transactionContext.Complete();
                 }
 
                 if (receivedTransportMessage != null) return receivedTransportMessage;

@@ -8,8 +8,9 @@ namespace Rebus.Transport
     public class DefaultTransactionContext : ITransactionContext
     {
         readonly List<Func<Task>> _onCommittedActions = new List<Func<Task>>();
-        readonly List<Func<Task>> _onAbortedActions = new List<Func<Task>>();
-        readonly List<Func<Task>> _onDisposedActions = new List<Func<Task>>();
+        
+        readonly List<Action> _onAbortedActions = new List<Action>();
+        readonly List<Action> _onDisposedActions = new List<Action>();
 
         bool _mustAbort;
         bool _completed;
@@ -28,12 +29,12 @@ namespace Rebus.Transport
             _onCommittedActions.Add(commitAction);
         }
 
-        public void OnAborted(Func<Task> abortedAction)
+        public void OnAborted(Action abortedAction)
         {
             _onAbortedActions.Add(abortedAction);
         }
 
-        public void OnDisposed(Func<Task> disposedAction)
+        public void OnDisposed(Action disposedAction)
         {
             _onDisposedActions.Add(disposedAction);
         }
@@ -46,30 +47,21 @@ namespace Rebus.Transport
             _mustAbort = true;
         }
 
-        public async Task CleanUp()
+        public void Dispose()
         {
-            if (_cleanedUp) return;
-
             try
             {
                 if (!_completed)
                 {
-                    await RaiseAborted();
+                    RaiseAborted();
                 }
-
-                await Invoke(_onDisposedActions);
             }
             finally
             {
-                _cleanedUp = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            if (!_cleanedUp)
-            {
-                throw new InvalidOperationException("DefaultTransactionContext was disposed without being cleaned up!!");
+                if (!_cleanedUp)
+                {
+                    Invoke(_onDisposedActions);
+                }
             }
         }
 
@@ -80,17 +72,17 @@ namespace Rebus.Transport
         {
             if (_mustAbort)
             {
-                await RaiseAborted();
+                RaiseAborted();
                 return;
             }
 
             await RaiseCommitted();
         }
 
-        async Task RaiseAborted()
+        void RaiseAborted()
         {
             if (_aborted) return;
-            await Invoke(_onAbortedActions);
+            Invoke(_onAbortedActions);
             _aborted = true;
         }
 
@@ -98,6 +90,14 @@ namespace Rebus.Transport
         {
             await Invoke(_onCommittedActions);
             _completed = true;
+        }
+
+        static void Invoke(IEnumerable<Action> actions)
+        {
+            foreach (var action in actions)
+            {
+                action();
+            }    
         }
 
         static async Task Invoke(IEnumerable<Func<Task>> actions)

@@ -77,8 +77,6 @@ namespace Rebus.AzureServiceBus.Tests
                 }
 
                 await transactionContext.Complete();
-                
-                await transactionContext.CleanUp();
             }
         }
     }

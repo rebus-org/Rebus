@@ -98,18 +98,15 @@ namespace Rebus.Bus
                 {
                     var message = await _transport.Receive(transactionContext);
 
-                    if (message == null)
+                    if (message != null)
                     {
-                        await transactionContext.CleanUp();
-                        return;
+                        var context = new IncomingStepContext(message, transactionContext);
+                        transactionContext.Items[StepContext.StepContextKey] = context;
+
+                        var stagedReceiveSteps = _pipeline.ReceivePipeline();
+
+                        await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
                     }
-
-                    var context = new IncomingStepContext(message, transactionContext);
-                    transactionContext.Items[StepContext.StepContextKey] = context;
-
-                    var stagedReceiveSteps = _pipeline.ReceivePipeline();
-
-                    await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                     await transactionContext.Complete();
                 }
@@ -122,8 +119,6 @@ namespace Rebus.Bus
                     AmbientTransactionContext.Current = null;
                     _continuationsWaitingToBePosted--;
                 }
-
-                await transactionContext.CleanUp();
             }
         }
 

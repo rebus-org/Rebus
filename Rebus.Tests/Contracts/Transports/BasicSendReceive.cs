@@ -132,8 +132,6 @@ namespace Rebus.Tests.Contracts.Transports
                 {
                     await context.Complete();
                 }
-
-                await context.CleanUp();
             }
         }
 

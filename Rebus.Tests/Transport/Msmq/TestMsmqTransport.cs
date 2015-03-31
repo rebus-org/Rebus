@@ -495,8 +495,6 @@ namespace Rebus.Tests.Transport.Msmq
                         context.Complete().Wait();
 
                         sendIds.Add(msg.Id);
-
-                        context.CleanUp().Wait();
                     }
                 });
 

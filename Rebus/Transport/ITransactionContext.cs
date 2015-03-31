@@ -11,9 +11,9 @@ namespace Rebus.Transport
 
         void OnCommitted(Func<Task> commitAction);
         
-        void OnAborted(Func<Task> abortedAction);
+        void OnAborted(Action abortedAction);
         
-        void OnDisposed(Func<Task> disposedAction);
+        void OnDisposed(Action disposedAction);
    
         void Abort();
     }

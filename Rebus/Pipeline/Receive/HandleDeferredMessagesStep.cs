@@ -47,16 +47,9 @@ namespace Rebus.Pipeline.Receive
 
                     using (var context = new DefaultTransactionContext())
                     {
-                        try
-                        {
-                            _transport.Send(returnAddress, transportMessage, context).Wait();
+                        _transport.Send(returnAddress, transportMessage, context).Wait();
 
-                            context.Complete().Wait();
-                        }
-                        finally
-                        {
-                            context.CleanUp().Wait();
-                        }
+                        context.Complete().Wait();
                     }
 
                     dueMessage.MarkAsCompleted();
