@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -90,8 +88,12 @@ namespace Rebus.AzureServiceBus
                 brokeredMessage.Properties[kvp.Key] = kvp.Value;
             }
 
-            context.Committed += () => GetQueueClient(destinationAddress).Send(brokeredMessage);
-            context.Cleanup += () => brokeredMessage.Dispose();
+            context.OnCommitted(async () =>
+            {
+                await GetQueueClient(destinationAddress).SendAsync(brokeredMessage);
+            });
+
+            context.OnDisposed(async () => brokeredMessage.Dispose());
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -125,24 +127,26 @@ namespace Rebus.AzureServiceBus
                 }
             }, cancellationToken);
 
-            context.Aborted += () =>
+            context.OnAborted(async () =>
             {
                 _log.Debug("Abandoning message with ID {0}", messageId);
-                brokeredMessage.Abandon();
-            };
-            context.Committed += () =>
+                await brokeredMessage.AbandonAsync();
+            });
+            
+            context.OnCommitted(async () =>
             {
                 _log.Debug("Completing message with ID {0}", messageId);
-                brokeredMessage.Complete();
-            };
-            context.Cleanup += () =>
+                await brokeredMessage.CompleteAsync();
+            });
+            
+            context.OnDisposed(async () =>
             {
                 cancellationTokenSource.Cancel();
-                task.Wait();
+                await task;
 
                 _log.Debug("Disposing message with ID {0}", messageId);
                 brokeredMessage.Dispose();
-            };
+            });
 
             return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
         }

@@ -250,9 +250,23 @@ namespace Rebus.Bus
             {
                 using (var context = new DefaultTransactionContext())
                 {
-                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
+                    Exception caughtException = null;
+                    try
+                    {
+                        await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
 
-                    context.Complete();
+                        await context.Complete();
+                    }
+                    catch (Exception exception)
+                    {
+                        caughtException = exception;
+                    }
+                    await context.CleanUp();
+
+                    if (caughtException != null)
+                    {
+                        throw caughtException;
+                    }
                 }
             }
         }

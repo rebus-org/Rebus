@@ -11,7 +11,7 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class TestRequestReply : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.QueueName("test.input");

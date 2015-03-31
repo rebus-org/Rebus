@@ -12,10 +12,20 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class TestReceivePerformance : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.QueueName("test.performance.input");
+
+        protected override void SetUp()
+        {
+            MsmqUtil.PurgeQueue(InputQueueName);
+        }
+
+        protected override void TearDown()
+        {
+            MsmqUtil.Delete(InputQueueName);
+        }
 
         [TestCase(10000, 5)]
         public async Task NizzleName(int numberOfMessages, int numberOfWorkers)
@@ -76,8 +86,8 @@ namespace Rebus.Tests.Integration
 
             if (receivedMoreThanOnce.Any())
             {
-                Assert.Fail("The following IDs were received more than once: {0}", 
-                    receivedMoreThanOnce.Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value)));
+                Assert.Fail("The following IDs were received more than once: {0}",
+                    string.Join(", ", receivedMoreThanOnce.Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value))));
             }
         }
 

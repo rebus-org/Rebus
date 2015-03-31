@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Rebus.Extensions;
 using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
@@ -37,10 +36,10 @@ namespace Rebus.Transport.InMem
                 throw new ArgumentException(string.Format("Destination queue address '{0}' does not exist!", destinationAddress));
             }
 
-            context.Committed += () =>
+            context.OnCommitted(async () =>
             {
                 _network.Deliver(destinationAddress, message.ToInMemTransportMessage());
-            };
+            });
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -51,10 +50,10 @@ namespace Rebus.Transport.InMem
             
             if (nextMessage != null)
             {
-                context.Aborted += () =>
+                context.OnAborted(async () =>
                 {
                     _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
-                };
+                });
 
                 return nextMessage.ToTransportMessage();
             }

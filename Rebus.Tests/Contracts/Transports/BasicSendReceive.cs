@@ -30,14 +30,12 @@ namespace Rebus.Tests.Contracts.Transports
         {
             var emptyQueue = _factory.Create(TestConfig.QueueName("empty"));
 
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await emptyQueue.Receive(context);
 
                 Assert.That(transportMessage, Is.Null);
-
-                context.Complete();
-            }
+            });
         }
 
         [Test]
@@ -49,22 +47,18 @@ namespace Rebus.Tests.Contracts.Transports
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
 
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 await input1.Send(input2QueueName, MessageWith("hej"), context);
-                
-                context.Complete();
-            }
+            });
 
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
-
-                context.Complete();
-            }
+            });
         }
 
         [Test]
@@ -76,21 +70,18 @@ namespace Rebus.Tests.Contracts.Transports
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
 
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 await input1.Send("input2", MessageWith("hej"), context);
+            }, 
+            completeTransaction: false);
 
-                //< we don't complete the transaction   //context.Complete(); 
-            }
-
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context);
 
                 Assert.That(transportMessage, Is.Null);
-
-                context.Complete();
-            }
+            });
         }
 
         [Test]
@@ -102,40 +93,47 @@ namespace Rebus.Tests.Contracts.Transports
             var input1 = _factory.Create(input1QueueName);
             var input2 = _factory.Create(input2QueueName);
 
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 await input1.Send("input2", MessageWith("hej"), context);
+            });
 
-                context.Complete(); 
-            }
-
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
+            }, completeTransaction: false);
 
-                // we don't complete the transaction //    context.Complete();
-            }
-
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
+            });
 
-                context.Complete();
-            }
-
-            using (var context = new DefaultTransactionContext())
+            await WithContext(async context =>
             {
                 var transportMessage = await input2.Receive(context);
 
                 Assert.That(transportMessage, Is.Null);
+            });
+        }
 
-                context.Complete();
+        async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
+        {
+            using (var context = new DefaultTransactionContext())
+            {
+                await contextAction(context);
+
+                if (completeTransaction)
+                {
+                    await context.Complete();
+                }
+
+                await context.CleanUp();
             }
         }
 

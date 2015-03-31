@@ -8,7 +8,7 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Transport.Msmq
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class MsmqBasicSendReceive : BasicSendReceive<MsmqTransportFactory> { }
 
     public class MsmqTransportFactory : ITransportFactory

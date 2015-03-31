@@ -157,8 +157,8 @@ ORDER BY [priority] ASC, [id] asc
                     async () =>
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
-                        context.Committed += dbConnection.Complete;
-                        context.Cleanup += dbConnection.Dispose;
+                        context.OnCommitted(async () => dbConnection.Complete());
+                        context.OnDisposed(async () => dbConnection.Dispose());
                         return dbConnection;
                     });
         }

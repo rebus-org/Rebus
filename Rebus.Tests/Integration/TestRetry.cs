@@ -15,7 +15,7 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class TestRetry : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.QueueName(string.Format("test.retries.input@{0}", Environment.MachineName));

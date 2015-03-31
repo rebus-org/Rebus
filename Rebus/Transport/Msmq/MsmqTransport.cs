@@ -90,8 +90,8 @@ namespace Rebus.Transport.Msmq
             var messageQueueTransaction = new MessageQueueTransaction();
             messageQueueTransaction.Begin();
 
-            context.Committed += messageQueueTransaction.Commit;
-            context.Cleanup += messageQueueTransaction.Dispose;
+            context.OnCommitted(async () => messageQueueTransaction.Commit());
+            context.OnDisposed(async () => messageQueueTransaction.Dispose());
 
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
 
@@ -186,7 +186,7 @@ namespace Rebus.Transport.Msmq
                 var messageQueueTransaction = new MessageQueueTransaction();
                 messageQueueTransaction.Begin();
 
-                context.Committed += messageQueueTransaction.Commit;
+                context.OnCommitted(async () => messageQueueTransaction.Commit());
 
                 return messageQueueTransaction;
             });

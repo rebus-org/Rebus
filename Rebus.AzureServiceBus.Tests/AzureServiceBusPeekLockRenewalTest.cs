@@ -76,7 +76,9 @@ namespace Rebus.AzureServiceBus.Tests
                     throw new AssertionException(string.Format("Did not expect to receive a message - got one with ID {0}", message.Headers.GetValue(Headers.MessageId)));    
                 }
 
-                transactionContext.Complete();
+                await transactionContext.Complete();
+                
+                await transactionContext.CleanUp();
             }
         }
     }

@@ -93,13 +93,16 @@ namespace Rebus.Bus
 
             using (var transactionContext = new DefaultTransactionContext())
             {
+                AmbientTransactionContext.Current = transactionContext;
                 try
                 {
-                    AmbientTransactionContext.Current = transactionContext;
-
                     var message = await _transport.Receive(transactionContext);
 
-                    if (message == null) return;
+                    if (message == null)
+                    {
+                        await transactionContext.CleanUp();
+                        return;
+                    }
 
                     var context = new IncomingStepContext(message, transactionContext);
                     transactionContext.Items[StepContext.StepContextKey] = context;
@@ -108,7 +111,7 @@ namespace Rebus.Bus
 
                     await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
-                    transactionContext.Complete();
+                    await transactionContext.Complete();
                 }
                 catch (Exception exception)
                 {
@@ -119,6 +122,8 @@ namespace Rebus.Bus
                     AmbientTransactionContext.Current = null;
                     _continuationsWaitingToBePosted--;
                 }
+
+                await transactionContext.CleanUp();
             }
         }
 

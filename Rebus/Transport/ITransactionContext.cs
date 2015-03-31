@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Remoting.Messaging;
+using System.Threading.Tasks;
 
 namespace Rebus.Transport
 {
@@ -8,11 +9,11 @@ namespace Rebus.Transport
     {
         Dictionary<string, object> Items { get; }
 
-        event Action Committed;
-
-        event Action Aborted;
-
-        event Action Cleanup;
+        void OnCommitted(Func<Task> commitAction);
+        
+        void OnAborted(Func<Task> abortedAction);
+        
+        void OnDisposed(Func<Task> disposedAction);
    
         void Abort();
     }

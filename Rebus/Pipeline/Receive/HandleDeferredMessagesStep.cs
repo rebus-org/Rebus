@@ -45,10 +45,18 @@ namespace Rebus.Pipeline.Receive
                         transportMessage.Headers[Headers.MessageId],
                         returnAddress);
 
-                    using (var defaultTransactionContext = new DefaultTransactionContext())
+                    using (var context = new DefaultTransactionContext())
                     {
-                        _transport.Send(returnAddress, transportMessage, defaultTransactionContext).Wait();
-                        defaultTransactionContext.Complete();
+                        try
+                        {
+                            _transport.Send(returnAddress, transportMessage, context).Wait();
+
+                            context.Complete().Wait();
+                        }
+                        finally
+                        {
+                            context.CleanUp().Wait();
+                        }
                     }
 
                     dueMessage.MarkAsCompleted();
