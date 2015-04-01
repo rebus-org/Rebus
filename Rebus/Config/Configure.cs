@@ -4,7 +4,7 @@ namespace Rebus.Config
 {
     public class Configure
     {
-        public static RebusConfigurer With(BuiltinHandlerActivator handlerActivator)
+        public static RebusConfigurer With(IHandlerActivator handlerActivator)
         {
             return new RebusConfigurer(handlerActivator);
         }

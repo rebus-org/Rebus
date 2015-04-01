@@ -49,7 +49,8 @@ namespace Rebus.Bus
                 _log.Debug("Worker {0} stopped", Name);
             })
             {
-                Name = workerName
+                Name = workerName,
+                IsBackground = true
             };
             _workerThread.Start();
         }
