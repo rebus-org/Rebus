@@ -48,6 +48,7 @@
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
