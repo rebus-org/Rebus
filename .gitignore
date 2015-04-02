@@ -16,4 +16,4 @@ _ReSharper.*
 *.suo
 *.cache
 ~$*
-azure_service_bus_connection_string.txt
+asb_connection_string.txt
