@@ -22,6 +22,8 @@ namespace Rebus.Tests.Contracts.Transports
 
         protected override void TearDown()
         {
+            CleanUpDisposables();
+
             _factory.CleanUp();
         }
 

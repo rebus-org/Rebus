@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.IO;
 using Microsoft.ServiceBus;
 using NUnit.Framework;
 using Rebus.Extensions;
@@ -13,8 +15,48 @@ namespace Rebus.AzureServiceBus.Tests
 
     public class AzureServiceBusTransportFactory : ITransportFactory
     {
-        public const string ConnectionString = "Endpoint=sb://rebus2.servicebus.windows.net/;SharedAccessKeyName=Tests;SharedAccessKey=Z3/e1CLzRYSX1SWVHIv0W3nZPp3n6DHcL/gDG5E8BO4=";
-        
+        public static string ConnectionString
+        {
+            get
+            {
+                return ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
+                       ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
+                       ?? Throw("Could not find Azure Service Bus connetion string!");
+            }
+        }
+
+        static string Throw(string message)
+        {
+            throw new ConfigurationErrorsException(message);
+        }
+
+        static string ConnectionStringFromEnvironmentVariable(string environmentVariableName)
+        {
+            var value = Environment.GetEnvironmentVariable(environmentVariableName);
+
+            if (value == null)
+            {
+                Console.WriteLine("Could not find env variable {0}", environmentVariableName);
+                return null;
+            }
+
+            Console.WriteLine("Using Azure Service Bus connection string from env variable {0}", environmentVariableName);
+
+            return value;
+        }
+
+        static string ConnectionStringFromFileOrNull(string filePath)
+        {
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine("Could not find file {0}", filePath);
+                return null;
+            }
+
+            Console.WriteLine("Using Azure Service Bus connection string from file {0}", filePath);
+            return File.ReadAllText(filePath);
+        }
+
         readonly Dictionary<string, AzureServiceBusTransport> _queuesToDelete = new Dictionary<string, AzureServiceBusTransport>();
 
         public ITransport Create(string inputQueueAddress)
