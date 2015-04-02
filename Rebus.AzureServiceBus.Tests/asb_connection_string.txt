@@ -1,1 +1,0 @@
-﻿Insert real Azure Service Bus connection string here (Endpoint=???;SharedAccessKeyName=???;SharedAccessKey=??????)
