@@ -10,6 +10,9 @@ namespace Rebus.Activation
     /// </summary>
     public interface IHandlerActivator
     {
+        /// <summary>
+        /// Must return all relevant handler instances for the given message
+        /// </summary>
         Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext);
     }
 }

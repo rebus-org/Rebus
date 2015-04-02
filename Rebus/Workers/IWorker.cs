@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Rebus.Bus
+namespace Rebus.Workers
 {
     /// <summary>
     /// Represents a worker, which is a thing that is capable of doing work. It may correspond to a worker thread

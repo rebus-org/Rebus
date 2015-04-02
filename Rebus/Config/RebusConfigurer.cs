@@ -19,6 +19,7 @@ using Rebus.Subscriptions;
 using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
+using Rebus.Workers.ThreadBased;
 
 namespace Rebus.Config
 {

@@ -5,7 +5,7 @@ using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Transport;
 
-namespace Rebus.Bus
+namespace Rebus.Workers.ThreadBased
 {
     /// <summary>
     /// Implementation of <see cref="IWorker"/> that has a dedicated thread the continuously polls the given <see cref="ThreadWorkerSynchronizationContext"/> for work,

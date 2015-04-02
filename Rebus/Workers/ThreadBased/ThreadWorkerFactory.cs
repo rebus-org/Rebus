@@ -1,8 +1,7 @@
-﻿using Rebus.Bus;
-using Rebus.Pipeline;
+﻿using Rebus.Pipeline;
 using Rebus.Transport;
 
-namespace Rebus.Workers
+namespace Rebus.Workers.ThreadBased
 {
     public class ThreadWorkerFactory : IWorkerFactory
     {

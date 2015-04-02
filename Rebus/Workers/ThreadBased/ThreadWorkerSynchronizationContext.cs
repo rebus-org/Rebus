@@ -2,7 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 
-namespace Rebus.Bus
+namespace Rebus.Workers.ThreadBased
 {
     /// <summary>
     /// Derivation of <see cref="SynchronizationContext"/> that queues posted callbacks, allowing for worker threads to retrieve them later 

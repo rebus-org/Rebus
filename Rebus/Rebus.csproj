@@ -48,11 +48,11 @@
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
-    <Compile Include="Bus\IWorker.cs" />
+    <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
-    <Compile Include="Bus\ThreadWorker.cs" />
-    <Compile Include="Bus\ThreadWorkerSynchronizationContext.cs" />
+    <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
+    <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />
     <Compile Include="Config\Options.cs" />
     <Compile Include="Config\OptionsConfigurer.cs" />
@@ -145,7 +145,7 @@
     <Compile Include="Transport\SqlServer\SqlServerTransport.cs" />
     <Compile Include="Transport\SqlServer\SqlServerTransportConfigurationExtensions.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
-    <Compile Include="Workers\ThreadWorkerFactory.cs" />
+    <Compile Include="Workers\ThreadBased\ThreadWorkerFactory.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
