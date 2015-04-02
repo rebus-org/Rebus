@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Castle.Windsor;
 using Rebus.Activation;
 using Rebus.Handlers;
+using Rebus.Transport;
 
 namespace Rebus.CastleWindsor
 {
@@ -15,9 +16,19 @@ namespace Rebus.CastleWindsor
             _windsorContainer = windsorContainer;
         }
 
-        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message)
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
-            return _windsorContainer.ResolveAll<IHandleMessages<TMessage>>();
+            var handlerInstances = _windsorContainer.ResolveAll<IHandleMessages<TMessage>>();
+
+            transactionContext.OnDisposed(() =>
+            {
+                foreach (var instance in handlerInstances)
+                {
+                    _windsorContainer.Release(instance);
+                }
+            });
+
+            return handlerInstances;
         }
     }
 }

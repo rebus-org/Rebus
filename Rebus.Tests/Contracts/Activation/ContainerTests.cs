@@ -3,9 +3,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
+using Rebus.Transport;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
@@ -24,9 +24,12 @@ namespace Rebus.Tests.Contracts.Activation
         {
             var handlerActivator = _factory.GetActivator();
 
-            var handlers = (await handlerActivator.GetHandlers("hej")).ToList();
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
 
-            Assert.That(handlers.Count, Is.EqualTo(0));
+                Assert.That(handlers.Count, Is.EqualTo(0));
+            }
         }
 
         [Test]
@@ -35,10 +38,13 @@ namespace Rebus.Tests.Contracts.Activation
             _factory.RegisterHandlerType<SomeStringHandler>();
             var handlerActivator = _factory.GetActivator();
 
-            var handlers = (await handlerActivator.GetHandlers("hej")).ToList();
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var handlers = (await handlerActivator.GetHandlers("hej", transactionContext)).ToList();
 
-            Assert.That(handlers.Count, Is.EqualTo(1));
-            Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
+                Assert.That(handlers.Count, Is.EqualTo(1));
+                Assert.That(handlers[0], Is.TypeOf<SomeStringHandler>());
+            }
         }
 
         [Test]

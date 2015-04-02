@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Handlers;
+using Rebus.Transport;
 
 namespace Rebus.Activation
 {
@@ -9,6 +10,6 @@ namespace Rebus.Activation
     /// </summary>
     public interface IHandlerActivator
     {
-        Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message);
+        Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext);
     }
 }

@@ -8,6 +8,7 @@ using Rebus.Activation;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Sagas;
+using Rebus.Transport;
 
 namespace Rebus.Pipeline.Receive
 {
@@ -23,6 +24,7 @@ namespace Rebus.Pipeline.Receive
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
+            var transactionContext = context.Load<ITransactionContext>();
             var message = context.Load<Message>();
             var messageId = message.Headers.GetValue(Headers.MessageId);
             var body = message.Body;
@@ -30,7 +32,7 @@ namespace Rebus.Pipeline.Receive
             var methodToInvoke = _dispatchMethods
                 .GetOrAdd(messageType, type => GetDispatchMethod(messageType));
 
-            var handlerInvokers = (Task<List<HandlerInvoker>>)methodToInvoke.Invoke(this, new[] { messageId, body });
+            var handlerInvokers = (Task<List<HandlerInvoker>>)methodToInvoke.Invoke(this, new[] { messageId, body, transactionContext });
 
             var invokers = await handlerInvokers;
 
@@ -40,9 +42,9 @@ namespace Rebus.Pipeline.Receive
         }
 
         // ReSharper disable once UnusedMember.Local
-        async Task<List<HandlerInvoker>> GetHandlerInvokers<TMessage>(string messageId, TMessage message)
+        async Task<List<HandlerInvoker>> GetHandlerInvokers<TMessage>(string messageId, TMessage message, ITransactionContext transactionContext)
         {
-            var handlers = await _handlerActivator.GetHandlers(message);
+            var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
             return handlers
                 .Select(handler => new HandlerInvoker<TMessage>(messageId, async () => await handler.Handle(message), handler))

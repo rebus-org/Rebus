@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Messages.Control;
 using Rebus.Subscriptions;
+using Rebus.Transport;
 
 namespace Rebus.Handlers
 {
@@ -28,11 +29,11 @@ namespace Rebus.Handlers
             };
         }
 
-        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message)
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var ownHandlers = GetOwnHandlersFor<TMessage>();
 
-            var handlers = await _innerHandlerActivator.GetHandlers(message);
+            var handlers = await _innerHandlerActivator.GetHandlers(message, transactionContext);
 
             return handlers.Concat(ownHandlers);
         }

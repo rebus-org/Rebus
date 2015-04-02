@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Handlers;
 using Rebus.Logging;
+using Rebus.Transport;
 
 namespace Rebus.Activation
 {
@@ -23,7 +24,7 @@ namespace Rebus.Activation
         readonly List<object> _handlerInstances = new List<object>();
         readonly List<Delegate> _handlerFactories = new List<Delegate>();
 
-        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message)
+        public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var factories = _handlerFactories.OfType<Func<IHandleMessages<TMessage>>>();
             var handlers = factories.Select(factory => factory());
