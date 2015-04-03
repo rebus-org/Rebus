@@ -17,6 +17,9 @@ namespace Rebus.Tests.Contracts.Activation
         protected override void SetUp()
         {
             _factory = new TFactory();
+
+            DisposableHandler.WasCalledAllright = false;
+            DisposableHandler.WasDisposedAllright = false;
         }
 
         [Test]
@@ -60,7 +63,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             await bus.SendLocal("hej med dig");
 
-            await Task.Delay(200);
+            await Task.Delay(500);
 
             Assert.That(DisposableHandler.WasCalledAllright, Is.True, "The handler was apparently not called");
             Assert.That(DisposableHandler.WasDisposedAllright, Is.True, "The handler was apparently not disposed");
