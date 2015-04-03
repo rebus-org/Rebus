@@ -14,13 +14,13 @@ namespace Rebus.Tests.Extensions
 
             return line.Substring(0, maxNumberOfChars - 3) + "...";
         }
-        
+
         public static void WaitOrDie(this ManualResetEvent resetEvent, TimeSpan timeout, string errorMessage = null)
         {
             if (!resetEvent.WaitOne(timeout))
             {
                 throw new AssertionException(string.Format("Reset event was not set within {0} timeout - {1}", timeout, errorMessage ?? "..."));
-            }    
+            }
         }
 
         public static void Times(this int count, Action action)

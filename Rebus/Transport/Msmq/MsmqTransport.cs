@@ -66,6 +66,19 @@ namespace Rebus.Transport.Msmq
             EnsureQueueExists(inputQueuePath);
         }
 
+        public void PurgeInputQueue()
+        {
+            if (!MsmqUtil.QueueExists(_inputQueueName))
+            {
+                _log.Info("Purging {0} (but the queue doesn't exist...)", _inputQueueName);
+                return;
+            }
+
+            _log.Info("Purging {0}", _inputQueueName);
+
+            MsmqUtil.PurgeQueue(_inputQueueName);
+        }
+
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
@@ -165,7 +178,7 @@ namespace Rebus.Transport.Msmq
                     _log.Warn("Queue '{0}' was deleted - will not receive any more messages", _inputQueueName);
                     return null;
                 }
-                
+
                 throw new IOException(
                     string.Format("Could not receive next message from MSMQ queue '{0}'", _inputQueueName),
                     exception);

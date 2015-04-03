@@ -78,8 +78,8 @@ namespace Rebus.Tests.Contracts.Activation
 
         class DisposableHandler : IHandleMessages<string>, IDisposable
         {
-            public static bool WasCalledAllright;
-            public static bool WasDisposedAllright;
+            public static volatile bool WasCalledAllright;
+            public static volatile bool WasDisposedAllright;
 
             public async Task Handle(string message)
             {

@@ -22,6 +22,8 @@ namespace Rebus.Tests.Transport.Msmq
 
             _disposables.Add(transport);
 
+            transport.PurgeInputQueue();
+
             transport.Initialize();
 
             _queuesToDelete.Add(inputQueueAddress);
