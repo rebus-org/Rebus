@@ -48,6 +48,7 @@
     <Compile Include="Sagas\MongoDbSagaStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Subscriptions\MongoDbSubscriptionStorage.cs" />
+    <Compile Include="Timeouts\MongoDbTimeoutManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

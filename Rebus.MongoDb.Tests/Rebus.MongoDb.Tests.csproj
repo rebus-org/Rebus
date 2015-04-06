@@ -52,6 +52,7 @@
     <Compile Include="Sagas\TestMongoDbSagaStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Subscriptions\TestMongoDbSubscriptionStorage.cs" />
+    <Compile Include="Timeouts\TestMongoDbTimeoutManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

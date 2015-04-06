@@ -12,7 +12,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.Tests.Contracts.Timeouts
 {
-    public class BasicStoreAndRetrieveOperations<TTimeoutManagerFactory> : FixtureBase where TTimeoutManagerFactory : ITimeoutManagerFactory, new()
+    public abstract class BasicStoreAndRetrieveOperations<TTimeoutManagerFactory> : FixtureBase where TTimeoutManagerFactory : ITimeoutManagerFactory, new()
     {
         TTimeoutManagerFactory _factory;
         ITimeoutManager _timeoutManager;

@@ -17,18 +17,21 @@ namespace Rebus.Persistence.InMem
 
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body)
         {
-            _deferredMessages
-                .AddOrUpdate(headers.GetValue(Headers.MessageId),
-                    id =>
-                    {
-                        using (body)
+            lock (_deferredMessages)
+            {
+                _deferredMessages
+                    .AddOrUpdate(headers.GetValue(Headers.MessageId),
+                        id =>
                         {
-                            var buffer = new byte[body.Length];
-                            body.Read(buffer, 0, buffer.Length);
-                            return new DeferredMessage(approximateDueTime, headers, buffer);
-                        }
-                    },
-                    (id, existing) => existing);
+                            using (body)
+                            {
+                                var buffer = new byte[body.Length];
+                                body.Read(buffer, 0, buffer.Length);
+                                return new DeferredMessage(approximateDueTime, headers, buffer);
+                            }
+                        },
+                        (id, existing) => existing);
+            }
         }
 
         public async Task<DueMessagesResult> GetDueMessages()
