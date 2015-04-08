@@ -2,14 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-using Rebus.Activation;
-using Rebus.Config;
+using Rebus.Bus;
 using Rebus.Injection;
 
 namespace Rebus.Tests.Injection
 {
     [TestFixture]
-    public class TestBusDisposal : FixtureBase
+    public class TestInjectionist_InstanceDisposal : FixtureBase
     {
         [Test]
         public void InjectedWhateverWithWhateverInsideIsProperlyDisposed()
@@ -21,7 +20,18 @@ namespace Rebus.Tests.Injection
             {
                 var fakeBus = new FakeBus(c.Get<Disposable1>(), c.Get<EventTracker>());
 
-                fakeBus.FakeBusDisposed += c.DisposeTrackedInstances;
+                fakeBus.FakeBusDisposed += () =>
+                {
+                    foreach (var disposable in c.GetTrackedInstancesOf<IDisposable>().Reverse())
+                    {
+                        disposable.Dispose();
+                    }
+                };
+
+                foreach (var disposable in c.GetTrackedInstancesOf<IInitializable>())
+                {
+                    disposable.Initialize();
+                }
 
                 return fakeBus;
             });
@@ -41,8 +51,12 @@ namespace Rebus.Tests.Injection
 
             Assert.That(eventTracker.Events, Is.EqualTo(new[]
             {
-                "Disposable2 disposed",
+                "EventTracker initialized",
+                "Disposable2 initialized",
+                "Disposable1 initialized",
                 "Disposable1 disposed",
+                "Disposable2 disposed",
+                "EventTracker disposed",
                 "FakeBus disposed",
             }));
         }
@@ -79,12 +93,22 @@ namespace Rebus.Tests.Injection
             }
         }
 
-        class EventTracker
+        class EventTracker: IDisposable, IInitializable
         {
             public readonly List<string> Events = new List<string>();
+            
+            public void Dispose()
+            {
+                Events.Add("EventTracker disposed");
+            }
+
+            public void Initialize()
+            {
+                Events.Add("EventTracker initialized");
+            }
         }
 
-        class Disposable1 : IDisposable
+        class Disposable1 : IDisposable, IInitializable
         {
             readonly EventTracker _tracker;
 
@@ -97,9 +121,14 @@ namespace Rebus.Tests.Injection
             {
                 _tracker.Events.Add("Disposable1 disposed");
             }
+
+            public void Initialize()
+            {
+                _tracker.Events.Add("Disposable1 initialized");
+            }
         }
 
-        class Disposable2 : IDisposable
+        class Disposable2 : IDisposable, IInitializable
         {
             readonly EventTracker _tracker;
 
@@ -111,6 +140,11 @@ namespace Rebus.Tests.Injection
             public void Dispose()
             {
                 _tracker.Events.Add("Disposable2 disposed");
+            }
+
+            public void Initialize()
+            {
+                _tracker.Events.Add("Disposable2 initialized");
             }
         }
     }

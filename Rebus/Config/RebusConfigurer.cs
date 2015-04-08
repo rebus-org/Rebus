@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Linq;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Handlers;
@@ -118,6 +119,23 @@ namespace Rebus.Config
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
                     c.Get<ISubscriptionStorage>());
+
+                bus.Disposed += () =>
+                {
+                    var disposableInstances = c.GetTrackedInstancesOf<IDisposable>().Reverse();
+
+                    foreach (var disposableInstance in disposableInstances)
+                    {
+                        disposableInstance.Dispose();
+                    }
+                };
+
+                var initializableInstances = c.GetTrackedInstancesOf<IInitializable>();
+
+                foreach (var initializableInstance in initializableInstances)
+                {
+                    initializableInstance.Initialize();
+                }
 
                 bus.Start(_options.NumberOfWorkers);
 

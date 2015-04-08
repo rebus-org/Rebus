@@ -61,7 +61,7 @@
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Extensions\Ponder.cs" />
-    <Compile Include="Injection\TestBusDisposal.cs" />
+    <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />

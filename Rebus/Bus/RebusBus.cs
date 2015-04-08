@@ -59,33 +59,11 @@ namespace Rebus.Bus
         {
             _log.Info("Starting bus {0}", _busId);
 
-            InjectedServicesWhoseLifetimeToControl
-                .OfType<IInitializable>()
-                .ForEach(i =>
-                {
-                    _log.Debug("Initializing {0}", i);
-                    i.Initialize();
-                });
-
             SetNumberOfWorkers(numberOfWorkers);
 
             _log.Info("Started");
 
             return this;
-        }
-
-        IEnumerable InjectedServicesWhoseLifetimeToControl
-        {
-            get
-            {
-                yield return _router;
-                yield return _transport;
-                yield return _serializer;
-                yield return _pipeline;
-                yield return _pipelineInvoker;
-                yield return _subscriptionStorage;
-                yield return _workerFactory;
-            }
         }
 
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
@@ -264,40 +242,33 @@ namespace Rebus.Bus
             await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline().Select(s => s.Step));
         }
 
-        ~RebusBus()
-        {
-            Dispose(false);
-        }
+        bool _disposing;
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+            if (_disposing) return;
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (disposing)
+            try
             {
+                _disposing = true;
 
-            }
-
-            // signal to all the workers that they must stop
-            lock (_workers)
-            {
-                _workers.ForEach(w => w.Stop());
-            }
-
-            SetNumberOfWorkers(0);
-
-            InjectedServicesWhoseLifetimeToControl
-                .OfType<IDisposable>()
-                .ForEach(d =>
+                // signal to all the workers that they must stop
+                lock (_workers)
                 {
-                    _log.Debug("Disposing {0}", d);
-                    d.Dispose();
-                });
+                    _workers.ForEach(w => w.Stop());
+                }
+
+                SetNumberOfWorkers(0);
+
+                Disposed();
+            }
+            finally
+            {
+                _disposing = false;
+            }
         }
+
+        public event Action Disposed = delegate { };
 
         public void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {

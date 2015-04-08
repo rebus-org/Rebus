@@ -1,4 +1,6 @@
-﻿namespace Rebus.Injection
+﻿using System.Collections.Generic;
+
+namespace Rebus.Injection
 {
     /// <summary>
     /// Represents the context of resolving one root service and can be used throughout the tree to fetch something to be injected
@@ -6,6 +8,7 @@
     public interface IResolutionContext
     {
         TService Get<TService>();
-        void DisposeTrackedInstances();
+
+        IEnumerable<T> GetTrackedInstancesOf<T>();
     }
 }
