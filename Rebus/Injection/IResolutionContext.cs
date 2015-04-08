@@ -6,5 +6,6 @@
     public interface IResolutionContext
     {
         TService Get<TService>();
+        void DisposeTrackedInstances();
     }
 }

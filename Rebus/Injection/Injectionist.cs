@@ -151,6 +151,14 @@ namespace Rebus.Injection
                     _decoratorDepth[serviceType]--;
                 }
             }
+
+            public void DisposeTrackedInstances()
+            {
+                foreach (var disposableInstance in _instances.Values.OfType<IDisposable>())
+                {
+                    disposableInstance.Dispose();
+                }
+            }
         }
     }
 }
