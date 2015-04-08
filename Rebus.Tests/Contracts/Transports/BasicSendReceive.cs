@@ -74,7 +74,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                await input1.Send("input2", MessageWith("hej"), context);
+                await input1.Send(input2QueueName, MessageWith("hej"), context);
             }, 
             completeTransaction: false);
 
@@ -97,7 +97,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                await input1.Send("input2", MessageWith("hej"), context);
+                await input1.Send(input2QueueName, MessageWith("hej"), context);
             });
 
             await WithContext(async context =>
