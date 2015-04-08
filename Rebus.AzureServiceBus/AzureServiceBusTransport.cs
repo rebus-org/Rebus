@@ -27,15 +27,13 @@ namespace Rebus.AzureServiceBus
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
         readonly string _inputQueueAddress;
-        readonly QueueClient _inputQueueClient;
-
+        
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
 
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
-            _inputQueueClient = QueueClient.CreateFromConnectionString(connectionString, inputQueueAddress, ReceiveMode.PeekLock);
             _connectionString = connectionString;
             _inputQueueAddress = inputQueueAddress;
         }
@@ -93,12 +91,12 @@ namespace Rebus.AzureServiceBus
                 await GetQueueClient(destinationAddress).SendAsync(brokeredMessage);
             });
 
-            context.OnDisposed(async () => brokeredMessage.Dispose());
+            context.OnDisposed(() => brokeredMessage.Dispose());
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var brokeredMessage = await _inputQueueClient.ReceiveAsync(TimeSpan.FromSeconds(1));
+            var brokeredMessage = await GetQueueClient(_inputQueueAddress).ReceiveAsync(TimeSpan.FromSeconds(1));
 
             if (brokeredMessage == null) return null;
 
@@ -153,7 +151,16 @@ namespace Rebus.AzureServiceBus
 
         QueueClient GetQueueClient(string queueAddress)
         {
-            return _queueClients.GetOrAdd(queueAddress, address => QueueClient.CreateFromConnectionString(_connectionString, address));
+            var queueClient = _queueClients.GetOrAdd(queueAddress, address =>
+            {
+                _log.Debug("Initializing new queue client for {0}", address);
+
+                var newQueueClient = QueueClient.CreateFromConnectionString(_connectionString, address, ReceiveMode.PeekLock);
+
+                return newQueueClient;
+            });
+
+            return queueClient;
         }
 
         public string Address
