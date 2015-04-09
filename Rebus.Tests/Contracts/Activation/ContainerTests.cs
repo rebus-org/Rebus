@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Transport;
@@ -21,6 +20,26 @@ namespace Rebus.Tests.Contracts.Activation
             DisposableHandler.WasCalledAllright = false;
             DisposableHandler.WasDisposedAllright = false;
         }
+
+        [Test]
+        public async Task ResolvesHandlersPolymorphically()
+        {
+            _factory.RegisterHandlerType<BaseMessageHandler>();
+
+            var handlerActivator = _factory.GetActivator();
+
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var handlers = (await handlerActivator.GetHandlers(new DerivedMessage(), transactionContext)).ToList();
+
+                Assert.That(handlers.Count, Is.EqualTo(1));
+                Assert.That(handlers[0], Is.TypeOf<BaseMessageHandler>());
+            }
+        }
+
+        abstract class BaseMessage { }
+        class DerivedMessage : BaseMessage { }
+        class BaseMessageHandler : IHandleMessages<BaseMessage> { public async Task Handle(BaseMessage message) { } }
 
         [Test]
         public async Task ResolvingWithoutRegistrationYieldsEmptySequenec()
@@ -91,11 +110,5 @@ namespace Rebus.Tests.Contracts.Activation
                 WasDisposedAllright = true;
             }
         }
-    }
-
-    public interface IHandlerActivatorFactory
-    {
-        IHandlerActivator GetActivator();
-        void RegisterHandlerType<THandler>() where THandler : class;
     }
 }

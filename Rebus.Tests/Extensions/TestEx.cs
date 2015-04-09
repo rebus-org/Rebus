@@ -15,7 +15,7 @@ namespace Rebus.Tests.Extensions
             return line.Substring(0, maxNumberOfChars - 3) + "...";
         }
 
-        public static void WaitOrDie(this ManualResetEvent resetEvent, TimeSpan timeout, string errorMessage = null)
+        public static void WaitOrDie(this EventWaitHandle resetEvent, TimeSpan timeout, string errorMessage = null)
         {
             if (!resetEvent.WaitOne(timeout))
             {

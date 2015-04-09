@@ -10,7 +10,7 @@ using Rebus.Tests.Contracts.Activation;
 namespace Rebus.CastleWindsor.Tests
 {
     [TestFixture]
-    public class ContainerTests : ContainerTests<CastleWindsorHandlerActivatorFactory>
+    public class CastleWindsorContainerTests : ContainerTests<CastleWindsorHandlerActivatorFactory>
     {
     }
 
@@ -23,7 +23,7 @@ namespace Rebus.CastleWindsor.Tests
             return new CastleWindsorHandlerActivator(_windsorContainer);
         }
 
-        public void RegisterHandlerType<THandler>() where THandler:class
+        public void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages
         {
             _windsorContainer.Register(
                 Component
@@ -36,7 +36,7 @@ namespace Rebus.CastleWindsor.Tests
         Type[] GetHandlerInterfaces(Type type)
         {
             return type.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>))
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))
                 .ToArray();
         }
     }

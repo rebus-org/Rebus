@@ -10,7 +10,7 @@ namespace Rebus.Handlers
     /// <summary>
     /// Message handler interface. Implement this in order to get to handle messages of a specific type
     /// </summary>
-    public interface IHandleMessages<TMessage> : IHandleMessages
+    public interface IHandleMessages<in TMessage> : IHandleMessages
     {
         Task Handle(TMessage message);
     }

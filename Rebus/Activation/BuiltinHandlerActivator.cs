@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Transport;
@@ -27,8 +28,19 @@ namespace Rebus.Activation
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var factories = _handlerFactories.OfType<Func<IHandleMessages<TMessage>>>();
-            var handlers = factories.Select(factory => factory());
-            return _handlerInstances.OfType<Handler<TMessage>>().Concat(handlers);
+            var instancesFromFactories = factories.Select(factory => factory());
+            var instancesJustInstances = _handlerInstances.OfType<IHandleMessages<TMessage>>();
+
+            var handlerInstances = instancesJustInstances.Concat(instancesFromFactories).ToList();
+
+            transactionContext.OnDisposed(() =>
+            {
+                handlerInstances
+                    .OfType<IDisposable>()
+                    .ForEach(i => i.Dispose());
+            });
+
+            return handlerInstances;
         }
 
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)

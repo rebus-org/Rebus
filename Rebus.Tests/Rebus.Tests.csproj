@@ -52,7 +52,9 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Categories.cs" />
+    <Compile Include="Contracts\Activation\BuiltinHandlerActivatorFactory.cs" />
     <Compile Include="Contracts\Activation\ContainerTests.cs" />
+    <Compile Include="Contracts\Activation\IHandlerActivatorFactory.cs" />
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
@@ -64,6 +66,7 @@
     <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
+    <Compile Include="Integration\TestPolymorphicDispatch.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />
     <Compile Include="ListLoggerFactory.cs" />
     <Compile Include="Persistence\InMem\InMemorySagaStorageFactory.cs" />
