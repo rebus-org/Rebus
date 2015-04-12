@@ -29,6 +29,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.CastleWindsor", "Rebu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.CastleWindsor.Tests", "Rebus.CastleWindsor.Tests\Rebus.CastleWindsor.Tests.csproj", "{4E606ECB-FF04-4DB7-A4EE-086948D2A7CF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{1692C59F-82DB-43D3-9982-C883B99E38B2}"
+	ProjectSection(SolutionItems) = preProject
+		scripts\build.proj = scripts\build.proj
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

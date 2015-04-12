@@ -1,0 +1,35 @@
+﻿<Project DefaultTargets="build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <UsingTask TaskName="Microsoft.Build.Tasks.XmlPoke" AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
+
+    <ItemGroup>
+        <ProjectFiles Include="$(Root)\**\*.csproj" Exclude="$(Root)\**\*.Test.csproj; $(Root)\**\*.Tests.csproj"/>
+    </ItemGroup>
+
+    <PropertyGroup>
+        <!-- directories -->
+        <Root>..</Root>
+        <SolutionDir>$(Root)</SolutionDir>
+        <ToolsDir>$(Root)\tools</ToolsDir>
+
+        <!-- tools -->
+        <Nuget>$(ToolsDir)\NuGet\NuGet.exe</Nuget>
+
+        <TempDir>$(Root)/deploy</TempDir>
+    </PropertyGroup>
+
+    <Target Name="verifyParameters">
+        <Error Condition="'$(Version)'==''" Text="Please remember to set the version parameter!"/>
+    </Target>
+
+    <Target Name="clean">
+        <RemoveDir Directories="$(TempDir)" />
+    </Target>
+
+    <Target Name="compile" DependsOnTargets="verifyParameters">
+        <Message Text="Projects to build: @(ProjectFiles)"/>
+        
+        <MSBuild Projects="@(ProjectFiles)" Targets="rebuild"/>
+    </Target>
+
+    <Target Name="build" DependsOnTargets="clean; compile" />
+</Project>
