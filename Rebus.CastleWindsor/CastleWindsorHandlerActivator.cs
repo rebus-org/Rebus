@@ -38,14 +38,20 @@ namespace Rebus.CastleWindsor
 
         public void SetBus(IBus bus)
         {
-            _windsorContainer.Register(
-                Component.For<IBus>().Instance(bus),
-                Component.For<InstanceDisposer>()
+            if (bus == null) throw new ArgumentNullException("bus", "You need to provide a bus instance in order to call this method!");
+
+            _windsorContainer
+                .Register(
+                    Component.For<IBus>().Instance(bus),
+                    Component.For<InstanceDisposer>()
                 );
 
             _windsorContainer.Resolve<InstanceDisposer>();
         }
 
+        /// <summary>
+        /// Hack to makes sure we dispose the bus instance when the container is disposed
+        /// </summary>
         class InstanceDisposer : IDisposable
         {
             readonly IBus _bus;

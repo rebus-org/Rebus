@@ -21,5 +21,10 @@ namespace Rebus.Tests.Contracts.Activation
         {
             _builtinHandlerActivator.Register(() => (THandler) Activator.CreateInstance(typeof (THandler)));
         }
+
+        public void CleanUp()
+        {
+            _builtinHandlerActivator.Dispose();
+        }
     }
 }

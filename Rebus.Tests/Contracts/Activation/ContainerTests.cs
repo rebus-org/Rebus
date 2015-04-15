@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -21,6 +22,74 @@ namespace Rebus.Tests.Contracts.Activation
 
             DisposableHandler.WasCalledAllright = false;
             DisposableHandler.WasDisposedAllright = false;
+        }
+
+        [Test]
+        public void CanSetBusAndDisposeItAfterwards()
+        {
+            var factoryForThisTest = new TFactory();
+            var fakeBus = new FakeBus();
+
+            try
+            {
+                var activator = factoryForThisTest.GetActivator();
+
+                if (activator is IContainerAdapter)
+                {
+                    ((IContainerAdapter)activator).SetBus(fakeBus);
+                }
+            }
+            finally
+            {
+                factoryForThisTest.CleanUp();
+            }
+
+            Assert.That(fakeBus.Disposed, Is.True);
+        }
+
+        class FakeBus : IBus
+        {
+            public bool Disposed { get; private set; }
+            
+            public void Dispose()
+            {
+                Disposed = true;
+            }
+
+            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Subscribe(string topic)
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Unsubscribe(string topic)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [Test]

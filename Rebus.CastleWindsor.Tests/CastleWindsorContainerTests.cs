@@ -49,6 +49,11 @@ namespace Rebus.CastleWindsor.Tests
                 );
         }
 
+        public void CleanUp()
+        {
+            _windsorContainer.Dispose();
+        }
+
         Type[] GetHandlerInterfaces(Type type)
         {
             return type.GetInterfaces()

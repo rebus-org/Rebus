@@ -8,5 +8,7 @@ namespace Rebus.Tests.Contracts.Activation
         IHandlerActivator GetActivator();
 
         void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages;
+
+        void CleanUp();
     }
 }
