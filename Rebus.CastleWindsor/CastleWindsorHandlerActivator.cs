@@ -2,16 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
-using Rebus.Messages;
 using Rebus.Transport;
 
 namespace Rebus.CastleWindsor
 {
-    public class CastleWindsorHandlerActivator : IHandlerActivator
+    public class CastleWindsorHandlerActivator : IContainerAdapter
     {
         readonly IWindsorContainer _windsorContainer;
 
@@ -33,6 +34,31 @@ namespace Rebus.CastleWindsor
             });
 
             return handlerInstances;
+        }
+
+        public void SetBus(IBus bus)
+        {
+            _windsorContainer.Register(
+                Component.For<IBus>().Instance(bus),
+                Component.For<InstanceDisposer>()
+                );
+
+            _windsorContainer.Resolve<InstanceDisposer>();
+        }
+
+        class InstanceDisposer : IDisposable
+        {
+            readonly IBus _bus;
+
+            public InstanceDisposer(IBus bus)
+            {
+                _bus = bus;
+            }
+
+            public void Dispose()
+            {
+                _bus.Dispose();
+            }
         }
 
         IEnumerable<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()

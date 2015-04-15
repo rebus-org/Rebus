@@ -4,14 +4,30 @@ using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Bus;
+using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
+using Rebus.Transport.InMem;
 
 namespace Rebus.CastleWindsor.Tests
 {
     [TestFixture]
     public class CastleWindsorContainerTests : ContainerTests<CastleWindsorHandlerActivatorFactory>
     {
+        [Test]
+        public void CanResolveBusFromContainer()
+        {
+            using (var container = new WindsorContainer())
+            {
+                using (Configure.With(new CastleWindsorHandlerActivator(container))
+                    .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test"))
+                    .Start())
+                {
+                    var bus = container.Resolve<IBus>();
+                }
+            }
+        }
     }
 
     public class CastleWindsorHandlerActivatorFactory : IHandlerActivatorFactory

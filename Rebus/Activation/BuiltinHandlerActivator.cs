@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Logging;
@@ -13,7 +14,7 @@ namespace Rebus.Activation
     /// Built-in handler activator that can be used when dependency injection is not required, or when inline
     /// lambda-based handler are wanted
     /// </summary>
-    public class BuiltinHandlerActivator : IHandlerActivator
+    public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
     {
         static ILog _log;
 
@@ -43,6 +44,14 @@ namespace Rebus.Activation
             return handlerInstances;
         }
 
+        public IBus Bus { get; private set; }
+
+        public void SetBus(IBus bus)
+        {
+            if (bus == null) throw new ArgumentNullException("bus");
+            Bus = bus;
+        }
+
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
             _log.Debug("Adding handler for message type {0}", typeof(TMessage));
@@ -70,6 +79,12 @@ namespace Rebus.Activation
             _log.Debug("Adding handler factory for handler type {0}", typeof(THandler));
             _handlerFactories.Add(handlerFactory);
             return this;
+        }
+
+        public void Dispose()
+        {
+            if (Bus == null) return;
+            Bus.Dispose();
         }
     }
 }

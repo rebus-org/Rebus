@@ -32,6 +32,11 @@ namespace Rebus.Config
         public RebusConfigurer(IHandlerActivator handlerActivator)
         {
             _injectionist.Register(c => handlerActivator);
+
+            if (handlerActivator is IContainerAdapter)
+            {
+                _injectionist.Register(c => (IContainerAdapter)handlerActivator);
+            }
         }
 
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
@@ -73,7 +78,7 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
 
             PossiblyRegisterDefault<ISagaStorage>(c => new InMemorySagaStorage());
-            
+
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
@@ -137,6 +142,11 @@ namespace Rebus.Config
                     initializableInstance.Initialize();
                 }
 
+                if (_injectionist.Has<IContainerAdapter>())
+                {
+                    c.Get<IContainerAdapter>().SetBus(bus);
+                }
+
                 bus.Start(_options.NumberOfWorkers);
 
                 return bus;
@@ -144,7 +154,9 @@ namespace Rebus.Config
 
             _injectionist.Register<IHandlerActivator>(c => new InternalHandlersContributor(c.Get<IHandlerActivator>(), c.Get<ISubscriptionStorage>()), isDecorator: true);
 
-            return _injectionist.Get<IBus>();
+            var busInstance = _injectionist.Get<IBus>();
+
+            return busInstance;
         }
 
         void VerifyRequirements()

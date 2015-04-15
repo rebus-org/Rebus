@@ -12,7 +12,8 @@
         <ToolsDir>$(Root)\tools</ToolsDir>
 
         <!-- tools -->
-        <Nuget>$(ToolsDir)\NuGet\NuGet.exe</Nuget>
+        <Nuget>$(ToolsDir)\nuget\NuGet.exe</Nuget>
+        <Ilmerge>$(ToolsDir)\ilmerge\ilmerge.exe</Ilmerge>
 
         <TempDir>$(Root)/deploy</TempDir>
     </PropertyGroup>
@@ -22,14 +23,37 @@
     </Target>
 
     <Target Name="clean">
-        <RemoveDir Directories="$(TempDir)" />
+        <RemoveDir Directories="$(TempDir)" ContinueOnError="true"/>
     </Target>
 
     <Target Name="compile" DependsOnTargets="verifyParameters">
         <Message Text="Projects to build: @(ProjectFiles)"/>
+
+        <MSBuild Projects="@(ProjectFiles)" Targets="rebuild" Properties="Configuration=Release"/>
+
+        <PropertyGroup>
+            <MergeOutputDir>$(Root)\Rebus\bin\Release\merged</MergeOutputDir>
+        </PropertyGroup>
         
-        <MSBuild Projects="@(ProjectFiles)" Targets="rebuild"/>
+        <MakeDir Directories="$(MergeOutputDir)"/>
+        <Exec Command="$(Ilmerge) /out:$(MergeOutputDir)\Rebus.dll $(Root)\Rebus\bin\Release\Rebus.dll $(Root)\Rebus\bin\Release\Newtonsoft.Json.dll /targetplatform:&quot;v4,$(ProgramFiles)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5&quot; /internalize"/>
     </Target>
 
     <Target Name="build" DependsOnTargets="clean; compile" />
+
+    <Target Name="package" DependsOnTargets="build">
+        <ItemGroup>
+            <NuSpecs Include="$(Root)\**\*.nuspec" Exclude="$(Root)\deploy\*.*"/>
+        </ItemGroup>
+
+        <PropertyGroup>
+            <PackagesDirectory>$(TempDir)\packages</PackagesDirectory>
+        </PropertyGroup>
+        
+        <Message Text="Here they are: @(NuSpecs)"/>
+        
+        <MakeDir Directories="$(PackagesDirectory)"/>
+        
+        <Exec Command="$(Nuget) pack %(NuSpecs.FullPath) -Version $(Version) -OutputDirectory $(PackagesDirectory)" />
+    </Target>
 </Project>
