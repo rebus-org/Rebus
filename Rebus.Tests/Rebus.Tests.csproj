@@ -87,6 +87,8 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManagerFactory.cs" />
+    <Compile Include="Serialization\BasicSerializationTests.cs" />
+    <Compile Include="Serialization\JsonSerializerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\InMem\InMemNetworkTests.cs" />
