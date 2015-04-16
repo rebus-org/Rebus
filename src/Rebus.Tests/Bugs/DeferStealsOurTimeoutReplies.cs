@@ -36,7 +36,7 @@ namespace Rebus.Tests.Bugs
 
             handleDeferredMessage.DispatchedMessages.Count.ShouldBe(1);
             var dispatchedMessage = handleDeferredMessage.DispatchedMessages[0];
-            dispatchedMessage.ShouldBeTypeOf<Message>();
+            dispatchedMessage.ShouldBeOfType<Message>();
             ((Message)dispatchedMessage).Id.ShouldBe("1");
         }
 

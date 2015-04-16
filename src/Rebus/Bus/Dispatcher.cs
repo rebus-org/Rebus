@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Ponder;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
@@ -59,12 +59,15 @@ namespace Rebus.Bus
         }
 
         public event Action<object, Saga> UncorrelatedMessage = delegate { };
+        public event Action<object, IHandleMessages> BeforeHandling = delegate { };
+        public event Action<object, IHandleMessages> AfterHandling = delegate { };
+        public event Action<Exception> OnHandlingError = delegate { };
 
         /// <summary>
         /// Main entry point of the dispatcher. Dispatches the given message, doing handler
         /// lookup etc. Any exceptions thrown will bubble up.
         /// </summary>
-        public void Dispatch<TMessage>(TMessage message)
+        public async Task Dispatch<TMessage>(TMessage message)
         {
             IHandleMessages[] handlersToRelease = null;
 
@@ -107,7 +110,7 @@ namespace Rebus.Bus
                     {
                         try
                         {
-                            GetDispatcherMethod(typeToDispatch)
+                            await (Task)GetDispatcherMethod(typeToDispatch)
                                 .Invoke(this, new object[] {message, handler});
                         }
                         catch (TargetInvocationException tie)
@@ -202,7 +205,9 @@ namespace Rebus.Bus
         IEnumerable<Type> GetTypesToDispatchToThisHandler(IEnumerable<Type> typesToDispatch, Type handlerType)
         {
             var interfaces = handlerType.GetInterfaces()
-                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))
+                .Where(i => i.IsGenericType
+                            && (i.GetGenericTypeDefinition() == typeof (IHandleMessages<>)
+                                || i.GetGenericTypeDefinition() == typeof (IHandleMessagesAsync<>)))
                 .Select(i => i.GetGenericArguments()[0]);
 
             return interfaces.Intersect(typesToDispatch).ToArray();
@@ -251,7 +256,7 @@ This most likely indicates that you have configured this Rebus service to use an
         ///   Private dispatcher method that gets invoked only via reflection.
         /// </summary>
         // ReSharper disable UnusedMember.Local
-        void DispatchToHandler<TMessage>(TMessage message, IHandleMessages<TMessage> handler)
+        async Task DispatchToHandler<TMessage>(TMessage message, IHandleMessages handler)
         {
             var saga = handler as Saga;
             if (saga != null)
@@ -261,7 +266,7 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 if (sagaData == null)
                 {
-                    if (handler is IAmInitiatedBy<TMessage>)
+                    if (handler is IAmInitiatedBy<TMessage> || handler is IAmInitiatedByAsync<TMessage>)
                     {
                         saga.IsNew = true;
                         saga.Complete = false;
@@ -284,16 +289,52 @@ This most likely indicates that you have configured this Rebus service to use an
 
                 using (new SagaContext(sagaData.Id))
                 {
-                    handler.Handle(message);
+                    await DoDispatch(message, handler);
                     PerformSaveActions(saga, sagaData);
                 }
 
                 return;
             }
 
-            handler.Handle(message);
+            await DoDispatch(message, handler);
         }
         // ReSharper restore UnusedMember.Local
+
+        async Task DoDispatch<TMessage>(TMessage message, IHandleMessages handler)
+        {
+            var handlerType = handler.GetType();
+            var context = MessageContext.HasCurrent ? MessageContext.GetCurrent() : null;
+
+            try
+            {
+                BeforeHandling(message, handler);
+
+                if (context != null && context.HandlersToSkip.Contains(handlerType))
+                {
+                    log.Info("Skipping invocation of handler: {0}", handlerType);
+                    return;
+                }
+
+                var ordinaryHandler = handler as IHandleMessages<TMessage>;
+                if (ordinaryHandler != null)
+                {
+                    ordinaryHandler.Handle(message);
+                }
+
+                var asyncHandler = handler as IHandleMessagesAsync<TMessage>;
+                if (asyncHandler != null)
+                {
+                    await asyncHandler.Handle(message);
+                }
+
+                AfterHandling(message, handler);
+            }
+            catch (Exception ex)
+            {
+                OnHandlingError(ex);
+                throw;
+            }
+        }
 
         void PerformSaveActions(Saga saga, ISagaData sagaData)
         {
@@ -336,7 +377,7 @@ This most likely indicates that you have configured this Rebus service to use an
             return paths;
         }
 
-        ISagaData CreateSagaData<TMessage>(IHandleMessages<TMessage> handler)
+        ISagaData CreateSagaData(IHandleMessages handler)
         {
             var dataProperty = handler.GetType().GetProperty(sagaDataPropertyName);
             var sagaData = (ISagaData)Activator.CreateInstance(dataProperty.PropertyType);

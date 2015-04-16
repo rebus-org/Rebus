@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using Castle.MicroKernel;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Castle.Windsor;
 using Shouldly;
 
@@ -22,7 +22,8 @@ namespace Rebus.Tests.Unit
         [Test]
         public void SameMessageContextResultsInSameService()
         {
-            using(MessageContext.Establish(new Dictionary<string, object>()))
+            using (TransactionContext.None())
+            using (MessageContext.Establish())
             {
                 var service1 = container.Resolve<ScopedService>();
                 var service2 = container.Resolve<ScopedService>();
@@ -36,11 +37,14 @@ namespace Rebus.Tests.Unit
             ScopedService service1;
             ScopedService service2;
 
-            using(MessageContext.Establish(new Dictionary<string, object>()))
-                service1 = container.Resolve<ScopedService>();
+            using (TransactionContext.None())
+            {
+                using (MessageContext.Establish())
+                    service1 = container.Resolve<ScopedService>();
 
-            using (MessageContext.Establish(new Dictionary<string, object>()))
-                service2 = container.Resolve<ScopedService>();
+                using (MessageContext.Establish())
+                    service2 = container.Resolve<ScopedService>();
+            }
 
             service1.ShouldNotBe(service2);
         }
@@ -53,7 +57,8 @@ namespace Rebus.Tests.Unit
             
             new Thread(() =>
             {
-                using (MessageContext.Establish(new Dictionary<string, object>()))
+                using (TransactionContext.None())
+                using (MessageContext.Establish())
                 {
                     Thread.Sleep(200);
                     service1 = container.Resolve<ScopedService>();
@@ -61,7 +66,8 @@ namespace Rebus.Tests.Unit
                 }
             }).Start();
 
-            using (MessageContext.Establish(new Dictionary<string, object>()))
+            using (TransactionContext.None())
+            using (MessageContext.Establish())
             {
                 Thread.Sleep(200);
                 service2 = container.Resolve<ScopedService>();

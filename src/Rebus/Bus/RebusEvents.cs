@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Rebus.Messages;
+
 namespace Rebus.Bus
 {
     class RebusEvents : IRebusEvents
@@ -13,6 +15,8 @@ namespace Rebus.Bus
         }
 
         public event MessageSentEventHandler MessageSent = delegate { };
+
+        public event BeforeInternalSendEventHandler BeforeInternalSend = delegate { };
 
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
 
@@ -29,8 +33,16 @@ namespace Rebus.Bus
         public event BeforeTransportMessageEventHandler BeforeTransportMessage = delegate { };
 
         public event AfterTransportMessageEventHandler AfterTransportMessage = delegate { };
+        
+        public event MessageAuditedEventHandler MessageAudited = delegate { };
 
         public event PoisonMessageEventHandler PoisonMessage = delegate { };
+
+        public event OnHandlingErrorEventHandler OnHandlingError = delegate { };
+
+        public event AfterHandlingEventHandler AfterHandling = delegate { };
+
+        public event BeforeHandlingEventHandler BeforeHandling = delegate { };
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
@@ -52,6 +64,11 @@ namespace Rebus.Bus
         internal void RaiseMessageSent(IBus bus, string destination, object message)
         {
             MessageSent(bus, destination, message);
+        }
+
+        internal void RaiseBeforeInternalSend(IEnumerable<string> destinations, Message message, bool published)
+        {
+            BeforeInternalSend(destinations, message, published);
         }
 
         internal void RaiseBeforeMessage(IBus bus, object message)
@@ -92,6 +109,26 @@ namespace Rebus.Bus
         internal void RaiseUncorrelatedMessage(IBus bus, object message, Saga saga)
         {
             UncorrelatedMessage(bus, message, saga);
+        }
+
+        internal void RaiseMessageAudited(IBus bus, TransportMessageToSend transportMessage)
+        {
+            MessageAudited(bus, transportMessage);
+        }
+
+        internal void RaiseOnHandlingError(Exception exception)
+        {
+            OnHandlingError(exception);
+        }
+
+        internal void RaiseAfterHandling(IBus bus, object message, IHandleMessages handler)
+        {
+            AfterHandling(bus, message, handler);
+        }
+
+        internal void RaiseBeforeHandling(IBus bus, object message, IHandleMessages handler)
+        {
+            BeforeHandling(bus, message, handler);
         }
     }
 }

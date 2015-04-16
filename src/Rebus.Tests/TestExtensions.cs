@@ -47,6 +47,7 @@ namespace Rebus.Tests
 
             throw new AssertionException(message);
         }
+        
         public static void WaitUntilSetOrDie(this AutoResetEvent resetEvent, TimeSpan timeout, string errorMessage, params object[] objs)
         {
             if (resetEvent.WaitOne(timeout)) return;
@@ -56,6 +57,7 @@ namespace Rebus.Tests
 
             throw new AssertionException(message);
         }
+        
         public static void WaitUntilSetOrDie(this ManualResetEvent resetEvent, TimeSpan timeout)
         {
             if (resetEvent.WaitOne(timeout)) return;
@@ -64,6 +66,7 @@ namespace Rebus.Tests
 
             throw new AssertionException(message);
         }
+
         public static void WaitUntilSetOrDie(this AutoResetEvent resetEvent, TimeSpan timeout)
         {
             if (resetEvent.WaitOne(timeout)) return;

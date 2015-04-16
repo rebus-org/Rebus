@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Rebus.Configuration
 {
@@ -46,10 +47,19 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Registers a function that can handle messages of the specified type.
+        /// </summary>
+        public BuiltinContainerAdapter HandleAsync<TMessage>(Func<TMessage, Task> handler)
+        {
+            handlerActivator.HandleAsync(handler);
+            return this;
+        }
+
+        /// <summary>
         /// Uses the underlying <see cref="SimpleHandlerActivator"/> to look up handler instances
         /// that can handle messages of type <typeparamref name="T"/>
         /// </summary>
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
             return handlerActivator.GetHandlerInstancesFor<T>();
         }

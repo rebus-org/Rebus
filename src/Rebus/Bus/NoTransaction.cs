@@ -7,7 +7,7 @@ namespace Rebus.Bus
     /// Transaction context that really means "no transaction". Sort of a null object implementation
     /// of a transaction context.
     /// </summary>
-    public class NoTransaction : ITransactionContext, IDisposable
+    public class NoTransaction : ITransactionContext
     {
         readonly Dictionary<string, object> items = new Dictionary<string, object>();
 
@@ -17,13 +17,20 @@ namespace Rebus.Bus
         public bool IsTransactional { get { return false; } }
 
         /// <summary>
-        /// Constructs the context and explicitly does NOT set itself as current in <see cref="TransactionContext"/>, because that would not make sense...
-        /// i.e. when would the "context" end when there's no transaction? The answer is that the <see cref="NoTransaction"/> implementation of
-        /// <see cref="ITransactionContext"/> must never be set as the current transaction context, it must always be constructed when it must be used
+        /// Constructs the context and sets itself as current in <see cref="TransactionContext"/>.
+        /// It must be disposed immediately after use.
         /// </summary>
         public NoTransaction()
         {
-            //TransactionContext.Set(this);
+            TransactionContext.Set(this);
+        }
+
+        /// <summary>
+        /// Formats itself as 'no transaction'
+        /// </summary>
+        public override string ToString()
+        {
+            return "no tx";
         }
 
         /// <summary>

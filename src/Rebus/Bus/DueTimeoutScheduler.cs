@@ -55,25 +55,28 @@ namespace Rebus.Bus
                 {
                     currentlyChecking = true;
 
-                    var dueTimeouts = GetDueTimeouts();
-                    if (!dueTimeouts.Any()) return;
-
-                    log.Info("Got {0} dues timeouts - will send them now", dueTimeouts.Count);
-                    foreach (var timeout in dueTimeouts)
+                    using (var dueTimeoutsResult = GetDueTimeouts())
                     {
-                        log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
+                        var dueTimeouts = dueTimeoutsResult.DueTimeouts.ToList();
+                        if (!dueTimeouts.Any()) return;
 
-                        var reply = new TimeoutReply
+                        log.Info("Got {0} dues timeouts - will send them now", dueTimeouts.Count);
+                        foreach (var timeout in dueTimeouts)
                         {
-                            SagaId = timeout.SagaId,
-                            CorrelationId = timeout.CorrelationId,
-                            DueTime = timeout.TimeToReturn,
-                            CustomData = timeout.CustomData,
-                        };
+                            log.Info("Timeout!: {0} -> {1}", timeout.CorrelationId, timeout.ReplyTo);
 
-                        SendReply(timeout, reply);
+                            var reply = new TimeoutReply
+                            {
+                                SagaId = timeout.SagaId,
+                                CorrelationId = timeout.CorrelationId,
+                                DueTime = timeout.TimeToReturn,
+                                CustomData = timeout.CustomData,
+                            };
 
-                        MarkAsProcessed(timeout);
+                            SendReply(timeout, reply);
+
+                            MarkAsProcessed(timeout);
+                        }
                     }
 
                     lastSuccess = DateTime.UtcNow;
@@ -124,11 +127,11 @@ namespace Rebus.Bus
             }
         }
 
-        List<DueTimeout> GetDueTimeouts()
+        DueTimeoutsResult GetDueTimeouts()
         {
             try
             {
-                return storeTimeouts.GetDueTimeouts().ToList();
+                return storeTimeouts.GetDueTimeouts();
             }
             catch (Exception exception)
             {

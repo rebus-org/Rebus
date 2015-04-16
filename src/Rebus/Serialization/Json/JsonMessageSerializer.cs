@@ -86,6 +86,8 @@ namespace Rebus.Serialization.Json
         /// </summary>
         public Message Deserialize(ReceivedTransportMessage transportMessage)
         {
+            if (transportMessage == null) throw new ArgumentNullException("transportMessage", "A transport message must be passed to this function in order to deserialize");
+            
             using (new CultureContext(serializationCulture))
             {
                 var headers = transportMessage.Headers.Clone();

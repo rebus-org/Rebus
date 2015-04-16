@@ -11,12 +11,92 @@ using Rebus.Tests.Transports.Rabbit;
 using Rebus.Transports.Msmq;
 using Shouldly;
 using System.Linq;
+using Castle.MicroKernel.Registration;
+using Castle.Windsor;
 
 namespace Rebus.Tests
 {
     [TestFixture]
     public class TestStuff
     {
+        [Test]
+        public void TestCastleWindsorFactoryMethodInjectionAndDisposal()
+        {
+            var container = new WindsorContainer()
+                .Register(
+                    Component.For<HasDependencyOnMessageContext>().LifestyleTransient(),
+
+                    Component.For<IMessageContext>()
+                        .UsingFactoryMethod(k => new FakeMessageContext())
+                        .LifestyleTransient()
+                );
+
+            container.Release(container.Resolve<HasDependencyOnMessageContext>());
+        }
+
+        class FakeMessageContext : IMessageContext
+        {
+            public void Dispose()
+            {
+                Console.WriteLine("Disposed");
+            }
+
+            public string ReturnAddress
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public string RebusTransportMessageId
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public IDictionary<string, object> Items
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public void Abort()
+            {
+                throw new NotImplementedException();
+            }
+
+            public event Action Disposed;
+
+            public object CurrentMessage
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public IDictionary<string, object> Headers
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public IReadOnlyCollection<Type> HandlersToSkip
+            {
+                get { throw new NotImplementedException(); }
+            }
+
+            public void SkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void DoNotSkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        class HasDependencyOnMessageContext
+        {
+            public HasDependencyOnMessageContext(IMessageContext context)
+            {
+                
+            }
+        }
+
         [Test, Ignore("Only run this bad boy if you know what you're doing :)")]
         public void DeleteMsmqMessageQueuesOnTheLocalSystem()
         {
@@ -24,6 +104,8 @@ namespace Rebus.Tests
 
             foreach(var messageQueue in messageQueues)
             {
+                Console.WriteLine("Deleting {0}...", messageQueue.QueueName);
+
                 Assert.DoesNotThrow(() => MessageQueue.Delete(messageQueue.Path),
                                     "Something bad happened while attempting to delete {0}", messageQueue.Path);
             }

@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Runtime.Remoting.Messaging;
 
 namespace Rebus.Bus
 {
@@ -7,8 +7,7 @@ namespace Rebus.Bus
     /// </summary>
     public class TransactionContext
     {
-        [ThreadStatic]
-        static ITransactionContext threadCurrent;
+        const string TransactionContextKey = "rebus-transaction-context";
 
         /// <summary>
         /// Gets the <see cref="ITransactionContext"/> associated with the current thread
@@ -21,7 +20,7 @@ namespace Rebus.Bus
                     return RebusHttpContext.TransactionContext;
                 if (RebusOperationContext.InContext)
                     return RebusOperationContext.TransactionContext;
-                return threadCurrent;
+                return CallContext.LogicalGetData(TransactionContextKey) as ITransactionContext;
             }
         }
 
@@ -30,19 +29,12 @@ namespace Rebus.Bus
         /// </summary>
         public static void Set(ITransactionContext context)
         {
-            if (!context.IsTransactional)
-            {
-                throw new InvalidOperationException(string.Format(@"Cannot mount {0} as the current ambient Rebus transaction context, but it does not make sense to do so.
-
-It does not make sense because a non-transactional transaction context does not have a life span that should be allowed to function as a context - by definition, a non-transactional context must be a throw-away context whose lifetime is purely transient.", context));
-            }
-            
             if (RebusHttpContext.InContext)
                 RebusHttpContext.TransactionContext = context;
             else if (RebusOperationContext.InContext)
                 RebusOperationContext.TransactionContext = context;
             else
-                threadCurrent = context;
+                CallContext.LogicalSetData(TransactionContextKey, context);
         }
 
         /// <summary>
@@ -52,7 +44,12 @@ It does not make sense because a non-transactional transaction context does not 
         {
             RebusHttpContext.Clear();
             RebusOperationContext.Clear();
-            threadCurrent = null;
+            CallContext.FreeNamedDataSlot(TransactionContextKey);
+        }
+
+        internal static ITransactionContext None()
+        {
+            return new NoTransaction();
         }
     }
 }

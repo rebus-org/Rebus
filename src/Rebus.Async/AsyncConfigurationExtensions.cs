@@ -130,7 +130,7 @@ namespace Rebus.Async
                 cleanupTimer.Start();
             }
 
-            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+            public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
             {
                 var handlerInstancesToReturn = innerActivator
                     .GetHandlerInstancesFor<T>()

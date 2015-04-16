@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Autofac;
 using Rebus.Autofac;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Testing;
 
@@ -30,6 +31,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             testMessageContext = new TestMessageContext();
             testMessageContext.Items["AutofacLifetimeScope"] = container.BeginLifetimeScope("UnitOfWorkLifetime");
+            disposables.Add(TransactionContext.None());
             disposables.Add(FakeMessageContext.Establish(testMessageContext));
         }
 
@@ -63,6 +65,18 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             public object CurrentMessage { get; private set; }
             public IDictionary<string, object> Headers { get; private set; }
             public string StackTrace { get; private set; }
+            public IReadOnlyCollection<Type> HandlersToSkip
+            {
+                get { throw new NotImplementedException(); }
+            }
+            public void SkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
+            public void DoNotSkipHandler(Type type)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         public void Register<TService, TImplementation>() where TService : class where TImplementation : TService

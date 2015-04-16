@@ -21,9 +21,11 @@ namespace Rebus.StructureMap
             this.container = container;
         }
 
-        public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
+        public IEnumerable<IHandleMessages> GetHandlerInstancesFor<T>()
         {
-            return container.GetAllInstances<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> handlers = container.GetAllInstances<IHandleMessages<T>>();
+            IEnumerable<IHandleMessages> asyncHandlers = container.GetAllInstances<IHandleMessagesAsync<T>>();
+            return handlers.Union(asyncHandlers);
         }
 
         public void Release(IEnumerable handlerInstances)

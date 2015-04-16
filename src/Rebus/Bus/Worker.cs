@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
@@ -63,6 +64,7 @@ namespace Rebus.Bus
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
         readonly MessageLogger messageLogger;
+        readonly RebusSynchronizationContext continuations;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -76,12 +78,19 @@ namespace Rebus.Bus
 
         internal event Action<object, Saga> UncorrelatedMessage = delegate { };
 
+        internal event Action<object, IHandleMessages> AfterHandling = delegate { };
+
+        internal event Action<Exception> OnHandlingError = delegate { };
+
+        internal event Action<object, IHandleMessages> BeforeHandling = delegate { };
+
         internal event Action<IMessageContext> MessageContextEstablished = delegate { };
 
         volatile bool shouldExit;
         volatile bool shouldWork;
 
-        public Worker(IErrorTracker errorTracker,
+        public Worker(
+            IErrorTracker errorTracker,
             IReceiveMessages receiveMessages,
             IActivateHandlers activateHandlers,
             IStoreSubscriptions storeSubscriptions,
@@ -94,7 +103,8 @@ namespace Rebus.Bus
             IStoreTimeouts storeTimeouts,
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
             ConfigureAdditionalBehavior configureAdditionalBehavior,
-            MessageLogger messageLogger)
+            MessageLogger messageLogger,
+            RebusSynchronizationContext continuations)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
@@ -102,9 +112,13 @@ namespace Rebus.Bus
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
             this.messageLogger = messageLogger;
+            this.continuations = continuations;
             this.errorTracker = errorTracker;
             dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+            dispatcher.AfterHandling += RaiseAfterHandling;
+            dispatcher.BeforeHandling += RaiseBeforeHandling;
+            dispatcher.OnHandlingError += RaiseOnHandlingError;
             nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
@@ -116,6 +130,21 @@ namespace Rebus.Bus
         void RaiseUncorrelatedMessage(object message, Saga saga)
         {
             UncorrelatedMessage(message, saga);
+        }
+
+        void RaiseAfterHandling(object message, IHandleMessages handler)
+        {
+            AfterHandling(message, handler);
+        }
+
+        void RaiseOnHandlingError(Exception exception)
+        {
+            OnHandlingError(exception);
+        }
+
+        void RaiseBeforeHandling(object message, IHandleMessages handler)
+        {
+            BeforeHandling(message, handler);
         }
 
         /// <summary>
@@ -179,6 +208,8 @@ namespace Rebus.Bus
 
         void MainLoop()
         {
+            SynchronizationContext.SetSynchronizationContext(continuations);
+
             while (!shouldExit)
             {
                 if (!shouldWork)
@@ -191,6 +222,8 @@ namespace Rebus.Bus
                 {
                     try
                     {
+                        continuations.Run();
+
                         TryProcessIncomingMessage();
 
                         errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper.Reset();
@@ -241,13 +274,13 @@ namespace Rebus.Bus
         ///             - Before/After logical message
         ///                 Dispatch logical message
         /// </summary>
-        void TryProcessIncomingMessage()
+        async void TryProcessIncomingMessage()
         {
             using (var context = new TxBomkarl())
             {
                 try
                 {
-                    DoTry();
+                    await DoTry();
 
                     try
                     {
@@ -274,7 +307,7 @@ namespace Rebus.Bus
             }
         }
 
-        void DoTry()
+        async Task DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
@@ -352,7 +385,7 @@ namespace Rebus.Bus
                                 {
                                     var dispatchMethod = GetDispatchMethod(typeToDispatch);
                                     var parameters = new[] { logicalMessage };
-                                    dispatchMethod.Invoke(this, parameters);
+                                    await (Task)dispatchMethod.Invoke(dispatcher, parameters);
                                 }
                                 catch (TargetInvocationException tie)
                                 {
@@ -464,7 +497,11 @@ namespace Rebus.Bus
                     }
                 }
 
-                if (context != null) context.Dispose(); //< dispose it if we entered
+                if (context != null)
+                {
+                    // dispose it if we entered
+                    context.Dispose();
+                }
             }
 
             errorTracker.StopTracking(id);
@@ -518,22 +555,13 @@ namespace Rebus.Bus
                 return method;
             }
 
-            var newMethod = GetType()
-                .GetMethod("DispatchGeneric", BindingFlags.Instance | BindingFlags.NonPublic)
+            var newMethod = dispatcher.GetType()
+                .GetMethod("Dispatch", BindingFlags.Instance | BindingFlags.Public)
                 .MakeGenericMethod(typeToDispatch);
 
             dispatchMethodCache.TryAdd(typeToDispatch, newMethod);
 
             return newMethod;
-        }
-
-        /// <summary>
-        /// Private strongly typed dispatcher method. Will be invoked through reflection to allow
-        /// for some strongly typed interaction from this point and on....
-        /// </summary>
-        internal void DispatchGeneric<T>(T message)
-        {
-            dispatcher.Dispatch(message);
         }
 
         /// <summary>

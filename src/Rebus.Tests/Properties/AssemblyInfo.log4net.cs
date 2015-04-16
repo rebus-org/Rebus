@@ -1,0 +1,1 @@
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "Rebus.Tests.dll.config", Watch = true)]

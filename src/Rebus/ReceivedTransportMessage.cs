@@ -48,15 +48,18 @@ namespace Rebus
         /// </summary>
         public TransportMessageToSend ToForwardableMessage()
         {
-            var transportMessageToSend = new TransportMessageToSend
-                                             {
-                                                 Label = Label,
-                                                 Body = Body,
-                                             };
+            var transportMessageToSend =
+                new TransportMessageToSend
+                {
+                    Label = Label,
+                    Body = Body,
+                };
+
             if (Headers != null)
             {
                 transportMessageToSend.Headers = Headers.Clone();
             }
+            
             return transportMessageToSend;
         }
 

@@ -417,8 +417,94 @@
 
 * Made SQL Server subscription storage & saga persister API accept connection string names (just like the SQL transport config)  - thanks [tiipe]
 
+## 0.71.4
 
+* Allow for specifying the messages table name on the SQL Server transport - thanks [tiipe]
+* Modified SQL server-based persistence things to accept connection string _names_ as well - thanks [tiipe]
+* Fixed subtle bug that would not remove the saga context from the current message context's items - thanks [dimajanzen]
 
+## 0.72.0
+
+* Added auditing capability - endpoints can now send a copy of the transport message to an audit queue whenever they have been successfully handled or published (which is the only two times when messages "disappear" - when handling a message, it "disappears", and when publishing to 0 subscribers, it also "disappears"). This can provide the basis for advanced tooling later on, e.g. for tracking correlation across systems, for gathering statistics etc. For now, go audit your messages - more tools will follow :)
+
+## 0.73.0
+
+* Updated RabbitMQ dependency - thanks [maxx1337]
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
+
+## 0.74.0
+
+* Upgraded to .NET 4.5 !!
+* `IHandleMessagesAsync` introduced - allows for having `async` message handlers
+* Fixed container adapters to correctly handle resolving async message handlers - thanks [arneeiri]
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
+
+## 0.74.1
+
+* Fixed bug that would not allow for configuring and starting a bus without an XML configuration section.
+* This version DOES NOT WORK because of the merge bug fixed in 0.75.0
+
+## 0.75.0
+
+* Fixed merge bug that made published Rebus core assembly unusable!
+
+## 0.75.1
+
+* Fixed container adapter registration bug that would make it impossible to have `IMessageContext` injected into more than one handler in the pipeline. Also ensures that the container does not dispose the message context.
+
+## 0.75.2
+
+* Change SQL Server subscription storage command to be truly idempotent - thanks [tobiaxor]
+
+## 0.76.0
+
+* Auto-subscribing extension on `IBus` - thanks [seankearon]
+* Updated Azure Service Bus dependency to 2.5.4
+
+## 0.77.0
+
+* Improved Serilog integration
+
+## 0.77.1
+
+* Made `PoisonMessageInfo` ctor public so that the `IErrorTracker` can actually be implemented outside of Rebus - thanks [bchavez]
+
+## 0.78.0
+
+* Added extension that allows for composing a chain-of-responsiblity-like way of determining message ownership - thanks [DixonD-git]
+* Introduced a little bit of structure in the `Rebus.Extensions` package - might not be the final way, but it should do for now
+
+## 0.78.1
+
+* Added support for DryIoC - thanks [DixonD-git]
+
+## 0.78.2
+
+* Fixed DryIoc nuget package
+
+## 0.79.0
+
+* Changed `IStoreTimeouts` API to return a `DueTimeoutsResult` instead of an `IEnumerable<DueTimeout>`
+* Made `SqlServerTimeoutStorage` grab row locks on found due timeouts, allowing for "competing timeout consumers"
+
+## 0.80.0
+
+* Changed default encoding of outgoing messages to be UTF8 instead of UTF7 when using the built-in JSON serializer
+* Added `NewtonsoftJsonMessageSerializer` that is honest about its dependency on Newtonsoft JSON.NET and thus lets you customize the serialization settings - thanks [joshua5822]
+
+## 0.80.1
+
+* Support async initiation of sagas via `IAmInitiatedByAsync<>` - thanks [AndreaCuneo]
+
+## 0.81.0
+
+* Support for idempotent sagas via the `Rebus.IdempotentSagas` packages - thanks [pruiz]
+
+## 0.82.0
+
+* Updated MongoDB stuff to work with MongoDB 3/WiredTiger - thanks [caspertdk]
+
+[AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
 [hagbarddenstore]: https://github.com/hagbarddenstore
@@ -431,3 +517,11 @@
 [krivin]: https://github.com/krivin
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [oguzhaneren]: https://github.com/oguzhaneren
+[dimajanzen]: https://github.com/dimajanzen
+[maxx1337]: https://github.com/maxx1337
+[arneeiri]: https://github.com/arneeiri
+[tobiaxor]: https://github.com/tobiaxor
+[seankearon]: https://github.com/seankearon
+[bchavez]: https://github.com/bchavez
+[DixonD-git]: https://github.com/DixonD-git
+[joshua5822]: https://github.com/joshua5822

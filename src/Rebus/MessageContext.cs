@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting.Messaging;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Extensions;
 
@@ -11,12 +13,21 @@ namespace Rebus
     public class MessageContext : IMessageContext
     {
         const string DispatchMessageToHandlersKey = "rebus-DispatchMessageToHandlers";
+        const string MessageContextItemKey = "rebus-message-context";
         readonly IDictionary<string, object> headers;
+        readonly ISet<Type> handlersToSkip;
         static ILog log;
 
         static MessageContext()
         {
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
+        }
+
+        MessageContext(IDictionary<string, object> headers)
+        {
+            this.headers = headers;
+            Items = new Dictionary<string, object>();
+            handlersToSkip = new HashSet<Type>();
         }
 
         /// <summary>
@@ -32,61 +43,39 @@ namespace Rebus
         /// </summary>
         public event Action Disposed = delegate { };
 
-        [ThreadStatic]
-        static internal IMessageContext current;
-        object currentMessage;
-
         /// <summary>
         /// Gets a reference to the current logical message being handled
         /// </summary>
-        public object CurrentMessage
-        {
-            get { return currentMessage; }
-        }
+        public object CurrentMessage { get; private set; }
 
-#if DEBUG
-        /// <summary>
-        /// Only applicable in DEBUG build: Stores that call stack of when this message context was created. Can be used to
-        /// chase down bugs that happen when establishing a message context on a thread where a message context has already
-        /// been established
-        /// </summary>
-        public string StackTrace { get; set; }
-#endif
+        internal static MessageContext Establish()
+        {
+            return Establish(new Dictionary<string, object>());
+        }
 
         internal static MessageContext Establish(IDictionary<string, object> headers)
         {
-            if (current != null)
-            {
-#if DEBUG
-                throw new InvalidOperationException(
-                    string.Format(
-                        @"Cannot establish new message context when one is already present!
-
-Stacktrace of when the current message context was created:
-{0}",
-                        current.StackTrace));
-#else
-                throw new InvalidOperationException(
-                    string.Format("Cannot establish new message context when one is already present"));
-#endif
-
-            }
             var messageContext = new MessageContext(headers);
-
-            current = messageContext;
-
+            Establish(messageContext, overwrite: false);
             return messageContext;
         }
 
-        MessageContext(IDictionary<string, object> headers)
+        internal static void Establish(IMessageContext messageContext, bool overwrite)
         {
-            this.headers = headers;
+            if (TransactionContext.Current == null)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Could not find a transaction context. There should always be a transaction " +
+                                  "context - though it might be a NoTransaction transaction context."));
+            }
 
-            Items = new Dictionary<string, object>();
+            if (TransactionContext.Current[MessageContextItemKey] != null && !overwrite)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Cannot establish new message context when one is already present!"));
+            }
 
-#if DEBUG
-            StackTrace = Environment.StackTrace;
-#endif
+            TransactionContext.Current[MessageContextItemKey] = messageContext;
         }
 
         /// <summary>
@@ -96,7 +85,7 @@ Stacktrace of when the current message context was created:
         {
             get { return (string)headers.ValueOrNull(Shared.Headers.MessageId); }
         }
-        
+
         /// <summary>
         /// Gets the return address from the transport message headers. This address will most likely be the sender
         /// of message currently being handled, but it could also have been set explicitly by the sender to another
@@ -114,19 +103,32 @@ Stacktrace of when the current message context was created:
         public IDictionary<string, object> Items { get; private set; }
 
         /// <summary>
+        /// Gets the handlers to skip.
+        /// </summary>
+        public IReadOnlyCollection<Type> HandlersToSkip { get { return new List<Type>(handlersToSkip).AsReadOnly(); } }
+
+        /// <summary>
         /// Gets the current thread-bound message context if one is available, throwing an <see cref="InvalidOperationException"/>
         /// otherwise. Use <seealso cref="HasCurrent"/> to check if a message context is available if you're unsure
         /// </summary>
         public static IMessageContext GetCurrent()
         {
-            if (current == null)
+            if (TransactionContext.Current == null)
             {
-                throw new InvalidOperationException("No message context available - the MessageContext instance will"
-                                                    + " only be set during the handling of messages, and it"
-                                                    + " is available only on the worker thread.");
+                throw new InvalidOperationException(
+                    string.Format("Could not find a transaction context. There should always be a transaction " +
+                                  "context - though it might be a NoTransaction transaction context."));
             }
 
-            return current;
+            var context = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
+            if (context == null)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Could not find message context! Looked for it in the current transaction context: {0}. " +
+                                  "The MessageContext instance will only be set during the handling of messages.", TransactionContext.Current));
+            }
+
+            return context;
         }
 
         /// <summary>
@@ -134,7 +136,16 @@ Stacktrace of when the current message context was created:
         /// </summary>
         public static bool HasCurrent
         {
-            get { return current != null; }
+            get
+            {
+                if (TransactionContext.Current != null)
+                {
+                    var messageContext = TransactionContext.Current[MessageContextItemKey] as IMessageContext;
+                    return messageContext != null;
+                }
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -149,7 +160,7 @@ Stacktrace of when the current message context was created:
                 var messageContext = GetCurrent();
 
                 return messageContext.Items.ContainsKey(DispatchMessageToHandlersKey)
-                       && !(bool) messageContext.Items[DispatchMessageToHandlersKey];
+                       && !(bool)messageContext.Items[DispatchMessageToHandlersKey];
             }
         }
 
@@ -170,7 +181,11 @@ Stacktrace of when the current message context was created:
         /// <filterpriority>2</filterpriority>
         public void Dispose()
         {
-            current = null;
+            if (TransactionContext.Current != null)
+            {
+                TransactionContext.Current[MessageContextItemKey] = null;
+            }
+
             Disposed();
         }
 
@@ -179,7 +194,7 @@ Stacktrace of when the current message context was created:
         /// </summary>
         public void SetLogicalMessage(object message)
         {
-            currentMessage = message;
+            CurrentMessage = message;
         }
 
         /// <summary>
@@ -187,7 +202,32 @@ Stacktrace of when the current message context was created:
         /// </summary>
         public void ClearLogicalMessage()
         {
-            currentMessage = null;
+            CurrentMessage = null;
+        }
+
+        /// <summary>
+        /// Instructs rebus handling infraestructure to skips the handler 
+        /// specified by type on it's current invocation.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public void SkipHandler(Type type)
+        {
+            if (!handlersToSkip.Contains(type))
+            {
+                handlersToSkip.Add(type);
+            }
+        }
+
+        /// <summary>
+        /// Removes the specified handler type from the list of handlers to skip.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        public void DoNotSkipHandler(Type type)
+        {
+            if (handlersToSkip.Contains(type))
+            {
+                handlersToSkip.Remove(type);
+            }
         }
     }
 }

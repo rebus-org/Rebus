@@ -16,7 +16,7 @@
     <dependencies>
       <dependency id="Rebus" version="0.0.1" />
       <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="2.0.3" />
-      <dependency id="WindowsAzure.ServiceBus" version="2.2.3.0" />
+      <dependency id="WindowsAzure.ServiceBus" version="2.5.4" />
     </dependencies>
   </metadata>
   <files>

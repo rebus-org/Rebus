@@ -60,21 +60,15 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"insert into [{0}] 
+                    command.CommandText = string.Format(@"if not exists
+                                                (select top 1 * from [{0}] where message_type = @message_type and endpoint = @endpoint)
+                                                insert into [{0}] 
                                                 (message_type, endpoint) 
                                                 values (@message_type, @endpoint)", subscriptionsTableName);
 
                     command.Parameters.AddWithValue("message_type", eventType.FullName);
                     command.Parameters.AddWithValue("endpoint", subscriberInputQueue);
-
-                    try
-                    {
-                        command.ExecuteNonQuery();
-                    }
-                    catch (SqlException ex)
-                    {
-                        if (ex.Number != SqlServerMagic.PrimaryKeyViolationNumber) throw;
-                    }
+                    command.ExecuteNonQuery();
                 }
 
                 commitAction(connection);

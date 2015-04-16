@@ -1,3 +1,4 @@
+using System;
 using Rebus.Transports;
 
 namespace Rebus.Configuration
@@ -14,7 +15,21 @@ namespace Rebus.Configuration
         {
             HandleMessagesInTransactionScope = false;
             OneWayClientMode = false;
+
             BackoffBehavior = BackoffBehavior.Default();
+
+            PossiblyInitializeFromConfigurationSection();
+        }
+
+        void PossiblyInitializeFromConfigurationSection()
+        {
+            var config = RebusConfigurationSection.LookItUp(returnNullIfNotFound: true);
+            if (config == null) return;
+
+            if (!string.IsNullOrWhiteSpace(config.AuditQueue))
+            {
+                PerformMessageAudit(config.AuditQueue);
+            }
         }
 
         /// <summary>
@@ -44,6 +59,31 @@ namespace Rebus.Configuration
         public void EnterOneWayClientMode()
         {
             OneWayClientMode = true;
+        }
+
+        /// <summary>
+        /// Gets the name of the audit queue (or null if audit has not been configured)
+        /// </summary>
+        public string AuditQueueName { get; private set; }
+
+        /// <summary>
+        /// Gets whether message audit should be performed
+        /// </summary>
+        public bool AuditMessages
+        {
+            get { return !string.IsNullOrWhiteSpace(AuditQueueName); }
+        }
+
+        /// <summary>
+        /// Configures Rebus to copy successfully handled messages and published messages to the queue with the specified name.
+        /// </summary>
+        public void PerformMessageAudit(string auditQueueName)
+        {
+            if (auditQueueName == null)
+            {
+                throw new ArgumentNullException("auditQueueName", "When configuring Rebus to audit messages, you cannot specify NULL as the audit queue name!");
+            }
+            AuditQueueName = auditQueueName;
         }
     }
 }

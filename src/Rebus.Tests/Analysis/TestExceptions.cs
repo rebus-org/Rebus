@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using NUnit.Framework;
-using Rebus.Bus;
 using System.Linq;
 
 namespace Rebus.Tests.Analysis
@@ -17,16 +16,16 @@ namespace Rebus.Tests.Analysis
                                          "Rebus",
 
                                          //containers
-                                         "Rebus.Castle.Windsor", "Rebus.Unity", "Rebus.Autofac", "Rebus.StructureMap", "Rebus.Ninject",
+                                         "Rebus.Castle.Windsor", "Rebus.Unity", "Rebus.Autofac", "Rebus.StructureMap", "Rebus.Ninject", "Rebus.SimpleInjector",
 
                                          //logging
-                                         "Rebus.NLog", "Rebus.Log4Net",
+                                         "Rebus.NLog", "Rebus.Log4Net", "Rebus.Serilog",
 
                                          //transports
                                          "Rebus.RabbitMq", "Rebus.Azure", "Rebus.AzureServiceBus",
 
                                          //persistence
-                                         "Rebus.RavenDb", "Rebus.MongoDb",
+                                         "Rebus.RavenDb", "Rebus.MongoDb", "Rebus.PostgreSql",
 
                                          //other stuff
                                          "Rebus.Timeout", "Rebus.HttpGateway",
