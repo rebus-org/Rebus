@@ -506,7 +506,7 @@
 
 ## 0.82.1
 
-* Updated Serilog dep
+* Updated Serilog dep - thanks [tiipe]
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe
