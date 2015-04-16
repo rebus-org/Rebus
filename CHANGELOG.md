@@ -504,6 +504,10 @@
 
 * Updated MongoDB stuff to work with MongoDB 3/WiredTiger - thanks [caspertdk]
 
+## 0.82.1
+
+* Updated Serilog dep
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [tiipe]: https://github.com/tiipe
 [pruiz]: https://github.com/pruiz
