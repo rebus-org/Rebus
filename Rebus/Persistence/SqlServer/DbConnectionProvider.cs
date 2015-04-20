@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -12,6 +13,8 @@ namespace Rebus.Persistence.SqlServer
         public DbConnectionProvider(string connectionString)
         {
             _connectionString = connectionString;
+
+            IsolationLevel = IsolationLevel.ReadCommitted;
         }
 
         public async Task<DbConnection> GetConnection()
@@ -20,8 +23,10 @@ namespace Rebus.Persistence.SqlServer
             
             await connection.OpenAsync();
 
-            return new DbConnection(connection, connection.BeginTransaction(), false);
+            return new DbConnection(connection, connection.BeginTransaction(IsolationLevel), false);
         }
+
+        public IsolationLevel IsolationLevel { get; set; }
     }
 
     public class DbConnection : IDisposable
@@ -49,7 +54,7 @@ namespace Rebus.Persistence.SqlServer
             return _connection.GetTableNames(_currentTransaction);
         }
 
-        public void Complete()
+        public async Task Complete()
         {
             if (_managedExternally) return;
 
@@ -69,7 +74,7 @@ namespace Rebus.Persistence.SqlServer
                 _currentTransaction.Rollback();
                 _currentTransaction = null;
             }
-
+            
             _connection.Dispose();
         }
     }

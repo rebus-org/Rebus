@@ -71,7 +71,7 @@ VALUES
                 command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
                 command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
 
-                command.ExecuteNonQuery();
+                await command.ExecuteNonQueryAsync();
             }
         }
 
@@ -157,8 +157,8 @@ ORDER BY [priority] ASC, [id] asc
                     async () =>
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
-                        context.OnCommitted(async () => dbConnection.Complete());
-                        context.OnDisposed(async () => dbConnection.Dispose());
+                        context.OnCommitted(async () => await dbConnection.Complete());
+                        context.OnDisposed(() => dbConnection.Dispose());
                         return dbConnection;
                     });
         }
@@ -208,7 +208,23 @@ CREATE TABLE [dbo].[{0}]
                     command.ExecuteNonQuery();
                 }
 
-                connection.Complete();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+
+CREATE NONCLUSTERED INDEX [IDX_{0}] ON [dbo].[{0}]
+(
+	[recipient] ASC,
+	[priority] ASC,
+	[id] ASC
+)
+
+", _tableName);
+
+                    command.ExecuteNonQuery();
+                }
+
+                connection.Complete().Wait();
             }
         }
     }
