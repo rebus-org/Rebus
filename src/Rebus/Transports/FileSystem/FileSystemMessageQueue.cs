@@ -172,8 +172,8 @@ namespace Rebus.Transports.FileSystem
 
         string GetNextFileName()
         {
-            return string.Format("{0:yyyy_MM_dd_HH_mm_ss}_{1:0000000}.rebusmessage",
-                DateTime.UtcNow, Interlocked.Increment(ref incrementingCounter));
+            return string.Format("{0:yyyy_MM_dd_HH_mm_ss}_{1:0000000}_{2}.rebusmessage",
+                DateTime.UtcNow, Interlocked.Increment(ref incrementingCounter), Guid.NewGuid());
         }
 
         string Serialize(TransportMessageToSend message)
