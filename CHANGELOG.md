@@ -508,24 +508,31 @@
 
 * Updated Serilog dep - thanks [tiipe]
 
+## 0.83.0
+
+* Fixed concurrent message send in file system transport - thanks [mgibas]
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
-[tiipe]: https://github.com/tiipe
-[pruiz]: https://github.com/pruiz
-[hagbarddenstore]: https://github.com/hagbarddenstore
-[fritsduus]: https://github.com/fritsduus
-[maeserichar]: https://github.com/maeserichar
-[jasperdk]: https://github.com/jasperdk
-[mgayeski]: https://github.com/mgayeski
+[arneeiri]: https://github.com/arneeiri
+[bchavez]: https://github.com/bchavez
 [caspertdk]: https://github.com/caspertdk
 [dev4ce]: https://github.com/dev4ce
-[krivin]: https://github.com/krivin
-[PeteProgrammer]: https://github.com/PeteProgrammer
-[oguzhaneren]: https://github.com/oguzhaneren
 [dimajanzen]: https://github.com/dimajanzen
-[maxx1337]: https://github.com/maxx1337
-[arneeiri]: https://github.com/arneeiri
-[tobiaxor]: https://github.com/tobiaxor
-[seankearon]: https://github.com/seankearon
-[bchavez]: https://github.com/bchavez
 [DixonD-git]: https://github.com/DixonD-git
+[fritsduus]: https://github.com/fritsduus
+[hagbarddenstore]: https://github.com/hagbarddenstore
+[jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
+[krivin]: https://github.com/krivin
+[maeserichar]: https://github.com/maeserichar
+[maxx1337]: https://github.com/maxx1337
+[mgayeski]: https://github.com/mgayeski
+[mgibas]: https://github.com/mgibas
+[oguzhaneren]: https://github.com/oguzhaneren
+[PeteProgrammer]: https://github.com/PeteProgrammer
+[pruiz]: https://github.com/pruiz
+[seankearon]: https://github.com/seankearon
+[tiipe]: https://github.com/tiipe
+[tobiaxor]: https://github.com/tobiaxor
+
