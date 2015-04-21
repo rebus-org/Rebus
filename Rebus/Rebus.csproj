@@ -50,6 +50,7 @@
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Persistence\SqlServer\DbConnection.cs" />
     <Compile Include="Timers\AsyncPeriodicBackgroundTask.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />

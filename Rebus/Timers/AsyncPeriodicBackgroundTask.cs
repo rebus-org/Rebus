@@ -24,10 +24,17 @@ namespace Rebus.Timers
         readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _finished = new ManualResetEvent(false);
 
+        bool _disposed;
+
         public AsyncPeriodicBackgroundTask(string description, Func<Task> action)
         {
             _description = description;
             _action = action;
+        }
+
+        ~AsyncPeriodicBackgroundTask()
+        {
+            Dispose(false);
         }
 
         public TimeSpan Interval { get; set; }
@@ -59,13 +66,27 @@ namespace Rebus.Timers
 
         public void Dispose()
         {
-            _log.Info("Stopping periodic task '{0}'", _description);
+            Dispose(true);
+        }
 
-            _tokenSource.Cancel();
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
 
-            if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
+            try
             {
-                _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!");
+                _log.Info("Stopping periodic task '{0}'", _description);
+
+                _tokenSource.Cancel();
+
+                if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
+                {
+                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!");
+                }
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
     }
