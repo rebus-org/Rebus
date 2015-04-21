@@ -46,5 +46,15 @@
         /// Indicates that the message must not be consumed right away, delivery should be delayed until the specified time
         /// </summary>
         public const string DeferredUntil = "rbs2-deferred-until";
+
+        /// <summary>
+        /// Indicates a time span (as a string, on the form hh:MM:ss) after which the queueing system can safely delete the message and thus never deliver it
+        /// </summary>
+        public const string TimeToBeReceived = "rbs2-time-to-be-received";
+
+        /// <summary>
+        /// Header that indicates that the queueing system can trade reliability for performance in order to deliver this message as fast as possible
+        /// </summary>
+        public const string Express = "rbs2-express";
     }
 }

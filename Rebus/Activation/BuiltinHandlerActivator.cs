@@ -54,7 +54,7 @@ namespace Rebus.Activation
             }
             if (Bus != null)
             {
-                throw new InvalidOperationException(string.Format("Cannot set but to {0} because it has already been set to {1}",
+                throw new InvalidOperationException(string.Format("Cannot set bus to {0} because it has already been set to {1}",
                 bus, Bus));
             }
             Bus = bus;

@@ -85,13 +85,7 @@ namespace Rebus.Transport.Msmq
             if (message == null) throw new ArgumentNullException("message");
             if (context == null) throw new ArgumentNullException("context");
 
-            var logicalMessage = new Message
-            {
-                Extension = _extensionSerializer.Serialize(message.Headers),
-                BodyStream = message.Body,
-                UseJournalQueue = false,
-                Recoverable = true,
-            };
+            var logicalMessage = CreateMsmqMessage(message);
 
             var messageQueueTransaction = context.Items.GetOrAdd(CurrentTransactionKey, () =>
             {
@@ -107,7 +101,7 @@ namespace Rebus.Transport.Msmq
             {
                 var messageQueues = new Dictionary<string, MessageQueue>(StringComparer.InvariantCultureIgnoreCase);
 
-                context.OnDisposed(async () =>
+                context.OnDisposed(() =>
                 {
                     foreach (var messageQueue in messageQueues.Values)
                     {
@@ -126,6 +120,32 @@ namespace Rebus.Transport.Msmq
             });
 
             sendQueue.Send(logicalMessage, messageQueueTransaction);
+        }
+
+        Message CreateMsmqMessage(TransportMessage message)
+        {
+            var headers = message.Headers;
+
+            var expressDelivery = headers.ContainsKey(Headers.Express);
+
+            var hasTimeout = headers.ContainsKey(Headers.TimeToBeReceived);
+
+            var msmqMessage = new Message
+            {
+                Extension = _extensionSerializer.Serialize(headers),
+                BodyStream = message.Body,
+                UseJournalQueue = false,
+                Recoverable = !expressDelivery,
+                UseDeadLetterQueue = !(expressDelivery || hasTimeout)
+            };
+
+            if (hasTimeout)
+            {
+                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                msmqMessage.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+            }
+
+            return msmqMessage;
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)

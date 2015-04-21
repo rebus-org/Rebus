@@ -70,6 +70,7 @@
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
+    <Compile Include="Integration\TestMessageExpiration.cs" />
     <Compile Include="Integration\TestPolymorphicDispatch.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />
     <Compile Include="ListLoggerFactory.cs" />
