@@ -256,6 +256,15 @@ namespace Rebus.Transport.Msmq
                     }
                 };
 
+                if (!_inputQueue.Transactional)
+                {
+                    var message = string.Format("The MSMQ queue '{0}' is not transactional! MSMQ queues need to" +
+                                                " be transactional for Rebus to use them, because otherwise Rebus" +
+                                                " will not be able to deliver messages to them.", inputQueuePath);
+
+                    throw new ApplicationException(message);
+                }
+
                 return _inputQueue;
             }
         }
