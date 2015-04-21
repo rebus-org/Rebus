@@ -22,7 +22,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
         public ITransport Create(string inputQueueAddress)
         {
-            var tableName = "messages" + TestConfig.Suffix;
+            var tableName = "RebusMessages" + TestConfig.Suffix;
 
             _tablesToDrop.Add(tableName);
 
