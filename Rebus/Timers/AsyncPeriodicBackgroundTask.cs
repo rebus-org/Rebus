@@ -53,9 +53,9 @@ namespace Rebus.Timers
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        await _action();
-
                         await Task.Delay(Interval, token);
+
+                        await _action();
                     }
                 }
                 catch (TaskCanceledException)
