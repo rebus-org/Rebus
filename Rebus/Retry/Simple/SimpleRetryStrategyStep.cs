@@ -3,15 +3,17 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Timers;
 using Rebus.Transport;
 
 namespace Rebus.Retry.Simple
 {
-    public class SimpleRetryStrategyStep : IIncomingStep
+    public class SimpleRetryStrategyStep : IRetryStrategyStep, IInitializable, IDisposable
     {
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
         static ILog _log;
@@ -23,12 +25,24 @@ namespace Rebus.Retry.Simple
 
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
+        readonly AsyncPeriodicBackgroundTask _cleanupOldTrackedErrorsTask;
         readonly ITransport _transport;
+
+        bool _disposed;
 
         public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings)
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
+            _cleanupOldTrackedErrorsTask = new AsyncPeriodicBackgroundTask("CleanupTrackedErrors", CleanupOldTrackedErrors)
+            {
+                Interval = TimeSpan.FromMinutes(1)
+            };
+        }
+
+        ~SimpleRetryStrategyStep()
+        {
+            Dispose(false);
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -39,7 +53,7 @@ namespace Rebus.Retry.Simple
 
             if (string.IsNullOrWhiteSpace(messageId))
             {
-                await MoveMessageToErrorQueue("<no message ID>", transportMessage, 
+                await MoveMessageToErrorQueue("<no message ID>", transportMessage,
                     string.Format("Received message with empty or absent '{0}' header! All messages must be" +
                                   " supplied with an ID . If no ID is present, the message cannot be tracked" +
                                   " between delivery attempts, and other stuff would also be much harder to" +
@@ -53,7 +67,7 @@ namespace Rebus.Retry.Simple
             if (HasFailedTooManyTimes(messageId))
             {
                 await MoveMessageToErrorQueue(messageId, transportMessage, GetErrorDescriptionFor(messageId), transactionContext);
-                
+
                 return;
             }
 
@@ -72,6 +86,21 @@ namespace Rebus.Retry.Simple
 
                 transactionContext.Abort();
             }
+        }
+
+        public void Initialize()
+        {
+            _cleanupOldTrackedErrorsTask.Start();
+        }
+
+        async Task CleanupOldTrackedErrors()
+        {
+            ErrorTracking _;
+
+            _trackedErrors
+                .ToList()
+                .Where(e => e.Value.ElapsedSinceLastError > TimeSpan.FromMinutes(5))
+                .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out _));
         }
 
         string GetErrorDescriptionFor(string messageId)
@@ -104,7 +133,7 @@ namespace Rebus.Retry.Simple
             }
             catch (Exception exception)
             {
-                _log.Error(exception, "Could not move message with ID {0} to error queue '{1}' - will pause {2} to avoid thrashing", 
+                _log.Error(exception, "Could not move message with ID {0} to error queue '{1}' - will pause {2} to avoid thrashing",
                     messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
 
                 moveToErrorQueueFailed = true;
@@ -121,7 +150,7 @@ namespace Rebus.Retry.Simple
         {
             ErrorTracking existingTracking;
             var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out existingTracking);
-            
+
             if (!hasTrackingForThisMessage) return false;
 
             var hasFailedTooManyTimes = existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
@@ -131,7 +160,7 @@ namespace Rebus.Retry.Simple
 
         class ErrorTracking
         {
-            readonly List<CaughtException> _caughtExceptions = new List<CaughtException>();
+            readonly ConcurrentQueue<CaughtException> _caughtExceptions = new ConcurrentQueue<CaughtException>();
 
             public ErrorTracking(Exception exception)
             {
@@ -150,8 +179,20 @@ namespace Rebus.Retry.Simple
 
             public ErrorTracking AddError(Exception caughtException)
             {
-                _caughtExceptions.Add(new CaughtException(caughtException));
+                _caughtExceptions.Enqueue(new CaughtException(caughtException));
                 return this;
+            }
+
+            public TimeSpan ElapsedSinceLastError
+            {
+                get
+                {
+                    var timeOfMostRecentError = _caughtExceptions.Max(e => e.Time);
+
+                    var elapsedSinceLastError = DateTime.UtcNow - timeOfMostRecentError;
+
+                    return elapsedSinceLastError;
+                }
             }
         }
 
@@ -165,6 +206,25 @@ namespace Rebus.Retry.Simple
 
             public Exception Exception { get; set; }
             public DateTime Time { get; set; }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
+            {
+                _cleanupOldTrackedErrorsTask.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }

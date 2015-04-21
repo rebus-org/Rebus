@@ -100,9 +100,11 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault(c => new HandleDeferredMessagesStep(c.Get<ITimeoutManager>(), c.Get<ITransport>()));
 
+            PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
+
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
-                .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
+                .OnReceive(c.Get<IRetryStrategyStep>(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(c.Get<HandleDeferredMessagesStep>(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)

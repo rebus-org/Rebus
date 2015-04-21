@@ -21,7 +21,7 @@ namespace Rebus.Retry.Simple
             _transport.CreateQueue(errorQueueAddress);
         }
 
-        public IIncomingStep GetRetryStep()
+        public IRetryStrategyStep GetRetryStep()
         {
             return new SimpleRetryStrategyStep(_transport, _simpleRetryStrategySettings);
         }
