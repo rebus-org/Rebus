@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -79,11 +80,21 @@ namespace Rebus.AzureServiceBus
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
-            var brokeredMessage = new BrokeredMessage(message.Body);
+            var headers = message.Headers;
+            var body = message.Body;
 
-            foreach (var kvp in message.Headers)
+            var brokeredMessage = new BrokeredMessage(body);
+
+            foreach (var kvp in headers)
             {
                 brokeredMessage.Properties[kvp.Key] = kvp.Value;
+            }
+
+            if (headers.ContainsKey(Headers.TimeToBeReceived))
+            {
+                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+                brokeredMessage.TimeToLive = timeToBeReceived;
             }
 
             context.OnCommitted(async () =>

@@ -11,6 +11,9 @@ namespace Rebus.Tests.Transport.Msmq
     [TestFixture, Category(Categories.Msmq)]
     public class MsmqBasicSendReceive : BasicSendReceive<MsmqTransportFactory> { }
 
+    [TestFixture, Category(Categories.Msmq)]
+    public class MsmqMessageExpiration : MessageExpiration<MsmqTransportFactory> { }
+
     public class MsmqTransportFactory : ITransportFactory
     {
         readonly List<IDisposable> _disposables = new List<IDisposable>();

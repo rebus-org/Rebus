@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Threading;
 using Rebus.Extensions;
 using Rebus.Messages;
@@ -43,7 +44,7 @@ namespace Rebus.Transport.InMem
 
             if (_outputEventsToConsole && !alwaysQuiet)
             {
-                Console.WriteLine("{0} -> {1} ({2})", msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", destinationAddress, _networkId);
+                Console.WriteLine("{0} ---> {1} ({2})", msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", destinationAddress, _networkId);
             }
 
             var messageQueue = _queues
@@ -62,12 +63,29 @@ namespace Rebus.Transport.InMem
 
             if (!messageQueue.TryDequeue(out message)) return null;
 
+            if (MessageIsExpired(message))
+            {
+                Console.WriteLine("{0} EXP> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
+                return null;
+            }
+
             if (_outputEventsToConsole)
             {
-                Console.WriteLine("{0} -> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
+                Console.WriteLine("{0} ---> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
             }
 
             return message;
+        }
+
+        bool MessageIsExpired(InMemTransportMessage message)
+        {
+            var headers= message.Headers;
+            if (!headers.ContainsKey(Headers.TimeToBeReceived)) return false;
+
+            var timeToBeReceived = headers[Headers.TimeToBeReceived];
+            var maximumAge = TimeSpan.Parse(timeToBeReceived);
+
+            return message.Age > maximumAge;
         }
 
         public bool HasQueue(string address)

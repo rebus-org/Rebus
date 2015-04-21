@@ -6,7 +6,10 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.Transport.InMem
 {
     [TestFixture]
-    public class InMemNetworkTests : BasicSendReceive<InMemTransportFactory> { }
+    public class InMemTransportBasicSendReceive : BasicSendReceive<InMemTransportFactory> { }
+
+    [TestFixture]
+    public class InMemTransportMessageExpiration : MessageExpiration<InMemTransportFactory> { }
 
     public class InMemTransportFactory : ITransportFactory
     {

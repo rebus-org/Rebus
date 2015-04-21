@@ -50,7 +50,7 @@ namespace Rebus.Transport.InMem
             
             if (nextMessage != null)
             {
-                context.OnAborted(async () =>
+                context.OnAborted(() =>
                 {
                     _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
                 });

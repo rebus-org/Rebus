@@ -13,6 +13,9 @@ namespace Rebus.AzureServiceBus.Tests
     [TestFixture]
     public class AzureServiceBusBasicSendReceive : BasicSendReceive<AzureServiceBusTransportFactory> { }
 
+    [TestFixture]
+    public class AzureServiceBusMessageExpiration : MessageExpiration<AzureServiceBusTransportFactory> { }
+
     public class AzureServiceBusTransportFactory : ITransportFactory
     {
         public static string ConnectionString
