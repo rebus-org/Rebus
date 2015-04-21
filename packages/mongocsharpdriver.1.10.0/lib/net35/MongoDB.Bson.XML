@@ -468,12 +468,14 @@
             <summary>
             Reads a BSON string from the reader.
             </summary>
+            <param name="encoding">The encoding.</param>
             <returns>A String.</returns>
         </member>
         <member name="M:MongoDB.Bson.IO.BsonBuffer.ReadCString(System.Text.UTF8Encoding)">
             <summary>
             Reads a BSON CString from the reader (a null terminated string).
             </summary>
+            <param name="encoding">The encoding.</param>
             <returns>A string.</returns>
         </member>
         <member name="M:MongoDB.Bson.IO.BsonBuffer.ReadName``1(MongoDB.Bson.IO.BsonTrie{``0},System.Boolean@,``0@)">
@@ -1515,6 +1517,21 @@
             Releases unmanaged and - optionally - managed resources.
             </summary>
             <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+        </member>
+        <member name="T:MongoDB.Bson.IO.Utf8Encodings">
+            <summary>
+            Represents a singleton instance of a strict UTF8Encoding.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.Utf8Encodings.Lenient">
+            <summary>
+            Gets the lenient instance.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Bson.IO.Utf8Encodings.Strict">
+            <summary>
+            Gets the strict instance.
+            </summary>
         </member>
         <member name="T:MongoDB.Bson.GuidRepresentation">
             <summary>
@@ -11803,6 +11820,7 @@
             <summary>
             Initializes a new instance of the EnumerableSerializerBase class.
             </summary>
+            <param name="defaultSerializationOptions">The default serialization options for this serializer.</param>
         </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -11923,6 +11941,7 @@
             <summary>
             Initializes a new instance of the EnumerableSerializer class.
             </summary>
+            <param name="defaultSerializationOptions">The default serialization options for this serializer.</param>
         </member>
         <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>

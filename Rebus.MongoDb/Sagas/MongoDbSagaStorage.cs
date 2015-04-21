@@ -99,12 +99,12 @@ namespace Rebus.MongoDb.Sagas
         {
             if (!result.Ok)
             {
-                throw new WriteConcernException("Not OK result returned from the server", result);
+                throw new MongoWriteConcernException("Not OK result returned from the server", result);
             }
 
             if (result.DocumentsAffected != expectedNumberOfAffectedDocuments)
             {
-                throw new WriteConcernException(string.Format("DocumentsAffected != {0}", expectedNumberOfAffectedDocuments), result);
+                throw new MongoWriteConcernException(string.Format("DocumentsAffected != {0}", expectedNumberOfAffectedDocuments), result);
             }
         }
 
@@ -118,7 +118,7 @@ namespace Rebus.MongoDb.Sagas
             }
             catch (Exception exception)
             {
-                throw new ApplicationException(string.Format("Could not get MongoCollection for saga data of type {0}", sagaDataType));
+                throw new ApplicationException(string.Format("Could not get MongoCollection for saga data of type {0}", sagaDataType), exception);
             }
         }
     }

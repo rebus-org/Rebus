@@ -19,6 +19,397 @@
             The timestamp type.
             </summary>
         </member>
+        <member name="T:MongoDB.Driver.Communication.Security.Mechanisms.ScramSha1Mechanism">
+            <summary>
+            Implements the SCRAM-SHA1 rfc: http://tools.ietf.org/html/rfc5802.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.Communication.Security.ISaslMechanism">
+            <summary>
+            Represents a sasl mechanism.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+            <summary>
+            Determines whether this instance can authenticate with the specified credential.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="credential">The credential.</param>
+            <returns>
+              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+            <summary>
+            Initializes the mechanism.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="credential">The credential.</param>
+            <returns>The initial step.</returns>
+        </member>
+        <member name="P:MongoDB.Driver.Communication.Security.ISaslMechanism.Name">
+            <summary>
+            Gets the name of the mechanism.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.ScramSha1Mechanism.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+            <summary>
+            Determines whether this instance can authenticate with the specified credential.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="credential">The credential.</param>
+            <returns>
+              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
+            </returns>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.ScramSha1Mechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
+            <summary>
+            Initializes the mechanism.
+            </summary>
+            <param name="connection">The connection.</param>
+            <param name="credential">The credential.</param>
+            <returns>
+            The initial step.
+            </returns>
+        </member>
+        <member name="P:MongoDB.Driver.Communication.Security.Mechanisms.ScramSha1Mechanism.Name">
+            <summary>
+            Gets the name of the mechanism.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.Communication.Security.ISaslStep">
+            <summary>
+            A step in a Sasl Conversation.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.Communication.Security.ISaslStep.Transition(MongoDB.Driver.Communication.Security.SaslConversation,System.Byte[])">
+            <summary>
+            Transitions to the next step in the conversation.
+            </summary>
+            <param name="conversation">The conversation.</param>
+            <param name="bytesReceivedFromServer">The bytes received from the server.</param>
+            <returns>An ISaslStep.</returns>
+        </member>
+        <member name="P:MongoDB.Driver.Communication.Security.ISaslStep.BytesToSendToServer">
+            <summary>
+            The bytes that should be sent to ther server before calling Transition.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.Communication.Security.ISaslStep.IsComplete">
+            <summary>
+            Gets a value indicating whether the client is complete.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoBulkWriteException">
+            <summary>
+            Represents a bulk write exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.BulkWriteException">
+            <summary>
+            Represents a bulk write exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoException">
+            <summary>
+            Represents a MongoDB exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the MongoException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the MongoException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Driver.BulkWriteException"/> class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoQueryException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.BulkWriteException.Result">
+            <summary>
+            Gets the result of the bulk write operation.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.BulkWriteException.UnprocessedRequests">
+            <summary>
+            Gets the unprocessed requests.
+            </summary>
+            <value>
+            The unprocessed requests.
+            </value>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="P:MongoDB.Driver.BulkWriteException.WriteConcernError">
+            <summary>
+            Gets the write concern error.
+            </summary>
+            <value>
+            The write concern error.
+            </value>
+        </member>
+        <member name="P:MongoDB.Driver.BulkWriteException.WriteErrors">
+            <summary>
+            Gets the write errors.
+            </summary>
+            <value>
+            The write errors.
+            </value>
+        </member>
+        <member name="M:MongoDB.Driver.MongoBulkWriteException.#ctor(MongoDB.Driver.BulkWriteResult,System.Collections.Generic.IEnumerable{MongoDB.Driver.BulkWriteError},MongoDB.Driver.WriteConcernError,System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Driver.MongoBulkWriteException"/> class.
+            </summary>
+            <param name="result">The result.</param>
+            <param name="writeErrors">The write errors.</param>
+            <param name="unprocessedRequests">The unprocessed requests.</param>
+            <param name="writeConcernError">The write concern error.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoBulkWriteException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoBulkWriteException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.MongoBulkWriteException.Result">
+            <summary>
+            Gets the result of the bulk write operation.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoBulkWriteException.UnprocessedRequests">
+            <summary>
+            Gets the unprocessed requests.
+            </summary>
+            <value>
+            The unprocessed requests.
+            </value>
+            <exception cref="T:System.NotImplementedException"></exception>
+        </member>
+        <member name="P:MongoDB.Driver.MongoBulkWriteException.WriteConcernError">
+            <summary>
+            Gets the write concern error.
+            </summary>
+            <value>
+            The write concern error.
+            </value>
+        </member>
+        <member name="P:MongoDB.Driver.MongoBulkWriteException.WriteErrors">
+            <summary>
+            Gets the write errors.
+            </summary>
+            <value>
+            The write errors.
+            </value>
+        </member>
+        <member name="T:MongoDB.Driver.MongoExecutionTimeoutException">
+            <summary>
+            Represents a MongoDB execution timeout exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.ExecutionTimeoutException">
+            <summary>
+            Represents a MongoDB execution timeout exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the ExecutionTimeoutException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the ExecutionTimeoutException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the ExecutionTimeoutException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoExecutionTimeoutException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the MongoExecutionTimeoutException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoExecutionTimeoutException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the MongoExecutionTimeoutException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoExecutionTimeoutException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoExecutionTimeoutException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="T:MongoDB.Driver.MongoWriteConcernException">
+            <summary>
+            Represents a write concern exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.WriteConcernException">
+            <summary>
+            Represents a write concern exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoSafeModeException">
+            <summary>
+            Represents a MongoDB safe mode exception.
+            </summary>
+        </member>
+        <member name="T:MongoDB.Driver.MongoCommandException">
+            <summary>
+            Represents a MongoDB command exception.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="commandResult">The command result (an error message will be constructed using the result).</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="innerException">The inner exception.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="commandResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoCommandException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.Code">
+            <summary>
+            Gets the error code.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.Command">
+            <summary>
+            Gets the command.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.CommandResult">
+            <summary>
+            Gets the command result.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.ErrorMessage">
+            <summary>
+            Gets the error message.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoCommandException.Result">
+            <summary>
+            Gets the command result.
+            </summary>
+        </member>
+        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.String,MongoDB.Driver.CommandResult)">
+            <summary>
+            Initializes a new instance of the MongoSafeModeException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="commandResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoSafeModeException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
+            <summary>
+            Initializes a new instance of the WriteConcernException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="writeConcernResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.WriteConcernException.WriteConcernResult">
+            <summary>
+            Gets the write concern result.
+            </summary>
+            <value>
+            The write concern result.
+            </value>
+        </member>
+        <member name="M:MongoDB.Driver.MongoWriteConcernException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
+            <summary>
+            Initializes a new instance of the MongoWriteConcernException class.
+            </summary>
+            <param name="message">The error message.</param>
+            <param name="writeConcernResult">The command result.</param>
+        </member>
+        <member name="M:MongoDB.Driver.MongoWriteConcernException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            <summary>
+            Initializes a new instance of the MongoWriteConcernException class (this overload supports deserialization).
+            </summary>
+            <param name="info">The SerializationInfo.</param>
+            <param name="context">The StreamingContext.</param>
+        </member>
+        <member name="P:MongoDB.Driver.MongoWriteConcernException.WriteConcernResult">
+            <summary>
+            Gets the write concern result.
+            </summary>
+            <value>
+            The write concern result.
+            </value>
+        </member>
         <member name="T:MongoDB.Driver.ParallelScanArgs">
             <summary>
             Represents arguments for the ParallelScan command helper method.
@@ -238,82 +629,6 @@
             The index.
             </value>
         </member>
-        <member name="T:MongoDB.Driver.BulkWriteException">
-            <summary>
-            Represents a bulk write exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoException">
-            <summary>
-            Represents a MongoDB exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the MongoException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the MongoException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(MongoDB.Driver.BulkWriteResult,System.Collections.Generic.IEnumerable{MongoDB.Driver.BulkWriteError},MongoDB.Driver.WriteConcernError,System.Collections.Generic.IEnumerable{MongoDB.Driver.WriteRequest})">
-            <summary>
-            Initializes a new instance of the <see cref="T:MongoDB.Driver.BulkWriteException"/> class.
-            </summary>
-            <param name="result">The result.</param>
-            <param name="writeErrors">The write errors.</param>
-            <param name="unprocessedRequests">The unprocessed requests.</param>
-            <param name="writeConcernError">The write concern error.</param>
-        </member>
-        <member name="M:MongoDB.Driver.BulkWriteException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoQueryException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.Result">
-            <summary>
-            Gets the result of the bulk write operation.
-            </summary>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.UnprocessedRequests">
-            <summary>
-            Gets the unprocessed requests.
-            </summary>
-            <value>
-            The unprocessed requests.
-            </value>
-            <exception cref="T:System.NotImplementedException"></exception>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.WriteConcernError">
-            <summary>
-            Gets the write concern error.
-            </summary>
-            <value>
-            The write concern error.
-            </value>
-        </member>
-        <member name="P:MongoDB.Driver.BulkWriteException.WriteErrors">
-            <summary>
-            Gets the write errors.
-            </summary>
-            <value>
-            The write errors.
-            </value>
-        </member>
         <member name="T:MongoDB.Driver.Operations.BulkWriteBatchResult">
             <summary>
             Represents the result of one batch executed using a write command.
@@ -342,7 +657,7 @@
             Creates a builder for a new write request (either a remove or an update).
             </summary>
             <param name="query">The query.</param>
-            <returns>A FluentWriteRequestBuilder.</returns>
+            <returns>A BulkWriteRequestBuilder.</returns>
         </member>
         <member name="M:MongoDB.Driver.BulkWriteOperation.Insert``1(``0)">
             <summary>
@@ -370,22 +685,26 @@
             <summary>
             Adds a request to replace one matching documents to the bulk operation.
             </summary>
+            <typeparam name="TDocument">The type of the document.</typeparam>
+            <param name="document">The document.</param>
         </member>
         <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.Update(MongoDB.Driver.IMongoUpdate)">
             <summary>
             Adds a request to update all matching documents to the bulk operation.
             </summary>
+            <param name="update">The update.</param>
         </member>
         <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.UpdateOne(MongoDB.Driver.IMongoUpdate)">
             <summary>
             Adds a request to update one matching documents to the bulk operation.
             </summary>
+            <param name="update">The update.</param>
         </member>
         <member name="M:MongoDB.Driver.BulkWriteRequestBuilder.Upsert">
             <summary>
             Specifies that the request being built should be an upsert.
             </summary>
-            <returns></returns>
+            <returns>A BulkUpdateRequestBuilder.</returns>
         </member>
         <member name="T:MongoDB.Driver.BulkUpdateRequestBuilder">
             <summary>
@@ -525,10 +844,11 @@
             <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.IAuthenticationProtocol.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can use the specified credential.
             </summary>
+            <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
@@ -546,10 +866,11 @@
             <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.X509AuthenticationProtocol.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can use the specified credential.
             </summary>
+            <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
@@ -610,95 +931,6 @@
             Thrown when a duplicate key is inserted into a collection.
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.WriteConcernException">
-            <summary>
-            Represents a get last error exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoSafeModeException">
-            <summary>
-            Represents a MongoDB safe mode exception.
-            </summary>
-        </member>
-        <member name="T:MongoDB.Driver.MongoCommandException">
-            <summary>
-            Represents a MongoDB command exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="commandResult">The command result (an error message will be constructed using the result).</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.String,MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="commandResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoCommandException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoCommandException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.MongoCommandException.CommandResult">
-            <summary>
-            Gets the command result.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.String,MongoDB.Driver.CommandResult)">
-            <summary>
-            Initializes a new instance of the MongoSafeModeException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="commandResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.MongoSafeModeException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the MongoSafeModeException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
-            <summary>
-            Initializes a new instance of the WriteConcernException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="writeConcernResult">The command result.</param>
-        </member>
-        <member name="M:MongoDB.Driver.WriteConcernException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
-        </member>
-        <member name="P:MongoDB.Driver.WriteConcernException.WriteConcernResult">
-            <summary>
-            Gets the write concern result.
-            </summary>
-            <value>
-            The write concern result.
-            </value>
-        </member>
         <member name="M:MongoDB.Driver.MongoDuplicateKeyException.#ctor(System.String,MongoDB.Driver.WriteConcernResult)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.MongoDuplicateKeyException"/> class.
@@ -708,7 +940,7 @@
         </member>
         <member name="M:MongoDB.Driver.MongoDuplicateKeyException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
             <summary>
-            Initializes a new instance of the WriteConcernException class (this overload supports deserialization).
+            Initializes a new instance of the MongoDuplicateKeyException class (this overload supports deserialization).
             </summary>
             <param name="info">The SerializationInfo.</param>
             <param name="context">The StreamingContext.</param>
@@ -756,6 +988,11 @@
         <member name="F:MongoDB.Driver.FeatureId.ParallelScanCommand">
             <summary>
             The parallel scan command.
+            </summary>
+        </member>
+        <member name="F:MongoDB.Driver.FeatureId.ScramSha1">
+            <summary>
+            Supports the SCRAM-SHA-1 authentication mechanism.
             </summary>
         </member>
         <member name="F:MongoDB.Driver.FeatureId.TextSearchCommand">
@@ -931,6 +1168,11 @@
             Represents arguments for the Count command helper method.
             </summary>
         </member>
+        <member name="P:MongoDB.Driver.CountArgs.Hint">
+            <summary>
+            Gets or sets the hint.
+            </summary>
+        </member>
         <member name="P:MongoDB.Driver.CountArgs.Limit">
             <summary>
             Gets or sets the maximum number of matching documents to count.
@@ -953,6 +1195,14 @@
             </summary>
             <value>
             The query.
+            </value>
+        </member>
+        <member name="P:MongoDB.Driver.CountArgs.ReadPreference">
+            <summary>
+            Gets or sets the read preference.
+            </summary>
+            <value>
+            The read preference.
             </value>
         </member>
         <member name="P:MongoDB.Driver.CountArgs.Skip">
@@ -1020,31 +1270,6 @@
             <returns>
             The custom exception (or null if the writeConcernResult was not mapped to an exception).
             </returns>
-        </member>
-        <member name="T:MongoDB.Driver.ExecutionTimeoutException">
-            <summary>
-            Represents a MongoDB execution timeout exception.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class.
-            </summary>
-            <param name="message">The error message.</param>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.String,System.Exception)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class.
-            </summary>
-            <param name="message">The error message.</param>
-            <param name="innerException">The inner exception.</param>
-        </member>
-        <member name="M:MongoDB.Driver.ExecutionTimeoutException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            <summary>
-            Initializes a new instance of the ExecutionTimeoutException class (this overload supports deserialization).
-            </summary>
-            <param name="info">The SerializationInfo.</param>
-            <param name="context">The StreamingContext.</param>
         </member>
         <member name="T:MongoDB.Driver.FindAndModifyDocumentVersion">
             <summary>
@@ -1247,6 +1472,13 @@
             <param name="value">The max size.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
+        <member name="M:MongoDB.Driver.Builders.CollectionOptions.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
         <member name="P:MongoDB.Driver.Builders.CollectionOptions.Null">
             <summary>
             Gets a null value with a type of IMongoCollectionOptions.
@@ -1293,6 +1525,13 @@
             Sets the max size of a capped collection.
             </summary>
             <param name="value">The max size.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.Builders.CollectionOptionsBuilder.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.CollectionOptionsBuilder.ToBsonDocument">
@@ -2354,6 +2593,13 @@
             <param name="value">Whether the index is a sparse index.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptions.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptions.SetTextDefaultLanguage(System.String)">
             <summary>
             Sets the default language for the text index.
@@ -2460,6 +2706,13 @@
             Sets whether the index is a sparse index.
             </summary>
             <param name="value">Whether the index is a sparse index.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder.SetTextDefaultLanguage(System.String)">
@@ -2570,6 +2823,13 @@
             <param name="value">Whether the index is a sparse index.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptions`1.SetTextDefaultLanguage(System.String)">
             <summary>
             Sets the default language for the text index.
@@ -2675,6 +2935,13 @@
             Sets whether the index is a sparse index.
             </summary>
             <param name="value">Whether the index is a sparse index.</param>
+            <returns>The builder (so method calls can be chained).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetStorageEngineOptions(MongoDB.Bson.BsonDocument)">
+            <summary>
+            Sets the storage engine options.
+            </summary>
+            <param name="value">The value.</param>
             <returns>The builder (so method calls can be chained).</returns>
         </member>
         <member name="M:MongoDB.Driver.Builders.IndexOptionsBuilder`1.SetTextDefaultLanguage(System.String)">
@@ -3259,6 +3526,7 @@
             <summary>
             Tests that the value of the named element is near some location (see $near).
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
             <param name="name">The name of the element to test.</param>
             <param name="point">The point.</param>
             <param name="maxDistance">The max distance.</param>
@@ -3268,6 +3536,7 @@
             <summary>
             Tests that the value of the named element is near some location (see $near).
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
             <param name="name">The name of the element to test.</param>
             <param name="point">The point.</param>
             <param name="maxDistance">The max distance.</param>
@@ -4856,6 +5125,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="values">The values to add to the end of the array.</param>
             <returns>The builder (so method calls can be chained).</returns>
@@ -4864,7 +5134,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
-            <typeparam name="T">The type of wrapped value.</typeparam>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="values">The values to add to the end of the array.</param>
             <returns>The builder (so method calls can be chained).</returns>
@@ -4873,7 +5143,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
-            <typeparam name="T">The type of wrapped value.</typeparam>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="options">The options.</param>
             <param name="values">The values to add to the end of the array.</param>
@@ -4883,7 +5153,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
-            <typeparam name="T">The type of wrapped value.</typeparam>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="options">The options.</param>
             <param name="values">The values to add to the end of the array.</param>
@@ -5349,6 +5619,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="values">The values to add to the end of the array.</param>
             <returns>The builder (so method calls can be chained).</returns>
@@ -5357,6 +5628,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="values">The values to add to the end of the array.</param>
             <returns>The builder (so method calls can be chained).</returns>
@@ -5365,6 +5637,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="args">The args.</param>
             <param name="values">The values to add to the end of the array.</param>
@@ -5374,6 +5647,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="T">The type of the wrapped values.</typeparam>
             <param name="name">The name of the array element.</param>
             <param name="args">The args.</param>
             <param name="values">The values to add to the end of the array.</param>
@@ -6091,6 +6365,7 @@
             <summary>
             Adds a list of values to the end of the named array element (see $push and $each).
             </summary>
+            <typeparam name="TValue">The type of the value.</typeparam>
             <param name="memberExpression">The name of the array element.</param>
             <param name="values">The values to add to the end of the array.</param>
             <returns>The builder (so method calls can be chained).</returns>
@@ -6494,6 +6769,7 @@
             <summary>
             Represents the result of a command (there are also subclasses for various commands).
             </summary>
+            <typeparam name="TValue">The type of the values.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.DistinctCommandResult`1.#ctor(MongoDB.Bson.BsonDocument,System.Collections.Generic.IEnumerable{`0})">
             <summary>
@@ -7429,37 +7705,11 @@
             Implements the SASL-PLAIN rfc: http://tools.ietf.org/html/rfc4616.
             </summary>
         </member>
-        <member name="T:MongoDB.Driver.Communication.Security.ISaslMechanism">
-            <summary>
-            Represents a sasl mechanism.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can authenticate with the specified credential.
-            </summary>
-            <param name="credential">The credential.</param>
-            <returns>
-              <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
-            </returns>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.ISaslMechanism.Initialize(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
-            <summary>
-            Initializes the mechanism.
             </summary>
             <param name="connection">The connection.</param>
-            <param name="credential">The credential.</param>
-            <returns>The initial step.</returns>
-        </member>
-        <member name="P:MongoDB.Driver.Communication.Security.ISaslMechanism.Name">
-            <summary>
-            Gets the name of the mechanism.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.PlainMechanism.CanUse(MongoDB.Driver.MongoCredential)">
-            <summary>
-            Determines whether this instance can authenticate with the specified credential.
-            </summary>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
@@ -7692,24 +7942,6 @@
               <IPermission class="System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.3600.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" version="1" Flags="UnmanagedCode" />
               </PermissionSet>
         </member>
-        <member name="T:MongoDB.Driver.Communication.Security.ISaslStep">
-            <summary>
-            A step in a Sasl Conversation.
-            </summary>
-        </member>
-        <member name="M:MongoDB.Driver.Communication.Security.ISaslStep.Transition(MongoDB.Driver.Communication.Security.SaslConversation,System.Byte[])">
-            <summary>
-            Transitions to the next step in the conversation.
-            </summary>
-            <param name="conversation">The conversation.</param>
-            <param name="bytesReceivedFromServer">The bytes received from the server.</param>
-            <returns>An ISaslStep.</returns>
-        </member>
-        <member name="P:MongoDB.Driver.Communication.Security.ISaslStep.BytesToSendToServer">
-            <summary>
-            The bytes that should be sent to ther server before calling Transition.
-            </summary>
-        </member>
         <member name="T:MongoDB.Driver.Communication.Security.MongoCRAuthenticationProtocol">
             <summary>
             Authenticates a credential using the MONGODB-CR protocol.
@@ -7722,10 +7954,11 @@
             <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.MongoCRAuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.MongoCRAuthenticationProtocol.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can use the specified credential.
             </summary>
+            <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
@@ -7763,6 +7996,11 @@
             The bytes that should be sent to ther server before calling Transition.
             </summary>
         </member>
+        <member name="P:MongoDB.Driver.Communication.Security.Mechanisms.GsaslImplementationBase.IsComplete">
+            <summary>
+            Gets a value indicating whether the client is complete.
+            </summary>
+        </member>
         <member name="T:MongoDB.Driver.Communication.Security.Mechanisms.GsaslGssapiImplementation">
             <summary>
             Implements the GssApi specification using the Gsasl library.
@@ -7789,10 +8027,11 @@
             A mechanism implementing the GSS API specification.
             </summary>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GssapiMechanism.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.Mechanisms.GssapiMechanism.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can authenticate with the specified credential.
             </summary>
+            <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can authenticate with the specified credential; otherwise, <c>false</c>.
@@ -7840,6 +8079,11 @@
             The bytes that should be sent to ther server before calling Transition.
             </summary>
         </member>
+        <member name="P:MongoDB.Driver.Communication.Security.Mechanisms.WindowsGssapiImplementation.IsComplete">
+            <summary>
+            Gets a value indicating whether the client is complete.
+            </summary>
+        </member>
         <member name="T:MongoDB.Driver.Communication.Security.MongoSecurityException">
             <summary>
             An exception thrown during login and privilege negotiation.
@@ -7883,10 +8127,11 @@
             <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
         </member>
-        <member name="M:MongoDB.Driver.Communication.Security.SaslAuthenticationProtocol.CanUse(MongoDB.Driver.MongoCredential)">
+        <member name="M:MongoDB.Driver.Communication.Security.SaslAuthenticationProtocol.CanUse(MongoDB.Driver.Internal.MongoConnection,MongoDB.Driver.MongoCredential)">
             <summary>
             Determines whether this instance can use the specified credential.
             </summary>
+            <param name="connection">The connection.</param>
             <param name="credential">The credential.</param>
             <returns>
               <c>true</c> if this instance can use the specified credential; otherwise, <c>false</c>.
@@ -10503,6 +10748,7 @@
             <summary>
             Represents a serializer for a GeoJsonLinearRingCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonLinearRingCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -10529,6 +10775,7 @@
             <summary>
             Represents a serializer for a GeoJsonLineStringCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonLineStringCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -10623,6 +10870,7 @@
             <summary>
             Represents a serializer for a GeoJsonMultiLineStringCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonMultiLineStringCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -10649,6 +10897,7 @@
             <summary>
             Represents a serializer for a GeoJsonMultiPointCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonMultiPointCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -10759,6 +11008,7 @@
             <summary>
             Represents a serializer for a GeoJsonMultiPolygonCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonMultiPolygonCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -10895,6 +11145,7 @@
             <summary>
             Represents a serializer for a GeoJsonPolygonCoordinates value.
             </summary>
+            <typeparam name="TCoordinates">The type of the coordinates.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.GeoJsonObjectModel.Serializers.GeoJsonPolygonCoordinatesSerializer`1.Deserialize(MongoDB.Bson.IO.BsonReader,System.Type,System.Type,MongoDB.Bson.Serialization.IBsonSerializationOptions)">
             <summary>
@@ -12848,6 +13099,11 @@
             Gets or sets the authentication mechanism.
             </summary>
         </member>
+        <member name="P:MongoDB.Driver.MongoUrlBuilder.AuthenticationMechanismProperties">
+            <summary>
+            Gets or sets the authentication mechanism properties.
+            </summary>
+        </member>
         <member name="P:MongoDB.Driver.MongoUrlBuilder.AuthenticationSource">
             <summary>
             Gets or sets the authentication source.
@@ -13679,6 +13935,7 @@
             <summary>
             Represents a setting that may or may not have been set.
             </summary>
+            <typeparam name="T">The type of the value.</typeparam>
         </member>
         <member name="M:MongoDB.Driver.Setting`1.Reset">
             <summary>
@@ -15702,12 +15959,17 @@
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.Enabled">
             <summary>
-            Gets or sets whether WriteConcern is enabled.
+            Gets whether WriteConcern is enabled.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.FSync">
             <summary>
             Gets or sets whether the write concern includes { fsync : true }.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.WriteConcern.IsAcknowledged">
+            <summary>
+            Gets a value indicating whether this WriteConcern is acknowledged.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.WriteConcern.IsFrozen">
@@ -17553,6 +17815,7 @@
             <summary>
             Returns an explanation of how the query was executed (instead of the results).
             </summary>
+            <typeparam name="TSource">The type of the elements of source.</typeparam>
             <param name="source">The LINQ query to explain.</param>
             <returns>An explanation of thow the query was executed.</returns>
         </member>
@@ -17560,6 +17823,7 @@
             <summary>
             Returns an explanation of how the query was executed (instead of the results).
             </summary>
+            <typeparam name="TSource">The type of the elements of source.</typeparam>
             <param name="source">The LINQ query to explain</param>
             <param name="verbose">Whether the explanation should contain more details.</param>
             <returns>An explanation of thow the query was executed.</returns>
@@ -18387,6 +18651,7 @@
             <summary>
             Creates or opens a GridFS file for writing UTF-8 encoded text.
             </summary>
+            <param name="remoteFileName">The remote file name.</param>
             <returns>A stream writer.</returns>
         </member>
         <member name="M:MongoDB.Driver.GridFS.MongoGridFS.CreateText(System.String,MongoDB.Driver.GridFS.MongoGridFSCreateOptions)">
@@ -19428,6 +19693,7 @@
             <summary>
             Returns the distinct values for a given field.
             </summary>
+            <typeparam name="TValue">The type of the values.</typeparam>
             <param name="args">The args.</param>
             <returns>The distint values of the field.</returns>
         </member>
@@ -19450,7 +19716,7 @@
             <summary>
             Returns the distinct values for a given field.
             </summary>
-            <typeparam name="TValue">The type of the value.</typeparam>
+            <typeparam name="TValue">The type of the values.</typeparam>
             <param name="key">The key of the field.</param>
             <returns>The distint values of the field.</returns>
         </member>
@@ -19458,7 +19724,7 @@
             <summary>
             Returns the distinct values for a given field for documents that match a query.
             </summary>
-            <typeparam name="TValue">The type of the value.</typeparam>
+            <typeparam name="TValue">The type of the values.</typeparam>
             <param name="key">The key of the field.</param>
             <param name="query">The query (usually a QueryDocument or constructed using the Query builder).</param>
             <returns>The distint values of the field.</returns>
@@ -20635,6 +20901,13 @@
             Credential to access a MongoDB database.
             </summary>
         </member>
+        <member name="M:MongoDB.Driver.MongoCredential.#ctor(MongoDB.Driver.MongoIdentity,MongoDB.Driver.MongoIdentityEvidence)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Driver.MongoCredential"/> class.
+            </summary>
+            <param name="identity">The identity.</param>
+            <param name="evidence">The evidence.</param>
+        </member>
         <member name="M:MongoDB.Driver.MongoCredential.#ctor(System.String,MongoDB.Driver.MongoIdentity,MongoDB.Driver.MongoIdentityEvidence)">
             <summary>
             Initializes a new instance of the <see cref="T:MongoDB.Driver.MongoCredential"/> class.
@@ -20658,6 +20931,24 @@
             <param name="lhs">The first MongoCredential.</param>
             <param name="rhs">The other MongoCredential.</param>
             <returns>True if the two MongoCredentials are not equal (or one is null and the other is not).</returns>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCredential.CreateCredential(System.String,System.String,System.String)">
+            <summary>
+            Creates a default credential.
+            </summary>
+            <param name="databaseName">Name of the database.</param>
+            <param name="username">The username.</param>
+            <param name="password">The password.</param>
+            <returns>A default credential.</returns>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCredential.CreateCredential(System.String,System.String,System.Security.SecureString)">
+            <summary>
+            Creates a default credential.
+            </summary>
+            <param name="databaseName">Name of the database.</param>
+            <param name="username">The username.</param>
+            <param name="password">The password.</param>
+            <returns>A default credential.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCredential.CreateGssapiCredential(System.String)">
             <summary>
@@ -20725,6 +21016,24 @@
             <param name="username">The username.</param>
             <param name="password">The password.</param>
             <returns>A credential for PLAIN.</returns>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCredential.CreateScramSha1Credential(System.String,System.String,System.String)">
+            <summary>
+            Creates a credential used with SCRAM-SHA-1.
+            </summary>
+            <param name="databaseName">Name of the database.</param>
+            <param name="username">The username.</param>
+            <param name="password">The password.</param>
+            <returns>A credential for SCRAM-SHA-1.</returns>
+        </member>
+        <member name="M:MongoDB.Driver.MongoCredential.CreateScramSha1Credential(System.String,System.String,System.Security.SecureString)">
+            <summary>
+            Creates a credential used with SCRAM-SHA-1.
+            </summary>
+            <param name="databaseName">Name of the database.</param>
+            <param name="username">The username.</param>
+            <param name="password">The password.</param>
+            <returns>A credential for SCRAM-SHA-1.</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCredential.GetMechanismProperty``1(System.String,``0)">
             <summary>
@@ -21411,7 +21720,7 @@
             Sets the maximum time the server should spend on this query.
             </summary>
             <param name="maxTime">The max time.</param>
-            <returns></returns>
+            <returns>The cursor (so you can chain method calls to it).</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCursor.SetMin(MongoDB.Bson.BsonDocument)">
             <summary>
@@ -21670,7 +21979,7 @@
             Sets the maximum time the server should spend on this query.
             </summary>
             <param name="maxTime">The max time.</param>
-            <returns></returns>
+            <returns>The cursor (so you can chain method calls to it).</returns>
         </member>
         <member name="M:MongoDB.Driver.MongoCursor`1.SetMin(MongoDB.Bson.BsonDocument)">
             <summary>
@@ -22478,6 +22787,11 @@
         <member name="P:MongoDB.Driver.MongoUrl.AuthenticationMechanism">
             <summary>
             Gets the authentication mechanism.
+            </summary>
+        </member>
+        <member name="P:MongoDB.Driver.MongoUrl.AuthenticationMechanismProperties">
+            <summary>
+            Gets the authentication mechanism properties.
             </summary>
         </member>
         <member name="P:MongoDB.Driver.MongoUrl.AuthenticationSource">
