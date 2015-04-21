@@ -36,7 +36,7 @@ namespace Rebus.Transport.SqlServer
         readonly DbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
-        
+
         CancellationTokenSource _expiredMessagesCleanupBackgroundTask;
         ManualResetEvent _expiredMessagesCleanupBackgroundTaskFinished;
 
@@ -62,7 +62,7 @@ namespace Rebus.Transport.SqlServer
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
-            _log.Info("Starting periodic expired messages cleanup for recipient '{0}' with {1} interval", 
+            _log.Info("Starting periodic expired messages cleanup for recipient '{0}' with {1} interval",
                 _inputQueueName, ExpiredMessagesCleanupInterval);
 
             Task.Factory.StartNew(async () =>
@@ -185,7 +185,7 @@ VALUES
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
             }
         }
-        
+
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             var connection = await GetConnection(context);
@@ -344,15 +344,22 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
         public void Dispose()
         {
-            if (_expiredMessagesCleanupBackgroundTask != null)
+            if (_expiredMessagesCleanupBackgroundTask == null) return;
+
+            try
             {
                 _log.Info("Stopping periodic expired messages cleanup for recipient '{0}'", _inputQueueName);
                 _expiredMessagesCleanupBackgroundTask.Cancel();
-                
+
                 if (!_expiredMessagesCleanupBackgroundTaskFinished.WaitOne(TimeSpan.FromSeconds(5)))
                 {
                     _log.Warn("Expired messages background task did not stop within 5 second timeout!!");
                 }
+            }
+            finally
+            {
+                _expiredMessagesCleanupBackgroundTask = null;
+                _expiredMessagesCleanupBackgroundTaskFinished = null;
             }
         }
     }
