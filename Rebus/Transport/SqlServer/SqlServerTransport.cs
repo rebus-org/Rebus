@@ -12,6 +12,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
+using Rebus.Timers;
 
 namespace Rebus.Transport.SqlServer
 {
@@ -21,6 +22,11 @@ namespace Rebus.Transport.SqlServer
         /// Special message priority header that can be used with the <see cref="SqlServerTransport"/>. The value must be an <see cref="Int32"/>
         /// </summary>
         public const string MessagePriorityHeaderKey = "rbs2-msg-priority";
+
+        /// <summary>
+        /// Default interval that will be used for <see cref="ExpiredMessagesCleanupInterval"/> unless it is explicitly set to something else
+        /// </summary>
+        public static readonly TimeSpan DefaultExpiredMessagesCleanupInterval = TimeSpan.FromSeconds(20);
 
         static ILog _log;
 
@@ -37,8 +43,7 @@ namespace Rebus.Transport.SqlServer
         readonly string _tableName;
         readonly string _inputQueueName;
 
-        CancellationTokenSource _expiredMessagesCleanupBackgroundTask;
-        ManualResetEvent _expiredMessagesCleanupBackgroundTaskFinished;
+        readonly AsyncPeriodicBackgroundTask _expiredMessagesCleanupTask;
 
         public SqlServerTransport(DbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
@@ -46,55 +51,20 @@ namespace Rebus.Transport.SqlServer
             _tableName = tableName;
             _inputQueueName = inputQueueName;
 
-            ExpiredMessagesCleanupInterval = TimeSpan.FromSeconds(20);
+            ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
+
+            _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle);
         }
 
         public void Initialize()
         {
-            _expiredMessagesCleanupBackgroundTaskFinished = new ManualResetEvent(false);
-            _expiredMessagesCleanupBackgroundTask = StartBackgroundTasks(_expiredMessagesCleanupBackgroundTaskFinished);
+            _expiredMessagesCleanupTask.Start();
         }
 
+        /// <summary>
+        /// Configures the interval between periodic deletion of expired messages. Defaults to <see cref="DefaultExpiredMessagesCleanupInterval"/>
+        /// </summary>
         public TimeSpan ExpiredMessagesCleanupInterval { get; set; }
-
-        CancellationTokenSource StartBackgroundTasks(ManualResetEvent finished)
-        {
-            var cancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = cancellationTokenSource.Token;
-
-            _log.Info("Starting periodic expired messages cleanup for recipient '{0}' with {1} interval",
-                _inputQueueName, ExpiredMessagesCleanupInterval);
-
-            Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    while (!cancellationToken.IsCancellationRequested)
-                    {
-                        await Task.Delay(ExpiredMessagesCleanupInterval, cancellationToken);
-
-                        if (!cancellationToken.IsCancellationRequested)
-                        {
-                            try
-                            {
-                                await PerformExpiredMessagesCleanupCycle();
-                            }
-                            catch (Exception exception)
-                            {
-                                _log.Warn("Expired messages cleanup experienced an error: {0}", exception);
-                            }
-                        }
-                    }
-                }
-                catch (TaskCanceledException)
-                {
-                    finished.Set();
-                    throw;
-                }
-            }, cancellationToken);
-
-            return cancellationTokenSource;
-        }
 
         async Task PerformExpiredMessagesCleanupCycle()
         {
@@ -197,12 +167,18 @@ VALUES
             {
                 selectCommand.CommandText =
                     string.Format(@"
-SELECT TOP 1 [id], [headers], [body]
-FROM [{0}]
+SELECT TOP 1
+    [id],
+    [headers],
+    [body]
+FROM [{0}] 
 WITH (UPDLOCK, READPAST, ROWLOCK)
-WHERE [recipient] = @recipient
+WHERE 
+    [recipient] = @recipient 
     AND [expiration] > getdate()
-ORDER BY [priority] ASC, [id] asc
+ORDER BY 
+    [priority] ASC, 
+    [id] asc
 
 ", _tableName);
 
@@ -344,23 +320,7 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
         public void Dispose()
         {
-            if (_expiredMessagesCleanupBackgroundTask == null) return;
-
-            try
-            {
-                _log.Info("Stopping periodic expired messages cleanup for recipient '{0}'", _inputQueueName);
-                _expiredMessagesCleanupBackgroundTask.Cancel();
-
-                if (!_expiredMessagesCleanupBackgroundTaskFinished.WaitOne(TimeSpan.FromSeconds(5)))
-                {
-                    _log.Warn("Expired messages background task did not stop within 5 second timeout!!");
-                }
-            }
-            finally
-            {
-                _expiredMessagesCleanupBackgroundTask = null;
-                _expiredMessagesCleanupBackgroundTaskFinished = null;
-            }
+            _expiredMessagesCleanupTask.Dispose();
         }
     }
 }
