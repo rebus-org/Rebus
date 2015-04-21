@@ -114,7 +114,6 @@
     <Compile Include="Sagas\Saga.cs" />
     <Compile Include="Sagas\SagaHelper.cs" />
     <Compile Include="Timeouts\ITimeoutManager.cs" />
-    <Compile Include="Timers\BackgroundTimer.cs" />
     <Compile Include="Time\RebusTime.cs" />
     <Compile Include="Transport\InMem\InMemNetwork.cs" />
     <Compile Include="Transport\InMem\InMemTransport.cs" />

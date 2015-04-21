@@ -5,6 +5,9 @@ using Rebus.Logging;
 
 namespace Rebus.Timers
 {
+    /// <summary>
+    /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
+    ///  </summary>
     public class AsyncPeriodicBackgroundTask : IDisposable
     {
         static ILog _log;
