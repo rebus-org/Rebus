@@ -98,10 +98,12 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
 
+            PossiblyRegisterDefault(c => new HandleDeferredMessagesStep(c.Get<ITimeoutManager>(), c.Get<ITransport>()));
+
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
                 .OnReceive(c.Get<IRetryStrategy>().GetRetryStep(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new HandleDeferredMessagesStep(c.Get<ITimeoutManager>(), c.Get<ITransport>()), ReceiveStage.TransportMessageReceived)
+                .OnReceive(c.Get<HandleDeferredMessagesStep>(), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
                 .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()), ReceiveStage.TransportMessageReceived)

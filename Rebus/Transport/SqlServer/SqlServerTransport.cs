@@ -56,6 +56,11 @@ namespace Rebus.Transport.SqlServer
             _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle);
         }
 
+        ~SqlServerTransport()
+        {
+            Dispose(false);
+        }
+
         public void Initialize()
         {
             _expiredMessagesCleanupTask.Start();
@@ -320,7 +325,14 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
             _expiredMessagesCleanupTask.Dispose();
         }
+
     }
 }

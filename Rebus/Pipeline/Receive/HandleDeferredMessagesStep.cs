@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Timeouts;
@@ -9,7 +10,7 @@ using Rebus.Transport;
 
 namespace Rebus.Pipeline.Receive
 {
-    public class HandleDeferredMessagesStep : IIncomingStep, IDisposable
+    public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializable
     {
         public const string DateTimeOffsetFormat = "O";
 
@@ -22,19 +23,32 @@ namespace Rebus.Pipeline.Receive
 
         readonly ITimeoutManager _timeoutManager;
         readonly ITransport _transport;
-        readonly IDisposable _timerHandle;
+        readonly AsyncPeriodicBackgroundTask _dueMessagesSenderBackgroundTask;
 
         public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport)
         {
             _timeoutManager = timeoutManager;
             _transport = transport;
 
-            _timerHandle = BackgroundTimer.Schedule(TimerElapsed, TimeSpan.FromSeconds(1));
+            _dueMessagesSenderBackgroundTask = new AsyncPeriodicBackgroundTask("DueMessagesSender", TimerElapsed)
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
         }
 
-        void TimerElapsed()
+        ~HandleDeferredMessagesStep()
         {
-            using (var result = _timeoutManager.GetDueMessages().Result)
+            Dispose(false);
+        }
+
+        public void Initialize()
+        {
+            _dueMessagesSenderBackgroundTask.Start();
+        }
+
+        async Task TimerElapsed()
+        {
+            using (var result = await _timeoutManager.GetDueMessages())
             {
                 foreach (var dueMessage in result)
                 {
@@ -47,19 +61,14 @@ namespace Rebus.Pipeline.Receive
 
                     using (var context = new DefaultTransactionContext())
                     {
-                        _transport.Send(returnAddress, transportMessage, context).Wait();
+                        await _transport.Send(returnAddress, transportMessage, context);
 
-                        context.Complete().Wait();
+                        await context.Complete();
                     }
 
                     dueMessage.MarkAsCompleted();
                 }
             }
-        }
-
-        ~HandleDeferredMessagesStep()
-        {
-            Dispose(false);
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -108,7 +117,7 @@ namespace Rebus.Pipeline.Receive
 
         protected virtual void Dispose(bool disposing)
         {
-            _timerHandle.Dispose();
+            _dueMessagesSenderBackgroundTask.Dispose();
         }
     }
 }
