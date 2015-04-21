@@ -28,7 +28,7 @@ namespace Rebus.AzureServiceBus
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
         readonly string _inputQueueAddress;
-        
+
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
 
@@ -42,7 +42,7 @@ namespace Rebus.AzureServiceBus
         public void Initialize()
         {
             _log.Info("Initializing Azure Service Bus transport with queue '{0}'", _inputQueueAddress);
-            
+
             CreateQueue(_inputQueueAddress);
         }
 
@@ -113,7 +113,7 @@ namespace Rebus.AzureServiceBus
 
             var headers = brokeredMessage.Properties
                 .Where(kvp => kvp.Value is string)
-                .ToDictionary(kvp => kvp.Key, kvp => (string) kvp.Value);
+                .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
 
             var messageId = headers.GetValueOrNull(Headers.MessageId);
 
@@ -121,8 +121,41 @@ namespace Rebus.AzureServiceBus
 
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
+            var renewalTaskFinished = new ManualResetEvent(false);
 
-            var task = Task.Factory.StartNew(async () =>
+            StartPeekLockRenewalTask(cancellationToken, messageId, brokeredMessage);
+
+            context.OnAborted(() =>
+            {
+                _log.Debug("Abandoning message with ID {0}", messageId);
+                brokeredMessage.Abandon();
+            });
+
+            context.OnCommitted(async () =>
+            {
+                _log.Debug("Completing message with ID {0}", messageId);
+                await brokeredMessage.CompleteAsync();
+            });
+
+            context.OnDisposed(() =>
+            {
+                cancellationTokenSource.Cancel();
+                
+                if (!renewalTaskFinished.WaitOne(TimeSpan.FromSeconds(5)))
+                {
+                    _log.Warn("Peek lock renewal background task did not finish within 5 second timeout!!");
+                }
+
+                _log.Debug("Disposing message with ID {0}", messageId);
+                brokeredMessage.Dispose();
+            });
+
+            return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
+        }
+
+        void StartPeekLockRenewalTask(CancellationToken cancellationToken, string messageId, BrokeredMessage brokeredMessage)
+        {
+            Task.Factory.StartNew(async () =>
             {
                 while (true)
                 {
@@ -131,33 +164,10 @@ namespace Rebus.AzureServiceBus
                     await Task.Delay(_peekLockRenewalInterval, cancellationToken);
 
                     _log.Info("Renewing peek lock for message with ID {0}", messageId);
-                    
+
                     await brokeredMessage.RenewLockAsync();
                 }
             }, cancellationToken);
-
-            context.OnAborted(async () =>
-            {
-                _log.Debug("Abandoning message with ID {0}", messageId);
-                await brokeredMessage.AbandonAsync();
-            });
-            
-            context.OnCommitted(async () =>
-            {
-                _log.Debug("Completing message with ID {0}", messageId);
-                await brokeredMessage.CompleteAsync();
-            });
-            
-            context.OnDisposed(async () =>
-            {
-                cancellationTokenSource.Cancel();
-                await task;
-
-                _log.Debug("Disposing message with ID {0}", messageId);
-                brokeredMessage.Dispose();
-            });
-
-            return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
         }
 
         QueueClient GetQueueClient(string queueAddress)
