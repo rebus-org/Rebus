@@ -11,6 +11,7 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Timers;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus
@@ -119,32 +120,38 @@ namespace Rebus.AzureServiceBus
 
             _log.Debug("Received brokered message with ID {0}", messageId);
 
-            var cancellationTokenSource = new CancellationTokenSource();
-            var cancellationToken = cancellationTokenSource.Token;
-            var renewalTaskFinished = new ManualResetEvent(false);
+            var renewalTask = new AsyncPeriodicBackgroundTask(string.Format("RenewPeekLock-{0}", messageId),
+                async () =>
+                {
+                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
 
-            StartPeekLockRenewalTask(cancellationToken, messageId, brokeredMessage);
+                    await brokeredMessage.RenewLockAsync();
+                })
+            {
+                Interval = _peekLockRenewalInterval
+            };
+
+            renewalTask.Start();
 
             context.OnAborted(() =>
             {
+                renewalTask.Dispose();
+
                 _log.Debug("Abandoning message with ID {0}", messageId);
                 brokeredMessage.Abandon();
             });
 
             context.OnCommitted(async () =>
             {
+                renewalTask.Dispose();
+
                 _log.Debug("Completing message with ID {0}", messageId);
                 await brokeredMessage.CompleteAsync();
             });
 
             context.OnDisposed(() =>
             {
-                cancellationTokenSource.Cancel();
-                
-                if (!renewalTaskFinished.WaitOne(TimeSpan.FromSeconds(5)))
-                {
-                    _log.Warn("Peek lock renewal background task did not finish within 5 second timeout!!");
-                }
+                renewalTask.Dispose();
 
                 _log.Debug("Disposing message with ID {0}", messageId);
                 brokeredMessage.Dispose();

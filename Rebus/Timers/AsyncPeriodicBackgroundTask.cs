@@ -24,6 +24,8 @@ namespace Rebus.Timers
         readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _finished = new ManualResetEvent(false);
 
+        Task _task;
+
         bool _disposed;
 
         public AsyncPeriodicBackgroundTask(string description, Func<Task> action)
@@ -45,7 +47,7 @@ namespace Rebus.Timers
 
             var token = _tokenSource.Token;
 
-            Task.Factory.StartNew(async () =>
+            _task = Task.Factory.StartNew(async () =>
             {
                 try
                 {
