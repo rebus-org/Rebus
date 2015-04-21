@@ -73,7 +73,7 @@ namespace Rebus.Tests.Contracts.Transports
                 await transactionContext.Complete();
             }
 
-            await Task.Delay(5000);
+            await Task.Delay(20000);
 
             using (var transactionContext = new DefaultTransactionContext())
             {

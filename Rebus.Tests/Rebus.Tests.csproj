@@ -108,6 +108,9 @@
     <Compile Include="Injection\TestInjectionist_Decorators.cs" />
     <Compile Include="Injection\TestInjectionist_Dependencies.cs" />
     <Compile Include="Injection\TestInjectionist_ServiceAndImplementation.cs" />
+    <Compile Include="Transport\SqlServer\SqlTransportTests.cs" />
+    <Compile Include="Transport\SqlServer\TestDbConnectionProvider.cs" />
+    <Compile Include="Transport\SqlServer\TestSqlServerTransport.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

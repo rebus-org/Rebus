@@ -33,6 +33,7 @@ namespace Rebus.Persistence.SqlServer
     {
         readonly SqlConnection _connection;
         SqlTransaction _currentTransaction;
+        bool _disposed;
         readonly bool _managedExternally;
 
         public DbConnection(SqlConnection connection, SqlTransaction currentTransaction, bool managedExternally)
@@ -68,14 +69,22 @@ namespace Rebus.Persistence.SqlServer
         public void Dispose()
         {
             if (_managedExternally) return;
+            if (_disposed) return;
 
-            if (_currentTransaction != null)
+            try
             {
-                _currentTransaction.Rollback();
-                _currentTransaction = null;
+                if (_currentTransaction != null)
+                {
+                    _currentTransaction.Rollback();
+                    _currentTransaction = null;
+                }
+
+                _connection.Dispose();
             }
-            
-            _connection.Dispose();
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }
