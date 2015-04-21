@@ -38,6 +38,7 @@ namespace Rebus.Transport.SqlServer
         readonly string _inputQueueName;
         
         CancellationTokenSource _expiredMessagesCleanupBackgroundTask;
+        ManualResetEvent _expiredMessagesCleanupBackgroundTaskFinished;
 
         public SqlServerTransport(DbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
@@ -50,36 +51,45 @@ namespace Rebus.Transport.SqlServer
 
         public void Initialize()
         {
-            _expiredMessagesCleanupBackgroundTask = StartBackgroundTasks();
+            _expiredMessagesCleanupBackgroundTaskFinished = new ManualResetEvent(false);
+            _expiredMessagesCleanupBackgroundTask = StartBackgroundTasks(_expiredMessagesCleanupBackgroundTaskFinished);
         }
 
         public TimeSpan ExpiredMessagesCleanupInterval { get; set; }
 
-        CancellationTokenSource StartBackgroundTasks()
+        CancellationTokenSource StartBackgroundTasks(ManualResetEvent finished)
         {
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
 
-            _log.Info("Starting periodic expired messages cleanup for recipient {0} with {1} interval", 
+            _log.Info("Starting periodic expired messages cleanup for recipient '{0}' with {1} interval", 
                 _inputQueueName, ExpiredMessagesCleanupInterval);
 
             Task.Factory.StartNew(async () =>
             {
-                while (!cancellationToken.IsCancellationRequested)
+                try
                 {
-                    await Task.Delay(ExpiredMessagesCleanupInterval, cancellationToken);
-
-                    if (!cancellationToken.IsCancellationRequested)
+                    while (!cancellationToken.IsCancellationRequested)
                     {
-                        try
+                        await Task.Delay(ExpiredMessagesCleanupInterval, cancellationToken);
+
+                        if (!cancellationToken.IsCancellationRequested)
                         {
-                            await PerformExpiredMessagesCleanupCycle();
-                        }
-                        catch (Exception exception)
-                        {
-                            _log.Warn("Expired messages cleanup experienced an error: {0}", exception);
+                            try
+                            {
+                                await PerformExpiredMessagesCleanupCycle();
+                            }
+                            catch (Exception exception)
+                            {
+                                _log.Warn("Expired messages cleanup experienced an error: {0}", exception);
+                            }
                         }
                     }
+                }
+                catch (TaskCanceledException)
+                {
+                    finished.Set();
+                    throw;
                 }
             }, cancellationToken);
 
@@ -336,7 +346,13 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
         {
             if (_expiredMessagesCleanupBackgroundTask != null)
             {
+                _log.Info("Stopping periodic expired messages cleanup for recipient '{0}'", _inputQueueName);
                 _expiredMessagesCleanupBackgroundTask.Cancel();
+                
+                if (!_expiredMessagesCleanupBackgroundTaskFinished.WaitOne(TimeSpan.FromSeconds(5)))
+                {
+                    _log.Warn("Expired messages background task did not stop within 5 second timeout!!");
+                }
             }
         }
     }
