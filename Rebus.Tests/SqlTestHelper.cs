@@ -25,49 +25,91 @@ namespace Rebus.Tests
             }
         }
 
-        static void InitializeDatabase(string databaseName)
+        public static void DropTable(string tableName)
         {
-            var masterConnectionString = GetConnectionStringForDatabase("master");
-
-            using (var connection = new SqlConnection(masterConnectionString))
+            try
             {
-                connection.Open();
-
-                if (connection.GetDatabaseNames().Contains(databaseName)) return;
-
-                Console.WriteLine("Creating database {0}", databaseName);
-
-                using (var command = connection.CreateCommand())
+                WithRetries(5, () =>
                 {
-                    command.CommandText = string.Format("CREATE DATABASE [{0}]", databaseName);
-                    command.ExecuteNonQuery();
+                    using (var connection = new SqlConnection(ConnectionString))
+                    {
+                        connection.Open();
+
+                        if (!connection.GetTableNames().Contains(tableName)) return;
+
+                        Console.WriteLine("Dropping table {0}", tableName);
+
+                        using (var command = connection.CreateCommand())
+                        {
+                            command.CommandText = string.Format("DROP TABLE [{0}]", tableName);
+                            command.ExecuteNonQuery();
+                        }
+                    }
+                });
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException(string.Format("Could not drop table '{0}'", tableName), exception);
+            }
+        }
+
+        static void WithRetries(int maxAttempts, Action action)
+        {
+            while (true)
+            {
+                try
+                {
+                    action();
+
+                    return;
+                }
+                catch
+                {
+                    maxAttempts--;
+
+                    Console.WriteLine("Remainint attempts: {0}", maxAttempts);
+
+                    if (maxAttempts <= 0)
+                    {
+                        throw;
+                    }
                 }
             }
+        }
 
-            _databaseHasBeenInitialized = true;
+        static void InitializeDatabase(string databaseName)
+        {
+            try
+            {
+                var masterConnectionString = GetConnectionStringForDatabase("master");
+
+                using (var connection = new SqlConnection(masterConnectionString))
+                {
+                    connection.Open();
+
+                    if (connection.GetDatabaseNames().Contains(databaseName)) return;
+
+                    Console.WriteLine("Creating database {0}", databaseName);
+
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format("CREATE DATABASE [{0}]", databaseName);
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                _databaseHasBeenInitialized = true;
+
+            }
+            catch (Exception exception)
+            {
+                throw new ApplicationException(string.Format("Could not initialize database '{0}'", databaseName), exception);
+            }
         }
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
             return string.Format("server=.; database={0}; trusted_connection=true", databaseName);
-        }
-
-        public static void DropTable(string tableName)
-        {
-            using (var connection = new SqlConnection(ConnectionString))
-            {
-                connection.Open();
-
-                if (!connection.GetTableNames().Contains(tableName)) return;
-
-                Console.WriteLine("Dropping table {0}", tableName);
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format("DROP TABLE [{0}]", tableName);
-                    command.ExecuteNonQuery();
-                }
-            }
         }
     }
 }

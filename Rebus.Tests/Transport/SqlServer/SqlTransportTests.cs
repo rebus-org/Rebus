@@ -22,7 +22,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
         public ITransport Create(string inputQueueAddress)
         {
-            var tableName = "RebusMessages" + TestConfig.Suffix;
+            var tableName = ("RebusMessages_" + TestConfig.Suffix).TrimEnd('_');
 
             _tablesToDrop.Add(tableName);
 
@@ -39,8 +39,10 @@ namespace Rebus.Tests.Transport.SqlServer
         public void CleanUp()
         {
             _disposables.ForEach(d => d.Dispose());
+            _disposables.Clear();
 
             _tablesToDrop.ForEach(SqlTestHelper.DropTable);
+            _tablesToDrop.Clear();
         }
     }
 }
