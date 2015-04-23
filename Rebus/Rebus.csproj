@@ -49,6 +49,7 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Persistence\SqlServer\DbConnection.cs" />
     <Compile Include="Timers\AsyncPeriodicBackgroundTask.cs" />

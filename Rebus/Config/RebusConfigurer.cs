@@ -5,7 +5,6 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Injection;
-using Rebus.Logging;
 using Rebus.Persistence.InMem;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -60,6 +59,12 @@ namespace Rebus.Config
         public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
         {
             configurer(new StandardConfigurer<ISagaStorage>(_injectionist));
+            return this;
+        }
+
+        public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
+        {
+            configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist));
             return this;
         }
 
@@ -179,40 +184,6 @@ namespace Rebus.Config
             if (_injectionist.Has<TService>()) return;
 
             _injectionist.Register(factoryMethod);
-        }
-    }
-
-    public class RebusLoggingConfigurer
-    {
-        public void Console(LogLevel minLevel = LogLevel.Debug)
-        {
-            UseLoggerFactory(new ConsoleLoggerFactory(false)
-            {
-                MinLevel = minLevel
-            });
-        }
-
-        public void ColoredConsole(LogLevel minLevel = LogLevel.Debug)
-        {
-            UseLoggerFactory(new ConsoleLoggerFactory(true)
-            {
-                MinLevel = minLevel
-            });
-        }
-
-        public void Trace()
-        {
-            UseLoggerFactory(new TraceLoggerFactory());
-        }
-
-        public void None()
-        {
-            UseLoggerFactory(new NullLoggerFactory());
-        }
-
-        static void UseLoggerFactory(IRebusLoggerFactory consoleLoggerFactory)
-        {
-            RebusLoggerFactory.Current = consoleLoggerFactory;
         }
     }
 }
