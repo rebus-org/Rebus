@@ -46,7 +46,7 @@ namespace Rebus.Sagas
 
             readonly List<CorrelationProperty> _correlationProperties = new List<CorrelationProperty>();
             
-            public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractor, Expression<Func<TSagaData, object>> sagaDataValueExpression)
+            public void Correlate<TMessage>(Func<TMessage, object> messageValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression)
             {
                 var propertyName = Reflect.Path(sagaDataValueExpression);
                 
@@ -54,7 +54,7 @@ namespace Rebus.Sagas
                 {
                     try
                     {
-                        return messageValueExtractor((TMessage) message);
+                        return messageValueExtractorFunction((TMessage) message);
                     }
                     catch (Exception exception)
                     {
