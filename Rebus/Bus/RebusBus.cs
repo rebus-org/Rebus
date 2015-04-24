@@ -69,7 +69,7 @@ namespace Rebus.Bus
 
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = CreateMessage(commandMessage, optionalHeaders);
+            var logicalMessage = CreateMessage(commandMessage, Operation.SendLocal, optionalHeaders);
             var destinationAddress = _transport.Address;
 
             if (string.IsNullOrWhiteSpace(destinationAddress))
@@ -82,7 +82,7 @@ namespace Rebus.Bus
 
         public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = CreateMessage(commandMessage, optionalHeaders);
+            var logicalMessage = CreateMessage(commandMessage, Operation.Send, optionalHeaders);
             var destinationAddress = await _router.GetDestinationAddress(logicalMessage);
 
             await InnerSend(new[] { destinationAddress }, logicalMessage);
@@ -90,7 +90,7 @@ namespace Rebus.Bus
 
         public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = CreateMessage(eventMessage, optionalHeaders);
+            var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
             var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
 
             await InnerSend(subscriberAddresses, logicalMessage);
@@ -98,7 +98,7 @@ namespace Rebus.Bus
 
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = CreateMessage(message, optionalHeaders);
+            var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
 
             if (!logicalMessage.HasReturnAddress())
             {
@@ -124,7 +124,7 @@ namespace Rebus.Bus
 
             var stepContext = GetCurrentReceiveContext(currentTransactionContext);
 
-            var logicalMessage = CreateMessage(replyMessage, optionalHeaders);
+            var logicalMessage = CreateMessage(replyMessage, Operation.Reply, optionalHeaders);
             var transportMessage = stepContext.Load<TransportMessage>();
             var returnAddress = GetReturnAddress(transportMessage);
 
@@ -143,7 +143,7 @@ namespace Rebus.Bus
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
-                });
+                }, Operation.Subscribe);
 
                 var destinationAddress = await _router.GetOwnerAddress(topic);
 
@@ -163,7 +163,7 @@ namespace Rebus.Bus
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
-                });
+                }, Operation.Unsubscribe);
 
                 var destinationAddress = await _router.GetOwnerAddress(topic);
 
@@ -181,11 +181,27 @@ namespace Rebus.Bus
             return address;
         }
 
-        static Message CreateMessage(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+        static Message CreateMessage(object commandMessage, Operation operation, Dictionary<string, string> optionalHeaders = null)
         {
             var headers = optionalHeaders ?? new Dictionary<string, string>();
 
+            switch (operation)
+            {
+                case Operation.Publish:
+                    headers[Headers.Intent] = Headers.IntentOptions.PublishSubscribe;
+                    break;
+
+                default:
+                    headers[Headers.Intent] = Headers.IntentOptions.PointToPoint;
+                    break;
+            }
+
             return new Message(headers, commandMessage);
+        }
+
+        enum Operation
+        {
+            Send, SendLocal, Reply, Publish, Subscribe, Unsubscribe, Defer
         }
 
         static string GetReturnAddress(TransportMessage transportMessage)

@@ -1,4 +1,5 @@
 ﻿using System;
+using Rebus.Bus;
 
 namespace Rebus.Messages
 {
@@ -63,5 +64,27 @@ namespace Rebus.Messages
         /// Headers with <see cref="DateTimeOffset"/> (serialized with the format string 'O') of the time when the message was sent.
         /// </summary>
         public const string SentTime = "rbs2-senttime";
+
+        /// <summary>
+        /// Header that indicates whether this message was sent or published
+        /// </summary>
+        public const string Intent = "rbs2-intent";
+
+        /// <summary>
+        /// Contains the possible values for the <see cref="Headers.Intent"/> header
+        /// </summary>
+        public class IntentOptions
+        {
+            /// <summary>
+            /// This value indicates that the message was sent to one specific recipient, i.e. either by sending or replying
+            /// </summary>
+            public const string PointToPoint = "p2p";
+
+            /// <summary>
+            /// This value indicates that the message was published to zero or more recipients, i.e. it might not actually be received by anyone (which,
+            /// when auditing, would mean that the message could potentially never have a copy stored anywhere)
+            /// </summary>
+            public const string PublishSubscribe = "pub";
+        }
     }
 }
