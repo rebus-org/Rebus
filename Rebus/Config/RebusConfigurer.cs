@@ -68,6 +68,12 @@ namespace Rebus.Config
             return this;
         }
 
+        public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
+        {
+            configurer(new StandardConfigurer<ITimeoutManager>(_injectionist));
+            return this;
+        }
+
         public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
         {
             configurer(new OptionsConfigurer(_options, _injectionist));
