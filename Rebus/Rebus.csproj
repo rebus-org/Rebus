@@ -52,6 +52,8 @@
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Persistence\SqlServer\DbConnection.cs" />
+    <Compile Include="Sagas\IAmInitiatedBy.cs" />
+    <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Timers\AsyncPeriodicBackgroundTask.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />

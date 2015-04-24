@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Rebus.Handlers;
 using Rebus.Reflection;
 
 namespace Rebus.Sagas
 {
+    /// <summary>
+    /// Saga base class that allows for passing around saga instances without being bothered by the type of saga data they're handling. You should
+    /// probably not inherit from this one, inherit your saga from <see cref="Saga{TSagaData}"/> instead.
+    /// </summary>
     public abstract class Saga
     {
         internal IEnumerable<CorrelationProperty> GetCorrelationProperties()
@@ -20,6 +23,9 @@ namespace Rebus.Sagas
         internal abstract ISagaData CreateNewSagaData();
     }
 
+    /// <summary>
+    /// Generic saga base class that must be made concrete by supplying the <see cref="TSagaData"/> type parameter.
+    /// </summary>
     public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
     {
         public TSagaData Data { get; set; }
@@ -83,13 +89,5 @@ namespace Rebus.Sagas
                 Id = Guid.NewGuid()
             };
         }
-    }
-
-    public interface IAmInitiatedBy<T> : IHandleMessages<T> { }
-
-    public interface ISagaData
-    {
-        Guid Id { get; set; }
-        int Revision { get; set; }
     }
 }
