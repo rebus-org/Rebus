@@ -9,6 +9,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Send;
 using Rebus.Routing;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
@@ -237,7 +238,7 @@ namespace Rebus.Bus
 
         async Task SendUsingTransactionContext(IEnumerable<string> destinationAddresses, Message logicalMessage, ITransactionContext transactionContext)
         {
-            var context = new OutgoingStepContext(logicalMessage, destinationAddresses, transactionContext);
+            var context = new OutgoingStepContext(logicalMessage, transactionContext, new DestinationAddresses(destinationAddresses));
 
             await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline().Select(s => s.Step));
         }
