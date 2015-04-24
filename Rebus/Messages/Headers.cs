@@ -1,4 +1,6 @@
-﻿namespace Rebus.Messages
+﻿using System;
+
+namespace Rebus.Messages
 {
     /// <summary>
     /// Contains keys of headers known & used by Rebus
@@ -56,5 +58,10 @@
         /// Header that indicates that the queueing system can trade reliability for performance in order to deliver this message as fast as possible
         /// </summary>
         public const string Express = "rbs2-express";
+
+        /// <summary>
+        /// Headers with <see cref="DateTimeOffset"/> (serialized with the format string 'O') of the time when the message was sent.
+        /// </summary>
+        public const string SentTime = "rbs2-senttime";
     }
 }
