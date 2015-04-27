@@ -68,6 +68,7 @@
     <Compile Include="Integration\ManyMessages\InMemoryBusFactory.cs" />
     <Compile Include="Integration\ManyMessages\SqlServerBusFactory.cs" />
     <Compile Include="Integration\ManyMessages\MsmqBusFactory.cs" />
+    <Compile Include="Integration\TestBugWhenSendingMessagesInParallel.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
