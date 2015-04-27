@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
-using Rebus.Logging;
 using Rebus.Transport;
 
 namespace Rebus.Activation
@@ -16,13 +15,6 @@ namespace Rebus.Activation
     /// </summary>
     public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
     {
-        static ILog _log;
-
-        static BuiltinHandlerActivator()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly List<object> _handlerInstances = new List<object>();
         readonly List<Delegate> _handlerFactories = new List<Delegate>();
 
@@ -62,7 +54,6 @@ namespace Rebus.Activation
 
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
-            _log.Debug("Adding handler for message type {0}", typeof(TMessage));
             _handlerInstances.Add(new Handler<TMessage>(handlerFunction));
             return this;
         }
@@ -84,7 +75,6 @@ namespace Rebus.Activation
 
         public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
         {
-            _log.Debug("Adding handler factory for handler type {0}", typeof(THandler));
             _handlerFactories.Add(handlerFactory);
             return this;
         }
