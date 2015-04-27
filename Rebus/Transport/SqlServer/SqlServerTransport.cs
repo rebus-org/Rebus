@@ -191,9 +191,9 @@ ORDER BY
 
                 selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
-                using (var reader = await selectCommand.ExecuteReaderAsync())
+                using (var reader = selectCommand.ExecuteReader())
                 {
-                    if (!await reader.ReadAsync()) return null;
+                    if (!reader.Read()) return null;
 
                     var headers = reader["headers"];
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
@@ -211,7 +211,7 @@ ORDER BY
             {
                 deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
                 deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-                await deleteCommand.ExecuteNonQueryAsync();
+                deleteCommand.ExecuteNonQuery();
             }
 
             return receivedTransportMessage;
@@ -240,7 +240,6 @@ ORDER BY
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
                         context.OnCommitted(async () => await dbConnection.Complete());
-                        //context.OnAborted(() => dbConnection.Dispose());
                         context.OnDisposed(() => dbConnection.Dispose());
                         return dbConnection;
                     });

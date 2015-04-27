@@ -58,7 +58,8 @@ namespace Rebus.Persistence.SqlServer
         {
             var connection = new SqlConnection(_connectionString);
             
-            await connection.OpenAsync();
+            //await connection.OpenAsync();
+            connection.Open();
 
             return new DbConnection(connection, connection.BeginTransaction(IsolationLevel), false);
         }
