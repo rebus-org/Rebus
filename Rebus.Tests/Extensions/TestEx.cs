@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Concurrent;
+using System.Data.SqlTypes;
 using System.Threading;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Rebus.Tests.Extensions
@@ -27,6 +30,23 @@ namespace Rebus.Tests.Extensions
             for (var counter = 0; counter < count; counter++)
             {
                 action();
+            }
+        }
+
+        public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Func<ConcurrentQueue<T>, bool> criteria, int? timeoutSeconds = 5)
+        {
+            var start = DateTime.UtcNow;
+            var timeout = TimeSpan.FromSeconds(timeoutSeconds.GetValueOrDefault(5));
+
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(100));
+
+                if (criteria(queue)) break;
+
+                if ((DateTime.UtcNow - start) < timeout) continue;
+
+                throw new TimeoutException(string.Format("Criteria {0} not satisfied within {1} s timeout", criteria, timeoutSeconds));
             }
         }
     }

@@ -10,6 +10,8 @@ namespace Rebus.MongoDb.Subscriptions
 {
     public class MongoDbSubscriptionStorage : ISubscriptionStorage
     {
+        static readonly string[] NoSubscribers = new string[0];
+
         readonly MongoCollection<BsonDocument> _subscriptions;
 
         public MongoDbSubscriptionStorage(MongoDatabase database, string collectionName, bool isCentralized)
@@ -18,12 +20,14 @@ namespace Rebus.MongoDb.Subscriptions
             _subscriptions = database.GetCollection<BsonDocument>(collectionName);
         }
 
-        public async Task<IEnumerable<string>> GetSubscriberAddresses(string topic)
+        public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             var doc = _subscriptions.FindOneById(topic);
-            if (doc == null) return Enumerable.Empty<string>();
+            if (doc == null) return NoSubscribers;
 
-            return doc["addresses"].AsBsonArray.Select(item => item.ToString());
+            return doc["addresses"].AsBsonArray
+                .Select(item => item.ToString())
+                .ToArray();
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)

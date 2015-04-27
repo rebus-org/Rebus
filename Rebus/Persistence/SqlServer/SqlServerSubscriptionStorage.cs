@@ -65,7 +65,7 @@ CREATE TABLE [dbo].[{0}] (
             Dispose(false);
         }
 
-        public async Task<IEnumerable<string>> GetSubscriberAddresses(string topic)
+        public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             using (var connection = await _connectionProvider.GetConnection())
             {
@@ -85,7 +85,7 @@ CREATE TABLE [dbo].[{0}] (
                         }
                     }
 
-                    return subscriberAddresses;
+                    return subscriberAddresses.ToArray();
                 }                
             }
         }

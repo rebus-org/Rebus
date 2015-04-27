@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Rebus.Messages.Control;
 
 namespace Rebus.Subscriptions
@@ -9,7 +8,7 @@ namespace Rebus.Subscriptions
         /// <summary>
         /// Gets all destination addresses for the given topic
         /// </summary>
-        Task<IEnumerable<string>> GetSubscriberAddresses(string topic);
+        Task<string[]> GetSubscriberAddresses(string topic);
 
         /// <summary>
         /// Registers the given <see cref="subscriberAddress"/> as a subscriber of the given topic

@@ -1,8 +1,14 @@
+using System;
+using System.Collections.Concurrent;
+using System.Linq;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
-using Rebus.Persistence.InMem;
+using Rebus.Persistence.SqlServer;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.SqlServer;
 
 namespace Rebus.Tests.Integration
@@ -10,33 +16,66 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestBugWhenSendingMessagesInParallel : FixtureBase
     {
-        [Test]
-        public void ShouldNotFailWhenSendingPublishingMessageToManySubscribersWithSqlTransport()
+        readonly string _subscriptionsTableName = "subscriptions" + TestConfig.Suffix;
+        readonly string _messagesTableName = "messages" + TestConfig.Suffix;
+
+        IBus _bus1;
+        IBus _bus2;
+        IBus _bus3;
+
+        ConcurrentQueue<string> _receivedMessages;
+
+        protected override void SetUp()
         {
-            var inMemorySubscriptionStorage = new InMemorySubscriptionStorage();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "a").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "b").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "c").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "d").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "e").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "f").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "g").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "h").Wait();
-            inMemorySubscriptionStorage.RegisterSubscriber("TradeFinalized", "i").Wait();
+            _receivedMessages = new ConcurrentQueue<string>();
 
-
-            var bus = Configure.With(new BuiltinHandlerActivator())
-                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
-                .Transport(t => t.UseSqlServer("server=.;database=demo;trusted_connection=true", "messages", "trading"))
-                .Subscriptions(s => s.Register(c => inMemorySubscriptionStorage))
-                .Start();
-
-            bus.Publish("TradeFinalized", new TheMessage()).Wait();
+            _bus1 = CreateBus(TestConfig.QueueName("bus1"), async str => { });
+            _bus2 = CreateBus(TestConfig.QueueName("bus2"), async str =>
+            {
+                _receivedMessages.Enqueue("bus2 got " + str);
+            });
+            _bus3 = CreateBus(TestConfig.QueueName("bus3"), async str =>
+            {
+                _receivedMessages.Enqueue("bus3 got " + str);
+            });
         }
 
-        public class TheMessage
+        IBus CreateBus(string inputQueueName, Func<string, Task> stringHandler)
         {
-            
+            var activator = new BuiltinHandlerActivator();
+
+            activator.Handle(stringHandler);
+
+            var bus = Configure.With(activator)
+                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
+                .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, _messagesTableName, inputQueueName))
+                .Subscriptions(s => s.StoreInSqlServer(SqlTestHelper.ConnectionString, _subscriptionsTableName, isCentralized: true))
+                .Start();
+
+            return Using(bus);
+        }
+
+        [Test]
+        public async Task CheckRealisticScenarioWithSqlAllTheWay()
+        {
+            await Task.WhenAll(
+                _bus2.Subscribe(typeof(string).FullName),
+                _bus3.Subscribe(typeof(string).FullName)
+                );
+
+            await _bus1.Publish(typeof (string).FullName, "hej");
+
+            await _receivedMessages.WaitUntil(q => q.Count >= 2);
+
+            await Task.Delay(200);
+
+            var receivedStrings = _receivedMessages.OrderBy(s => s).ToArray();
+
+            Assert.That(receivedStrings, Is.EqualTo(new[]
+            {
+                "bus2 got hej",
+                "bus3 got hej"
+            }));
         }
     }
 }
