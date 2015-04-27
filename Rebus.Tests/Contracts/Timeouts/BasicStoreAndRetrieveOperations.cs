@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
-using Rebus.Tests.Extensions;
 using Rebus.Time;
 using Rebus.Timeouts;
 
@@ -44,7 +42,7 @@ namespace Rebus.Tests.Contracts.Timeouts
 
             const string stringBody = "hello there!";
 
-            await _timeoutManager.Defer(someTimeInThePast, HeadersWith("i know u"), Encoding.UTF8.GetBytes(stringBody).ToStream());
+            await _timeoutManager.Defer(someTimeInThePast, HeadersWith("i know u"), Encoding.UTF8.GetBytes(stringBody));
 
             using (var result = await _timeoutManager.GetDueMessages())
             {
@@ -52,7 +50,7 @@ namespace Rebus.Tests.Contracts.Timeouts
 
                 Assert.That(dueTimeouts.Count, Is.EqualTo(1));
                 
-                var bodyBytes = await dueTimeouts[0].Body.GetBytes();
+                var bodyBytes = dueTimeouts[0].Body;
                 
                 Assert.That(Encoding.UTF8.GetString(bodyBytes), Is.EqualTo(stringBody));
             }
@@ -152,9 +150,9 @@ namespace Rebus.Tests.Contracts.Timeouts
             };
         }
 
-        static Stream EmptyBody()
+        static byte[] EmptyBody()
         {
-            return new MemoryStream(new byte[0]);
+            return new byte[0];
         }
     }
 }

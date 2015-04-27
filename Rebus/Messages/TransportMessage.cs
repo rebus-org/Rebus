@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
 namespace Rebus.Messages
 {
@@ -9,7 +8,7 @@ namespace Rebus.Messages
     /// </summary>
     public class TransportMessage
     {
-        public TransportMessage(Dictionary<string, string> headers, Stream body)
+        public TransportMessage(Dictionary<string, string> headers, byte[] body)
         {
             if (headers == null) throw new ArgumentNullException("headers");
             if (body == null) throw new ArgumentNullException("body");
@@ -19,6 +18,6 @@ namespace Rebus.Messages
 
         public Dictionary<string, string> Headers { get; private set; }
         
-        public Stream Body { get; private set; }
+        public byte[] Body { get; private set; }
     }
 }

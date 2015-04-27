@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Extensions;
@@ -78,7 +77,7 @@ namespace Rebus.Tests.Transport.SqlServer
             {
                 {"recognizzle", "hej"}
             };
-            return new TransportMessage(headers, new MemoryStream(new byte[] { 1, 2, 3 }));
+            return new TransportMessage(headers, new byte[] { 1, 2, 3 });
         }
     }
 }

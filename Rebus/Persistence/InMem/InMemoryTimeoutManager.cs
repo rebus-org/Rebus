@@ -15,21 +15,13 @@ namespace Rebus.Persistence.InMem
     {
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
 
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body)
+        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             lock (_deferredMessages)
             {
                 _deferredMessages
                     .AddOrUpdate(headers.GetValue(Headers.MessageId),
-                        id =>
-                        {
-                            using (body)
-                            {
-                                var buffer = new byte[body.Length];
-                                body.Read(buffer, 0, buffer.Length);
-                                return new DeferredMessage(approximateDueTime, headers, buffer);
-                            }
-                        },
+                        id => new DeferredMessage(approximateDueTime, headers, body),
                         (id, existing) => existing);
             }
         }
@@ -43,7 +35,7 @@ namespace Rebus.Persistence.InMem
                     .ToHashSet();
 
                 var result = new DueMessagesResult(keyValuePairsToRemove
-                    .Select(kvp => new DueMessage(kvp.Value.Headers, new MemoryStream(kvp.Value.Body),
+                    .Select(kvp => new DueMessage(kvp.Value.Headers, kvp.Value.Body,
                         () => keyValuePairsToRemove.Remove(kvp))),
                     () =>
                     {

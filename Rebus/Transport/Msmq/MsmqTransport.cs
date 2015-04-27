@@ -133,7 +133,7 @@ namespace Rebus.Transport.Msmq
             var msmqMessage = new Message
             {
                 Extension = _extensionSerializer.Serialize(headers),
-                BodyStream = message.Body,
+                BodyStream = new MemoryStream(message.Body),
                 UseJournalQueue = false,
                 Recoverable = !expressDelivery,
                 UseDeadLetterQueue = !(expressDelivery || hasTimeout)
@@ -177,8 +177,11 @@ namespace Rebus.Transport.Msmq
                 }
 
                 var headers = _extensionSerializer.Deserialize(message.Extension);
-
-                return new TransportMessage(headers, message.BodyStream);
+                var body = new byte[message.BodyStream.Length];
+                
+                await message.BodyStream.ReadAsync(body, 0, body.Length);
+                
+                return new TransportMessage(headers, body);
             }
             catch (MessageQueueException exception)
             {

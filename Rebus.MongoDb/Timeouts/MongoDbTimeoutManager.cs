@@ -30,11 +30,9 @@ namespace Rebus.MongoDb.Timeouts
             _timeouts = database.GetCollection<Timeout>(collectionName);
         }
 
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body)
+        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            var buffer = new byte[body.Length];
-            await body.ReadAsync(buffer, 0, buffer.Length);
-            var newTimeout = new Timeout(headers, buffer, approximateDueTime.UtcDateTime);
+            var newTimeout = new Timeout(headers, body, approximateDueTime.UtcDateTime);
             _log.Debug("Deferring message with ID {0} until {1} (doc ID {2})", headers.GetValue(Headers.MessageId), approximateDueTime, newTimeout.Id);
             _timeouts.Insert(newTimeout);
         }
@@ -61,7 +59,7 @@ namespace Rebus.MongoDb.Timeouts
             var timeoutsNotCompleted = dueTimeouts.ToDictionary(t => t.Id);
 
             var dueMessages = dueTimeouts
-                .Select(timeout => new DueMessage(timeout.Headers, new MemoryStream(timeout.Body), () =>
+                .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, () =>
                 {
                     _log.Debug("Completing timeout for message with ID {0} (doc ID {1})", timeout.Headers.GetValue(Headers.MessageId), timeout.Id);
                     _timeouts.Remove(Query<Timeout>.EQ(t => t.Id, timeout.Id));

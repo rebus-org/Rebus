@@ -57,7 +57,7 @@ namespace Rebus.Tests.Transport.InMem
                 {Headers.MessageId, messageId}
             };
 
-            var emptyMessageBody = new MemoryStream();
+            var emptyMessageBody = new byte[0];
 
             return new TransportMessage(headers, emptyMessageBody);
         }

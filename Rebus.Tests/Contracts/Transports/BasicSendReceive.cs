@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -198,10 +197,7 @@ namespace Rebus.Tests.Contracts.Transports
                 throw new InvalidOperationException("Cannot get string body out of null message!");
             }
 
-            using (var reader = new StreamReader(transportMessage.Body, _defaultEncoding))
-            {
-                return reader.ReadToEnd();
-            }
+            return _defaultEncoding.GetString(transportMessage.Body);
         }
 
         TransportMessage MessageWith(string stringBody)
@@ -210,7 +206,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 {Headers.MessageId, Guid.NewGuid().ToString()}
             };
-            var body = new MemoryStream(_defaultEncoding.GetBytes(stringBody));
+            var body = _defaultEncoding.GetBytes(stringBody);
             return new TransportMessage(headers, body);
         }
     }

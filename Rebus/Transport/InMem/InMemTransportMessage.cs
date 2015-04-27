@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
@@ -12,8 +11,7 @@ namespace Rebus.Transport.InMem
         public InMemTransportMessage(TransportMessage transportMessage)
         {
             Headers = transportMessage.Headers;
-            Body = new byte[transportMessage.Body.Length];
-            transportMessage.Body.Read(Body, 0, Body.Length);
+            Body = transportMessage.Body;
         }
 
         public TimeSpan Age
@@ -27,7 +25,7 @@ namespace Rebus.Transport.InMem
 
         public TransportMessage ToTransportMessage()
         {
-            return new TransportMessage(Headers, new MemoryStream(Body));
+            return new TransportMessage(Headers, Body);
         }
     }
 }

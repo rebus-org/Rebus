@@ -89,9 +89,9 @@ namespace Rebus.Tests.Contracts.Transports
             return new TransportMessage(headers, DontCareAboutTheBody());
         }
 
-        static MemoryStream DontCareAboutTheBody()
+        static byte[] DontCareAboutTheBody()
         {
-            return new MemoryStream(new byte[] { 1, 2, 3 });
+            return new byte[] { 1, 2, 3 };
         }
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -157,24 +156,7 @@ namespace Rebus.AzureServiceBus
                 brokeredMessage.Dispose();
             });
 
-            return new TransportMessage(headers, brokeredMessage.GetBody<Stream>());
-        }
-
-        void StartPeekLockRenewalTask(CancellationToken cancellationToken, string messageId, BrokeredMessage brokeredMessage)
-        {
-            Task.Factory.StartNew(async () =>
-            {
-                while (true)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    await Task.Delay(_peekLockRenewalInterval, cancellationToken);
-
-                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
-
-                    await brokeredMessage.RenewLockAsync();
-                }
-            }, cancellationToken);
+            return new TransportMessage(headers, brokeredMessage.GetBody<byte[]>());
         }
 
         QueueClient GetQueueClient(string queueAddress)

@@ -76,7 +76,7 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
             }
         }
 
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body)
+        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             var headersString = JsonConvert.SerializeObject(headers, _serializerSettings);
 
@@ -128,7 +128,8 @@ ORDER BY [due_time] ASC
                         var id = (int) reader["id"];
                         var headersString = (string)reader["headers"];
                         var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersString, _serializerSettings);
-                        var body = reader.GetStream(reader.GetOrdinal("body"));
+                        var body = (byte[]) reader["body"];
+
                         var sqlTimeout = new DueMessage(headers, body, () =>
                         {
                             using (var deleteCommand = connection.CreateCommand())
@@ -145,11 +146,11 @@ ORDER BY [due_time] ASC
                     }
                 }
 
-                return new DueMessagesResult(dueMessages, () =>
+                return new DueMessagesResult(dueMessages, async () =>
                 {
                     using (connection)
                     {
-                        connection.Complete();
+                        await connection.Complete();
                     }
                 });
             }

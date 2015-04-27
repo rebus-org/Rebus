@@ -199,7 +199,9 @@ ORDER BY
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
 
                     idOfMessageToDelete = (long)reader["id"];
-                    receivedTransportMessage = new TransportMessage(headersDictionary, reader.GetStream(reader.GetOrdinal("body")));
+                    var body = (byte[])reader["body"];
+
+                    receivedTransportMessage = new TransportMessage(headersDictionary, body);
                 }
             }
 

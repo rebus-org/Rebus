@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -105,10 +104,9 @@ namespace Rebus.Tests.Integration
             Console.WriteLine("----------------------------------------------------------------------------------------");
         }
 
-        static MemoryStream BodyWith(string text)
+        static byte[] BodyWith(string text)
         {
-            var body = new MemoryStream(Encoding.UTF8.GetBytes(text));
-            return body;
+            return Encoding.UTF8.GetBytes(text);
         }
     }
 }

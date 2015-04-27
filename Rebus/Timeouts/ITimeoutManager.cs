@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Messages;
@@ -10,7 +9,7 @@ namespace Rebus.Timeouts
 {
     public interface ITimeoutManager
     {
-        Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, Stream body);
+        Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body);
 
         Task<DueMessagesResult> GetDueMessages();
     }
@@ -19,7 +18,7 @@ namespace Rebus.Timeouts
     {
         readonly Action _completeAction;
 
-        public DueMessage(Dictionary<string, string> headers, Stream body, Action completeAction = null)
+        public DueMessage(Dictionary<string, string> headers, byte[] body, Action completeAction = null)
         {
             _completeAction = completeAction;
             Headers = headers;
@@ -28,7 +27,7 @@ namespace Rebus.Timeouts
 
         public Dictionary<string, string> Headers { get; private set; }
 
-        public Stream Body { get; private set; }
+        public byte[] Body { get; private set; }
 
         public void MarkAsCompleted()
         {
