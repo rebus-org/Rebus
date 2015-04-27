@@ -47,10 +47,11 @@ namespace Rebus.Pipeline.Send
             TransportMessage transportMessage,
             ITransactionContext currentTransactionContext)
         {
-            foreach (var a in destinationAddressesList)
-            {
-                await _transport.Send(a, transportMessage, currentTransactionContext);
-            }
+            var sendTasks = destinationAddressesList
+                .Select(address => _transport.Send(address, transportMessage, currentTransactionContext))
+                .ToArray();
+
+            await Task.WhenAll(sendTasks);
         }
     }
 
