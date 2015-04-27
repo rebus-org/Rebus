@@ -67,6 +67,7 @@
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
+    <Compile Include="Workers\ThreadBased\BackoffHelper.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />

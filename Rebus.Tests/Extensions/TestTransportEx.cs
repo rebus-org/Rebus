@@ -16,7 +16,7 @@ namespace Rebus.Tests.Extensions
 
             while (stopwatch.Elapsed < timeout)
             {
-                TransportMessage receivedTransportMessage = null;
+                TransportMessage receivedTransportMessage;
 
                 using (var transactionContext = new DefaultTransactionContext())
                 {

@@ -4,7 +4,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -53,7 +52,10 @@ namespace Rebus.Transport.SqlServer
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle);
+            _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
+            {
+                Interval = TimeSpan.FromMinutes(1)
+            };
         }
 
         ~SqlServerTransport()
@@ -73,7 +75,7 @@ namespace Rebus.Transport.SqlServer
 
         async Task PerformExpiredMessagesCleanupCycle()
         {
-            var results = 0;
+            int results;
             var stopwatch = Stopwatch.StartNew();
 
             using (var connection = await _connectionProvider.GetConnection())
@@ -236,7 +238,7 @@ ORDER BY
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
                         context.OnCommitted(async () => await dbConnection.Complete());
-                        context.OnAborted(() => dbConnection.Dispose());
+                        //context.OnAborted(() => dbConnection.Dispose());
                         context.OnDisposed(() => dbConnection.Dispose());
                         return dbConnection;
                     });

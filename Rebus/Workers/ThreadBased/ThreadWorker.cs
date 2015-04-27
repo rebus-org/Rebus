@@ -20,6 +20,7 @@ namespace Rebus.Workers.ThreadBased
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        readonly BackoffHelper _backoffHelper = new BackoffHelper();
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
         readonly int _maxParallelismPerWorker;
         readonly ITransport _transport;
@@ -99,15 +100,22 @@ namespace Rebus.Workers.ThreadBased
                 {
                     var message = await _transport.Receive(transactionContext);
 
-                    if (message != null)
+                    if (message == null)
                     {
-                        var context = new IncomingStepContext(message, transactionContext);
-                        transactionContext.Items[StepContext.StepContextKey] = context;
-
-                        var stagedReceiveSteps = _pipeline.ReceivePipeline();
-
-                        await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+                        // finish the tx and wait....
+                        await transactionContext.Complete();
+                        await _backoffHelper.Wait();
+                        return;
                     }
+
+                    _backoffHelper.Reset();
+
+                    var context = new IncomingStepContext(message, transactionContext);
+                    transactionContext.Items[StepContext.StepContextKey] = context;
+
+                    var stagedReceiveSteps = _pipeline.ReceivePipeline();
+
+                    await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                     await transactionContext.Complete();
                 }

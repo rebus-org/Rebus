@@ -94,7 +94,7 @@ namespace Rebus.Tests.Integration
             {
                 var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 
-                await errorQueue.AwaitReceive(1 + numberOfRetries / 10.0);
+                await errorQueue.AwaitReceive(2 + numberOfRetries / 10.0);
 
                 Assert.That(attemptedDeliveries, Is.EqualTo(expectedNumberOfAttemptedDeliveries));
             }

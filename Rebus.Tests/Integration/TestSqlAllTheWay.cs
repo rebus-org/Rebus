@@ -29,12 +29,17 @@ namespace Rebus.Tests.Integration
                 .Sagas(x => x.StoreInSqlServer(ConnectionString, "Sagas", "SagaIndex"))
                 .Options(x =>
                 {
-                    x.SetNumberOfWorkers(5);
-                    x.SetMaxParallelism(20);
+                    x.SetNumberOfWorkers(1);
+                    x.SetMaxParallelism(1);
                 })
                 .Start();
 
             Using(_bus);
+        }
+
+        protected override void TearDown()
+        {
+//            SqlTestHelper.DropTable("RebusMessages");
         }
 
         [Test]

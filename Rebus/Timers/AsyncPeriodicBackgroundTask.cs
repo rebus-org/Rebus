@@ -17,6 +17,9 @@ namespace Rebus.Timers
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// This is the default interval between invocations if the periodic action, unless the <see cref="Interval"/> property is set to something else
+        /// </summary>
         public static TimeSpan DefaultInterval = TimeSpan.FromSeconds(10);
 
         readonly string _description;
@@ -27,11 +30,18 @@ namespace Rebus.Timers
         Task _task;
 
         bool _disposed;
+        TimeSpan _interval;
 
+        /// <summary>
+        /// Constructs the periodic background task with the given <see cref="description"/>, periodically executing the given <see cref="action"/>,
+        /// waiting <see cref="Interval"/> between invocations.
+        /// </summary>
         public AsyncPeriodicBackgroundTask(string description, Func<Task> action)
         {
             _description = description;
             _action = action;
+
+            Interval = DefaultInterval;
         }
 
         ~AsyncPeriodicBackgroundTask()
@@ -39,8 +49,25 @@ namespace Rebus.Timers
             Dispose(false);
         }
 
-        public TimeSpan Interval { get; set; }
+        /// <summary>
+        /// Configures the interval between invocations. The default value is <see cref="DefaultInterval"/>
+        /// </summary>
+        public TimeSpan Interval
+        {
+            get { return _interval; }
+            set
+            {
+                _interval = value < TimeSpan.FromMilliseconds(100)
+                    ? TimeSpan.FromMilliseconds(100)
+                    : value;
 
+                _log.Debug("Periodic task '{0}' interval set to {1}", _description, _interval);
+            }
+        }
+
+        /// <summary>
+        /// Starts the task
+        /// </summary>
         public void Start()
         {
             _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
@@ -53,7 +80,9 @@ namespace Rebus.Timers
                 {
                     while (!token.IsCancellationRequested)
                     {
-                        await Task.Delay(Interval, token);
+                        var intervalAboveZero = Interval;
+
+                        await Task.Delay(intervalAboveZero, token);
 
                         await _action();
                     }
@@ -75,6 +104,9 @@ namespace Rebus.Timers
         {
             if (_disposed) return;
 
+            // if it was never started, we don't do anything
+            if (_task == null) return;
+
             try
             {
                 _log.Info("Stopping periodic task '{0}'", _description);
@@ -83,7 +115,7 @@ namespace Rebus.Timers
 
                 if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
                 {
-                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!");
+                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
                 }
             }
             finally
