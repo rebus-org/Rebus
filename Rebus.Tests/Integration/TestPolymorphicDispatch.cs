@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
@@ -23,6 +24,11 @@ namespace Rebus.Tests.Integration
 
             _bus = Configure.With(_handlerActivator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "input"))
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(1);
+                })
                 .Start();
 
             Using(_bus);
