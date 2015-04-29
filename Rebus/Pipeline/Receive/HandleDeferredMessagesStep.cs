@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Threading;
 using Rebus.Timeouts;
-using Rebus.Timers;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline.Receive

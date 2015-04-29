@@ -4,7 +4,6 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -12,14 +11,14 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
-using Rebus.Timers;
+using Rebus.Threading;
 using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
 {
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
-        readonly SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(20);
+        readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(20);
 
         /// <summary>
         /// Special message priority header that can be used with the <see cref="SqlServerTransport"/>. The value must be an <see cref="Int32"/>
@@ -169,10 +168,8 @@ VALUES
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            try
+            using (await _bottleneck.Enter())
             {
-                await _receiveSemaphore.WaitAsync();
-
                 var connection = await GetConnection(context);
 
                 long? idOfMessageToDelete;
@@ -205,10 +202,10 @@ ORDER BY
                         if (!await reader.ReadAsync()) return null;
 
                         var headers = reader["headers"];
-                        var headersDictionary = _headerSerializer.Deserialize((byte[]) headers);
+                        var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
 
-                        idOfMessageToDelete = (long) reader["id"];
-                        var body = (byte[]) reader["body"];
+                        idOfMessageToDelete = (long)reader["id"];
+                        var body = (byte[])reader["body"];
 
                         receivedTransportMessage = new TransportMessage(headersDictionary, body);
                     }
@@ -228,10 +225,6 @@ ORDER BY
                 }
 
                 return receivedTransportMessage;
-            }
-            finally
-            {
-                _receiveSemaphore.Release();
             }
         }
 

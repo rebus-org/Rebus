@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Timers;
+using Rebus.Threading;
 
 namespace Rebus.Tests.Timers
 {

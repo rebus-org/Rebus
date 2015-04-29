@@ -27,6 +27,7 @@ namespace Rebus.Workers.ThreadBased
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         volatile bool _keepWorking = true;
 
@@ -136,6 +137,7 @@ namespace Rebus.Workers.ThreadBased
         public void Stop()
         {
             _keepWorking = false;
+            _cancellationTokenSource.Cancel();
         }
 
         public void Dispose()

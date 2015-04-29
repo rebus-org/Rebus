@@ -10,7 +10,7 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Timers;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus

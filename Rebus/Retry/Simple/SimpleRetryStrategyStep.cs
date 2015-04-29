@@ -8,7 +8,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Timers;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Retry.Simple

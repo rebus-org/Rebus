@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Logging;
 
-namespace Rebus.Timers
+namespace Rebus.Threading
 {
     /// <summary>
     /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
