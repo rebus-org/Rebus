@@ -1,6 +1,8 @@
 #### _"As friendly as machinely possible."_
 
 ![Bedford OB](http://mookid.dk/oncode/wp-content/2011/10/logo400x150.png)
+[![install from nuget](http://img.shields.io/nuget/v/REBUS.svg?style=flat-square)](https://www.nuget.org/packages/REBUS)[![downloads](http://img.shields.io/nuget/dt/REBUS.svg?style=flat-square)](https://www.nuget.org/packages/REBUS)
+
 
 What?
 ====
