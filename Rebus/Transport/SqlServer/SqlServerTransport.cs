@@ -4,6 +4,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -18,6 +19,8 @@ namespace Rebus.Transport.SqlServer
 {
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
+        readonly SemaphoreSlim _receiveSemaphore = new SemaphoreSlim(20);
+
         /// <summary>
         /// Special message priority header that can be used with the <see cref="SqlServerTransport"/>. The value must be an <see cref="Int32"/>
         /// </summary>
@@ -166,15 +169,19 @@ VALUES
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var connection = await GetConnection(context);
-
-            long? idOfMessageToDelete;
-            TransportMessage receivedTransportMessage;
-
-            using (var selectCommand = connection.CreateCommand())
+            try
             {
-                selectCommand.CommandText =
-                    string.Format(@"
+                await _receiveSemaphore.WaitAsync();
+
+                var connection = await GetConnection(context);
+
+                long? idOfMessageToDelete;
+                TransportMessage receivedTransportMessage;
+
+                using (var selectCommand = connection.CreateCommand())
+                {
+                    selectCommand.CommandText =
+                        string.Format(@"
 SELECT TOP 1
     [id],
     [headers],
@@ -190,36 +197,42 @@ ORDER BY
 
 ", _tableName);
 
-                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
+                        _inputQueueName;
 
-                using (var reader = await selectCommand.ExecuteReaderAsync())
-                {
-                    if (!await reader.ReadAsync()) return null;
+                    using (var reader = await selectCommand.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync()) return null;
 
-                    var headers = reader["headers"];
-                    var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
+                        var headers = reader["headers"];
+                        var headersDictionary = _headerSerializer.Deserialize((byte[]) headers);
 
-                    idOfMessageToDelete = (long)reader["id"];
-                    var body = (byte[])reader["body"];
+                        idOfMessageToDelete = (long) reader["id"];
+                        var body = (byte[]) reader["body"];
 
-                    receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                        receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                    }
                 }
-            }
 
-            if (!idOfMessageToDelete.HasValue)
+                if (!idOfMessageToDelete.HasValue)
+                {
+                    return null;
+                }
+
+                using (var deleteCommand = connection.CreateCommand())
+                {
+                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                    deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
+
+                    await deleteCommand.ExecuteNonQueryAsync();
+                }
+
+                return receivedTransportMessage;
+            }
+            finally
             {
-                return null;
+                _receiveSemaphore.Release();
             }
-
-            using (var deleteCommand = connection.CreateCommand())
-            {
-                deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-                
-                await deleteCommand.ExecuteNonQueryAsync();
-            }
-
-            return receivedTransportMessage;
         }
 
         int GetMessagePriority(TransportMessage message)
