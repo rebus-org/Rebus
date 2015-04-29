@@ -13,8 +13,8 @@ namespace Rebus.Tests.Persistence.SqlServer
 
     public class SqlServerSagaStorageFactory : ISagaStorageFactory
     {
-        const string IndexTableName = "RebusSagaData";
-        const string DataTableName = "RebusSagaIndex";
+        const string IndexTableName = "RebusSagaIndex";
+        const string DataTableName = "RebusSagaData";
 
         public ISagaStorage GetSagaStorage()
         {

@@ -39,7 +39,7 @@ namespace Rebus.Tests.Integration
 
         protected override void TearDown()
         {
-//            SqlTestHelper.DropTable("RebusMessages");
+            SqlTestHelper.DropTable("RebusMessages");
         }
 
         [Test]

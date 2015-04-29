@@ -6,8 +6,8 @@ namespace Rebus.Config
     {
         public Options()
         {
-            NumberOfWorkers = 1;
-            MaxParallelism = 10;
+            NumberOfWorkers = 2;
+            MaxParallelism = 2;
         }
 
         /// <summary>

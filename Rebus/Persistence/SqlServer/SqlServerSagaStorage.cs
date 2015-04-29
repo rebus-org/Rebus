@@ -71,6 +71,7 @@ CREATE TABLE [dbo].[{0}] (
     )
 )
 ", _dataTableName);
+                    
                     command.ExecuteNonQuery();
                 }
 
@@ -95,10 +96,32 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
 	[saga_id] ASC
 )
 ", _indexTableName);
+                    
                     command.ExecuteNonQuery();
                 }
 
-                connection.Complete();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+ALTER TABLE [dbo].[{0}] WITH CHECK 
+    ADD CONSTRAINT [FK_{1}_id] FOREIGN KEY([saga_id])
+
+REFERENCES [dbo].[{1}] ([id]) ON DELETE CASCADE
+", _indexTableName, _dataTableName);
+                    
+                    command.ExecuteNonQuery();
+                }
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
+", _indexTableName, _dataTableName);
+
+                    command.ExecuteNonQuery();
+                }
+
+                connection.Complete().Wait();
             }
         }
 
@@ -110,16 +133,16 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
                 {
                     if (propertyName == _idPropertyName)
                     {
-                        command.CommandText = string.Format(@"SELECT [data] from [{0}] where [id] = @value", _dataTableName);
+                        command.CommandText = string.Format(@"SELECT [data] FROM [{0}] WHERE [id] = @value", _dataTableName);
                     }
                     else
                     {
                         command.CommandText = string.Format(@"
 SELECT [saga].[data] FROM [{0}] [saga] 
     JOIN [{1}] [index] ON [saga].[id] = [index].[saga_id] 
-where [index].[saga_type] = @saga_type
-    and [index].[key] = @key 
-    and [index].[value] = @value", _dataTableName, _indexTableName);
+WHERE [index].[saga_type] = @saga_type
+    AND [index].[key] = @key 
+    AND [index].[value] = @value", _dataTableName, _indexTableName);
 
                         command.Parameters.AddWithValue("key", propertyName);
                         command.Parameters.AddWithValue("saga_type", GetSagaTypeName(sagaDataType));
