@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -31,6 +29,7 @@ namespace Rebus.AzureServiceBus
 
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
+        readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
 
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
@@ -107,56 +106,59 @@ namespace Rebus.AzureServiceBus
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var brokeredMessage = await GetQueueClient(_inputQueueAddress).ReceiveAsync(TimeSpan.FromSeconds(1));
+            using (await _bottleneck.Enter())
+            {
+                var brokeredMessage = await GetQueueClient(_inputQueueAddress).ReceiveAsync(TimeSpan.FromSeconds(1));
 
-            if (brokeredMessage == null) return null;
+                if (brokeredMessage == null) return null;
 
-            var headers = brokeredMessage.Properties
-                .Where(kvp => kvp.Value is string)
-                .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
+                var headers = brokeredMessage.Properties
+                    .Where(kvp => kvp.Value is string)
+                    .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
 
-            var messageId = headers.GetValueOrNull(Headers.MessageId);
+                var messageId = headers.GetValueOrNull(Headers.MessageId);
 
-            _log.Debug("Received brokered message with ID {0}", messageId);
+                _log.Debug("Received brokered message with ID {0}", messageId);
 
-            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
-                async () =>
+                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
+                    async () =>
+                    {
+                        _log.Info("Renewing peek lock for message with ID {0}", messageId);
+
+                        await brokeredMessage.RenewLockAsync();
+                    })
                 {
-                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
+                    Interval = _peekLockRenewalInterval
+                };
 
-                    await brokeredMessage.RenewLockAsync();
-                })
-            {
-                Interval = _peekLockRenewalInterval
-            };
+                renewalTask.Start();
 
-            renewalTask.Start();
+                context.OnAborted(() =>
+                {
+                    renewalTask.Dispose();
 
-            context.OnAborted(() =>
-            {
-                renewalTask.Dispose();
+                    _log.Debug("Abandoning message with ID {0}", messageId);
+                    brokeredMessage.Abandon();
+                });
 
-                _log.Debug("Abandoning message with ID {0}", messageId);
-                brokeredMessage.Abandon();
-            });
+                context.OnCommitted(async () =>
+                {
+                    renewalTask.Dispose();
 
-            context.OnCommitted(async () =>
-            {
-                renewalTask.Dispose();
+                    _log.Debug("Completing message with ID {0}", messageId);
+                    await brokeredMessage.CompleteAsync();
+                });
 
-                _log.Debug("Completing message with ID {0}", messageId);
-                await brokeredMessage.CompleteAsync();
-            });
+                context.OnDisposed(() =>
+                {
+                    renewalTask.Dispose();
 
-            context.OnDisposed(() =>
-            {
-                renewalTask.Dispose();
+                    _log.Debug("Disposing message with ID {0}", messageId);
+                    brokeredMessage.Dispose();
+                });
 
-                _log.Debug("Disposing message with ID {0}", messageId);
-                brokeredMessage.Dispose();
-            });
-
-            return new TransportMessage(headers, brokeredMessage.GetBody<byte[]>());
+                return new TransportMessage(headers, brokeredMessage.GetBody<byte[]>());
+            }
         }
 
         QueueClient GetQueueClient(string queueAddress)
