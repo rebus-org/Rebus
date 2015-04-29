@@ -8,14 +8,14 @@ using Rebus.Timers;
 namespace Rebus.Tests.Timers
 {
     [TestFixture]
-    public class TestAsyncPeriodicBackgroundTask : FixtureBase
+    public class TestAsyncTask : FixtureBase
     {
         [Test]
         public async Task ItWorks()
         {
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
-            var task = new AsyncPeriodicBackgroundTask("test task",
+            var task = new AsyncTask("test task",
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);

@@ -119,7 +119,7 @@ namespace Rebus.AzureServiceBus
 
             _log.Debug("Received brokered message with ID {0}", messageId);
 
-            var renewalTask = new AsyncPeriodicBackgroundTask(string.Format("RenewPeekLock-{0}", messageId),
+            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
                 async () =>
                 {
                     _log.Info("Renewing peek lock for message with ID {0}", messageId);

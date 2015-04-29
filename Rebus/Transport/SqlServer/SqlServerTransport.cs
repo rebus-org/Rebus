@@ -43,7 +43,7 @@ namespace Rebus.Transport.SqlServer
         readonly string _tableName;
         readonly string _inputQueueName;
 
-        readonly AsyncPeriodicBackgroundTask _expiredMessagesCleanupTask;
+        readonly AsyncTask _expiredMessagesCleanupTask;
 
         public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
@@ -53,7 +53,7 @@ namespace Rebus.Transport.SqlServer
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
+            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };
@@ -208,7 +208,6 @@ ORDER BY
 
             if (!idOfMessageToDelete.HasValue)
             {
-                await Task.Delay(500);
                 return null;
             }
 

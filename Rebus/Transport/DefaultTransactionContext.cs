@@ -84,6 +84,8 @@ namespace Rebus.Transport
             }
 
             await RaiseCommitted();
+
+            Dispose();
         }
 
         void RaiseAborted()

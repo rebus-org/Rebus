@@ -8,11 +8,11 @@ namespace Rebus.Timers
     /// <summary>
     /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
     ///  </summary>
-    public class AsyncPeriodicBackgroundTask : IDisposable
+    public class AsyncTask : IDisposable
     {
         static ILog _log;
 
-        static AsyncPeriodicBackgroundTask()
+        static AsyncTask()
         {
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
@@ -36,7 +36,7 @@ namespace Rebus.Timers
         /// Constructs the periodic background task with the given <see cref="description"/>, periodically executing the given <see cref="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
-        public AsyncPeriodicBackgroundTask(string description, Func<Task> action)
+        public AsyncTask(string description, Func<Task> action)
         {
             _description = description;
             _action = action;
@@ -44,7 +44,7 @@ namespace Rebus.Timers
             Interval = DefaultInterval;
         }
 
-        ~AsyncPeriodicBackgroundTask()
+        ~AsyncTask()
         {
             Dispose(false);
         }
@@ -74,15 +74,17 @@ namespace Rebus.Timers
 
             var token = _tokenSource.Token;
 
-            _task = Task.Factory.StartNew(async () =>
+            _task = Task.Run(async () =>
             {
                 try
                 {
-                    while (!token.IsCancellationRequested)
+                    while (true)
                     {
                         var intervalAboveZero = Interval;
 
                         await Task.Delay(intervalAboveZero, token);
+
+                        token.ThrowIfCancellationRequested();
 
                         await _action();
                     }
@@ -90,7 +92,6 @@ namespace Rebus.Timers
                 catch (TaskCanceledException)
                 {
                     _finished.Set();
-                    throw;
                 }
             }, token);
         }
@@ -98,6 +99,7 @@ namespace Rebus.Timers
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)

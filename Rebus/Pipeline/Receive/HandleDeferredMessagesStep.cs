@@ -23,14 +23,14 @@ namespace Rebus.Pipeline.Receive
 
         readonly ITimeoutManager _timeoutManager;
         readonly ITransport _transport;
-        readonly AsyncPeriodicBackgroundTask _dueMessagesSenderBackgroundTask;
+        readonly AsyncTask _dueMessagesSenderBackgroundTask;
 
         public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport)
         {
             _timeoutManager = timeoutManager;
             _transport = transport;
 
-            _dueMessagesSenderBackgroundTask = new AsyncPeriodicBackgroundTask("DueMessagesSender", TimerElapsed)
+            _dueMessagesSenderBackgroundTask = new AsyncTask("DueMessagesSender", TimerElapsed)
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
