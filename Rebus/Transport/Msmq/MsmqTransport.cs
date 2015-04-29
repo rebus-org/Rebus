@@ -163,7 +163,7 @@ namespace Rebus.Transport.Msmq
             messageQueueTransaction.Begin();
 
             context.OnCommitted(async () => messageQueueTransaction.Commit());
-            context.OnDisposed(async () => messageQueueTransaction.Dispose());
+            context.OnDisposed(() => messageQueueTransaction.Dispose());
 
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
 

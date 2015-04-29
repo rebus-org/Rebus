@@ -293,7 +293,7 @@ UPDATE [{0}]
             }
         }
 
-        void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, DbConnection connection, ISagaData sagaData)
+        void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, IDbConnection connection, ISagaData sagaData)
         {
             var sagaTypeName = GetSagaTypeName(sagaData.GetType());
             var parameters = propertiesToIndex

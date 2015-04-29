@@ -87,17 +87,17 @@ namespace Rebus.Workers.ThreadBased
         {
             if (_continuationsWaitingToBePosted >= _maxParallelismPerWorker)
             {
-                Thread.Sleep(100);
+                Thread.Sleep(10);
                 return;
             }
-
-            _continuationsWaitingToBePosted++;
 
             using (var transactionContext = new DefaultTransactionContext())
             {
                 AmbientTransactionContext.Current = transactionContext;
                 try
                 {
+                    _continuationsWaitingToBePosted++;
+
                     var message = await _transport.Receive(transactionContext);
 
                     if (message == null)
@@ -114,7 +114,7 @@ namespace Rebus.Workers.ThreadBased
                     transactionContext.Items[StepContext.StepContextKey] = context;
 
                     var stagedReceiveSteps = _pipeline.ReceivePipeline();
-
+                    
                     await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
 
                     await transactionContext.Complete();

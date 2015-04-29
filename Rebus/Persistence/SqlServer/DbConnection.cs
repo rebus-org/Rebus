@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class DbConnection : IDisposable
+    public class DbConnection : IDbConnection
     {
         readonly SqlConnection _connection;
         readonly bool _managedExternally;
@@ -49,6 +49,7 @@ namespace Rebus.Persistence.SqlServer
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

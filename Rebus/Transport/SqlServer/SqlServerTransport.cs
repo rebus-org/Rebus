@@ -12,6 +12,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
 using Rebus.Timers;
+using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
 {
@@ -38,13 +39,13 @@ namespace Rebus.Transport.SqlServer
         const int RecipientColumnSize = 200;
 
         readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
-        readonly DbConnectionProvider _connectionProvider;
+        readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
 
         readonly AsyncPeriodicBackgroundTask _expiredMessagesCleanupTask;
 
-        public SqlServerTransport(DbConnectionProvider connectionProvider, string tableName, string inputQueueName)
+        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
@@ -191,9 +192,9 @@ ORDER BY
 
                 selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
-                using (var reader = selectCommand.ExecuteReader())
+                using (var reader = await selectCommand.ExecuteReaderAsync())
                 {
-                    if (!reader.Read()) return null;
+                    if (!await reader.ReadAsync()) return null;
 
                     var headers = reader["headers"];
                     var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
@@ -205,13 +206,18 @@ ORDER BY
                 }
             }
 
-            if (!idOfMessageToDelete.HasValue) return null;
+            if (!idOfMessageToDelete.HasValue)
+            {
+                await Task.Delay(500);
+                return null;
+            }
 
             using (var deleteCommand = connection.CreateCommand())
             {
                 deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
                 deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-                deleteCommand.ExecuteNonQuery();
+                
+                await deleteCommand.ExecuteNonQueryAsync();
             }
 
             return receivedTransportMessage;
@@ -232,7 +238,7 @@ ORDER BY
             }
         }
 
-        Task<DbConnection> GetConnection(ITransactionContext context)
+        Task<IDbConnection> GetConnection(ITransactionContext context)
         {
             return context.Items
                 .GetOrAddAsync(CurrentConnectionKey,
@@ -240,7 +246,10 @@ ORDER BY
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
                         context.OnCommitted(async () => await dbConnection.Complete());
-                        context.OnDisposed(() => dbConnection.Dispose());
+                        context.OnDisposed(() =>
+                        {
+                            dbConnection.Dispose();
+                        });
                         return dbConnection;
                     });
         }

@@ -54,6 +54,8 @@
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Persistence\SqlServer\DbConnection.cs" />
+    <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
+    <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />
     <Compile Include="Pipeline\IIncomingStep.cs" />
     <Compile Include="Pipeline\IncomingStepContext.cs" />
     <Compile Include="Pipeline\IOutgoingStep.cs" />

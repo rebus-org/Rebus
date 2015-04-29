@@ -60,7 +60,14 @@ namespace Rebus.Transport
             {
                 if (!_cleanedUp)
                 {
-                    Invoke(_onDisposedActions);
+                    try
+                    {
+                        Invoke(_onDisposedActions);
+                    }
+                    finally
+                    {
+                        _cleanedUp = true;
+                    }
                 }
             }
         }
