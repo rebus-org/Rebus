@@ -66,6 +66,7 @@
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />
+    <Compile Include="Threading\ParallelismCounter.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
