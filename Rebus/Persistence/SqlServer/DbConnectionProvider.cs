@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
@@ -8,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class DbConnectionProvider
+    public class DbConnectionProvider : IDbConnectionProvider
     {
         readonly string _connectionString;
 
@@ -54,14 +53,13 @@ namespace Rebus.Persistence.SqlServer
             return connectionStringOrConnectionStringName;
         }
 
-        public async Task<DbConnection> GetConnection()
+        public async Task<IDbConnection> GetConnection()
         {
             var connection = new SqlConnection(_connectionString);
             
-            //await connection.OpenAsync();
-            connection.Open();
+            await connection.OpenAsync();
 
-            return new DbConnection(connection, connection.BeginTransaction(IsolationLevel), false);
+            return new DbConnectionWrapper(connection, connection.BeginTransaction(IsolationLevel), false);
         }
 
         public IsolationLevel IsolationLevel { get; set; }

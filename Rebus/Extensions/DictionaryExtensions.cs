@@ -6,13 +6,23 @@ using System.Threading.Tasks;
 
 namespace Rebus.Extensions
 {
+    /// <summary>
+    /// Provides some nifty extensions to <see cref="Dictionary{TKey,TValue}"/> and <see cref="ConcurrentDictionary{TKey,TValue}"/>
+    /// </summary>
     public static class DictionaryExtensions
     {
+        /// <summary>
+        /// Returns a new dictionary with the same key-value pairs as the target
+        /// </summary>
         public static Dictionary<string, string> Clone(this Dictionary<string, string> dictionary)
         {
             return new Dictionary<string, string>(dictionary);
         }
 
+        /// <summary>
+        /// Gets the value with the given key from the dictionary, throwing a MUCH nicer <see cref="KeyNotFoundException"/>
+        /// if the key does not exist
+        /// </summary>
         public static string GetValue(this Dictionary<string, string> dictionary, string key)
         {
             string value;
@@ -24,6 +34,9 @@ namespace Rebus.Extensions
                 key, string.Join(", ", dictionary.Keys.Select(k => string.Format("'{0}'", k)))));
         }
 
+        /// <summary>
+        /// Gets the value with the given key from the dictionary, returning null if the key does not exist
+        /// </summary>
         public static string GetValueOrNull(this Dictionary<string, string> dictionary, string key)
         {
             string value;
@@ -33,6 +46,10 @@ namespace Rebus.Extensions
                 : null;
         }
 
+        /// <summary>
+        /// Provides a function similar to <see cref="ConcurrentDictionary{TKey,TValue}.GetOrAdd(TKey,System.Func{TKey,TValue})"/>, only
+        /// on <see cref="Dictionary{TKey,TValue}"/>
+        /// </summary>
         public static T GetOrAdd<T, U>(this Dictionary<string, U> dictionary, string key, Func<T> newItemFactory) where T : U
         {
             U item;
@@ -43,6 +60,9 @@ namespace Rebus.Extensions
             return newItem;
         }
 
+        /// <summary>
+        /// Provides a function similar to <see cref="GetOrAdd{T,U}"/>, only where the factory function can be async
+        /// </summary>
         public static async Task<T> GetOrAddAsync<T, U>(this Dictionary<string, U> dictionary, string key, Func<Task<T>> newItemFactory) where T : U
         {
             U item;
@@ -53,12 +73,18 @@ namespace Rebus.Extensions
             return newItem;
         }
 
-        public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TKey, TValue>(
-            this IEnumerable<TValue> items, Func<TValue, TKey> keyFunction)
+        /// <summary>
+        /// Maps the given sequence of items to key-value pairs, returning them in a <see cref="ConcurrentDictionary{TKey,TValue}"/>
+        /// </summary>
+        public static ConcurrentDictionary<TKey, TValue> ToConcurrentDictionary<TKey, TValue>(this IEnumerable<TValue> items, Func<TValue, TKey> keyFunction)
         {
             return new ConcurrentDictionary<TKey, TValue>(items.Select(i => new KeyValuePair<TKey, TValue>(keyFunction(i), i)));
         }
 
+        /// <summary>
+        /// Gets the item with the given key and type from the dictionary of objects, throwing a nice exception if either the key
+        /// does not exist, or the found value cannot be cast to the given type
+        /// </summary>
         public static T GetOrThrow<T>(this Dictionary<string, object> dictionary, string key)
         {
             object item;
@@ -77,6 +103,10 @@ namespace Rebus.Extensions
             return (T)item;
         }
 
+        /// <summary>
+        /// Gets the item with the given key and type from the dictionary of objects, returning null if the key does not exist.
+        /// If the key exists, but the object could not be cast to the given type, a nice exception is throws
+        /// </summary>
         public static T GetOrNull<T>(this Dictionary<string, object> dictionary, string key) where T : class
         {
             object item;

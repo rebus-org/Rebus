@@ -16,7 +16,7 @@ namespace Rebus.Tests.Assumptions
             var cancellationToken = cancellationTokenSource.Token;
             var events = new List<string>();
 
-            var task = Task.Factory.StartNew(async () =>
+            var task = Task.Run(async () =>
             {
                 try
                 {
@@ -34,11 +34,10 @@ namespace Rebus.Tests.Assumptions
                 catch (Exception exception)
                 {
                     events.Add(exception.ToString());
-                    throw;
                 }
             }, cancellationToken);
 
-            Console.WriteLine(task.Status);
+            //Console.WriteLine(task.Status);
             await Task.Delay(2000);
 
             cancellationTokenSource.Cancel();

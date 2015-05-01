@@ -109,7 +109,7 @@ namespace Rebus.Tests
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
-            return string.Format("server=.; database={0}; trusted_connection=true", databaseName);
+            return string.Format("server=.; database={0}; trusted_connection=true;", databaseName);
         }
     }
 }

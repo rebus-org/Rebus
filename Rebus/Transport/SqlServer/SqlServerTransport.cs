@@ -11,12 +11,15 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
-using Rebus.Timers;
+using Rebus.Threading;
+using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
 {
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
+        readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(20);
+
         /// <summary>
         /// Special message priority header that can be used with the <see cref="SqlServerTransport"/>. The value must be an <see cref="Int32"/>
         /// </summary>
@@ -38,13 +41,13 @@ namespace Rebus.Transport.SqlServer
         const int RecipientColumnSize = 200;
 
         readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
-        readonly DbConnectionProvider _connectionProvider;
+        readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
 
-        readonly AsyncPeriodicBackgroundTask _expiredMessagesCleanupTask;
+        readonly AsyncTask _expiredMessagesCleanupTask;
 
-        public SqlServerTransport(DbConnectionProvider connectionProvider, string tableName, string inputQueueName)
+        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
@@ -52,7 +55,7 @@ namespace Rebus.Transport.SqlServer
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncPeriodicBackgroundTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
+            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };
@@ -165,15 +168,17 @@ VALUES
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            var connection = await GetConnection(context);
-
-            long? idOfMessageToDelete;
-            TransportMessage receivedTransportMessage;
-
-            using (var selectCommand = connection.CreateCommand())
+            using (await _bottleneck.Enter())
             {
-                selectCommand.CommandText =
-                    string.Format(@"
+                var connection = await GetConnection(context);
+
+                long? idOfMessageToDelete;
+                TransportMessage receivedTransportMessage;
+
+                using (var selectCommand = connection.CreateCommand())
+                {
+                    selectCommand.CommandText =
+                        string.Format(@"
 SELECT TOP 1
     [id],
     [headers],
@@ -189,32 +194,38 @@ ORDER BY
 
 ", _tableName);
 
-                selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
+                        _inputQueueName;
 
-                using (var reader = selectCommand.ExecuteReader())
-                {
-                    if (!reader.Read()) return null;
+                    using (var reader = await selectCommand.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync()) return null;
 
-                    var headers = reader["headers"];
-                    var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
+                        var headers = reader["headers"];
+                        var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
 
-                    idOfMessageToDelete = (long)reader["id"];
-                    var body = (byte[])reader["body"];
+                        idOfMessageToDelete = (long)reader["id"];
+                        var body = (byte[])reader["body"];
 
-                    receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                        receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                    }
                 }
+
+                if (!idOfMessageToDelete.HasValue)
+                {
+                    return null;
+                }
+
+                using (var deleteCommand = connection.CreateCommand())
+                {
+                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                    deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
+
+                    await deleteCommand.ExecuteNonQueryAsync();
+                }
+
+                return receivedTransportMessage;
             }
-
-            if (!idOfMessageToDelete.HasValue) return null;
-
-            using (var deleteCommand = connection.CreateCommand())
-            {
-                deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-                deleteCommand.ExecuteNonQuery();
-            }
-
-            return receivedTransportMessage;
         }
 
         int GetMessagePriority(TransportMessage message)
@@ -232,7 +243,7 @@ ORDER BY
             }
         }
 
-        Task<DbConnection> GetConnection(ITransactionContext context)
+        Task<IDbConnection> GetConnection(ITransactionContext context)
         {
             return context.Items
                 .GetOrAddAsync(CurrentConnectionKey,
@@ -240,7 +251,10 @@ ORDER BY
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
                         context.OnCommitted(async () => await dbConnection.Complete());
-                        context.OnDisposed(() => dbConnection.Dispose());
+                        context.OnDisposed(() =>
+                        {
+                            dbConnection.Dispose();
+                        });
                         return dbConnection;
                     });
         }

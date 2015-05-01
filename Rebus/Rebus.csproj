@@ -53,7 +53,9 @@
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
-    <Compile Include="Persistence\SqlServer\DbConnection.cs" />
+    <Compile Include="Persistence\SqlServer\DbConnectionWrapper.cs" />
+    <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
+    <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />
     <Compile Include="Pipeline\IIncomingStep.cs" />
     <Compile Include="Pipeline\IncomingStepContext.cs" />
     <Compile Include="Pipeline\IOutgoingStep.cs" />
@@ -62,7 +64,9 @@
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
-    <Compile Include="Timers\AsyncPeriodicBackgroundTask.cs" />
+    <Compile Include="Threading\AsyncBottleneck.cs" />
+    <Compile Include="Threading\AsyncTask.cs" />
+    <Compile Include="Threading\ParallelismCounter.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />

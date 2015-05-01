@@ -8,7 +8,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Timers;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Retry.Simple
@@ -25,7 +25,7 @@ namespace Rebus.Retry.Simple
 
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
-        readonly AsyncPeriodicBackgroundTask _cleanupOldTrackedErrorsTask;
+        readonly AsyncTask _cleanupOldTrackedErrorsTask;
         readonly ITransport _transport;
 
         bool _disposed;
@@ -34,7 +34,7 @@ namespace Rebus.Retry.Simple
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
-            _cleanupOldTrackedErrorsTask = new AsyncPeriodicBackgroundTask("CleanupTrackedErrors", CleanupOldTrackedErrors)
+            _cleanupOldTrackedErrorsTask = new AsyncTask("CleanupTrackedErrors", CleanupOldTrackedErrors)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };

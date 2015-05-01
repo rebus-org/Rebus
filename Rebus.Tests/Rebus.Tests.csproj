@@ -73,6 +73,7 @@
     <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageExpiration.cs" />
+    <Compile Include="Integration\TestNumberOfSqlConnections.cs" />
     <Compile Include="Integration\TestPolymorphicDispatch.cs" />
     <Compile Include="Integration\TestSqlAllTheWay.cs" />
     <Compile Include="ListLoggerFactory.cs" />
@@ -98,7 +99,7 @@
     <Compile Include="Serialization\JsonSerializerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
-    <Compile Include="Timers\TestAsyncPeriodicBackgroundTask.cs" />
+    <Compile Include="Timers\TestAsyncTask.cs" />
     <Compile Include="Transport\InMem\InMemNetworkTests.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
     <Compile Include="Transport\Msmq\MsmqTests.cs" />

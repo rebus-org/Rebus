@@ -27,6 +27,8 @@ namespace Rebus.AzureServiceBus.Tests
 
             var queueName = TestConfig.QueueName(inputQueueAddress);
 
+            PurgeQueue(queueName);
+
             var bus = Configure.With(builtinHandlerActivator)
                 .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, queueName))
                 .Options(o =>
@@ -39,6 +41,12 @@ namespace Rebus.AzureServiceBus.Tests
             _stuffToDispose.Add(bus);
 
             return bus;
+        }
+
+        static void PurgeQueue(string queueName)
+        {
+            new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, queueName)
+                .PurgeInputQueue();
         }
 
         public void Cleanup()

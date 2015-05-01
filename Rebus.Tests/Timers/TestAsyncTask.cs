@@ -3,19 +3,19 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Timers;
+using Rebus.Threading;
 
 namespace Rebus.Tests.Timers
 {
     [TestFixture]
-    public class TestAsyncPeriodicBackgroundTask : FixtureBase
+    public class TestAsyncTask : FixtureBase
     {
         [Test]
         public async Task ItWorks()
         {
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
-            var task = new AsyncPeriodicBackgroundTask("test task",
+            var task = new AsyncTask("test task",
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);

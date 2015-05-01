@@ -39,7 +39,7 @@ namespace Rebus.Tests.Integration.ManyMessages
             _busFactory.Cleanup();
         }
 
-        [TestCase(1000)]
+        [TestCase(10)]
         public async Task SendAndReceiveManyMessages(int messageCount)
         {
             var allMessagesReceived = new ManualResetEvent(false);

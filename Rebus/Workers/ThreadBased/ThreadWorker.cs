@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Rebus.Logging;
 using Rebus.Pipeline;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Workers.ThreadBased
@@ -22,11 +23,12 @@ namespace Rebus.Workers.ThreadBased
 
         readonly BackoffHelper _backoffHelper = new BackoffHelper();
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
-        readonly int _maxParallelismPerWorker;
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        readonly ParallelismCounter _parallelismCounter;
 
         volatile bool _keepWorking = true;
 
@@ -38,7 +40,7 @@ namespace Rebus.Workers.ThreadBased
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
-            _maxParallelismPerWorker = maxParallelismPerWorker;
+            _parallelismCounter = new ParallelismCounter(maxParallelismPerWorker);
             _workerThread = new Thread(() =>
             {
                 SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
@@ -81,52 +83,50 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        int _continuationsWaitingToBePosted;
-
         async void TryProcessMessage()
         {
-            if (_continuationsWaitingToBePosted >= _maxParallelismPerWorker)
+            if (!_parallelismCounter.CanContinue())
             {
-                Thread.Sleep(100);
+                Thread.Sleep(10);
                 return;
             }
 
-            _continuationsWaitingToBePosted++;
-
-            using (var transactionContext = new DefaultTransactionContext())
+            using (_parallelismCounter.Begin())
             {
-                AmbientTransactionContext.Current = transactionContext;
-                try
+                using (var transactionContext = new DefaultTransactionContext())
                 {
-                    var message = await _transport.Receive(transactionContext);
-
-                    if (message == null)
+                    AmbientTransactionContext.Current = transactionContext;
+                    try
                     {
-                        // finish the tx and wait....
+                        var message = await _transport.Receive(transactionContext);
+
+                        if (message == null)
+                        {
+                            // finish the tx and wait....
+                            await transactionContext.Complete();
+                            await _backoffHelper.Wait();
+                            return;
+                        }
+
+                        _backoffHelper.Reset();
+
+                        var context = new IncomingStepContext(message, transactionContext);
+                        transactionContext.Items[StepContext.StepContextKey] = context;
+
+                        var stagedReceiveSteps = _pipeline.ReceivePipeline();
+
+                        await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+
                         await transactionContext.Complete();
-                        await _backoffHelper.Wait();
-                        return;
                     }
-
-                    _backoffHelper.Reset();
-
-                    var context = new IncomingStepContext(message, transactionContext);
-                    transactionContext.Items[StepContext.StepContextKey] = context;
-
-                    var stagedReceiveSteps = _pipeline.ReceivePipeline();
-
-                    await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
-
-                    await transactionContext.Complete();
-                }
-                catch (Exception exception)
-                {
-                    _log.Error(exception, "Unhandled exception in thread worker");
-                }
-                finally
-                {
-                    AmbientTransactionContext.Current = null;
-                    _continuationsWaitingToBePosted--;
+                    catch (Exception exception)
+                    {
+                        _log.Error(exception, "Unhandled exception in thread worker");
+                    }
+                    finally
+                    {
+                        AmbientTransactionContext.Current = null;
+                    }
                 }
             }
         }
@@ -136,6 +136,7 @@ namespace Rebus.Workers.ThreadBased
         public void Stop()
         {
             _keepWorking = false;
+            _cancellationTokenSource.Cancel();
         }
 
         public void Dispose()

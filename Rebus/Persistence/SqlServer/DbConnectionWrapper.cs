@@ -5,21 +5,22 @@ using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class DbConnection : IDisposable
+    public class DbConnectionWrapper : IDbConnection
     {
         readonly SqlConnection _connection;
         readonly bool _managedExternally;
+
         SqlTransaction _currentTransaction;
         bool _disposed;
 
-        public DbConnection(SqlConnection connection, SqlTransaction currentTransaction, bool managedExternally)
+        public DbConnectionWrapper(SqlConnection connection, SqlTransaction currentTransaction, bool managedExternally)
         {
             _connection = connection;
             _currentTransaction = currentTransaction;
             _managedExternally = managedExternally;
         }
 
-        ~DbConnection()
+        ~DbConnectionWrapper()
         {
             Dispose(false);
         }
@@ -49,6 +50,7 @@ namespace Rebus.Persistence.SqlServer
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 
@@ -65,7 +67,10 @@ namespace Rebus.Persistence.SqlServer
                     _currentTransaction = null;
                 }
 
-                _connection.Dispose();
+                using(_connection)
+                {
+                    _connection.Close();
+                }
             }
             finally
             {
