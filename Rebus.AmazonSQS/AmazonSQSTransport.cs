@@ -153,6 +153,7 @@ namespace Rebus.AmazonSQS
                                          MessageBody = GetBody(message.Body),
                                          Id = message.Headers.GetValueOrNull(Headers.MessageId) ?? Guid.NewGuid().ToString()
 
+
                                      };
 
             _outputQueue.AddOrUpdate(GetQueueUrl(destinationAddress),
@@ -177,21 +178,6 @@ namespace Rebus.AmazonSQS
 
         }
 
-        private AmazonSQSClient GetClientFromTransactionContext(ITransactionContext context)
-        {
-            return context.Items.GetOrAdd(ClientContextKey, () =>
-                                                            {
-                                                                var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
-                                                                {
-                                                                    ServiceURL = _queueServiceUrl,
-                                                                    RegionEndpoint = _regionEndpoint
-                                                                });
-                                                                context.OnDisposed(amazonSqsClient.Dispose);
-                                                                return amazonSqsClient;
-                                                            });
-        }
-
-
 
 
 
@@ -203,7 +189,9 @@ namespace Rebus.AmazonSQS
             var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(GetQueueUrl(_inputQueueAddress))
                                                             {
                                                                 MaxNumberOfMessages = 1,
-                                                                WaitTimeSeconds = 1
+                                                                WaitTimeSeconds = 1,
+                                                                AttributeNames = new List<string>(new[] { "All" }),
+                                                                MessageAttributeNames = new List<string>(new[] { "All" })
                                                             });
 
 
@@ -251,16 +239,28 @@ namespace Rebus.AmazonSQS
             return null;
 
         }
+        private AmazonSQSClient GetClientFromTransactionContext(ITransactionContext context)
+        {
+            return context.Items.GetOrAdd(ClientContextKey, () =>
+            {
+                var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
+                {
+                    ServiceURL = _queueServiceUrl,
+                    RegionEndpoint = _regionEndpoint
+                });
+                context.OnDisposed(amazonSqsClient.Dispose);
+                return amazonSqsClient;
+            });
+        }
+
+
 
         private TransportMessage GetTransportMessage(Message message)
         {
             //TODO: Attributes == headers?
-            var headers = message.Attributes;
-            if (!headers.ContainsKey(Headers.MessageId))
-            {
-                headers.Add(Headers.MessageId, message.MessageId);
-            }
-            return new TransportMessage(message.Attributes, GetBodyBytes(message.Body));
+            var headers = message.MessageAttributes.ToDictionary((kv)=>kv.Key,(kv)=> kv.Value.StringValue);
+
+            return new TransportMessage(headers, GetBodyBytes(message.Body));
 
         }
         private string GetBody(byte[] bodyBytes)
