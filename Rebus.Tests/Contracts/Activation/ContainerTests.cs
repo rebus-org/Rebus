@@ -44,7 +44,7 @@ namespace Rebus.Tests.Contracts.Activation
                 factoryForThisTest.CleanUp();
             }
 
-            Assert.That(fakeBus.Disposed, Is.True);
+            Assert.That(fakeBus.Disposed, Is.True, "The disposable bus instance was NOT disposed when the container was disposed");
         }
 
         class FakeBus : IBus
