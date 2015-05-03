@@ -125,7 +125,7 @@ namespace Rebus.AmazonSQS
 
 
 
-            context.OnCommitted(() =>
+            context.OnCommitted(async () =>
                                 {
 
                                     var client = GetClientFromTransactionContext(context);
@@ -136,7 +136,14 @@ namespace Rebus.AmazonSQS
                                         );
 
 
-                                    return Task.WhenAll(tasks);
+                                    var response = await Task.WhenAll(tasks);
+
+                                    if (response.Any(r => r.Failed.Any()))
+                                    {
+                                        GenerateErrorsAndThrow(response);
+                                    }
+
+
 
                                 });
             context.OnAborted(() =>
@@ -167,18 +174,8 @@ namespace Rebus.AmazonSQS
 
 
 
-            //var response = await client.SendMessageAsync(sendMessageRequest);
-
-            ////TODO: transactions
-            //if (response.HttpStatusCode != HttpStatusCode.OK)
-            //{
-            //    //TODO: unwrap metadata
-            //    _log.Error("There's an error in sending messages: ErrorCode: {errorCode} and message: {message}", response.HttpStatusCode, response.ResponseMetadata.Metadata.FirstOrDefault());
-            //}
 
         }
-
-
 
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -196,27 +193,20 @@ namespace Rebus.AmazonSQS
 
 
 
-
-
-            //if (response.HttpStatusCode != HttpStatusCode.OK)
-            //{
-            //    _log.Error("There's an error in sending messages: ErrorCode: {errorCode} and message: {message}", response.HttpStatusCode, response.ResponseMetadata.Metadata.FirstOrDefault());
-
-            //}
-            //else
-            //{
-
             if (response.Messages.Any())
             {
 
-                context.OnCommitted(() =>
+                context.OnCommitted(async () =>
                 {
-                    return
-                        client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(GetQueueUrl(_inputQueueAddress), response.Messages
+
+                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(GetQueueUrl(_inputQueueAddress), response.Messages
                             .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
                             .ToList()));
 
-
+                    if (result.Failed.Any())
+                    {
+                        GenerateErrorsAndLog(result);
+                    }
                 });
 
                 context.OnAborted(() =>
@@ -228,7 +218,10 @@ namespace Rebus.AmazonSQS
                             VisibilityTimeout = 0
                         })
                         .ToList()));
-
+                    if (result.Failed.Any())
+                    {
+                        GenerateErrorsAndLog(result);
+                    }
                 });
                 var transportMessage = GetTransportMessage(response.Messages.First());
 
@@ -239,6 +232,10 @@ namespace Rebus.AmazonSQS
             return null;
 
         }
+
+
+
+
         private AmazonSQSClient GetClientFromTransactionContext(ITransactionContext context)
         {
             return context.Items.GetOrAdd(ClientContextKey, () =>
@@ -257,8 +254,8 @@ namespace Rebus.AmazonSQS
 
         private TransportMessage GetTransportMessage(Message message)
         {
-            //TODO: Attributes == headers?
-            var headers = message.MessageAttributes.ToDictionary((kv)=>kv.Key,(kv)=> kv.Value.StringValue);
+
+            var headers = message.MessageAttributes.ToDictionary((kv) => kv.Key, (kv) => kv.Value.StringValue);
 
             return new TransportMessage(headers, GetBodyBytes(message.Body));
 
@@ -286,6 +283,46 @@ namespace Rebus.AmazonSQS
         public string Address
         {
             get { return _inputQueueAddress; }
+        }
+
+        private static void GenerateErrorsAndThrow(SendMessageBatchResponse[] response)
+        {
+            var failed = response.SelectMany(r => r.Failed);
+
+            var failedMessages = String.Join("\n", failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
+            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
+            var successMessages = response.SelectMany(r => r.Successful).ToList();
+            if (successMessages.Any())
+                errorMessage += "\n These message went through the loophole:\n" + String.Join("\n", successMessages.Select(s => "   Id: " + s.Id + " MessageId:" + s.MessageId));
+
+            throw new ApplicationException(errorMessage);
+        }
+
+        private void GenerateErrorsAndLog(DeleteMessageBatchResponse result)
+        {
+
+            var failedMessages = String.Join("\n", result.Failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
+            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
+
+            if (result.Successful.Any())
+                errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
+
+            _log.Warn("Not all completed messages is removed from the queue: {queue} \n{noOfFailedMessages} failed.\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
+        }
+
+
+
+        private void GenerateErrorsAndLog(ChangeMessageVisibilityBatchResponse result)
+        {
+
+            var failedMessages = String.Join("\n", result.Failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
+            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
+
+            if (result.Successful.Any())
+                errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
+
+            _log.Warn("Not all messages is set back to visible in the queue: {queue} \n{noOfFailedMessages} failed.These will appear later when the global visibility time runs out. Details:\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
+        
         }
     }
 }
