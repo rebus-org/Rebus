@@ -46,26 +46,7 @@ namespace Rebus.AmazonSQS.Tests
         {
 
 
-            //using (var client = new AmazonSQSClient(accessKeyId, secretAccessKey, RegionEndpoint.EUCentral1))
-            //{
-
-
-            //    foreach (var amazonSqsTransportFactory in _queuesToDelete)
-            //    {
-            //        try
-            //        {
-            //            client.PurgeQueue(baseQueueUrl + amazonSqsTransportFactory.Key);
-            //        }
-            //        catch (Exception ex)
-            //        {
-
-            //            Console.WriteLine("error in purge: " + ex.Message);
-            //        }
-
-            //    }
-
-
-            //}
+         
 
         }
     }

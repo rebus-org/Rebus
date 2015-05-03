@@ -3,14 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon;
-using Amazon.IdentityManagement.Model;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -19,7 +16,7 @@ using Message = Amazon.SQS.Model.Message;
 
 namespace Rebus.AmazonSQS
 {
-    public class AmazonSqsTransport : ITransport
+    public class AmazonSqsTransport : ITransport, IInitializable
     {
         static ILog _log;
         static AmazonSqsTransport()
@@ -33,20 +30,31 @@ namespace Rebus.AmazonSQS
         private readonly string _queueServiceUrl;
         private readonly RegionEndpoint _regionEndpoint;
         private const string ClientContextKey = "SQS_Client";
+        private const string OutgoingQueueContextKey = "SQS_outgoingQueue";
+        private readonly string _queueUrl;
 
         public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, string queueServiceUrl, RegionEndpoint regionEndpoint)
         {
+            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
+            if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
+            if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
+            if (queueServiceUrl == null) throw new ArgumentNullException("queueServiceUrl");
+            if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
+            if (!queueServiceUrl.EndsWith("/"))
+            {
+                queueServiceUrl = queueServiceUrl + "/";
+            }
             _inputQueueAddress = inputQueueAddress;
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _queueServiceUrl = queueServiceUrl;
             _regionEndpoint = regionEndpoint;
+            _queueUrl = GetQueueUrl(_inputQueueAddress);
         }
 
         public void CreateQueue(string address)
         {
-            // var queueUrl = GetQueueUrl(address);
-
+            _log.Info("Creating a new sqs queue: using service: {serviceUrl} with name: {queueaddress} on region: {regionEndpoint}", _queueServiceUrl, address, _regionEndpoint);
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
                                                                                     {
                                                                                         ServiceURL = _queueServiceUrl,
@@ -58,8 +66,8 @@ namespace Rebus.AmazonSQS
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
-                    //TODO: unwrap metadata
-                    _log.Warn("Did not create queue with {address} - there was an error: ErrorCode: {errorCode} and message: {message}", address, response.HttpStatusCode, response.ResponseMetadata.Metadata.FirstOrDefault());
+                 
+                    _log.Warn("Did not create queue with {address} - there was an error: ErrorCode: {errorCode}", address, response.HttpStatusCode);
                 }
 
 
@@ -68,7 +76,6 @@ namespace Rebus.AmazonSQS
 
         public void Initialize()
         {
-
             CreateQueue(_inputQueueAddress);
         }
         public void Purge()
@@ -79,20 +86,20 @@ namespace Rebus.AmazonSQS
 
                 try
                 {
-                    var response = client.ReceiveMessage(new ReceiveMessageRequest(GetQueueUrl(_inputQueueAddress))
+                    var response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
                                           {
                                               MaxNumberOfMessages = 10
                                           });
 
                     while (response.Messages.Any())
                     {
-                        var deleteResponse = client.DeleteMessageBatch(GetQueueUrl(_inputQueueAddress), response.Messages
+                        var deleteResponse = client.DeleteMessageBatch(_queueUrl, response.Messages
                         .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
                         .ToList());
 
                         if (!deleteResponse.Failed.Any())
                         {
-                            response = client.ReceiveMessage(new ReceiveMessageRequest(GetQueueUrl(_inputQueueAddress))
+                            response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
                                                              {
                                                                  MaxNumberOfMessages = 10
                                                              });
@@ -118,38 +125,38 @@ namespace Rebus.AmazonSQS
 
 
         }
-        private ConcurrentDictionary<string, List<SendMessageBatchRequestEntry>> _outputQueue = new ConcurrentDictionary<string, List<SendMessageBatchRequestEntry>>();
+
+
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
-
-
-
+            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
+            if (message == null) throw new ArgumentNullException("message");
+            if (context == null) throw new ArgumentNullException("context");
+            var outputQueue = context.Items.GetOrAdd(OutgoingQueueContextKey, () => new ConcurrentDictionary<string, List<SendMessageBatchRequestEntry>>());
 
             context.OnCommitted(async () =>
-                                {
+                                      {
 
-                                    var client = GetClientFromTransactionContext(context);
-                                    var messageSendRequests = _outputQueue.ToArray();
+                                          var client = GetClientFromTransactionContext(context);
+                                          var messageSendRequests = outputQueue.ToArray();
 
-                                    var tasks = messageSendRequests.Select(r =>
-                                            client.SendMessageBatchAsync(new SendMessageBatchRequest(r.Key, new List<SendMessageBatchRequestEntry>(r.Value)))
-                                        );
+                                          var tasks = messageSendRequests.Select(r =>
 
-
-                                    var response = await Task.WhenAll(tasks);
-
-                                    if (response.Any(r => r.Failed.Any()))
-                                    {
-                                        GenerateErrorsAndThrow(response);
-                                    }
+                                                  client.SendMessageBatchAsync(new SendMessageBatchRequest(r.Key, new List<SendMessageBatchRequestEntry>(r.Value)))
+                                              );
 
 
+                                          var response = await Task.WhenAll(tasks);
 
-                                });
-            context.OnAborted(() =>
-                              {
-                                  _outputQueue = new ConcurrentDictionary<string, List<SendMessageBatchRequestEntry>>();
-                              });
+                                          if (response.Any(r => r.Failed.Any()))
+                                          {
+                                              GenerateErrorsAndThrow(response);
+                                          }
+
+
+
+                                      });
+            context.OnAborted(outputQueue.Clear);
 
 
 
@@ -158,12 +165,12 @@ namespace Rebus.AmazonSQS
 
                                          MessageAttributes = CreateAttributesFromHeaders(message.Headers),
                                          MessageBody = GetBody(message.Body),
-                                         Id = message.Headers.GetValueOrNull(Headers.MessageId) ?? Guid.NewGuid().ToString()
-
-
+                                         Id = message.Headers.GetValueOrNull(Headers.MessageId) ?? Guid.NewGuid().ToString(),
                                      };
 
-            _outputQueue.AddOrUpdate(GetQueueUrl(destinationAddress),
+
+            //TODO: if sending to a different service - the destination might be a full url?
+            outputQueue.AddOrUpdate(GetQueueUrl(destinationAddress),
                                     (key) => new List<SendMessageBatchRequestEntry>(new[] { sendMessageRequest }),
                                     (key, list) =>
                                     {
@@ -180,10 +187,10 @@ namespace Rebus.AmazonSQS
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
+            if (context == null) throw new ArgumentNullException("context");
             var client = GetClientFromTransactionContext(context);
-
-
-            var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(GetQueueUrl(_inputQueueAddress))
+            
+            var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(_queueUrl)
                                                             {
                                                                 MaxNumberOfMessages = 1,
                                                                 WaitTimeSeconds = 1,
@@ -199,7 +206,7 @@ namespace Rebus.AmazonSQS
                 context.OnCommitted(async () =>
                 {
 
-                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(GetQueueUrl(_inputQueueAddress), response.Messages
+                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl, response.Messages
                             .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
                             .ToList()));
 
@@ -212,19 +219,26 @@ namespace Rebus.AmazonSQS
                 context.OnAborted(() =>
                 {
 
-                    var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(GetQueueUrl(_inputQueueAddress), response.Messages
+                    var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(_queueUrl, response.Messages
                         .Select(m => new ChangeMessageVisibilityBatchRequestEntry(m.MessageId, m.ReceiptHandle)
                         {
                             VisibilityTimeout = 0
-                        })
-                        .ToList()));
+                        }).ToList()));
                     if (result.Failed.Any())
                     {
                         GenerateErrorsAndLog(result);
                     }
                 });
-                var transportMessage = GetTransportMessage(response.Messages.First());
 
+                var message = response.Messages.First();
+
+                if (MessageIsExpired(message))
+                {
+                    await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
+                    return null;
+                }
+
+                var transportMessage = GetTransportMessage(message);
                 return transportMessage;
             }
 
@@ -233,7 +247,60 @@ namespace Rebus.AmazonSQS
 
         }
 
+        private bool MessageIsExpired(Message message)
+        {
+            MessageAttributeValue value;
+            TimeSpan timeToBeReceived;
+            if (message.MessageAttributes.TryGetValue(Headers.TimeToBeReceived, out value))
+            {
+                timeToBeReceived = TimeSpan.Parse(value.StringValue);
 
+                if (UseRebusSentTime(message, timeToBeReceived)) return true;
+                if (UseNativeSentTimestamp(message, timeToBeReceived)) return true;
+            }
+
+            return false;
+        }
+
+        private bool UseRebusSentTime(Message message, TimeSpan timeToBeReceived)
+        {
+            MessageAttributeValue rebusUtcTimeSentAttributeValue;
+            if (message.MessageAttributes.TryGetValue(Headers.SentTime, out rebusUtcTimeSentAttributeValue))
+            {
+                var rebusUtcTimeSent = DateTimeOffset.ParseExact(rebusUtcTimeSentAttributeValue.StringValue, "O", null);
+
+                if (Time.RebusTime.Now.UtcDateTime - rebusUtcTimeSent > timeToBeReceived)
+                {
+                    return true;
+                }
+
+            }
+
+            return false;
+
+        }
+
+        private static bool UseNativeSentTimestamp(Message message, TimeSpan timeToBeReceived)
+        {
+            string sentTimeStampString;
+            if (message.Attributes.TryGetValue("SentTimestamp", out sentTimeStampString))
+            {
+                var sentTime = GetTimeFromUnixTimestamp(sentTimeStampString);
+                if (Time.RebusTime.Now.UtcDateTime - sentTime > timeToBeReceived)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static DateTime GetTimeFromUnixTimestamp(string sentTimeStampString)
+        {
+            var unixTime = long.Parse(sentTimeStampString);
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            var sentTime = epoch.AddMilliseconds(unixTime);
+            return sentTime;
+        }
 
 
         private AmazonSQSClient GetClientFromTransactionContext(ITransactionContext context)
@@ -322,7 +389,9 @@ namespace Rebus.AmazonSQS
                 errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
 
             _log.Warn("Not all messages is set back to visible in the queue: {queue} \n{noOfFailedMessages} failed.These will appear later when the global visibility time runs out. Details:\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
-        
+
         }
+
+
     }
 }

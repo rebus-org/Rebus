@@ -84,6 +84,36 @@ namespace Rebus.Tests.Contracts.Transports
             }
         }
 
+        [Test]
+        public async Task ReceivesAlmostExpiredMessage()
+        {
+            var queueName = TestConfig.QueueName("expiration");
+            var transport = _factory.Create(queueName);
+            var id = Guid.NewGuid().ToString();
+
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var headers = new Dictionary<string, string>
+                {
+                    {"recognizzle", id},
+                    {Headers.TimeToBeReceived, "00:00:10"},
+                    {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
+                };
+                await transport.Send(queueName, MessageWith(headers), transactionContext);
+                await transactionContext.Complete();
+            }
+
+            await Task.Delay(3000);
+
+            using (var transactionContext = new DefaultTransactionContext())
+            {
+                var transportMessage = await transport.Receive(transactionContext);
+                await transactionContext.Complete();
+
+                Assert.That(transportMessage, Is.Not.Null);
+            }
+        }
+
         static TransportMessage MessageWith(Dictionary<string, string> headers)
         {
             return new TransportMessage(headers, DontCareAboutTheBody());
