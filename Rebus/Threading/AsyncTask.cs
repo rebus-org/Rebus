@@ -68,7 +68,7 @@ namespace Rebus.Threading
         /// <summary>
         /// Starts the task
         /// </summary>
-        public void Start()
+        public void Start(bool doBeforeInterval = false)
         {
             _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
 
@@ -81,12 +81,12 @@ namespace Rebus.Threading
                     while (true)
                     {
                         var intervalAboveZero = Interval;
-
+                        if (doBeforeInterval) await _action();
                         await Task.Delay(intervalAboveZero, token);
 
                         token.ThrowIfCancellationRequested();
 
-                        await _action();
+                        if (!doBeforeInterval) await _action();
                     }
                 }
                 catch (TaskCanceledException)

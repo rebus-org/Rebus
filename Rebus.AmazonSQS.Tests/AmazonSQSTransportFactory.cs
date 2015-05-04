@@ -18,7 +18,7 @@ namespace Rebus.AmazonSQS.Tests
         private string _inputAddress;
 
 
-        public ITransport Create(string inputQueueAddress)
+        public ITransport Create(string inputQueueAddress, int visibiltyTimeout)
         {
 
             _inputAddress = StripPrefixSlash(inputQueueAddress);
@@ -27,11 +27,16 @@ namespace Rebus.AmazonSQS.Tests
 
                 var transport = new AmazonSqsTransport(_inputAddress, accessKeyId, secretAccessKey, baseQueueUrl, RegionEndpoint.EUCentral1);
 
-                transport.Initialize();
+                transport.Initialize(visibiltyTimeout);
                 transport.Purge();
                 return transport;
             });
 
+        }
+
+        public ITransport Create(string inputQuquAddress)
+        {
+            return Create(inputQuquAddress, 30);
         }
         readonly Dictionary<string, AmazonSqsTransport> _queuesToDelete = new Dictionary<string, AmazonSqsTransport>();
         private string StripPrefixSlash(string inputQueueAddress)
@@ -46,7 +51,7 @@ namespace Rebus.AmazonSQS.Tests
         {
 
 
-         
+
 
         }
     }

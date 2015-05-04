@@ -11,6 +11,7 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Threading;
 using Rebus.Transport;
 using Message = Amazon.SQS.Model.Message;
 
@@ -23,7 +24,9 @@ namespace Rebus.AmazonSQS
         {
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
-
+        readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
+        readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
+        readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
         private readonly string _inputQueueAddress;
         private readonly string _accessKeyId;
         private readonly string _secretAccessKey;
@@ -52,21 +55,25 @@ namespace Rebus.AmazonSQS
             _queueUrl = GetQueueUrl(_inputQueueAddress);
         }
 
-        public void CreateQueue(string address)
+        public void CreateQueue(string address, int visibilityTimeout)
         {
             _log.Info("Creating a new sqs queue: using service: {serviceUrl} with name: {queueaddress} on region: {regionEndpoint}", _queueServiceUrl, address, _regionEndpoint);
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
                                                                                     {
                                                                                         ServiceURL = _queueServiceUrl,
                                                                                         RegionEndpoint = _regionEndpoint
+
                                                                                     }))
             {
 
-                var response = client.CreateQueue(address);
+                
+                var response = client.CreateQueue(new CreateQueueRequest(address));
+                var attributes = new Dictionary<string, string>() { { "VisibilityTimeout", visibilityTimeout.ToString() } };
+                client.SetQueueAttributes(GetQueueUrl(address), attributes);
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
-                 
+
                     _log.Warn("Did not create queue with {address} - there was an error: ErrorCode: {errorCode}", address, response.HttpStatusCode);
                 }
 
@@ -74,9 +81,9 @@ namespace Rebus.AmazonSQS
             }
         }
 
-        public void Initialize()
+        public void Initialize(int visibilityTimeout)
         {
-            CreateQueue(_inputQueueAddress);
+            CreateQueue(_inputQueueAddress, visibilityTimeout);
         }
         public void Purge()
         {
@@ -126,6 +133,11 @@ namespace Rebus.AmazonSQS
 
         }
 
+
+        public void CreateQueue(string address)
+        {
+            CreateQueue(address,30);
+        }
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
@@ -189,7 +201,7 @@ namespace Rebus.AmazonSQS
         {
             if (context == null) throw new ArgumentNullException("context");
             var client = GetClientFromTransactionContext(context);
-            
+
             var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(_queueUrl)
                                                             {
                                                                 MaxNumberOfMessages = 1,
@@ -202,10 +214,25 @@ namespace Rebus.AmazonSQS
 
             if (response.Messages.Any())
             {
+                var message = response.Messages.First();
+
+                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", message.MessageId),
+                   async () =>
+                   {
+                       _log.Info("Renewing peek lock for message with ID {0}", message.MessageId);
+
+                       await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int) _peekLockDuration.TotalSeconds));
+                   })
+                {
+                    Interval = _peekLockRenewalInterval
+                };
+
+                
+                
 
                 context.OnCommitted(async () =>
                 {
-
+                    renewalTask.Dispose();
                     var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl, response.Messages
                             .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
                             .ToList()));
@@ -218,7 +245,7 @@ namespace Rebus.AmazonSQS
 
                 context.OnAborted(() =>
                 {
-
+                    renewalTask.Dispose();
                     var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(_queueUrl, response.Messages
                         .Select(m => new ChangeMessageVisibilityBatchRequestEntry(m.MessageId, m.ReceiptHandle)
                         {
@@ -230,14 +257,15 @@ namespace Rebus.AmazonSQS
                     }
                 });
 
-                var message = response.Messages.First();
+                
 
                 if (MessageIsExpired(message))
                 {
+                    
                     await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
                     return null;
                 }
-
+                renewalTask.Start(true);
                 var transportMessage = GetTransportMessage(message);
                 return transportMessage;
             }
@@ -317,8 +345,6 @@ namespace Rebus.AmazonSQS
             });
         }
 
-
-
         private TransportMessage GetTransportMessage(Message message)
         {
 
@@ -377,8 +403,6 @@ namespace Rebus.AmazonSQS
             _log.Warn("Not all completed messages is removed from the queue: {queue} \n{noOfFailedMessages} failed.\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
         }
 
-
-
         private void GenerateErrorsAndLog(ChangeMessageVisibilityBatchResponse result)
         {
 
@@ -393,5 +417,9 @@ namespace Rebus.AmazonSQS
         }
 
 
+        public void Initialize()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
