@@ -96,7 +96,7 @@ namespace Rebus.Tests.Contracts.Transports
                 var headers = new Dictionary<string, string>
                 {
                     {"recognizzle", id},
-                    {Headers.TimeToBeReceived, "00:00:10"},
+                    {Headers.TimeToBeReceived, "00:00:20"},
                     {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
                 };
                 await transport.Send(queueName, MessageWith(headers), transactionContext);

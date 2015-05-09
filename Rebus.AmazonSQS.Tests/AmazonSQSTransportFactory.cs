@@ -18,7 +18,7 @@ namespace Rebus.AmazonSQS.Tests
         private string _inputAddress;
 
 
-        public ITransport Create(string inputQueueAddress, int visibiltyTimeout)
+        public ITransport Create(string inputQueueAddress, int visibiltyTimeoutSeconds)
         {
 
             _inputAddress = StripPrefixSlash(inputQueueAddress);
@@ -27,7 +27,7 @@ namespace Rebus.AmazonSQS.Tests
 
                 var transport = new AmazonSqsTransport(_inputAddress, accessKeyId, secretAccessKey, baseQueueUrl, RegionEndpoint.EUCentral1);
 
-                transport.Initialize(visibiltyTimeout);
+                transport.Initialize(visibiltyTimeoutSeconds);
                 transport.Purge();
                 return transport;
             });

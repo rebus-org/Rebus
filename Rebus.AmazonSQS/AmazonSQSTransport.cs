@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
+using Rebus.AmazonSQS.Config;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -26,7 +27,6 @@ namespace Rebus.AmazonSQS
         }
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
-        readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
         private readonly string _inputQueueAddress;
         private readonly string _accessKeyId;
         private readonly string _secretAccessKey;
@@ -34,6 +34,7 @@ namespace Rebus.AmazonSQS
         private readonly RegionEndpoint _regionEndpoint;
         private const string ClientContextKey = "SQS_Client";
         private const string OutgoingQueueContextKey = "SQS_outgoingQueue";
+        private const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
         private readonly string _queueUrl;
 
         public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, string queueServiceUrl, RegionEndpoint regionEndpoint)
@@ -55,9 +56,9 @@ namespace Rebus.AmazonSQS
             _queueUrl = GetQueueUrl(_inputQueueAddress);
         }
 
-        public void CreateQueue(string address, int visibilityTimeout)
+        public void CreateQueue(string address, int? visibilityTimeoutSeconds = null)
         {
-            _log.Info("Creating a new sqs queue: using service: {serviceUrl} with name: {queueaddress} on region: {regionEndpoint}", _queueServiceUrl, address, _regionEndpoint);
+            _log.Info("Creating a new sqs queue: using service: {0} with name: {1} on region: {2}", _queueServiceUrl, address, _regionEndpoint);
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
                                                                                     {
                                                                                         ServiceURL = _queueServiceUrl,
@@ -66,9 +67,10 @@ namespace Rebus.AmazonSQS
                                                                                     }))
             {
 
-                
+
                 var response = client.CreateQueue(new CreateQueueRequest(address));
-                var attributes = new Dictionary<string, string>() { { "VisibilityTimeout", visibilityTimeout.ToString() } };
+                var visibilityTimeoutString = visibilityTimeoutSeconds.HasValue ? visibilityTimeoutSeconds.Value.ToString() : 30.ToString();
+                var attributes = new Dictionary<string, string>() { { "VisibilityTimeout", visibilityTimeoutString } };
                 client.SetQueueAttributes(GetQueueUrl(address), attributes);
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
@@ -81,9 +83,9 @@ namespace Rebus.AmazonSQS
             }
         }
 
-        public void Initialize(int visibilityTimeout)
+        public void Initialize(int visibilityTimeoutSeconds)
         {
-            CreateQueue(_inputQueueAddress, visibilityTimeout);
+            CreateQueue(_inputQueueAddress, visibilityTimeoutSeconds);
         }
         public void Purge()
         {
@@ -136,7 +138,7 @@ namespace Rebus.AmazonSQS
 
         public void CreateQueue(string address)
         {
-            CreateQueue(address,30);
+            CreateQueue(address, null);
         }
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
@@ -144,33 +146,38 @@ namespace Rebus.AmazonSQS
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
             if (message == null) throw new ArgumentNullException("message");
             if (context == null) throw new ArgumentNullException("context");
-            var outputQueue = context.Items.GetOrAdd(OutgoingQueueContextKey, () => new ConcurrentDictionary<string, List<SendMessageBatchRequestEntry>>());
 
-            context.OnCommitted(async () =>
-                                      {
+            var outputQueue = context.Items.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
+            var contextActionsSet = context.Items.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
 
-                                          var client = GetClientFromTransactionContext(context);
-                                          var messageSendRequests = outputQueue.ToArray();
-
-                                          var tasks = messageSendRequests.Select(r =>
-
-                                                  client.SendMessageBatchAsync(new SendMessageBatchRequest(r.Key, new List<SendMessageBatchRequestEntry>(r.Value)))
-                                              );
-
-
-                                          var response = await Task.WhenAll(tasks);
-
-                                          if (response.Any(r => r.Failed.Any()))
+            if (!contextActionsSet)
+            {
+                context.OnCommitted(async () =>
                                           {
-                                              GenerateErrorsAndThrow(response);
-                                          }
+
+                                              var client = GetClientFromTransactionContext(context);
+                                              var messageSendRequests = outputQueue.GetMessages();
+
+                                              var tasks = messageSendRequests.Select(r =>
+
+                                                  client.SendMessageBatchAsync(new SendMessageBatchRequest(r.DestinationAddressUrl, r.Messages.ToList()))
+                                                  );
+
+
+                                              var response = await Task.WhenAll(tasks);
+
+                                              if (response.Any(r => r.Failed.Any()))
+                                              {
+                                                  GenerateErrorsAndThrow(response);
+                                              }
 
 
 
-                                      });
-            context.OnAborted(outputQueue.Clear);
+                                          });
+                context.OnAborted(outputQueue.Clear);
 
-
+                context.Items[OutgoingQueueContextActionIsSetKey] = true;
+            }
 
             var sendMessageRequest = new SendMessageBatchRequestEntry()
                                      {
@@ -181,14 +188,9 @@ namespace Rebus.AmazonSQS
                                      };
 
 
-            //TODO: if sending to a different service - the destination might be a full url?
-            outputQueue.AddOrUpdate(GetQueueUrl(destinationAddress),
-                                    (key) => new List<SendMessageBatchRequestEntry>(new[] { sendMessageRequest }),
-                                    (key, list) =>
-                                    {
-                                        list.Add(sendMessageRequest);
-                                        return list;
-                                    });
+            
+            outputQueue.AddMessage(GetQueueUrl(destinationAddress), sendMessageRequest);
+
 
 
 
@@ -221,14 +223,14 @@ namespace Rebus.AmazonSQS
                    {
                        _log.Info("Renewing peek lock for message with ID {0}", message.MessageId);
 
-                       await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int) _peekLockDuration.TotalSeconds));
+                       await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int)_peekLockDuration.TotalSeconds));
                    })
                 {
                     Interval = _peekLockRenewalInterval
                 };
 
-                
-                
+
+
 
                 context.OnCommitted(async () =>
                 {
@@ -257,11 +259,11 @@ namespace Rebus.AmazonSQS
                     }
                 });
 
-                
+
 
                 if (MessageIsExpired(message))
                 {
-                    
+
                     await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
                     return null;
                 }
@@ -283,14 +285,14 @@ namespace Rebus.AmazonSQS
             {
                 timeToBeReceived = TimeSpan.Parse(value.StringValue);
 
-                if (UseRebusSentTime(message, timeToBeReceived)) return true;
-                if (UseNativeSentTimestamp(message, timeToBeReceived)) return true;
+                if (MessageIsExpiredUsingRebusSentTime(message, timeToBeReceived)) return true;
+                if (MessageIsExpiredUsingNativeSqsSentTimestamp(message, timeToBeReceived)) return true;
             }
 
             return false;
         }
 
-        private bool UseRebusSentTime(Message message, TimeSpan timeToBeReceived)
+        private bool MessageIsExpiredUsingRebusSentTime(Message message, TimeSpan timeToBeReceived)
         {
             MessageAttributeValue rebusUtcTimeSentAttributeValue;
             if (message.MessageAttributes.TryGetValue(Headers.SentTime, out rebusUtcTimeSentAttributeValue))
@@ -308,7 +310,7 @@ namespace Rebus.AmazonSQS
 
         }
 
-        private static bool UseNativeSentTimestamp(Message message, TimeSpan timeToBeReceived)
+        private static bool MessageIsExpiredUsingNativeSqsSentTimestamp(Message message, TimeSpan timeToBeReceived)
         {
             string sentTimeStampString;
             if (message.Attributes.TryGetValue("SentTimestamp", out sentTimeStampString))
@@ -370,6 +372,10 @@ namespace Rebus.AmazonSQS
 
         private string GetQueueUrl(string address)
         {
+            if (Uri.IsWellFormedUriString(address, UriKind.Absolute))
+            {
+                return address;
+            }
             return _queueServiceUrl + address;
         }
 
@@ -419,7 +425,7 @@ namespace Rebus.AmazonSQS
 
         public void Initialize()
         {
-            throw new NotImplementedException();
+            CreateQueue(_inputQueueAddress);
         }
     }
 }
