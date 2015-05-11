@@ -29,7 +29,7 @@ namespace Rebus.AmazonSQS.Tests
             var transportFactory = new AmazonSQSTransportFactory();
 
             const string inputqueueName = "inputQueue";
-            var inputQueue = transportFactory.Create(TestConfig.QueueName(inputqueueName), 3);//3 seconds timeout on queue should be overrided by renewalcode
+            var inputQueue = transportFactory.Create(TestConfig.QueueName(inputqueueName), TimeSpan.FromSeconds(3));
             const string inputqueueName2 = "outputQueue";
             var outputQueue = transportFactory.Create(TestConfig.QueueName(inputqueueName2));
 
@@ -45,14 +45,14 @@ namespace Rebus.AmazonSQS.Tests
 
                 await WithContext(async innerContext =>
                                         {
-                                            Thread.Sleep(5000);
+                                            Thread.Sleep(6000);
                                             var innerMessage = await inputQueue.Receive(innerContext);
 
-                                            Assert.That(innerMessage,Is.Null);
+                                            Assert.That(innerMessage, Is.Null);
                                         });
 
 
-                Assert.That(transportMessage,Is.Not.Null);
+                Assert.That(transportMessage, Is.Not.Null);
 
             });
 

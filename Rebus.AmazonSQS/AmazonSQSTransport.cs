@@ -25,68 +25,90 @@ namespace Rebus.AmazonSQS
         {
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
-        readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
-        readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
+        private TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
+        private TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
         private readonly string _inputQueueAddress;
         private readonly string _accessKeyId;
         private readonly string _secretAccessKey;
-        private readonly string _queueServiceUrl;
+
         private readonly RegionEndpoint _regionEndpoint;
         private const string ClientContextKey = "SQS_Client";
         private const string OutgoingQueueContextKey = "SQS_outgoingQueue";
         private const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
-        private readonly string _queueUrl;
+        private string _queueUrl = null;
 
-        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, string queueServiceUrl, RegionEndpoint regionEndpoint)
+        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
         {
             if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
             if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
             if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
-            if (queueServiceUrl == null) throw new ArgumentNullException("queueServiceUrl");
+
             if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
-            if (!queueServiceUrl.EndsWith("/"))
-            {
-                queueServiceUrl = queueServiceUrl + "/";
-            }
             _inputQueueAddress = inputQueueAddress;
+            if (_inputQueueAddress.Contains("/") && !Uri.IsWellFormedUriString(_inputQueueAddress, UriKind.Absolute))
+            {
+                throw new ArgumentException("You could either have a simple queue name without slash (eg. inputqueue) - or a complete URL for the queue endpoint.", "inputQueueAddress");
+            }
+            
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
-            _queueServiceUrl = queueServiceUrl;
             _regionEndpoint = regionEndpoint;
-            _queueUrl = GetQueueUrl(_inputQueueAddress);
+            if (Uri.IsWellFormedUriString(inputQueueAddress, UriKind.Absolute))
+            {
+                _queueUrl = inputQueueAddress;
+            }
+        }
+        public void Initialize(TimeSpan peeklockDuration)
+        {
+            _peekLockDuration = peeklockDuration;
+
+            _peekLockRenewalInterval = TimeSpan.FromMinutes(_peekLockDuration.TotalMinutes * 0.8);
+            CreateQueue(_inputQueueAddress);
         }
 
-        public void CreateQueue(string address, int? visibilityTimeoutSeconds = null)
+        public void Initialize()
         {
-            _log.Info("Creating a new sqs queue: using service: {0} with name: {1} on region: {2}", _queueServiceUrl, address, _regionEndpoint);
-            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
-                                                                                    {
-                                                                                        ServiceURL = _queueServiceUrl,
-                                                                                        RegionEndpoint = _regionEndpoint
+            CreateQueue(_inputQueueAddress);
+        }
 
-                                                                                    }))
+
+        public void CreateQueue(string address)
+        {
+            _log.Info("Creating a new sqs queue:  with name: {1} on region: {2}", address, _regionEndpoint);
+
+
+            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _regionEndpoint))
             {
+                if (_queueUrl == null)
+                {
+                    _log.Info("Getting queueUrl from SQS service by name:{0}", _inputQueueAddress);
 
+                    var urlResponse = client.GetQueueUrl(_inputQueueAddress);
 
+                    if (urlResponse.HttpStatusCode == HttpStatusCode.OK)
+                    {
+                        _queueUrl = urlResponse.QueueUrl;
+                    }
+                    else
+                    {
+                        _log.Warn("Could not get queue url from service by name: {0}", _inputQueueAddress);
+                    }
+                }
                 var response = client.CreateQueue(new CreateQueueRequest(address));
-                var visibilityTimeoutString = visibilityTimeoutSeconds.HasValue ? visibilityTimeoutSeconds.Value.ToString() : 30.ToString();
-                var attributes = new Dictionary<string, string>() { { "VisibilityTimeout", visibilityTimeoutString } };
-                client.SetQueueAttributes(GetQueueUrl(address), attributes);
+                var attributes = new Dictionary<string, string>() { { "VisibilityTimeout", _peekLockDuration.TotalSeconds.ToString() } };
+                client.SetQueueAttributes(_queueUrl, attributes);
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
 
-                    _log.Warn("Did not create queue with {address} - there was an error: ErrorCode: {errorCode}", address, response.HttpStatusCode);
+                    _log.Warn("Did not create queue with address: {0} - there was an error: ErrorCode: {0}", address, response.HttpStatusCode);
                 }
 
 
             }
         }
 
-        public void Initialize(int visibilityTimeoutSeconds)
-        {
-            CreateQueue(_inputQueueAddress, visibilityTimeoutSeconds);
-        }
+
         public void Purge()
         {
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
@@ -136,10 +158,7 @@ namespace Rebus.AmazonSQS
         }
 
 
-        public void CreateQueue(string address)
-        {
-            CreateQueue(address, null);
-        }
+
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
@@ -157,21 +176,13 @@ namespace Rebus.AmazonSQS
 
                                               var client = GetClientFromTransactionContext(context);
                                               var messageSendRequests = outputQueue.GetMessages();
-
-                                              var tasks = messageSendRequests.Select(r =>
-
-                                                  client.SendMessageBatchAsync(new SendMessageBatchRequest(r.DestinationAddressUrl, r.Messages.ToList()))
-                                                  );
-
+                                              var tasks = messageSendRequests.Select(r => client.SendMessageBatchAsync(new SendMessageBatchRequest(r.DestinationAddressUrl, r.Messages.ToList())));
 
                                               var response = await Task.WhenAll(tasks);
-
                                               if (response.Any(r => r.Failed.Any()))
                                               {
                                                   GenerateErrorsAndThrow(response);
                                               }
-
-
 
                                           });
                 context.OnAborted(outputQueue.Clear);
@@ -188,14 +199,8 @@ namespace Rebus.AmazonSQS
                                      };
 
 
-            
-            outputQueue.AddMessage(GetQueueUrl(destinationAddress), sendMessageRequest);
 
-
-
-
-
-
+            outputQueue.AddMessage(GetQueueUrl(destinationAddress, context), sendMessageRequest);
         }
 
 
@@ -263,11 +268,10 @@ namespace Rebus.AmazonSQS
 
                 if (MessageIsExpired(message))
                 {
-
                     await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
                     return null;
                 }
-                renewalTask.Start(true);
+                renewalTask.Start();
                 var transportMessage = GetTransportMessage(message);
                 return transportMessage;
             }
@@ -292,7 +296,7 @@ namespace Rebus.AmazonSQS
             return false;
         }
 
-        private bool MessageIsExpiredUsingRebusSentTime(Message message, TimeSpan timeToBeReceived)
+        private static bool MessageIsExpiredUsingRebusSentTime(Message message, TimeSpan timeToBeReceived)
         {
             MessageAttributeValue rebusUtcTimeSentAttributeValue;
             if (message.MessageAttributes.TryGetValue(Headers.SentTime, out rebusUtcTimeSentAttributeValue))
@@ -339,7 +343,6 @@ namespace Rebus.AmazonSQS
             {
                 var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
                 {
-                    ServiceURL = _queueServiceUrl,
                     RegionEndpoint = _regionEndpoint
                 });
                 context.OnDisposed(amazonSqsClient.Dispose);
@@ -349,7 +352,6 @@ namespace Rebus.AmazonSQS
 
         private TransportMessage GetTransportMessage(Message message)
         {
-
             var headers = message.MessageAttributes.ToDictionary((kv) => kv.Key, (kv) => kv.Value.StringValue);
 
             return new TransportMessage(headers, GetBodyBytes(message.Body));
@@ -370,13 +372,36 @@ namespace Rebus.AmazonSQS
                                         value => new MessageAttributeValue() { DataType = "String", StringValue = value.Value });
         }
 
-        private string GetQueueUrl(string address)
+        private string GetQueueUrl(string address, ITransactionContext transactionContext)
         {
-            if (Uri.IsWellFormedUriString(address, UriKind.Absolute))
-            {
-                return address;
-            }
-            return _queueServiceUrl + address;
+
+            var url = transactionContext.Items.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), () =>
+                    {
+
+                        if (Uri.IsWellFormedUriString(address, UriKind.Absolute))
+                        {
+                            return address;
+                        }
+
+                        _log.Info("Getting queueUrl from SQS service by name:{0}", _inputQueueAddress);
+                        var client = GetClientFromTransactionContext(transactionContext);
+                        var urlResponse = client.GetQueueUrl(address);
+
+                        if (urlResponse.HttpStatusCode == HttpStatusCode.OK)
+                        {
+                            return urlResponse.QueueUrl;
+                        }
+                        else
+                        {
+                            _log.Warn("Could not get queue url from service by name: {0}", _inputQueueAddress);
+                            throw new ApplicationException(String.Format("could not find Url for address: {0} - got errorcode: {1}", address,
+                                urlResponse.HttpStatusCode));
+                        }
+
+                    });
+
+            return url;
+
         }
 
         public string Address
@@ -423,9 +448,6 @@ namespace Rebus.AmazonSQS
         }
 
 
-        public void Initialize()
-        {
-            CreateQueue(_inputQueueAddress);
-        }
+        
     }
 }

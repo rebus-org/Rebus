@@ -13,39 +13,35 @@ namespace Rebus.AmazonSQS.Tests
     {
         private string accessKeyId = "AKIAIFLMHSFJHKP5US5Q";
         private const string secretAccessKey = "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";
-        private const string baseQueueUrl = "https://sqs.eu-central-1.amazonaws.com/706962889542/";
+        // private const string baseQueueUrl = "https://sqs.eu-central-1.amazonaws.com/706962889542/";
 
         private string _inputAddress;
 
 
-        public ITransport Create(string inputQueueAddress, int visibiltyTimeoutSeconds)
+        public ITransport Create(string inputQueueAddress, TimeSpan peeklockDuration)
         {
 
-            _inputAddress = StripPrefixSlash(inputQueueAddress);
+            _inputAddress = inputQueueAddress;
             return _queuesToDelete.GetOrAdd(_inputAddress, () =>
             {
 
-                var transport = new AmazonSqsTransport(_inputAddress, accessKeyId, secretAccessKey, baseQueueUrl, RegionEndpoint.EUCentral1);
+                var transport = new AmazonSqsTransport(_inputAddress, accessKeyId, secretAccessKey, RegionEndpoint.EUCentral1);
 
-                transport.Initialize(visibiltyTimeoutSeconds);
+                transport.Initialize(peeklockDuration);
                 transport.Purge();
                 return transport;
             });
 
         }
 
-        public ITransport Create(string inputQuquAddress)
+        public ITransport Create(string inputQueueAddress)
         {
-            return Create(inputQuquAddress, 30);
+            return Create(inputQueueAddress, TimeSpan.FromSeconds(30));
         }
-        readonly Dictionary<string, AmazonSqsTransport> _queuesToDelete = new Dictionary<string, AmazonSqsTransport>();
-        private string StripPrefixSlash(string inputQueueAddress)
-        {
-            if (inputQueueAddress.StartsWith("/"))
-                return inputQueueAddress.Substring(1);
 
-            return inputQueueAddress;
-        }
+
+        readonly Dictionary<string, AmazonSqsTransport> _queuesToDelete = new Dictionary<string, AmazonSqsTransport>();
+
 
         public void CleanUp()
         {
