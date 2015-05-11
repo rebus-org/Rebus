@@ -2,8 +2,14 @@
 
 namespace Rebus.Config
 {
+    /// <summary>
+    /// Contains additional options for configuring Rebus internals
+    /// </summary>
     public class Options
     {
+        /// <summary>
+        /// Constructs the options with the default settings
+        /// </summary>
         public Options()
         {
             NumberOfWorkers = 10;
@@ -16,8 +22,7 @@ namespace Rebus.Config
         public int NumberOfWorkers { get; set; }
 
         /// <summary>
-        /// Configures how many outstanding continuations (i.e. async <see cref="Task"/>-based parallel operations) we
-        /// allow per worker
+        /// Configures how many outstanding continuations (i.e. async <see cref="Task"/>-based parallel operations) we allow per worker
         /// </summary>
         public int MaxParallelism { get; set; }
     }

@@ -60,7 +60,10 @@
     <Compile Include="Pipeline\IncomingStepContext.cs" />
     <Compile Include="Pipeline\IOutgoingStep.cs" />
     <Compile Include="Pipeline\OutgoingStepContext.cs" />
+    <Compile Include="Pipeline\ReceiveStage.cs" />
+    <Compile Include="Pipeline\SendStage.cs" />
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
+    <Compile Include="Pipeline\StagedStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
