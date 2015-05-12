@@ -4,8 +4,6 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using Amazon;
-using Amazon.EC2.Model;
-using Amazon.SQS;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
@@ -140,7 +138,6 @@ namespace Rebus.AmazonSQS.Tests
                     SecretAccessKey = keysAndValues["SecretAccessKey"],
                     BaseQueueUrl = keysAndValues["BaseQueueUrl"].EndsWith("/") ? keysAndValues["BaseQueueUrl"] : keysAndValues["BaseQueueUrl"] + "/",
                     RegionEndpoint = keysAndValues["RegionEndpoint"]
-
                 };
 
             }
@@ -152,8 +149,6 @@ namespace Rebus.AmazonSQS.Tests
 
                 throw;
             }
-
-
         }
 
     }
