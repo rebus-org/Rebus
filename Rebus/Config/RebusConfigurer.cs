@@ -23,12 +23,15 @@ using Rebus.Workers.ThreadBased;
 
 namespace Rebus.Config
 {
+    /// <summary>
+    /// Basic skeleton of the fluent configuration builder. Contains a method for each aspect that can be configured
+    /// </summary>
     public class RebusConfigurer
     {
         readonly Injectionist _injectionist = new Injectionist();
         readonly Options _options = new Options();
 
-        public RebusConfigurer(IHandlerActivator handlerActivator)
+        internal RebusConfigurer(IHandlerActivator handlerActivator)
         {
             _injectionist.Register(c => handlerActivator);
 
