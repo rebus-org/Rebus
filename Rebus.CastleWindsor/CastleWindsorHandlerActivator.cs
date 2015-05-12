@@ -8,16 +8,24 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.CastleWindsor
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that is backed by a Windsor Container
+    /// </summary>
     public class CastleWindsorHandlerActivator : IContainerAdapter
     {
         readonly IWindsorContainer _windsorContainer;
 
+        /// <summary>
+        /// Constructs the Windsor handler activator
+        /// </summary>
         public CastleWindsorHandlerActivator(IWindsorContainer windsorContainer)
         {
+            if (windsorContainer == null) throw new ArgumentNullException("windsorContainer");
             _windsorContainer = windsorContainer;
         }
 
@@ -42,8 +50,20 @@ namespace Rebus.CastleWindsor
 
             _windsorContainer
                 .Register(
-                    Component.For<IBus>().Instance(bus),
-                    Component.For<InstanceDisposer>()
+                    Component.For<IBus>().Instance(bus).LifestyleSingleton(),
+                    Component.For<InstanceDisposer>(),
+                  
+                    Component.For<IMessageContext>()
+                        .UsingFactoryMethod(k =>
+                        {
+                            var currentMessageContext = MessageContext.Current;
+                            if (currentMessageContext == null)
+                            {
+                                throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
+                            }
+                            return currentMessageContext;
+                        }, managedExternally: true)
+                        .LifestyleTransient()
                 );
 
             _windsorContainer.Resolve<InstanceDisposer>();
