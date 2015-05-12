@@ -17,3 +17,4 @@ _ReSharper.*
 *.cache
 ~$*
 asb_connection_string.txt
+sqs_connectionstring.txt
