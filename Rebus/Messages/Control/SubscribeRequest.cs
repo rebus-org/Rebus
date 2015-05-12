@@ -7,7 +7,14 @@
     /// </summary>
     public class SubscribeRequest
     {
+        /// <summary>
+        /// Specifies the globally addressable queue address of the subscriber to enlist for the given topic
+        /// </summary>
         public string SubscriberAddress { get; set; }
+        
+        /// <summary>
+        /// Specifis the topic for which the subscriber wishes to subscribe
+        /// </summary>
         public string Topic { get; set; }
     }
 }

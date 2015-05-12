@@ -3,8 +3,14 @@ using System.Collections.Generic;
 
 namespace Rebus.Extensions
 {
+    /// <summary>
+    /// Provides extensions of <see cref="Type"/>
+    /// </summary>
     public static class TypeExtensions
     {
+        /// <summary>
+        /// Gets the type's base types (i.e. the <see cref="Type"/> for each implemented interface and for each class inherited from, all the way up to <see cref="Object"/>)
+        /// </summary>
         public static IEnumerable<Type> GetBaseTypes(this Type type)
         {
             foreach (var implementedInterface in type.GetInterfaces())

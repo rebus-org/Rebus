@@ -7,8 +7,14 @@ namespace Rebus.Injection
     /// </summary>
     public interface IResolutionContext
     {
+        /// <summary>
+        /// Gets an instance of the specified <see cref="TService"/>.
+        /// </summary>
         TService Get<TService>();
 
+        /// <summary>
+        /// Gets all instances resolved within this resolution context at this time.
+        /// </summary>
         IEnumerable<T> GetTrackedInstancesOf<T>();
     }
 }

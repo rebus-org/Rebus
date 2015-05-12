@@ -13,6 +13,11 @@ using Rebus.Transport;
 
 namespace Rebus.Retry.Simple
 {
+    /// <summary>
+    /// Incoming message pipeline step that implements a retry mechanism - if the call to the rest of the pipeline fails,
+    /// the exception is caught and the queue transaction is rolled back. Caught exceptions are tracked in-mem, and after
+    /// a configurable number of retries, the message will be forwarded to the configured error queue and the rest of the pipeline will not be called
+    /// </summary>
     public class SimpleRetryStrategyStep : IRetryStrategyStep, IInitializable, IDisposable
     {
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
@@ -30,6 +35,9 @@ namespace Rebus.Retry.Simple
 
         bool _disposed;
 
+        /// <summary>
+        /// Constructs the step, using the given transport and settings
+        /// </summary>
         public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings)
         {
             _transport = transport;
@@ -88,6 +96,9 @@ namespace Rebus.Retry.Simple
             }
         }
 
+        /// <summary>
+        /// Initializes the step, starting the background task that cleans up old tracked errors
+        /// </summary>
         public void Initialize()
         {
             _cleanupOldTrackedErrorsTask.Start();
@@ -99,7 +110,7 @@ namespace Rebus.Retry.Simple
 
             _trackedErrors
                 .ToList()
-                .Where(e => e.Value.ElapsedSinceLastError > TimeSpan.FromMinutes(5))
+                .Where(e => e.Value.ElapsedSinceLastError > TimeSpan.FromMinutes(10))
                 .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out _));
         }
 

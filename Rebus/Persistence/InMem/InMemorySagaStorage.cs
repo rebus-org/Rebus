@@ -9,6 +9,10 @@ using Rebus.Sagas;
 
 namespace Rebus.Persistence.InMem
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaStorage"/> that "persists" saga data in memory. Saga data is serialized/deserialized using Newtonsoft JSON.NET
+    /// with some pretty robust settings, so inheritance and interfaces etc. can be used in the saga data.
+    /// </summary>
     public class InMemorySagaStorage : ISagaStorage
     {
         readonly ConcurrentDictionary<Guid, ISagaData> _data = new ConcurrentDictionary<Guid, ISagaData>();

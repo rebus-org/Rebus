@@ -6,6 +6,9 @@
     /// </summary>
     public interface IInitializable
     {
+        /// <summary>
+        /// Initializes the instance
+        /// </summary>
         void Initialize();
     }
 }

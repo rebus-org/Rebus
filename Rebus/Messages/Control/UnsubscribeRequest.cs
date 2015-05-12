@@ -7,7 +7,14 @@
     /// </summary>
     public class UnsubscribeRequest
     {
+        /// <summary>
+        /// Specifies the globally addressable queue address of the subscriber to remove for the given topic
+        /// </summary>
         public string SubscriberAddress { get; set; }
+
+        /// <summary>
+        /// Specifis the topic from which the subscriber wishes to unsubscribe
+        /// </summary>
         public string Topic { get; set; }
     }
 }

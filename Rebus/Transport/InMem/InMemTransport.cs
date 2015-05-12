@@ -4,11 +4,20 @@ using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
 {
+    /// <summary>
+    /// In-mem implementation of <see cref="ITransport"/> that uses one particular <see cref="InMemNetwork"/> to deliver messages. Can
+    /// be used for in-process messaging and unit testing
+    /// </summary>
     public class InMemTransport : ITransport
     {
         readonly InMemNetwork _network;
         readonly string _inputQueueAddress;
 
+        /// <summary>
+        /// Creates the transport, using the specified <see cref="InMemNetwork"/> to deliver/receive messages. This transport will have
+        /// <see cref="inputQueueAddress"/> as its input queue address, and thus will attempt to receive messages from the queue with that
+        /// name out of the given <see cref="network"/>
+        /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
             if (network == null) throw new ArgumentNullException("network");

@@ -8,6 +8,9 @@ namespace Rebus.Messages
     /// </summary>
     public class TransportMessage
     {
+        /// <summary>
+        /// Constructs the transport message with the given headers, wrapping the given body payload
+        /// </summary>
         public TransportMessage(Dictionary<string, string> headers, byte[] body)
         {
             if (headers == null) throw new ArgumentNullException("headers");
@@ -16,8 +19,14 @@ namespace Rebus.Messages
             Body = body;
         }
 
+        /// <summary>
+        /// Gets the headers of this message
+        /// </summary>
         public Dictionary<string, string> Headers { get; private set; }
-        
+
+        /// <summary>
+        /// Gets the wrapped body data of this message
+        /// </summary>
         public byte[] Body { get; private set; }
     }
 }

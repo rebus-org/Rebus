@@ -9,16 +9,25 @@ namespace Rebus.Injection
     [Serializable]
     public class ResolutionException : Exception
     {
+        /// <summary>
+        /// Constructs the exception
+        /// </summary>
         public ResolutionException(string message, params object[] objs)
             : base(string.Format(message, objs))
         {
         }
 
+        /// <summary>
+        /// Constructs the exception
+        /// </summary>
         public ResolutionException(Exception innerException, string message, params object[] objs)
             : base(string.Format(message, objs), innerException)
         {
         }
 
+        /// <summary>
+        /// Constructs the exception
+        /// </summary>
         public ResolutionException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {

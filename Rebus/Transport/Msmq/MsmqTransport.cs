@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Messaging;
-using System.Security.Principal;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -15,6 +13,9 @@ using Message = System.Messaging.Message;
 
 namespace Rebus.Transport.Msmq
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses MSMQ to do its thing
+    /// </summary>
     public class MsmqTransport : ITransport, IInitializable, IDisposable
     {
         static ILog _log;
@@ -31,6 +32,9 @@ namespace Rebus.Transport.Msmq
 
         volatile MessageQueue _inputQueue;
 
+        /// <summary>
+        /// Constructs the transport with the specified input queue address
+        /// </summary>
         public MsmqTransport(string inputQueueAddress)
         {
             if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
@@ -63,9 +67,12 @@ namespace Rebus.Transport.Msmq
 
             var inputQueuePath = MsmqUtil.GetPath(address);
 
-            EnsureQueueExists(inputQueuePath);
+            MsmqUtil.EnsureQueueExists(inputQueuePath);
         }
 
+        /// <summary>
+        /// Deletes all messages in the input queue
+        /// </summary>
         public void PurgeInputQueue()
         {
             if (!MsmqUtil.QueueExists(_inputQueueName))
@@ -247,7 +254,9 @@ namespace Rebus.Transport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                EnsureQueueExists(inputQueuePath);
+                MsmqUtil.EnsureQueueExists(inputQueuePath);
+
+                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {
@@ -258,60 +267,9 @@ namespace Rebus.Transport.Msmq
                         Body = true,
                     }
                 };
-
-                if (!_inputQueue.Transactional)
-                {
-                    var message = string.Format("The MSMQ queue '{0}' is not transactional! MSMQ queues need to" +
-                                                " be transactional for Rebus to use them, because otherwise Rebus" +
-                                                " will not be able to deliver messages to them.", inputQueuePath);
-
-                    throw new ApplicationException(message);
-                }
-
-                return _inputQueue;
             }
-        }
 
-        static void EnsureQueueExists(string inputQueuePath)
-        {
-            if (MessageQueue.Exists(inputQueuePath)) return;
-
-            try
-            {
-                _log.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
-
-                var newQueue = MessageQueue.Create(inputQueuePath, true);
-
-                newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                    MessageQueueAccessRights.GenericWrite);
-
-                var administratorAccountName = GetAdministratorAccountName();
-
-                newQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
-            }
-            catch (MessageQueueException exception)
-            {
-                if (exception.MessageQueueErrorCode == MessageQueueErrorCode.QueueExists)
-                {
-                    return;
-                }
-
-                throw;
-            }
-        }
-
-        static string GetAdministratorAccountName()
-        {
-            try
-            {
-                return new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null)
-                    .Translate(typeof(NTAccount))
-                    .ToString();
-            }
-            catch (Exception e)
-            {
-                throw new ApplicationException(string.Format("An error occurred while attempting to figure out the name of the local administrators group!"), e);
-            }
+            return _inputQueue;
         }
 
         class ExtensionSerializer
@@ -334,6 +292,9 @@ namespace Rebus.Transport.Msmq
             Dispose(true);
         }
 
+        /// <summary>
+        /// Disposes the input queue instance
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (_inputQueue != null)

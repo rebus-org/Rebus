@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
 using Rebus.Extensions;
 using Rebus.Messages;
@@ -21,6 +20,10 @@ namespace Rebus.Transport.InMem
 
         readonly bool _outputEventsToConsole;
 
+        /// <summary>
+        /// Constructs the in-mem network, optionally (if <see cref="outputEventsToConsole"/> is set to true) outputting information
+        /// about what is happening inside it to <see cref="Console.Out"/>
+        /// </summary>
         public InMemNetwork(bool outputEventsToConsole = false)
         {
             _outputEventsToConsole = outputEventsToConsole;
@@ -31,12 +34,20 @@ namespace Rebus.Transport.InMem
             }
         }
 
+        /// <summary>
+        /// Resets the network (i.e. all queues and their messages are deleted)
+        /// </summary>
         public void Reset()
         {
             Console.WriteLine("Resetting in-mem network '{0}'", _networkId);
             _queues.Clear();
         }
 
+        /// <summary>
+        /// Delivers the specified <see cref="InMemTransportMessage"/> to the address specified by <see cref="destinationAddress"/>.
+        /// If <see cref="alwaysQuiet"/> is set to true, no events will ever be printed to <see cref="Console.Out"/>
+        /// (can be used by an in-mem transport to return a message to a queue, as if there was a queue transaction that was rolled back)
+        /// </summary>
         public void Deliver(string destinationAddress, InMemTransportMessage msg, bool alwaysQuiet = false)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
@@ -53,6 +64,9 @@ namespace Rebus.Transport.InMem
             messageQueue.Enqueue(msg);
         }
 
+        /// <summary>
+        /// Gets the next message from the queue with the given <see cref="inputQueueName"/>, returning null if no messages are available.
+        /// </summary>
         public InMemTransportMessage GetNextOrNull(string inputQueueName)
         {
             if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
@@ -88,11 +102,17 @@ namespace Rebus.Transport.InMem
             return message.Age > maximumAge;
         }
 
+        /// <summary>
+        /// Returns whether the network has a queue with the specified name
+        /// </summary>
         public bool HasQueue(string address)
         {
             return _queues.ContainsKey(address);
         }
 
+        /// <summary>
+        /// Creates a queue on the network with the specified name
+        /// </summary>
         public void CreateQueue(string address)
         {
             _queues.TryAdd(address, new ConcurrentQueue<InMemTransportMessage>());

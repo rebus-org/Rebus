@@ -478,7 +478,7 @@ namespace Rebus.Tests.Transport.Msmq
         {
             var transport = new MsmqTransport(QueueName);
 
-            MsmqUtil.EnsureMessageQueueExists(MsmqUtil.GetPath(QueueName));
+            MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(QueueName));
 
             var sendIds = new List<int>();
 

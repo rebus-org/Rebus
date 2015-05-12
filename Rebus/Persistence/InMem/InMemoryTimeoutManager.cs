@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Extensions;
@@ -11,6 +10,9 @@ using Rebus.Timeouts;
 
 namespace Rebus.Persistence.InMem
 {
+    /// <summary>
+    /// Implementation of <see cref="ITimeoutManager"/> that "persists" timeouts in memory.
+    /// </summary>
     public class InMemoryTimeoutManager : ITimeoutManager
     {
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();

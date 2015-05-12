@@ -50,10 +50,10 @@ namespace Rebus.Extensions
         /// Provides a function similar to <see cref="ConcurrentDictionary{TKey,TValue}.GetOrAdd(TKey,System.Func{TKey,TValue})"/>, only
         /// on <see cref="Dictionary{TKey,TValue}"/>
         /// </summary>
-        public static T GetOrAdd<T, U>(this Dictionary<string, U> dictionary, string key, Func<T> newItemFactory) where T : U
+        public static TItem GetOrAdd<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<TItem> newItemFactory) where TItem : TBase
         {
-            U item;
-            if (dictionary.TryGetValue(key, out item)) return (T)item;
+            TBase item;
+            if (dictionary.TryGetValue(key, out item)) return (TItem)item;
 
             var newItem = newItemFactory();
             dictionary[key] = newItem;
@@ -63,10 +63,10 @@ namespace Rebus.Extensions
         /// <summary>
         /// Provides a function similar to <see cref="GetOrAdd{T,U}"/>, only where the factory function can be async
         /// </summary>
-        public static async Task<T> GetOrAddAsync<T, U>(this Dictionary<string, U> dictionary, string key, Func<Task<T>> newItemFactory) where T : U
+        public static async Task<TItem> GetOrAddAsync<TItem, TBase>(this Dictionary<string, TBase> dictionary, string key, Func<Task<TItem>> newItemFactory) where TItem : TBase
         {
-            U item;
-            if (dictionary.TryGetValue(key, out item)) return (T)item;
+            TBase item;
+            if (dictionary.TryGetValue(key, out item)) return (TItem)item;
 
             var newItem = await newItemFactory();
             dictionary[key] = newItem;

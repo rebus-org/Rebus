@@ -6,6 +6,9 @@ using Rebus.Subscriptions;
 
 namespace Rebus.Persistence.InMem
 {
+    /// <summary>
+    /// Implementation of <see cref="ISubscriptionStorage"/> that "persists" subscriptions in memory.
+    /// </summary>
     public class InMemorySubscriptionStorage : ISubscriptionStorage
     {
         static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
@@ -42,7 +45,7 @@ namespace Rebus.Persistence.InMem
         {
             get
             {
-                // in-mem subscription storage is decentralized
+                // in-mem subscription storage is always decentralized
                 return false;
             }
         }
