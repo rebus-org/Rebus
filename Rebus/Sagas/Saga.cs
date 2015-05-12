@@ -31,8 +31,7 @@ namespace Rebus.Sagas
         /// <summary>
         /// Gets or sets the relevant saga data instance for this saga handler
         /// </summary>
-        // ReSharper disable once UnusedAutoPropertyAccessor.Local
-        public TSagaData Data { get; private set; }
+        public TSagaData Data { get; set; }
 
         /// <summary>
         /// This method must be implemented in order to configure correlation of incoming messages with existing saga data instances.
