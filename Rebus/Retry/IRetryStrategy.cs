@@ -13,11 +13,4 @@ namespace Rebus.Retry
         /// </summary>
         IRetryStrategyStep GetRetryStep();
     }
-
-    /// <summary>
-    /// Special marker for the retry strategy step
-    /// </summary>
-    public interface IRetryStrategyStep : IIncomingStep
-    {
-    }
 }

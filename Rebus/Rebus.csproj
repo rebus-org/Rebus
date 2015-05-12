@@ -65,7 +65,9 @@
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
     <Compile Include="Pipeline\StagedStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
+    <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
+    <Compile Include="Sagas\ISagaCorrelationProperty.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />

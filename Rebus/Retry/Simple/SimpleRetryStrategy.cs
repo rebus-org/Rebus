@@ -10,6 +10,9 @@ namespace Rebus.Retry.Simple
         readonly ITransport _transport;
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
 
+        /// <summary>
+        /// Constructs the retry strategy with the given settings, creating an error queue with the configured name if necessary
+        /// </summary>
         public SimpleRetryStrategy(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings)
         {
             _transport = transport;

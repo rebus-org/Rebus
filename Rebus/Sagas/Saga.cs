@@ -28,8 +28,20 @@ namespace Rebus.Sagas
     /// </summary>
     public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
     {
-        public TSagaData Data { get; set; }
+        /// <summary>
+        /// Gets or sets the relevant saga data instance for this saga handler
+        /// </summary>
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        public TSagaData Data { get; private set; }
 
+        /// <summary>
+        /// This method must be implemented in order to configure correlation of incoming messages with existing saga data instances.
+        /// Use the injected <see cref="ICorrelationConfig{TSagaData}"/> to set up the correlations, e.g. like so:
+        /// <code>
+        /// config.Correlate&lt;InitiatingMessage&gt;(m => m.OrderId, d => d.CorrelationId);
+        /// config.Correlate&lt;CorrelatedMessage&gt;(m => m.CorrelationId, d => d.CorrelationId);
+        /// </code>
+        /// </summary>
         protected abstract void CorrelateMessages(ICorrelationConfig<TSagaData> config);
 
         internal override IEnumerable<CorrelationProperty> GenerateCorrelationProperties()

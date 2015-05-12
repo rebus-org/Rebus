@@ -7,9 +7,14 @@ using Rebus.Messages;
 
 namespace Rebus.Serialization
 {
+    /// <summary>
+    /// Implementation of <see cref="ISerializer"/> that uses Newtonsoft JSON.NET internally, with some pretty robust settings
+    /// (i.e. full type info is included in the serialized format in order to support deserializing "unknown" types like
+    /// implementations of interfaces, etc)
+    /// </summary>
     public class JsonSerializer : ISerializer
     {
-        public static string JsonUtf8ContentType = "application/json;charset=utf-8";
+        const string JsonUtf8ContentType = "application/json;charset=utf-8";
 
         static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
