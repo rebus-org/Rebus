@@ -10,6 +10,10 @@ namespace Rebus.Transport
     {
         const string TransactionContextKey = "rebus2-current-transaction-context";
 
+        /// <summary>
+        /// Gets/sets the current transaction context from the call context's logical data slot (which is automatically transferred to continuations when resuming
+        /// awaited calls)
+        /// </summary>
         public static ITransactionContext Current
         {
             get

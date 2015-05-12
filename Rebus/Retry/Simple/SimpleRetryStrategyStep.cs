@@ -117,13 +117,13 @@ namespace Rebus.Retry.Simple
         string GetErrorDescriptionFor(string messageId)
         {
             ErrorTracking errorTracking;
+            
             if (!_trackedErrors.TryRemove(messageId, out errorTracking))
             {
                 return "Could not get error details for the message";
             }
 
-            return string.Join(Environment.NewLine,
-                errorTracking.Errors.Select(c => string.Format("{0}: {1}", c.Time, c.Exception)));
+            return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
         }
 
         async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, string errorDescription, ITransactionContext transactionContext)

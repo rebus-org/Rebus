@@ -57,8 +57,10 @@
     <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
     <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />
     <Compile Include="Pipeline\IIncomingStep.cs" />
+    <Compile Include="Pipeline\IMessageContext.cs" />
     <Compile Include="Pipeline\IncomingStepContext.cs" />
     <Compile Include="Pipeline\IOutgoingStep.cs" />
+    <Compile Include="Pipeline\MessageContext.cs" />
     <Compile Include="Pipeline\OutgoingStepContext.cs" />
     <Compile Include="Pipeline\ReceiveStage.cs" />
     <Compile Include="Pipeline\SendStage.cs" />

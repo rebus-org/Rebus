@@ -60,8 +60,6 @@ namespace Rebus.Threading
                 _interval = value < TimeSpan.FromMilliseconds(100)
                     ? TimeSpan.FromMilliseconds(100)
                     : value;
-
-                _log.Debug("Periodic task '{0}' interval set to {1}", _description, _interval);
             }
         }
 
