@@ -5,13 +5,31 @@ using Rebus.Messages;
 
 namespace Rebus.Routing.TypeBased
 {
+    /// <summary>
+    /// Routing logic that maps types to owning endpoints.
+    /// </summary>
     public class TypeBasedRouter : IRouter
     {
         readonly Dictionary<Type, string> _messageTypeAddresses = new Dictionary<Type, string>();
 
+        /// <summary>
+        /// Maps <see cref="destinationAddress"/> as the owner of the <see cref="TMessage"/> message type
+        /// </summary>
         public TypeBasedRouter Map<TMessage>(string destinationAddress)
         {
             _messageTypeAddresses[typeof (TMessage)] = destinationAddress;
+            return this;
+        }
+
+        /// <summary>
+        /// Maps <see cref="destinationAddress"/> as the owner of all message types found in the same assembly as <see cref="TMessage"/>
+        /// </summary>
+        public TypeBasedRouter MapAssemblyOf<TMessage>(string destinationAddress)
+        {
+            foreach (var messageType in typeof (TMessage).Assembly.GetTypes())
+            {
+                _messageTypeAddresses[messageType] = destinationAddress;
+            }
             return this;
         }
 

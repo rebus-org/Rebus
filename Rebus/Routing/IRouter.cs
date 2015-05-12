@@ -3,6 +3,10 @@ using Rebus.Messages;
 
 namespace Rebus.Routing
 {
+    /// <summary>
+    /// Abstraction of the routing logic. Should be capable of returning a destination address for a message
+    /// and an owner address for a topic.
+    /// </summary>
     public interface IRouter
     {
         /// <summary>

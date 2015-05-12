@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="CastleWindsorHandlerActivator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WindsorContainerExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
