@@ -8,7 +8,10 @@ using Rebus.Subscriptions;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class SqlServerSubscriptionStorage : ISubscriptionStorage, IDisposable
+    /// <summary>
+    /// Implementation of <see cref="ISubscriptionStorage"/> that persists subscriptions in a table in SQL Server
+    /// </summary>
+    public class SqlServerSubscriptionStorage : ISubscriptionStorage
     {
         static ILog _log;
 
@@ -20,6 +23,11 @@ namespace Rebus.Persistence.SqlServer
         readonly DbConnectionProvider _connectionProvider;
         readonly string _tableName;
 
+        /// <summary>
+        /// Constructs the storage using the specified connection provider and table to store its subscriptions. If the subscription
+        /// storage is shared by all subscribers and publishers, the <see cref="isCentralized"/> parameter can be set to true
+        /// in order to subscribe/unsubscribe directly instead of sending subscription/unsubscription requests
+        /// </summary>
         public SqlServerSubscriptionStorage(DbConnectionProvider connectionProvider, string tableName, bool isCentralized)
         {
             IsCentralized = isCentralized;
@@ -27,6 +35,9 @@ namespace Rebus.Persistence.SqlServer
             _tableName = tableName;
         }
 
+        /// <summary>
+        /// Creates the subscriptions table if necessary
+        /// </summary>
         public void EnsureTableIsCreated()
         {
             using (var connection = _connectionProvider.GetConnection().Result)
@@ -58,11 +69,6 @@ CREATE TABLE [dbo].[{0}] (
 
                 connection.Complete();
             }
-        }
-
-        ~SqlServerSubscriptionStorage()
-        {
-            Dispose(false);
         }
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
@@ -110,7 +116,7 @@ END
                     await command.ExecuteNonQueryAsync();
                 }
 
-                connection.Complete();
+                await connection.Complete();
             }
         }
 
@@ -129,22 +135,10 @@ DELETE FROM [{0}] WHERE [topic] = @topic AND [address] = @address
                     await command.ExecuteNonQueryAsync();
                 }
 
-                connection.Complete();
-
+                await connection.Complete();
             }
         }
 
         public bool IsCentralized { get; private set; }
-        
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            
-        }
     }
 }

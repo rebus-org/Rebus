@@ -7,10 +7,19 @@ using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implementation of <see cref="IDbConnectionProvider"/> that ensures that MARS (multiple active result sets) is enabled on the
+    /// given connection string (possibly by enabling it by itself)
+    /// </summary>
     public class DbConnectionProvider : IDbConnectionProvider
     {
         readonly string _connectionString;
 
+        /// <summary>
+        /// Wraps the connection string with the given name from app.config (if it is found), or interprets the given string as
+        /// a connection string to use. Will use <see cref="System.Data.IsolationLevel.ReadCommitted"/> by default on transactions,
+        /// unless another isolation level is set with the <see cref="IsolationLevel"/> property
+        /// </summary>
         public DbConnectionProvider(string connectionStringOrConnectionStringName)
         {
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
@@ -62,6 +71,9 @@ namespace Rebus.Persistence.SqlServer
             return new DbConnectionWrapper(connection, connection.BeginTransaction(IsolationLevel), false);
         }
 
+        /// <summary>
+        /// Gets/sets the isolation level used for transactions
+        /// </summary>
         public IsolationLevel IsolationLevel { get; set; }
     }
 }

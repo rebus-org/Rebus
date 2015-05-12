@@ -5,6 +5,9 @@ using Rebus.Timeouts;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Configuration extensions for configuring SQL persistence for sagas, subscriptions, and timeouts.
+    /// </summary>
     public static class SqlServerPersistenceConfigurationExtensions
     {
         /// <summary>

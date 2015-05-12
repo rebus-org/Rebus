@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -11,7 +10,10 @@ using Rebus.Timeouts;
 
 namespace Rebus.Persistence.SqlServer
 {
-    public class SqlServerTimeoutManager : ITimeoutManager, IDisposable
+    /// <summary>
+    /// Implementation of <see cref="ITimeoutManager"/> that uses SQL Server to store messages until it's time to deliver them.
+    /// </summary>
+    public class SqlServerTimeoutManager : ITimeoutManager
     {
         static ILog _log;
 
@@ -24,12 +26,18 @@ namespace Rebus.Persistence.SqlServer
         readonly string _tableName;
         readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings();
 
+        /// <summary>
+        /// Constructs the timeout manager, using the specified connection provider and table to store the messages until they're due.
+        /// </summary>
         public SqlServerTimeoutManager(DbConnectionProvider connectionProvider, string tableName)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
         }
 
+        /// <summary>
+        /// Creates the due messages table if necessary
+        /// </summary>
         public void EnsureTableIsCreated()
         {
             using (var connection = _connectionProvider.GetConnection().Result)
@@ -93,7 +101,7 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
                     await command.ExecuteNonQueryAsync();
                 }
 
-                connection.Complete();
+                await connection.Complete();
             }
         }
 
@@ -154,11 +162,6 @@ ORDER BY [due_time] ASC
                     }
                 });
             }
-        }
-
-        public void Dispose()
-        {
-            
         }
     }
 }

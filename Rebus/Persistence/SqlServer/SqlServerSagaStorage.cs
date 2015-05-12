@@ -12,6 +12,11 @@ using Rebus.Sagas;
 
 namespace Rebus.Persistence.SqlServer
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaStorage"/> that persists saga data as a Newtonsoft JSON.NET-serialized object to a table in SQL Server.
+    /// Correlation properties are stored in a separate index table, allowing for looking up saga data instanes based on the configured correlation
+    /// properties
+    /// </summary>
     public class SqlServerSagaStorage : ISagaStorage
     {
         const int MaximumSagaDataTypeNameLength = 40; 
@@ -32,6 +37,9 @@ namespace Rebus.Persistence.SqlServer
         readonly string _idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
         const bool IndexNullProperties = false;
 
+        /// <summary>
+        /// Constructs the saga storage, using the specified connection provider and tables for persistence.
+        /// </summary>
         public SqlServerSagaStorage(DbConnectionProvider connectionProvider, string dataTableName, string indexTableName)
         {
             _connectionProvider = connectionProvider;
@@ -39,6 +47,9 @@ namespace Rebus.Persistence.SqlServer
             _indexTableName = indexTableName;
         }
 
+        /// <summary>
+        /// Checks to see if the configured tables exist, creating them if necessary
+        /// </summary>
         public void EnsureTablesAreCreated()
         {
             using (var connection = _connectionProvider.GetConnection().Result)
@@ -206,7 +217,7 @@ WHERE [index].[saga_type] = @saga_type
                     CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
-                connection.Complete();
+                await connection.Complete();
             }
         }
 
@@ -255,8 +266,7 @@ UPDATE [{0}]
                         CreateIndex(propertiesToIndex, connection, sagaData);
                     }
 
-                    connection.Complete();
-
+                    await connection.Complete();
                 }
                 catch
                 {
@@ -289,7 +299,7 @@ UPDATE [{0}]
                     command.ExecuteNonQuery();
                 }
 
-                connection.Complete();
+                await connection.Complete();
             }
         }
 
