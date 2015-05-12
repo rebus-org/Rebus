@@ -1,5 +1,4 @@
-﻿using Rebus.Pipeline;
-using Rebus.Transport;
+﻿using Rebus.Transport;
 
 namespace Rebus.Retry.Simple
 {

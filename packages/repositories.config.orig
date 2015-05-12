@@ -1,9 +1,12 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <repositories>
+<<<<<<< HEAD
   <repository path="..\Rebus.AmazonSQS.Tests\packages.config" />
   <repository path="..\Rebus.AmazonSQS\packages.config" />
+=======
   <repository path="..\Rebus.Autofac.Tests\packages.config" />
   <repository path="..\Rebus.Autofac\packages.config" />
+>>>>>>> 45dd89c73377528df436e8f13cf97d01b92391ad
   <repository path="..\Rebus.AzureServiceBus.Tests\packages.config" />
   <repository path="..\Rebus.AzureServiceBus\packages.config" />
   <repository path="..\Rebus.CastleWindsor.Tests\packages.config" />
