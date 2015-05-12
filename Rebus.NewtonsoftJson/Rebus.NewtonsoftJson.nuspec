@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.NewtonsoftJson</id>
+    <version>$version$</version>
+    <title>Rebus.NewtonsoftJson</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>JSON serializer for Rebus that is honest about its dependency on Newtonsoft JSON.NET and thus allows for customizing almost every aspect of how serialization/deserialization is performed</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus newtonsoft json json.net serialization</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[2, 3)" />
+        <dependency id="Newtonsoft.Json" version="[6, 7)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.NewtonsoftJson.dll" target="lib\NET45" />
+  </files>
+</package>

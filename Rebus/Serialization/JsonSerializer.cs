@@ -12,20 +12,32 @@ namespace Rebus.Serialization
     /// (i.e. full type info is included in the serialized format in order to support deserializing "unknown" types like
     /// implementations of interfaces, etc)
     /// </summary>
-    public class JsonSerializer : ISerializer
+    internal class JsonSerializer : ISerializer
     {
         const string JsonUtf8ContentType = "application/json;charset=utf-8";
 
-        static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
+        static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings
         {
             TypeNameHandling = TypeNameHandling.All
         };
 
         static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
+        readonly JsonSerializerSettings _settings;
+
+        public JsonSerializer()
+        {
+            _settings = DefaultSettings;
+        }
+
+        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings)
+        {
+            _settings = jsonSerializerSettings;
+        }
+
         public async Task<TransportMessage> Serialize(Message message)
         {
-            var jsonText = JsonConvert.SerializeObject(message.Body, Settings);
+            var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
             var bytes = DefaultEncoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
             var messageType = message.Body.GetType();
@@ -44,7 +56,7 @@ namespace Rebus.Serialization
             }
 
             var bodyString = DefaultEncoding.GetString(transportMessage.Body);
-            var bodyObject = JsonConvert.DeserializeObject(bodyString, Settings);
+            var bodyObject = JsonConvert.DeserializeObject(bodyString, _settings);
             var headers = transportMessage.Headers.Clone();
             return new Message(headers, bodyObject);
         }

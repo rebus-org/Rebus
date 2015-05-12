@@ -68,6 +68,12 @@ namespace Rebus.Config
             return this;
         }
 
+        public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
+        {
+            configurer(new StandardConfigurer<ISerializer>(_injectionist));
+            return this;
+        }
+
         public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
         {
             configurer(new StandardConfigurer<ITimeoutManager>(_injectionist));
