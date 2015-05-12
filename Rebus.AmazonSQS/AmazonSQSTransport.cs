@@ -18,6 +18,9 @@ using Message = Amazon.SQS.Model.Message;
 
 namespace Rebus.AmazonSQS
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses Amazon Simple Queue Service to move messages around
+    /// </summary>
     public class AmazonSqsTransport : ITransport, IInitializable
     {
         static ILog _log;
@@ -35,8 +38,11 @@ namespace Rebus.AmazonSQS
         private const string ClientContextKey = "SQS_Client";
         private const string OutgoingQueueContextKey = "SQS_outgoingQueue";
         private const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
-        private string _queueUrl = null;
+        private string _queueUrl;
 
+        /// <summary>
+        /// Constructs the transport with the specified settings
+        /// </summary>
         public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
         {
             if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
@@ -55,6 +61,10 @@ namespace Rebus.AmazonSQS
             _regionEndpoint = regionEndpoint;
 
         }
+
+        /// <summary>
+        /// Public initialization method that allows for configuring the peek lock duration. Mostly useful for tests.
+        /// </summary>
         public void Initialize(TimeSpan peeklockDuration)
         {
             _peekLockDuration = peeklockDuration;
@@ -89,6 +99,9 @@ namespace Rebus.AmazonSQS
             }
         }
 
+        /// <summary>
+        /// Deletes all messages from the input queue
+        /// </summary>
         public void Purge()
         {
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
@@ -174,13 +187,12 @@ namespace Rebus.AmazonSQS
                                          Id = message.Headers.GetValueOrNull(Headers.MessageId) ?? Guid.NewGuid().ToString(),
                                      };
 
-
-
             outputQueue.AddMessage(GetDestinationQueueUrlByName(destinationAddress, context), sendMessageRequest);
-
+            
             return _emptyTask;
         }
-        private Task _emptyTask = Task.FromResult(0);
+        
+        private readonly Task _emptyTask = Task.FromResult(0);
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
