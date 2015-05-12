@@ -17,6 +17,10 @@ namespace Rebus.AmazonSQS.Tests
 
         private string _inputAddress;
 
+        public string BaseUrl
+        {
+            get { return "https://sqs.eu-central-1.amazonaws.com/706962889542/"; }
+        }
 
         public ITransport Create(string inputQueueAddress, TimeSpan peeklockDuration)
         {
@@ -45,10 +49,26 @@ namespace Rebus.AmazonSQS.Tests
 
         public void CleanUp()
         {
-
-
+            CleanUp(false);
 
 
         }
+
+        public void CleanUp(bool deleteQueues)
+        {
+            if (deleteQueues)
+            {
+                foreach (var queueAndTransport in _queuesToDelete)
+                {
+
+                    var transport = queueAndTransport.Value;
+
+                    transport.DeleteQueue();
+
+                }
+            }
+        }
+
+        
     }
 }
