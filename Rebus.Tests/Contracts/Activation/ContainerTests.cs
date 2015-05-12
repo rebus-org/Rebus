@@ -90,6 +90,11 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 throw new NotImplementedException();
             }
+
+            public Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [Test]

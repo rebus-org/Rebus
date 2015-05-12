@@ -21,6 +21,17 @@ namespace Rebus.Sagas
         internal abstract Type GetSagaDataType();
         
         internal abstract ISagaData CreateNewSagaData();
+
+        internal bool WasMarkedAsComplete { get; set; }
+
+        /// <summary>
+        /// Marks the current saga instance as completed, which means that it is either a) deleted from persistent storage in case
+        /// it has been made persistent, or b) thrown out the window if it was never persisted in the first place.
+        /// </summary>
+        protected virtual void MarkAsComplete()
+        {
+            WasMarkedAsComplete = true;
+        }
     }
 
     /// <summary>

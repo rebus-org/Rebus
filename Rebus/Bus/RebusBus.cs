@@ -88,6 +88,13 @@ namespace Rebus.Bus
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
+        public async Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
+
+            await InnerSend(new[] { destinationAddress }, logicalMessage);
+        }
+
         public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);

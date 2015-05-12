@@ -11,6 +11,9 @@ namespace Rebus.Tests.Persistence.SqlServer
     [TestFixture]
     public class ConcurrencyHandling : ConcurrencyHandling<SqlServerSagaStorageFactory> { }
 
+    [TestFixture]
+    public class SagaIntegrationTests : SagaIntegrationTests<SqlServerSagaStorageFactory> { }
+
     public class SqlServerSagaStorageFactory : ISagaStorageFactory
     {
         const string IndexTableName = "RebusSagaIndex";

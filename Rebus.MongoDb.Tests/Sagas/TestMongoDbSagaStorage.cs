@@ -12,6 +12,9 @@ namespace Rebus.MongoDb.Tests.Sagas
     [TestFixture]
     public class ConcurrencyHandling : ConcurrencyHandling<TestMongoDbSagaStorage> { }
 
+    [TestFixture]
+    public class SagaIntegrationTests : SagaIntegrationTests<TestMongoDbSagaStorage> { }
+
     public class TestMongoDbSagaStorage : ISagaStorageFactory
     {
         MongoDatabase _mongoDatabase;

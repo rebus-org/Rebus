@@ -17,12 +17,12 @@ namespace Rebus.Bus
         /// Sends the specified message to our own input queue address
         /// </summary>
         Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null);
-        
+
         /// <summary>
         /// Sends the specified message to a destination that is determined by calling <see cref="IRouter.GetDestinationAddress"/>
         /// </summary>
         Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null);
-        
+
         /// <summary>
         /// Sends the specified reply message to a destination that is determined by looking up the <see cref="Headers.ReturnAddress"/> header of the message currently being handled.
         /// This method can only be called from within a message handler.
@@ -54,5 +54,10 @@ namespace Rebus.Bus
         /// <see cref="UnsubscribeRequest"/> is sent to the owning endpoint).
         /// </summary>
         Task Unsubscribe(string topic);
+
+        /// <summary>
+        /// Explicitly routes the <see cref="explicitlyRoutedMessage"/> to the destination specified by <see cref="destinationAddress"/>
+        /// </summary>
+        Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null);
     }
 }

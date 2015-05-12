@@ -35,8 +35,11 @@ namespace Rebus.Pipeline.Receive
             var message = context.Load<Message>();
             var messageId = message.Headers.GetValue(Headers.MessageId);
             var body = message.Body;
-            var loadedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
-            var newlyCreatedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
+            var loadedSagaData = new List<RelevantSagaInfo>();
+            var newlyCreatedSagaData = new List<RelevantSagaInfo>();
+
+            //var loadedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
+            //var newlyCreatedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
 
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
@@ -55,7 +58,7 @@ namespace Rebus.Pipeline.Receive
 
                     sagaInvoker.SetSagaData(sagaData);
                     foundExistingSagaData = true;
-                    loadedSagaData.Add(Tuple.Create(sagaData, correlationProperties));
+                    loadedSagaData.Add(new RelevantSagaInfo(sagaData, correlationProperties, sagaInvoker.Saga));
 
                     _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, messageId);
                     break;
@@ -70,7 +73,7 @@ namespace Rebus.Pipeline.Receive
                         var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
                         sagaInvoker.SetSagaData(newSagaData);
                         _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, messageId);
-                        newlyCreatedSagaData.Add(Tuple.Create(newSagaData, correlationProperties));
+                        newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
                     }
                     else
                     {
@@ -78,20 +81,44 @@ namespace Rebus.Pipeline.Receive
                         sagaInvoker.SkipInvocation();
                     }
                 }
-
             }
 
             await next();
 
-            foreach (var sagaDataToInsert in newlyCreatedSagaData)
+            var newlyCreatedSagaDataToSave = newlyCreatedSagaData.Where(s => !s.Saga.WasMarkedAsComplete);
+            var loadedSagaDataToUpdate = loadedSagaData.Where(s => !s.Saga.WasMarkedAsComplete);
+            var loadedSagaDataToDelete = loadedSagaData.Where(s => s.Saga.WasMarkedAsComplete);
+
+            foreach (var sagaDataToInsert in newlyCreatedSagaDataToSave)
             {
-                await _sagaStorage.Insert(sagaDataToInsert.Item1, sagaDataToInsert.Item2);
+                await _sagaStorage.Insert(sagaDataToInsert.SagaData, sagaDataToInsert.CorrelationProperties);
             }
+
+            foreach (var sagaDataToUpdate in loadedSagaDataToUpdate)
+            {
+                await _sagaStorage.Update(sagaDataToUpdate.SagaData, sagaDataToUpdate.CorrelationProperties);
+            }
+
+            foreach (var sagaDataToUpdate in loadedSagaDataToDelete)
+            {
+                await _sagaStorage.Delete(sagaDataToUpdate.SagaData);
+            }
+        }
+
+        class RelevantSagaInfo
+        {
+            public RelevantSagaInfo(ISagaData sagaData, List<CorrelationProperty> correlationProperties, Saga saga)
+            {
+                SagaData = sagaData;
+                CorrelationProperties = correlationProperties;
+                Saga = saga;
+            }
+
+            public ISagaData SagaData { get; private set; }
             
-            foreach (var sagaDataToUpdate in loadedSagaData)
-            {
-                await _sagaStorage.Update(sagaDataToUpdate.Item1, sagaDataToUpdate.Item2);
-            }
+            public List<CorrelationProperty> CorrelationProperties { get; private set; }
+            
+            public Saga Saga { get; private set; }
         }
     }
 }

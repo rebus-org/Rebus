@@ -11,6 +11,9 @@ namespace Rebus.Tests.Persistence.InMem
     [TestFixture]
     public class ConcurrencyHandling : ConcurrencyHandling<InMemorySagaStorageFactory> { }
 
+    [TestFixture]
+    public class SagaIntegrationTests : SagaIntegrationTests<InMemorySagaStorageFactory> { }
+
     public class InMemorySagaStorageFactory : ISagaStorageFactory
     {
         public ISagaStorage GetSagaStorage()
