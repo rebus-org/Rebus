@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Rebus.Workers.ThreadBased
 {
@@ -13,11 +14,17 @@ namespace Rebus.Workers.ThreadBased
         readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _callbacks =
             new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
 
-        public override void Post(SendOrPostCallback d, object state)
+        /// <summary>
+        /// This method is called when a <see cref="Task"/> has finished and is ready to be continued
+        /// </summary>
+        public override void Post(SendOrPostCallback callback, object state)
         {
-            _callbacks.Enqueue(Tuple.Create(d, state));
+            _callbacks.Enqueue(Tuple.Create(callback, state));
         }
 
+        /// <summary>
+        /// Gets the next ready continuation if any, returns null otherwise
+        /// </summary>
         public Action GetNextContinuationOrNull()
         {
             Tuple<SendOrPostCallback, object> tuple;

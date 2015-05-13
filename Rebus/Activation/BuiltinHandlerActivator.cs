@@ -36,6 +36,9 @@ namespace Rebus.Activation
             return handlerInstances;
         }
 
+        /// <summary>
+        /// Gets the bus instance that this activator was configured with
+        /// </summary>
         public IBus Bus { get; private set; }
 
         public void SetBus(IBus bus)
@@ -52,6 +55,9 @@ namespace Rebus.Activation
             Bus = bus;
         }
 
+        /// <summary>
+        /// Sets up an inline handler for messages of type <see cref="TMessage"/>
+        /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
             _handlerInstances.Add(new Handler<TMessage>(handlerFunction));
@@ -73,6 +79,10 @@ namespace Rebus.Activation
             }
         }
 
+        /// <summary>
+        /// Registers the given factory method as a handler factory method for messages of the types determined by which
+        /// <see cref="IHandleMessages{TMessage}"/> interfaces are implemeted.
+        /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
         {
             _handlerFactories.Add(handlerFactory);

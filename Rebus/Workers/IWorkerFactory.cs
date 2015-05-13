@@ -1,6 +1,4 @@
-﻿using Rebus.Bus;
-
-namespace Rebus.Workers
+﻿namespace Rebus.Workers
 {
     /// <summary>
     /// Factory responsible for creating a "worker"
