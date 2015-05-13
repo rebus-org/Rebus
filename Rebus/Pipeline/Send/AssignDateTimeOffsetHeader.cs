@@ -10,6 +10,9 @@ namespace Rebus.Pipeline.Send
     /// </summary>
     public class AssignDateTimeOffsetHeader : IOutgoingStep
     {
+        /// <summary>
+        /// Sets the <see cref="Headers.SentTime"/> header
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();

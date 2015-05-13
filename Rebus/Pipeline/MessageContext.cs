@@ -10,18 +10,31 @@ namespace Rebus.Pipeline
     /// </summary>
     public class MessageContext : IMessageContext
     {
+        /// <summary>
+        /// This is the outermost context, the one that spans the entire queue receive transaction. The other properties on the message
+        /// context are merely provided as a convenience.
+        /// </summary>
         public ITransactionContext TransactionContext { get; private set; }
 
+        /// <summary>
+        /// Gets the step context, i.e. the context that is passed down through the step pipeline when a message is received.
+        /// </summary>
         public IncomingStepContext IncomingStepContext
         {
             get { return TransactionContext.Items.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="IMessageContext.TransportMessage"/> model for the message currently being handled.
+        /// </summary>
         public TransportMessage TransportMessage
         {
             get { return IncomingStepContext.Load<TransportMessage>(); }
         }
 
+        /// <summary>
+        /// Gets the <see cref="IMessageContext.Message"/> model for the message currently being handled.
+        /// </summary>
         public Message Message
         {
             get { return IncomingStepContext.Load<Message>(); }
@@ -41,9 +54,7 @@ namespace Rebus.Pipeline
             get
             {
                 var transactionContext = AmbientTransactionContext.Current;
-                if (transactionContext == null) return null;
-                
-                return new MessageContext(transactionContext);
+                return transactionContext == null ? null : new MessageContext(transactionContext);
             }
         }
     }
