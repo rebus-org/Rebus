@@ -8,7 +8,7 @@ namespace Rebus.Transport.Msmq
     public static class MsmqTransportConfigurationExtensions
     {
         /// <summary>
-        /// Configures Rebus to use MSMQ to transport messages, receiving messages from the specified <see cref="inputQueueName"/>
+        /// Configures Rebus to use MSMQ to transport messages, receiving messages from the specified <paramref name="inputQueueName"/>
         /// </summary>
         public static void UseMsmq(this StandardConfigurer<ITransport> configurer, string inputQueueName)
         {

@@ -6,6 +6,13 @@ using Rebus.Transport;
 
 namespace Rebus.Pipeline.Send
 {
+    /// <summary>
+    /// Outgoing step that sets the <see cref="Headers.CorrelationId"/> header of the outgoing message if it has not already been set.
+    /// The value used is one of the following (in prioritized order):
+    /// 1) The correlation ID of the message currently being handled,
+    /// 2) The message ID of the message currently being handled,
+    /// 3) The message's own message ID
+    /// </summary>
     public class FlowCorrelationIdStep : IOutgoingStep
     {
         public async Task Process(OutgoingStepContext context, Func<Task> next)
@@ -37,12 +44,9 @@ namespace Rebus.Pipeline.Send
 
                 return correlationId;
             }
-            else
-            {
-                // otherwise, use the current message ID as the correlation ID
-                return outgoingMessage.Headers.GetValue(Headers.MessageId);
-            }
-
+            
+            // otherwise, use the current message ID as the correlation ID
+            return outgoingMessage.Headers.GetValue(Headers.MessageId);
         }
     }
 }

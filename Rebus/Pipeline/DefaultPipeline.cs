@@ -1,10 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Rebus.Pipeline
 {
+    /// <summary>
+    /// Default pipeline implementation that can be built with a fluent syntax by calling <see cref="OnSend"/> and <see cref="OnReceive"/> respectively,
+    /// in the order that the steps must be invoked in.
+    /// </summary>
     public class DefaultPipeline : IPipeline
     {
         readonly List<StagedStep<IOutgoingStep, SendStage>> _sendSteps = new List<StagedStep<IOutgoingStep, SendStage>>();
@@ -12,61 +14,30 @@ namespace Rebus.Pipeline
 
         public IEnumerable<StagedStep<IOutgoingStep, SendStage>> SendPipeline()
         {
-            return _sendSteps.Select(s => new StagedStep<IOutgoingStep, SendStage>((IOutgoingStep)s.Step, SendStage.None));
+            return _sendSteps.Select(s => new StagedStep<IOutgoingStep, SendStage>(s.Step, SendStage.None));
         }
 
         public IEnumerable<StagedStep<IIncomingStep, ReceiveStage>> ReceivePipeline()
         {
-            return _receiveSteps.Select(s => new StagedStep<IIncomingStep,ReceiveStage>((IIncomingStep)s.Step, (ReceiveStage)s.Stage));
+            return _receiveSteps.Select(s => new StagedStep<IIncomingStep,ReceiveStage>(s.Step, s.Stage));
         }
 
+        /// <summary>
+        /// Adds a new incoming step to the receive pipeline
+        /// </summary>
         public DefaultPipeline OnReceive(IIncomingStep step, ReceiveStage stage)
         {
             _receiveSteps.Add(new StagedStep<IIncomingStep, ReceiveStage>(step, stage));
             return this;
         }
 
-        public DefaultPipeline OnReceive(Action<StepContext, Func<Task>> step, ReceiveStage stage, string stepDescription = null)
-        {
-            return OnReceive(new StepContainer(step, stepDescription), stage);
-        }
-
+        /// <summary>
+        /// Adds a new outgoing step to the send pipeline
+        /// </summary>
         public DefaultPipeline OnSend(IOutgoingStep step)
         {
             _sendSteps.Add(new StagedStep<IOutgoingStep, SendStage>(step, SendStage.None));
             return this;
-        }
-
-        public DefaultPipeline OnSend(Action<StepContext, Func<Task>> step, string stepDescription = null)
-        {
-            return OnSend(new StepContainer(step, stepDescription));
-        }
-
-        public class StepContainer : IIncomingStep, IOutgoingStep
-        {
-            readonly Action<StepContext, Func<Task>> _step;
-            readonly string _description;
-
-            public StepContainer(Action<StepContext, Func<Task>> step, string description)
-            {
-                _step = step;
-                _description = description;
-            }
-
-            public async Task Process(OutgoingStepContext context, Func<Task> next)
-            {
-                _step(context, next);
-            }
-
-            public async Task Process(IncomingStepContext context, Func<Task> next)
-            {
-                _step(context, next);
-            }
-
-            public override string ToString()
-            {
-                return string.Format("Step: {0}", _description);
-            }
         }
     }
 }

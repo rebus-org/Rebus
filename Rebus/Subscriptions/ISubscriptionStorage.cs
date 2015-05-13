@@ -3,6 +3,9 @@ using Rebus.Messages.Control;
 
 namespace Rebus.Subscriptions
 {
+    /// <summary>
+    /// Abstraction that handles how subscriptions are stored
+    /// </summary>
     public interface ISubscriptionStorage
     {
         /// <summary>

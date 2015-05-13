@@ -9,6 +9,9 @@ using Rebus.Sagas;
 
 namespace Rebus.Pipeline.Receive
 {
+    /// <summary>
+    /// Incoming step that loads and saves relevant saga data.
+    /// </summary>
     public class LoadSagaDataStep : IIncomingStep
     {
         static ILog _log;
@@ -21,6 +24,9 @@ namespace Rebus.Pipeline.Receive
         readonly SagaHelper _sagaHelper = new SagaHelper();
         readonly ISagaStorage _sagaStorage;
 
+        /// <summary>
+        /// Constructs the step with the given saga storage
+        /// </summary>
         public LoadSagaDataStep(ISagaStorage sagaStorage)
         {
             _sagaStorage = sagaStorage;
@@ -37,9 +43,6 @@ namespace Rebus.Pipeline.Receive
             var body = message.Body;
             var loadedSagaData = new List<RelevantSagaInfo>();
             var newlyCreatedSagaData = new List<RelevantSagaInfo>();
-
-            //var loadedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
-            //var newlyCreatedSagaData = new List<Tuple<ISagaData, List<CorrelationProperty>>>();
 
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {

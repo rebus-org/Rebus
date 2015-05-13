@@ -6,6 +6,10 @@ using Rebus.Messages;
 
 namespace Rebus.Pipeline.Receive
 {
+    /// <summary>
+    /// Incoming step that gets a <see cref="List{T}"/> where T is <see cref="HandlerInvoker"/> from the context
+    /// and invokes them in the order they're in.
+    /// </summary>
     public class DispatchIncomingMessageStep : IIncomingStep
     {
         public async Task Process(IncomingStepContext context, Func<Task> next)

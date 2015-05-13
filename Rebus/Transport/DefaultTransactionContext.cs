@@ -5,6 +5,9 @@ using System.Threading.Tasks;
 
 namespace Rebus.Transport
 {
+    /// <summary>
+    /// Default implementation of <see cref="ITransactionContext"/>
+    /// </summary>
     public class DefaultTransactionContext : ITransactionContext
     {
         readonly List<Func<Task>> _onCommittedActions = new List<Func<Task>>();
@@ -17,6 +20,9 @@ namespace Rebus.Transport
         bool _aborted;
         bool _cleanedUp;
 
+        /// <summary>
+        /// Constructs the transaction context
+        /// </summary>
         public DefaultTransactionContext()
         {
             Items = new Dictionary<string, object>();

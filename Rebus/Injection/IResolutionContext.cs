@@ -8,7 +8,7 @@ namespace Rebus.Injection
     public interface IResolutionContext
     {
         /// <summary>
-        /// Gets an instance of the specified <see cref="TService"/>.
+        /// Gets an instance of the specified <typeparamref name="TService"/>.
         /// </summary>
         TService Get<TService>();
 

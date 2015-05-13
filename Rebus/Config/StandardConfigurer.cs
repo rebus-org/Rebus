@@ -5,7 +5,7 @@ namespace Rebus.Config
 {
     /// <summary>
     /// Configurer that can have extension methods attached to it for helping with registering an implementation or a decorator
-    /// for the <see cref="TService"/> service.
+    /// for the <typeparamref name="TService"/> service.
     /// </summary>
     public class StandardConfigurer<TService>
     {

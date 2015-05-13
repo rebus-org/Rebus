@@ -9,6 +9,11 @@ using Rebus.Transport;
 
 namespace Rebus.Pipeline.Send
 {
+    /// <summary>
+    /// Outgoing step that uses the current transport to send the <see cref="TransportMessage"/>
+    /// found in the context to the destination address specified by looking up
+    /// <see cref="DestinationAddresses"/> in the context.
+    /// </summary>
     public class SendOutgoingMessageStep : IOutgoingStep
     {
         static ILog _log;
@@ -20,6 +25,9 @@ namespace Rebus.Pipeline.Send
 
         readonly ITransport _transport;
 
+        /// <summary>
+        /// Constructs the step, using the specified transport to send the messages
+        /// </summary>
         public SendOutgoingMessageStep(ITransport transport)
         {
             _transport = transport;

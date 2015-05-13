@@ -10,8 +10,15 @@ using Rebus.Transport;
 
 namespace Rebus.Pipeline.Receive
 {
+    /// <summary>
+    /// Incoming step that checks for the presence of the <see cref="Headers.DeferredUntil"/> header, using a
+    /// <see cref="ITimeoutManager"/> to handle the deferral if necessary.
+    /// </summary>
     public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializable
     {
+        /// <summary>
+        /// The format string to use when serializing/deserializing the <see cref="DateTimeOffset"/>
+        /// </summary>
         public const string DateTimeOffsetFormat = "O";
 
         static ILog _log;
@@ -25,6 +32,10 @@ namespace Rebus.Pipeline.Receive
         readonly ITransport _transport;
         readonly AsyncTask _dueMessagesSenderBackgroundTask;
 
+        /// <summary>
+        /// Constructs the step, using the specified <see cref="ITimeoutManager"/> to defer relevant messages
+        /// and the specified <see cref="ITransport"/> to deliver messages when they're due.
+        /// </summary>
         public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport)
         {
             _timeoutManager = timeoutManager;

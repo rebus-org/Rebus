@@ -3,7 +3,7 @@
 namespace Rebus.Messages
 {
     /// <summary>
-    /// Contains keys of headers known & used by Rebus
+    /// Contains keys of headers known &amp; used by Rebus
     /// </summary>
     public class Headers
     {
