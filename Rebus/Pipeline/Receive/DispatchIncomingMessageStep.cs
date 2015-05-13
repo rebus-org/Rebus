@@ -25,8 +25,16 @@ namespace Rebus.Pipeline.Receive
 
             if (!didInvokeHandler)
             {
-                throw new ApplicationException(string.Format("Message with ID {0} could not be dispatched to any handlers", 
-                    context.Load<Message>().Headers.GetValue(Headers.MessageId)));
+                var message = context.Load<Message>();
+                var headers = message.Headers;
+                
+                var messageId = headers.GetValue(Headers.MessageId);
+                var messageType = headers.GetValueOrNull(Headers.Type) ?? "<unknown>";
+
+                var text = string.Format("Message with ID {0} and type {1} could not be dispatched to any handlers",
+                    messageId, messageType);
+
+                throw new ApplicationException(text);
             }
 
             await next();
