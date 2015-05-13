@@ -5,6 +5,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Injection;
+using Rebus.Logging;
 using Rebus.Persistence.InMem;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -41,54 +42,86 @@ namespace Rebus.Config
             }
         }
 
+        /// <summary>
+        /// Configures how Rebus logs things that happen by installing a <see cref="RebusLoggerFactory"/> instance
+        /// on <see cref="RebusLoggerFactory.Current"/>
+        /// </summary>
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
             configurer(new RebusLoggingConfigurer());
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus sends/receives messages by allowing for choosing which implementation of <see cref="ITransport"/> to use
+        /// </summary>
         public RebusConfigurer Transport(Action<StandardConfigurer<ITransport>> configurer)
         {
             configurer(new StandardConfigurer<ITransport>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus routes messages by allowing for choosing which implementation of <see cref="IRouter"/> to use
+        /// </summary>
         public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
         {
             configurer(new StandardConfigurer<IRouter>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus persists saga data by allowing for choosing which implementation of <see cref="ISagaStorage"/> to use
+        /// </summary>
         public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
         {
             configurer(new StandardConfigurer<ISagaStorage>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus persists subscriptions by allowing for choosing which implementation of <see cref="ISubscriptionStorage"/> to use
+        /// </summary>
         public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
         {
             configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus serializes messages by allowing for choosing which implementation of <see cref="ISerializer"/> to use
+        /// </summary>
         public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
         {
             configurer(new StandardConfigurer<ISerializer>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures how Rebus defers messages to the future by allowing for choosing which implementation of <see cref="ITimeoutManager"/> to use
+        /// </summary>
         public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
         {
             configurer(new StandardConfigurer<ITimeoutManager>(_injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Configures additional options about how Rebus works
+        /// </summary>
         public RebusConfigurer Options(Action<OptionsConfigurer> configurer)
         {
             configurer(new OptionsConfigurer(_options, _injectionist));
             return this;
         }
 
+        /// <summary>
+        /// Finishes the setup of the bus, using default implementations for the options that have not explicitly been set.
+        /// The only requirement, is that you must call <see cref="Transport"/> and select which transport to use - everything
+        /// else can run with a default option. It should be noted though, that several of the defaults (e.g. in-mem persistence
+        /// options for saga storage, subscriptions, and timeouts) are not meant for production use, and should probably be
+        /// replaced by something that is actually persistent.
+        /// </summary>
         public IBus Start()
         {
             VerifyRequirements();
