@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,32 +59,6 @@ namespace Rebus.Pipeline.Send
                 .ToArray();
 
             await Task.WhenAll(sendTasks);
-        }
-    }
-
-    /// <summary>
-    /// Encapsulates a list of destination addresses
-    /// </summary>
-    public class DestinationAddresses : IEnumerable<string>
-    {
-        readonly List<string> _addresses;
-
-        /// <summary>
-        /// Constructs the list of destination addresses
-        /// </summary>
-        public DestinationAddresses(IEnumerable<string> addresses)
-        {
-            _addresses = addresses.ToList();
-        }
-
-        public IEnumerator<string> GetEnumerator()
-        {
-            return _addresses.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
     }
 }

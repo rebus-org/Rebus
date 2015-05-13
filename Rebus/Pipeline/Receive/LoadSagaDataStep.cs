@@ -34,7 +34,7 @@ namespace Rebus.Pipeline.Receive
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var handlerInvokersForSagas = context.Load<List<HandlerInvoker>>()
+            var handlerInvokersForSagas = context.Load<HandlerInvokers>()
                 .Where(l => l.HasSaga)
                 .ToList();
 

@@ -63,8 +63,10 @@
     <Compile Include="Pipeline\MessageContext.cs" />
     <Compile Include="Pipeline\OutgoingStepContext.cs" />
     <Compile Include="Pipeline\ReceiveStage.cs" />
+    <Compile Include="Pipeline\Receive\HandlerInvokers.cs" />
     <Compile Include="Pipeline\SendStage.cs" />
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
+    <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
     <Compile Include="Pipeline\StagedStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />

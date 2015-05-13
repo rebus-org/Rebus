@@ -14,7 +14,7 @@ namespace Rebus.Pipeline.Receive
     {
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var invokers = context.Load<List<HandlerInvoker>>();
+            var invokers = context.Load<HandlerInvokers>();
             var didInvokeHandler = false;
 
             foreach (var invoker in invokers)
