@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Rebus.Messages;
+using Rebus.Time;
 
 namespace Rebus.Pipeline.Send
 {
     /// <summary>
-    /// Outgoing step that sets the <see cref="Headers.SentTime"/> header of the outgoing message to <see cref="DateTimeOffset.Now"/>
+    /// Outgoing step that sets the <see cref="Headers.SentTime"/> header of the outgoing message to <see cref="RebusTime.Now"/>
     /// (serializing it with the "O" format, i.e. its ISO 8601 representation)
     /// </summary>
     public class AssignDateTimeOffsetHeader : IOutgoingStep
@@ -18,7 +19,7 @@ namespace Rebus.Pipeline.Send
             var message = context.Load<Message>();
             var headers = message.Headers;
 
-            headers[Headers.SentTime] = DateTimeOffset.Now.ToString("O");
+            headers[Headers.SentTime] = RebusTime.Now.ToString("O");
 
             await next();
         }

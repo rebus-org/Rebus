@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,7 +10,6 @@ using Rebus.Messages.Control;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Send;
 using Rebus.Routing;
-using Rebus.Serialization;
 using Rebus.Subscriptions;
 using Rebus.Time;
 using Rebus.Transport;
@@ -40,31 +38,35 @@ namespace Rebus.Bus
         readonly IWorkerFactory _workerFactory;
         readonly IRouter _router;
         readonly ITransport _transport;
-        readonly ISerializer _serializer;
         readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly ISubscriptionStorage _subscriptionStorage;
 
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, ISerializer serializer, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage)
+        /// <summary>
+        /// Constructs the bus.
+        /// </summary>
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage)
         {
             _workerFactory = workerFactory;
             _router = router;
             _transport = transport;
-            _serializer = serializer;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _subscriptionStorage = subscriptionStorage;
         }
 
-        public IBus Start(int numberOfWorkers)
+        /// <summary>
+        /// Starts the bus by adding the specified number of workers
+        /// </summary>
+        /// <param name="numberOfWorkers"></param>
+        /// <returns></returns>
+        public void Start(int numberOfWorkers)
         {
             _log.Info("Starting bus {0}", _busId);
 
             SetNumberOfWorkers(numberOfWorkers);
 
             _log.Info("Started");
-
-            return this;
         }
 
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
@@ -217,7 +219,6 @@ namespace Rebus.Bus
             try
             {
                 return headers.GetValue(Headers.ReturnAddress);
-
             }
             catch (Exception exception)
             {
@@ -270,6 +271,8 @@ namespace Rebus.Bus
 
         public void Dispose()
         {
+            // this Dispose may be called when the Disposed event is raised - therefore, we need
+            // to guard against recursively entering this method
             if (_disposing) return;
 
             try
@@ -304,8 +307,15 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Event that is raised when the bus is disposed
+        /// </summary>
         public event Action Disposed = delegate { };
 
+        /// <summary>
+        /// Sets the number of workers by adding/removing one worker at a time until
+        /// the desired number is reached
+        /// </summary>
         public void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {
             if (desiredNumberOfWorkers == _workers.Count) return;

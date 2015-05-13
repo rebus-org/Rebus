@@ -76,6 +76,7 @@
     <Compile Include="Threading\ParallelismCounter.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
+    <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />

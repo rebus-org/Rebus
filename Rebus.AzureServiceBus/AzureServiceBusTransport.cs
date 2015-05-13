@@ -13,6 +13,9 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses Azure Service Bus queues to send/receive messages.
+    /// </summary>
     public class AzureServiceBusTransport : ITransport, IInitializable
     {
         static ILog _log;
@@ -31,6 +34,9 @@ namespace Rebus.AzureServiceBus
         readonly TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
 
+        /// <summary>
+        /// Constructs the transport, connecting to the service bus pointed to by the connection string.
+        /// </summary>
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
@@ -45,6 +51,9 @@ namespace Rebus.AzureServiceBus
             CreateQueue(_inputQueueAddress);
         }
 
+        /// <summary>
+        /// Purges the input queue by deleting it and creating it again
+        /// </summary>
         public void PurgeInputQueue()
         {
             _log.Info("Purging queue '{0}'", _inputQueueAddress);

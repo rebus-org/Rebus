@@ -70,6 +70,11 @@ namespace Rebus.Threading
         /// </summary>
         public void Start()
         {
+            if (_disposed)
+            {
+                throw new InvalidOperationException(string.Format("Cannot start periodic task '{0}' because it has been disposed!", _description));
+            }
+
             if (!_prettyInsignificant)
             {
                 _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
@@ -105,15 +110,19 @@ namespace Rebus.Threading
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Cancels the background task so that it stops, waiting (up to 5 seconds) until it has exited properly
+        /// </summary>
+        /// <param name="disposing"></param>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
 
-            // if it was never started, we don't do anything
-            if (_task == null) return;
-
             try
             {
+                // if it was never started, we don't do anything
+                if (_task == null) return;
+
                 if (!_prettyInsignificant)
                 {
                     _log.Info("Stopping periodic task '{0}'", _description);

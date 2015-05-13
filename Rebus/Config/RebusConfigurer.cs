@@ -178,7 +178,6 @@ namespace Rebus.Config
                     c.Get<IWorkerFactory>(),
                     c.Get<IRouter>(),
                     c.Get<ITransport>(),
-                    c.Get<ISerializer>(),
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
                     c.Get<ISubscriptionStorage>());
