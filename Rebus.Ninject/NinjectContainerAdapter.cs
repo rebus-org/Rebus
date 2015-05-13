@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.Ninject
@@ -38,6 +39,18 @@ namespace Rebus.Ninject
         public void SetBus(IBus bus)
         {
             _kernel.Bind<IBus>().ToConstant(bus);
+
+            _kernel.Bind<IMessageContext>().ToMethod(c =>
+            {
+                var currentMessageContext = MessageContext.Current;
+                if (currentMessageContext == null)
+                {
+                    throw new InvalidOperationException(
+                        "Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
+                }
+                return currentMessageContext;
+            });
+
             _kernel.Get<IBus>();
         }
 

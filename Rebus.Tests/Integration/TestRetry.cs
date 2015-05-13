@@ -65,7 +65,7 @@ namespace Rebus.Tests.Integration
                 var failedMessage = await errorQueue.AwaitReceive();
 
                 Assert.That(attemptedDeliveries, Is.EqualTo(numberOfRetries));
-                Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("omgwtf!"));
+                Assert.That(failedMessage.Headers.GetValue(Headers.ErrorDetails), Contains.Substring("5 unhandled exceptions"));
                 Assert.That(failedMessage.Headers.GetValue(Headers.SourceQueue), Is.EqualTo(InputQueueName));
             }
         }

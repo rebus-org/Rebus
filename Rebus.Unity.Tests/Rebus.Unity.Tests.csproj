@@ -54,6 +54,7 @@
     <Compile Include="UnityContainerAdapterFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnityContainerTests.cs" />
+    <Compile Include="UnityRealContainerTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

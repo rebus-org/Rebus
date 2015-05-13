@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
@@ -6,14 +7,21 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.Autofac
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that is backed by an Autofac container
+    /// </summary>
     public class AutofacHandlerActivator : IContainerAdapter
     {
         readonly IContainer _container;
 
+        /// <summary>
+        /// Constructs the adapter, using the specified container
+        /// </summary>
         public AutofacHandlerActivator(IContainer container)
         {
             _container = container;
@@ -48,7 +56,24 @@ namespace Rebus.Autofac
         public void SetBus(IBus bus)
         {
             var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterInstance(bus).SingleInstance();
+            
+            containerBuilder
+                .RegisterInstance(bus)
+                .SingleInstance();
+            
+            containerBuilder
+                .Register(c =>
+                {
+                    var currentMessageContext = MessageContext.Current;
+                    if (currentMessageContext == null)
+                    {
+                        throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
+                    }
+                    return currentMessageContext;
+                })
+                .InstancePerDependency()
+                .ExternallyOwned();
+            
             containerBuilder.Update(_container);
         }
     }

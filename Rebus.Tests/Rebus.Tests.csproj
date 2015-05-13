@@ -55,6 +55,7 @@
     <Compile Include="Contracts\Activation\BuiltinHandlerActivatorFactory.cs" />
     <Compile Include="Contracts\Activation\ContainerTests.cs" />
     <Compile Include="Contracts\Activation\IHandlerActivatorFactory.cs" />
+    <Compile Include="Contracts\Activation\RealContainerTests.cs" />
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Contracts\Sagas\SagaIntegrationTests.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />

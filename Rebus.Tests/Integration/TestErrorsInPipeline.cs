@@ -73,9 +73,11 @@ namespace Rebus.Tests.Integration
 
             _adapter.Handle<string>(async str => gotMessage = true);
 
+            var messageId = Guid.NewGuid();
+
             var headers = new Dictionary<string, string>
             {
-                {Headers.MessageId, Guid.NewGuid().ToString()}
+                {Headers.MessageId, messageId.ToString()}
             };
 
             _network.Deliver("test", new TransportMessage(headers, BodyWith("hej igen!")).ToInMemTransportMessage());
@@ -94,7 +96,7 @@ namespace Rebus.Tests.Integration
 
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
-            Assert.That(errorLogLine.Text, Contains.Substring(string.Format("Could not find the key '{0}'", Headers.ContentType)));
+            Assert.That(errorLogLine.Text, Contains.Substring(string.Format("Moving message with ID {0} to error queue 'error'", messageId)));
         }
 
         void PrintLogs()

@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.Unity
@@ -53,6 +54,16 @@ namespace Rebus.Unity
         public void SetBus(IBus bus)
         {
             _unityContainer.RegisterInstance(bus, new ContainerControlledLifetimeManager());
+
+            _unityContainer.RegisterType<IMessageContext>(new InjectionFactory(c =>
+            {
+                var currentMessageContext = MessageContext.Current;
+                if (currentMessageContext == null)
+                {
+                    throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
+                }
+                return currentMessageContext;
+            }));
         }
     }
 }

@@ -47,6 +47,7 @@
   <ItemGroup>
     <Compile Include="NinjectContainerAdapterTests.cs" />
     <Compile Include="NinjectContainerAdapterFactory.cs" />
+    <Compile Include="NinjectRealContainerAdapterTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
