@@ -24,6 +24,7 @@ namespace Rebus.Threading
 
         readonly string _description;
         readonly Func<Task> _action;
+        readonly bool _prettyInsignificant;
         readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _finished = new ManualResetEvent(false);
 
@@ -36,10 +37,11 @@ namespace Rebus.Threading
         /// Constructs the periodic background task with the given <see cref="description"/>, periodically executing the given <see cref="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
-        public AsyncTask(string description, Func<Task> action)
+        public AsyncTask(string description, Func<Task> action, bool prettyInsignificant = false)
         {
             _description = description;
             _action = action;
+            _prettyInsignificant = prettyInsignificant;
 
             Interval = DefaultInterval;
         }
@@ -68,7 +70,10 @@ namespace Rebus.Threading
         /// </summary>
         public void Start()
         {
-            _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
+            if (!_prettyInsignificant)
+            {
+                _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
+            }
 
             var token = _tokenSource.Token;
 
@@ -109,7 +114,10 @@ namespace Rebus.Threading
 
             try
             {
-                _log.Info("Stopping periodic task '{0}'", _description);
+                if (!_prettyInsignificant)
+                {
+                    _log.Info("Stopping periodic task '{0}'", _description);
+                }
 
                 _tokenSource.Cancel();
 

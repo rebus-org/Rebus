@@ -279,7 +279,7 @@ namespace Rebus.Bus
                 // signal to all the workers that they must stop
                 lock (_workers)
                 {
-                    _workers.ForEach(w => w.Stop());
+                    _workers.ForEach(StopWorker);
                 }
 
                 SetNumberOfWorkers(0);
@@ -289,6 +289,18 @@ namespace Rebus.Bus
             finally
             {
                 _disposing = false;
+            }
+        }
+
+        static void StopWorker(IWorker worker)
+        {
+            try
+            {
+                worker.Stop();
+            }
+            catch (Exception exception)
+            {
+                _log.Warn("An exception occurred when stopping {0}: {1}", worker.Name, exception);
             }
         }
 
@@ -309,7 +321,16 @@ namespace Rebus.Bus
             {
                 var workerName = string.Format("Rebus {0} worker {1}", _busId, _workers.Count + 1);
                 _log.Debug("Adding worker {0}", workerName);
-                _workers.Add(_workerFactory.CreateWorker(workerName));
+
+                try
+                {
+                    var worker = _workerFactory.CreateWorker(workerName);
+                    _workers.Add(worker);
+                }
+                catch (Exception exception)
+                {
+                    throw new ApplicationException(string.Format("Could not create {0}", workerName), exception);
+                }
             }
         }
 

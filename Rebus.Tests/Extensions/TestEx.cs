@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Data.SqlTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;

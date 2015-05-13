@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Messages;
 
 namespace Rebus.Transport.InMem
@@ -8,7 +9,7 @@ namespace Rebus.Transport.InMem
     /// In-mem implementation of <see cref="ITransport"/> that uses one particular <see cref="InMemNetwork"/> to deliver messages. Can
     /// be used for in-process messaging and unit testing
     /// </summary>
-    public class InMemTransport : ITransport
+    public class InMemTransport : ITransport, IInitializable
     {
         readonly InMemNetwork _network;
         readonly string _inputQueueAddress;
@@ -70,6 +71,11 @@ namespace Rebus.Transport.InMem
             await Task.Delay(20);
             
             return null;
+        }
+
+        public void Initialize()
+        {
+            CreateQueue(_inputQueueAddress);
         }
 
         public string Address

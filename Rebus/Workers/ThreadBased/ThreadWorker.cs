@@ -44,7 +44,7 @@ namespace Rebus.Workers.ThreadBased
             _workerThread = new Thread(() =>
             {
                 SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
-                _log.Debug("Starting worker {0}", Name);
+                _log.Debug("Starting (thread-based) worker {0}", Name);
                 while (_keepWorking)
                 {
                     DoWork();
