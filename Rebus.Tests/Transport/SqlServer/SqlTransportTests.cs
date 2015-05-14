@@ -9,10 +9,10 @@ using Rebus.Transport.SqlServer;
 
 namespace Rebus.Tests.Transport.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class SqlServerTransportBasicSendReceive : BasicSendReceive<SqlTransportFactory> { }
 
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class SqlServerTransportMessageExpiration : MessageExpiration<SqlTransportFactory> { }
 
     public class SqlTransportFactory : ITransportFactory

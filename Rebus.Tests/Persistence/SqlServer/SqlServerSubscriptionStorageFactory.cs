@@ -5,7 +5,7 @@ using Rebus.Tests.Contracts.Subscriptions;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class BasicSubscriptionOperations : BasicSubscriptionOperations<SqlServerSubscriptionStorageFactory>
     {
     }

@@ -16,7 +16,7 @@ using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Transport.Msmq
 {
-    [TestFixture, Ignore]
+    [TestFixture, Ignore, Category(Categories.Msmq)]
     public class TestMsmqTransport : FixtureBase
     {
         static readonly string QueueName = TestConfig.QueueName("test.performance");

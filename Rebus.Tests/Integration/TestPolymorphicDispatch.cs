@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Serialization;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;

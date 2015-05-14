@@ -5,13 +5,13 @@ using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class BasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<SqlServerSagaStorageFactory> { }
 
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class ConcurrencyHandling : ConcurrencyHandling<SqlServerSagaStorageFactory> { }
 
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class SagaIntegrationTests : SagaIntegrationTests<SqlServerSagaStorageFactory> { }
 
     public class SqlServerSagaStorageFactory : ISagaStorageFactory

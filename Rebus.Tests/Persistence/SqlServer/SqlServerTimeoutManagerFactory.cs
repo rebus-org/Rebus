@@ -5,7 +5,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.Tests.Persistence.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class BasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<SqlServerTimeoutManagerFactory>
     {
     }

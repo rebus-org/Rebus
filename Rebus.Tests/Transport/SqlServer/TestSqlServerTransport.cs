@@ -14,7 +14,7 @@ using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Transport.SqlServer
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.SqlServer)]
     public class TestSqlServerTransport : FixtureBase
     {
         const string QueueName = "input";
