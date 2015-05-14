@@ -8,12 +8,12 @@ using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
 {
-   public  abstract class SqsFixtureBase :FixtureBase
+    public abstract class SqsFixtureBase : FixtureBase
     {
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
 
-       protected async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
+        protected async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
         {
             using (var context = new DefaultTransactionContext())
             {
@@ -36,7 +36,7 @@ namespace Rebus.AmazonSQS.Tests
             return _defaultEncoding.GetString(transportMessage.Body);
         }
 
-       protected TransportMessage MessageWith(string stringBody)
+        protected TransportMessage MessageWith(string stringBody)
         {
             var headers = new Dictionary<string, string>
                           {

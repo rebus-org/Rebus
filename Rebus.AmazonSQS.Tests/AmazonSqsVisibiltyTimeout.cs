@@ -1,18 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Messages;
 using Rebus.Tests;
-using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
 {
+    [TestFixture, Category(Category.AmazonSqs)]
     public class AmazonSqsVisibiltyTimeout : SqsFixtureBase
     {
-
         [Test]
         public async void WhenMessageVisibilityIsRenewed_ThenItsNotVisibleForOthers()
         {

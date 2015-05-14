@@ -12,8 +12,6 @@ namespace Rebus.AmazonSQS.Tests
 {
     public class AmazonSQSTransportFactory : ITransportFactory
     {
-        
-
         public string BaseUrl
         {
             get { return ConnectionInfo.BaseQueueUrl; }

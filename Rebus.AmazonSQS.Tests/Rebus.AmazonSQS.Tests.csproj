@@ -52,6 +52,7 @@
     <Compile Include="AmazonSQSSimpleSend.cs" />
     <Compile Include="AmazonSQSTransportFactory.cs" />
     <Compile Include="AmazonSqsVisibiltyTimeout.cs" />
+    <Compile Include="Category.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QueueAddressHandlingTests.cs" />
     <Compile Include="SqsFixtureBase.cs" />

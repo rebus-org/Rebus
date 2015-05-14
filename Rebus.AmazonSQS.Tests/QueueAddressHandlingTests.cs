@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Tests;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
 {
-
+    [TestFixture, Category(Category.AmazonSqs)]
     public class QueueAddressHandlingTests : SqsFixtureBase
     {
         private AmazonSQSTransportFactory _transportFactory;
