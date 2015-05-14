@@ -41,17 +41,19 @@ namespace Rebus.Tests.Contracts.Sagas
                 .Start();
 
             await bus.SendLocal(new SagaMessage {Id = 70});
-            
-            await Task.Delay(100);
+
+            const int millisecondsDelay = 300;
+
+            await Task.Delay(millisecondsDelay);
             await bus.SendLocal(new SagaMessage { Id = 70 });
             
-            await Task.Delay(100);
+            await Task.Delay(millisecondsDelay);
             await bus.SendLocal(new SagaMessage { Id = 70 });
             
-            await Task.Delay(100);
+            await Task.Delay(millisecondsDelay);
             await bus.SendLocal(new SagaMessage { Id = 70 });
             
-            await Task.Delay(100);
+            await Task.Delay(millisecondsDelay);
             await bus.SendLocal(new SagaMessage { Id = 70 });
 
             await Task.Delay(1000);
