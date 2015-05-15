@@ -512,6 +512,10 @@
 
 * Fixed concurrent message send in file system transport - thanks [mgibas]
 
+## 0.84.0
+
+* Made Azure Service Bus transport stop the peek lock renewal timer when the transaction context goes into the commit/rollback/cleanup phase. Seems more right, and it avoids a pesky race that could result in confusing `MessageLockLostException`s if the message would happen to be successfully completed right before attempting to renew the peek lock.
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

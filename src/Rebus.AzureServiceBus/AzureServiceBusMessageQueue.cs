@@ -21,6 +21,8 @@ namespace Rebus.AzureServiceBus
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
+        public static TimeSpan PeekLockDurationOnQueueInitialization = TimeSpan.FromMinutes(5);
+
         public const string AzureServiceBusRenewLeaseAction = "AzureServiceBusRenewLeaseAction (invoke in order to renew the peek lock on the current message)";
 
         const string AzureServiceBusMessageBatch = "AzureServiceBusMessageBatch";
@@ -95,7 +97,7 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var lockDuration = TimeSpan.FromMinutes(5);
+                var lockDuration = PeekLockDurationOnQueueInitialization;
                 const int maxDeliveryCount = 1000;
 
                 log.Info("Queue '{0}' does not exist - it will be created now (with lockDuration={1} and maxDeliveryCount={2})",
@@ -108,9 +110,9 @@ namespace Rebus.AzureServiceBus
                     UserMetadata = string.Format("Queue created by Rebus {0}", DateTime.Now)
                 });
             }
-            catch
+            catch(MessagingEntityAlreadyExistsException)
             {
-                // just assume the call failed because the queue already exists
+                //the call failed because the queue already exists
             }
         }
 
@@ -206,7 +208,12 @@ namespace Rebus.AzureServiceBus
 
                         if (peekLockRenewalInterval > TimeSpan.FromSeconds(1))
                         {
-                            context[AzureServiceBusReceivedMessagePeekLockRenewalTimer] = ScheduleInvocation(peekLockRenewalAction, peekLockRenewalInterval);
+                            var peekLockRenewalTimer = ScheduleInvocation(peekLockRenewalAction, peekLockRenewalInterval);
+                            context[AzureServiceBusReceivedMessagePeekLockRenewalTimer] = peekLockRenewalTimer;
+
+                            context.DoCommit += peekLockRenewalTimer.Stop;
+                            context.DoRollback += peekLockRenewalTimer.Stop;
+                            context.Cleanup += peekLockRenewalTimer.Dispose;
                         }
 
                         context.DoCommit += () => DoCommit(context);
@@ -295,10 +302,10 @@ namespace Rebus.AzureServiceBus
                                     faultNumber, messageId, exception, delay))
                         .Do(messageToRenew.RenewLock);
 
-                    context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
-
-                    log.Info("Peek lock renewed on message {0} - current lease is {1:0.0} seconds old", messageId,
+                    log.Info("Peek lock renewed on message {0} - lease was {1:0.0} seconds old", messageId,
                         TimeSinceLastLockRenewal(context).TotalSeconds);
+
+                    context[AzureServiceBusReceivedMessagePeekLockRenewedTime] = DateTime.UtcNow;
                 }
                 catch (Exception exception)
                 {
@@ -363,17 +370,10 @@ namespace Rebus.AzureServiceBus
             catch
             {
             }
-
         }
+
         void DoCleanUp(ITransactionContext context)
         {
-            var timer = context[AzureServiceBusReceivedMessagePeekLockRenewalTimer] as Timer;
-            if (timer != null)
-            {
-                timer.Stop();
-                timer.Dispose();
-            }
-
             try
             {
                 var brokeredMessage = (BrokeredMessage)context[AzureServiceBusReceivedMessage];

@@ -258,6 +258,7 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestAzureServiceBusPeekLockRenewal.cs" />
     <Compile Include="Integration\TestIdempotentSagas.cs" />
     <Compile Include="Integration\TestMessageAuditConfiguration.cs" />
     <Compile Include="Integration\TestMessageAuditMulticast.cs" />
