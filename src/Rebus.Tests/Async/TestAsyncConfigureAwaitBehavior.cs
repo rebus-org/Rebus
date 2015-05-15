@@ -3,18 +3,19 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.AzureServiceBus;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
-using Rebus.Transports.Msmq;
+using Rebus.Tests.Contracts.Transports.Factories;
 
 namespace Rebus.Tests.Async
 {
     [TestFixture]
     public class TestAsyncConfigureAwaitBehavior : FixtureBase
     {
-        const string QueueName = "test.configureawait";
+        const string QueueName = "testconfigureawait";
         BuiltinContainerAdapter builtinContainerAdapter;
         ConcurrentQueue<string> events;
 
@@ -25,9 +26,14 @@ namespace Rebus.Tests.Async
 
             TrackDisposable(builtinContainerAdapter);
 
+            using (var q = new AzureServiceBusMessageQueue(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName))
+            {
+                q.Purge();
+            }
+
             Configure.With(builtinContainerAdapter)
                 .Logging(l => l.Console(minLevel: LogLevel.Info))
-                .Transport(t => t.UseMsmq(QueueName, "error"))
+                .Transport(t => t.UseAzureServiceBus(AzureServiceBusMessageQueueFactory.ConnectionString, QueueName, "error"))
                 .Events(e =>
                 {
                     e.MessageContextEstablished += (bus, context) =>
@@ -42,7 +48,7 @@ namespace Rebus.Tests.Async
 
                     e.AddUnitOfWorkManager(new EventOutputtingUnitOfWorkManager(text => WriteEvent(text)));
                 })
-                .CreateBus().Start();
+                .CreateBus().Start(1);
         }
 
         protected override void DoTearDown()
@@ -57,28 +63,31 @@ namespace Rebus.Tests.Async
 
             builtinContainerAdapter.HandleAsync<string>(async str =>
             {
-                WriteEvent(string.Format("context before doing anything: {0}", MessageContext.HasCurrent));
+                WriteEvent(string.Format("context before doing anything: {0}, tx: {1}, current thread: {2}", MessageContext.HasCurrent, TransactionContext.Current, Thread.CurrentThread.Name));
 
-                await Task.Delay(TimeSpan.FromSeconds(1));
-                WriteEvent(string.Format("context after first await: {0}", MessageContext.HasCurrent));
+                await Task.Delay(TimeSpan.FromSeconds(3));
+                WriteEvent(string.Format("context after first await: {0}, tx: {1}, current thread: {2}", MessageContext.HasCurrent, TransactionContext.Current, Thread.CurrentThread.Name));
 
-                await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
-                WriteEvent(string.Format("context after ConfigureAwait(false): {0}", MessageContext.HasCurrent));
+                await Task.Delay(TimeSpan.FromSeconds(3)).ConfigureAwait(false);
+                WriteEvent(string.Format("context after ConfigureAwait(false): {0}, tx: {1}, current thread: {2}", MessageContext.HasCurrent, TransactionContext.Current, Thread.CurrentThread.Name));
 
                 done.Set();
             });
 
             builtinContainerAdapter.Bus.SendLocal("hej med dig!");
 
-            done.WaitUntilSetOrDie(TimeSpan.FromSeconds(5));
+            done.WaitUntilSetOrDie(TimeSpan.FromSeconds(10));
 
             Thread.Sleep(TimeSpan.FromSeconds(1));
 
             var eventsArray = events.ToArray();
 
-            Console.WriteLine(@"Got events:
+            Console.WriteLine(@"
+------------------------------------------------------------------
+Got events:
 
 {0}
+------------------------------------------------------------------
 ", string.Join(Environment.NewLine, eventsArray));
 
             Assert.That(eventsArray, Is.EqualTo(new[]
@@ -87,9 +96,9 @@ namespace Rebus.Tests.Async
 
                 "uow started",
 
-                "context before doing anything: True",
-                "context after first await: True",
-                "context after ConfigureAwait(false): True",
+                "context before doing anything: True, tx: handler tx on thread 'Rebus 1 worker 1', current thread: Rebus 1 worker 1",
+                "context after first await: True, , tx: handler tx on thread 'Rebus 1 worker 1', current thread: Rebus 1 worker 1",
+                "context after ConfigureAwait(false): True, , tx: handler tx on thread 'Rebus 1 worker 1', current thread:",
 
                 "uow commit",
                 "uow dispose",
