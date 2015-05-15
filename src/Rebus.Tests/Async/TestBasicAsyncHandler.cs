@@ -7,7 +7,6 @@ using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
 using Rebus.Transports.Msmq;
-using Rhino.Mocks;
 using Shouldly;
 
 namespace Rebus.Tests.Async

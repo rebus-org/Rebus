@@ -188,6 +188,7 @@
       <Link>Massive.cs</Link>
     </Compile>
     <Compile Include="Analysis\TestExceptions.cs" />
+    <Compile Include="Async\TestAsyncConfigureAwaitBehavior.cs" />
     <Compile Include="Async\TestBasicAsyncHandler.cs" />
     <Compile Include="Bugs\AmbientTransactionContextNeverCleansUp.cs" />
     <Compile Include="Bugs\AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction.cs" />
