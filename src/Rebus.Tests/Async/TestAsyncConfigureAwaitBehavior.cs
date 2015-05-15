@@ -97,8 +97,8 @@ Got events:
                 "uow started",
 
                 "context before doing anything: True, tx: handler tx on thread 'Rebus 1 worker 1', current thread: Rebus 1 worker 1",
-                "context after first await: True, , tx: handler tx on thread 'Rebus 1 worker 1', current thread: Rebus 1 worker 1",
-                "context after ConfigureAwait(false): True, , tx: handler tx on thread 'Rebus 1 worker 1', current thread:",
+                "context after first await: True, tx: handler tx on thread 'Rebus 1 worker 1', current thread: Rebus 1 worker 1",
+                "context after ConfigureAwait(false): True, tx: handler tx on thread 'Rebus 1 worker 1', current thread: ",
 
                 "uow commit",
                 "uow dispose",
