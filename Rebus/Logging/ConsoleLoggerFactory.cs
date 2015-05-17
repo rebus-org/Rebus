@@ -44,16 +44,16 @@ namespace Rebus.Logging
         readonly bool _colored;
         readonly List<Func<LogStatement, bool>> _filters = new List<Func<LogStatement, bool>>(); 
 
-        LoggingColors colors = new LoggingColors();
-        LogLevel minLevel = LogLevel.Debug;
-        bool showTimestamps;
+        LoggingColors _colors = new LoggingColors();
+        LogLevel _minLevel = LogLevel.Debug;
+        bool _showTimestamps;
 
         /// <summary>
         /// Constructs the logger factory
         /// </summary>
         public ConsoleLoggerFactory(bool colored)
         {
-            this._colored = colored;
+            _colored = colored;
         }
 
         /// <summary>
@@ -61,14 +61,14 @@ namespace Rebus.Logging
         /// </summary>
         public LoggingColors Colors
         {
-            get { return colors; }
+            get { return _colors; }
             set
             {
                 if (value == null)
                 {
                     throw new InvalidOperationException("Attempted to set logging colors to null");
                 }
-                colors = value;
+                _colors = value;
             }
         }
 
@@ -77,10 +77,10 @@ namespace Rebus.Logging
         /// </summary>
         public LogLevel MinLevel
         {
-            get { return minLevel; }
+            get { return _minLevel; }
             set
             {
-                minLevel = value;
+                _minLevel = value;
                 Loggers.Clear();
             }
         }
@@ -99,10 +99,10 @@ namespace Rebus.Logging
         /// </summary>
         public bool ShowTimestamps
         {
-            get { return showTimestamps; }
+            get { return _showTimestamps; }
             set
             {
-                showTimestamps = value;
+                _showTimestamps = value;
                 Loggers.Clear();
             }
         }
@@ -116,7 +116,7 @@ namespace Rebus.Logging
             
             if (Loggers.TryGetValue(type, out logger)) return logger;
             
-            logger = new ConsoleLogger(type, colors, this, showTimestamps);
+            logger = new ConsoleLogger(type, _colors, this, _showTimestamps);
             Loggers.TryAdd(type, logger);
             
             return logger;
@@ -124,18 +124,18 @@ namespace Rebus.Logging
 
         class ConsoleLogger : ILog
         {
-            readonly LoggingColors loggingColors;
-            readonly ConsoleLoggerFactory factory;
-            readonly Type type;
-            readonly string logLineFormatString;
+            readonly LoggingColors _loggingColors;
+            readonly ConsoleLoggerFactory _factory;
+            readonly Type _type;
+            readonly string _logLineFormatString;
 
             public ConsoleLogger(Type type, LoggingColors loggingColors, ConsoleLoggerFactory factory, bool showTimestamps)
             {
-                this.type = type;
-                this.loggingColors = loggingColors;
-                this.factory = factory;
+                _type = type;
+                _loggingColors = loggingColors;
+                _factory = factory;
 
-                logLineFormatString = showTimestamps
+                _logLineFormatString = showTimestamps
                                           ? "{0} {1} {2} ({3}): {4}"
                                           : "{1} {2} ({3}): {4}";
             }
@@ -144,34 +144,34 @@ namespace Rebus.Logging
 
             public void Debug(string message, params object[] objs)
             {
-                Log(LogLevel.Debug, message, loggingColors.Debug, objs);
+                Log(LogLevel.Debug, message, _loggingColors.Debug, objs);
             }
 
             public void Info(string message, params object[] objs)
             {
-                Log(LogLevel.Info, message, loggingColors.Info, objs);
+                Log(LogLevel.Info, message, _loggingColors.Info, objs);
             }
 
             public void Warn(string message, params object[] objs)
             {
-                Log(LogLevel.Warn, message, loggingColors.Warn, objs);
+                Log(LogLevel.Warn, message, _loggingColors.Warn, objs);
             }
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                Log(LogLevel.Error, string.Format(message, objs) + Environment.NewLine + exception, loggingColors.Error);
+                Log(LogLevel.Error, string.Format(message, objs) + Environment.NewLine + exception, _loggingColors.Error);
             }
 
             public void Error(string message, params object[] objs)
             {
-                Log(LogLevel.Error, message, loggingColors.Error, objs);
+                Log(LogLevel.Error, message, _loggingColors.Error, objs);
             }
 
             #endregion
 
             void Log(LogLevel level, string message, ColorSetting colorSetting, params object[] objs)
             {
-                if (factory._colored)
+                if (_factory._colored)
                 {
                     using (colorSetting.Enter())
                     {
@@ -203,13 +203,13 @@ namespace Rebus.Logging
 
             void Write(LogLevel level, string message, object[] objs)
             {
-                if ((int)level < (int)factory.MinLevel) return;
-                if (factory.AbortedByFilter(new LogStatement(level, message, objs))) return;
+                if ((int)level < (int)_factory.MinLevel) return;
+                if (_factory.AbortedByFilter(new LogStatement(level, message, objs))) return;
 
                 var levelString = LevelString(level);
 
-                var threadName = Thread.CurrentThread.Name;
-                var typeName = type.FullName;
+                var threadName = GetThreadName();
+                var typeName = _type.FullName;
                 try
                 {
                     var renderedMessage = string.Format(message, objs);
@@ -218,7 +218,7 @@ namespace Rebus.Logging
                     // ReSharper disable EmptyGeneralCatchClause
                     try
                     {
-                        Console.WriteLine(logLineFormatString,
+                        Console.WriteLine(_logLineFormatString,
                             timeFormat,
                             typeName,
                             levelString,
@@ -235,6 +235,15 @@ namespace Rebus.Logging
                 {
                     Warn("Could not render output string: '{0}' with args: {1}", message, string.Join(", ", objs));
                 }
+            }
+
+            static string GetThreadName()
+            {
+                var threadName = Thread.CurrentThread.Name;
+
+                return string.IsNullOrWhiteSpace(threadName)
+                    ? string.Format("Thread #{0}", Thread.CurrentThread.ManagedThreadId)
+                    : threadName;
             }
         }
 

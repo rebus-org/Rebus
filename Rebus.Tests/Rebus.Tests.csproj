@@ -65,6 +65,7 @@
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
+    <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
     <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
     <Compile Include="Integration\ManyMessages\InMemoryBusFactory.cs" />

@@ -53,6 +53,7 @@
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
+    <Compile Include="Exceptions\Ignorant.cs" />
     <Compile Include="Persistence\SqlServer\DbConnectionWrapper.cs" />
     <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
     <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />

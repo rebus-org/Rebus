@@ -41,6 +41,12 @@ namespace Rebus.AzureServiceBus.Tests
             Using(_bus);
         }
 
+        [Test, Ignore("Can be used to check silencing behavior when receive errors occur")]
+        public void ReceiveExceptions()
+        {
+            Thread.Sleep(TimeSpan.FromMinutes(10));
+        }
+
         [Test]
         public async Task ItWorks()
         {
