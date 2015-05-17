@@ -3,19 +3,12 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.ServiceBus;
-using NUnit.Framework;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
 {
-    [TestFixture]
-    public class AzureServiceBusBasicSendReceive : BasicSendReceive<AzureServiceBusTransportFactory> { }
-
-    [TestFixture]
-    public class AzureServiceBusMessageExpiration : MessageExpiration<AzureServiceBusTransportFactory> { }
-
     public class AzureServiceBusTransportFactory : ITransportFactory
     {
         public static string ConnectionString

@@ -51,7 +51,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureServiceBusBasicSendReceive.cs" />
     <Compile Include="AzureServiceBusManyMessages.cs" />
+    <Compile Include="AzureServiceBusMessageExpiration.cs" />
     <Compile Include="AzureServiceBusPeekLockRenewalTest.cs" />
     <Compile Include="AzureServiceBusTransportFactory.cs" />
     <Content Include="asb_connection_string.txt" />

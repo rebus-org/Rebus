@@ -26,6 +26,23 @@ namespace Rebus.AzureServiceBus
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        static readonly TimeSpan[] RetryWaitTimes =
+        {
+            TimeSpan.FromSeconds(0.1),
+            TimeSpan.FromSeconds(0.1),
+            TimeSpan.FromSeconds(0.1),
+            TimeSpan.FromSeconds(0.2),
+            TimeSpan.FromSeconds(0.2),
+            TimeSpan.FromSeconds(0.2),
+            TimeSpan.FromSeconds(0.5),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(5),
+            TimeSpan.FromSeconds(10),
+        };
+
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
@@ -108,10 +125,22 @@ namespace Rebus.AzureServiceBus
 
             context.OnCommitted(async () =>
             {
-                await GetQueueClient(destinationAddress).SendAsync(brokeredMessage);
+                await GetRetrier()
+                    .Execute(() => GetQueueClient(destinationAddress).SendAsync(brokeredMessage));
             });
 
             context.OnDisposed(() => brokeredMessage.Dispose());
+        }
+
+        /// <summary>
+        /// Shoudl return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
+        /// </summary>
+        static Retrier GetRetrier()
+        {
+            return new Retrier(RetryWaitTimes)
+                .On<MessagingException>(e => e.IsTransient)
+                .On<MessagingCommunicationException>(e => e.IsTransient)
+                .On<ServerBusyException>(e => e.IsTransient);
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -138,7 +167,8 @@ namespace Rebus.AzureServiceBus
                     {
                         _log.Info("Renewing peek lock for message with ID {0}", messageId);
 
-                        await brokeredMessage.RenewLockAsync();
+                        await GetRetrier()
+                            .Execute(() => brokeredMessage.RenewLockAsync());
                     })
                 {
                     Interval = lockRenewalInterval
@@ -151,7 +181,15 @@ namespace Rebus.AzureServiceBus
                     renewalTask.Dispose();
 
                     _log.Debug("Abandoning message with ID {0}", messageId);
-                    brokeredMessage.Abandon();
+                    try
+                    {
+                        brokeredMessage.Abandon();
+                    }
+                    catch(Exception exception)
+                    {
+                        // if it fails, it'll be back on the queue anyway....
+                        _log.Warn("Could not abandon message: {0}", exception);
+                    }
                 });
 
                 context.OnCommitted(async () =>
@@ -159,7 +197,9 @@ namespace Rebus.AzureServiceBus
                     renewalTask.Dispose();
 
                     _log.Debug("Completing message with ID {0}", messageId);
-                    await brokeredMessage.CompleteAsync();
+                   
+                    await GetRetrier()
+                        .Execute(() => brokeredMessage.CompleteAsync());
                 });
 
                 context.OnDisposed(() =>
