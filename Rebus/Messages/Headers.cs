@@ -35,6 +35,11 @@ namespace Rebus.Messages
         public const string ContentType = "rbs2-content-type";
 
         /// <summary>
+        /// Optional header element that specifies an encoding that the content is encoded with, e.g. gzip
+        /// </summary>
+        public const string ContentEncoding = "rbs2-content-encoding";
+
+        /// <summary>
         /// Details that can be attached to a message that is forwarded after it has failed
         /// </summary>
         public const string ErrorDetails = "rbs2-error-details";

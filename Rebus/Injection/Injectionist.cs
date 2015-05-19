@@ -62,10 +62,11 @@ namespace Rebus.Injection
         /// <summary>
         /// Returns whether there exists a registration for the specified <see cref="TService"/>.
         /// </summary>
-        public bool Has<TService>()
+        public bool Has<TService>(bool primary = true)
         {
             var key = typeof(TService);
-            return _resolvers.ContainsKey(key) && _resolvers[key].Count > 0;
+            return _resolvers.ContainsKey(key) 
+                && _resolvers[key].Count(r => !r.IsDecorator) == 1;
         }
 
         abstract class Resolver

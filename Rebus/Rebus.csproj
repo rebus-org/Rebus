@@ -51,6 +51,10 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Compression\UnzipMessagesIncomingStep.cs" />
+    <Compile Include="Compression\ZipConfigurationExtensions.cs" />
+    <Compile Include="Compression\ZipMessagesOutgoingStep.cs" />
+    <Compile Include="Compression\Zipper.cs" />
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Exceptions\Ignorant.cs" />
