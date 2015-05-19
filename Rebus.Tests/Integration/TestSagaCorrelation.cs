@@ -33,7 +33,7 @@ namespace Rebus.Tests.Integration
 
         protected override void TearDown()
         {
-         //   _factory.CleanUp();
+            _factory.CleanUp();
         }
 
         [Test]
@@ -59,7 +59,7 @@ namespace Rebus.Tests.Integration
                 AnInt = 23
             });
 
-            await events.WaitUntil(e => e.Count >= 4, timeoutSeconds: 50);
+            await events.WaitUntil(e => e.Count >= 4, timeoutSeconds: 5);
 
             await Task.Delay(500);
 
