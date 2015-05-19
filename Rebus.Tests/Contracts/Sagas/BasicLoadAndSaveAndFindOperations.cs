@@ -170,6 +170,72 @@ namespace Rebus.Tests.Contracts.Sagas
             Assert.That(loadedSagaDataAfterDelete, Is.Null);
         }
 
+        [Test]
+        public async Task NizzleName()
+        {
+            var id = Guid.NewGuid();
+            
+            var guidCorrelationValue = Guid.NewGuid();
+            var stringCorrelationValue = "hej";
+            var dateTimeCorrelationValue = new DateTime(1979, 3, 19);
+            var dateTimeOffsetCorrelationValue = new DateTimeOffset(1979, 3, 19, 20, 0, 0, TimeSpan.FromHours(2));
+            var decimalCorrelationValue = 23M;
+            var intCorrelationValue = 8;
+
+            var data = new SagaDataWithVariousCorrelationProperties
+            {
+                Id = id,
+                CorrelateByString = stringCorrelationValue,
+                CorrelateByDateTime = dateTimeCorrelationValue,
+                CorrelateByDateTimeOffset = dateTimeOffsetCorrelationValue,
+                CorrelateByDecimal = decimalCorrelationValue,
+                CorrelateByGuid = guidCorrelationValue,
+                CorrelateByInt = intCorrelationValue
+            };
+
+            var correlationProperties = new[]
+            {
+                GetCorrelationProperty(d => d.CorrelateByString), 
+                GetCorrelationProperty(d => d.CorrelateByInt), 
+                //GetCorrelationProperty(d => d.CorrelateByDecimal), 
+                //GetCorrelationProperty(d => d.CorrelateByDateTime), 
+                //GetCorrelationProperty(d => d.CorrelateByDateTimeOffset), 
+                GetCorrelationProperty(d => d.CorrelateByGuid), 
+            };
+
+            await _sagaStorage.Insert(data,correlationProperties);
+
+            var dataByString = await Find(stringCorrelationValue, d => d.CorrelateByString);
+            var dataByInt = await Find(intCorrelationValue, d => d.CorrelateByInt);
+            var dataByGuid = await Find(guidCorrelationValue, d => d.CorrelateByGuid);
+
+            Assert.That(dataByString.Id, Is.EqualTo(id));
+            Assert.That(dataByInt.Id, Is.EqualTo(id));
+            Assert.That(dataByGuid.Id, Is.EqualTo(id));
+        }
+
+        async Task<ISagaData> Find(object value, Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
+        {
+            return await _sagaStorage.Find(typeof (SagaDataWithVariousCorrelationProperties), Reflect.Path(expression), value);
+        }
+
+        CorrelationProperty GetCorrelationProperty(Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
+        {
+            return new CorrelationProperty(Reflect.Path(expression), typeof (SagaDataWithVariousCorrelationProperties));
+        }
+
+        class SagaDataWithVariousCorrelationProperties : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+
+            public string CorrelateByString { get; set; }
+            public Guid CorrelateByGuid { get; set; }
+            public int CorrelateByInt { get; set; }
+            public decimal CorrelateByDecimal { get; set; }
+            public DateTime CorrelateByDateTime { get; set; }
+            public DateTimeOffset CorrelateByDateTimeOffset { get; set; }
+        }
 
         class TestSagaData : ISagaData
         {
@@ -194,10 +260,28 @@ namespace Rebus.Tests.Contracts.Sagas
 
         class CorrelationProperty : ISagaCorrelationProperty
         {
+            static readonly Type[] AllowedCorrelationPropertyTypes = {
+                typeof (string),
+                typeof (int),
+                typeof (Guid)
+            };
+
             public CorrelationProperty(string propertyName, Type sagaDataType)
             {
                 PropertyName = propertyName;
                 SagaDataType = sagaDataType;
+
+                Validate();
+            }
+
+            void Validate()
+            {
+                var propertyType = SagaDataType.GetProperty(PropertyName).PropertyType;
+
+                if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
+
+                throw new ArgumentException(string.Format("Cannot correlate with the '{0}' property on the '{1}' saga data type - only allowed types are: {2}",
+                    PropertyName, SagaDataType.Name, string.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))));
             }
 
             public string PropertyName { get; private set; }

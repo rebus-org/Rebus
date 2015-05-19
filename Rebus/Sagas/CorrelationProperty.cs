@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Rebus.Sagas
 {
@@ -7,6 +8,16 @@ namespace Rebus.Sagas
     /// </summary>
     public class CorrelationProperty : ISagaCorrelationProperty
     {
+        /// <summary>
+        /// Defines the types that are allowed to use with saga data properties that are intended for correlation
+        /// </summary>
+        static readonly Type[] AllowedCorrelationPropertyTypes =
+        {
+            typeof (Guid),
+            typeof (int),
+            typeof (string),
+        };
+
         /// <summary>
         /// Constructs the correlation property
         /// </summary>
@@ -22,6 +33,18 @@ namespace Rebus.Sagas
             ValueFromMessage = valueFromMessage;
             SagaDataType = sagaDataType;
             MessageType = messageType;
+
+            Validate();
+        }
+
+        void Validate()
+        {
+            var propertyType = SagaDataType.GetProperty(PropertyName).PropertyType;
+
+            if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
+
+            throw new ArgumentException(string.Format("Cannot correlate with the '{0}' property on the '{1}' saga data type - only allowed types are: {2}",
+                PropertyName, SagaDataType.Name, string.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))));
         }
 
         /// <summary>

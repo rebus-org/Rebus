@@ -155,13 +155,18 @@ WHERE [index].[saga_type] = @saga_type
     AND [index].[key] = @key 
     AND [index].[value] = @value", _dataTableName, _indexTableName);
 
+                        var sagaTypeName = GetSagaTypeName(sagaDataType);
+
                         command.Parameters.AddWithValue("key", propertyName);
-                        command.Parameters.AddWithValue("saga_type", GetSagaTypeName(sagaDataType));
+                        command.Parameters.AddWithValue("saga_type", sagaTypeName);
                     }
 
-                    command.Parameters.AddWithValue("value", (propertyValue ?? "").ToString());
+                    var correlationPropertyValue = GetCorrelationPropertyValue(propertyValue);
 
-                    var value = (string)command.ExecuteScalar();
+                    command.Parameters.AddWithValue("value", correlationPropertyValue);
+
+                    var dbValue = command.ExecuteScalar();
+                    var value = (string) dbValue;
 
                     if (value == null) return null;
 
@@ -177,6 +182,16 @@ WHERE [index].[saga_type] = @saga_type
                     }
                 }
             }
+        }
+
+        static string GetCorrelationPropertyValue(object propertyValue)
+        {
+            if (propertyValue is decimal)
+            {
+                Console.WriteLine("DECIMAL: {0}", propertyValue.ToString());
+            }
+
+            return (propertyValue ?? "").ToString();
         }
 
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
@@ -310,7 +325,7 @@ UPDATE [{0}]
                 .Select((p, i) => new
                 {
                     PropertyName = p.Key,
-                    PropertyValue = p.Value ?? "",
+                    PropertyValue = GetCorrelationPropertyValue(p.Value),
                     PropertyNameParameter = string.Format("@n{0}", i),
                     PropertyValueParameter = string.Format("@v{0}", i)
                 })

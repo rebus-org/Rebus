@@ -14,26 +14,16 @@ namespace Rebus.Sagas
                 = new ConcurrentDictionary<Type, Dictionary<Type, CorrelationProperty[]>>();
 
         /// <summary>
-        /// Gets (possibly from the cache) the set of correlation properties relevant for the given message type and saga handler.
-        /// If no properties are found, an <see cref="ArgumentException"/> is thrown.
+        /// Gets (most likely from a cache) the set of correlation properties relevant for the given saga handler.
         /// </summary>
-        /// <exception cref="ArgumentException"></exception>
-        public IEnumerable<CorrelationProperty> GetCorrelationProperties(object message, Saga saga)
+        public SagaDataCorrelationProperties GetCorrelationProperties(object message, Saga saga)
         {
             var sagaDataType = saga.GetSagaDataType();
-            var messageType = message.GetType();
 
             var correlationPropertiesForThisSagaDataType = _cachedCorrelationProperties
                 .GetOrAdd(sagaDataType, type => GetCorrelationProperties(saga));
 
-            CorrelationProperty[] potentialCorrelationproperties;
-            
-            if (!correlationPropertiesForThisSagaDataType.TryGetValue(messageType, out potentialCorrelationproperties))
-            {
-                throw new ArgumentException(string.Format("Could not find any correlation properties for message {0} and saga data {1}", messageType, sagaDataType));
-            }
-
-            return potentialCorrelationproperties;
+            return new SagaDataCorrelationProperties(correlationPropertiesForThisSagaDataType, sagaDataType);
         }
 
         /// <summary>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Rebus.Extensions;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Sagas;
@@ -39,7 +39,8 @@ namespace Rebus.Pipeline.Receive
                 .ToList();
 
             var message = context.Load<Message>();
-            var messageId = message.Headers.GetValue(Headers.MessageId);
+            var label = message.GetMessageLabel();
+
             var body = message.Body;
             var loadedSagaData = new List<RelevantSagaInfo>();
             var newlyCreatedSagaData = new List<RelevantSagaInfo>();
@@ -47,12 +48,11 @@ namespace Rebus.Pipeline.Receive
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
                 var foundExistingSagaData = false;
-                
-                var correlationProperties = _sagaHelper
-                    .GetCorrelationProperties(body, sagaInvoker.Saga)
-                    .ToList();
 
-                foreach (var correlationProperty in correlationProperties)
+                var correlationProperties = _sagaHelper.GetCorrelationProperties(body, sagaInvoker.Saga);
+                var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body);
+
+                foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
                 {
                     var valueFromMessage = correlationProperty.ValueFromMessage(body);
                     var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
@@ -63,24 +63,25 @@ namespace Rebus.Pipeline.Receive
                     foundExistingSagaData = true;
                     loadedSagaData.Add(new RelevantSagaInfo(sagaData, correlationProperties, sagaInvoker.Saga));
 
-                    _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, messageId);
+                    _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, label);
                     break;
                 }
 
                 if (!foundExistingSagaData)
                 {
-                    var canBeInitiatedByThisMessageType = sagaInvoker.CanBeInitiatedBy(body.GetType());
+                    var messageType = body.GetType();
+                    var canBeInitiatedByThisMessageType = sagaInvoker.CanBeInitiatedBy(messageType);
 
                     if (canBeInitiatedByThisMessageType)
                     {
                         var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
                         sagaInvoker.SetSagaData(newSagaData);
-                        _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, messageId);
+                        _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
                         newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
                     }
                     else
                     {
-                        _log.Debug("Could not find existing saga data for message {0}", messageId);
+                        _log.Debug("Could not find existing saga data for message {0}", label);
                         sagaInvoker.SkipInvocation();
                     }
                 }
@@ -110,10 +111,10 @@ namespace Rebus.Pipeline.Receive
 
         class RelevantSagaInfo
         {
-            public RelevantSagaInfo(ISagaData sagaData, List<CorrelationProperty> correlationProperties, Saga saga)
+            public RelevantSagaInfo(ISagaData sagaData, IEnumerable<CorrelationProperty> correlationProperties, Saga saga)
             {
                 SagaData = sagaData;
-                CorrelationProperties = correlationProperties;
+                CorrelationProperties = correlationProperties.ToList();
                 Saga = saga;
             }
 

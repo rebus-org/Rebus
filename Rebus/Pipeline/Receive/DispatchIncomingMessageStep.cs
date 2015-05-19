@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Rebus.Extensions;
+using Rebus.Bus;
 using Rebus.Messages;
 
 namespace Rebus.Pipeline.Receive
@@ -26,10 +26,9 @@ namespace Rebus.Pipeline.Receive
             if (!didInvokeHandler)
             {
                 var message = context.Load<Message>();
-                var headers = message.Headers;
                 
-                var messageId = headers.GetValue(Headers.MessageId);
-                var messageType = headers.GetValueOrNull(Headers.Type) ?? "<unknown>";
+                var messageId = message.GetMessageId();
+                var messageType = message.GetMessageType();
 
                 var text = string.Format("Message with ID {0} and type {1} could not be dispatched to any handlers",
                     messageId, messageType);

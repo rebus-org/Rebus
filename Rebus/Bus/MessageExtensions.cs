@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.Design;
+using System.Linq;
+using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline.Receive;
 using Rebus.Transport;
@@ -39,6 +43,61 @@ namespace Rebus.Bus
         public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
         {
             message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToString(HandleDeferredMessagesStep.DateTimeOffsetFormat);
+        }
+
+        /// <summary>
+        /// Gets the message type from the message
+        /// </summary>
+        public static string GetMessageType(this Message message)
+        {
+            return message.Headers.GetValueOrNull(Headers.Type) ?? "<unknown>";
+        }
+
+        /// <summary>
+        /// Gets the message ID from the message
+        /// </summary>
+        public static string GetMessageId(this Message message)
+        {
+            return message.Headers.GetValue(Headers.MessageId);
+        }
+
+        /// <summary>
+        /// Gets a nice label for the message, consisting of message type and ID if possible
+        /// </summary>
+        public static string GetMessageLabel(this Message message)
+        {
+            return GetMessageLabel(message.Headers);
+        }
+
+        /// <summary>
+        /// Gets a nice label for the message, consisting of message type and ID if possible
+        /// </summary>
+        public static string GetMessageLabel(this TransportMessage message)
+        {
+            return GetMessageLabel(message.Headers);
+        }
+
+        static string GetMessageLabel(Dictionary<string, string> headers)
+        {
+            var id = headers.GetValue(Headers.MessageId);
+
+            string type;
+
+            if (headers.TryGetValue(Headers.Type, out type))
+            {
+                var dotnetType = Type.GetType(type);
+
+                if (dotnetType != null)
+                {
+                    type = dotnetType.Name;
+                }
+            }
+            else
+            {
+                type = "<unknown>";
+            }
+
+            return string.Format("{0}/{1}", type, id);
         }
     }
 }

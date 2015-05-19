@@ -33,7 +33,8 @@ namespace Rebus.Persistence.InMem
                 {
                     if (data.GetType() != sagaDataType) continue;
 
-                    var valueFromSaga = (Reflect.Value(data, propertyName) ?? "").ToString();
+                    var sagaValue = Reflect.Value(data, propertyName);
+                    var valueFromSaga = (sagaValue ?? "").ToString();
 
                     if (valueFromMessage.Equals(valueFromSaga)) return Clone(data);
                 }
