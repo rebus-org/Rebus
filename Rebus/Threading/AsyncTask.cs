@@ -42,7 +42,6 @@ namespace Rebus.Threading
             _description = description;
             _action = action;
             _prettyInsignificant = prettyInsignificant;
-
             Interval = DefaultInterval;
         }
 
@@ -75,10 +74,7 @@ namespace Rebus.Threading
                 throw new InvalidOperationException(string.Format("Cannot start periodic task '{0}' because it has been disposed!", _description));
             }
 
-            if (!_prettyInsignificant)
-            {
-                _log.Info("Starting periodic task '{0}' with interval {1}", _description, Interval);
-            }
+            LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);
 
             var token = _tokenSource.Token;
 
@@ -123,10 +119,7 @@ namespace Rebus.Threading
                 // if it was never started, we don't do anything
                 if (_task == null) return;
 
-                if (!_prettyInsignificant)
-                {
-                    _log.Info("Stopping periodic task '{0}'", _description);
-                }
+                LogStartStop("Stopping periodic task '{0}'", _description);
 
                 _tokenSource.Cancel();
 
@@ -138,6 +131,18 @@ namespace Rebus.Threading
             finally
             {
                 _disposed = true;
+            }
+        }
+
+        void LogStartStop(string message, params object[] objs)
+        {
+            if (_prettyInsignificant)
+            {
+                _log.Debug(message, objs);
+            }
+            else
+            {
+                _log.Info(message, objs);
             }
         }
     }
