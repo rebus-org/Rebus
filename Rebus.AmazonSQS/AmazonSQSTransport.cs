@@ -188,10 +188,10 @@ namespace Rebus.AmazonSQS
                                      };
 
             outputQueue.AddMessage(GetDestinationQueueUrlByName(destinationAddress, context), sendMessageRequest);
-            
+
             return _emptyTask;
         }
-        
+
         private readonly Task _emptyTask = Task.FromResult(0);
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -219,7 +219,7 @@ namespace Rebus.AmazonSQS
                 context.OnCommitted(async () =>
                 {
                     renewalTask.Dispose();
-                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl, 
+                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl,
                         response.Messages
                             .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
                             .ToList()));
@@ -233,7 +233,7 @@ namespace Rebus.AmazonSQS
                 context.OnAborted(() =>
                 {
                     renewalTask.Dispose();
-                    var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(_queueUrl, 
+                    var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(_queueUrl,
                         response.Messages
                         .Select(m => new ChangeMessageVisibilityBatchRequestEntry(m.MessageId, m.ReceiptHandle)
                         {
@@ -271,7 +271,8 @@ namespace Rebus.AmazonSQS
                     _log.Info("Renewing peek lock for message with ID {0}", message.MessageId);
 
                     await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int)_peekLockDuration.TotalSeconds));
-                })
+                },
+                prettyInsignificant: true)
                               {
                                   Interval = _peekLockRenewalInterval
                               };

@@ -169,7 +169,8 @@ namespace Rebus.AzureServiceBus
 
                         await GetRetrier()
                             .Execute(() => brokeredMessage.RenewLockAsync());
-                    })
+                    },
+                    prettyInsignificant: true)
                 {
                     Interval = lockRenewalInterval
                 };
@@ -185,7 +186,7 @@ namespace Rebus.AzureServiceBus
                     {
                         brokeredMessage.Abandon();
                     }
-                    catch(Exception exception)
+                    catch (Exception exception)
                     {
                         // if it fails, it'll be back on the queue anyway....
                         _log.Warn("Could not abandon message: {0}", exception);
@@ -197,7 +198,7 @@ namespace Rebus.AzureServiceBus
                     renewalTask.Dispose();
 
                     _log.Debug("Completing message with ID {0}", messageId);
-                   
+
                     await GetRetrier()
                         .Execute(() => brokeredMessage.CompleteAsync());
                 });
