@@ -8,25 +8,36 @@ namespace Rebus.Compression
     /// </summary>
     public class Zipper
     {
+        /// <summary>
+        /// Zips the byte array
+        /// </summary>
         public byte[] Zip(byte[] uncompressedBytes)
         {
+            using (var sourceStream = new MemoryStream(uncompressedBytes))
             using (var targetStream = new MemoryStream())
-            using (var zipStream = new GZipStream(targetStream, CompressionMode.Compress))
+            using (var zipStream = new GZipStream(targetStream, CompressionLevel.Optimal))
             {
-                zipStream.Write(uncompressedBytes, 0, uncompressedBytes.Length);
+                var buffer = new byte[1024];
+                int nRead;
+                while ((nRead = sourceStream.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    zipStream.Write(buffer, 0, nRead);
+                }
                 zipStream.Flush();
-
                 return targetStream.GetBuffer();
             }
         }
 
+        /// <summary>
+        /// Unzips the byte array
+        /// </summary>
         public byte[] Unzip(byte[] compressedBytes)
         {
             using (var targetStream = new MemoryStream())
             using (var sourceStream = new MemoryStream(compressedBytes))
             using (var zipStream = new GZipStream(sourceStream, CompressionMode.Decompress))
             {
-                byte[] buffer = new byte[1024];
+                var buffer = new byte[1024];
                 int nRead;
                 while ((nRead = zipStream.Read(buffer, 0, buffer.Length)) > 0)
                 {

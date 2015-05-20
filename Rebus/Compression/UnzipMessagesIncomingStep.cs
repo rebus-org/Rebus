@@ -15,6 +15,9 @@ namespace Rebus.Compression
     {
         readonly Zipper _zipper;
 
+        /// <summary>
+        /// Message pipeline step that unzips incoming messages if the <see cref="Headers.ContentEncoding"/> is present
+        /// </summary>
         public UnzipMessagesIncomingStep(Zipper zipper)
         {
             _zipper = zipper;

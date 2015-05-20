@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using Rebus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -9,6 +8,9 @@ using Rebus.Pipeline.Send;
 
 namespace Rebus.Compression
 {
+    /// <summary>
+    /// Configuration extensions for enabling compression
+    /// </summary>
     public static class ZipConfigurationExtensions
     {
         /// <summary>
@@ -34,6 +36,9 @@ namespace Rebus.Compression
             return configurer;
         }
 
+        /// <summary>
+        /// Step injector that may be promoted to become the default pipeline step injector
+        /// </summary>
         class PipelineStepInjector : IPipeline
         {
             readonly ConcurrentDictionary<Type, Tuple<Position, IOutgoingStep>> _outgoingInjectedSteps = new ConcurrentDictionary<Type, Tuple<Position, IOutgoingStep>>();

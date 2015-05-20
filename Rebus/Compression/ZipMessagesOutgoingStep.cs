@@ -20,6 +20,9 @@ namespace Rebus.Compression
         readonly Zipper _zipper;
         readonly int _bodySizeThresholdBytes;
 
+        /// <summary>
+        /// Constructs the step
+        /// </summary>
         public ZipMessagesOutgoingStep(Zipper zipper, int bodySizeThresholdBytes)
         {
             _zipper = zipper;
