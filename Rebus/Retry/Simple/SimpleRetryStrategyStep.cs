@@ -62,19 +62,20 @@ namespace Rebus.Retry.Simple
             if (string.IsNullOrWhiteSpace(messageId))
             {
                 await MoveMessageToErrorQueue("<no message ID>", transportMessage,
-                    string.Format("Received message with empty or absent '{0}' header! All messages must be" +
-                                  " supplied with an ID . If no ID is present, the message cannot be tracked" +
-                                  " between delivery attempts, and other stuff would also be much harder to" +
-                                  " do - therefore, it is a requirement that messages be supplied with an ID.",
-                    Headers.MessageId),
-                    transactionContext);
+                    transactionContext, string.Format("Received message with empty or absent '{0}' header! All messages must be" +
+                                                      " supplied with an ID . If no ID is present, the message cannot be tracked" +
+                                                      " between delivery attempts, and other stuff would also be much harder to" +
+                                                      " do - therefore, it is a requirement that messages be supplied with an ID.",
+                        Headers.MessageId));
 
                 return;
             }
 
             if (HasFailedTooManyTimes(messageId))
             {
-                await MoveMessageToErrorQueue(messageId, transportMessage, GetErrorDescriptionFor(messageId), transactionContext);
+                await MoveMessageToErrorQueue(messageId, transportMessage, transactionContext, GetErrorDescriptionFor(messageId), GetErrorDescriptionFor(messageId, brief: true));
+
+                RemoveErrorTracking(messageId);
 
                 return;
             }
@@ -96,6 +97,12 @@ namespace Rebus.Retry.Simple
             }
         }
 
+        void RemoveErrorTracking(string messageId)
+        {
+            ErrorTracking dummy;
+            _trackedErrors.TryRemove(messageId, out dummy);
+        }
+
         /// <summary>
         /// Initializes the step, starting the background task that cleans up old tracked errors
         /// </summary>
@@ -114,19 +121,26 @@ namespace Rebus.Retry.Simple
                 .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out _));
         }
 
-        string GetErrorDescriptionFor(string messageId)
+        string GetErrorDescriptionFor(string messageId, bool brief = false)
         {
             ErrorTracking errorTracking;
-            
-            if (!_trackedErrors.TryRemove(messageId, out errorTracking))
+
+            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
             {
                 return "Could not get error details for the message";
             }
 
-            return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
+            if (brief)
+            {
+                return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
+            }
+
+            var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e => string.Format("{0}: {1}", e.Time, e.Exception)));
+
+            return string.Format("{0} unhandled exceptions: {1}", errorTracking.Errors.Count(), fullExceptionInfo);
         }
 
-        async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, string errorDescription, ITransactionContext transactionContext)
+        async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription, string shortErrorDescription = null)
         {
             var headers = transportMessage.Headers;
 
@@ -138,7 +152,7 @@ namespace Rebus.Retry.Simple
 
             try
             {
-                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, errorDescription);
+                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, shortErrorDescription);
 
                 await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
             }
