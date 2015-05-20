@@ -51,6 +51,10 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
+    <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Pipeline\PipelineStepInjector.cs" />
+    <Compile Include="Pipeline\PipelineRelativePosition.cs" />
     <Compile Include="Compression\UnzipMessagesIncomingStep.cs" />
     <Compile Include="Compression\ZipConfigurationExtensions.cs" />
     <Compile Include="Compression\ZipMessagesOutgoingStep.cs" />
@@ -58,6 +62,8 @@
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Exceptions\Ignorant.cs" />
+    <Compile Include="Handlers\Reordering\HandlerReorderingConfigurationExtensions.cs" />
+    <Compile Include="Handlers\Reordering\HandlerReorderingStep.cs" />
     <Compile Include="Persistence\SqlServer\DbConnectionWrapper.cs" />
     <Compile Include="Persistence\SqlServer\IDbConnection.cs" />
     <Compile Include="Persistence\SqlServer\IDbConnectionProvider.cs" />

@@ -1,22 +1,28 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Extensions;
+using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Sagas;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline.Receive
 {
+    /// <summary>
+    /// Incoming message step that gets relevant handlers for the message
+    /// </summary>
     public class ActivateHandlersStep : IIncomingStep
     {
         readonly ConcurrentDictionary<Type, MethodInfo> _dispatchMethods = new ConcurrentDictionary<Type, MethodInfo>();
         readonly IHandlerActivator _handlerActivator;
 
+        /// <summary>
+        /// Constructs the step with the <see cref="IHandlerActivator"/> to use to get the handler instances
+        /// </summary>
         public ActivateHandlersStep(IHandlerActivator handlerActivator)
         {
             _handlerActivator = handlerActivator;
@@ -45,7 +51,7 @@ namespace Rebus.Pipeline.Receive
             var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
             var listOfHandlerInvokers = handlers
-                .Select(handler => new HandlerInvoker<TMessage>(messageId, async () => await handler.Handle(message), handler))
+                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler))
                 .Cast<HandlerInvoker>()
                 .ToList();
 
@@ -60,18 +66,51 @@ namespace Rebus.Pipeline.Receive
         }
     }
 
+    /// <summary>
+    /// Wrapper of the handler that is ready to invoke
+    /// </summary>
     public abstract class HandlerInvoker
     {
+        /// <summary>
+        /// Method to call in order to invoke this particular handler
+        /// </summary>
         public abstract Task Invoke();
+        
+        /// <summary>
+        /// Gets whether this invoker's handler is a saga
+        /// </summary>
         public abstract bool HasSaga { get; }
+
+        /// <summary>
+        /// Gets this invoker's handler as a saga (throws if it's not a saga)
+        /// </summary>
         public abstract Saga Saga { get; }
 
+        /// <summary>
+        /// Adds to the invoker a piece of saga data that has been determined to be relevant for the invocation
+        /// </summary>
         public abstract void SetSagaData(ISagaData sagaData);
+        
+        /// <summary>
+        /// Gets whether the contained saga handler can be initiated by messages of the given type
+        /// </summary>
         public abstract bool CanBeInitiatedBy(Type messageType);
 
+        /// <summary>
+        /// Marks this handler as one to skip, i.e. calling this method will make the invoker ignore the call to <see cref="Invoke"/>
+        /// </summary>
         public abstract void SkipInvocation();
+
+        /// <summary>
+        /// Gets the contained handler object (which is probably an implementation of <see cref="IHandleMessages"/>, but you should
+        /// not depend on it!)
+        /// </summary>
+        public abstract object Handler { get; }
     }
 
+    /// <summary>
+    /// Derivation of the <see cref="HandlerInvoker"/> that has the message type
+    /// </summary>
     public class HandlerInvoker<TMessage> : HandlerInvoker
     {
         readonly string _messageId;
@@ -80,11 +119,19 @@ namespace Rebus.Pipeline.Receive
         ISagaData _sagaData;
         bool _invokeHandler = true;
 
+        /// <summary>
+        /// Constructs the invoker
+        /// </summary>
         public HandlerInvoker(string messageId, Func<Task> action, object handler)
         {
             _messageId = messageId;
             _action = action;
             _handler = handler;
+        }
+
+        public override object Handler
+        {
+            get { return _handler; }
         }
 
         public override bool HasSaga

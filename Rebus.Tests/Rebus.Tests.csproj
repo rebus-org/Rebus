@@ -77,6 +77,7 @@
     <Compile Include="Integration\TestBugWhenSendingMessagesInParallel.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
+    <Compile Include="Integration\TestHandlerReordering.cs" />
     <Compile Include="Integration\TestMessageDeferral.cs" />
     <Compile Include="Integration\TestMessageExpiration.cs" />
     <Compile Include="Integration\TestNumberOfSqlConnections.cs" />
