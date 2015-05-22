@@ -20,8 +20,14 @@ namespace Rebus.Handlers.Reordering
 
             configurer.Register(c => new HandlerReorderingStep(configuration));
 
-            configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                .OnReceive(c.Get<HandlerReorderingStep>(), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep)));
+            configurer.Decorate<IPipeline>(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+                var step = c.Get<HandlerReorderingStep>();
+
+                return new PipelineStepInjector(pipeline)
+                    .OnReceive(step, PipelineRelativePosition.Before, typeof (DispatchIncomingMessageStep));
+            });
 
             return configuration;
         }

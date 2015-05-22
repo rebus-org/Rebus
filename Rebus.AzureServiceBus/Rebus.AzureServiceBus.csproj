@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="AzureServiceBusTransport.cs" />
     <Compile Include="Config\AzureServiceBusConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureServiceBusTransportSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Retrier.cs" />
   </ItemGroup>
