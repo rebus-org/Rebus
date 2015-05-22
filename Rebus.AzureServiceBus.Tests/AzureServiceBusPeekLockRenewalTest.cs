@@ -30,7 +30,8 @@ namespace Rebus.AzureServiceBus.Tests
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
-                .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName))
+                .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName)
+                .AutomaticallyRenewPeekLock())
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(1);

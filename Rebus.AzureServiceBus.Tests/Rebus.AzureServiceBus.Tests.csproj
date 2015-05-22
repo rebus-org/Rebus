@@ -36,6 +36,10 @@
     <Reference Include="Microsoft.WindowsAzure.Configuration">
       <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.3.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
     </Reference>
@@ -55,6 +59,7 @@
     <Compile Include="AzureServiceBusManyMessages.cs" />
     <Compile Include="AzureServiceBusMessageExpiration.cs" />
     <Compile Include="AzureServiceBusPeekLockRenewalTest.cs" />
+    <Compile Include="AzureServiceBusPrefetchTest.cs" />
     <Compile Include="AzureServiceBusTransportFactory.cs" />
     <Content Include="asb_connection_string.txt" />
     <Compile Include="Properties\AssemblyInfo.cs" />

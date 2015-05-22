@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -52,6 +53,12 @@ namespace Rebus.AzureServiceBus
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
         readonly Ignorant _ignorant = new Ignorant();
 
+        readonly ConcurrentQueue<BrokeredMessage> _prefetchQueue = new ConcurrentQueue<BrokeredMessage>();
+
+        bool _automaticallyRenewPeekLock;
+        bool _prefetchingEnabled;
+        int _numberOfMessagesToPrefetch;
+
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
@@ -78,6 +85,23 @@ namespace Rebus.AzureServiceBus
             _namespaceManager.DeleteQueue(_inputQueueAddress);
 
             CreateQueue(_inputQueueAddress);
+        }
+
+        /// <summary>
+        /// Configures the transport to prefetch the specified number of messages into an in-mem queue for processing, disabling automatic peek lock renewal
+        /// </summary>
+        public void PrefetchMessages(int numberOfMessagesToPrefetch)
+        {
+            _prefetchingEnabled = true;
+            _numberOfMessagesToPrefetch = numberOfMessagesToPrefetch;
+        }
+
+        /// <summary>
+        /// Enables automatic peek lock renewal - only recommended if you truly need to handle messages for a very long time
+        /// </summary>
+        public void AutomaticallyRenewPeekLock()
+        {
+            _automaticallyRenewPeekLock = true;
         }
 
         public void CreateQueue(string address)
@@ -162,20 +186,7 @@ namespace Rebus.AzureServiceBus
                 var leaseDuration = (brokeredMessage.LockedUntilUtc - DateTime.UtcNow);
                 var lockRenewalInterval = TimeSpan.FromMinutes(0.8 * leaseDuration.TotalMinutes);
 
-                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
-                    async () =>
-                    {
-                        _log.Info("Renewing peek lock for message with ID {0}", messageId);
-
-                        await GetRetrier()
-                            .Execute(() => brokeredMessage.RenewLockAsync());
-                    },
-                    prettyInsignificant: true)
-                {
-                    Interval = lockRenewalInterval
-                };
-
-                renewalTask.Start();
+                var renewalTask = GetRenewalTaskOrFakeDisposable(messageId, brokeredMessage, lockRenewalInterval);
 
                 context.OnAborted(() =>
                 {
@@ -215,9 +226,62 @@ namespace Rebus.AzureServiceBus
             }
         }
 
+        IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
+        {
+            if (_automaticallyRenewPeekLock)
+            {
+                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
+                    async () =>
+                    {
+                        _log.Info("Renewing peek lock for message with ID {0}", messageId);
+
+                        await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
+                    },
+                    prettyInsignificant: true)
+                {
+                    Interval = lockRenewalInterval
+                };
+
+                renewalTask.Start();
+
+                return renewalTask;
+            }
+
+            return new FakeDisposable();
+        }
+
+        class FakeDisposable : IDisposable
+        {
+            public void Dispose()
+            {
+            }
+        }
+
         async Task<BrokeredMessage> ReceiveBrokeredMessage()
         {
             var queueAddress = _inputQueueAddress;
+
+            if (_prefetchingEnabled)
+            {
+                BrokeredMessage nextMessage = null;
+
+                if (_prefetchQueue.TryDequeue(out nextMessage))
+                {
+                    return nextMessage;
+                }
+
+                var client = GetQueueClient(queueAddress);
+
+                var brokeredMessages = await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, TimeSpan.FromSeconds(1));
+
+                foreach (var receivedMessage in brokeredMessages)
+                {
+                    _prefetchQueue.Enqueue(receivedMessage);
+                }
+
+                _prefetchQueue.TryDequeue(out nextMessage);
+                return nextMessage; //< just accept null at this point if there was nothing
+            }
 
             try
             {
