@@ -368,11 +368,11 @@ namespace Rebus.AmazonSQS
             return headers.ToDictionary(key => key.Key,
                                         value => new MessageAttributeValue() { DataType = "String", StringValue = value.Value });
         }
-
+        private readonly ConcurrentDictionary<string, string> _queueUrls = new ConcurrentDictionary<string, string>();
         private string GetDestinationQueueUrlByName(string address, ITransactionContext transactionContext)
         {
 
-            var url = transactionContext.Items.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), () =>
+            var url = _queueUrls.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), (key) =>
                     {
 
                         if (Uri.IsWellFormedUriString(address, UriKind.Absolute))
