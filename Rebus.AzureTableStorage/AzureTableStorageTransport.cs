@@ -9,6 +9,7 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.AzureTableStorage
@@ -29,6 +30,8 @@ namespace Rebus.AzureTableStorage
         private const string OutgoingQueueContextActionIsSetKey = "AzureTableStorageOutgoingQueueContextActionIsSetKey";
         private const string OutgoingQueueContextKey = "AzureTableStorageOutgoingQueueContextKey";
         public const string ClientContextKey = "AzureTableStorageClient";
+        private TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
+        private TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
         public AzureTableStorageTransport(string connectionString, string inputQueueAddress)
         {
 
@@ -70,6 +73,7 @@ namespace Rebus.AzureTableStorage
 
 
                     var batches = outputQueue.GetBatchOperations();
+                    // _log.Info("getting ready to send " + batches.Count() + " batches");
                     var tasks = batches.Select(b =>
                                                {
                                                    var client = GetOrCreateClientFromContext(context, b.DestinationAddress);
@@ -82,13 +86,8 @@ namespace Rebus.AzureTableStorage
 
                     try
                     {
-                        var response = await Task.WhenAll(tasks);
-                        if (response.Any(r => r.Any(re => re.HttpStatusCode != 201)))
-                        {
-                            //TODO: Do errorhandling
-                            throw new ApplicationException("something went wrong");
-                            //GenerateErrorsAndThrow(response);
-                        }
+                        await Task.WhenAll(tasks);
+                        //  _log.Info("Batches send: " + tasks.Count());
                     }
                     catch (StorageException storageException)
                     {
@@ -112,10 +111,7 @@ namespace Rebus.AzureTableStorage
 
         }
 
-        private TransportMessageEntity GetEntityFromMessage(string destinationAddress, TransportMessage message)
-        {
-            return new TransportMessageEntity(destinationAddress, Time.RebusTime.Now.Ticks.ToString(), message.Headers, message.Body);
-        }
+
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
@@ -123,40 +119,63 @@ namespace Rebus.AzureTableStorage
             var client = GetOrCreateClientFromContext(context, _inputQueueAddress);
 
             var query = new TableQuery<TransportMessageEntity>()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, _inputQueueAddress))
-                .Take(5);
+                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, _inputQueueAddress));
 
-            var result = client.ExecuteQuery(query);
+
+            var result = client.ExecuteQuery(query);//.Where(e => e.LeaseTimeout < Time.RebusTime.Now);
 
             foreach (var transportMessageEntity in result)
             {
+
+
                 if (transportMessageEntity.LeaseTimeout < Time.RebusTime.Now)
                 {
+                    if (MessageIsExpired(transportMessageEntity))
+                    {
+                        _log.Warn("message expired");
+                        var deleteQuery = TableOperation.Delete(transportMessageEntity);
+                        await client.ExecuteAsync(deleteQuery);
+                        continue;
+                    }
 
                     transportMessageEntity.LeaseTimeout = GetNewLeaseTimeOut();
 
                     var replaceOperation = TableOperation.Replace(transportMessageEntity);
 
-                    var replaceResult = await client.ExecuteAsync(replaceOperation);
-                    if (replaceResult.HttpStatusCode == 204)
+                    try
                     {
-                        TransportMessageEntity messageEntity = transportMessageEntity;
-                        context.OnAborted(() =>
-                                          {
 
-                                              messageEntity.ResetLease();
-                                              var resetLeaseQuery = TableOperation.Replace(messageEntity);
-                                              client.ExecuteAsync(resetLeaseQuery);
+                        var replaceResult = await client.ExecuteAsync(replaceOperation);
+                        if (replaceResult.HttpStatusCode == 204)
+                        {
 
-                                          });
+                            var renewalTask = CreateRenewalTaskForMessage(transportMessageEntity, client);
+                            TransportMessageEntity messageEntity = transportMessageEntity;
+                            context.OnAborted(() =>
+                                              {
+                                                  renewalTask.Dispose();
+                                                  messageEntity.ResetLease();
+                                                  var resetLeaseQuery = TableOperation.Replace(messageEntity);
+                                                  client.ExecuteAsync(resetLeaseQuery);
 
-                        context.OnCommitted(() =>
-                                            {
-                                                var deleteQuery = TableOperation.Delete(messageEntity);
-                                                return client.ExecuteAsync(deleteQuery);
-                                            });
+                                              });
 
-                        return GetMessageFromEntity(transportMessageEntity);
+                            context.OnCommitted(async () =>
+                                                {
+
+                                                    renewalTask.Dispose();
+                                                    var deleteQuery = TableOperation.Delete(messageEntity);
+                                                    await client.ExecuteAsync(deleteQuery);
+                                                    _log.Info("message received");
+                                                });
+                            renewalTask.Start();
+                            return GetMessageFromEntity(transportMessageEntity);
+                        }
+                    }
+                    catch (StorageException exception)
+                    {
+                        //just log.. trying next operation... Might check for right concurrency exception
+
                     }
 
                 }
@@ -166,14 +185,82 @@ namespace Rebus.AzureTableStorage
             return null;
         }
 
+        private AsyncTask CreateRenewalTaskForMessage(TransportMessageEntity transportMessageEntity, CloudTable client)
+        {
+            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", transportMessageEntity.RowKey),
+                async () =>
+                {
+                    _log.Info("Renewing peek lock for message with ID {0}", transportMessageEntity.RowKey);
+
+                    transportMessageEntity.LeaseTimeout = GetNewLeaseTimeOut();
+                    var replaceQuery = TableOperation.Replace(transportMessageEntity);
+                    await client.ExecuteAsync(replaceQuery);
+
+                },
+                prettyInsignificant: true)
+            {
+                Interval = _peekLockRenewalInterval
+            };
+            return renewalTask;
+        }
+
         private TransportMessage GetMessageFromEntity(TransportMessageEntity transportMessageEntity)
         {
             return new TransportMessage(transportMessageEntity.GetHeaders(), transportMessageEntity.Body);
         }
-
+        private TransportMessageEntity GetEntityFromMessage(string destinationAddress, TransportMessage message)
+        {
+            return new TransportMessageEntity(destinationAddress, Guid.NewGuid().ToString() + Time.RebusTime.Now.Ticks.ToString(), message.Headers, message.Body);
+        }
         private DateTime GetNewLeaseTimeOut()
         {
-            return Time.RebusTime.Now.Add(TimeSpan.FromMinutes(5)).LocalDateTime;
+            return Time.RebusTime.Now.Add(_peekLockDuration).LocalDateTime;
+        }
+
+
+
+        private bool MessageIsExpired(TransportMessageEntity message)
+        {
+
+            string headerValue;
+            if (message.GetHeaders().TryGetValue(Headers.TimeToBeReceived, out headerValue))
+            {
+                TimeSpan timeToBeReceived = TimeSpan.Parse(headerValue);
+
+                // if (MessageIsExpiredUsingRebusSentTime(message, timeToBeReceived)) return true;
+                if (MessageIsExpiredUsingNativMessageSentTime(message, timeToBeReceived)) return true;
+
+            }
+
+            return false;
+        }
+
+        private bool MessageIsExpiredUsingNativMessageSentTime(TransportMessageEntity message, TimeSpan timeToBeReceived)
+        {
+            if (Time.RebusTime.Now.UtcDateTime - message.SentTime > timeToBeReceived)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool MessageIsExpiredUsingRebusSentTime(TransportMessageEntity message, TimeSpan timeToBeReceived)
+        {
+            string rebusUtcTimeSentAttributeValue = null;
+            if (message.GetHeaders().TryGetValue(Headers.SentTime, out rebusUtcTimeSentAttributeValue))
+            {
+                var rebusUtcTimeSent = DateTimeOffset.ParseExact(rebusUtcTimeSentAttributeValue, "O", null);
+
+                if (Time.RebusTime.Now.UtcDateTime - rebusUtcTimeSent > timeToBeReceived)
+                {
+                    return true;
+                }
+
+            }
+
+            return false;
+
         }
 
 

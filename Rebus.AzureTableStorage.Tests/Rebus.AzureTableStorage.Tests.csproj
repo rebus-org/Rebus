@@ -48,8 +48,9 @@
     <Reference Include="Microsoft.WindowsAzure.Storage">
       <HintPath>..\packages\WindowsAzure.Storage.4.3.0\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
@@ -69,7 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureTableStorageBasicSendReceive.cs" />
-    <Compile Include="AzureServiceBusManyMessages.cs" />
+    <Compile Include="AzureTableStorageManyMessages.cs" />
     <Compile Include="AzureTableStorageMessageExpiration.cs" />
     <Compile Include="AzureTableStorageTransportFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

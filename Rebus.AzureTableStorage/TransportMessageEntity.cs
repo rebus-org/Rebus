@@ -19,21 +19,23 @@ namespace Rebus.AzureTableStorage
             if (headers == null) throw new ArgumentNullException("headers");
             if (body == null) throw new ArgumentNullException("body");
 
-            var keyValues = headers.Select(kv => kv.Key + "=" + kv.Value);
+            var keyValues = headers.Select(kv => kv.Key + "€" + kv.Value);
             HeaderString = String.Join("¤", keyValues);
             Body = body;
             PartitionKey = partitionKey;
             RowKey = rowKey;
             LeaseTimeout = MinLeaseDate;
+            SentTime = Time.RebusTime.Now;
         }
 
         public Dictionary<string, string> GetHeaders()
         {
             var keyValues = HeaderString.Split('¤');
 
-            return keyValues.ToDictionary(s => s.Split('=')[0], v => v.Split('=')[1]);
+            return keyValues.ToDictionary(s => s.Split('€')[0], v => v.Split('€')[1]);
         }
         public string HeaderString { get; set; }
+        public DateTimeOffset SentTime { get; set; }
         public DateTime LeaseTimeout { get; set; }
         /// <summary>
         /// Gets the wrapped body data of this message
