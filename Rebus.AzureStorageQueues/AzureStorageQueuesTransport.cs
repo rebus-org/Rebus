@@ -23,20 +23,18 @@ namespace Rebus.AzureStorageQueues
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly CloudStorageAccount _cloudStorageAccount;
-        readonly string _inputQueueName;
-        readonly CloudQueueClient _queueClient;
         readonly ConcurrentDictionary<string, CloudQueue> _queues = new ConcurrentDictionary<string, CloudQueue>();
         readonly TimeSpan _initialVisibilityDelay = TimeSpan.FromMinutes(5);
+        readonly CloudQueueClient _queueClient;
+        readonly string _inputQueueName;
 
-        public AzureStorageQueuesTransport(string connectionString, string inputQueueName)
+        public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName)
         {
-            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (storageAccount == null) throw new ArgumentNullException("storageAccount");
             if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
 
             _inputQueueName = inputQueueName.ToLowerInvariant();
-            _cloudStorageAccount = CloudStorageAccount.Parse(connectionString);
-            _queueClient = _cloudStorageAccount.CreateCloudQueueClient();
+            _queueClient = storageAccount.CreateCloudQueueClient();
         }
 
         public void CreateQueue(string address)
