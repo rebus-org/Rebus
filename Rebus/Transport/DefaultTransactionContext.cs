@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,10 +11,11 @@ namespace Rebus.Transport
     /// </summary>
     public class DefaultTransactionContext : ITransactionContext
     {
-        readonly List<Func<Task>> _onCommittedActions = new List<Func<Task>>();
-        
-        readonly List<Action> _onAbortedActions = new List<Action>();
-        readonly List<Action> _onDisposedActions = new List<Action>();
+        readonly ConcurrentQueue<Func<Task>> _onCommittedActions = new ConcurrentQueue<Func<Task>>();
+        readonly ConcurrentQueue<Func<Task>> _onCompletedActions = new ConcurrentQueue<Func<Task>>();
+
+        readonly ConcurrentQueue<Action> _onAbortedActions = new ConcurrentQueue<Action>();
+        readonly ConcurrentQueue<Action> _onDisposedActions = new ConcurrentQueue<Action>();
 
         bool _mustAbort;
         bool _completed;
@@ -32,17 +34,22 @@ namespace Rebus.Transport
 
         public void OnCommitted(Func<Task> commitAction)
         {
-            _onCommittedActions.Add(commitAction);
+            _onCommittedActions.Enqueue(commitAction);
+        }
+
+        public void OnCompleted(Func<Task> completedAction)
+        {
+            _onCompletedActions.Enqueue(completedAction);
         }
 
         public void OnAborted(Action abortedAction)
         {
-            _onAbortedActions.Add(abortedAction);
+            _onAbortedActions.Enqueue(abortedAction);
         }
 
         public void OnDisposed(Action disposedAction)
         {
-            _onDisposedActions.Add(disposedAction);
+            _onDisposedActions.Enqueue(disposedAction);
         }
 
         /// <summary>
@@ -91,6 +98,8 @@ namespace Rebus.Transport
 
             await RaiseCommitted();
 
+            await RaiseCompleted();
+
             Dispose();
         }
 
@@ -104,6 +113,11 @@ namespace Rebus.Transport
         async Task RaiseCommitted()
         {
             await Invoke(_onCommittedActions);
+        }
+
+        async Task RaiseCompleted()
+        {
+            await Invoke(_onCompletedActions);
             _completed = true;
         }
 
