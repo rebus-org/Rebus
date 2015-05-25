@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -26,6 +27,7 @@ namespace Rebus.AzureStorageQueues
         readonly string _inputQueueName;
         readonly CloudQueueClient _queueClient;
         readonly ConcurrentDictionary<string, CloudQueue> _queues = new ConcurrentDictionary<string, CloudQueue>();
+        readonly TimeSpan _initialVisibilityDelay = TimeSpan.FromMinutes(5);
 
         public AzureStorageQueuesTransport(string connectionString, string inputQueueName)
         {
@@ -55,6 +57,14 @@ namespace Rebus.AzureStorageQueues
 
                 var cloudQueueMessage = Serialize(message, messageId, popReceipt);
 
+                //var headers = message.Headers;
+                //TimeSpan? timeToBeReceived = null;
+                //if (headers.ContainsKey(Headers.TimeToBeReceived))
+                //{
+                //    var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                //    timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+                //}
+
                 try
                 {
                     await queue.AddMessageAsync(cloudQueueMessage);
@@ -70,13 +80,18 @@ namespace Rebus.AzureStorageQueues
         {
             var inputQueue = GetQueue(_inputQueueName);
 
-            var cloudQueueMessage = await inputQueue.GetMessageAsync(TimeSpan.FromSeconds(1), new QueueRequestOptions(), new OperationContext());
+            var cloudQueueMessage = await inputQueue.GetMessageAsync(_initialVisibilityDelay, new QueueRequestOptions(), new OperationContext());
 
             if (cloudQueueMessage == null) return null;
 
             context.OnCompleted(async () =>
             {
-                await inputQueue.DeleteMessageAsync(cloudQueueMessage.Id, cloudQueueMessage.PopReceipt);
+                await inputQueue.DeleteMessageAsync(cloudQueueMessage);
+            });
+
+            context.OnAborted(() =>
+            {
+                inputQueue.UpdateMessage(cloudQueueMessage, TimeSpan.FromSeconds(0), MessageUpdateFields.Visibility);
             });
 
             return Deserialize(cloudQueueMessage);
@@ -86,7 +101,7 @@ namespace Rebus.AzureStorageQueues
         {
             var cloudStorageQueueTransportMessage = new CloudStorageQueueTransportMessage
             {
-                Headers = message.Headers, 
+                Headers = message.Headers,
                 Body = message.Body
             };
 
@@ -104,7 +119,7 @@ namespace Rebus.AzureStorageQueues
 
         class CloudStorageQueueTransportMessage
         {
-            public Dictionary<string,string> Headers { get; set; }
+            public Dictionary<string, string> Headers { get; set; }
             public byte[] Body { get; set; }
         }
 
