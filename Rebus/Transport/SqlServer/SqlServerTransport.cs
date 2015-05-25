@@ -245,7 +245,7 @@ ORDER BY
 
         Task<IDbConnection> GetConnection(ITransactionContext context)
         {
-            return context.Items
+            return context
                 .GetOrAddAsync(CurrentConnectionKey,
                     async () =>
                     {

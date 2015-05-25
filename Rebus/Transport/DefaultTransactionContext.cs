@@ -27,10 +27,10 @@ namespace Rebus.Transport
         /// </summary>
         public DefaultTransactionContext()
         {
-            Items = new Dictionary<string, object>();
+            Items = new ConcurrentDictionary<string, object>();
         }
 
-        public Dictionary<string, object> Items { get; private set; }
+        public ConcurrentDictionary<string, object> Items { get; private set; }
 
         public void OnCommitted(Func<Task> commitAction)
         {

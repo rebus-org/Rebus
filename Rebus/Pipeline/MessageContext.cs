@@ -21,7 +21,7 @@ namespace Rebus.Pipeline
         /// </summary>
         public IncomingStepContext IncomingStepContext
         {
-            get { return TransactionContext.Items.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey); }
+            get { return TransactionContext.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey); }
         }
 
         /// <summary>

@@ -47,11 +47,6 @@ namespace Rebus.AzureServiceBus.Tests
         ///     Receiving 10000 messages took 28,8 s - that's 347,6 msg/s
         /// 
         /// </summary>
-        //[TestCase(100, 1)]
-        //[TestCase(100, 10)]
-        //[TestCase(100, 100)]
-        //[TestCase(1, 1000)]
-        //[TestCase(100, 1000)]
         [TestCase(10, 10000)]
         [TestCase(20, 10000)]
         [TestCase(30, 10000)]

@@ -155,8 +155,8 @@ namespace Rebus.AmazonSQS
             if (message == null) throw new ArgumentNullException("message");
             if (context == null) throw new ArgumentNullException("context");
 
-            var outputQueue = context.Items.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
-            var contextActionsSet = context.Items.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
+            var outputQueue = context.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
+            var contextActionsSet = context.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
 
             if (!contextActionsSet)
             {
@@ -336,7 +336,7 @@ namespace Rebus.AmazonSQS
 
         private AmazonSQSClient GetClientFromTransactionContext(ITransactionContext context)
         {
-            return context.Items.GetOrAdd(ClientContextKey, () =>
+            return context.GetOrAdd(ClientContextKey, () =>
             {
                 var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
                 {
@@ -371,8 +371,7 @@ namespace Rebus.AmazonSQS
 
         private string GetDestinationQueueUrlByName(string address, ITransactionContext transactionContext)
         {
-
-            var url = transactionContext.Items.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), () =>
+            var url = transactionContext.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), () =>
                     {
 
                         if (Uri.IsWellFormedUriString(address, UriKind.Absolute))

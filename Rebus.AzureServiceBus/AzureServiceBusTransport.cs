@@ -230,7 +230,7 @@ namespace Rebus.AzureServiceBus
 
         ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>> GetOutgoingMessages(ITransactionContext context)
         {
-            return context.Items.GetOrAdd(OutgoingMessagesKey, () =>
+            return context.GetOrAdd(OutgoingMessagesKey, () =>
             {
                 var destinations = new ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>>();
 
