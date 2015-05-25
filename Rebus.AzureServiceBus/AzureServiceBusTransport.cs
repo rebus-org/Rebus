@@ -219,7 +219,7 @@ namespace Rebus.AzureServiceBus
                 context.OnDisposed(() =>
                 {
                     renewalTask.Dispose();
-                        
+
                     _log.Debug("Disposing message with ID {0}", messageId);
                     brokeredMessage.Dispose();
                 });
@@ -382,7 +382,28 @@ namespace Rebus.AzureServiceBus
 
         public void Dispose()
         {
+            DisposePrefetchedMessages();
+
             _queueClients.Values.ForEach(CloseQueueClient);
+        }
+
+        void DisposePrefetchedMessages()
+        {
+            BrokeredMessage brokeredMessage;
+            while (_prefetchQueue.TryDequeue(out brokeredMessage))
+            {
+                using (brokeredMessage)
+                {
+                    try
+                    {
+                        brokeredMessage.Abandon();
+                    }
+                    catch (Exception exception)
+                    {
+                        _log.Warn("Could not abandon brokered message with ID {0}: {1}", brokeredMessage.MessageId, exception);
+                    }
+                }
+            }
         }
     }
 }
