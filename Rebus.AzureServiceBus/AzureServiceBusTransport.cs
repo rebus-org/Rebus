@@ -64,9 +64,12 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
+            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
+            
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
-            _inputQueueAddress = inputQueueAddress;
+            _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
         }
 
         public void Initialize()

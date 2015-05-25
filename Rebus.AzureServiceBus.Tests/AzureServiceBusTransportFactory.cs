@@ -17,7 +17,7 @@ namespace Rebus.AzureServiceBus.Tests
             {
                 return ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
                        ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
-                       ?? Throw("Could not find Azure Service Bus connetion string!");
+                       ?? Throw("Could not find Azure Service Bus connection string!");
             }
         }
 
