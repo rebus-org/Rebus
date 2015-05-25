@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Rebus.Transport
 {
@@ -68,33 +66,8 @@ namespace Rebus.Transport
             catch (Exception exception)
             {
                 throw new ApplicationException(string.Format("Could not 'GetOrAdd' item with key '{0}' as type {1}",
-                    key, typeof (TItem)), exception);
+                    key, typeof(TItem)), exception);
             }
         }
-
-        /// <summary>
-        /// Provides a function similar to <see cref="GetOrAdd{TItem}"/>, only where the factory function can be async
-        /// </summary>
-        public static async Task<TItem> GetOrAddAsync<TItem>(this ITransactionContext context, string key, Func<Task<TItem>> newItemFactory)
-        {
-            // double-check locking
-            object item;
-            if (context.Items.TryGetValue(key, out item)) return (TItem)item;
-
-            try
-            {
-                Monitor.Enter(context.Items);
-                if (context.Items.TryGetValue(key, out item)) return (TItem)item;
-
-                var newItem = await newItemFactory();
-                context.Items[key] = newItem;
-                return newItem;
-            }
-            finally
-            {
-                Monitor.Exit(context.Items);
-            }
-        }
-
     }
 }

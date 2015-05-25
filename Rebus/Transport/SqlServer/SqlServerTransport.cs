@@ -246,7 +246,7 @@ ORDER BY
         Task<IDbConnection> GetConnection(ITransactionContext context)
         {
             return context
-                .GetOrAddAsync(CurrentConnectionKey,
+                .GetOrAdd(CurrentConnectionKey,
                     async () =>
                     {
                         var dbConnection = await _connectionProvider.GetConnection();
