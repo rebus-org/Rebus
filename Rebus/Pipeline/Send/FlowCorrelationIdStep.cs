@@ -20,7 +20,7 @@ namespace Rebus.Pipeline.Send
             var outgoingMessage = context.Load<Message>();
 
             var transactionContext = context.Load<ITransactionContext>();
-            var incomingStepContext = transactionContext.Items.GetOrNull<IncomingStepContext>(StepContext.StepContextKey);
+            var incomingStepContext = transactionContext.GetOrNull<IncomingStepContext>(StepContext.StepContextKey);
 
             if (!outgoingMessage.Headers.ContainsKey(Headers.CorrelationId))
             {

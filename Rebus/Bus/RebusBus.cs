@@ -231,8 +231,7 @@ namespace Rebus.Bus
         {
             try
             {
-                return currentTransactionContext
-                    .Items.GetOrThrow<StepContext>(StepContext.StepContextKey);
+                return currentTransactionContext.GetOrThrow<StepContext>(StepContext.StepContextKey);
             }
             catch (Exception exception)
             {

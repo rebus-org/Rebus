@@ -371,8 +371,12 @@ namespace Rebus.AmazonSQS
         private readonly ConcurrentDictionary<string, string> _queueUrls = new ConcurrentDictionary<string, string>();
         private string GetDestinationQueueUrlByName(string address, ITransactionContext transactionContext)
         {
+<<<<<<< HEAD
 
             var url = _queueUrls.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), (key) =>
+=======
+            var url = transactionContext.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), () =>
+>>>>>>> a7ea2065661ab7c577da36344d6e460f85691c3c
                     {
 
                         if (Uri.IsWellFormedUriString(address, UriKind.Absolute))

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Messaging;
@@ -94,7 +95,7 @@ namespace Rebus.Transport.Msmq
 
             var logicalMessage = CreateMsmqMessage(message);
 
-            var messageQueueTransaction = context.Items.GetOrAdd(CurrentTransactionKey, () =>
+            var messageQueueTransaction = context.GetOrAdd(CurrentTransactionKey, () =>
             {
                 var messageQueueTransaction1 = new MessageQueueTransaction();
                 messageQueueTransaction1.Begin();
@@ -104,9 +105,9 @@ namespace Rebus.Transport.Msmq
                 return messageQueueTransaction1;
             });
 
-            var sendQueues = context.Items.GetOrAdd(CurrentOutgoingQueuesKey, () =>
+            var sendQueues = context.GetOrAdd(CurrentOutgoingQueuesKey, () =>
             {
-                var messageQueues = new Dictionary<string, MessageQueue>(StringComparer.InvariantCultureIgnoreCase);
+                var messageQueues = new ConcurrentDictionary<string, MessageQueue>(StringComparer.InvariantCultureIgnoreCase);
 
                 context.OnDisposed(() =>
                 {
@@ -119,7 +120,7 @@ namespace Rebus.Transport.Msmq
                 return messageQueues;
             });
 
-            var sendQueue = sendQueues.GetOrAdd(MsmqUtil.GetPath(destinationAddress), () =>
+            var sendQueue = sendQueues.GetOrAdd(MsmqUtil.GetPath(destinationAddress), _ =>
             {
                 var messageQueue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send);
 
@@ -185,9 +186,9 @@ namespace Rebus.Transport.Msmq
 
                 var headers = _extensionSerializer.Deserialize(message.Extension);
                 var body = new byte[message.BodyStream.Length];
-                
+
                 await message.BodyStream.ReadAsync(body, 0, body.Length);
-                
+
                 return new TransportMessage(headers, body);
             }
             catch (MessageQueueException exception)

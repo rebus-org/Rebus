@@ -29,7 +29,7 @@ namespace Rebus.Autofac
 
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
-            var lifetimeScope = transactionContext.Items
+            var lifetimeScope = transactionContext
                 .GetOrAdd("current-autofac-lifetime-scope", () =>
                 {
                     var scope = _container.BeginLifetimeScope();

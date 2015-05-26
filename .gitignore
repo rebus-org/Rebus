@@ -18,3 +18,4 @@ _ReSharper.*
 ~$*
 asb_connection_string.txt
 sqs_connectionstring.txt
+azure_storage_connection_string.txt

@@ -40,10 +40,23 @@ namespace Rebus.AzureServiceBus.Tests
         /// With prefetch 100:
         ///     Receiving 10000 messages took 31,3 s - that's 319,4 msg/s
         /// 
+        /// With prefetch 20:
+        ///     Receiving 10000 messages took 30,3 s - that's 330,1 msg/s
+        /// 
+        /// With prefetch 10:
+        ///     Receiving 10000 messages took 28,8 s - that's 347,6 msg/s
+        /// 
         /// </summary>
+        [TestCase(10, 10000)]
+        [TestCase(20, 10000)]
+        [TestCase(30, 10000)]
+        [TestCase(50, 10000)]
         [TestCase(100, 10000)]
+        [TestCase(200, 10000)]
         public void WorksWithPrefetch(int prefetch, int numberOfMessages)
         {
+            AdjustLogging(LogLevel.Info);
+
             var activator = new BuiltinHandlerActivator();
             var receivedMessages = 0;
             var done = new ManualResetEvent(false);
@@ -68,10 +81,16 @@ namespace Rebus.AzureServiceBus.Tests
                     {
                         using (var context = new DefaultTransactionContext())
                         {
-                            await transport.Send(QueueName, new TransportMessage(DefaultHeaders(), Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg))), context);
+                            var headers = DefaultHeaders();
+                            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg));
+                            var transportMessage = new TransportMessage(headers, body);
+
+                            await transport.Send(QueueName, transportMessage, context);
+
                             await context.Complete();
                         }
-                    });
+                    })
+                    .ToArray();
 
                 Task.WhenAll(tasks).Wait();
             }
@@ -81,7 +100,6 @@ namespace Rebus.AzureServiceBus.Tests
             var stopwatch = Stopwatch.StartNew();
 
             using (Configure.With(activator)
-                .Logging(l => l.Console(minLevel: LogLevel.Warn))
                 .Transport(t =>
                 {
                     t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName)
@@ -94,7 +112,7 @@ namespace Rebus.AzureServiceBus.Tests
                 })
                 .Start())
             {
-                done.WaitOrDie(TimeSpan.FromSeconds(numberOfMessages*0.1 + 3));
+                done.WaitOrDie(TimeSpan.FromSeconds(numberOfMessages * 0.1 + 3));
             }
 
             var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;

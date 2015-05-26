@@ -66,7 +66,8 @@ namespace Rebus.Retry.Simple
                                                       " supplied with an ID . If no ID is present, the message cannot be tracked" +
                                                       " between delivery attempts, and other stuff would also be much harder to" +
                                                       " do - therefore, it is a requirement that messages be supplied with an ID.",
-                        Headers.MessageId));
+                        Headers.MessageId),
+                        shortErrorDescription: "Received message with empty or absent 'rbs2-msg-id' header");
 
                 return;
             }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -20,6 +19,7 @@ namespace Rebus.AzureServiceBus
     /// </summary>
     public class AzureServiceBusTransport : ITransport, IInitializable, IDisposable
     {
+        const string OutgoingMessagesKey = "azure-service-bus-transport";
         static ILog _log;
 
         static AzureServiceBusTransport()
@@ -64,9 +64,12 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
+            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
+            
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
-            _inputQueueAddress = inputQueueAddress;
+            _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
         }
 
         public void Initialize()
@@ -130,9 +133,15 @@ namespace Rebus.AzureServiceBus
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
+            GetOutgoingMessages(context)
+                .GetOrAdd(destinationAddress, _ => new ConcurrentQueue<TransportMessage>())
+                .Enqueue(message);
+        }
+
+        static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
+        {
             var headers = message.Headers;
             var body = message.Body;
-
             var brokeredMessage = new BrokeredMessage(body);
 
             foreach (var kvp in headers)
@@ -147,13 +156,7 @@ namespace Rebus.AzureServiceBus
                 brokeredMessage.TimeToLive = timeToBeReceived;
             }
 
-            context.OnCommitted(async () =>
-            {
-                await GetRetrier()
-                    .Execute(() => GetQueueClient(destinationAddress).SendAsync(brokeredMessage));
-            });
-
-            context.OnDisposed(() => brokeredMessage.Dispose());
+            return brokeredMessage;
         }
 
         /// <summary>
@@ -207,11 +210,13 @@ namespace Rebus.AzureServiceBus
                 context.OnCommitted(async () =>
                 {
                     renewalTask.Dispose();
+                });
 
+                context.OnCompleted(async () =>
+                {
                     _log.Debug("Completing message with ID {0}", messageId);
 
-                    await GetRetrier()
-                        .Execute(() => brokeredMessage.CompleteAsync());
+                    await GetRetrier().Execute(() => brokeredMessage.CompleteAsync());
                 });
 
                 context.OnDisposed(() =>
@@ -224,6 +229,43 @@ namespace Rebus.AzureServiceBus
 
                 return new TransportMessage(headers, brokeredMessage.GetBody<byte[]>());
             }
+        }
+
+        ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>> GetOutgoingMessages(ITransactionContext context)
+        {
+            return context.GetOrAdd(OutgoingMessagesKey, () =>
+            {
+                var destinations = new ConcurrentDictionary<string, ConcurrentQueue<TransportMessage>>();
+
+                context.OnCommitted(async () =>
+                {
+                    // send outgoing messages
+                    foreach (var destinationAndMessages in destinations)
+                    {
+                        var destinationAddress = destinationAndMessages.Key;
+                        var messages = destinationAndMessages.Value;
+
+                        _log.Debug("Sending {0} messages to {1}", messages.Count, destinationAddress);
+
+                        var sendTasks = messages
+                            .Select(async message =>
+                            {
+                                await GetRetrier().Execute(async () =>
+                                {
+                                    using (var brokeredMessageToSend = CreateBrokeredMessage(message))
+                                    {
+                                        await GetQueueClient(destinationAddress).SendAsync(brokeredMessageToSend);
+                                    }
+                                });
+                            })
+                            .ToArray();
+
+                        await Task.WhenAll(sendTasks);
+                    }
+                });
+
+                return destinations;
+            });
         }
 
         IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
@@ -263,7 +305,7 @@ namespace Rebus.AzureServiceBus
 
             if (_prefetchingEnabled)
             {
-                BrokeredMessage nextMessage = null;
+                BrokeredMessage nextMessage;
 
                 if (_prefetchQueue.TryDequeue(out nextMessage))
                 {
@@ -272,7 +314,11 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                var brokeredMessages = await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, TimeSpan.FromSeconds(1));
+                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, TimeSpan.FromSeconds(1))).ToList();
+
+                _ignorant.Reset();
+
+                _log.Debug("Received new batch of {0} messages", brokeredMessages.Count);
 
                 foreach (var receivedMessage in brokeredMessages)
                 {
@@ -339,7 +385,28 @@ namespace Rebus.AzureServiceBus
 
         public void Dispose()
         {
+            DisposePrefetchedMessages();
+
             _queueClients.Values.ForEach(CloseQueueClient);
+        }
+
+        void DisposePrefetchedMessages()
+        {
+            BrokeredMessage brokeredMessage;
+            while (_prefetchQueue.TryDequeue(out brokeredMessage))
+            {
+                using (brokeredMessage)
+                {
+                    try
+                    {
+                        brokeredMessage.Abandon();
+                    }
+                    catch (Exception exception)
+                    {
+                        _log.Warn("Could not abandon brokered message with ID {0}: {1}", brokeredMessage.MessageId, exception);
+                    }
+                }
+            }
         }
     }
 }

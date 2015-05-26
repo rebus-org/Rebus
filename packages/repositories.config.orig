@@ -6,10 +6,13 @@
   <repository path="..\Rebus.Autofac\packages.config" />
   <repository path="..\Rebus.AzureServiceBus.Tests\packages.config" />
   <repository path="..\Rebus.AzureServiceBus\packages.config" />
+<<<<<<< HEAD
   <repository path="..\Rebus.AzureTableStorage.Tests\packages.config" />
   <repository path="..\Rebus.AzureTableStorage\packages.config" />
+=======
   <repository path="..\Rebus.AzureStorageQueues.Tests\packages.config" />
   <repository path="..\Rebus.AzureStorageQueues\packages.config" />
+>>>>>>> a7ea2065661ab7c577da36344d6e460f85691c3c
   <repository path="..\Rebus.CastleWindsor.Tests\packages.config" />
   <repository path="..\Rebus.CastleWindsor\packages.config" />
   <repository path="..\Rebus.Log4net\packages.config" />

@@ -88,6 +88,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.AzureTableStorage", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.AzureTableStorage.Tests", "Rebus.AzureTableStorage.Tests\Rebus.AzureTableStorage.Tests.csproj", "{BC96C200-AAE1-4DE4-923B-A97F140E63F5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "azure storage queues", "azure storage queues", "{FFD4D50C-FEA3-44B1-AD56-A89DD710FF48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.AzureStorageQueues", "Rebus.AzureStorageQueues\Rebus.AzureStorageQueues.csproj", "{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.AzureStorageQueues.Tests", "Rebus.AzureStorageQueues.Tests\Rebus.AzureStorageQueues.Tests.csproj", "{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -182,6 +188,14 @@ Global
 		{BC96C200-AAE1-4DE4-923B-A97F140E63F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC96C200-AAE1-4DE4-923B-A97F140E63F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC96C200-AAE1-4DE4-923B-A97F140E63F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -225,5 +239,8 @@ Global
 		{BDB08395-D249-4410-8592-36E923C2D0B3} = {CBB5C5F8-7C91-422F-907D-F16182FA0154}
 		{E5DEC267-5D55-44B5-8BA0-A1A4FB67EE40} = {BDB08395-D249-4410-8592-36E923C2D0B3}
 		{BC96C200-AAE1-4DE4-923B-A97F140E63F5} = {BDB08395-D249-4410-8592-36E923C2D0B3}
+		{FFD4D50C-FEA3-44B1-AD56-A89DD710FF48} = {CBB5C5F8-7C91-422F-907D-F16182FA0154}
+		{F3C81A1A-E167-4277-8CE4-5BB6E52DD237} = {FFD4D50C-FEA3-44B1-AD56-A89DD710FF48}
+		{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB} = {FFD4D50C-FEA3-44B1-AD56-A89DD710FF48}
 	EndGlobalSection
 EndGlobal
