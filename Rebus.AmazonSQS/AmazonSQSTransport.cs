@@ -216,7 +216,7 @@ namespace Rebus.AmazonSQS
                 var renewalTask = CreateRenewalTaskForMessage(message, client);
 
 
-                context.OnCommitted(async () =>
+                context.OnCompleted(async () =>
                 {
                     renewalTask.Dispose();
                     var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl,
