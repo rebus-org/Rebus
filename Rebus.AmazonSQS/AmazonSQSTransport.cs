@@ -440,7 +440,7 @@ namespace Rebus.AmazonSQS
             if (result.Successful.Any())
                 errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
 
-            _log.Warn("Not all completed messages is removed from the queue: {queue} \n{noOfFailedMessages} failed.\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
+            _log.Warn("Not all completed messages is removed from the queue: {0} \n{1} failed.\n{2}", _inputQueueAddress, result.Failed.Count, errorMessage);
         }
 
         private void GenerateErrorsAndLog(ChangeMessageVisibilityBatchResponse result)
@@ -452,7 +452,7 @@ namespace Rebus.AmazonSQS
             if (result.Successful.Any())
                 errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
 
-            _log.Warn("Not all messages is set back to visible in the queue: {queue} \n{noOfFailedMessages} failed.These will appear later when the global visibility time runs out. Details:\n {messageLog}", _inputQueueAddress, result.Failed.Count, errorMessage);
+            _log.Warn("Not all messages is set back to visible in the queue: {0} \n{1} failed.These will appear later when the global visibility time runs out. Details:\n{2}", _inputQueueAddress, result.Failed.Count, errorMessage);
 
         }
 
