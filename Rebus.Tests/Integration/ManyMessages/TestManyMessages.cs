@@ -40,14 +40,14 @@ namespace Rebus.Tests.Integration.ManyMessages
             _busFactory.Cleanup();
         }
 
-        [TestCase(100)]
+        [TestCase(10)]
         public async Task SendAndReceiveManyMessages(int messageCount)
         {
             var allMessagesReceived = new ManualResetEvent(false);
             var idCounts = new ConcurrentDictionary<int, int>();
             var sentMessages = 0;
             var receivedMessages = 0;
-            var stopWatch = Stopwatch.StartNew();
+            var stopWatch = new Stopwatch();
             var bus1 = _busFactory.GetBus<MessageWithId>(TestConfig.QueueName("input1"),
                 async msg =>
                 {
@@ -72,7 +72,7 @@ namespace Rebus.Tests.Integration.ManyMessages
             {
                 printTimer.Elapsed += delegate { Console.WriteLine("Sent: {0}, Received: {1}", sentMessages, receivedMessages); };
                 printTimer.Start();
-
+                stopWatch.Start();
                 Console.WriteLine("Sending {0} messages", messageCount);
                 await Task.WhenAll(messagesToSend.Select(async msg =>
                 {

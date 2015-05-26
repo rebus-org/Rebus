@@ -122,7 +122,26 @@ namespace Rebus.AzureTableStorage
                 .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, _inputQueueAddress));
 
 
-            var result = client.ExecuteQuery(query);//.Where(e => e.LeaseTimeout < Time.RebusTime.Now);
+            //TableContinuationToken continuationToken = null;
+
+            //do
+            //{
+            //    // Retrieve a segment (up to 1000 entities)
+            //    TableQuerySegment<TransportMessageEntity> tableQueryResult =
+            //        await client.ExecuteQuerySegmentedAsync(query, continuationToken);
+
+            //    // Assign the new continuation token to tell the service where to 
+            //    // continue on the next iteration (or null if it has reached the end)
+            //    continuationToken = tableQueryResult.ContinuationToken;
+
+            //    // Print the number of rows retrieved
+            //    Console.WriteLine("Rows retrieved {0}", tableQueryResult.Results.Count);
+
+            //    // Loop until a null continuation token is received indicating the end of the table
+            //} while (continuationToken != null);
+
+
+            var result = client.ExecuteQuery(query);//, continueToken);//.Where(e => e.LeaseTimeout < Time.RebusTime.Now);
 
             foreach (var transportMessageEntity in result)
             {
@@ -166,7 +185,7 @@ namespace Rebus.AzureTableStorage
                                                     renewalTask.Dispose();
                                                     var deleteQuery = TableOperation.Delete(messageEntity);
                                                     await client.ExecuteAsync(deleteQuery);
-                                                    _log.Info("message received");
+                                                    //_log.Info("message received");
                                                 });
                             renewalTask.Start();
                             return GetMessageFromEntity(transportMessageEntity);

@@ -37,8 +37,8 @@ namespace Rebus.AzureTableStorage.Tests
                         t.UseAzureTableStorage(AzureTableStorageTransportFactory.ConnectionString, queueName))
                 .Options(o =>
                 {
-                    o.SetNumberOfWorkers(20);
-                    o.SetMaxParallelism(4);
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(10);
                 })
                 .Start();
 
