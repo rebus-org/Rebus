@@ -10,7 +10,9 @@ namespace Rebus.Pipeline
     /// </summary>
     public class DefaultPipelineInvoker : IPipelineInvoker
     {
-        static readonly Func<Task> TerminationStep = (async () => { });
+        static async Task Noop() { }
+
+        static readonly Func<Task> TerminationStep = Noop;
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked

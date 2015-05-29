@@ -16,6 +16,9 @@ using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses SQL Server to do its thing
+    /// </summary>
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(20);

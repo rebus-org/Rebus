@@ -5,10 +5,16 @@ using Rebus.Messages;
 
 namespace Rebus.Routing.TopicBased
 {
+    /// <summary>
+    /// Implementation of <see cref="IRouter"/> that uses string-based topics to do its thing
+    /// </summary>
     public class TopicBasedRouter : IRouter
     {
         readonly Dictionary<string, string> _topicAddresses = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
+        /// <summary>
+        /// Maps the specified topic to the specified address
+        /// </summary>
         public TopicBasedRouter Map(string topic, string ownerAddress)
         {
             _topicAddresses[topic] = ownerAddress;

@@ -10,7 +10,7 @@ namespace Rebus.Timeouts
     public interface ITimeoutManager
     {
         /// <summary>
-        /// Stores the message with the given headers and body data, delaying it until the specified <see cref="approximateDueTime"/>
+        /// Stores the message with the given headers and body data, delaying it until the specified <paramref name="approximateDueTime"/>
         /// </summary>
         Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body);
 
