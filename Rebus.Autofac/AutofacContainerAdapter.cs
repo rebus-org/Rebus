@@ -15,14 +15,14 @@ namespace Rebus.Autofac
     /// <summary>
     /// Implementation of <see cref="IContainerAdapter"/> that is backed by an Autofac container
     /// </summary>
-    public class AutofacHandlerActivator : IContainerAdapter
+    public class AutofacContainerAdapter : IContainerAdapter
     {
         readonly IContainer _container;
 
         /// <summary>
         /// Constructs the adapter, using the specified container
         /// </summary>
-        public AutofacHandlerActivator(IContainer container)
+        public AutofacContainerAdapter(IContainer container)
         {
             _container = container;
         }

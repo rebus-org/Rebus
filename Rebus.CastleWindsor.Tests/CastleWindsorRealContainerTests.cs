@@ -4,7 +4,7 @@ using Rebus.Tests.Contracts.Activation;
 namespace Rebus.CastleWindsor.Tests
 {
     [TestFixture]
-    public class CastleWindsorRealContainerTests : RealContainerTests<CastleWindsorHandlerActivatorFactory>
+    public class CastleWindsorRealContainerTests : RealContainerTests<CastleWindsorContainerAdapterFactory>
     {
     }
 }

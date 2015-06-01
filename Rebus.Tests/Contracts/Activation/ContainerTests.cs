@@ -12,7 +12,7 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public class ContainerTests<TFactory> : FixtureBase where TFactory : IHandlerActivatorFactory, new()
+    public class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         TFactory _factory;
 
