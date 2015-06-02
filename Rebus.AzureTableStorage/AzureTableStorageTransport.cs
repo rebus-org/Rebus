@@ -63,8 +63,8 @@ namespace Rebus.AzureTableStorage
         {
 
 
-            var outputQueue = context.Items.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
-            var contextActionsSet = context.Items.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
+            var outputQueue = context.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
+            var contextActionsSet = context.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
 
             if (!contextActionsSet)
             {
@@ -286,7 +286,7 @@ namespace Rebus.AzureTableStorage
         private CloudTable GetOrCreateClientFromContext(ITransactionContext context, string queueAddress)
         {
 
-            return context.Items.GetOrAdd(ClientContextKey + queueAddress.ToLowerInvariant(), () => _cloudTableClient.GetTableReference(GetTableNameFromAddress(queueAddress)));
+            return context.GetOrAdd(ClientContextKey + queueAddress.ToLowerInvariant(), () => _cloudTableClient.GetTableReference(GetTableNameFromAddress(queueAddress)));
         }
 
 
