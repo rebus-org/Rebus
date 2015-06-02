@@ -12,11 +12,17 @@ namespace Rebus.Pipeline
         readonly List<StagedStep<IOutgoingStep, SendStage>> _sendSteps = new List<StagedStep<IOutgoingStep, SendStage>>();
         readonly List<StagedStep<IIncomingStep, ReceiveStage>> _receiveSteps = new List<StagedStep<IIncomingStep, ReceiveStage>>();
 
+        /// <summary>
+        /// Gets the send pipeline
+        /// </summary>
         public IEnumerable<StagedStep<IOutgoingStep, SendStage>> SendPipeline()
         {
             return _sendSteps.Select(s => new StagedStep<IOutgoingStep, SendStage>(s.Step, SendStage.None));
         }
 
+        /// <summary>
+        /// Gets the receive pipeline
+        /// </summary>
         public IEnumerable<StagedStep<IIncomingStep, ReceiveStage>> ReceivePipeline()
         {
             return _receiveSteps.Select(s => new StagedStep<IIncomingStep,ReceiveStage>(s.Step, s.Stage));

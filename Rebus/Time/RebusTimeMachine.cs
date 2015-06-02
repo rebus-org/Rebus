@@ -9,7 +9,7 @@ namespace Rebus.Time
     {
         /// <summary>
         /// Fakes the current time to the time specified, making slight increments in time for each invocation
-        /// (the slight increments can be turned off by setting <see cref="incrementSlightlyOnEachInvocation"/> to false)
+        /// (the slight increments can be turned off by setting <paramref name="incrementSlightlyOnEachInvocation"/> to false)
         /// </summary>
         public static void FakeIt(DateTimeOffset fakeTime, bool incrementSlightlyOnEachInvocation = true)
         {

@@ -10,8 +10,8 @@ namespace Rebus.Sagas
     public interface ICorrelationConfig<TSagaData>
     {
         /// <summary>
-        /// Correlates an incoming message of type <see cref="TMessage"/>, using the specified <see cref="messageValueExtractorFunction"/> to
-        /// extract a value from the message. The value will be used when looking up a saga data instance using the specified <see cref="sagaDataValueExpression"/>.
+        /// Correlates an incoming message of type <typeparamref name="TMessage"/>, using the specified <paramref name="messageValueExtractorFunction"/> to
+        /// extract a value from the message. The value will be used when looking up a saga data instance using the specified <paramref name="sagaDataValueExpression"/>.
         /// You could for example do something like this:
         /// <code>
         /// config.Correlate&lt;TradeApproved&gt;(t => t.Id, d => d.TradeId);

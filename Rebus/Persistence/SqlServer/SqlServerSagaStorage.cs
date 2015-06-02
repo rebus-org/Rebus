@@ -136,6 +136,10 @@ ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
             }
         }
 
+        /// <summary>
+        /// Queries the saga index for an instance with the given <paramref name="sagaDataType"/> with a
+        /// a property named <paramref name="propertyName"/> and the value <paramref name="propertyValue"/>
+        /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
             using (var connection = await _connectionProvider.GetConnection())
@@ -184,16 +188,9 @@ WHERE [index].[saga_type] = @saga_type
             }
         }
 
-        static string GetCorrelationPropertyValue(object propertyValue)
-        {
-            if (propertyValue is decimal)
-            {
-                Console.WriteLine("DECIMAL: {0}", propertyValue.ToString());
-            }
-
-            return (propertyValue ?? "").ToString();
-        }
-
+        /// <summary>
+        /// Serializes the given <see cref="ISagaData"/> and generates entries in the index for the specified <paramref name="correlationProperties"/>
+        /// </summary>
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             if (sagaData.Id == Guid.Empty)
@@ -236,6 +233,9 @@ WHERE [index].[saga_type] = @saga_type
             }
         }
 
+        /// <summary>
+        /// Updates the given <see cref="ISagaData"/> and generates entries in the index for the specified <paramref name="correlationProperties"/>
+        /// </summary>
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             using (var connection = await _connectionProvider.GetConnection())
@@ -291,6 +291,9 @@ UPDATE [{0}]
             }
         }
 
+        /// <summary>
+        /// Deletes the given <see cref="ISagaData"/> and removes all its entries in the index
+        /// </summary>
         public async Task Delete(ISagaData sagaData)
         {
             using (var connection = await _connectionProvider.GetConnection())
@@ -316,6 +319,11 @@ UPDATE [{0}]
 
                 await connection.Complete();
             }
+        }
+
+        static string GetCorrelationPropertyValue(object propertyValue)
+        {
+            return (propertyValue ?? "").ToString();
         }
 
         void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, IDbConnection connection, ISagaData sagaData)
@@ -376,7 +384,7 @@ VALUES
 
         }
 
-        string GetSagaTypeName(Type sagaDataType)
+        static string GetSagaTypeName(Type sagaDataType)
         {
             var sagaTypeName = sagaDataType.Name;
 
@@ -395,7 +403,7 @@ saga type name.",
             return sagaTypeName;
         }
 
-        List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
+        static List<KeyValuePair<string, string>> GetPropertiesToIndex(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             return correlationProperties
                 .Select(p => p.PropertyName)

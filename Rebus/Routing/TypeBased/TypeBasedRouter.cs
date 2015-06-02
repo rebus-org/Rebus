@@ -13,7 +13,7 @@ namespace Rebus.Routing.TypeBased
         readonly Dictionary<Type, string> _messageTypeAddresses = new Dictionary<Type, string>();
 
         /// <summary>
-        /// Maps <see cref="destinationAddress"/> as the owner of the <see cref="TMessage"/> message type
+        /// Maps <paramref name="destinationAddress"/> as the owner of the <typeparamref name="TMessage"/> message type
         /// </summary>
         public TypeBasedRouter Map<TMessage>(string destinationAddress)
         {
@@ -22,7 +22,7 @@ namespace Rebus.Routing.TypeBased
         }
 
         /// <summary>
-        /// Maps <see cref="destinationAddress"/> as the owner of all message types found in the same assembly as <see cref="TMessage"/>
+        /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/>
         /// </summary>
         public TypeBasedRouter MapAssemblyOf<TMessage>(string destinationAddress)
         {

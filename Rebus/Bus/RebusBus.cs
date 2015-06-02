@@ -358,6 +358,9 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Gets a label for this bus instance - e.g. "RebusBus 2" if this is the 2nd instace created, ever, in the current process
+        /// </summary>
         public override string ToString()
         {
             return string.Format("RebusBus {0}", _busId);

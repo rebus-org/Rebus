@@ -14,12 +14,12 @@ namespace Rebus.Subscriptions
         Task<string[]> GetSubscriberAddresses(string topic);
 
         /// <summary>
-        /// Registers the given <see cref="subscriberAddress"/> as a subscriber of the given topic
+        /// Registers the given <paramref name="subscriberAddress"/> as a subscriber of the given topic
         /// </summary>
         Task RegisterSubscriber(string topic, string subscriberAddress);
 
         /// <summary>
-        /// Unregisters the given <see cref="subscriberAddress"/> as a subscriber of the given topic
+        /// Unregisters the given <paramref name="subscriberAddress"/> as a subscriber of the given topic
         /// </summary>
         Task UnregisterSubscriber(string topic, string subscriberAddress);
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -16,6 +17,9 @@ using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses SQL Server to do its thing
+    /// </summary>
     public class SqlServerTransport : ITransport, IInitializable, IDisposable
     {
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(20);
@@ -46,7 +50,12 @@ namespace Rebus.Transport.SqlServer
         readonly string _inputQueueName;
 
         readonly AsyncTask _expiredMessagesCleanupTask;
+        bool _disposed;
 
+        /// <summary>
+        /// Constructs the transport with the given <see cref="IDbConnectionProvider"/>, using the specified <paramref name="tableName"/> to send/receive messages,
+        /// querying for messages with recipient = <paramref name="inputQueueName"/>
+        /// </summary>
         public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
         {
             _connectionProvider = connectionProvider;
@@ -268,6 +277,9 @@ ORDER BY
         {
         }
 
+        /// <summary>
+        /// Checks if the table with the configured name exists - if not, it will be created
+        /// </summary>
         public void EnsureTableIsCreated()
         {
             using (var connection = _connectionProvider.GetConnection().Result)
@@ -340,16 +352,30 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
             }
         }
 
+        /// <summary>
+        /// Shuts down the background timer
+        /// </summary>
         public void Dispose()
         {
             GC.SuppressFinalize(this);
             Dispose(true);
         }
 
+        /// <summary>
+        /// Shuts down the background timer
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            _expiredMessagesCleanupTask.Dispose();
-        }
+            if (_disposed) return;
 
+            try
+            {
+                _expiredMessagesCleanupTask.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
+        }
     }
 }
