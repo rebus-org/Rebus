@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Activation;
+using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
 using SimpleInjector;
@@ -11,34 +12,51 @@ namespace Rebus.SimpleInjector.Tests
     public class SimpleInjectorContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly Container _container = new Container();
+        readonly HashSet<Type> _handlerTypesToRegister = new HashSet<Type>();
+        readonly HashSet<IDisposable> _disposables = new HashSet<IDisposable>();
 
         public IHandlerActivator GetActivator()
         {
-            return new SimpleInjectorContainerAdapter(_container);
+            _handlerTypesToRegister
+                .SelectMany(type => GetHandlerInterfaces(type)
+                    .Select(handlerType =>
+                        new
+                        {
+                            HandlerType = handlerType,
+                            ConcreteType = type
+                        }))
+                .GroupBy(a => a.HandlerType)
+                .ForEach(a =>
+                {
+                    var serviceType = a.Key;
+
+                    Console.WriteLine("Registering {0} => {1}", serviceType, string.Join(", ", a));
+                    _container.RegisterAll(serviceType, a.Select(g => g.ConcreteType));
+                });
+
+            _handlerTypesToRegister.Clear();
+
+            var containerAdapter = new SimpleInjectorContainerAdapter(_container);
+
+            _disposables.Add(containerAdapter);
+
+            return containerAdapter;
         }
 
         public void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages
         {
-            _container.Register(typeof(THandler));
-
-            _container.Register<THandler, THandler>();
-
-            return;
-            foreach (var handlerInterfaceType in GetHandlerInterfaces<THandler>())
-            {
-                var componentName = string.Format("{0}:{1}", typeof(THandler).FullName, handlerInterfaceType.FullName);
-
-                //_container.RegisterType(handlerInterfaceType, typeof(THandler), componentName, new TransientLifetimeManager(), new InjectionMember[0]);
-            }
+            _handlerTypesToRegister.Add(typeof(THandler));
         }
 
         public void CleanUp()
         {
+            _disposables.ForEach(d => d.Dispose());
+            _disposables.Clear();
         }
 
-        static IEnumerable<Type> GetHandlerInterfaces<THandler>() where THandler : class, IHandleMessages
+        static IEnumerable<Type> GetHandlerInterfaces(Type handlerType)
         {
-            return typeof(THandler).GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>));
+            return handlerType.GetInterfaces().Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>));
         }
     }
 }
