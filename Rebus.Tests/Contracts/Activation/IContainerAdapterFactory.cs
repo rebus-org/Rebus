@@ -3,7 +3,7 @@ using Rebus.Handlers;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public interface IHandlerActivatorFactory
+    public interface IContainerAdapterFactory
     {
         IHandlerActivator GetActivator();
 

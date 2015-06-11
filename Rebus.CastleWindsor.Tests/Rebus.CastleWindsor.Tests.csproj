@@ -51,7 +51,7 @@
   <ItemGroup>
     <Compile Include="Assumptions.cs" />
     <Compile Include="CastleWindsorContainerTests.cs" />
-    <Compile Include="CastleWindsorHandlerActivatorFactory.cs" />
+    <Compile Include="CastleWindsorContainerAdapterFactory.cs" />
     <Compile Include="CastleWindsorRealContainerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

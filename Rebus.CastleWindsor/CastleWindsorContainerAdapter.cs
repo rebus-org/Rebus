@@ -16,14 +16,14 @@ namespace Rebus.CastleWindsor
     /// <summary>
     /// Implementation of <see cref="IContainerAdapter"/> that is backed by a Windsor Container
     /// </summary>
-    public class CastleWindsorHandlerActivator : IContainerAdapter
+    public class CastleWindsorContainerAdapter : IContainerAdapter
     {
         readonly IWindsorContainer _windsorContainer;
 
         /// <summary>
         /// Constructs the Windsor handler activator
         /// </summary>
-        public CastleWindsorHandlerActivator(IWindsorContainer windsorContainer)
+        public CastleWindsorContainerAdapter(IWindsorContainer windsorContainer)
         {
             if (windsorContainer == null) throw new ArgumentNullException("windsorContainer");
             _windsorContainer = windsorContainer;

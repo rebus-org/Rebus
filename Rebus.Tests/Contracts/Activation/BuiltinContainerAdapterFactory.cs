@@ -6,9 +6,9 @@ using Rebus.Handlers;
 namespace Rebus.Tests.Contracts.Activation
 {
     [TestFixture]
-    public class BuiltinHandlerActivatorContainerTests : ContainerTests<BuiltinHandlerActivatorFactory> { }
+    public class BuiltinHandlerActivatorContainerTests : ContainerTests<BuiltinContainerAdapterFactory> { }
 
-    public class BuiltinHandlerActivatorFactory : IHandlerActivatorFactory
+    public class BuiltinContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly BuiltinHandlerActivator _builtinHandlerActivator = new BuiltinHandlerActivator();
 

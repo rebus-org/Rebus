@@ -8,7 +8,7 @@ using Rebus.Tests.Contracts.Activation;
 
 namespace Rebus.Unity.Tests
 {
-    public class UnityContainerAdapterFactory : IHandlerActivatorFactory
+    public class UnityContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly UnityContainer _unityContainer = new UnityContainer();
 

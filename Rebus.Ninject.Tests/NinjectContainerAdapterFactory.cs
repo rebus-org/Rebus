@@ -8,7 +8,7 @@ using Rebus.Tests.Contracts.Activation;
 
 namespace Rebus.Ninject.Tests
 {
-    public class NinjectContainerAdapterFactory : IHandlerActivatorFactory
+    public class NinjectContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly StandardKernel _kernel = new StandardKernel();
 

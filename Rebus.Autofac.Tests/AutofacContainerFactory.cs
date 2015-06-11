@@ -8,7 +8,7 @@ using Rebus.Tests.Contracts.Activation;
 
 namespace Rebus.Autofac.Tests
 {
-    public class AutofacContainerFactory : IHandlerActivatorFactory
+    public class AutofacContainerFactory : IContainerAdapterFactory
     {
         readonly ContainerBuilder _containerBuilder = new ContainerBuilder();
         readonly List<IDisposable> _disposables = new List<IDisposable>();
@@ -17,7 +17,7 @@ namespace Rebus.Autofac.Tests
         {
             var container = _containerBuilder.Build();
             _disposables.Add(container);
-            return new AutofacHandlerActivator(container);
+            return new AutofacContainerAdapter(container);
         }
 
         public void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages

@@ -8,13 +8,13 @@ using Rebus.Tests.Contracts.Activation;
 
 namespace Rebus.CastleWindsor.Tests
 {
-    public class CastleWindsorHandlerActivatorFactory : IHandlerActivatorFactory
+    public class CastleWindsorContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly WindsorContainer _windsorContainer = new WindsorContainer();
 
         public IHandlerActivator GetActivator()
         {
-            return new CastleWindsorHandlerActivator(_windsorContainer);
+            return new CastleWindsorContainerAdapter(_windsorContainer);
         }
 
         public void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages
