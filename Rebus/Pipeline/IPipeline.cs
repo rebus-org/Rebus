@@ -10,11 +10,11 @@ namespace Rebus.Pipeline
         /// <summary>
         /// Gets the send pipeline, i.e. the sequence of <see cref="IOutgoingStep"/> implementations that will be executed for each outgoing message
         /// </summary>
-        IEnumerable<StagedStep<IOutgoingStep, SendStage>> SendPipeline();
+        IEnumerable<IOutgoingStep> SendPipeline();
 
         /// <summary>
         /// Gets the receive pipeline, i.e. the sequence of <see cref="IIncomingStep"/> implementations that will be executed for each incoming message
         /// </summary>
-        IEnumerable<StagedStep<IIncomingStep, ReceiveStage>> ReceivePipeline();
+        IEnumerable<IIncomingStep> ReceivePipeline();
     }
 }

@@ -13,6 +13,11 @@ namespace Rebus.Pipeline.Send
     /// 2) The message ID of the message currently being handled,
     /// 3) The message's own message ID
     /// </summary>
+    [StepDocumentation(@"Sets the '" + Headers.CorrelationId + @"' header of the outgoing message to one of the following three things:
+
+1) The correlation ID of the message currently being handled.
+2) The message ID of the message currently being handled.
+3) The message's own message ID.")]
     public class FlowCorrelationIdStep : IOutgoingStep
     {
         public async Task Process(OutgoingStepContext context, Func<Task> next)
@@ -44,7 +49,7 @@ namespace Rebus.Pipeline.Send
 
                 return correlationId;
             }
-            
+
             // otherwise, use the current message ID as the correlation ID
             return outgoingMessage.Headers.GetValue(Headers.MessageId);
         }

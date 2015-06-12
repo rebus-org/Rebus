@@ -157,12 +157,12 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
-                .OnReceive(c.Get<IRetryStrategyStep>(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(c.Get<HandleDeferredMessagesStep>(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchIncomingMessageStep(), ReceiveStage.MessageDeserialized)
+                .OnReceive(c.Get<IRetryStrategyStep>())
+                .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()))
+                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()))
+                .OnReceive(new DispatchIncomingMessageStep())
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))

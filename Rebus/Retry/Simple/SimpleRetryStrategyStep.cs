@@ -18,6 +18,9 @@ namespace Rebus.Retry.Simple
     /// the exception is caught and the queue transaction is rolled back. Caught exceptions are tracked in-mem, and after
     /// a configurable number of retries, the message will be forwarded to the configured error queue and the rest of the pipeline will not be called
     /// </summary>
+    [StepDocumentation(@"Wraps the invocation of the entire receive pipeline in an exception handler, tracking the number of times the received message has been attempted to be delivered.
+
+If the maximum number of delivery attempts is reached, the message is moved to the error queue.")]
     public class SimpleRetryStrategyStep : IRetryStrategyStep, IInitializable, IDisposable
     {
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);

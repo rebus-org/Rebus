@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 namespace Rebus.Pipeline
 {
@@ -9,31 +8,31 @@ namespace Rebus.Pipeline
     /// </summary>
     public class DefaultPipeline : IPipeline
     {
-        readonly List<StagedStep<IOutgoingStep, SendStage>> _sendSteps = new List<StagedStep<IOutgoingStep, SendStage>>();
-        readonly List<StagedStep<IIncomingStep, ReceiveStage>> _receiveSteps = new List<StagedStep<IIncomingStep, ReceiveStage>>();
+        readonly List<IOutgoingStep> _sendSteps = new List<IOutgoingStep>();
+        readonly List<IIncomingStep> _receiveSteps = new List<IIncomingStep>();
 
         /// <summary>
         /// Gets the send pipeline
         /// </summary>
-        public IEnumerable<StagedStep<IOutgoingStep, SendStage>> SendPipeline()
+        public IEnumerable<IOutgoingStep> SendPipeline()
         {
-            return _sendSteps.Select(s => new StagedStep<IOutgoingStep, SendStage>(s.Step, SendStage.None));
+            return _sendSteps;
         }
 
         /// <summary>
         /// Gets the receive pipeline
         /// </summary>
-        public IEnumerable<StagedStep<IIncomingStep, ReceiveStage>> ReceivePipeline()
+        public IEnumerable<IIncomingStep> ReceivePipeline()
         {
-            return _receiveSteps.Select(s => new StagedStep<IIncomingStep,ReceiveStage>(s.Step, s.Stage));
+            return _receiveSteps;
         }
 
         /// <summary>
         /// Adds a new incoming step to the receive pipeline
         /// </summary>
-        public DefaultPipeline OnReceive(IIncomingStep step, ReceiveStage stage)
+        public DefaultPipeline OnReceive(IIncomingStep step)
         {
-            _receiveSteps.Add(new StagedStep<IIncomingStep, ReceiveStage>(step, stage));
+            _receiveSteps.Add(step);
             return this;
         }
 
@@ -42,7 +41,7 @@ namespace Rebus.Pipeline
         /// </summary>
         public DefaultPipeline OnSend(IOutgoingStep step)
         {
-            _sendSteps.Add(new StagedStep<IOutgoingStep, SendStage>(step, SendStage.None));
+            _sendSteps.Add(step);
             return this;
         }
     }

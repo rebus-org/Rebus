@@ -52,6 +52,7 @@
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Pipeline\PipelineStepInjector.cs" />
@@ -74,13 +75,11 @@
     <Compile Include="Pipeline\IOutgoingStep.cs" />
     <Compile Include="Pipeline\MessageContext.cs" />
     <Compile Include="Pipeline\OutgoingStepContext.cs" />
-    <Compile Include="Pipeline\ReceiveStage.cs" />
     <Compile Include="Pipeline\Receive\HandlerInvokers.cs" />
-    <Compile Include="Pipeline\SendStage.cs" />
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
     <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
-    <Compile Include="Pipeline\StagedStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
+    <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
     <Compile Include="Sagas\ISagaCorrelationProperty.cs" />

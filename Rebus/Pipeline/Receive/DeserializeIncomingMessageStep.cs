@@ -9,6 +9,7 @@ namespace Rebus.Pipeline.Receive
     /// Incoming step that gets the current <see cref="TransportMessage"/> from the context and deserializes its body,
     /// saving the result as a <see cref="Message"/> back to the context.
     /// </summary>
+    [StepDocumentation(@"Deserializes the current transport message using the configured serializer, saving the deserialized message back to the context.")]
     public class DeserializeIncomingMessageStep : IIncomingStep
     {
         readonly ISerializer _serializer;

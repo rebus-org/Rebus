@@ -14,6 +14,9 @@ namespace Rebus.Pipeline.Receive
     /// Incoming step that checks for the presence of the <see cref="Headers.DeferredUntil"/> header, using a
     /// <see cref="ITimeoutManager"/> to handle the deferral if necessary.
     /// </summary>
+    [StepDocumentation(@"If the incoming message should not be handled now, this step saves the message until it is time to deliver the message.
+
+This is done by checking if the incoming message has a '" + Headers.DeferredUntil + @"' header with a desired time to be delivered.")]
     public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializable
     {
         /// <summary>

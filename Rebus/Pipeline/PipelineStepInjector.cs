@@ -13,28 +13,31 @@ namespace Rebus.Pipeline
         readonly ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IIncomingStep>> _incomingInjectedSteps = new ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IIncomingStep>>();
         readonly IPipeline _pipeline;
 
+        /// <summary>
+        /// Constructs the step injector, wrapping the given <see cref="IPipeline"/>
+        /// </summary>
         public PipelineStepInjector(IPipeline pipeline)
         {
             _pipeline = pipeline;
         }
 
-        public IEnumerable<StagedStep<IOutgoingStep, SendStage>> SendPipeline()
+        public IEnumerable<IOutgoingStep> SendPipeline()
         {
             foreach (var step in _pipeline.SendPipeline())
             {
                 Tuple<PipelineRelativePosition, IOutgoingStep> injectedStep;
 
-                if (_outgoingInjectedSteps.TryGetValue(step.Step.GetType(), out injectedStep))
+                if (_outgoingInjectedSteps.TryGetValue(step.GetType(), out injectedStep))
                 {
                     if (injectedStep.Item1 == PipelineRelativePosition.Before)
                     {
-                        yield return new StagedStep<IOutgoingStep, SendStage>(injectedStep.Item2, SendStage.None);
+                        yield return injectedStep.Item2;
                         yield return step;
                     }
                     else
                     {
                         yield return step;
-                        yield return new StagedStep<IOutgoingStep, SendStage>(injectedStep.Item2, SendStage.None);
+                        yield return injectedStep.Item2;
                     }
                 }
                 else
@@ -44,23 +47,23 @@ namespace Rebus.Pipeline
             }
         }
 
-        public IEnumerable<StagedStep<IIncomingStep, ReceiveStage>> ReceivePipeline()
+        public IEnumerable<IIncomingStep> ReceivePipeline()
         {
             foreach (var step in _pipeline.ReceivePipeline())
             {
                 Tuple<PipelineRelativePosition, IIncomingStep> injectedStep;
 
-                if (_incomingInjectedSteps.TryGetValue(step.Step.GetType(), out injectedStep))
+                if (_incomingInjectedSteps.TryGetValue(step.GetType(), out injectedStep))
                 {
                     if (injectedStep.Item1 == PipelineRelativePosition.Before)
                     {
-                        yield return new StagedStep<IIncomingStep, ReceiveStage>(injectedStep.Item2, ReceiveStage.TransportMessageReceived);
+                        yield return injectedStep.Item2;
                         yield return step;
                     }
                     else
                     {
                         yield return step;
-                        yield return new StagedStep<IIncomingStep, ReceiveStage>(injectedStep.Item2, ReceiveStage.TransportMessageReceived);
+                        yield return injectedStep.Item2;
                     }
                 }
                 else

@@ -159,7 +159,7 @@ namespace Rebus.Tests.Integration
 
                             var stagedReceiveSteps = _pipeline.ReceivePipeline();
 
-                            await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+                            await _pipelineInvoker.Invoke(context, stagedReceiveSteps);
 
                             await transactionContext.Complete();
                         }

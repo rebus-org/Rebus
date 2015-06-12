@@ -115,7 +115,7 @@ namespace Rebus.Workers.ThreadBased
 
                         var stagedReceiveSteps = _pipeline.ReceivePipeline();
 
-                        await _pipelineInvoker.Invoke(context, stagedReceiveSteps.Select(s => s.Step));
+                        await _pipelineInvoker.Invoke(context, stagedReceiveSteps);
 
                         await transactionContext.Complete();
                     }
