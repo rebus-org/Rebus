@@ -66,14 +66,19 @@ namespace Rebus.Config
         {
             var logger = RebusLoggerFactory.Current.GetCurrentClassLogger();
 
-            Decorate(c =>
+            // when the pipeline is resolved, we hook ourselves in and log it!
+            _injectionist.ResolveRequested += serviceType =>
             {
-                var pipeline = c.Get<IPipeline>();
+                if (serviceType != typeof (IPipeline)) return;
 
-                var receivePipeline = pipeline.ReceivePipeline();
-                var sendPipeline = pipeline.SendPipeline();
+                _injectionist.Register(c =>
+                {
+                    var pipeline = c.Get<IPipeline>();
 
-                logger.Info(@"
+                    var receivePipeline = pipeline.ReceivePipeline();
+                    var sendPipeline = pipeline.SendPipeline();
+
+                    logger.Info(@"
 ------------------------------------------------------------------------------
 Message pipelines
 ------------------------------------------------------------------------------
@@ -86,8 +91,9 @@ Send pipeline:
 ", Format(receivePipeline, verbose), Format(sendPipeline, verbose));
 
 
-                return pipeline;
-            });
+                    return pipeline;
+                }, isDecorator: true);
+            };
 
             return this;
         }

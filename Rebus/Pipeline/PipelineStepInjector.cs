@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus.Pipeline
 {
@@ -9,8 +10,12 @@ namespace Rebus.Pipeline
     /// </summary>
     public class PipelineStepInjector : IPipeline
     {
-        readonly ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IOutgoingStep>> _outgoingInjectedSteps = new ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IOutgoingStep>>();
-        readonly ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IIncomingStep>> _incomingInjectedSteps = new ConcurrentDictionary<Type, Tuple<PipelineRelativePosition, IIncomingStep>>();
+        readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>> _outgoingInjectedSteps =
+            new ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IOutgoingStep>>>();
+
+        readonly ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>> _incomingInjectedSteps =
+            new ConcurrentDictionary<Type, List<Tuple<PipelineRelativePosition, IIncomingStep>>>();
+
         readonly IPipeline _pipeline;
 
         /// <summary>
@@ -23,47 +28,71 @@ namespace Rebus.Pipeline
 
         public IEnumerable<IOutgoingStep> SendPipeline()
         {
+            var encounteredStepTypes = new HashSet<Type>();
+
             foreach (var step in _pipeline.SendPipeline())
             {
-                Tuple<PipelineRelativePosition, IOutgoingStep> injectedStep;
+                var currentStepType = step.GetType();
+                
+                encounteredStepTypes.Add(currentStepType);
+                
+                List<Tuple<PipelineRelativePosition, IOutgoingStep>> injectedStep;
 
-                if (_outgoingInjectedSteps.TryGetValue(step.GetType(), out injectedStep))
+                if (_outgoingInjectedSteps.TryGetValue(currentStepType, out injectedStep))
                 {
-                    if (injectedStep.Item1 == PipelineRelativePosition.Before)
+                    foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
                     {
-                        yield return injectedStep.Item2;
-                        yield return step;
+                        yield return stepToInject.Item2;
                     }
-                    else
+
+                    yield return step;
+
+                    foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.After))
                     {
-                        yield return step;
-                        yield return injectedStep.Item2;
+                        yield return stepToInject.Item2;
                     }
                 }
                 else
                 {
                     yield return step;
+                }
+            }
+
+            var typesNotEncountered = _outgoingInjectedSteps.Keys.Except(encounteredStepTypes);
+
+            foreach (var typeNotEncountered in typesNotEncountered)
+            {
+                foreach (var missingStep in _outgoingInjectedSteps[typeNotEncountered])
+                {
+                    yield return missingStep.Item2;
                 }
             }
         }
 
         public IEnumerable<IIncomingStep> ReceivePipeline()
         {
+            var encounteredStepTypes = new HashSet<Type>();
+
             foreach (var step in _pipeline.ReceivePipeline())
             {
-                Tuple<PipelineRelativePosition, IIncomingStep> injectedStep;
+                var currentStepType = step.GetType();
 
-                if (_incomingInjectedSteps.TryGetValue(step.GetType(), out injectedStep))
+                encounteredStepTypes.Add(currentStepType);
+
+                List<Tuple<PipelineRelativePosition, IIncomingStep>> injectedStep;
+
+                if (_incomingInjectedSteps.TryGetValue(currentStepType, out injectedStep))
                 {
-                    if (injectedStep.Item1 == PipelineRelativePosition.Before)
+                    foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.Before))
                     {
-                        yield return injectedStep.Item2;
-                        yield return step;
+                        yield return stepToInject.Item2;
                     }
-                    else
+
+                    yield return step;
+
+                    foreach (var stepToInject in injectedStep.Where(i => i.Item1 == PipelineRelativePosition.After))
                     {
-                        yield return step;
-                        yield return injectedStep.Item2;
+                        yield return stepToInject.Item2;
                     }
                 }
                 else
@@ -71,17 +100,49 @@ namespace Rebus.Pipeline
                     yield return step;
                 }
             }
+
+            var typesNotEncountered = _incomingInjectedSteps.Keys.Except(encounteredStepTypes);
+
+            foreach (var typeNotEncountered in typesNotEncountered)
+            {
+                foreach (var missingStep in _incomingInjectedSteps[typeNotEncountered])
+                {
+                    yield return missingStep.Item2;
+                }
+            }
         }
 
+        /// <summary>
+        /// Configures injection of the given <see cref="IOutgoingStep"/>, positioning it relative to another step
+        /// specified by <paramref name="anchorStep"/>. The relative position is specified with either
+        /// <see cref="PipelineRelativePosition.Before"/> or <see cref="PipelineRelativePosition.After"/>
+        /// </summary>
         public PipelineStepInjector OnSend(IOutgoingStep step, PipelineRelativePosition position, Type anchorStep)
         {
-            _outgoingInjectedSteps[anchorStep] = Tuple.Create(position, step);
+            if (step == null) throw new ArgumentNullException("step");
+            if (anchorStep == null) throw new ArgumentNullException("anchorStep");
+
+            _outgoingInjectedSteps
+                .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IOutgoingStep>>())
+                .Add(Tuple.Create(position, step));
+
             return this;
         }
 
+        /// <summary>
+        /// Configures injection of the given <see cref="IIncomingStep"/>, positioning it relative to another step
+        /// specified by <paramref name="anchorStep"/>. The relative position is specified with either
+        /// <see cref="PipelineRelativePosition.Before"/> or <see cref="PipelineRelativePosition.After"/>
+        /// </summary>
         public PipelineStepInjector OnReceive(IIncomingStep step, PipelineRelativePosition position, Type anchorStep)
         {
-            _incomingInjectedSteps[anchorStep] = Tuple.Create(position, step);
+            if (step == null) throw new ArgumentNullException("step");
+            if (anchorStep == null) throw new ArgumentNullException("anchorStep");
+
+            _incomingInjectedSteps
+                .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IIncomingStep>>())
+                .Add(Tuple.Create(position, step));
+
             return this;
         }
     }

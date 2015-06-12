@@ -55,6 +55,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Pipeline\PipelineCache.cs" />
     <Compile Include="Pipeline\PipelineStepInjector.cs" />
     <Compile Include="Pipeline\PipelineRelativePosition.cs" />
     <Compile Include="Compression\UnzipMessagesIncomingStep.cs" />

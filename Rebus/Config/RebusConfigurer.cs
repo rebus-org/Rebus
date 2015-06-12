@@ -172,6 +172,8 @@ namespace Rebus.Config
                 .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
                 );
 
+            RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
+
             PossiblyRegisterDefault<IBus>(c =>
             {
                 var bus = new RebusBus(
@@ -232,6 +234,11 @@ namespace Rebus.Config
             if (_injectionist.Has<TService>()) return;
 
             _injectionist.Register(factoryMethod);
+        }
+
+        void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
+        {
+            _injectionist.Register(factoryMethod, isDecorator: true);
         }
     }
 }

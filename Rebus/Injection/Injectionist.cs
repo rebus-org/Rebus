@@ -18,7 +18,9 @@ namespace Rebus.Injection
         /// </summary>
         public TService Get<TService>()
         {
-            return new ResolutionContext(_resolvers).Get<TService>();
+            var resolutionContext = new ResolutionContext(_resolvers, serviceType => ResolveRequested(serviceType));
+
+            return resolutionContext.Get<TService>();
         }
 
         /// <summary>
@@ -58,6 +60,8 @@ namespace Rebus.Injection
                 resolverList.Insert(0, resolver);
             }
         }
+
+        public event Action<Type> ResolveRequested = delegate { };
 
         /// <summary>
         /// Returns whether there exists a registration for the specified <see cref="TService"/>.
@@ -112,12 +116,14 @@ namespace Rebus.Injection
         {
             readonly Dictionary<Type, int> _decoratorDepth = new Dictionary<Type, int>();
             readonly Dictionary<Type, List<Resolver>> _resolvers;
+            readonly Action<Type> _serviceTypeRequested;
             readonly Dictionary<Type, Tuple<object, int>> _instances = new Dictionary<Type, Tuple<object, int>>();
             int _resolutionOrderCounter;
 
-            public ResolutionContext(Dictionary<Type, List<Resolver>> resolvers)
+            public ResolutionContext(Dictionary<Type, List<Resolver>> resolvers, Action<Type> serviceTypeRequested)
             {
                 _resolvers = resolvers;
+                _serviceTypeRequested = serviceTypeRequested;
             }
 
             public TService Get<TService>()
@@ -137,6 +143,7 @@ namespace Rebus.Injection
                 if (!_decoratorDepth.ContainsKey(serviceType))
                 {
                     _decoratorDepth[serviceType] = 0;
+                    _serviceTypeRequested(serviceType);
                 }
 
                 var resolversForThisType = _resolvers[serviceType];
