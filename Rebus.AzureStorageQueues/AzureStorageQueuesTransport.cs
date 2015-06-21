@@ -2,12 +2,12 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
 using Newtonsoft.Json;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -69,7 +69,7 @@ namespace Rebus.AzureStorageQueues
                 }
                 catch (Exception exception)
                 {
-                    throw new ApplicationException(string.Format("Could not send message with ID {0} to '{1}'", cloudQueueMessage.Id, destinationAddress), exception);
+                    throw new RebusApplicationException(string.Format("Could not send message with ID {0} to '{1}'", cloudQueueMessage.Id, destinationAddress), exception);
                 }
             });
         }
@@ -162,7 +162,7 @@ namespace Rebus.AzureStorageQueues
             }
             catch (Exception exception)
             {
-                throw new ApplicationException("Could not purge queue", exception);
+                throw new RebusApplicationException("Could not purge queue", exception);
             }
         }
     }

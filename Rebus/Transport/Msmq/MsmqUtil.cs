@@ -3,6 +3,7 @@ using System.Linq;
 using System.Messaging;
 using System.Security.Principal;
 using System.Threading;
+using Rebus.Exceptions;
 using Rebus.Logging;
 
 namespace Rebus.Transport.Msmq
@@ -184,7 +185,7 @@ namespace Rebus.Transport.Msmq
             }
             catch (Exception e)
             {
-                throw new ApplicationException(string.Format("An error occurred while attempting to figure out the name of the local administrators group!"), e);
+                throw new RebusApplicationException(string.Format("An error occurred while attempting to figure out the name of the local administrators group!"), e);
             }
         }
 

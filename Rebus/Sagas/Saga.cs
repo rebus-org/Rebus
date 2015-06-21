@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Rebus.Exceptions;
 using Rebus.Reflection;
 
 namespace Rebus.Sagas
@@ -86,7 +87,7 @@ namespace Rebus.Sagas
                     }
                     catch (Exception exception)
                     {
-                        throw new ApplicationException(string.Format("Could not extract correlation value from message {0}", typeof(TMessage)), exception);
+                        throw new RebusApplicationException(string.Format("Could not extract correlation value from message {0}", typeof(TMessage)), exception);
                     }
                 };
 
