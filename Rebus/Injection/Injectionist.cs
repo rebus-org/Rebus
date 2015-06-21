@@ -14,7 +14,7 @@ namespace Rebus.Injection
         readonly Dictionary<Type, List<Resolver>> _resolvers = new Dictionary<Type, List<Resolver>>();
 
         /// <summary>
-        /// Starts a new resolution context, resolving an instance of the given <see cref="TService"/>
+        /// Starts a new resolution context, resolving an instance of the given <typeparamref name="TService"/>
         /// </summary>
         public TService Get<TService>()
         {

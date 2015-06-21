@@ -11,7 +11,7 @@ namespace Rebus.Sagas
     public interface ISagaStorage
     {
         /// <summary>
-        /// Finds an already-existing instance of the given saga data type that has a property with the given <see cref="propertyName"/>
+        /// Finds an already-existing instance of the given saga data type that has a property with the given <paramref name="propertyName"/>
         /// whose value matches <paramref name="propertyValue"/>. Returns null if no such instance could be found
         /// </summary>
         Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue);

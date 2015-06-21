@@ -13,7 +13,7 @@ namespace Rebus.Handlers
     public interface IHandleMessages<in TMessage> : IHandleMessages
     {
         /// <summary>
-        /// This method will be invoked with a message of type <see cref="TMessage"/>
+        /// This method will be invoked with a message of type <typeparamref name="TMessage"/>
         /// </summary>
         Task Handle(TMessage message);
     }

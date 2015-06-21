@@ -12,6 +12,9 @@ namespace Rebus.Pipeline.Receive
     /// </summary>
     public class DispatchIncomingMessageStep : IIncomingStep
     {
+        /// <summary>
+        /// Processes the message
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var invokers = context.Load<HandlerInvokers>();
