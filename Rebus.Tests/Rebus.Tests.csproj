@@ -67,6 +67,7 @@
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
+    <Compile Include="Encryption\TestEncryption.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
     <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
