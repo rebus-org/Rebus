@@ -49,7 +49,9 @@ namespace Rebus.Jil
             var headers = transportMessage.Headers.Clone();
             var messageType = GetMessageType(headers);
             var bodyString = Encoding.GetString(transportMessage.Body);
-            var bodyObject = JSON.Deserialize(bodyString, messageType);
+            var bodyObject = messageType != null 
+                ? JSON.Deserialize(bodyString, messageType)
+                : JSON.DeserializeDynamic(bodyString);
             return new Message(headers, bodyObject);
         }
 
@@ -58,7 +60,7 @@ namespace Rebus.Jil
             string messageTypeString;
             if (!headers.TryGetValue(Headers.Type, out messageTypeString))
             {
-                throw new SerializationException(string.Format("Could not find '{0}' header on the message!", Headers.Type));
+                return null;
             }
 
             var type = Type.GetType(messageTypeString, false);

@@ -107,6 +107,7 @@
     <Compile Include="Pipeline\TestPipelineLogging.cs" />
     <Compile Include="Pipeline\TestPipelineStepInjector.cs" />
     <Compile Include="Serialization\BasicSerializationTests.cs" />
+    <Compile Include="Serialization\Default\TestDynamicJil.cs" />
     <Compile Include="Serialization\JsonSerializerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
