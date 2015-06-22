@@ -53,6 +53,7 @@
     <Compile Include="JilSerializerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestDynamicJil.cs" />
+    <Compile Include="TestJilCapabilities.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
