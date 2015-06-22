@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,8 +8,8 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Encryption;
-using Rebus.Messages;
 using Rebus.Tests.Extensions;
+using Rebus.Tests.Transport;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
@@ -73,57 +71,6 @@ namespace Rebus.Tests.Encryption
 
             Assert.That(sentMessageBodyAsString, Is.Not.StringContaining(plainTextMessage));
             Assert.That(receivedMessageBodyAsString, Is.Not.StringContaining(plainTextMessage));
-        }
-
-        class TransportTap : ITransport
-        {
-            readonly List<TransportMessage> _receivedMessages = new List<TransportMessage>();
-            readonly List<TransportMessage> _sentMessages = new List<TransportMessage>();
-            readonly ITransport _innerTransport;
-
-            public TransportTap(ITransport innerTransport)
-            {
-                _innerTransport = innerTransport;
-            }
-
-            public void CreateQueue(string address)
-            {
-                _innerTransport.CreateQueue(address);
-            }
-
-            public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
-            {
-                await _innerTransport.Send(destinationAddress, message, context);
-
-                _sentMessages.Add(message);
-            }
-
-            public async Task<TransportMessage> Receive(ITransactionContext context)
-            {
-                var transportMessage = await _innerTransport.Receive(context);
-
-                if (transportMessage != null)
-                {
-                    _receivedMessages.Add(transportMessage);
-                }
-
-                return transportMessage;
-            }
-
-            public List<TransportMessage> ReceivedMessages
-            {
-                get { return _receivedMessages; }
-            }
-
-            public List<TransportMessage> SentMessages
-            {
-                get { return _sentMessages; }
-            }
-
-            public string Address
-            {
-                get { return _innerTransport.Address; }
-            }
         }
     }
 }

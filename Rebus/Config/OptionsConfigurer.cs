@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -82,13 +83,13 @@ namespace Rebus.Config
 ------------------------------------------------------------------------------
 Message pipelines
 ------------------------------------------------------------------------------
-Receive pipeline:
+Send pipeline:
 {0}
 
-Send pipeline:
+Receive pipeline:
 {1}
 ------------------------------------------------------------------------------
-", Format(receivePipeline, verbose), Format(sendPipeline, verbose));
+", Format(sendPipeline, verbose), Format(receivePipeline, verbose));
 
 
                     return pipeline;
