@@ -73,14 +73,16 @@ namespace Rebus.Persistence.SqlServer
 
             try
             {
-                if (_currentTransaction != null)
+                using (_connection)
                 {
-                    _currentTransaction.Rollback();
-                    _currentTransaction = null;
-                }
+                    if (_currentTransaction != null)
+                    {
+                        _currentTransaction.Rollback();
+                        _currentTransaction = null;
+                    }
 
-                //_connection.Close();
-                _connection.Dispose();
+                    _connection.Close();
+                }
             }
             finally
             {
