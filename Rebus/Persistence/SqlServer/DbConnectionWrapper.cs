@@ -79,10 +79,8 @@ namespace Rebus.Persistence.SqlServer
                     _currentTransaction = null;
                 }
 
-                using(_connection)
-                {
-                    _connection.Close();
-                }
+                //_connection.Close();
+                _connection.Dispose();
             }
             finally
             {
