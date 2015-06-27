@@ -1,0 +1,89 @@
+﻿using System;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using NUnit.Framework;
+using Rebus.Activation;
+using Rebus.Auditing;
+using Rebus.Bus;
+using Rebus.Config;
+using Rebus.Messages;
+using Rebus.Tests.Extensions;
+using Rebus.Transport.InMem;
+
+namespace Rebus.Tests.Auditing
+{
+    [TestFixture]
+    public class TestMessageAuditing : FixtureBase
+    {
+        IBus _bus;
+        BuiltinHandlerActivator _adapter;
+        InMemNetwork _network;
+
+        protected override void SetUp()
+        {
+            _adapter = new BuiltinHandlerActivator();
+            _network = new InMemNetwork();
+            
+            _bus = Configure.With(_adapter)
+                .Transport(t => t.UseInMemoryTransport(_network, "test"))
+                .Options(o => o.EnableMessageAuditing("audit"))
+                .Start();
+        }
+
+        [Test]
+        public async Task CopiesProperlyHandledMessageToAuditQueue()
+        {
+            var gotTheMessage = new ManualResetEvent(false);
+
+            _adapter.Handle<string>(async _ =>
+            {
+                gotTheMessage.Set();
+            });
+
+            await _bus.SendLocal("woohooo!!!!");
+
+            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
+
+            InMemTransportMessage message;
+            var timer = Stopwatch.StartNew();
+
+            while ((message = _network.GetNextOrNull("audit")) == null)
+            {
+                await Task.Delay(200);
+
+                if (timer.Elapsed > TimeSpan.FromSeconds(2))
+                {
+                    Assert.Fail("Did not receive message copy within 2 seconds of waiting....");
+                }
+            }
+
+            Assert.That(message.Headers.ContainsKey(Headers.AuditTime));
+            Assert.That(message.Headers.ContainsKey(Headers.Intent));
+            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
+        }
+
+        [Test]
+        public async Task CopiesPublishedMessageToAuditQueue()
+        {
+            await _bus.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
+
+            InMemTransportMessage message;
+            var timer = Stopwatch.StartNew();
+
+            while ((message = _network.GetNextOrNull("audit")) == null)
+            {
+                await Task.Delay(200);
+
+                if (timer.Elapsed > TimeSpan.FromSeconds(2))
+                {
+                    Assert.Fail("Did not receive message copy within 2 seconds of waiting....");
+                }
+            }
+
+            Assert.That(message.Headers.ContainsKey(Headers.AuditTime));
+            Assert.That(message.Headers.ContainsKey(Headers.Intent));
+            Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
+        }
+    }
+}

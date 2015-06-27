@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Linq;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline.Receive;
@@ -75,6 +73,14 @@ namespace Rebus.Bus
         public static string GetMessageLabel(this TransportMessage message)
         {
             return GetMessageLabel(message.Headers);
+        }
+
+        /// <summary>
+        /// Returns a cloned instance of the transport message
+        /// </summary>
+        public static TransportMessage Clone(this TransportMessage message)
+        {
+            return new TransportMessage(message.Headers.Clone(), message.Body);
         }
 
         static string GetMessageLabel(Dictionary<string, string> headers)

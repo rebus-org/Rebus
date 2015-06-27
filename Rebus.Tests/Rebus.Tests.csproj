@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
+    <Compile Include="Auditing\TestMessageAuditing.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Compression\TestCompressionIntegration.cs" />
     <Compile Include="Compression\TestZipper.cs" />
