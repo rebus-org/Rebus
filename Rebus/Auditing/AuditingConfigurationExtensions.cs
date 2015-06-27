@@ -11,6 +11,9 @@ using Rebus.Transport;
 
 namespace Rebus.Auditing
 {
+    /// <summary>
+    /// Configuration extensions for the auditing configuration
+    /// </summary>
     public static class AuditingConfigurationExtensions
     {
         /// <summary>
