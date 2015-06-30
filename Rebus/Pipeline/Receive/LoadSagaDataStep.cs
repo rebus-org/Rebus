@@ -119,7 +119,13 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             public RelevantSagaInfo(ISagaData sagaData, IEnumerable<CorrelationProperty> correlationProperties, Saga saga)
             {
                 SagaData = sagaData;
-                CorrelationProperties = correlationProperties.ToList();
+                
+                // only keep necessary correlation properties, i.e.
+                CorrelationProperties = correlationProperties
+                    .GroupBy(p => p.PropertyName)
+                    .Select(g => g.First())
+                    .ToList();
+
                 Saga = saga;
             }
 
