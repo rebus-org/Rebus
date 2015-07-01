@@ -9,6 +9,7 @@ namespace Rebus.Pipeline.Send
     /// Outgoing step that sets the <see cref="Headers.ReturnAddress"/> header of the outgoing message to the input queue
     /// address (found with <see cref="ITransport.Address"/>), unless the header has already been set to something else.
     /// </summary>
+    [StepDocumentation("If the outgoing message does not already have a '" + Headers.ReturnAddress + "' header, this step will assign the input queue address of the sending endpoint as the return address.")]
     public class AssignReturnAddressStep : IOutgoingStep
     {
         readonly bool _hasOwnAddress;

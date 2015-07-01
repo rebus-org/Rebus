@@ -12,6 +12,11 @@ namespace Rebus.Pipeline.Receive
     /// <summary>
     /// Incoming step that loads and saves relevant saga data.
     /// </summary>
+    [StepDocumentation(@"Looks at the handler invokers in the context and sees if there's one or more saga handlers in there. 
+
+If that's the case, relevant saga data is loaded/created, and the rest of the pipeline gets invoked.
+
+Afterwards, all the created/loaded saga data is updated appropriately.")]
     public class LoadSagaDataStep : IIncomingStep
     {
         static ILog _log;
@@ -114,7 +119,13 @@ namespace Rebus.Pipeline.Receive
             public RelevantSagaInfo(ISagaData sagaData, IEnumerable<CorrelationProperty> correlationProperties, Saga saga)
             {
                 SagaData = sagaData;
-                CorrelationProperties = correlationProperties.ToList();
+                
+                // only keep necessary correlation properties, i.e.
+                CorrelationProperties = correlationProperties
+                    .GroupBy(p => p.PropertyName)
+                    .Select(g => g.First())
+                    .ToList();
+
                 Saga = saga;
             }
 

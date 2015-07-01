@@ -23,8 +23,8 @@ namespace Rebus.Compression
                 {
                     zipStream.Write(buffer, 0, nRead);
                 }
-                zipStream.Close(); //< WTF=?!=! don't Flush or Dispose, Close!
-                return targetStream.GetBuffer();
+                zipStream.Close();
+                return targetStream.ToArray();
             }
         }
 
@@ -43,7 +43,8 @@ namespace Rebus.Compression
                 {
                     targetStream.Write(buffer, 0, nRead);
                 }
-                return targetStream.GetBuffer();
+                zipStream.Close();
+                return targetStream.ToArray();
             }
         }
 

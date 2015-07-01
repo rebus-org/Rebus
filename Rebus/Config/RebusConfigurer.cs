@@ -157,12 +157,12 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
 
-                .OnReceive(c.Get<IRetryStrategyStep>(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(c.Get<HandleDeferredMessagesStep>(), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()), ReceiveStage.TransportMessageReceived)
-                .OnReceive(new DispatchIncomingMessageStep(), ReceiveStage.MessageDeserialized)
+                .OnReceive(c.Get<IRetryStrategyStep>())
+                .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()))
+                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
+                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()))
+                .OnReceive(new DispatchIncomingMessageStep())
 
                 .OnSend(new AssignGuidMessageIdStep())
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
@@ -171,6 +171,8 @@ namespace Rebus.Config
                 .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
                 .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
                 );
+
+            RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
             PossiblyRegisterDefault<IBus>(c =>
             {
@@ -232,6 +234,11 @@ namespace Rebus.Config
             if (_injectionist.Has<TService>()) return;
 
             _injectionist.Register(factoryMethod);
+        }
+
+        void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
+        {
+            _injectionist.Register(factoryMethod, isDecorator: true);
         }
     }
 }

@@ -14,7 +14,7 @@ namespace Rebus.Timeouts
         readonly Action _completeAction;
 
         /// <summary>
-        /// Constructs the due message with the given headers and body, storing the given <see cref="completeAction"/> to be
+        /// Constructs the due message with the given headers and body, storing the given <paramref name="completeAction"/> to be
         /// executed when the message's <see cref="MarkAsCompleted"/> method is called.
         /// </summary>
         public DueMessage(Dictionary<string, string> headers, byte[] body, Action completeAction = null)

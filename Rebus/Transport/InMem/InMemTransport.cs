@@ -16,8 +16,8 @@ namespace Rebus.Transport.InMem
 
         /// <summary>
         /// Creates the transport, using the specified <see cref="InMemNetwork"/> to deliver/receive messages. This transport will have
-        /// <see cref="inputQueueAddress"/> as its input queue address, and thus will attempt to receive messages from the queue with that
-        /// name out of the given <see cref="network"/>
+        /// <paramref name="inputQueueAddress"/> as its input queue address, and thus will attempt to receive messages from the queue with that
+        /// name out of the given <paramref name="network"/>
         /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {

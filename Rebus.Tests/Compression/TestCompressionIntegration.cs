@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -79,6 +77,8 @@ namespace Rebus.Tests.Compression
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "compressor"))
                 .Options(o =>
                 {
+                    o.LogPipeline();
+
                     if (withCompressionEnabled)
                     {
                         o.EnableCompression(128);

@@ -7,6 +7,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Time;
 using Rebus.Timeouts;
+#pragma warning disable 1998
 
 namespace Rebus.Persistence.InMem
 {

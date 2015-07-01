@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -222,7 +223,7 @@ namespace Rebus.Bus
             }
             catch (Exception exception)
             {
-                throw new ApplicationException(string.Format("Could not get the return address from the '{0}' header of the incoming message with ID {1}",
+                throw new RebusApplicationException(string.Format("Could not get the return address from the '{0}' header of the incoming message with ID {1}",
                     Headers.ReturnAddress, transportMessage.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>"), exception);
             }
         }
@@ -263,7 +264,7 @@ namespace Rebus.Bus
         {
             var context = new OutgoingStepContext(logicalMessage, transactionContext, new DestinationAddresses(destinationAddresses));
 
-            await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline().Select(s => s.Step));
+            await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline());
         }
 
         bool _disposing;
@@ -338,7 +339,7 @@ namespace Rebus.Bus
                 }
                 catch (Exception exception)
                 {
-                    throw new ApplicationException(string.Format("Could not create {0}", workerName), exception);
+                    throw new RebusApplicationException(string.Format("Could not create {0}", workerName), exception);
                 }
             }
         }

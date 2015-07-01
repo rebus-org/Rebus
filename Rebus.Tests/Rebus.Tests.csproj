@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
+    <Compile Include="Auditing\TestMessageAuditing.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Compression\TestCompressionIntegration.cs" />
     <Compile Include="Compression\TestZipper.cs" />
@@ -67,6 +68,8 @@
     <Compile Include="Contracts\Transports\BasicSendReceive.cs" />
     <Compile Include="Contracts\Transports\ITransportFactory.cs" />
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
+    <Compile Include="Encryption\TestEncryption.cs" />
+    <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
     <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
@@ -75,6 +78,7 @@
     <Compile Include="Integration\ManyMessages\MsmqBusFactory.cs" />
     <Compile Include="Integration\TestAlternativeWorkerFactory.cs" />
     <Compile Include="Integration\TestBugWhenSendingMessagesInParallel.cs" />
+    <Compile Include="Integration\TestEncryptionAndCompressionTogether.cs" />
     <Compile Include="Integration\TestErrorsInPipeline.cs" />
     <Compile Include="Integration\ManyMessages\TestManyMessages.cs" />
     <Compile Include="Integration\TestHandlerReordering.cs" />
@@ -103,7 +107,10 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManagerFactory.cs" />
+    <Compile Include="Pipeline\TestPipelineLogging.cs" />
+    <Compile Include="Pipeline\TestPipelineStepInjector.cs" />
     <Compile Include="Serialization\BasicSerializationTests.cs" />
+    <Compile Include="Serialization\Default\TestDynamicJil.cs" />
     <Compile Include="Serialization\JsonSerializerFactory.cs" />
     <Compile Include="SqlTestHelper.cs" />
     <Compile Include="TestConfig.cs" />
