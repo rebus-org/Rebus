@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,10 +14,10 @@ namespace Rebus.Tests.Integration.ManyMessages
 {
     [TestFixture]
     public class MsmqTestManyMessages : TestManyMessages<MsmqBusFactory> { }
-    
+
     [TestFixture]
     public class InMemTestManyMessages : TestManyMessages<InMemoryBusFactory> { }
-    
+
     [TestFixture]
     public class SqlServerTestManyMessages : TestManyMessages<SqlServerBusFactory> { }
 
@@ -46,7 +47,7 @@ namespace Rebus.Tests.Integration.ManyMessages
             var idCounts = new ConcurrentDictionary<int, int>();
             var sentMessages = 0;
             var receivedMessages = 0;
-
+            var stopWatch = new Stopwatch();
             var bus1 = _busFactory.GetBus<MessageWithId>(TestConfig.QueueName("input1"),
                 async msg =>
                 {
@@ -56,7 +57,10 @@ namespace Rebus.Tests.Integration.ManyMessages
 
                     if (receivedMessages >= messageCount)
                     {
+                        stopWatch.Stop();
+                        Console.WriteLine("DONE: took time:" + stopWatch.ElapsedMilliseconds+"ms");
                         allMessagesReceived.Set();
+
                     }
                 });
 
@@ -68,7 +72,7 @@ namespace Rebus.Tests.Integration.ManyMessages
             {
                 printTimer.Elapsed += delegate { Console.WriteLine("Sent: {0}, Received: {1}", sentMessages, receivedMessages); };
                 printTimer.Start();
-
+                stopWatch.Start();
                 Console.WriteLine("Sending {0} messages", messageCount);
                 await Task.WhenAll(messagesToSend.Select(async msg =>
                 {

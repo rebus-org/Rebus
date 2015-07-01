@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AmazonSqsManyMessages.cs" />
     <Compile Include="AmazonSqsMessageExpiration.cs" />
     <Compile Include="AmazonSQSSimpleSend.cs" />
     <Compile Include="AmazonSQSTransportFactory.cs" />

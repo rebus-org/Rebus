@@ -3,9 +3,12 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Amazon;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Tests.Integration.ManyMessages;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
@@ -19,7 +22,7 @@ namespace Rebus.AmazonSQS.Tests
 
         private static ConnectionInfo _connectionInfo = null;
 
-        static ConnectionInfo ConnectionInfo
+        internal static ConnectionInfo ConnectionInfo
         {
             get
             {
@@ -108,7 +111,8 @@ namespace Rebus.AmazonSQS.Tests
         {
             throw new ConfigurationErrorsException(message);
         }
-        
+
+
     }
     internal class ConnectionInfo
     {
