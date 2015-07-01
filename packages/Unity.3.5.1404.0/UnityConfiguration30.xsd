@@ -1,0 +1,319 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns="http://schemas.microsoft.com/practices/2010/unity"
+           targetNamespace="http://schemas.microsoft.com/practices/2010/unity"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+  <!-- Core unity config -->
+
+  <xs:element name="unity" type="UnityConfigurationSection" />
+
+  <xs:complexType name="UnityConfigurationSection">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="container" type="ContainerElement"/>
+        <xs:element name="alias" type="AliasElement" />
+        <xs:element name="sectionExtension" type="SectionExtensionElement" />
+        <xs:element name="namespace" type="NamedElement" />
+        <xs:element name="assembly" type="NamedElement" />
+      </xs:choice>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="Containers">
+    <xs:sequence>
+      <xs:element name="container" minOccurs="0" maxOccurs="unbounded" type="ContainerElement"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="ContainerElement">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="instance" type="InstanceElement"/>
+        <xs:element name="register" type="RegisterElement"/>
+        <xs:element name="extension" type="ContainerExtensionElement"/>
+        <xs:element name="interception" type="InterceptionElement"/>
+        <xs:element name="interceptors" type="InterceptorsElement"/>
+      </xs:choice>
+    </xs:sequence>
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="InstanceElement">
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+    <xs:attribute name="value" type="LiteralValue_Type"/>
+    <xs:attribute name="typeConverter" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="ContainerExtensionElement">
+    <xs:attribute name="type" type="ContainerExtensionTypeName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="RegisterElement">
+    <xs:group ref="InjectionGroup"/>
+    <xs:attribute name="type" type="TypeName_Type" use="required" />
+    <xs:attribute name="name" type="IdentifierName_Type" />
+    <xs:attribute name="mapTo" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="LifetimeElement">
+    <xs:attribute name="type" type="LifetimeTypeName_Type" use="required"/>
+    <xs:attribute name="value" type="LiteralValue_Type"/>
+    <xs:attribute name="typeConverter" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="ConstructorElement">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="param" type="ParameterElement"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MethodElement">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="param" type="ParameterElement"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="PropertyElement">
+    <xs:group ref="ValueResolutionGroup" minOccurs="0"/>
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+    <xs:attributeGroup ref="ValueOptimizationAttributes"/>
+  </xs:complexType>
+
+  <xs:complexType name="ParameterElement">
+    <xs:group ref="ValueResolutionGroup" minOccurs="0"/>
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+    <xs:attributeGroup ref="ValueOptimizationAttributes"/>
+  </xs:complexType>
+
+  <xs:complexType name="DependencyElement">
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="ValueElement">
+    <xs:attribute name="value" type="LiteralValue_Type"/>
+    <xs:attribute name="typeConverter" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="ArrayElement">
+    <xs:group ref="ValueResolutionGroup" minOccurs="0" maxOccurs="unbounded"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="OptionalElement">
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="AliasElement">
+    <xs:attribute name="alias" type="IdentifierName_Type" use="required"/>
+    <xs:attribute name="type" type="TypeName_Type" use="required"/>
+  </xs:complexType>
+
+
+  <xs:complexType name="SectionExtensionElement">
+    <xs:attribute name="prefix" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="SectionExtensionTypeName_Type" use="required"/>
+  </xs:complexType>
+
+
+  <xs:attributeGroup name="ValueOptimizationAttributes">
+    <xs:attribute name="value" type="LiteralValue_Type"/>
+    <xs:attribute name="dependencyName" type="IdentifierName_Type"/>
+    <xs:attribute name="dependencyType" type="TypeName_Type"/>
+  </xs:attributeGroup>
+
+  <xs:group name="ValueResolutionGroup">
+    <xs:choice>
+      <xs:element name="value" type="ValueElement"/>
+      <xs:element name="dependency" type="DependencyElement"/>
+      <xs:element name="array" type="ArrayElement"/>
+      <xs:element name="optional" type="OptionalElement"/>
+    </xs:choice>
+  </xs:group>
+
+  <xs:group name="InjectionGroup">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="lifetime" type="LifetimeElement"/>
+      <xs:element minOccurs="0" name="constructor" type="ConstructorElement"/>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="method" type="MethodElement"/>
+        <xs:element name="property" type="PropertyElement"/>
+        <xs:element name="interceptor" type="InterceptorElement"/>
+        <xs:element name="interceptionBehavior" type="InterceptionBehaviorElement"/>
+        <xs:element name="addInterface" type="AddInterfaceElement"/>
+        <xs:element name="policyInjection" type="PolicyInjectionElement"/>
+      </xs:choice>
+    </xs:sequence>
+  </xs:group>
+
+  <!-- Interception config -->
+
+  <xs:complexType name="InterceptionElement">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="policy" type="PolicyElement"/>
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="PolicyElement">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="callHandler" type="CallHandlerElement"/>
+      <xs:element name="matchingRule" type="MatchingRuleElement"/>
+    </xs:choice>
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="CallHandlerElement">
+    <xs:group ref="InjectionGroup"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="MatchingRuleElement">
+    <xs:group ref="InjectionGroup"/>
+    <xs:attribute name="type" type="MatchingRuleTypeName_Type"/>
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="InterceptorElement">
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="InterceptorTypeName_Type"/>
+    <xs:attribute name="isDefaultForType" type="boolean_Type2"/>
+  </xs:complexType>
+
+  <xs:complexType name="InterceptionBehaviorElement">
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+    <xs:attribute name="type" type="TypeName_Type"/>
+    <xs:attribute name="isDefaultForType" type="boolean_Type2"/>
+  </xs:complexType>
+
+  <xs:complexType name="AddInterfaceElement">
+    <xs:attribute name="type" type="TypeName_Type" use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="PolicyInjectionElement"/>
+
+  <xs:complexType name="InterceptorsElement">
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="interceptor" type="InterceptorsInterceptorElement"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="InterceptorsInterceptorElement">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="key" type="KeyElement"/>
+      <xs:element name="default" type="DefaultElement"/>
+    </xs:choice>
+    <xs:attribute name="type" type="InterceptorTypeName_Type"/>
+    <xs:attribute name="value" type="LiteralValue_Type"/>
+    <xs:attribute name="typeConverter" type="TypeName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="KeyElement">
+    <xs:attribute name="type" type="TypeName_Type" use="required"/>
+    <xs:attribute name="name" type="IdentifierName_Type"/>
+  </xs:complexType>
+
+  <xs:complexType name="DefaultElement">
+    <xs:attribute name="type" type="TypeName_Type" use="required"/>
+  </xs:complexType>
+
+  <!-- common types -->
+
+  <xs:simpleType name="LiteralValue_Type">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="TypeName_Type">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="LifetimeTypeName_Type">
+    <xs:union memberTypes="TypeName_Type">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="singleton"/>
+          <xs:enumeration value="transient"/>
+          <xs:enumeration value="perthread"/>
+          <xs:enumeration value="external"/>
+          <xs:enumeration value="hierarchical"/>
+          <xs:enumeration value="resolve"/>
+          <xs:enumeration value="perresolve"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="ContainerExtensionTypeName_Type">
+    <xs:union memberTypes="TypeName_Type">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="Interception"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="SectionExtensionTypeName_Type">
+    <xs:union memberTypes="TypeName_Type">
+      <xs:simpleType>
+        <xs:restriction base="xs:string">
+          <xs:enumeration value="Microsoft.Practices.Unity.InterceptionExtension.Configuration.InterceptionConfigurationExtension, Microsoft.Practices.Unity.Interception.Configuration"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="InterceptorTypeName_Type">
+    <xs:union memberTypes="TypeName_Type">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="VirtualMethodInterceptor"/>
+          <xs:enumeration value="InterfaceInterceptor"/>
+          <xs:enumeration value="TransparentProxyInterceptor"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="MatchingRuleTypeName_Type">
+    <xs:union memberTypes="TypeName_Type">
+      <xs:simpleType>
+        <xs:restriction base="xs:NMTOKEN">
+          <xs:enumeration value="AssemblyMatchingRule"/>
+          <xs:enumeration value="CustomAttributeMatchingRule"/>
+          <xs:enumeration value="MemberNameMatchingRule"/>
+          <xs:enumeration value="NamespaceMatchingRule"/>
+          <xs:enumeration value="ParameterTypeMatchingRule"/>
+          <xs:enumeration value="PropertyMatchingRule"/>
+          <xs:enumeration value="TagAttributeMatchingRule"/>
+          <xs:enumeration value="TypeMatchingRule"/>
+        </xs:restriction>
+      </xs:simpleType>
+    </xs:union>
+  </xs:simpleType>
+
+  <xs:simpleType name="IdentifierName_Type">
+    <xs:restriction base="xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="boolean_Type2">
+    <xs:restriction base="xs:boolean">
+      <xs:pattern value="true" />
+      <xs:pattern value="false" />
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="Empty"/>
+
+  <xs:complexType name="NamedElement">
+    <xs:attribute name="name" type="IdentifierName_Type" use="required"/>
+  </xs:complexType>
+
+</xs:schema>

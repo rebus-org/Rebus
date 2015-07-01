@@ -1,1 +1,0 @@
-﻿DefaultEndpointsProtocol=http;AccountName=drachmannstorage;AccountKey=RsCXDc0e0dCzlurvE9QIk4BFnkhph7+Nsk0Md1jB4UU5/iFHWIOkIVGyjv6kunJTWKC1+qnszHcCKDi1muhWVw==
