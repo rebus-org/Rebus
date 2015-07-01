@@ -24,5 +24,14 @@ namespace Rebus.Extensions
                 type = type.BaseType;
             }
         }
+
+        /// <summary>
+        /// Gets the assembly-qualified name of the type, without any version info etc.
+        /// E.g. "System.String, mscorlib"
+        /// </summary>
+        public static string GetSimpleAssemblyQualifiedName(this Type type)
+        {
+            return string.Format("{0}, {1}", type.FullName, type.Assembly.GetName().Name);
+        }
     }
 }

@@ -41,7 +41,7 @@ namespace Rebus.Serialization
             var bytes = DefaultEncoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
             var messageType = message.Body.GetType();
-            headers[Headers.Type] = string.Format("{0}, {1}", messageType.FullName, messageType.Assembly.GetName().Name);
+            headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
             headers[Headers.ContentType] = JsonUtf8ContentType;
             return new TransportMessage(headers, bytes);
         }

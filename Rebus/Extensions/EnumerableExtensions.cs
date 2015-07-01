@@ -17,7 +17,7 @@ namespace Rebus.Extensions
         }
 
         /// <summary>
-        /// Iterates the sequence, calling the given <see cref="itemAction"/> for each item
+        /// Iterates the sequence, calling the given <paramref name="itemAction"/> for each item
         /// </summary>
         public static void ForEach<T>(this IEnumerable<T> items, Action<T> itemAction)
         {

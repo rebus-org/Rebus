@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Rebus.Exceptions;
 
 namespace Rebus.Transport
 {
@@ -65,7 +66,7 @@ namespace Rebus.Transport
             }
             catch (Exception exception)
             {
-                throw new ApplicationException(string.Format("Could not 'GetOrAdd' item with key '{0}' as type {1}",
+                throw new RebusApplicationException(string.Format("Could not 'GetOrAdd' item with key '{0}' as type {1}",
                     key, typeof(TItem)), exception);
             }
         }

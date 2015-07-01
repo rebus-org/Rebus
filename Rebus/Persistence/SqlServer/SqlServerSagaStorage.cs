@@ -226,7 +226,7 @@ WHERE [index].[saga_type] = @saga_type
 
                 if (propertiesToIndex.Any())
                 {
-                    CreateIndex(propertiesToIndex, connection, sagaData);
+                    await CreateIndex(propertiesToIndex, connection, sagaData);
                 }
 
                 await connection.Complete();
@@ -278,7 +278,7 @@ UPDATE [{0}]
 
                     if (propertiesToIndex.Any())
                     {
-                        CreateIndex(propertiesToIndex, connection, sagaData);
+                        await CreateIndex(propertiesToIndex, connection, sagaData);
                     }
 
                     await connection.Complete();
@@ -326,10 +326,12 @@ UPDATE [{0}]
             return (propertyValue ?? "").ToString();
         }
 
-        void CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, IDbConnection connection, ISagaData sagaData)
+        async Task CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, IDbConnection connection, ISagaData sagaData)
         {
             var sagaTypeName = GetSagaTypeName(sagaData.GetType());
-            var parameters = propertiesToIndex
+            var propertiesToIndexList = propertiesToIndex.ToList();
+
+            var parameters = propertiesToIndexList
                 .Select((p, i) => new
                 {
                     PropertyName = p.Key,
@@ -369,13 +371,14 @@ VALUES
 
                 try
                 {
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
                 catch (SqlException sqlException)
                 {
                     if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                     {
-                        throw new ConcurrencyException("Could not update index for saga with ID {0}", sagaData.Id);
+                        throw new ConcurrencyException("Could not update index for saga with ID {0} because of a PK violation - there must already exist a saga instance that uses one of the following correlation properties: {1}", sagaData.Id,
+                            string.Join(", ", propertiesToIndexList.Select(p => string.Format("{0}='{1}'", p.Key, p.Value))));
                     }
 
                     throw;

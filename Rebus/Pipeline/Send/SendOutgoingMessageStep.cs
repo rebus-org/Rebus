@@ -13,6 +13,7 @@ namespace Rebus.Pipeline.Send
     /// found in the context to the destination address specified by looking up
     /// <see cref="DestinationAddresses"/> in the context.
     /// </summary>
+    [StepDocumentation("Final step that uses the current transport to send the transport message found in the context to all addresses found by looking up the DestinationAddress object from the context.")]
     public class SendOutgoingMessageStep : IOutgoingStep
     {
         static ILog _log;

@@ -90,5 +90,10 @@ namespace Rebus.Messages
             /// </summary>
             public const string PublishSubscribe = "pub";
         }
+
+        /// <summary>
+        /// Headers with <see cref="DateTimeOffset"/> (serialized with the format string 'O') of the time when the message copy was forwarded to the audit queue.
+        /// </summary>
+        public const string AuditTime = "rbs2-audittime";
     }
 }

@@ -13,7 +13,7 @@ namespace Rebus.Threading
         readonly SemaphoreSlim _semaphore;
 
         /// <summary>
-        /// Constructs the bottleneck, allowing for <see cref="maxParallelOperationsToAllow"/> parallel operations
+        /// Constructs the bottleneck, allowing for <paramref name="maxParallelOperationsToAllow"/> parallel operations
         /// to be performed
         /// </summary>
         public AsyncBottleneck(int maxParallelOperationsToAllow)

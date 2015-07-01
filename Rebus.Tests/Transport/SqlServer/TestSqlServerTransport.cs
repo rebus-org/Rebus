@@ -80,7 +80,7 @@ namespace Rebus.Tests.Transport.SqlServer
             Console.WriteLine("Sending {0} messages", numberOfMessages);
 
             await Task.WhenAll(Enumerable.Range(0, numberOfMessages)
-                .Select(i => Task.Run(async () =>
+                .Select(async i =>
                 {
                     using (var context = new DefaultTransactionContext())
                     {
@@ -89,7 +89,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
                         messageIds[i] = 0;
                     }
-                })));
+                }));
 
             Console.WriteLine("Receiving {0} messages", numberOfMessages);
 
@@ -102,7 +102,7 @@ namespace Rebus.Tests.Transport.SqlServer
                 timer.Start();
 
                 await Task.WhenAll(Enumerable.Range(0, numberOfMessages)
-                    .Select(i => Task.Run(async () =>
+                    .Select(async i =>
                     {
                         using (var context = new DefaultTransactionContext())
                         {
@@ -115,7 +115,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
                             messageIds.AddOrUpdate(id, 1, (_, existing) => existing + 1);
                         }
-                    })));
+                    }));
 
                 await Task.Delay(1000);
             }

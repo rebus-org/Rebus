@@ -27,6 +27,8 @@ namespace Rebus.Tests
 
         public static void DropTable(string tableName)
         {
+            SqlConnection.ClearAllPools();
+
             try
             {
                 WithRetries(5, () =>
