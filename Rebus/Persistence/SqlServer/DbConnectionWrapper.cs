@@ -73,7 +73,7 @@ namespace Rebus.Persistence.SqlServer
 
             try
             {
-                using (_connection)
+                try
                 {
                     if (_currentTransaction != null)
                     {
@@ -82,6 +82,10 @@ namespace Rebus.Persistence.SqlServer
                     }
 
                     _connection.Close();
+                }
+                finally
+                {
+                    _connection.Dispose();
                 }
             }
             finally

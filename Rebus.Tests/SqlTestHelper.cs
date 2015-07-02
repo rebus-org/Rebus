@@ -27,11 +27,9 @@ namespace Rebus.Tests
 
         public static void DropTable(string tableName)
         {
-            SqlConnection.ClearAllPools();
-
             try
             {
-                WithRetries(5, () =>
+//                WithRetries(5, () =>
                 {
                     using (var connection = new SqlConnection(ConnectionString))
                     {
@@ -47,7 +45,8 @@ namespace Rebus.Tests
                             command.ExecuteNonQuery();
                         }
                     }
-                });
+                }
+                //);
             }
             catch (Exception exception)
             {
