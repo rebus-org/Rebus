@@ -18,6 +18,9 @@ namespace Rebus.Persistence.InMem
     {
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
 
+        /// <summary>
+        /// Stores the message with the given headers and body data, delaying it until the specified <paramref name="approximateDueTime"/>
+        /// </summary>
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             lock (_deferredMessages)

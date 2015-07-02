@@ -138,20 +138,35 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
             {
-                var factory = new ThreadWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>())
+                var transport = c.Get<ITransport>();
+                var pipeline = c.Get<IPipeline>();
+                var pipelineInvoker = c.Get<IPipelineInvoker>();
+                var factory = new ThreadWorkerFactory(transport, pipeline, pipelineInvoker)
                 {
                     MaxParallelismPerWorker = _options.MaxParallelism
                 };
                 return factory;
             });
 
-            PossiblyRegisterDefault<IRetryStrategy>(c => new SimpleRetryStrategy(c.Get<ITransport>(), c.Get<SimpleRetryStrategySettings>()));
+            PossiblyRegisterDefault<IRetryStrategy>(c =>
+            {
+                var transport = c.Get<ITransport>();
+                var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
+                var simpleRetryStrategy = new SimpleRetryStrategy(transport, simpleRetryStrategySettings);
+                return simpleRetryStrategy;
+            });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
 
             PossiblyRegisterDefault<ITimeoutManager>(c => new InMemoryTimeoutManager());
 
-            PossiblyRegisterDefault(c => new HandleDeferredMessagesStep(c.Get<ITimeoutManager>(), c.Get<ITransport>()));
+            PossiblyRegisterDefault(c =>
+            {
+                var transport = c.Get<ITransport>();
+                var timeoutManager = c.Get<ITimeoutManager>();
+                var handleDeferredMessagesStep = new HandleDeferredMessagesStep(timeoutManager, transport);
+                return handleDeferredMessagesStep;
+            });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
@@ -211,7 +226,13 @@ namespace Rebus.Config
                 return bus;
             });
 
-            _injectionist.Register<IHandlerActivator>(c => new InternalHandlersContributor(c.Get<IHandlerActivator>(), c.Get<ISubscriptionStorage>()), isDecorator: true);
+            _injectionist.Register<IHandlerActivator>(c =>
+            {
+                var handlerActivator = c.Get<IHandlerActivator>();
+                var subscriptionStorage = c.Get<ISubscriptionStorage>();
+                var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
+                return internalHandlersContributor;
+            }, isDecorator: true);
 
             var busInstance = _injectionist.Get<IBus>();
 

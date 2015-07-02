@@ -17,7 +17,7 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <see cref="TService"/> service
+        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
         /// </summary>
         public void Register(Func<IResolutionContext, TService> factoryMethod)
         {
@@ -25,7 +25,7 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <see cref="TService"/> service
+        /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service
         /// </summary>
         public void Decorate(Func<IResolutionContext, TService> factoryMethod)
         {

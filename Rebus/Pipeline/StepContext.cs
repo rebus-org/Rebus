@@ -17,7 +17,7 @@ namespace Rebus.Pipeline
         readonly Dictionary<string, object> _items = new Dictionary<string, object>();
 
         /// <summary>
-        /// Saves the given instance in the bag with a key derived from the (possibly explicitly specified) type <see cref="T"/> (by calling <see cref="Type.FullName"/>).
+        /// Saves the given instance in the bag with a key derived from the (possibly explicitly specified) type <typeparamref name="T"/> (by calling <see cref="Type.FullName"/>).
         /// Any instances currently stored under that key will be overwritten.
         /// </summary>
         public T Save<T>(T instance)
@@ -35,7 +35,7 @@ namespace Rebus.Pipeline
         }
 
         /// <summary>
-        /// Loads the instance stored under the key that is stored under a key as determined by calling <see cref="Type.FullName"/> on the specified type <see cref="T"/>.
+        /// Loads the instance stored under the key that is stored under a key as determined by calling <see cref="Type.FullName"/> on the specified type <typeparamref name="T"/>.
         /// Returns null if none could be found.
         /// </summary>
         public T Load<T>()

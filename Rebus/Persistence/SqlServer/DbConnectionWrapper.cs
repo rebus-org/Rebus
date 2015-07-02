@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+#pragma warning disable 1998
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -17,7 +18,7 @@ namespace Rebus.Persistence.SqlServer
         bool _disposed;
 
         /// <summary>
-        /// Constructs the wrapper, wrapping the given connection and transaction. It must be indicated with <see cref="managedExternally"/> whether this wrapper
+        /// Constructs the wrapper, wrapping the given connection and transaction. It must be indicated with <paramref name="managedExternally"/> whether this wrapper
         /// should commit/rollback the transaction (depending on whether <see cref="Complete"/> is called before <see cref="Dispose"/>), or if the transaction
         /// is handled outside of the wrapper
         /// </summary>

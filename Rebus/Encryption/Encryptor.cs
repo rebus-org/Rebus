@@ -4,17 +4,46 @@ using System.Security.Cryptography;
 
 namespace Rebus.Encryption
 {
+    /// <summary>
+    /// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
+    /// </summary>
     public class Encryptor
     {
         readonly byte[] _key;
 
+        /// <summary>
+        /// Creates the encrptor with the specified key - the key must be a valid, base64-encoded key
+        /// </summary>
+        /// <param name="key"></param>
         public Encryptor(string key)
         {
             _key = Convert.FromBase64String(key);
 
+            try
+            {
+                using (var rijndael = new RijndaelManaged())
+                {
+                    rijndael.Key = _key;
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new ArgumentException(string.Format(@"Could not initialize the encryption algorithm with the specified key (not shown here for security reasons) - if you're unsure how to get a valid key, here's a newly generated key that you can use:
+
+    {0}
+
+I promise that the suggested key has been generated this instant - if you don't believe me, feel free to run the program again ;)",
+                    GenerateNewKey()), exception);
+            }
+        }
+
+        string GenerateNewKey()
+        {
             using (var rijndael = new RijndaelManaged())
             {
-                rijndael.Key = _key;
+                rijndael.GenerateKey();
+                
+                return Convert.ToBase64String(rijndael.Key);
             }
         }
 
