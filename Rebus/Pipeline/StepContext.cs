@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline
@@ -14,7 +14,7 @@ namespace Rebus.Pipeline
         /// </summary>
         public const string StepContextKey = "stepContext";
 
-        readonly Dictionary<string, object> _items = new Dictionary<string, object>();
+        readonly ConcurrentDictionary<string, object> _items = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Saves the given instance in the bag with a key derived from the (possibly explicitly specified) type <typeparamref name="T"/> (by calling <see cref="Type.FullName"/>).

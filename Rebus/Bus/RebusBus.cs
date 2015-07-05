@@ -72,13 +72,14 @@ namespace Rebus.Bus
 
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            var logicalMessage = CreateMessage(commandMessage, Operation.SendLocal, optionalHeaders);
             var destinationAddress = _transport.Address;
 
             if (string.IsNullOrWhiteSpace(destinationAddress))
             {
                 throw new InvalidOperationException("It's not possible to send the message to ourselves, because this is a one-way client!");
             }
+
+            var logicalMessage = CreateMessage(commandMessage, Operation.SendLocal, optionalHeaders);
 
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
@@ -149,13 +150,13 @@ namespace Rebus.Bus
             }
             else
             {
+                var destinationAddress = await _router.GetOwnerAddress(topic);
+
                 var logicalMessage = CreateMessage(new SubscribeRequest
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
                 }, Operation.Subscribe);
-
-                var destinationAddress = await _router.GetOwnerAddress(topic);
 
                 await InnerSend(new[] { destinationAddress }, logicalMessage);
             }
@@ -169,13 +170,13 @@ namespace Rebus.Bus
             }
             else
             {
+                var destinationAddress = await _router.GetOwnerAddress(topic);
+
                 var logicalMessage = CreateMessage(new UnsubscribeRequest
                 {
                     Topic = topic,
                     SubscriberAddress = _transport.Address,
                 }, Operation.Unsubscribe);
-
-                var destinationAddress = await _router.GetOwnerAddress(topic);
 
                 await InnerSend(new[] { destinationAddress }, logicalMessage);
             }
