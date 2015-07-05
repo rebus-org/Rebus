@@ -185,7 +185,7 @@ namespace Rebus.Transport.Msmq
                     return null;
                 }
 
-                var headers = _extensionSerializer.Deserialize(message.Extension);
+                var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
 
                 await message.BodyStream.ReadAsync(body, 0, body.Length);
@@ -285,7 +285,7 @@ namespace Rebus.Transport.Msmq
                 return DefaultEncoding.GetBytes(jsonString);
             }
 
-            public Dictionary<string, string> Deserialize(byte[] bytes)
+            public Dictionary<string, string> Deserialize(byte[] bytes, string msmqMessageId)
             {
                 var jsonString = DefaultEncoding.GetString(bytes);
 
@@ -295,7 +295,8 @@ namespace Rebus.Transport.Msmq
                 }
                 catch (Exception exception)
                 {
-                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension - expected valid JSON text: '{0}'", jsonString), exception);
+                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension for message with physical message ID {0} - expected valid JSON text, got '{1}'", 
+                        msmqMessageId, jsonString), exception);
                 }
             }
         }
