@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Messaging;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -279,12 +280,23 @@ namespace Rebus.Transport.Msmq
 
             public byte[] Serialize(Dictionary<string, string> headers)
             {
-                return DefaultEncoding.GetBytes(JsonConvert.SerializeObject(headers));
+                var jsonString = JsonConvert.SerializeObject(headers);
+
+                return DefaultEncoding.GetBytes(jsonString);
             }
 
             public Dictionary<string, string> Deserialize(byte[] bytes)
             {
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
+                var jsonString = DefaultEncoding.GetString(bytes);
+
+                try
+                {
+                    return JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
+                }
+                catch (Exception exception)
+                {
+                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension - expected valid JSON text: '{0}'", jsonString), exception);
+                }
             }
         }
 
