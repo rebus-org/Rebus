@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Logging;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -13,6 +14,13 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class DbConnectionProvider : IDbConnectionProvider
     {
+        static ILog _log;
+
+        static DbConnectionProvider()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
         readonly string _connectionString;
 
         /// <summary>
@@ -46,6 +54,7 @@ namespace Rebus.Persistence.SqlServer
 
             if (!connectionStringParameters.ContainsKey("MultipleActiveResultSets"))
             {
+                _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
                 return connectionString + ";MultipleActiveResultSets=true";
             }
 
@@ -64,13 +73,27 @@ namespace Rebus.Persistence.SqlServer
 
         public async Task<IDbConnection> GetConnection()
         {
-            var connection = new SqlConnection(_connectionString);
-            
-            connection.Open();
+            SqlConnection connection = null;
 
-            var transaction = connection.BeginTransaction(IsolationLevel);
+            try
+            {
+                connection = new SqlConnection(_connectionString);
 
-            return new DbConnectionWrapper(connection, transaction, false);
+                connection.Open();
+
+                var transaction = connection.BeginTransaction(IsolationLevel);
+
+                return new DbConnectionWrapper(connection, transaction, false);
+            }
+            catch(Exception exception)
+            {
+                _log.Warn("Could not open connection and begin transaction: {0}", exception);
+                if (connection != null)
+                {
+                    connection.Dispose();
+                }
+                throw;
+            }
         }
 
         /// <summary>
