@@ -32,7 +32,7 @@ namespace Rebus.Persistence.SqlServer
         {
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
 
-            _connectionString = EnsureMarsIsEnabled(connectionString);
+            //_connectionString = EnsureMarsIsEnabled(connectionString);
 
             IsolationLevel = IsolationLevel.ReadCommitted;
         }
