@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Tests
@@ -50,7 +52,60 @@ namespace Rebus.Tests
             }
             catch (Exception exception)
             {
+                DumpWho();
+                
                 throw new ApplicationException(string.Format("Could not drop table '{0}'", tableName), exception);
+            }
+        }
+
+        static void DumpWho()
+        {
+            try
+            {
+                Console.WriteLine("Trying to dump all active connections...");
+                Console.WriteLine();
+
+                var who = ExecSpWho();
+
+                Console.WriteLine(string.Join(Environment.NewLine,
+                    who.Select(d => string.Join(", ", d.Select(kvp => string.Format("{0} = {1}", kvp.Key, kvp.Value))))));
+                
+                Console.WriteLine();
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Could not execute sp_who: {0}", exception);
+            }
+        }
+
+        public static IEnumerable<IDictionary<string, string>> ExecSpWho()
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = "sp_who;";
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        var rows = new List<Dictionary<string, string>>();
+
+                        while (reader.Read())
+                        {
+                            rows.Add(Enumerable.Range(0, reader.FieldCount)
+                                .Select(field => new
+                                {
+                                    ColumnName = reader.GetName(field),
+                                    Value = (reader.GetValue(field) ?? "").ToString().Trim()
+                                })
+                                .ToDictionary(a => a.ColumnName, a => a.Value));
+                        }
+
+                        return rows;
+                    }
+                }
             }
         }
 
