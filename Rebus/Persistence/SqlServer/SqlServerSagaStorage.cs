@@ -19,8 +19,8 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerSagaStorage : ISagaStorage
     {
-        const int MaximumSagaDataTypeNameLength = 40; 
-        
+        const int MaximumSagaDataTypeNameLength = 40;
+
         static ILog _log;
 
         static SqlServerSagaStorage()
@@ -52,7 +52,12 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public void EnsureTablesAreCreated()
         {
-            using (var connection = _connectionProvider.GetConnection().Result)
+            EnsureTablesAreCreatedAsync().Wait();
+        }
+
+        async Task EnsureTablesAreCreatedAsync()
+        {
+            using (var connection = await _connectionProvider.GetConnection())
             {
                 var tableNames = connection.GetTableNames().ToList();
 
@@ -63,11 +68,14 @@ namespace Rebus.Persistence.SqlServer
 
                 if (tableNames.Contains(_indexTableName, StringComparer.OrdinalIgnoreCase))
                 {
-                    throw new ApplicationException(string.Format("The saga data table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the index table",
-                        _dataTableName, _indexTableName));
+                    throw new ApplicationException(
+                        string.Format(
+                            "The saga data table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the index table",
+                            _dataTableName, _indexTableName));
                 }
 
-                _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName, _indexTableName);
+                _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName,
+                    _indexTableName);
 
                 using (var command = connection.CreateCommand())
                 {
@@ -82,8 +90,8 @@ CREATE TABLE [dbo].[{0}] (
     )
 )
 ", _dataTableName);
-                    
-                    command.ExecuteNonQuery();
+
+                    await command.ExecuteNonQueryAsync();
                 }
 
                 using (var command = connection.CreateCommand())
@@ -107,8 +115,8 @@ CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
 	[saga_id] ASC
 )
 ", _indexTableName);
-                    
-                    command.ExecuteNonQuery();
+
+                    await command.ExecuteNonQueryAsync();
                 }
 
                 using (var command = connection.CreateCommand())
@@ -119,8 +127,8 @@ ALTER TABLE [dbo].[{0}] WITH CHECK
 
 REFERENCES [dbo].[{1}] ([id]) ON DELETE CASCADE
 ", _indexTableName, _dataTableName);
-                    
-                    command.ExecuteNonQuery();
+
+                    await command.ExecuteNonQueryAsync();
                 }
 
                 using (var command = connection.CreateCommand())
@@ -129,10 +137,10 @@ REFERENCES [dbo].[{1}] ([id]) ON DELETE CASCADE
 ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
 ", _indexTableName, _dataTableName);
 
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
 
-                connection.Complete().Wait();
+                await connection.Complete();
             }
         }
 
@@ -169,8 +177,8 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.AddWithValue("value", correlationPropertyValue);
 
-                    var dbValue = command.ExecuteScalar();
-                    var value = (string) dbValue;
+                    var dbValue = await command.ExecuteScalarAsync();
+                    var value = (string)dbValue;
 
                     if (value == null) return null;
 
@@ -209,7 +217,7 @@ WHERE [index].[saga_type] = @saga_type
                     command.CommandText = string.Format(@"INSERT INTO [{0}] ([id], [revision], [data]) VALUES (@id, @revision, @data)", _dataTableName);
                     try
                     {
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                     }
                     catch (SqlException sqlException)
                     {
@@ -250,7 +258,7 @@ WHERE [index].[saga_type] = @saga_type
                     {
                         command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
                         command.Parameters.AddWithValue("id", sagaData.Id);
-                        command.ExecuteNonQuery();
+                        await command.ExecuteNonQueryAsync();
                     }
 
                     // next, update or insert the saga
@@ -266,7 +274,7 @@ UPDATE [{0}]
     SET [data] = @data, [revision] = @next_revision 
     WHERE [id] = @id AND [revision] = @current_revision", _dataTableName);
 
-                        var rows = command.ExecuteNonQuery();
+                        var rows = await command.ExecuteNonQueryAsync();
 
                         if (rows == 0)
                         {
@@ -303,7 +311,7 @@ UPDATE [{0}]
                     command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [id] = @id AND [revision] = @current_revision;", _dataTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
                     command.Parameters.AddWithValue("current_revision", sagaData.Revision);
-                    var rows = command.ExecuteNonQuery();
+                    var rows = await command.ExecuteNonQueryAsync();
                     if (rows == 0)
                     {
                         throw new ConcurrencyException("Delete of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
@@ -314,7 +322,7 @@ UPDATE [{0}]
                 {
                     command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
                     command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
 
                 await connection.Complete();
