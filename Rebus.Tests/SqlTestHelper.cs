@@ -14,7 +14,7 @@ namespace Rebus.Tests
         {
             get
             {
-                var databaseName = string.Format("rebus2_test_{0}", TestConfig.Suffix).TrimEnd('_');
+                var databaseName = DatabaseName;
 
                 if (!_databaseHasBeenInitialized)
                 {
@@ -25,6 +25,11 @@ namespace Rebus.Tests
 
                 return GetConnectionStringForDatabase(databaseName);
             }
+        }
+
+        public static string DatabaseName
+        {
+            get { return string.Format("rebus2_test_{0}", TestConfig.Suffix).TrimEnd('_'); }
         }
 
         public static void DropTable(string tableName)
@@ -62,10 +67,12 @@ namespace Rebus.Tests
         {
             try
             {
-                Console.WriteLine("Trying to dump all active connections...");
+                Console.WriteLine("Trying to dump all active connections for db {0}...", DatabaseName);
                 Console.WriteLine();
 
-                var who = ExecSpWho();
+                var who = ExecSpWho()
+                    .Where(kvp => kvp.ContainsKey("dbname"))
+                    .Where(kvp => kvp["dbname"].Equals(DatabaseName, StringComparison.InvariantCultureIgnoreCase));
 
                 Console.WriteLine(string.Join(Environment.NewLine,
                     who.Select(d => string.Join(", ", d.Select(kvp => string.Format("{0} = {1}", kvp.Key, kvp.Value))))));
