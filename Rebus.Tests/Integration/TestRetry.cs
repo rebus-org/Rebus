@@ -18,7 +18,7 @@ namespace Rebus.Tests.Integration
     [TestFixture, Category(Categories.Msmq)]
     public class TestRetry : FixtureBase
     {
-        static readonly string InputQueueName = TestConfig.QueueName(string.Format("test.retries.input@{0}", Environment.MachineName));
+        static readonly string InputQueueName = TestConfig.QueueName(string.Format("test.rebus2.retries.input@{0}", Environment.MachineName));
 
         BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
