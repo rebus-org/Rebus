@@ -32,7 +32,7 @@ namespace Rebus.Persistence.SqlServer
         {
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
 
-            //_connectionString = EnsureMarsIsEnabled(connectionString);
+            _connectionString = EnsureMarsIsEnabled(connectionString);
 
             IsolationLevel = IsolationLevel.ReadCommitted;
         }
@@ -52,11 +52,11 @@ namespace Rebus.Persistence.SqlServer
                 })
                 .ToDictionary(a => a.Key, a => a.Value, StringComparer.InvariantCultureIgnoreCase);
 
-            if (!connectionStringParameters.ContainsKey("MultipleActiveResultSets"))
-            {
-                _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
-                return connectionString + ";MultipleActiveResultSets=true";
-            }
+            //if (!connectionStringParameters.ContainsKey("MultipleActiveResultSets"))
+            //{
+            //    _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
+            //    return connectionString + ";MultipleActiveResultSets=true";
+            //}
 
             return connectionString;
         }
