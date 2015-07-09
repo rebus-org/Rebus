@@ -122,30 +122,6 @@ namespace Rebus.Tests
             }
         }
 
-        static void WithRetries(int maxAttempts, Action action)
-        {
-            while (true)
-            {
-                try
-                {
-                    action();
-
-                    return;
-                }
-                catch
-                {
-                    maxAttempts--;
-
-                    Console.WriteLine("Remainint attempts: {0}", maxAttempts);
-
-                    if (maxAttempts <= 0)
-                    {
-                        throw;
-                    }
-                }
-            }
-        }
-
         static void InitializeDatabase(string databaseName)
         {
             try
@@ -156,7 +132,7 @@ namespace Rebus.Tests
                 {
                     connection.Open();
 
-                    if (connection.GetDatabaseNames().Contains(databaseName)) return;
+                    if (connection.GetDatabaseNames().Contains(databaseName, StringComparer.InvariantCultureIgnoreCase)) return;
 
                     Console.WriteLine("Creating database {0}", databaseName);
 

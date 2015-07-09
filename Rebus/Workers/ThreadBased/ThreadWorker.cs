@@ -135,14 +135,21 @@ namespace Rebus.Workers.ThreadBased
 
         public void Stop()
         {
-            _keepWorking = false;
-            _cancellationTokenSource.Cancel();
+            if (_keepWorking)
+            {
+                _keepWorking = false;
+                _cancellationTokenSource.Cancel();
+            }
         }
 
         public void Dispose()
         {
-            _keepWorking = false;
-            _workerThread.Join();
+            Stop();
+            
+            if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
+            {
+                _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
+            }
         }
     }
 }

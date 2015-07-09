@@ -192,9 +192,8 @@ WHERE [index].[saga_type] = @saga_type
                     command.Parameters.Add("value", SqlDbType.NVarChar).Value = correlationPropertyValue;
 
                     var dbValue = await command.ExecuteScalarAsync();
+                    if (dbValue == DBNull.Value) return null;
                     var value = (string)dbValue;
-
-                    if (value == null) return null;
 
                     try
                     {

@@ -79,6 +79,7 @@ namespace Rebus.Persistence.SqlServer
                     if (_currentTransaction != null)
                     {
                         _currentTransaction.Rollback();
+                        _currentTransaction.Dispose();
                         _currentTransaction = null;
                     }
 

@@ -40,7 +40,7 @@ namespace Rebus.Persistence.SqlServer
                     command.Transaction = transaction;
                 }
 
-                command.CommandText = string.Format("SELECT * FROM {0}", systemTableName);
+                command.CommandText = string.Format("SELECT [name] FROM {0}", systemTableName);
 
                 using (var reader = command.ExecuteReader())
                 {
