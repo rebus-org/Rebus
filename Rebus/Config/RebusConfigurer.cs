@@ -141,19 +141,14 @@ namespace Rebus.Config
                 var transport = c.Get<ITransport>();
                 var pipeline = c.Get<IPipeline>();
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
-                var factory = new ThreadWorkerFactory(transport, pipeline, pipelineInvoker)
-                {
-                    MaxParallelismPerWorker = _options.MaxParallelism
-                };
-                return factory;
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism);
             });
 
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
                 var transport = c.Get<ITransport>();
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
-                var simpleRetryStrategy = new SimpleRetryStrategy(transport, simpleRetryStrategySettings);
-                return simpleRetryStrategy;
+                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
@@ -164,8 +159,7 @@ namespace Rebus.Config
             {
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
-                var handleDeferredMessagesStep = new HandleDeferredMessagesStep(timeoutManager, transport);
-                return handleDeferredMessagesStep;
+                return new HandleDeferredMessagesStep(timeoutManager, transport);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());

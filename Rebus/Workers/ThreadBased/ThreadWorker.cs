@@ -29,12 +29,11 @@ namespace Rebus.Workers.ThreadBased
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-        readonly ParallelismCounter _parallelismCounter;
+        readonly ParallelOperationsManager _parallelOperationsManager;
 
         volatile bool _keepWorking = true;
-        DateTime _threadStopSignalReceived;
 
-        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, int maxParallelismPerWorker)
+        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager)
         {
             Name = workerName;
 
@@ -42,32 +41,47 @@ namespace Rebus.Workers.ThreadBased
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
-            _parallelismCounter = new ParallelismCounter(maxParallelismPerWorker);
-            _workerThread = new Thread(() =>
-            {
-                SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
-                _log.Debug("Starting (thread-based) worker {0}", Name);
-                while (_keepWorking)
-                {
-                    DoWork();
-                }
-
-                while (true)
-                {
-                    DoWork(onlyRunContinuations: true);
-
-                    if (_threadStopSignalReceived.ElapsedUntilNow() > TimeSpan.FromSeconds(1))
-                    {
-                        break;
-                    }
-                }
-                _log.Debug("Worker {0} stopped", Name);
-            })
+            _parallelOperationsManager = parallelOperationsManager;
+            _workerThread = new Thread(ThreadStart)
             {
                 Name = workerName,
                 IsBackground = true
             };
             _workerThread.Start();
+        }
+
+        void ThreadStart()
+        {
+            SynchronizationContext.SetSynchronizationContext(_threadWorkerSynchronizationContext);
+
+            _log.Debug("Starting (thread-based) worker {0}", Name);
+
+            while (_keepWorking)
+            {
+                DoWork();
+            }
+
+            var didLogAboutContinuations = false;
+            var stopTime = DateTime.UtcNow;
+
+            while (_parallelOperationsManager.HasPendingTasks)
+            {
+                if (!didLogAboutContinuations)
+                {
+                    _log.Info("Continuations are waiting to be posted.... will wait up to 1 minute");
+                    didLogAboutContinuations = true;
+                }
+
+                DoWork(onlyRunContinuations: true);
+
+                if (stopTime.ElapsedUntilNow() >= TimeSpan.FromMinutes(1))
+                {
+                    _log.Warn("Not all continuations were able to finish within 1 minute!!!");
+                    break;
+                }
+            }
+
+            _log.Debug("Worker {0} stopped", Name);
         }
 
         void DoWork(bool onlyRunContinuations = false)
@@ -100,14 +114,14 @@ namespace Rebus.Workers.ThreadBased
 
         async void TryProcessMessage()
         {
-            if (!_parallelismCounter.CanContinue())
+            using (var op = _parallelOperationsManager.TryBegin())
             {
-                Thread.Sleep(10);
-                return;
-            }
+                if (!op.CanContinue())
+                {
+                    Thread.Sleep(10);
+                    return;
+                }
 
-            using (_parallelismCounter.Begin())
-            {
                 using (var transactionContext = new DefaultTransactionContext())
                 {
                     AmbientTransactionContext.Current = transactionContext;
@@ -154,7 +168,6 @@ namespace Rebus.Workers.ThreadBased
             {
                 _keepWorking = false;
                 _cancellationTokenSource.Cancel();
-                _threadStopSignalReceived = DateTime.UtcNow;
             }
         }
 

@@ -106,7 +106,7 @@ namespace Rebus.Tests.Integration
             }
 
             readonly BackoffHelper _backoffHelper = new BackoffHelper();
-            readonly ParallelismCounter _parallelismCounter;
+            readonly ParallelOperationsManager _parallelOperationsManager;
             readonly ITransport _transport;
             readonly IPipeline _pipeline;
             readonly IPipelineInvoker _pipelineInvoker;
@@ -119,7 +119,7 @@ namespace Rebus.Tests.Integration
                 _transport = transport;
                 _pipeline = pipeline;
                 _pipelineInvoker = pipelineInvoker;
-                _parallelismCounter = new ParallelismCounter(maxParallelismPerWorker);
+                _parallelOperationsManager = new ParallelOperationsManager(maxParallelismPerWorker);
 
                 Name = name;
 
@@ -133,10 +133,10 @@ namespace Rebus.Tests.Integration
 
             async Task DoWork()
             {
-                if (!_parallelismCounter.CanContinue()) return;
-
-                using (_parallelismCounter.Begin())
+                using (var op = _parallelOperationsManager.TryBegin())
                 {
+                    if (!op.CanContinue()) return;
+
                     using (var transactionContext = new DefaultTransactionContext())
                     {
                         AmbientTransactionContext.Current = transactionContext;

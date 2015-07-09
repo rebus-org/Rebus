@@ -96,7 +96,7 @@
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />
-    <Compile Include="Threading\ParallelismCounter.cs" />
+    <Compile Include="Threading\ParallelOperationsManager.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />

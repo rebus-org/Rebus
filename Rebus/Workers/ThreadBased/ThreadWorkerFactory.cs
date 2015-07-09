@@ -1,4 +1,6 @@
-﻿using Rebus.Pipeline;
+﻿using System;
+using Rebus.Pipeline;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Workers.ThreadBased
@@ -11,6 +13,7 @@ namespace Rebus.Workers.ThreadBased
     public class ThreadWorkerFactory : IWorkerFactory
     {
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext = new ThreadWorkerSynchronizationContext();
+        readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
@@ -18,22 +21,21 @@ namespace Rebus.Workers.ThreadBased
         /// <summary>
         /// Constructs the worker factory
         /// </summary>
-        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker)
+        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelism)
         {
+            if (transport == null) throw new ArgumentNullException("transport");
+            if (pipeline == null) throw new ArgumentNullException("pipeline");
+            if (pipelineInvoker == null) throw new ArgumentNullException("pipelineInvoker");
+            if (maxParallelism <= 0) throw new ArgumentOutOfRangeException(string.Format("Cannot use value '{0}' as max parallelism!", maxParallelism));
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
+            _parallelOperationsManager = new ParallelOperationsManager(maxParallelism);
         }
-
-        /// <summary>
-        /// Configures the degree of parallelism allowed within each worker, i.e. how many concurrent operations one single
-        /// worker thread can perform, using async/await
-        /// </summary>
-        public int MaxParallelismPerWorker { get; set; }
 
         public IWorker CreateWorker(string workerName)
         {
-            return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext, MaxParallelismPerWorker);
+            return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext, _parallelOperationsManager);
         }
     }
 }
