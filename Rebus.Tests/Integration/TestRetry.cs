@@ -19,6 +19,7 @@ namespace Rebus.Tests.Integration
     public class TestRetry : FixtureBase
     {
         static readonly string InputQueueName = TestConfig.QueueName(string.Format("test.rebus2.retries.input@{0}", Environment.MachineName));
+        static readonly string ErrorQueueName = TestConfig.QueueName("rebus2.error");
 
         BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
@@ -31,7 +32,7 @@ namespace Rebus.Tests.Integration
                 .Logging(l => l.Console(minLevel: LogLevel.Warn))
                 .Transport(t => t.UseMsmq(InputQueueName))
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
-                .Options(o => o.SimpleRetryStrategy(maxDeliveryAttempts: numberOfRetries))
+                .Options(o => o.SimpleRetryStrategy(maxDeliveryAttempts: numberOfRetries, errorQueueAddress: ErrorQueueName))
                 .Start();
 
             Using(_bus);
@@ -40,7 +41,7 @@ namespace Rebus.Tests.Integration
         protected override void TearDown()
         {
             MsmqUtil.Delete(InputQueueName);
-            MsmqUtil.Delete(SimpleRetryStrategySettings.DefaultErrorQueueName);
+            MsmqUtil.Delete(ErrorQueueName);
         }
 
         [Test]
@@ -60,7 +61,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            using (var errorQueue = new MsmqTransport(SimpleRetryStrategySettings.DefaultErrorQueueName))
+            using (var errorQueue = new MsmqTransport(ErrorQueueName))
             {
                 var failedMessage = await errorQueue.AwaitReceive();
 
@@ -90,7 +91,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            using (var errorQueue = new MsmqTransport(SimpleRetryStrategySettings.DefaultErrorQueueName))
+            using (var errorQueue = new MsmqTransport(ErrorQueueName))
             {
                 var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 
