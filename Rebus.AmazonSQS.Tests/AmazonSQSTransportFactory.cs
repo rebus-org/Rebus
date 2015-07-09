@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using Amazon;
-using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Tests.Integration.ManyMessages;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
