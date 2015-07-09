@@ -61,12 +61,23 @@ namespace Rebus.Persistence.SqlServer
             {
                 var tableNames = connection.GetTableNames().ToList();
 
-                if (tableNames.Contains(_dataTableName, StringComparer.OrdinalIgnoreCase))
+                var hasDataTable = tableNames.Contains(_dataTableName, StringComparer.OrdinalIgnoreCase);
+                var hasIndexTable = tableNames.Contains(_indexTableName, StringComparer.OrdinalIgnoreCase);
+                
+                if (hasDataTable && hasIndexTable)
                 {
                     return;
                 }
 
-                if (tableNames.Contains(_indexTableName, StringComparer.OrdinalIgnoreCase))
+                if (hasDataTable)
+                {
+                    throw new ApplicationException(
+                        string.Format(
+                            "The saga index table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the data table",
+                            _indexTableName, _dataTableName));
+                }
+
+                if (hasIndexTable)
                 {
                     throw new ApplicationException(
                         string.Format(
@@ -74,8 +85,7 @@ namespace Rebus.Persistence.SqlServer
                             _dataTableName, _indexTableName));
                 }
 
-                _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName,
-                    _indexTableName);
+                _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName, _indexTableName);
 
                 using (var command = connection.CreateCommand())
                 {
@@ -150,18 +160,22 @@ ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
         /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
+            if (sagaDataType == null) throw new ArgumentNullException("sagaDataType");
+            if (propertyName == null) throw new ArgumentNullException("propertyName");
+            if (propertyValue == null) throw new ArgumentNullException("propertyValue");
+
             using (var connection = await _connectionProvider.GetConnection())
             {
                 using (var command = connection.CreateCommand())
                 {
-                    if (propertyName == _idPropertyName)
+                    if (propertyName.Equals(_idPropertyName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        command.CommandText = string.Format(@"SELECT [data] FROM [{0}] WHERE [id] = @value", _dataTableName);
+                        command.CommandText = string.Format(@"SELECT TOP 1 [data] FROM [{0}] WHERE [id] = @value", _dataTableName);
                     }
                     else
                     {
                         command.CommandText = string.Format(@"
-SELECT [saga].[data] FROM [{0}] [saga] 
+SELECT TOP 1 [saga].[data] as 'data' FROM [{0}] [saga] 
     JOIN [{1}] [index] ON [saga].[id] = [index].[saga_id] 
 WHERE [index].[saga_type] = @saga_type
     AND [index].[key] = @key 
@@ -169,13 +183,13 @@ WHERE [index].[saga_type] = @saga_type
 
                         var sagaTypeName = GetSagaTypeName(sagaDataType);
 
-                        command.Parameters.AddWithValue("key", propertyName);
-                        command.Parameters.AddWithValue("saga_type", sagaTypeName);
+                        command.Parameters.Add("key", SqlDbType.NVarChar).Value = propertyName;
+                        command.Parameters.Add("saga_type", SqlDbType.NVarChar).Value = sagaTypeName;
                     }
 
                     var correlationPropertyValue = GetCorrelationPropertyValue(propertyValue);
 
-                    command.Parameters.AddWithValue("value", correlationPropertyValue);
+                    command.Parameters.Add("value", SqlDbType.NVarChar).Value = correlationPropertyValue;
 
                     var dbValue = await command.ExecuteScalarAsync();
                     var value = (string)dbValue;
@@ -210,9 +224,11 @@ WHERE [index].[saga_type] = @saga_type
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.Parameters.AddWithValue("revision", sagaData.Revision);
-                    command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
+                    var data = JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings);
+
+                    command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+                    command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
+                    command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
 
                     command.CommandText = string.Format(@"INSERT INTO [{0}] ([id], [revision], [data]) VALUES (@id, @revision, @data)", _dataTableName);
                     try
@@ -234,7 +250,7 @@ WHERE [index].[saga_type] = @saga_type
 
                 if (propertiesToIndex.Any())
                 {
-                    await CreateIndex(propertiesToIndex, connection, sagaData);
+                    await CreateIndex(connection, sagaData, propertiesToIndex);
                 }
 
                 await connection.Complete();
@@ -257,17 +273,20 @@ WHERE [index].[saga_type] = @saga_type
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
-                        command.Parameters.AddWithValue("id", sagaData.Id);
+                        command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+
                         await command.ExecuteNonQueryAsync();
                     }
 
                     // next, update or insert the saga
                     using (var command = connection.CreateCommand())
                     {
-                        command.Parameters.AddWithValue("id", sagaData.Id);
-                        command.Parameters.AddWithValue("current_revision", revisionToUpdate);
-                        command.Parameters.AddWithValue("next_revision", sagaData.Revision);
-                        command.Parameters.AddWithValue("data", JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings));
+                        var data = JsonConvert.SerializeObject(sagaData, Formatting.Indented, Settings);
+
+                        command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+                        command.Parameters.Add("current_revision", SqlDbType.Int).Value = revisionToUpdate;
+                        command.Parameters.Add("next_revision", SqlDbType.Int).Value = sagaData.Revision;
+                        command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
 
                         command.CommandText = string.Format(@"
 UPDATE [{0}] 
@@ -286,7 +305,7 @@ UPDATE [{0}]
 
                     if (propertiesToIndex.Any())
                     {
-                        await CreateIndex(propertiesToIndex, connection, sagaData);
+                        await CreateIndex(connection, sagaData, propertiesToIndex);
                     }
 
                     await connection.Complete();
@@ -309,8 +328,8 @@ UPDATE [{0}]
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [id] = @id AND [revision] = @current_revision;", _dataTableName);
-                    command.Parameters.AddWithValue("id", sagaData.Id);
-                    command.Parameters.AddWithValue("current_revision", sagaData.Revision);
+                    command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
+                    command.Parameters.Add("current_revision", SqlDbType.Int).Value = sagaData.Revision;
                     var rows = await command.ExecuteNonQueryAsync();
                     if (rows == 0)
                     {
@@ -321,7 +340,7 @@ UPDATE [{0}]
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
-                    command.Parameters.AddWithValue("id", sagaData.Id);
+                    command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     await command.ExecuteNonQueryAsync();
                 }
 
@@ -334,7 +353,7 @@ UPDATE [{0}]
             return (propertyValue ?? "").ToString();
         }
 
-        async Task CreateIndex(IEnumerable<KeyValuePair<string, string>> propertiesToIndex, IDbConnection connection, ISagaData sagaData)
+        async Task CreateIndex(IDbConnection connection, ISagaData sagaData, IEnumerable<KeyValuePair<string, string>> propertiesToIndex)
         {
             var sagaTypeName = GetSagaTypeName(sagaData.GetType());
             var propertiesToIndexList = propertiesToIndex.ToList();
@@ -344,8 +363,8 @@ UPDATE [{0}]
                 {
                     PropertyName = p.Key,
                     PropertyValue = GetCorrelationPropertyValue(p.Value),
-                    PropertyNameParameter = string.Format("@n{0}", i),
-                    PropertyValueParameter = string.Format("@v{0}", i)
+                    PropertyNameParameter = string.Format("n{0}", i),
+                    PropertyValueParameter = string.Format("v{0}", i)
                 })
                 .ToList();
 
@@ -359,7 +378,7 @@ UPDATE [{0}]
 INSERT INTO [{0}]
     ([saga_type], [key], [value], [saga_id]) 
 VALUES
-    (@saga_type, {1}, {2}, @saga_id)
+    (@saga_type, @{1}, @{2}, @saga_id)
 ",
                         _indexTableName, a.PropertyNameParameter, a.PropertyValueParameter))
                     .ToList();

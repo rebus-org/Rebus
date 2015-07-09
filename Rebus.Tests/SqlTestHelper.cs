@@ -8,6 +8,7 @@ namespace Rebus.Tests
 {
     public class SqlTestHelper
     {
+        const int DoesNotExistOrNoPermissions = 3701;
         static bool _databaseHasBeenInitialized;
 
         public static string ConnectionString
@@ -36,29 +37,34 @@ namespace Rebus.Tests
         {
             try
             {
-//                WithRetries(5, () =>
+                using (var connection = new SqlConnection(ConnectionString))
                 {
-                    using (var connection = new SqlConnection(ConnectionString))
+                    connection.Open();
+
+                    if (!connection.GetTableNames().Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
+
+                    Console.WriteLine("Dropping table {0}", tableName);
+
+                    try
                     {
-                        connection.Open();
-
-                        if (!connection.GetTableNames().Contains(tableName)) return;
-
-                        Console.WriteLine("Dropping table {0}", tableName);
-
                         using (var command = connection.CreateCommand())
                         {
                             command.CommandText = string.Format("DROP TABLE [{0}]", tableName);
                             command.ExecuteNonQuery();
                         }
                     }
+                    catch (SqlException exception)
+                    {
+                        if (exception.Number == DoesNotExistOrNoPermissions) return;
+
+                        throw;
+                    }
                 }
-                //);
             }
             catch (Exception exception)
             {
                 DumpWho();
-                
+
                 throw new ApplicationException(string.Format("Could not drop table '{0}'", tableName), exception);
             }
         }
@@ -76,7 +82,7 @@ namespace Rebus.Tests
 
                 Console.WriteLine(string.Join(Environment.NewLine,
                     who.Select(d => string.Join(", ", d.Select(kvp => string.Format("{0} = {1}", kvp.Key, kvp.Value))))));
-                
+
                 Console.WriteLine();
             }
             catch (Exception exception)

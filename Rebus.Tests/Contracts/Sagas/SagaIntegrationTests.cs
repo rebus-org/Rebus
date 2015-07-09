@@ -8,7 +8,6 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
-using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
@@ -24,12 +23,14 @@ namespace Rebus.Tests.Contracts.Sagas
             _factory = new TFactory();
         }
 
+        protected override void TearDown()
+        {
+            _factory.CleanUp();
+        }
+
         [Test]
         public async Task DoesNotChokeWhenCorrelatingMultipleMessagesWithTheSameCorrelationProperty()
         {
-            SqlTestHelper.DropTable("MySagas_Index");
-            SqlTestHelper.DropTable("MySagas");
-
             var done = new ManualResetEvent(false);
             var activator = new BuiltinHandlerActivator();
 
@@ -38,7 +39,7 @@ namespace Rebus.Tests.Contracts.Sagas
             var bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sagastuff"))
                 .Options(o => o.SetNumberOfWorkers(1).SetMaxParallelism(1))
-                .Sagas(s => s.StoreInSqlServer(SqlTestHelper.ConnectionString, "MySagas", "MySagas_Index"))
+                .Sagas(s => s.Register(c => _factory.GetSagaStorage()))
                 .Start();
 
             Using(bus);

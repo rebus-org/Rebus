@@ -46,7 +46,9 @@ namespace Rebus.Persistence.SqlServer
                 {
                     while (reader.Read())
                     {
-                        names.Add(reader["name"].ToString());
+                        var name = reader["name"].ToString();
+
+                        names.Add(name);
                     }
                 }
             }

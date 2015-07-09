@@ -8,6 +8,12 @@ namespace Rebus.Tests.Assumptions
     public class TestSpWho
     {
         [Test]
+        public void DropTableThatDoesNotExist()
+        {
+            SqlTestHelper.DropTable("bimse");
+        }
+
+        [Test]
         public void CanGetActiveConnections()
         {
             var who = SqlTestHelper.ExecSpWho();
