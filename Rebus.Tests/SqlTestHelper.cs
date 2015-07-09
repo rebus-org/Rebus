@@ -55,6 +55,12 @@ namespace Rebus.Tests
 
                     try
                     {
+                        //using (var command = connection.CreateCommand())
+                        //{
+                        //    command.CommandText = string.Format("DELETE FROM [{0}]", tableName);
+                        //    command.ExecuteNonQuery();
+                        //}
+
                         using (var command = connection.CreateCommand())
                         {
                             command.CommandText = string.Format("DROP TABLE [{0}]", tableName);

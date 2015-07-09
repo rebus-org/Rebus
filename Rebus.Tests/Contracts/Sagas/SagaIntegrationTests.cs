@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
+using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
@@ -50,7 +51,6 @@ namespace Rebus.Tests.Contracts.Sagas
                 );
 
             done.WaitOrDie(TimeSpan.FromSeconds(5));
-
         }
 
         class MySagaData : ISagaData

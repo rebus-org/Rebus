@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Threading;
 using System.Threading.Tasks;
 #pragma warning disable 1998
 
@@ -52,8 +53,11 @@ namespace Rebus.Persistence.SqlServer
 
             if (_currentTransaction != null)
             {
-                _currentTransaction.Commit();
-                _currentTransaction = null;
+                using (_currentTransaction)
+                {
+                    _currentTransaction.Commit();
+                    _currentTransaction = null;
+                }
             }
         }
 
@@ -78,9 +82,11 @@ namespace Rebus.Persistence.SqlServer
                 {
                     if (_currentTransaction != null)
                     {
-                        _currentTransaction.Rollback();
-                        _currentTransaction.Dispose();
-                        _currentTransaction = null;
+                        using (_currentTransaction)
+                        {
+                            _currentTransaction.Rollback();
+                            _currentTransaction = null;
+                        }
                     }
 
                     _connection.Close();

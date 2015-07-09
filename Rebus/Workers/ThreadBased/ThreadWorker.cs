@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Threading;
@@ -31,6 +32,7 @@ namespace Rebus.Workers.ThreadBased
         readonly ParallelismCounter _parallelismCounter;
 
         volatile bool _keepWorking = true;
+        DateTime _threadStopSignalReceived;
 
         internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, int maxParallelismPerWorker)
         {
@@ -49,6 +51,16 @@ namespace Rebus.Workers.ThreadBased
                 {
                     DoWork();
                 }
+
+                while (true)
+                {
+                    DoWork(onlyRunContinuations: true);
+
+                    if (_threadStopSignalReceived.ElapsedUntilNow() > TimeSpan.FromSeconds(1))
+                    {
+                        break;
+                    }
+                }
                 _log.Debug("Worker {0} stopped", Name);
             })
             {
@@ -58,7 +70,7 @@ namespace Rebus.Workers.ThreadBased
             _workerThread.Start();
         }
 
-        void DoWork()
+        void DoWork(bool onlyRunContinuations = false)
         {
             try
             {
@@ -70,7 +82,10 @@ namespace Rebus.Workers.ThreadBased
                     return;
                 }
 
-                TryProcessMessage();
+                if (!onlyRunContinuations)
+                {
+                    TryProcessMessage();
+                }
             }
             catch (ThreadAbortException)
             {
@@ -139,13 +154,14 @@ namespace Rebus.Workers.ThreadBased
             {
                 _keepWorking = false;
                 _cancellationTokenSource.Cancel();
+                _threadStopSignalReceived = DateTime.UtcNow;
             }
         }
 
         public void Dispose()
         {
             Stop();
-            
+
             if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
             {
                 _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
