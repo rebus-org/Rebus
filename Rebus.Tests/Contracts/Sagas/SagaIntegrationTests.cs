@@ -50,6 +50,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 );
 
             done.WaitOrDie(TimeSpan.FromSeconds(5));
+
         }
 
         class MySagaData : ISagaData

@@ -183,17 +183,17 @@ WHERE [index].[saga_type] = @saga_type
 
                         var sagaTypeName = GetSagaTypeName(sagaDataType);
 
-                        command.Parameters.Add("key", SqlDbType.NVarChar).Value = propertyName;
-                        command.Parameters.Add("saga_type", SqlDbType.NVarChar).Value = sagaTypeName;
+                        command.Parameters.Add("key", SqlDbType.NVarChar, propertyName.Length).Value = propertyName;
+                        command.Parameters.Add("saga_type", SqlDbType.NVarChar, sagaTypeName.Length).Value = sagaTypeName;
                     }
 
                     var correlationPropertyValue = GetCorrelationPropertyValue(propertyValue);
 
-                    command.Parameters.Add("value", SqlDbType.NVarChar).Value = correlationPropertyValue;
+                    command.Parameters.Add("value", SqlDbType.NVarChar, correlationPropertyValue.Length).Value = correlationPropertyValue;
 
                     var dbValue = await command.ExecuteScalarAsync();
-                    if (dbValue == DBNull.Value) return null;
                     var value = (string)dbValue;
+                    if (value == null) return null;
 
                     try
                     {

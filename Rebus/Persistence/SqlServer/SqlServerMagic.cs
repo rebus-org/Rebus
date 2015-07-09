@@ -14,6 +14,11 @@ namespace Rebus.Persistence.SqlServer
         public const int PrimaryKeyViolationNumber = 2627;
 
         /// <summary>
+        /// Error code that is emitted when something does not exist or the login's permissions do not allow the client to see it
+        /// </summary>
+        public const int ObjectDoesNotExistOrNoPermission = 3701;
+
+        /// <summary>
         /// Gets the names of all tables in the current database
         /// </summary>
         public static List<string> GetTableNames(this SqlConnection connection, SqlTransaction transaction = null)

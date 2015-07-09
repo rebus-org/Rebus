@@ -8,13 +8,19 @@ namespace Rebus.Tests
 {
     public class SqlTestHelper
     {
-        const int DoesNotExistOrNoPermissions = 3701;
         static bool _databaseHasBeenInitialized;
+
+        static string _connectionString;
 
         public static string ConnectionString
         {
             get
             {
+                if (_connectionString != null)
+                {
+                    return _connectionString;
+                }
+
                 var databaseName = DatabaseName;
 
                 if (!_databaseHasBeenInitialized)
@@ -24,7 +30,9 @@ namespace Rebus.Tests
 
                 Console.WriteLine("Using local SQL database {0}", databaseName);
 
-                return GetConnectionStringForDatabase(databaseName);
+                _connectionString = GetConnectionStringForDatabase(databaseName);
+
+                return _connectionString;
             }
         }
 
@@ -55,7 +63,7 @@ namespace Rebus.Tests
                     }
                     catch (SqlException exception)
                     {
-                        if (exception.Number == DoesNotExistOrNoPermissions) return;
+                        if (exception.Number == SqlServerMagic.ObjectDoesNotExistOrNoPermission) return;
 
                         throw;
                     }
