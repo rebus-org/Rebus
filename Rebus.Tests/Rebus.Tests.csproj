@@ -71,6 +71,7 @@
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
     <Compile Include="Encryption\TestEncryption.cs" />
     <Compile Include="Encryption\TestEncryptor.cs" />
+    <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
