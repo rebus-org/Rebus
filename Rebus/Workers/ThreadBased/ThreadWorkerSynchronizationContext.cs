@@ -11,15 +11,14 @@ namespace Rebus.Workers.ThreadBased
     /// </summary>
     public class ThreadWorkerSynchronizationContext : SynchronizationContext
     {
-        readonly ConcurrentQueue<Tuple<SendOrPostCallback, object>> _callbacks =
-            new ConcurrentQueue<Tuple<SendOrPostCallback, object>>();
+        readonly ConcurrentQueue<Action> _callbacks = new ConcurrentQueue<Action>();
 
         /// <summary>
         /// This method is called when a <see cref="Task"/> has finished and is ready to be continued
         /// </summary>
         public override void Post(SendOrPostCallback callback, object state)
         {
-            _callbacks.Enqueue(Tuple.Create(callback, state));
+            _callbacks.Enqueue(() => callback(state));
         }
 
         /// <summary>
@@ -27,13 +26,11 @@ namespace Rebus.Workers.ThreadBased
         /// </summary>
         public Action GetNextContinuationOrNull()
         {
-            Tuple<SendOrPostCallback, object> tuple;
-            if (!_callbacks.TryDequeue(out tuple)) return null;
-
-            return () =>
-            {
-                tuple.Item1(tuple.Item2);
-            };
+            Action continuation;
+            
+            return _callbacks.TryDequeue(out continuation)
+                ? continuation
+                : null;
         }
     }
 }
