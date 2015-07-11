@@ -61,24 +61,21 @@ namespace Rebus.Workers.ThreadBased
                 DoWork();
             }
 
-            var didLogAboutContinuations = false;
             var stopTime = DateTime.UtcNow;
+
+            if (_parallelOperationsManager.HasPendingTasks)
+            {
+                _log.Info("Continuations are waiting to be posted.... will wait up to 1 minute");
+            }
 
             while (_parallelOperationsManager.HasPendingTasks)
             {
-                if (!didLogAboutContinuations)
-                {
-                    _log.Info("Continuations are waiting to be posted.... will wait up to 1 minute");
-                    didLogAboutContinuations = true;
-                }
-
                 DoWork(onlyRunContinuations: true);
 
-                if (stopTime.ElapsedUntilNow() >= TimeSpan.FromMinutes(1))
-                {
-                    _log.Warn("Not all continuations were able to finish within 1 minute!!!");
-                    break;
-                }
+                if (stopTime.ElapsedUntilNow() < TimeSpan.FromMinutes(1)) continue;
+
+                _log.Warn("Not all async tasks were able to finish within 1 minute!!!");
+                break;
             }
 
             _log.Debug("Worker {0} stopped", Name);
