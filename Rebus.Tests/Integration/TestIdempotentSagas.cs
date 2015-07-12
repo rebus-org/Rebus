@@ -20,6 +20,7 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestIdempotentSagas : FixtureBase
     {
+        const int MakeEveryFifthMessageFail = 5;
         BuiltinHandlerActivator _activator;
         IBus _bus;
         ConcurrentDictionary<Guid, ISagaData> _persistentSagaData;
@@ -31,11 +32,11 @@ namespace Rebus.Tests.Integration
             _persistentSagaData = new ConcurrentDictionary<Guid, ISagaData>();
 
             _bus = Configure.With(_activator)
-                .Logging( l => l.Console(LogLevel.Warn))
+                .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t =>
                 {
                     t.UseInMemoryTransport(new InMemNetwork(), "bimse");
-                    t.Decorate(c => new IntroducerOfTransportInstability(c.Get<ITransport>()));
+                    t.Decorate(c => new IntroducerOfTransportInstability(c.Get<ITransport>(), MakeEveryFifthMessageFail));
                 })
                 .Sagas(s =>
                 {
@@ -44,14 +45,18 @@ namespace Rebus.Tests.Integration
                 .Start();
         }
 
-        [Test]
-        public async Task ItWorks()
+        [TestCase(10)]
+        public async Task ItWorks(int total)
         {
+            if (total < MakeEveryFifthMessageFail)
+            {
+                Assert.Fail("Fail factor must be less than or equal to total!");
+            }
+
             var allMessagesReceived = new ManualResetEvent(false);
 
             _activator.Register(() => new MyIdempotentSaga(allMessagesReceived));
 
-            const int total = 30;
 
             var messagesToSend = Enumerable
                 .Range(0, total)
@@ -79,7 +84,7 @@ namespace Rebus.Tests.Integration
 
             Assert.That(instance.CountPerId.Count, Is.EqualTo(total));
 
-            Assert.That(instance.CountPerId.All(c => c.Value == 1), Is.True, 
+            Assert.That(instance.CountPerId.All(c => c.Value == 1), Is.True,
                 "Not all counts were exactly one: {0} - this is a sign that the saga was not truly idempotent, as the redelivery should have been caught!",
                 string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => string.Format("{0}: {1}", c.Key, c.Value))));
         }
@@ -180,12 +185,14 @@ namespace Rebus.Tests.Integration
 
         class IntroducerOfTransportInstability : ITransport
         {
-            readonly Random _random = new Random(DateTime.Now.GetHashCode());
             readonly ITransport _innerTransport;
+            readonly int _failFactor;
+            int _failCounter;
 
-            public IntroducerOfTransportInstability(ITransport innerTransport)
+            public IntroducerOfTransportInstability(ITransport innerTransport, int failFactor)
             {
                 _innerTransport = innerTransport;
+                _failFactor = failFactor;
             }
 
             public void CreateQueue(string address)
@@ -203,7 +210,9 @@ namespace Rebus.Tests.Integration
                 var transportMessage = await _innerTransport.Receive(context);
                 if (transportMessage == null) return null;
 
-                if (GetNext() == 0)
+                var shouldFailThisTime = Interlocked.Increment(ref _failCounter) % _failFactor == 0;
+
+                if (shouldFailThisTime)
                 {
                     context.OnCommitted(async () =>
                     {
@@ -212,14 +221,6 @@ namespace Rebus.Tests.Integration
                 }
 
                 return transportMessage;
-            }
-
-            int GetNext()
-            {
-                lock (this)
-                {
-                    return _random.Next(5);
-                }
             }
 
             public string Address
