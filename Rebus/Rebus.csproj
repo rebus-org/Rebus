@@ -91,6 +91,7 @@
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
+    <Compile Include="Sagas\IdempotentSaga.cs" />
     <Compile Include="Sagas\ISagaCorrelationProperty.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
