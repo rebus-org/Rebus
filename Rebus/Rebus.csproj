@@ -91,7 +91,13 @@
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
-    <Compile Include="Sagas\IdempotentSaga.cs" />
+    <Compile Include="Sagas\Idempotent\IdempotencyData.cs" />
+    <Compile Include="Sagas\Idempotent\IdempotentSaga.cs" />
+    <Compile Include="Sagas\Idempotent\IdempotentSagaIncomingStep.cs" />
+    <Compile Include="Sagas\Idempotent\IdempotentSagaOutgoingStep.cs" />
+    <Compile Include="Sagas\Idempotent\IIdempotentSagaData.cs" />
+    <Compile Include="Sagas\Idempotent\OutgoingMessage.cs" />
+    <Compile Include="Sagas\Idempotent\OutgoingMessages.cs" />
     <Compile Include="Sagas\ISagaCorrelationProperty.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />

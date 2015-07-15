@@ -85,7 +85,7 @@ namespace Rebus.Extensions
         /// Gets the item with the given key and type from the dictionary of objects, throwing a nice exception if either the key
         /// does not exist, or the found value cannot be cast to the given type
         /// </summary>
-        public static T GetOrThrow<T>(this Dictionary<string, object> dictionary, string key)
+        public static T GetOrThrow<T>(this IDictionary<string, object> dictionary, string key)
         {
             object item;
 

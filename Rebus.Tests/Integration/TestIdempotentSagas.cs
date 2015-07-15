@@ -15,6 +15,7 @@ using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Sagas;
+using Rebus.Sagas.Idempotent;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
@@ -75,7 +76,8 @@ namespace Rebus.Tests.Integration
                 {
                     CorrelationId = "hej",
                     Id = id,
-                    Total = total
+                    Total = total,
+                    SendOutgoingMessage = id % 2 == 0
                 })
                 .ToList();
 
@@ -101,9 +103,11 @@ namespace Rebus.Tests.Integration
 
             var outgoingMessagesById = receivedMessages.GroupBy(m => m.Id).ToList();
 
-            Assert.That(outgoingMessagesById.Count, Is.EqualTo(total));
+            Assert.That(outgoingMessagesById.Count, Is.EqualTo(total / 2));
 
-            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(), Is.EqualTo(Enumerable.Range(0, total).ToArray()));
+            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(), 
+                Is.EqualTo(Enumerable.Range(0, total).Where(id => id % 2 == 0).ToArray()),
+                "Didn't get the expected outgoing messages - expected an outgoing message for each ID whose mod 2 is zero");
         }
 
         class SagaStorageTap : ISagaStorage
@@ -187,7 +191,10 @@ namespace Rebus.Tests.Integration
 
                 Data.CountPerId[message.Id]++;
 
-                await _bus.SendLocal(new OutgoingMessage { Id = message.Id });
+                if (message.SendOutgoingMessage)
+                {
+                    await _bus.SendLocal(new OutgoingMessage { Id = message.Id });
+                }
 
                 if (Data.CountPerId.Count == message.Total)
                 {
@@ -215,6 +222,7 @@ namespace Rebus.Tests.Integration
             public string CorrelationId { get; set; }
             public int Id { get; set; }
             public int Total { get; set; }
+            public bool SendOutgoingMessage { get; set; }
             public override string ToString()
             {
                 return string.Format("MyMessage {0}/{1}", Id, Total);
@@ -270,110 +278,6 @@ namespace Rebus.Tests.Integration
             {
                 get { return _innerTransport.Address; }
             }
-        }
-    }
-
-    public class IdempotentSagaOutgoingStep : IOutgoingStep
-    {
-        public async Task Process(OutgoingStepContext context, Func<Task> next)
-        {
-            var transactionContext = context.Load<ITransactionContext>();
-
-            object temp;
-            if (transactionContext.Items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out temp))
-            {
-                var handlerInvoker = (HandlerInvoker)temp;
-
-                if (handlerInvoker.HasSaga)
-                {
-                    var idempotentSagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
-
-                    if (idempotentSagaData != null)
-                    {
-                        var idempotencyData = idempotentSagaData.IdempotencyData;
-
-                        var transportMessage = context.Load<TransportMessage>();
-                        var destinationAddresses = context.Load<DestinationAddresses>();
-                        var incomingStepContext = (IncomingStepContext)transactionContext.Items[StepContext.StepContextKey];
-                        var messageId = incomingStepContext.Load<Message>().GetMessageId();
-
-                        idempotencyData.StoreOutgoingMessage(messageId, destinationAddresses, transportMessage);
-                    }
-                }
-            }
-
-            await next();
-        }
-    }
-
-    public class IdempotentSagaIncomingStep : IIncomingStep
-    {
-        static ILog _log;
-
-        static IdempotentSagaIncomingStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
-        readonly ITransport _transport;
-
-        public IdempotentSagaIncomingStep(ITransport transport)
-        {
-            _transport = transport;
-        }
-
-        public async Task Process(IncomingStepContext context, Func<Task> next)
-        {
-            var handlerInvokersForSagas = context.Load<HandlerInvokers>()
-                .Where(l => l.HasSaga)
-                .ToList();
-
-            var message = context.Load<Message>();
-            var messageId = message.GetMessageId();
-
-            var transactionContext = context.Load<ITransactionContext>();
-
-            foreach (var handlerInvoker in handlerInvokersForSagas)
-            {
-                var sagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
-
-                if (sagaData == null) continue;
-
-                var idempotencyData = sagaData.IdempotencyData;
-
-                if (idempotencyData.HasAlreadyHandled(messageId))
-                {
-                    _log.Info("Message with ID {0} has already been handled by saga with ID {1}",
-                        messageId, sagaData.Id);
-
-                    var outgoingMessages = idempotencyData
-                        .GetOutgoingMessages(messageId)
-                        .ToList();
-
-                    if (outgoingMessages.Any())
-                    {
-                        _log.Info("Found {0} outgoing messages to be (re-)sent... will do that now", outgoingMessages.Count);
-
-                        foreach (var messageToResend in outgoingMessages)
-                        {
-                            foreach (var destinationAddress in messageToResend.DestinationAddresses)
-                            {
-                                await
-                                    _transport.Send(destinationAddress, messageToResend.TransportMessage,
-                                        transactionContext);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        _log.Info("Found no outgoing messages to be (re-)sent...");
-                    }
-
-                    handlerInvoker.SkipInvocation();
-                }
-            }
-
-            await next();
         }
     }
 }

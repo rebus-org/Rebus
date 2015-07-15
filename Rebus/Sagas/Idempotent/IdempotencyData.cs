@@ -1,20 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Exceptions;
 using Rebus.Messages;
 
-namespace Rebus.Sagas
+namespace Rebus.Sagas.Idempotent
 {
-    public abstract class IdempotentSaga<TSagaData> : Saga<TSagaData> where TSagaData : IIdempotentSagaData, new()
-    {
-    }
-
-    public interface IIdempotentSagaData : ISagaData
-    {
-        IdempotencyData IdempotencyData { get; }
-    }
-
     public class IdempotencyData
     {
         readonly List<OutgoingMessages> _outgoingMessages = new List<OutgoingMessages>();
@@ -48,11 +39,9 @@ namespace Rebus.Sagas
 
         public void StoreOutgoingMessage(string messageId, IEnumerable<string> destinationAddresses, TransportMessage transportMessage)
         {
-            GetOrCreate(messageId).MessagesToSend.Add(new OutgoingMessage
-            {
-                DestinationAddresses = destinationAddresses,
-                TransportMessage = transportMessage
-            });
+            var outgoingMessage = new OutgoingMessage(destinationAddresses, transportMessage);
+
+            GetOrCreate(messageId).Add(outgoingMessage);
         }
 
         OutgoingMessages GetOrCreate(string messageId)
@@ -67,23 +56,5 @@ namespace Rebus.Sagas
 
             return outgoingMessages;
         }
-    }
-
-    public class OutgoingMessages
-    {
-        public OutgoingMessages(string messageId, IEnumerable<OutgoingMessage> messagesToSend)
-        {
-            MessageId = messageId;
-            MessagesToSend = messagesToSend.ToList();
-        }
-
-        public string MessageId { get; private set; }
-        public List<OutgoingMessage> MessagesToSend { get; private set; }
-    }
-
-    public class OutgoingMessage
-    {
-        public IEnumerable<string> DestinationAddresses { get; set; }
-        public TransportMessage TransportMessage     { get; set; }
     }
 }
