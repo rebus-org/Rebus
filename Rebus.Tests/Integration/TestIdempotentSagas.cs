@@ -8,8 +8,12 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
+using Rebus.Pipeline.Send;
 using Rebus.Sagas;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
@@ -42,6 +46,12 @@ namespace Rebus.Tests.Integration
                 {
                     s.Decorate(c => new SagaStorageTap(c.Get<ISagaStorage>(), _persistentSagaData));
                 })
+                .Options(o =>
+                {
+                    o.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
+                        .OnReceive(new IdempotentSagaStep(c.Get<ITransport>()), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep))
+                        .OnSend(new IdempotentSagaSendStep(), PipelineRelativePosition.After, typeof(SendOutgoingMessageStep)));
+                })
                 .Start();
         }
 
@@ -54,9 +64,10 @@ namespace Rebus.Tests.Integration
             }
 
             var allMessagesReceived = new ManualResetEvent(false);
+            var receivedMessages = new ConcurrentQueue<OutgoingMessage>();
 
-            _activator.Register(() => new MyIdempotentSaga(allMessagesReceived));
-
+            _activator.Register(() => new MyIdempotentSaga(allMessagesReceived, _activator.Bus));
+            _activator.Register(() => new OutgoingMessageCollector(receivedMessages));
 
             var messagesToSend = Enumerable
                 .Range(0, total)
@@ -87,6 +98,12 @@ namespace Rebus.Tests.Integration
             Assert.That(instance.CountPerId.All(c => c.Value == 1), Is.True,
                 "Not all counts were exactly one: {0} - this is a sign that the saga was not truly idempotent, as the redelivery should have been caught!",
                 string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => string.Format("{0}: {1}", c.Key, c.Value))));
+
+            var outgoingMessagesById = receivedMessages.GroupBy(m => m.Id).ToList();
+
+            Assert.That(outgoingMessagesById.Count, Is.EqualTo(total));
+
+            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(), Is.EqualTo(Enumerable.Range(0, total).ToArray()));
         }
 
         class SagaStorageTap : ISagaStorage
@@ -128,13 +145,30 @@ namespace Rebus.Tests.Integration
             }
         }
 
+        class OutgoingMessageCollector : IHandleMessages<OutgoingMessage>
+        {
+            readonly ConcurrentQueue<OutgoingMessage> _receivedMessages;
+
+            public OutgoingMessageCollector(ConcurrentQueue<OutgoingMessage> receivedMessages)
+            {
+                _receivedMessages = receivedMessages;
+            }
+
+            public async Task Handle(OutgoingMessage message)
+            {
+                _receivedMessages.Enqueue(message);
+            }
+        }
+
         class MyIdempotentSaga : IdempotentSaga<MyIdempotentSagaData>, IAmInitiatedBy<MyMessage>
         {
             readonly ManualResetEvent _allMessagesReceived;
+            readonly IBus _bus;
 
-            public MyIdempotentSaga(ManualResetEvent allMessagesReceived)
+            public MyIdempotentSaga(ManualResetEvent allMessagesReceived, IBus bus)
             {
                 _allMessagesReceived = allMessagesReceived;
+                _bus = bus;
             }
 
             protected override void CorrelateMessages(ICorrelationConfig<MyIdempotentSagaData> config)
@@ -153,6 +187,8 @@ namespace Rebus.Tests.Integration
 
                 Data.CountPerId[message.Id]++;
 
+                await _bus.SendLocal(new OutgoingMessage { Id = message.Id });
+
                 if (Data.CountPerId.Count == message.Total)
                 {
                     _allMessagesReceived.Set();
@@ -160,16 +196,18 @@ namespace Rebus.Tests.Integration
             }
         }
 
-        class MyIdempotentSagaData : ISagaData
+        class MyIdempotentSagaData : IIdempotentSagaData
         {
             public MyIdempotentSagaData()
             {
                 CountPerId = new Dictionary<int, int>();
+                IdempotencyData = new IdempotencyData();
             }
             public Guid Id { get; set; }
             public int Revision { get; set; }
             public string CorrelationId { get; set; }
             public Dictionary<int, int> CountPerId { get; set; }
+            public IdempotencyData IdempotencyData { get; set; }
         }
 
         class MyMessage
@@ -181,6 +219,11 @@ namespace Rebus.Tests.Integration
             {
                 return string.Format("MyMessage {0}/{1}", Id, Total);
             }
+        }
+
+        class OutgoingMessage
+        {
+            public int Id { get; set; }
         }
 
         class IntroducerOfTransportInstability : ITransport
@@ -227,6 +270,61 @@ namespace Rebus.Tests.Integration
             {
                 get { return _innerTransport.Address; }
             }
+        }
+    }
+
+    public class IdempotentSagaSendStep : IOutgoingStep
+    {
+        public async Task Process(OutgoingStepContext context, Func<Task> next)
+        {
+            await next();
+        }
+    }
+
+    public class IdempotentSagaStep : IIncomingStep
+    {
+        readonly ITransport _transport;
+
+        public IdempotentSagaStep(ITransport transport)
+        {
+            _transport = transport;
+        }
+
+        public async Task Process(IncomingStepContext context, Func<Task> next)
+        {
+            var handlerInvokersForSagas = context.Load<HandlerInvokers>()
+                .Where(l => l.HasSaga)
+                .ToList();
+
+            var message = context.Load<Message>();
+            var messageId = message.GetMessageId();
+
+            var transactionContext = context.Load<ITransactionContext>();
+
+            foreach (var handlerInvoker in handlerInvokersForSagas)
+            {
+                var sagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
+
+                if (sagaData == null) continue;
+
+                var idempotencyData = sagaData.IdempotencyData;
+
+                if (idempotencyData.HasAlreadyHandled(messageId))
+                {
+                    var outgoingMessages = idempotencyData.GetOutgoingMessages(messageId);
+
+                    foreach (var messageToResend in outgoingMessages)
+                    {
+                        await _transport.Send(messageToResend.Destination,
+                            messageToResend.TransportMessage,
+                            transactionContext);
+                    }
+
+                    handlerInvoker.SkipInvocation();
+                }
+            }
+
+            await next();
         }
     }
 }

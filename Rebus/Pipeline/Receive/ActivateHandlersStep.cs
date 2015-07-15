@@ -91,6 +91,11 @@ namespace Rebus.Pipeline.Receive
         /// Adds to the invoker a piece of saga data that has been determined to be relevant for the invocation
         /// </summary>
         public abstract void SetSagaData(ISagaData sagaData);
+
+        /// <summary>
+        /// Gets from the invoker the piece of saga data that has been determined to be relevant for the invocation, returning null if no such saga data has been set
+        /// </summary>
+        public abstract ISagaData GetSagaData();
         
         /// <summary>
         /// Gets whether the contained saga handler can be initiated by messages of the given type
@@ -159,8 +164,12 @@ namespace Rebus.Pipeline.Receive
 
         public override void SetSagaData(ISagaData sagaData)
         {
-            if (!HasSaga) throw new InvalidOperationException(string.Format("Attempted to set {0} as saga data on handler {1}, but the handler is not a saga!",
-                sagaData, _handler));
+            if (!HasSaga)
+            {
+                throw new InvalidOperationException(
+                    string.Format("Attempted to set {0} as saga data on handler {1}, but the handler is not a saga!",
+                        sagaData, _handler));
+            }
 
             var dataProperty = _handler.GetType().GetProperty("Data");
 
@@ -172,6 +181,11 @@ namespace Rebus.Pipeline.Receive
             dataProperty.SetValue(_handler, sagaData);
 
             _sagaData = sagaData;
+        }
+
+        public override ISagaData GetSagaData()
+        {
+            return _sagaData;
         }
 
         public override bool CanBeInitiatedBy(Type messageType)
