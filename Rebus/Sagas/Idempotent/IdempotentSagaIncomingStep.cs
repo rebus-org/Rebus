@@ -51,7 +51,8 @@ namespace Rebus.Sagas.Idempotent
 
                 if (sagaData == null) continue;
 
-                var idempotencyData = sagaData.IdempotencyData;
+                var idempotencyData = sagaData.IdempotencyData
+                                      ?? (sagaData.IdempotencyData = new IdempotencyData());
 
                 if (idempotencyData.HasAlreadyHandled(messageId))
                 {

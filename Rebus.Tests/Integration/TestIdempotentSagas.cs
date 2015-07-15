@@ -198,17 +198,17 @@ namespace Rebus.Tests.Integration
             }
         }
 
-        class MyIdempotentSagaData : IIdempotentSagaData
+        class MyIdempotentSagaData : IdempotentSagaData
         {
             public MyIdempotentSagaData()
             {
                 CountPerId = new Dictionary<int, int>();
             }
-            public Guid Id { get; set; }
-            public int Revision { get; set; }
+            //public Guid Id { get; set; }
+            //public int Revision { get; set; }
             public string CorrelationId { get; set; }
             public Dictionary<int, int> CountPerId { get; set; }
-            public IdempotencyData IdempotencyData { get; set; }
+            //public IdempotencyData IdempotencyData { get; set; }
         }
 
         class MyMessage

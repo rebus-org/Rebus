@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Rebus.Extensions;
 using Rebus.Messages;
 
 namespace Rebus.Sagas.Idempotent
@@ -10,24 +9,23 @@ namespace Rebus.Sagas.Idempotent
     /// </summary>
     public class IdempotencyData
     {
-        readonly List<OutgoingMessages> _outgoingMessages;
-        readonly HashSet<string> _handledMessageIds;
-
-        /// <summary>
-        /// Constructs the idempotency data
-        /// </summary>
-        public IdempotencyData(IEnumerable<OutgoingMessages> outgoingMessages, IEnumerable<string> handledMessageIds)
-        {
-            _outgoingMessages = outgoingMessages.ToList();
-            _handledMessageIds = handledMessageIds.ToHashSet();
-        }
+        readonly List<OutgoingMessages> _outgoingMessages = new List<OutgoingMessages>();
+        readonly HashSet<string> _handledMessageIds = new HashSet<string>();
 
         /// <summary>
         /// Gets the outgoing messages
         /// </summary>
-        public IEnumerable<OutgoingMessages> OutgoingMessages
+        public List<OutgoingMessages> OutgoingMessages
         {
             get { return _outgoingMessages; }
+        }
+
+        /// <summary>
+        /// Getst the IDs of all messages that have been handled
+        /// </summary>
+        public HashSet<string> HandledMessageIds
+        {
+            get { return _handledMessageIds; }
         }
 
         /// <summary>

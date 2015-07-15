@@ -94,6 +94,7 @@
     <Compile Include="Sagas\Idempotent\IdempotencyData.cs" />
     <Compile Include="Sagas\Idempotent\IdempotentSaga.cs" />
     <Compile Include="Sagas\Idempotent\IdempotentSagaConfigurationExtensions.cs" />
+    <Compile Include="Sagas\Idempotent\IdempotentSagaData.cs" />
     <Compile Include="Sagas\Idempotent\IdempotentSagaIncomingStep.cs" />
     <Compile Include="Sagas\Idempotent\IdempotentSagaOutgoingStep.cs" />
     <Compile Include="Sagas\Idempotent\IIdempotentSagaData.cs" />
