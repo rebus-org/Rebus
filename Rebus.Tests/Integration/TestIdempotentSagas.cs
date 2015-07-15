@@ -36,7 +36,7 @@ namespace Rebus.Tests.Integration
             _persistentSagaData = new ConcurrentDictionary<Guid, ISagaData>();
 
             _bus = Configure.With(_activator)
-                .Logging(l => l.Console(LogLevel.Warn))
+                .Logging(l => l.Console(LogLevel.Info))
                 .Transport(t =>
                 {
                     t.UseInMemoryTransport(new InMemNetwork(), "bimse");
@@ -49,8 +49,8 @@ namespace Rebus.Tests.Integration
                 .Options(o =>
                 {
                     o.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                        .OnReceive(new IdempotentSagaStep(c.Get<ITransport>()), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep))
-                        .OnSend(new IdempotentSagaSendStep(), PipelineRelativePosition.After, typeof(SendOutgoingMessageStep)));
+                        .OnReceive(new IdempotentSagaIncomingStep(c.Get<ITransport>()), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep))
+                        .OnSend(new IdempotentSagaOutgoingStep(), PipelineRelativePosition.After, typeof(SendOutgoingMessageStep)));
                 })
                 .Start();
         }
@@ -273,7 +273,7 @@ namespace Rebus.Tests.Integration
         }
     }
 
-    public class IdempotentSagaSendStep : IOutgoingStep
+    public class IdempotentSagaOutgoingStep : IOutgoingStep
     {
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
@@ -306,11 +306,18 @@ namespace Rebus.Tests.Integration
         }
     }
 
-    public class IdempotentSagaStep : IIncomingStep
+    public class IdempotentSagaIncomingStep : IIncomingStep
     {
+        static ILog _log;
+
+        static IdempotentSagaIncomingStep()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
         readonly ITransport _transport;
 
-        public IdempotentSagaStep(ITransport transport)
+        public IdempotentSagaIncomingStep(ITransport transport)
         {
             _transport = transport;
         }
@@ -336,14 +343,30 @@ namespace Rebus.Tests.Integration
 
                 if (idempotencyData.HasAlreadyHandled(messageId))
                 {
-                    var outgoingMessages = idempotencyData.GetOutgoingMessages(messageId);
+                    _log.Info("Message with ID {0} has already been handled by saga with ID {1}",
+                        messageId, sagaData.Id);
 
-                    foreach (var messageToResend in outgoingMessages)
+                    var outgoingMessages = idempotencyData
+                        .GetOutgoingMessages(messageId)
+                        .ToList();
+
+                    if (outgoingMessages.Any())
                     {
-                        foreach (var destinationAddress in messageToResend.DestinationAddresses)
+                        _log.Info("Found {0} outgoing messages to be (re-)sent... will do that now", outgoingMessages.Count);
+
+                        foreach (var messageToResend in outgoingMessages)
                         {
-                            await _transport.Send(destinationAddress, messageToResend.TransportMessage, transactionContext);
+                            foreach (var destinationAddress in messageToResend.DestinationAddresses)
+                            {
+                                await
+                                    _transport.Send(destinationAddress, messageToResend.TransportMessage,
+                                        transactionContext);
+                            }
                         }
+                    }
+                    else
+                    {
+                        _log.Info("Found no outgoing messages to be (re-)sent...");
                     }
 
                     handlerInvoker.SkipInvocation();
