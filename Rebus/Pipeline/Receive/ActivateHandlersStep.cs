@@ -52,7 +52,7 @@ namespace Rebus.Pipeline.Receive
             var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
 
             var listOfHandlerInvokers = handlers
-                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler))
+                .Select(handler => new HandlerInvoker<TMessage>(messageId, () => handler.Handle(message), handler, transactionContext))
                 .Cast<HandlerInvoker>()
                 .ToList();
 
@@ -73,10 +73,16 @@ namespace Rebus.Pipeline.Receive
     public abstract class HandlerInvoker
     {
         /// <summary>
+        /// Key under which the handler invoker will stash itself in the <see cref="ITransactionContext.Items"/>
+        /// during the invocation of the wrapped handler
+        /// </summary>
+        public const string CurrentHandlerInvokerItemsKey = "current-handler-invoker";
+
+        /// <summary>
         /// Method to call in order to invoke this particular handler
         /// </summary>
         public abstract Task Invoke();
-        
+
         /// <summary>
         /// Gets whether this invoker's handler is a saga
         /// </summary>
@@ -96,7 +102,7 @@ namespace Rebus.Pipeline.Receive
         /// Gets from the invoker the piece of saga data that has been determined to be relevant for the invocation, returning null if no such saga data has been set
         /// </summary>
         public abstract ISagaData GetSagaData();
-        
+
         /// <summary>
         /// Gets whether the contained saga handler can be initiated by messages of the given type
         /// </summary>
@@ -122,17 +128,19 @@ namespace Rebus.Pipeline.Receive
         readonly string _messageId;
         readonly Func<Task> _action;
         readonly object _handler;
+        readonly ITransactionContext _transactionContext;
         ISagaData _sagaData;
         bool _invokeHandler = true;
 
         /// <summary>
         /// Constructs the invoker
         /// </summary>
-        public HandlerInvoker(string messageId, Func<Task> action, object handler)
+        public HandlerInvoker(string messageId, Func<Task> action, object handler, ITransactionContext transactionContext)
         {
             _messageId = messageId;
             _action = action;
             _handler = handler;
+            _transactionContext = transactionContext;
         }
 
         public override object Handler
@@ -150,7 +158,7 @@ namespace Rebus.Pipeline.Receive
             get
             {
                 if (!HasSaga) throw new InvalidOperationException(string.Format("Attempted to get {0} as saga, it's not a saga!", _handler));
-                
+
                 return (Saga)_handler;
             }
         }
@@ -159,7 +167,17 @@ namespace Rebus.Pipeline.Receive
         {
             if (!_invokeHandler) return;
 
-            await _action();
+            try
+            {
+                _transactionContext.Items[CurrentHandlerInvokerItemsKey] = this;
+
+                await _action();
+            }
+            finally
+            {
+                object temp;
+                _transactionContext.Items.TryRemove(CurrentHandlerInvokerItemsKey, out temp);
+            }
         }
 
         public override void SetSagaData(ISagaData sagaData)

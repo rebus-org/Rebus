@@ -277,6 +277,31 @@ namespace Rebus.Tests.Integration
     {
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
+            var transactionContext = context.Load<ITransactionContext>();
+
+            object temp;
+            if (transactionContext.Items.TryGetValue(HandlerInvoker.CurrentHandlerInvokerItemsKey, out temp))
+            {
+                var handlerInvoker = (HandlerInvoker)temp;
+
+                if (handlerInvoker.HasSaga)
+                {
+                    var idempotentSagaData = handlerInvoker.GetSagaData() as IIdempotentSagaData;
+
+                    if (idempotentSagaData != null)
+                    {
+                        var idempotencyData = idempotentSagaData.IdempotencyData;
+
+                        var transportMessage = context.Load<TransportMessage>();
+                        var destinationAddresses = context.Load<DestinationAddresses>();
+                        var incomingStepContext = (IncomingStepContext)transactionContext.Items[StepContext.StepContextKey];
+                        var messageId = incomingStepContext.Load<Message>().GetMessageId();
+
+                        idempotencyData.StoreOutgoingMessage(messageId, destinationAddresses, transportMessage);
+                    }
+                }
+            }
+
             await next();
         }
     }
@@ -315,9 +340,10 @@ namespace Rebus.Tests.Integration
 
                     foreach (var messageToResend in outgoingMessages)
                     {
-                        await _transport.Send(messageToResend.Destination,
-                            messageToResend.TransportMessage,
-                            transactionContext);
+                        foreach (var destinationAddress in messageToResend.DestinationAddresses)
+                        {
+                            await _transport.Send(destinationAddress, messageToResend.TransportMessage, transactionContext);
+                        }
                     }
 
                     handlerInvoker.SkipInvocation();
