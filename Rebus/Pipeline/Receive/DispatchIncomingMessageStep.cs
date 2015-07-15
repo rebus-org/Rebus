@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Messages;
 
 namespace Rebus.Pipeline.Receive
@@ -10,6 +11,11 @@ namespace Rebus.Pipeline.Receive
     /// Incoming step that gets a <see cref="List{T}"/> where T is <see cref="HandlerInvoker"/> from the context
     /// and invokes them in the order they're in.
     /// </summary>
+    [StepDocumentation(@"Gets all the handler invokers from the current context and invokes them in order.
+
+Please note that each invoker might choose to ignore the invocation internally.
+
+If no invokers were found, a RebusApplicationException is thrown.")]
     public class DispatchIncomingMessageStep : IIncomingStep
     {
         /// <summary>
@@ -36,7 +42,7 @@ namespace Rebus.Pipeline.Receive
                 var text = string.Format("Message with ID {0} and type {1} could not be dispatched to any handlers",
                     messageId, messageType);
 
-                throw new ApplicationException(text);
+                throw new RebusApplicationException(text);
             }
 
             await next();

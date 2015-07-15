@@ -12,9 +12,12 @@ namespace Rebus.Sagas.Idempotent
 {
     /// <summary>
     /// Incoming pipeline step that checks the loaded saga data to see if the message currently being handled is a dupe.
-    /// If it is, message dispatch it skipped, but any messages stored as outgoing messages from previously handling the incoming message
+    /// If it is, message dispatch is skipped, but any messages stored as outgoing messages from previously handling the incoming message
     /// will be sent 
     /// </summary>
+    [StepDocumentation(@"Checks the loaded saga data to see if the message currently being handled is a duplicate of a message that has previously been handled.
+
+If that is the case, message dispatch is skipped, but any messages stored as outgoing messages from previously handling the incoming message will be sent.")]
     public class IdempotentSagaIncomingStep : IIncomingStep
     {
         static ILog _log;

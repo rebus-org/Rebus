@@ -11,9 +11,6 @@ using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
-using Rebus.Pipeline.Send;
 using Rebus.Sagas;
 using Rebus.Sagas.Idempotent;
 using Rebus.Tests.Extensions;
@@ -47,7 +44,11 @@ namespace Rebus.Tests.Integration
                 {
                     s.Decorate(c => new SagaStorageTap(c.Get<ISagaStorage>(), _persistentSagaData));
                 })
-                .Options(o => o.EnableIdempotentSagas())
+                .Options(o =>
+                {
+                    o.EnableIdempotentSagas();
+                    o.LogPipeline(verbose: true);
+                })
                 .Start();
         }
 
@@ -100,7 +101,7 @@ namespace Rebus.Tests.Integration
 
             Assert.That(outgoingMessagesById.Count, Is.EqualTo(total / 2));
 
-            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(), 
+            Assert.That(outgoingMessagesById.Select(g => g.Key).OrderBy(id => id).ToArray(),
                 Is.EqualTo(Enumerable.Range(0, total).Where(id => id % 2 == 0).ToArray()),
                 "Didn't get the expected outgoing messages - expected an outgoing message for each ID whose mod 2 is zero");
         }
