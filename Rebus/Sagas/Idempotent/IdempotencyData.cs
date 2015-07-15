@@ -1,43 +1,68 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Messages;
 
 namespace Rebus.Sagas.Idempotent
 {
+    /// <summary>
+    /// This chunk of data help with tracking handled messages and externally visible behavior (i.e. outbound messages) from handling each message
+    /// </summary>
     public class IdempotencyData
     {
-        readonly List<OutgoingMessages> _outgoingMessages = new List<OutgoingMessages>();
+        readonly List<OutgoingMessages> _outgoingMessages;
+        readonly HashSet<string> _handledMessageIds;
 
-        public List<OutgoingMessages> OutgoingMessages
+        /// <summary>
+        /// Constructs the idempotency data
+        /// </summary>
+        public IdempotencyData(IEnumerable<OutgoingMessages> outgoingMessages, IEnumerable<string> handledMessageIds)
+        {
+            _outgoingMessages = outgoingMessages.ToList();
+            _handledMessageIds = handledMessageIds.ToHashSet();
+        }
+
+        /// <summary>
+        /// Gets the outgoing messages
+        /// </summary>
+        public IEnumerable<OutgoingMessages> OutgoingMessages
         {
             get { return _outgoingMessages; }
         }
 
+        /// <summary>
+        /// Gets whether the message with the given ID has already been handled
+        /// </summary>
         public bool HasAlreadyHandled(string messageId)
         {
-            return _outgoingMessages.Any(o => o.MessageId == messageId);
+            return _handledMessageIds.Contains(messageId);
         }
 
+        /// <summary>
+        /// Gets the outgoing messages for the incoming message with the given ID
+        /// </summary>
         public IEnumerable<OutgoingMessage> GetOutgoingMessages(string messageId)
         {
-            try
-            {
-                return _outgoingMessages.First(o => o.MessageId == messageId).MessagesToSend;
-            }
-            catch (Exception exception)
-            {
-                throw new RebusApplicationException(exception, "Could not get outgoing messages for message with ID {0}", messageId);
-            }
+            var outgoingMessages = _outgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
+
+            return outgoingMessages != null
+                ? outgoingMessages.MessagesToSend
+                : Enumerable.Empty<OutgoingMessage>();
         }
 
+        /// <summary>
+        /// Marks the message with the given ID as handled
+        /// </summary>
         public void MarkMessageAsHandled(string messageId)
         {
-            GetOrCreate(messageId);
+            _handledMessageIds.Add(messageId);
         }
 
-        public void StoreOutgoingMessage(string messageId, IEnumerable<string> destinationAddresses, TransportMessage transportMessage)
+        /// <summary>
+        /// Adds the <see cref="TransportMessage"/> as an outgoing message destined for the addresses specified by <paramref name="destinationAddresses"/>
+        /// under the given <paramref name="messageId"/>
+        /// </summary>
+        public void AddOutgoingMessage(string messageId, IEnumerable<string> destinationAddresses, TransportMessage transportMessage)
         {
             var outgoingMessage = new OutgoingMessage(destinationAddresses, transportMessage);
 
@@ -46,13 +71,14 @@ namespace Rebus.Sagas.Idempotent
 
         OutgoingMessages GetOrCreate(string messageId)
         {
+            _handledMessageIds.Add(messageId);
+
             var outgoingMessages = _outgoingMessages.FirstOrDefault(o => o.MessageId == messageId);
 
-            if (outgoingMessages == null)
-            {
-                outgoingMessages = new OutgoingMessages(messageId, new List<OutgoingMessage>());
-                _outgoingMessages.Add(outgoingMessages);
-            }
+            if (outgoingMessages != null) return outgoingMessages;
+
+            outgoingMessages = new OutgoingMessages(messageId, new List<OutgoingMessage>());
+            _outgoingMessages.Add(outgoingMessages);
 
             return outgoingMessages;
         }

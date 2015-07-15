@@ -47,12 +47,7 @@ namespace Rebus.Tests.Integration
                 {
                     s.Decorate(c => new SagaStorageTap(c.Get<ISagaStorage>(), _persistentSagaData));
                 })
-                .Options(o =>
-                {
-                    o.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                        .OnReceive(new IdempotentSagaIncomingStep(c.Get<ITransport>()), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep))
-                        .OnSend(new IdempotentSagaOutgoingStep(), PipelineRelativePosition.After, typeof(SendOutgoingMessageStep)));
-                })
+                .Options(o => o.EnableIdempotentSagas())
                 .Start();
         }
 
@@ -208,7 +203,6 @@ namespace Rebus.Tests.Integration
             public MyIdempotentSagaData()
             {
                 CountPerId = new Dictionary<int, int>();
-                IdempotencyData = new IdempotencyData();
             }
             public Guid Id { get; set; }
             public int Revision { get; set; }

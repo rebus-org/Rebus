@@ -10,6 +10,9 @@ using Rebus.Transport;
 
 namespace Rebus.Sagas.Idempotent
 {
+    /// <summary>
+    /// Outgoing pipeline step that stores the sent message in the current saga data (if it is an <see cref="IIdempotentSagaData"/>)
+    /// </summary>
     public class IdempotentSagaOutgoingStep : IOutgoingStep
     {
         public async Task Process(OutgoingStepContext context, Func<Task> next)
@@ -34,7 +37,7 @@ namespace Rebus.Sagas.Idempotent
                         var incomingStepContext = transactionContext.Items.GetOrThrow<IncomingStepContext>(StepContext.StepContextKey);
                         var messageId = incomingStepContext.Load<Message>().GetMessageId();
 
-                        idempotencyData.StoreOutgoingMessage(messageId, destinationAddresses, transportMessage);
+                        idempotencyData.AddOutgoingMessage(messageId, destinationAddresses, transportMessage);
                     }
                 }
             }
