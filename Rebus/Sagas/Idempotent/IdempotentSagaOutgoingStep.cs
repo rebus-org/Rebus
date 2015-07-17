@@ -16,6 +16,9 @@ namespace Rebus.Sagas.Idempotent
     [StepDocumentation(@"If the sent message originates from an idempotent saga, the message is stored in the saga's IdempotencyData in order to allow for re-sending it later on if necessary.")]
     public class IdempotentSagaOutgoingStep : IOutgoingStep
     {
+        /// <summary>
+        /// Carries out whichever logic it takes to do something good for the outgoing message :)
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var transactionContext = context.Load<ITransactionContext>();

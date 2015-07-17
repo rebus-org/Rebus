@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Messages;
+#pragma warning disable 1998
 
 namespace Rebus.Routing.TopicBased
 {
@@ -21,6 +22,9 @@ namespace Rebus.Routing.TopicBased
             return this;
         }
 
+        /// <summary>
+        /// Called when sending messages
+        /// </summary>
         public async Task<string> GetDestinationAddress(Message message)
         {
             if (message == null) throw new ArgumentNullException("message");
@@ -28,6 +32,9 @@ namespace Rebus.Routing.TopicBased
             throw new NotImplementedException("don't know what to do here yet");
         }
 
+        /// <summary>
+        /// Called when subscribing to messages
+        /// </summary>
         public async Task<string> GetOwnerAddress(string topic)
         {
             if (topic == null) throw new ArgumentNullException("topic");

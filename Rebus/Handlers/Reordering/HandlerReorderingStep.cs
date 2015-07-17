@@ -21,6 +21,9 @@ namespace Rebus.Handlers.Reordering
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Reorders the handler invokers if necessary
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var handlerInvokers = context.Load<HandlerInvokers>();

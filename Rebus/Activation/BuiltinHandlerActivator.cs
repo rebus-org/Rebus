@@ -6,6 +6,7 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Activation
 {
@@ -18,6 +19,9 @@ namespace Rebus.Activation
         readonly List<object> _handlerInstances = new List<object>();
         readonly List<Delegate> _handlerFactories = new List<Delegate>();
 
+        /// <summary>
+        /// Returns all relevant handler instances for the given message by looking up compatible registered functions and instance factory methods.
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var factories = _handlerFactories.OfType<Func<IHandleMessages<TMessage>>>();

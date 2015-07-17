@@ -20,6 +20,9 @@ namespace Rebus.Pipeline.Send
 3) The message's own message ID.")]
     public class FlowCorrelationIdStep : IOutgoingStep
     {
+        /// <summary>
+        /// Flows the correlation ID like it should
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var outgoingMessage = context.Load<Message>();
@@ -37,21 +40,20 @@ namespace Rebus.Pipeline.Send
             await next();
         }
 
-        string GetCorrelationIdToAssign(IncomingStepContext incomingStepContext, Message outgoingMessage)
+        static string GetCorrelationIdToAssign(IncomingStepContext incomingStepContext, Message outgoingMessage)
         {
             // if we're handling an incoming message right now, let either current correlation ID or the message ID flow
-            if (incomingStepContext != null)
+            if (incomingStepContext == null)
             {
-                var incomingMessage = incomingStepContext.Load<Message>();
-
-                var correlationId = incomingMessage.Headers.GetValueOrNull(Headers.CorrelationId)
-                                    ?? incomingMessage.Headers.GetValue(Headers.MessageId);
-
-                return correlationId;
+                return outgoingMessage.Headers.GetValue(Headers.MessageId);
             }
+            
+            var incomingMessage = incomingStepContext.Load<Message>();
 
-            // otherwise, use the current message ID as the correlation ID
-            return outgoingMessage.Headers.GetValue(Headers.MessageId);
+            var correlationId = incomingMessage.Headers.GetValueOrNull(Headers.CorrelationId)
+                                ?? incomingMessage.Headers.GetValue(Headers.MessageId);
+
+            return correlationId;
         }
     }
 }

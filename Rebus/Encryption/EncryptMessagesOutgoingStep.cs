@@ -21,6 +21,9 @@ namespace Rebus.Encryption
             _encryptor = encryptor;
         }
 
+        /// <summary>
+        /// Encrypts the outgoing <see cref="TransportMessage"/> and adds appropriate headers
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();

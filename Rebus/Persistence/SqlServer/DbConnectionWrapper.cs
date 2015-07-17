@@ -20,7 +20,7 @@ namespace Rebus.Persistence.SqlServer
 
         /// <summary>
         /// Constructs the wrapper, wrapping the given connection and transaction. It must be indicated with <paramref name="managedExternally"/> whether this wrapper
-        /// should commit/rollback the transaction (depending on whether <see cref="Complete"/> is called before <see cref="Dispose"/>), or if the transaction
+        /// should commit/rollback the transaction (depending on whether <see cref="Complete"/> is called before <see cref="Dispose()"/>), or if the transaction
         /// is handled outside of the wrapper
         /// </summary>
         public DbConnectionWrapper(SqlConnection connection, SqlTransaction currentTransaction, bool managedExternally)

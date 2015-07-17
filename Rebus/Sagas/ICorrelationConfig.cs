@@ -20,7 +20,7 @@ namespace Rebus.Sagas
         /// </summary>
         /// <typeparam name="TMessage">Specifies the message type to configure a correlation for</typeparam>
         /// <param name="messageValueExtractorFunction">Configures a function to extract a value from the message. Since this is just a function, it may contain logic that e.g. concatenates fields, calls other functions, etc.</param>
-        /// <param name="sagaDataValueExpression">Configures an expression, which will be used when querying the chosen <see cref="ISagaStorage"/> - since this is an expression, it must point to a simple property of the relevant <see cref="TSagaData"/>.</param>
+        /// <param name="sagaDataValueExpression">Configures an expression, which will be used when querying the chosen <see cref="ISagaStorage"/> - since this is an expression, it must point to a simple property of the relevant <typeparamref name="TSagaData"/>.</param>
         void Correlate<TMessage>(Func<TMessage, object> messageValueExtractorFunction, Expression<Func<TSagaData, object>> sagaDataValueExpression);
     }
 }
