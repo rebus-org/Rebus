@@ -23,6 +23,9 @@ namespace Rebus.Timeouts
             _dueMessages = dueMessages.ToList();
         }
 
+        /// <summary>
+        /// Invokes the cleanup action
+        /// </summary>
         public void Dispose()
         {
             if (_cleanupAction == null) return;

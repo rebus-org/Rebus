@@ -23,6 +23,10 @@ namespace Rebus.Compression
             _zipper = zipper;
         }
 
+        /// <summary>
+        /// Decompresses the body of the incoming <see cref="TransportMessage"/> if it has the <see cref="Headers.ContentEncoding"/> header
+        /// set to an understood content encoding
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             PossiblyDecompressTransportMessage(context);

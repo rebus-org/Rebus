@@ -24,6 +24,10 @@ namespace Rebus.Pipeline.Send
             _hasOwnAddress = !string.IsNullOrWhiteSpace(_address);
         }
 
+        /// <summary>
+        /// If no return address has been added to the message, the sender's input queue address is automatically added as the <see cref="Headers.ReturnAddress"/>
+        /// header
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();

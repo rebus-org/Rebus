@@ -25,7 +25,7 @@ namespace Rebus.Persistence.SqlServer
 
         /// <summary>
         /// Constructs the storage using the specified connection provider and table to store its subscriptions. If the subscription
-        /// storage is shared by all subscribers and publishers, the <see cref="isCentralized"/> parameter can be set to true
+        /// storage is shared by all subscribers and publishers, the <paramref name="isCentralized"/> parameter can be set to true
         /// in order to subscribe/unsubscribe directly instead of sending subscription/unsubscription requests
         /// </summary>
         public SqlServerSubscriptionStorage(DbConnectionProvider connectionProvider, string tableName, bool isCentralized)

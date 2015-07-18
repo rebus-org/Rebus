@@ -24,6 +24,9 @@ namespace Rebus.Encryption
             _encryptor = encryptor;
         }
 
+        /// <summary>
+        /// Descrypts the incoming <see cref="TransportMessage"/> if it has the <see cref="EncryptionHeaders.ContentEncryption"/> header
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();

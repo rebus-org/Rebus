@@ -24,9 +24,9 @@ namespace Rebus.Injection
         }
 
         /// <summary>
-        /// Registers a factory method that can provide an instance of <see cref="TService"/>. If <see cref="isDecorator"/> is set to true,
-        /// the factory method will be called before the factory method where <see cref="isDecorator"/> is set to false (which is the default).
-        /// There can be only one factory method with <see cref="isDecorator"/>=false for each type of <see cref="TService"/>.
+        /// Registers a factory method that can provide an instance of <typeparamref name="TService"/>. If <paramref name="isDecorator"/> is set to true,
+        /// the factory method will be called before the factory method where <paramref name="isDecorator"/> is set to false (which is the default).
+        /// There can be only one factory method with <paramref name="isDecorator"/>=false for each type of <typeparamref name="TService"/>.
         /// </summary>
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator = false)
         {
@@ -61,6 +61,9 @@ namespace Rebus.Injection
             }
         }
 
+        /// <summary>
+        /// Event that gets fired when (top level) resolve is called for a type
+        /// </summary>
         public event Action<Type> ResolveRequested = delegate { };
 
         /// <summary>

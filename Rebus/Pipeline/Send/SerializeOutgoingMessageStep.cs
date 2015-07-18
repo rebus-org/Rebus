@@ -22,6 +22,10 @@ namespace Rebus.Pipeline.Send
             _serializer = serializer;
         }
 
+        /// <summary>
+        /// Serializes the outgoing message by invoking the currently configured <see cref="ISerializer"/> on the <see cref="Message"/> found in the context,
+        /// storing the result as the <see cref="TransportMessage"/> returned by the serializer
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var logicalMessage = context.Load<Message>();

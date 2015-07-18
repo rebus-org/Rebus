@@ -26,6 +26,10 @@ namespace Rebus.Pipeline
             _pipeline = pipeline;
         }
 
+        /// <summary>
+        /// Gets the ordered sequence of <see cref="IOutgoingStep"/> that makes up the outgoing pipeline, injecting any configured outgoing steps
+        /// at their appropriate places
+        /// </summary>
         public IEnumerable<IOutgoingStep> SendPipeline()
         {
             var encounteredStepTypes = new HashSet<Type>();
@@ -69,6 +73,10 @@ namespace Rebus.Pipeline
             }
         }
 
+        /// <summary>
+        /// Gets the ordered sequence of <see cref="IIncomingStep"/> that makes up the incoming pipeline, injecting any configured incoming steps
+        /// at their appropriate places
+        /// </summary>
         public IEnumerable<IIncomingStep> ReceivePipeline()
         {
             var encounteredStepTypes = new HashSet<Type>();

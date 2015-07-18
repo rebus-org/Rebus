@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Rebus.Exceptions;
 using Rebus.Reflection;
 using Rebus.Sagas;
+#pragma warning disable 1998
 
 namespace Rebus.Persistence.InMem
 {
@@ -23,6 +24,9 @@ namespace Rebus.Persistence.InMem
             TypeNameHandling = TypeNameHandling.All
         };
 
+        /// <summary>
+        /// Looks up an existing saga data of the given type with a property of the specified name and the specified value
+        /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
             lock (_lock)
@@ -43,6 +47,9 @@ namespace Rebus.Persistence.InMem
             }
         }
 
+        /// <summary>
+        /// Saves the given saga data, throwing an exception if the instance already exists
+        /// </summary>
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var id = GetId(sagaData);
@@ -64,6 +71,9 @@ namespace Rebus.Persistence.InMem
             }
         }
 
+        /// <summary>
+        /// Updates the saga data
+        /// </summary>
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var id = GetId(sagaData);
@@ -90,6 +100,9 @@ namespace Rebus.Persistence.InMem
             }
         }
 
+        /// <summary>
+        /// Deletes the given saga data
+        /// </summary>
         public async Task Delete(ISagaData sagaData)
         {
             var id = GetId(sagaData);

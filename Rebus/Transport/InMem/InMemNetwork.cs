@@ -21,7 +21,7 @@ namespace Rebus.Transport.InMem
         readonly bool _outputEventsToConsole;
 
         /// <summary>
-        /// Constructs the in-mem network, optionally (if <see cref="outputEventsToConsole"/> is set to true) outputting information
+        /// Constructs the in-mem network, optionally (if <paramref name="outputEventsToConsole"/> is set to true) outputting information
         /// about what is happening inside it to <see cref="Console.Out"/>
         /// </summary>
         public InMemNetwork(bool outputEventsToConsole = false)

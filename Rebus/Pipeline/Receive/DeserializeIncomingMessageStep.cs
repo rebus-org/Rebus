@@ -22,6 +22,10 @@ namespace Rebus.Pipeline.Receive
             _serializer = serializer;
         }
 
+        /// <summary>
+        /// Deserializes the incoming message by invoking the currently configured <see cref="ISerializer"/> on the <see cref="TransportMessage"/> found in the context,
+        /// storing the result as the <see cref="Message"/> returned by the serializer
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();
