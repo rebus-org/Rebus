@@ -29,6 +29,9 @@ namespace Rebus.Compression
             _bodySizeThresholdBytes = bodySizeThresholdBytes;
         }
 
+        /// <summary>
+        /// Compresses theo outgoing transport message body
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             PossiblyCompressTransportMessage(context);

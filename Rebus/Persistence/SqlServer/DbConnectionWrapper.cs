@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Threading;
 using System.Threading.Tasks;
+
 #pragma warning disable 1998
 
 namespace Rebus.Persistence.SqlServer
@@ -30,11 +30,17 @@ namespace Rebus.Persistence.SqlServer
             _managedExternally = managedExternally;
         }
 
+        /// <summary>
+        /// Ensures that the wrapper is always disposed
+        /// </summary>
         ~DbConnectionWrapper()
         {
             Dispose(false);
         }
 
+        /// <summary>
+        /// Creates a ready to used <see cref="SqlCommand"/>
+        /// </summary>
         public SqlCommand CreateCommand()
         {
             var sqlCommand = _connection.CreateCommand();
@@ -42,11 +48,17 @@ namespace Rebus.Persistence.SqlServer
             return sqlCommand;
         }
 
+        /// <summary>
+        /// Gets the names of all the tables in the current database for the current schema
+        /// </summary>
         public IEnumerable<string> GetTableNames()
         {
             return _connection.GetTableNames(_currentTransaction);
         }
 
+        /// <summary>
+        /// Marks that all work has been successfully done and the <see cref="SqlConnection"/> may have its transaction committed or whatever is natural to do at this time
+        /// </summary>
         public async Task Complete()
         {
             if (_managedExternally) return;
@@ -61,6 +73,10 @@ namespace Rebus.Persistence.SqlServer
             }
         }
 
+        /// <summary>
+        /// Finishes the transaction and disposes the connection in order to return it to the connection pool. If the transaction
+        /// has not been committed (by calling <see cref="Complete"/>), the transaction will be rolled back.
+        /// </summary>
         public void Dispose()
         {
             GC.SuppressFinalize(this);

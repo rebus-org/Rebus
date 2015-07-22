@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Messages;
+#pragma warning disable 1998
 
 namespace Rebus.Transport.InMem
 {
@@ -46,10 +47,7 @@ namespace Rebus.Transport.InMem
                 throw new ArgumentException(string.Format("Destination queue address '{0}' does not exist!", destinationAddress));
             }
 
-            context.OnCommitted(async () =>
-            {
-                _network.Deliver(destinationAddress, message.ToInMemTransportMessage());
-            });
+            context.OnCommitted(async () => _network.Deliver(destinationAddress, message.ToInMemTransportMessage()));
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
