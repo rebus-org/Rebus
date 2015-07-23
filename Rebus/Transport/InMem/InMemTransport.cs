@@ -31,11 +31,17 @@ namespace Rebus.Transport.InMem
             _network.CreateQueue(inputQueueAddress);
         }
 
+        /// <summary>
+        /// Creates a queue with the given address
+        /// </summary>
         public void CreateQueue(string address)
         {
             _network.CreateQueue(address);
         }
 
+        /// <summary>
+        /// Delivers the given message to the queue identitied by the given <paramref name="destinationAddress"/>
+        /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
@@ -50,6 +56,9 @@ namespace Rebus.Transport.InMem
             context.OnCommitted(async () => _network.Deliver(destinationAddress, message.ToInMemTransportMessage()));
         }
 
+        /// <summary>
+        /// Receives the next message from the queue identified by the configured <see cref="Address"/>, returning null if none was available
+        /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
@@ -71,11 +80,17 @@ namespace Rebus.Transport.InMem
             return null;
         }
 
+        /// <summary>
+        /// Initializes the transport by creating its own input queue
+        /// </summary>
         public void Initialize()
         {
             CreateQueue(_inputQueueAddress);
         }
 
+        /// <summary>
+        /// Gets the input queue
+        /// </summary>
         public string Address
         {
             get { return _inputQueueAddress; }
