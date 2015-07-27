@@ -5,6 +5,9 @@ using Rebus.Logging;
 
 namespace Rebus.Log4net
 {
+    /// <summary>
+    /// Configuration extensions for setting up logging with Log4net
+    /// </summary>
     public static class Log4NetConfigurationExtensions
     {
         /// <summary>

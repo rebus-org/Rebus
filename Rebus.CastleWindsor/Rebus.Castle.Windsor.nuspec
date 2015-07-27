@@ -21,5 +21,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Rebus.CastleWindsor.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.CastleWindsor.xml" target="lib\NET45" />
   </files>
 </package>

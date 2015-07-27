@@ -4,6 +4,9 @@ using Serilog;
 
 namespace Rebus.Serilog
 {
+    /// <summary>
+    /// Configuration extensions for setting up logging with Serilog
+    /// </summary>
     public static class SerilogConfigurationExtensions
     {
         /// <summary>

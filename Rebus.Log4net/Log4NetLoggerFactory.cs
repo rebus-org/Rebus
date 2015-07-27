@@ -5,6 +5,9 @@ using ILog = Rebus.Logging.ILog;
 
 namespace Rebus.Log4net
 {
+    /// <summary>
+    /// Logger factory that creates Log4net-based loggers
+    /// </summary>
     public class Log4NetLoggerFactory : AbstractRebusLoggerFactory
     {
         protected override ILog GetLogger(Type type)

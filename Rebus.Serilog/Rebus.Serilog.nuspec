@@ -20,5 +20,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Rebus.Serilog.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Serilog.xml" target="lib\NET45" />
   </files>
 </package>

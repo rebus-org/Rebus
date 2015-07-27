@@ -9,14 +9,21 @@ using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
 using SimpleInjector;
+#pragma warning disable 1998
 
 namespace Rebus.SimpleInjector
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that uses Simple Injector to do its thing
+    /// </summary>
     public class SimpleInjectorContainerAdapter : IContainerAdapter, IDisposable
     {
         readonly HashSet<IDisposable> _disposables = new HashSet<IDisposable>();
         readonly Container _container;
 
+        /// <summary>
+        /// Constructs the container adapter
+        /// </summary>
         public SimpleInjectorContainerAdapter(Container container)
         {
             _container = container;

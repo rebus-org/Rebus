@@ -9,13 +9,20 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Unity
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that uses Unity to do its thing
+    /// </summary>
     public class UnityContainerAdapter : IContainerAdapter
     {
         readonly IUnityContainer _unityContainer;
 
+        /// <summary>
+        /// Constructs the container adapter
+        /// </summary>
         public UnityContainerAdapter(IUnityContainer unityContainer)
         {
             _unityContainer = unityContainer;

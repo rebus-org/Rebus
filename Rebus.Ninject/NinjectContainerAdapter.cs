@@ -9,13 +9,20 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Ninject
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that uses Ninject to do its thing
+    /// </summary>
     public class NinjectContainerAdapter : IContainerAdapter
     {
         readonly IKernel _kernel;
 
+        /// <summary>
+        /// Constructs the adapter
+        /// </summary>
         public NinjectContainerAdapter(IKernel kernel)
         {
             _kernel = kernel;

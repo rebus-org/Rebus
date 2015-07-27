@@ -20,5 +20,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Rebus.Unity.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Unity.xml" target="lib\NET45" />
   </files>
 </package>

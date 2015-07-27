@@ -21,5 +21,6 @@
     </metadata>
     <files>
         <file src="bin\Release\Rebus.Jil.dll" target="lib\NET45" />
+        <file src="bin\Release\Rebus.Jil.xml" target="lib\NET45" />
     </files>
 </package>

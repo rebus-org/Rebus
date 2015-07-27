@@ -4,6 +4,9 @@ using Rebus.Logging;
 
 namespace Rebus.NLog
 {
+    /// <summary>
+    /// Configuration extensions for setting up logging with NLog
+    /// </summary>
     public static class NLogConfigurationExtensions
     {
         /// <summary>
