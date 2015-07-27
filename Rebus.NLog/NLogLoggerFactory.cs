@@ -4,7 +4,7 @@ using Rebus.Logging;
 
 namespace Rebus.NLog
 {
-    public class NLogLoggerFactory : AbstractRebusLoggerFactory
+    class NLogLoggerFactory : AbstractRebusLoggerFactory
     {
         protected override ILog GetLogger(Type type)
         {

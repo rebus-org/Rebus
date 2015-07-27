@@ -71,6 +71,9 @@ namespace Rebus.SimpleInjector
             });
         }
 
+        /// <summary>
+        /// Disposes the bus
+        /// </summary>
         public void Dispose()
         {
             _disposables.ForEach(d => d.Dispose());
