@@ -59,8 +59,6 @@ namespace Rebus.Bus
         /// <summary>
         /// Starts the bus by adding the specified number of workers
         /// </summary>
-        /// <param name="numberOfWorkers"></param>
-        /// <returns></returns>
         public void Start(int numberOfWorkers)
         {
             _log.Info("Starting bus {0}", _busId);
@@ -70,6 +68,9 @@ namespace Rebus.Bus
             _log.Info("Started");
         }
 
+        /// <summary>
+        /// Sends the specified command message to this instance's own input queue, optionally specifying some headers to attach to the message
+        /// </summary>
         public async Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var destinationAddress = _transport.Address;
@@ -84,6 +85,9 @@ namespace Rebus.Bus
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
+        /// <summary>
+        /// Sends the specified command message to the address mapped as the owner of the message type, optionally specifying some headers to attach to the message
+        /// </summary>
         public async Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(commandMessage, Operation.Send, optionalHeaders);
@@ -92,6 +96,9 @@ namespace Rebus.Bus
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
+        /// <summary>
+        /// Sends the specified command message to the address specified as <paramref name="destinationAddress"/>, optionally specifying some headers to attach to the message
+        /// </summary>
         public async Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
@@ -99,6 +106,9 @@ namespace Rebus.Bus
             await InnerSend(new[] { destinationAddress }, logicalMessage);
         }
 
+        /// <summary>
+        /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
+        /// </summary>
         public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
@@ -107,6 +117,11 @@ namespace Rebus.Bus
             await InnerSend(subscriberAddresses, logicalMessage);
         }
 
+        /// <summary>
+        /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.ReturnAddress"/> is specified
+        /// in a header, the instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
+        /// has elapsed.
+        /// </summary>
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
@@ -123,6 +138,10 @@ namespace Rebus.Bus
             await InnerSend(new[] { timeoutManagerAddress }, logicalMessage);
         }
 
+        /// <summary>
+        /// Replies back to the endpoint specified as return address on the message currently being handled. Throws an <see cref="InvalidOperationException"/> if
+        /// called outside of a proper message context.
+        /// </summary>
         public async Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
         {
             // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
@@ -142,6 +161,10 @@ namespace Rebus.Bus
             await InnerSend(new[] { returnAddress }, logicalMessage);
         }
 
+        /// <summary>
+        /// Subscribes to the specified topic. If the current subscription storage is centralized, the subscription will be established right away. Otherwise, a <see cref="SubscribeRequest"/>
+        /// will be sent to the address mapped as the owner (i.e. the publisher) of the given topic.
+        /// </summary>
         public async Task Subscribe(string topic)
         {
             if (_subscriptionStorage.IsCentralized)
@@ -162,6 +185,10 @@ namespace Rebus.Bus
             }
         }
 
+        /// <summary>
+        /// Unsubscribes from the specified topic. If the current subscription storage is centralized, the subscription will be removed right away. Otherwise, an <see cref="UnsubscribeRequest"/>
+        /// will be sent to the address mapped as the owner (i.e. the publisher) of the given topic.
+        /// </summary>
         public async Task Unsubscribe(string topic)
         {
             if (_subscriptionStorage.IsCentralized)
@@ -244,11 +271,11 @@ namespace Rebus.Bus
 
         async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
-            var transactionContext = AmbientTransactionContext.Current;
+            var currentTransactionContext = AmbientTransactionContext.Current;
 
-            if (transactionContext != null)
+            if (currentTransactionContext != null)
             {
-                await SendUsingTransactionContext(destinationAddresses, logicalMessage, transactionContext);
+                await SendUsingTransactionContext(destinationAddresses, logicalMessage, currentTransactionContext);
             }
             else
             {
@@ -270,6 +297,9 @@ namespace Rebus.Bus
 
         bool _disposing;
 
+        /// <summary>
+        /// Stops all workers, allowing them to finish handling the current message (for up to 1 minute) before exiting
+        /// </summary>
         public void Dispose()
         {
             // this Dispose may be called when the Disposed event is raised - therefore, we need
@@ -361,7 +391,7 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Gets a label for this bus instance - e.g. "RebusBus 2" if this is the 2nd instace created, ever, in the current process
+        /// Gets a label for this bus instance - e.g. "RebusBus 2" if this is the 2nd instance created, ever, in the current process
         /// </summary>
         public override string ToString()
         {
