@@ -22,6 +22,26 @@ namespace Rebus.XmlConfig
         }
 
         /// <summary>
+        /// Adds mappings
+        /// </summary>
+        public static TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder MapAppConfig(this TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder builder)
+        {
+            var rebusRoutingConfigurationSection = GetRebusRoutingConfigurationSection();
+
+            try
+            {
+                SetUpEndpointMappings(rebusRoutingConfigurationSection.MappingsCollection,
+                    (type, endpoint) => builder.Map(type, endpoint));
+
+                return builder;
+            }
+            catch (Exception exception)
+            {
+                throw GetStandardConfigurationException(exception);
+            }
+        }
+
+        /// <summary>
         /// Loads an almost-identical-to-Rebus1 configuration section of endpoint mappings from the current app.config/web.config
         /// </summary>
         public static void TypeBasedRoutingFromAppConfig(this StandardConfigurer<IRouter> configurer)
@@ -32,7 +52,13 @@ namespace Rebus.XmlConfig
             }
             catch (Exception exception)
             {
-                throw new ConfigurationErrorsException(@"There was a problem configuring the type-based router. Please ensure that your configuration file has the following configuration section defined:
+                throw GetStandardConfigurationException(exception);
+            }
+        }
+
+        static ConfigurationErrorsException GetStandardConfigurationException(Exception exception)
+        {
+            return new ConfigurationErrorsException(@"There was a problem configuring the type-based router. Please ensure that your configuration file has the following configuration section defined:
 
     <configSections>
         <section name=""rebus"" type=""Rebus.XmlConfig.RebusConfigurationSection, Rebus.XmlConfig"" />
@@ -53,10 +79,23 @@ in this case mapping all types from the assemblies SomeSystem.Messages and Anoth
 
 Please note that explicitly mapped types will always take precedence over assembly-mapped types.
 ", exception);
-            }
         }
 
         static void Configure(StandardConfigurer<IRouter> configurer)
+        {
+            var rebusRoutingConfigurationSection = GetRebusRoutingConfigurationSection();
+
+            configurer.Register(c =>
+            {
+                var typeBasedRouter = new TypeBasedRouter();
+
+                SetUpEndpointMappings(rebusRoutingConfigurationSection.MappingsCollection, (type, endpoint) => typeBasedRouter.Map(type, endpoint));
+
+                return typeBasedRouter;
+            });
+        }
+
+        static RebusConfigurationSection GetRebusRoutingConfigurationSection()
         {
             var section = ConfigurationManager.GetSection("rebus");
 
@@ -75,18 +114,10 @@ Please note that explicitly mapped types will always take precedence over assemb
             }
 
             var rebusRoutingConfigurationSection = (RebusConfigurationSection) section;
-
-            configurer.Register(c =>
-            {
-                var typeBasedRouter = new TypeBasedRouter();
-
-                SetUpEndpointMappings(rebusRoutingConfigurationSection.MappingsCollection, typeBasedRouter);
-
-                return typeBasedRouter;
-            });
+            return rebusRoutingConfigurationSection;
         }
 
-        static void SetUpEndpointMappings(EndpointConfigurationElement mappings, TypeBasedRouter typeBasedRouter)
+        static void SetUpEndpointMappings(EndpointConfigurationElement mappings, Action<Type, string> mappingFunction)
         {
             var mappingElements = mappings.OrderBy(c => !c.IsAssemblyName).ToList();
 
@@ -102,7 +133,7 @@ Please note that explicitly mapped types will always take precedence over assemb
 
                     foreach (var type in assembly.GetTypes())
                     {
-                        Map(type, element.Endpoint, typeBasedRouter);
+                        mappingFunction(type, element.Endpoint);
                     }
                 }
                 else
@@ -119,7 +150,7 @@ Please note that explicitly mapped types will always take precedence over assemb
                             string.Format(@"Could not find the message type {0}. If you choose to map a specific message type, please ensure that the type is available for Rebus to load. This requires that the assembly can be found in Rebus' current runtime directory, that the type is available, and that any (of the optional) version and key requirements are matched", typeName));
                     }
 
-                    Map(messageType, element.Endpoint, typeBasedRouter);
+                    mappingFunction(messageType, element.Endpoint);
                 }
             }
         }
@@ -142,11 +173,6 @@ For this to work, Rebus needs access to an assembly with one of the following fi
 ",
                     assemblyName, e));
             }
-        }
-
-        static void Map(Type messageType, string endpoint, TypeBasedRouter typeBasedRouter)
-        {
-            typeBasedRouter.Map(messageType, endpoint);
         }
     }
 }

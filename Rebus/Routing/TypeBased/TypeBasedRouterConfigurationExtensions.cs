@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using System;
+using Rebus.Config;
 
 namespace Rebus.Routing.TypeBased
 {
@@ -32,7 +33,7 @@ namespace Rebus.Routing.TypeBased
             }
 
             /// <summary>
-            /// Maps <see cref="destinationAddress"/> as the owner of the <see cref="TMessage"/> message type
+            /// Maps <paramref name="destinationAddress"/> as the owner of the <typeparamref name="TMessage"/> message type
             /// </summary>
             public TypeBasedRouterConfigurationBuilder Map<TMessage>(string destinationAddress)
             {
@@ -41,7 +42,16 @@ namespace Rebus.Routing.TypeBased
             }
 
             /// <summary>
-            /// Maps <see cref="destinationAddress"/> as the owner of all message types found in the same assembly as <see cref="TMessage"/>
+            /// Maps <paramref name="destinationAddress"/> as the owner of the <paramref name="messageType"/> message type
+            /// </summary>
+            public TypeBasedRouterConfigurationBuilder Map(Type messageType, string destinationAddress)
+            {
+                _router.Map(messageType, destinationAddress);
+                return this;
+            }
+
+            /// <summary>
+            /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/>
             /// </summary>
             public TypeBasedRouterConfigurationBuilder MapAssemblyOf<TMessage>(string destinationAddress)
             {
