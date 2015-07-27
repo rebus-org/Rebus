@@ -45,6 +45,9 @@ namespace Rebus.Activation
         /// </summary>
         public IBus Bus { get; private set; }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             if (bus == null)

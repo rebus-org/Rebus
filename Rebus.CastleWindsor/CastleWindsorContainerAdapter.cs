@@ -10,6 +10,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.CastleWindsor
 {
@@ -29,6 +30,9 @@ namespace Rebus.CastleWindsor
             _windsorContainer = windsorContainer;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var handlerInstances = GetAllHandlerInstances<TMessage>();
@@ -44,6 +48,9 @@ namespace Rebus.CastleWindsor
             return handlerInstances;
         }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             if (bus == null) throw new ArgumentNullException("bus", "You need to provide a bus instance in order to call this method!");

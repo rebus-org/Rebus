@@ -28,6 +28,9 @@ namespace Rebus.Unity
             _unityContainer = unityContainer;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var resolvedHandlerInstances = ResolvePoly<TMessage>();
@@ -58,6 +61,9 @@ namespace Rebus.Unity
                 .Cast<IHandleMessages<TMessage>>();
         }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             _unityContainer.RegisterInstance(bus, new ContainerControlledLifetimeManager());

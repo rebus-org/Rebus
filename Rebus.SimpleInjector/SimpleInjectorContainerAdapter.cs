@@ -29,6 +29,9 @@ namespace Rebus.SimpleInjector
             _container = container;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var handlerInstances = _container
@@ -48,6 +51,9 @@ namespace Rebus.SimpleInjector
             return handlerInstances;
         }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             _container.RegisterSingle(bus);

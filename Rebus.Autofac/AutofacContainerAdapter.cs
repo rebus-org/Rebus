@@ -9,6 +9,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.Autofac
 {
@@ -27,6 +28,9 @@ namespace Rebus.Autofac
             _container = container;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var lifetimeScope = transactionContext
@@ -53,6 +57,9 @@ namespace Rebus.Autofac
                 .Cast<IHandleMessages<TMessage>>();
         }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             var containerBuilder = new ContainerBuilder();

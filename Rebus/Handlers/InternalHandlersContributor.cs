@@ -29,6 +29,9 @@ namespace Rebus.Handlers
             };
         }
 
+        /// <summary>
+        /// Gets Rebus' own internal handlers (if any) for the given message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var ownHandlers = GetOwnHandlersFor<TMessage>();

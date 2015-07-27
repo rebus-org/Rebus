@@ -28,6 +28,9 @@ namespace Rebus.Ninject
             _kernel = kernel;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var handlerInstances = GetAllHandlerInstances<TMessage>();
@@ -43,6 +46,9 @@ namespace Rebus.Ninject
             return handlerInstances;
         }
 
+        /// <summary>
+        /// Stores the bus instance
+        /// </summary>
         public void SetBus(IBus bus)
         {
             _kernel.Bind<IBus>().ToConstant(bus);
