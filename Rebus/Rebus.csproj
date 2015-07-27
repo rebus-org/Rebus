@@ -59,6 +59,7 @@
     <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Exceptions\RebusApplicationException.cs" />
+    <Compile Include="Extensions\BusExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />

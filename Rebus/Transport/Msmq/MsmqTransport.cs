@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Message = System.Messaging.Message;
