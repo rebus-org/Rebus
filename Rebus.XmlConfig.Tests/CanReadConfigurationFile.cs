@@ -29,7 +29,7 @@ namespace Rebus.XmlConfig.Tests
             {
                 Configure.With(new BuiltinHandlerActivator())
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
-                    .Routing(r => r.TypeBased().MapAppConfig())
+                    .Routing(r => r.TypeBased().AddEndpointMappingsFromAppConfig())
                     .Start();
             }
         }

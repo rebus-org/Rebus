@@ -24,7 +24,7 @@ namespace Rebus.XmlConfig
         /// <summary>
         /// Adds mappings
         /// </summary>
-        public static TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder MapAppConfig(this TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder builder)
+        public static TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder AddEndpointMappingsFromAppConfig(this TypeBasedRouterConfigurationExtensions.TypeBasedRouterConfigurationBuilder builder)
         {
             var rebusRoutingConfigurationSection = GetRebusRoutingConfigurationSection();
 
