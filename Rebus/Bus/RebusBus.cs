@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -21,7 +22,7 @@ namespace Rebus.Bus
     /// <summary>
     /// This is the main bus thing which you'll most likely hold on to
     /// </summary>
-    public class RebusBus : IBus
+    public partial class RebusBus : IBus
     {
         static ILog _log;
 
@@ -349,11 +350,19 @@ namespace Rebus.Bus
         /// </summary>
         public void SetNumberOfWorkers(int desiredNumberOfWorkers)
         {
-            if (desiredNumberOfWorkers == _workers.Count) return;
+            if (desiredNumberOfWorkers == GetNumberOfWorkers()) return;
 
             _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
-            while (desiredNumberOfWorkers > _workers.Count) AddWorker();
-            while (desiredNumberOfWorkers < _workers.Count) RemoveWorker();
+            while (desiredNumberOfWorkers > GetNumberOfWorkers()) AddWorker();
+            while (desiredNumberOfWorkers < GetNumberOfWorkers()) RemoveWorker();
+        }
+
+        int GetNumberOfWorkers()
+        {
+            lock (_workers)
+            {
+                return _workers.Count;
+            }
         }
 
         void AddWorker()
@@ -396,6 +405,15 @@ namespace Rebus.Bus
         public override string ToString()
         {
             return string.Format("RebusBus {0}", _busId);
+        }
+
+        /// <summary>
+        /// Gets the API for advanced features of the bus
+        /// </summary>
+        public IAdvancedApi Advanced
+        {
+            // the advanced API is defined in the other partial RebusBus class definition in the AdvancedRebusBus.cs file
+            get { return new AdvancedApi(this); }
         }
     }
 }

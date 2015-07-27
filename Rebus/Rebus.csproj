@@ -51,6 +51,9 @@
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Auditing\AuditingConfigurationExtensions.cs" />
+    <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
+    <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
+    <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />

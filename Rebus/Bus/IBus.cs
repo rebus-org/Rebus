@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Routing;
@@ -59,5 +60,10 @@ namespace Rebus.Bus
         /// Explicitly routes the <see cref="explicitlyRoutedMessage"/> to the destination specified by <see cref="destinationAddress"/>
         /// </summary>
         Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null);
+
+        /// <summary>
+        /// Gets the API for advanced features of the bus
+        /// </summary>
+        IAdvancedApi Advanced { get; }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
+using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Transport;
@@ -95,6 +96,8 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 throw new NotImplementedException();
             }
+
+            public IAdvancedApi Advanced { get; private set; }
         }
 
         [Test]
