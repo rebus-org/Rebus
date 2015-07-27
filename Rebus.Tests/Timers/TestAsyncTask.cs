@@ -28,7 +28,7 @@ namespace Rebus.Tests.Timers
             {
                 task.Start();
 
-                await Task.Delay(1180);
+                await Task.Delay(1199);
             }
 
             await Task.Delay(TimeSpan.FromSeconds(0.7));
