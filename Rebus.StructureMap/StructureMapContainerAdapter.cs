@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Activation;
 using Rebus.Bus;
@@ -8,6 +6,7 @@ using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
 using StructureMap;
+#pragma warning disable 1998
 
 namespace Rebus.StructureMap
 {
@@ -28,7 +27,14 @@ namespace Rebus.StructureMap
 
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
-            return _container.GetAllInstances<IHandleMessages<TMessage>>();
+            var container = transactionContext.GetOrAdd("nested-structuremap-container", () =>
+            {
+                var nestedContainer = _container.GetNestedContainer();
+                transactionContext.OnDisposed(() => nestedContainer.Dispose());
+                return nestedContainer;
+            });
+
+            return container.GetAllInstances<IHandleMessages<TMessage>>();
         }
 
         public void SetBus(IBus bus)
