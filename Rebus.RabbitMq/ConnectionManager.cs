@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using RabbitMQ.Client;
 using Rebus.Logging;
 
 namespace Rebus.RabbitMq
 {
-    public class ConnectionManager : IDisposable
+    class ConnectionManager : IDisposable
     {
         static ILog _log;
 
@@ -15,13 +13,10 @@ namespace Rebus.RabbitMq
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        //readonly List<IConnection> _activeConnections = new List<IConnection>();
-        
         readonly object _activeConnectionLock = new object();
-        IConnection _activeConnection;
-
-
         readonly ConnectionFactory _connectionFactory;
+
+        IConnection _activeConnection;
 
         public ConnectionManager(string connectionString)
         {
@@ -33,7 +28,7 @@ namespace Rebus.RabbitMq
             };
         }
 
-        public IConnection GetConnection(bool trackConnection = true)
+        public IConnection GetConnection()
         {
             var connection = _activeConnection;
 

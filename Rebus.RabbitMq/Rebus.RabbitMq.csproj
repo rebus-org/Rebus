@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Rebus.RabbitMq.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj">

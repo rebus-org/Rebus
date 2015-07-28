@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Exceptions;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -13,6 +14,9 @@ using Rebus.Transport;
 
 namespace Rebus.RabbitMq
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses RabbitMQ to send/receive messages
+    /// </summary>
     public class RabbitMqTransport : ITransport, IDisposable, IInitializable
     {
         const string ExchangeName = "Rebus";
@@ -23,25 +27,32 @@ namespace Rebus.RabbitMq
 
         readonly ConnectionManager _connectionManager;
 
+        /// <summary>
+        /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
+        /// </summary>
         public RabbitMqTransport(string connectionString, string inputQueueAddress)
         {
             _connectionManager = new ConnectionManager(connectionString);
             Address = inputQueueAddress;
         }
 
+        public void Initialize()
+        {
+            CreateQueue(Address);
+        }
+
         public void CreateQueue(string address)
         {
-            using (var connection = _connectionManager.GetConnection(trackConnection: false))
+            var connection = _connectionManager.GetConnection();
+         
+            using (var model = connection.CreateModel())
             {
-                using (var model = connection.CreateModel())
-                {
-                    model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-                    model.QueueDeclare(Address, true, false, false, new Dictionary<string, object>
+                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
+                model.QueueDeclare(address, true, false, false, new Dictionary<string, object>
                     {
                         {"x-ha-policy", "all"}
                     });
-                    model.QueueBind(Address, ExchangeName, Address);
-                }
+                model.QueueBind(address, ExchangeName, Address);
             }
         }
 
@@ -55,6 +66,75 @@ namespace Rebus.RabbitMq
             });
 
             outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
+        }
+
+        public string Address { get; private set; }
+
+        /// <summary>
+        /// Deletes all messages from the queue
+        /// </summary>
+        public void PurgeInputQueue()
+        {
+            var connection = _connectionManager.GetConnection();
+
+            using (var model = connection.CreateModel())
+            {
+                try
+                {
+                    model.QueuePurge(Address);
+                }
+                catch (OperationInterruptedException exception)
+                {
+                    var shutdownReason = exception.ShutdownReason;
+
+                    var queueDoesNotExist = shutdownReason != null
+                                            && shutdownReason.ReplyCode == 404;
+
+                    if (queueDoesNotExist)
+                    {
+                        return;
+                    }
+
+                    throw;
+                }
+            }
+        }
+
+        public async Task<TransportMessage> Receive(ITransactionContext context)
+        {
+            var model = GetModel(context);
+            var result = model.BasicGet(Address, false);
+
+            if (result == null) return null;
+
+            var deliveryTag = result.DeliveryTag;
+
+            context.OnCompleted(async () =>
+            {
+                model.BasicAck(deliveryTag, false);
+            });
+
+            context.OnAborted(() =>
+            {
+                model.BasicNack(deliveryTag, false, true);
+            });
+
+            var headers = result.BasicProperties.Headers
+                .ToDictionary(kvp => kvp.Key, kvp =>
+                {
+                    var headerValue = kvp.Value;
+
+                    if (headerValue is byte[])
+                    {
+                        var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+
+                        return stringHeaderValue;
+                    }
+
+                    return headerValue.ToString();
+                });
+
+            return new TransportMessage(headers, result.Body);
         }
 
         async Task SendOutgoingMessages(ITransactionContext context)
@@ -94,56 +174,6 @@ namespace Rebus.RabbitMq
             return timeToBeReceived;
         }
 
-        class OutgoingMessage
-        {
-            public OutgoingMessage(string destinationAddress, TransportMessage transportMessage)
-            {
-                DestinationAddress = destinationAddress;
-                TransportMessage = transportMessage;
-            }
-
-            public string DestinationAddress { get; private set; }
-
-            public TransportMessage TransportMessage { get; private set; }
-        }
-
-        public async Task<TransportMessage> Receive(ITransactionContext context)
-        {
-            var model = GetModel(context);
-            var result = model.BasicGet(Address, false);
-
-            if (result == null) return null;
-
-            var deliveryTag = result.DeliveryTag;
-
-            context.OnCompleted(async () =>
-            {
-                model.BasicAck(deliveryTag, false);
-            });
-            
-            context.OnAborted(() =>
-            {
-                model.BasicNack(deliveryTag, false, true);
-            });
-
-            var headers = result.BasicProperties.Headers
-                .ToDictionary(kvp => kvp.Key, kvp =>
-                {
-                    var headerValue = kvp.Value;
-
-                    if (headerValue is byte[])
-                    {
-                        var stringHeaderValue = HeaderValueEncoding.GetString((byte[]) headerValue);
-
-                        return stringHeaderValue;
-                    }
-
-                    return headerValue.ToString();
-                });
-
-            return new TransportMessage(headers, result.Body);
-        }
-
         IModel GetModel(ITransactionContext context)
         {
             return context.GetOrAdd(CurrentModelItemsKey, () =>
@@ -157,21 +187,22 @@ namespace Rebus.RabbitMq
             });
         }
 
-        public string Address { get; private set; }
+        class OutgoingMessage
+        {
+            public OutgoingMessage(string destinationAddress, TransportMessage transportMessage)
+            {
+                DestinationAddress = destinationAddress;
+                TransportMessage = transportMessage;
+            }
+
+            public string DestinationAddress { get; private set; }
+
+            public TransportMessage TransportMessage { get; private set; }
+        }
 
         public void Dispose()
         {
             _connectionManager.Dispose();
-        }
-
-        public void PurgeInputQueue()
-        {
-
-        }
-
-        public void Initialize()
-        {
-            CreateQueue(Address);
         }
     }
 }
