@@ -45,7 +45,7 @@ namespace Rebus.Extensions
         }
 
         /// <summary>
-        /// Publishes the event message on the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
+        /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.
         /// While this kind of pub/sub can work universally with the general topic-based routing, it works especially well with type-based routing,
         /// which can be enabled by going 
         /// <code>
@@ -57,9 +57,14 @@ namespace Rebus.Extensions
         /// </code>
         /// in the configuration
         /// </summary>
-        public static Task Publish<TEvent>(this IBus bus, TEvent eventMessage, Dictionary<string, string> optionalHeaders = null)
+        public static Task Publish(this IBus bus, object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            return bus.Publish(typeof (TEvent).AssemblyQualifiedName, eventMessage, optionalHeaders);
+            if (bus == null) throw new ArgumentNullException("bus");
+            if (eventMessage == null) throw new ArgumentNullException("eventMessage");
+
+            var messageType = eventMessage.GetType();
+
+            return bus.Publish(messageType.AssemblyQualifiedName, eventMessage, optionalHeaders);
         }
     }
 }

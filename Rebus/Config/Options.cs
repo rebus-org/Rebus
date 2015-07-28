@@ -33,8 +33,8 @@ namespace Rebus.Config
         public int NumberOfWorkers { get; set; }
 
         /// <summary>
-        /// Configures how many outstanding continuations (i.e. async <see cref="Task"/>-based parallel operations) we allow. This number
-        /// must be greater than or equal to <see cref="NumberOfWorkers"/>.
+        /// Configures the total degree of parallelism allowed. This will be the maximum number of parallel potentially asynchrounous operations that can be active,
+        /// regardless of the number of workers
         /// </summary>
         public int MaxParallelism { get; set; }
     }

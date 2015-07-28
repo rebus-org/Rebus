@@ -35,7 +35,8 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Configures the degree of parallelism allowed within each worker
+        /// Configures the total degree of parallelism allowed. This will be the maximum number of parallel potentially asynchrounous operations that can be active,
+        /// regardless of the number of workers
         /// </summary>
         public OptionsConfigurer SetMaxParallelism(int maxParallelism)
         {
