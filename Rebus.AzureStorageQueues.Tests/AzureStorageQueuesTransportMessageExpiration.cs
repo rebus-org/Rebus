@@ -3,6 +3,6 @@ using Rebus.Tests.Contracts.Transports;
 
 namespace Rebus.AzureStorageQueues.Tests
 {
-    [TestFixture, Ignore("not implemented yet")]
+    [TestFixture]
     public class AzureStorageQueuesTransportMessageExpiration : MessageExpiration<AzureStorageQueuesTransportFactory> { }
 }

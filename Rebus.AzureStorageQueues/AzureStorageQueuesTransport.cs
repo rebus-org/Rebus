@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -11,9 +12,13 @@ using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.AzureStorageQueues
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses Azure Storage Queues to do its thing
+    /// </summary>
     public class AzureStorageQueuesTransport : ITransport, IInitializable
     {
         static ILog _log;
@@ -28,6 +33,9 @@ namespace Rebus.AzureStorageQueues
         readonly CloudQueueClient _queueClient;
         readonly string _inputQueueName;
 
+        /// <summary>
+        /// Constructs the transport
+        /// </summary>
         public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName)
         {
             if (storageAccount == null) throw new ArgumentNullException("storageAccount");
@@ -55,17 +63,27 @@ namespace Rebus.AzureStorageQueues
 
                 var cloudQueueMessage = Serialize(message, messageId, popReceipt);
 
-                //var headers = message.Headers;
-                //TimeSpan? timeToBeReceived = null;
-                //if (headers.ContainsKey(Headers.TimeToBeReceived))
-                //{
-                //    var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                //    timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-                //}
+                var headers = message.Headers;
+                TimeSpan? timeToBeReceived = null;
+                if (headers.ContainsKey(Headers.TimeToBeReceived))
+                {
+                    var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                    timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+                }
 
                 try
                 {
-                    await queue.AddMessageAsync(cloudQueueMessage);
+                    if (timeToBeReceived.HasValue)
+                    {
+                        await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceived.Value, 
+                            null, 
+                            new QueueRequestOptions(), 
+                            new OperationContext());
+                    }
+                    else
+                    {
+                        await queue.AddMessageAsync(cloudQueueMessage);
+                    }
                 }
                 catch (Exception exception)
                 {
@@ -136,6 +154,10 @@ namespace Rebus.AzureStorageQueues
             return _queues.GetOrAdd(address, _ => _queueClient.GetQueueReference(address));
         }
 
+        /// <summary>
+        /// Purges the input queue (WARNING: potentially very slow operation, as it will continue to batch receive messages until the queue is empty
+        /// </summary>
+        /// <exception cref="RebusApplicationException"></exception>
         public void PurgeInputQueue()
         {
             var queue = GetQueue(_inputQueueName);
