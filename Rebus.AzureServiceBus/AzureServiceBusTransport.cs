@@ -160,7 +160,7 @@ namespace Rebus.AzureServiceBus
         }
 
         /// <summary>
-        /// Shoudl return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
+        /// Should return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
         /// </summary>
         static Retrier GetRetrier()
         {

@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
+using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Exceptions;
@@ -73,23 +74,21 @@ namespace Rebus.AzureStorageQueues
 
                 try
                 {
-                    if (timeToBeReceived.HasValue)
-                    {
-                        await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceived.Value, 
-                            null, 
-                            new QueueRequestOptions(), 
-                            new OperationContext());
-                    }
-                    else
-                    {
-                        await queue.AddMessageAsync(cloudQueueMessage);
-                    }
+                    var options = GetQueueRequestOptions();
+                    var operationContext = new OperationContext();
+
+                    await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceived, null, options, operationContext);
                 }
                 catch (Exception exception)
                 {
                     throw new RebusApplicationException(string.Format("Could not send message with ID {0} to '{1}'", cloudQueueMessage.Id, destinationAddress), exception);
                 }
             });
+        }
+
+        QueueRequestOptions GetQueueRequestOptions()
+        {
+            return new QueueRequestOptions {RetryPolicy = new ExponentialRetry()};
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
