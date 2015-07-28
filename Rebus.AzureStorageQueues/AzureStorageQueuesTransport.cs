@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -13,6 +12,7 @@ using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
+
 #pragma warning disable 1998
 
 namespace Rebus.AzureStorageQueues
@@ -53,28 +53,53 @@ namespace Rebus.AzureStorageQueues
             queue.CreateIfNotExists();
         }
 
+        class OutgoingMessage
+        {
+            readonly string _destinationAddress;
+            readonly TransportMessage _transportMessage;
+
+            public OutgoingMessage(string destinationAddress, TransportMessage transportMessage)
+            {
+                _destinationAddress = destinationAddress;
+                _transportMessage = transportMessage;
+            }
+
+            public string DestinationAddress
+            {
+                get { return _destinationAddress; }
+            }
+
+            public TransportMessage TransportMessage
+            {
+                get { return _transportMessage; }
+            }
+        }
+
+        static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
+        {
+            var headers = message.Headers;
+            TimeSpan? timeToBeReceived = null;
+            if (headers.ContainsKey(Headers.TimeToBeReceived))
+            {
+                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+            }
+            return timeToBeReceived;
+        }
+
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             context.OnCommitted(async () =>
             {
                 var queue = GetQueue(destinationAddress);
-
                 var messageId = Guid.NewGuid().ToString();
                 var popReceipt = Guid.NewGuid().ToString();
-
+                var timeToBeReceived = GetTimeToBeReceivedOrNull(message);
                 var cloudQueueMessage = Serialize(message, messageId, popReceipt);
-
-                var headers = message.Headers;
-                TimeSpan? timeToBeReceived = null;
-                if (headers.ContainsKey(Headers.TimeToBeReceived))
-                {
-                    var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                    timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-                }
 
                 try
                 {
-                    var options = GetQueueRequestOptions();
+                    var options = new QueueRequestOptions {RetryPolicy = new ExponentialRetry()};
                     var operationContext = new OperationContext();
 
                     await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceived, null, options, operationContext);
@@ -84,11 +109,6 @@ namespace Rebus.AzureStorageQueues
                     throw new RebusApplicationException(string.Format("Could not send message with ID {0} to '{1}'", cloudQueueMessage.Id, destinationAddress), exception);
                 }
             });
-        }
-
-        QueueRequestOptions GetQueueRequestOptions()
-        {
-            return new QueueRequestOptions {RetryPolicy = new ExponentialRetry()};
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
