@@ -46,6 +46,9 @@ namespace Rebus.AzureStorageQueues
             _queueClient = storageAccount.CreateCloudQueueClient();
         }
 
+        /// <summary>
+        /// Creates a new queue with the specified address
+        /// </summary>
         public void CreateQueue(string address)
         {
             var queue = GetQueue(address);
@@ -53,40 +56,9 @@ namespace Rebus.AzureStorageQueues
             queue.CreateIfNotExists();
         }
 
-        class OutgoingMessage
-        {
-            readonly string _destinationAddress;
-            readonly TransportMessage _transportMessage;
-
-            public OutgoingMessage(string destinationAddress, TransportMessage transportMessage)
-            {
-                _destinationAddress = destinationAddress;
-                _transportMessage = transportMessage;
-            }
-
-            public string DestinationAddress
-            {
-                get { return _destinationAddress; }
-            }
-
-            public TransportMessage TransportMessage
-            {
-                get { return _transportMessage; }
-            }
-        }
-
-        static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
-        {
-            var headers = message.Headers;
-            TimeSpan? timeToBeReceived = null;
-            if (headers.ContainsKey(Headers.TimeToBeReceived))
-            {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-            }
-            return timeToBeReceived;
-        }
-
+        /// <summary>
+        /// Sends the given <see cref="TransportMessage"/> to the queue with the specified globally addressable name
+        /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             context.OnCommitted(async () =>
@@ -111,6 +83,9 @@ namespace Rebus.AzureStorageQueues
             });
         }
 
+        /// <summary>
+        /// Receives the next message (if any) from the transport's input queue <see cref="ITransport.Address"/>
+        /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             var inputQueue = GetQueue(_inputQueueName);
@@ -130,6 +105,18 @@ namespace Rebus.AzureStorageQueues
             });
 
             return Deserialize(cloudQueueMessage);
+        }
+
+        static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
+        {
+            var headers = message.Headers;
+            TimeSpan? timeToBeReceived = null;
+            if (headers.ContainsKey(Headers.TimeToBeReceived))
+            {
+                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+            }
+            return timeToBeReceived;
         }
 
         static CloudQueueMessage Serialize(TransportMessage message, string messageId, string popReceipt)
