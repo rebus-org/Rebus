@@ -14,7 +14,7 @@
     <tags>rebus newtonsoft json json.net serialization</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[2, 3)" />
+        <dependency id="Rebus" version="[0.90.0, 1)" />
         <dependency id="Newtonsoft.Json" version="[6, 7)" />
     </dependencies>
   </metadata>
