@@ -29,6 +29,9 @@ namespace Rebus.Pipeline.Receive
             _handlerActivator = handlerActivator;
         }
 
+        /// <summary>
+        /// Looks up handlers for the incoming message and saves the handlers (without invoking them) to the context as a <see cref="HandlerInvokers"/>
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transactionContext = context.Load<ITransactionContext>();

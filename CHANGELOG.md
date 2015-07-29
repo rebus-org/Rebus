@@ -531,6 +531,11 @@
 * Ground laid for more advanced control of Rebus internals, e.g. to implement auto-scaling of number of workers, diagnostics, etc.
 * Tests refactored to make it much much easier to introduce new implementations based on contract tests
 
+## 0.90.1
+
+* Added `TransactionScope` support via the `Rebus.TransactionScope` package (note: requires at least .NET 4.5.1 for `TransactionScopeAsyncFlowOption.Enabled` to be there)
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
