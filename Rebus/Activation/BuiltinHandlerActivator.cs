@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Pipeline;
 using Rebus.Transport;
 #pragma warning disable 1998
 
@@ -63,7 +64,16 @@ namespace Rebus.Activation
         }
 
         /// <summary>
-        /// Sets up an inline handler for messages of type <see cref="TMessage"/>
+        /// Sets up an inline handler for messages of type <see cref="TMessage"/> with the <see cref="IBus"/> and the current <see cref="IMessageContext"/> available
+        /// </summary>
+        public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, IMessageContext, TMessage, Task> handlerFunction)
+        {
+            _handlerInstances.Add(new Handler<TMessage>((bus, message) => handlerFunction(bus, MessageContext.Current, message), () => Bus));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up an inline handler for messages of type <see cref="TMessage"/> with the <see cref="IBus"/> available
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, TMessage, Task> handlerFunction)
         {
@@ -88,7 +98,7 @@ namespace Rebus.Activation
             public Handler(Func<IBus, TMessage, Task> handlerFunction, Func<IBus> getBus)
             {
                 _handlerFunction = handlerFunction;
-                _getBus = getBus;
+                _getBus = getBus; // store this function here because of Hen&Egg-Problem between handler activator and bus
             }
 
             public async Task Handle(TMessage message)
