@@ -56,4 +56,17 @@
         
         <Exec Command="$(Nuget) pack %(NuSpecs.FullPath) -Version $(Version) -OutputDirectory $(PackagesDirectory)" />
     </Target>
+
+    <Target Name="push">
+        <PropertyGroup>
+            <PackagesDirectory>$(TempDir)\packages</PackagesDirectory>
+        </PropertyGroup>
+
+        <ItemGroup>
+            <NuGetPackages Include="$(PackagesDirectory)\*.nupkg" />
+        </ItemGroup>
+
+        <Message Text="Pushing NuGet packages..." />
+        <Exec Command="$(Nuget) push %(NuGetPackages.FullPath)" />
+    </Target>
 </Project>
