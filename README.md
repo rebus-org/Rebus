@@ -78,9 +78,9 @@ which will stuff the resulting `IBus` in the container as a singleton and use th
 License
 ====
 
-Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
+Rebus is licensed under [The MIT License (MIT)][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
 
-[1]: http://www.apache.org/licenses/LICENSE-2.0.html
+[1]: http://opensource.org/licenses/MIT
 [2]: http://twitter.com/#!/mookid8000
 [3]: http://nservicebus.com/
 [4]: http://masstransit-project.com/
