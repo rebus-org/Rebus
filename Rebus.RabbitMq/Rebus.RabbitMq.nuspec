@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.RabbitMq</id>
+    <version>$version$</version>
+    <title>Rebus.RabbitMq</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>RabbitMQ transport for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus rabbitmq amqp</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[2, 3)" />
+        <dependency id="RabbitMQ.Client" version="[3.5, 3.6)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.RabbitMq.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.RabbitMq.xml" target="lib\NET45" />
+  </files>
+</package>

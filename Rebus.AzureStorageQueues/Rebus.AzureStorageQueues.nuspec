@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.AzureStorageQueues</id>
+    <version>$version$</version>
+    <title>Rebus.AzureStorageQueues</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Azure Storage Queues transport for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus azure azure-storage-queues</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[2, 3)" />
+        <dependency id="Microsoft.Data.Edm" version="[5.6.2, 5.6.3)" />
+        <dependency id="Microsoft.Data.OData" version="[5.6.2, 5.6.3)" />
+        <dependency id="Microsoft.Data.Services.Client" version="[5.6.2, 5.6.3)" />
+        <dependency id="Microsoft.WindowsAzure.ConfigurationManager" version="[1.8.0, 1.8.1)" />
+        <dependency id="Newtonsoft.Json" version="[6.0, 6.1)" />
+        <dependency id="System.Spatial" version="[5.6.2, 5.6.3)" />
+        <dependency id="WindowsAzure.Storage" version="[4.3.0, 4.3.1)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.AzureStorageQueues.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.AzureStorageQueues.xml" target="lib\NET45" />
+  </files>
+</package>

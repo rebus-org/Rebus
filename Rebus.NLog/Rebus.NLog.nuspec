@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.NLog</id>
+    <version>$version$</version>
+    <title>Rebus.NLog</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>NLog logging integration for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus nlog logging</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[2, 3)" />
+        <dependency id="NLog" version="[3, 4)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.NLog.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.NLog.xml" target="lib\NET45" />
+  </files>
+</package>
