@@ -65,24 +65,35 @@ namespace Rebus.Activation
         /// <summary>
         /// Sets up an inline handler for messages of type <see cref="TMessage"/>
         /// </summary>
+        public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, TMessage, Task> handlerFunction)
+        {
+            _handlerInstances.Add(new Handler<TMessage>(handlerFunction, () => Bus));
+            return this;
+        }
+
+        /// <summary>
+        /// Sets up an inline handler for messages of type <see cref="TMessage"/>
+        /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {
-            _handlerInstances.Add(new Handler<TMessage>(handlerFunction));
+            _handlerInstances.Add(new Handler<TMessage>((bus, message) => handlerFunction(message), () => Bus));
             return this;
         }
 
         class Handler<TMessage> : IHandleMessages<TMessage>
         {
-            readonly Func<TMessage, Task> _handlerFunction;
+            readonly Func<IBus, TMessage, Task> _handlerFunction;
+            readonly Func<IBus> _getBus;
 
-            public Handler(Func<TMessage, Task> handlerFunction)
+            public Handler(Func<IBus, TMessage, Task> handlerFunction, Func<IBus> getBus)
             {
                 _handlerFunction = handlerFunction;
+                _getBus = getBus;
             }
 
             public async Task Handle(TMessage message)
             {
-                await _handlerFunction(message);
+                await _handlerFunction(_getBus(), message);
             }
         }
 

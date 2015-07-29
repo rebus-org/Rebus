@@ -44,13 +44,13 @@ namespace Rebus.Tests.Integration
             var gotMessage = new ManualResetEvent(false);
 
             _handlerActivator
-                .Handle<string>(async str =>
+                .Handle<string>(async (bus, str) =>
                 {
                     if (str == "hej med dig min ven!")
                     {
                         Console.WriteLine("w00t!");
 
-                        await _bus.Reply("t00t!");
+                        await bus.Reply("t00t!");
                     }
 
                     if (str == "t00t!")
