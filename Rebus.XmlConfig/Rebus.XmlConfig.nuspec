@@ -12,7 +12,7 @@
     <description>XML-based configuration for Rebus</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus configuration config xml</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[2, 3)" />
     </dependencies>

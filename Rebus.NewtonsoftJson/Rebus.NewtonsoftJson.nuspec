@@ -12,7 +12,7 @@
     <description>JSON serializer for Rebus that is honest about its dependency on Newtonsoft JSON.NET and thus allows for customizing almost every aspect of how serialization/deserialization is performed</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus newtonsoft json json.net serialization</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[2, 3)" />
         <dependency id="Newtonsoft.Json" version="[6, 7)" />
