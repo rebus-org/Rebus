@@ -6,7 +6,7 @@ NOTE: This is Rebus2 - if you've used Rebus before up until version 0.84.0, you 
 
 Moreover - since the wiki actually contains quite a bit of content - please be patient until the content has been updated to reflect Rebus 2 :)
 
-![Bedford OB](http://mookid.dk/oncode/wp-content/2011/10/logo400x150.png)
+![Bedford OB](http://mookid.dk/oncode/wp-content/2015/07/small-bus-logo-1.png)
 
 [![install from nuget](http://img.shields.io/nuget/v/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)[![downloads](http://img.shields.io/nuget/dt/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
 
