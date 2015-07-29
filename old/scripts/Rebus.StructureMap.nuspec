@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.StructureMap</id>
+    <version>0.0.1</version>
+    <title>Rebus.StructureMap</title>
+    <authors>rasmuskl</authors>
+    <owners>rasmuskl,mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides a Rebus container adapter for StructureMap.</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus structuremap</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="structuremap" version="3.0.3.116" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.StructureMap.dll" target="lib" />
+  </files>
+</package>

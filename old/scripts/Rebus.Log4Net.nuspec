@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Log4Net</id>
+    <version>0.0.1</version>
+    <title>Rebus.Log4Net</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides the ability for Rebus to log with Log4Net</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus log4net</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="log4net" version="2.0.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.Log4Net.dll" target="lib" />
+    <file src="..\deploy\**\Rebus.Log4Net.xml" target="lib" />
+  </files>
+</package>

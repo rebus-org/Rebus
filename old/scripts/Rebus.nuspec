@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus</id>
+    <version>0.0.1</version>
+    <title>Rebus</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Rebus is a lean service bus implementation, similar in nature to NServiceBus, MassTransit, Rhino Service Bus etc.</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>servicebus msmq rabbitmq cqrs publish subscribe reliable asynchronous messaging esb</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.dll" target="lib" />
+    <file src="..\deploy\**\Rebus.xml" target="lib" />
+  </files>
+</package>

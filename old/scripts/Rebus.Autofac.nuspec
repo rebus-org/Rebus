@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Autofac</id>
+    <version>0.0.1</version>
+    <title>Rebus.Autofac</title>
+    <authors>clausn</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides an Autofac container adapter for Rebus</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus autofac di dependencyInjection ioc inversionOfControl</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="Autofac" version="2.6.3.862" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.Autofac.dll" target="lib" />
+  </files>
+</package>

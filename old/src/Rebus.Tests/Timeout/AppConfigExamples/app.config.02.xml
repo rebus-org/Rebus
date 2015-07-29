@@ -1,0 +1,47 @@
+﻿<?xml version="1.0"?>
+<configuration>
+  <configSections>
+    <section name="MsmqTransportConfig" type="NServiceBus.Config.MsmqTransportConfig, NServiceBus.Core"/>
+    <section name="UnicastBusConfig" type="NServiceBus.Config.UnicastBusConfig, NServiceBus.Core"/>
+  </configSections>
+  
+  <appSettings configSource="AppSettings.config"/>
+  
+  <MsmqTransportConfig InputQueue="powerhub_server" ErrorQueue="error" NumberOfWorkerThreads="1" MaxRetries="2"/>
+  
+  <UnicastBusConfig>
+    <MessageEndpointMappings>
+      <add Messages="Rebus.Tests.Configuration.OuterClass, Rebus.Tests" 
+		   Endpoint="outer_class_endpoint"/>
+      <add Messages="Rebus.Tests.Configuration.TestDetermineMessageOwnershipFromNServiceBusEndpointMappings+InnerClass, Rebus.Tests" 
+		   Endpoint="inner_class_endpoint"/>
+    </MessageEndpointMappings>
+  </UnicastBusConfig>
+  
+  <system.web>
+    <globalization culture="en-GB" uiCulture="en-GB"/>
+    <compilation debug="true" targetFramework="4.0"/>
+    <authentication mode="Windows"/>
+    <pages controlRenderingCompatibilityVersion="3.5" clientIDMode="AutoID"/>
+  </system.web> 
+  
+  <system.serviceModel>
+    <services>
+      <service name="DongEnergy.PowerHub.Service.PowerHubService" behaviorConfiguration="DefaultBehavior">
+        <endpoint address="" binding="basicHttpBinding" contract="DongEnergy.PowerHub.Service.Api.IPowerHubService"/>
+        <endpoint address="mex" binding="mexHttpBinding" contract="IMetadataExchange"/>
+      </service>
+    </services>
+
+    <serviceHostingEnvironment aspNetCompatibilityEnabled="true"/>
+    
+      <behaviors>
+      <serviceBehaviors>
+        <behavior name="DefaultBehavior">
+          <serviceMetadata httpGetEnabled="true"/>
+          <serviceDebug includeExceptionDetailInFaults="true"/>
+        </behavior>
+      </serviceBehaviors>
+    </behaviors>
+  </system.serviceModel>
+</configuration>

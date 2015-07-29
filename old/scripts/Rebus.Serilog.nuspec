@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Serilog</id>
+    <version>0.0.1</version>
+    <title>Rebus.Serilog</title>
+    <authors>fritsduus</authors>
+    <owners>mookid8000,fritsduus</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides the ability for Rebus to log with Serilog</description>
+    <copyright>Copyright 2014</copyright>
+    <tags>rebus serilog</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="Serilog" version="[1.5, 2)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.Serilog.dll" target="lib" />
+  </files>
+</package>

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Unity</id>
+    <version>0.0.1</version>
+    <title>Rebus.Unity</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides a Unity container adapter for Rebus</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus unity di dependencyInjection ioc inversionOfControl</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="CommonServiceLocator" version="1.0" />
+      <dependency id="Unity" version="2.1.505.2" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.Unity.dll" target="lib" />
+  </files>
+</package>
