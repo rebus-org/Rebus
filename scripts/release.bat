@@ -4,25 +4,28 @@ set /P VERSION=Enter version:
 
 echo Verify version: %VERSION%
 
-set /P CONFIRM=Y/y to confirm version: 
+set /P CONFIRM=Version correct? (y/n): 
 
-if [%CONFIRM%] == [Y] goto :GO
-if [%CONFIRM%] == [y] goto :GO
+if NOT [%CONFIRM%] == [y] goto :DONE
+
+set /P DOPUSH=Push packages? (y/n): 
 
 goto :DONE
 
 :GO
-call build.bat %VERSION%
+call "%~dp0\build.bat" %VERSION%
 
 if %errorlevel% neq 0 (
 	echo Error code returned from build: %errorlevel%
 	goto :DONE
 )
 
+if NOT [%DOPUSH%] == [y] goto :DONE
+
 git tag %VERSION%
 echo Tagged commit with tag '%VERSION%' - push tags to origin with 'git push --tags'.
 
-call push.bat
+call "%~dp0\push.bat"
 
 if %errorlevel% neq 0 (
   echo Error code returned from build: %errorlevel%

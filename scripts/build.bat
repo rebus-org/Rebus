@@ -9,8 +9,8 @@ if "%1%"=="" (
   goto exit
 )
 
-echo Building version %1%
+echo Building version %1% 
 
-msbuild scripts/build.proj /t:package /p:Version=%1%
+msbuild "%~dp0\build.proj" /t:package /p:Version=%1%
 
 :exit
