@@ -15,8 +15,14 @@ namespace Rebus.TransactionScope
         /// </summary>
         public static OptionsConfigurer HandleMessagesInsideTransactionScope(this OptionsConfigurer configurer)
         {
-            configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                .OnReceive(new TransactionScopeIncomingStep(), PipelineRelativePosition.Before, typeof(DispatchIncomingMessageStep)));
+            configurer.Decorate<IPipeline>(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+                var stepToInject = new TransactionScopeIncomingStep();
+
+                return new PipelineStepInjector(pipeline)
+                    .OnReceive(stepToInject, PipelineRelativePosition.Before, typeof (DispatchIncomingMessageStep));
+            });
 
             return configurer;
         }

@@ -24,7 +24,7 @@ namespace Rebus.Tests.Pipeline
         {
             var bus = Configure.With(new BuiltinHandlerActivator())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test"))
-                .Options(o => o.LogPipeline(verbose:false))
+                .Options(o => o.LogPipeline(verbose:true))
                 .Start();
 
             Using(bus);
