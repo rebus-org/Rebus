@@ -91,7 +91,7 @@ namespace Rebus.Persistence.FileSystem
 
         void SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
         {
-            var jsonText = JsonConvert.SerializeObject(subscriptions);
+            var jsonText = JsonConvert.SerializeObject(subscriptions, Formatting.Indented);
 
             File.WriteAllText(_jsonFilePath, jsonText, FileEncoding);
         }
