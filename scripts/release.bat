@@ -21,7 +21,10 @@ if %errorlevel% neq 0 (
 if NOT [%DOPUSH%] == [y] goto :DONE
 
 git tag %VERSION%
-echo Tagged commit with tag '%VERSION%' - push tags to origin with 'git push --tags'.
+echo Tagged commit with tag '%VERSION%'
+
+git push
+git push --tags
 
 call "%~dp0\push.bat"
 
