@@ -535,6 +535,10 @@
 
 * Added `TransactionScope` support via the `Rebus.TransactionScope` package (note: requires at least .NET 4.5.1 for `TransactionScopeAsyncFlowOption.Enabled` to be there)
 
+## 0.90.2
+
+* Added ability to storage subscriptions in a JSON file
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

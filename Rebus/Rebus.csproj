@@ -69,6 +69,7 @@
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorage.cs" />
+    <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
     <Compile Include="Pipeline\PipelineCache.cs" />
     <Compile Include="Pipeline\PipelineStepInjector.cs" />
     <Compile Include="Pipeline\PipelineRelativePosition.cs" />
