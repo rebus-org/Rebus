@@ -10,8 +10,6 @@ if NOT [%CONFIRM%] == [y] goto :DONE
 
 set /P DOPUSH=Push packages? (y/n): 
 
-goto :DONE
-
 :GO
 call "%~dp0\build.bat" %VERSION%
 
