@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Rebus.Extensions;
 using Rebus.Subscriptions;
 #pragma warning disable 1998
 
@@ -36,7 +37,11 @@ namespace Rebus.Persistence.FileSystem
 
                 var subscriptions = GetSubscriptions();
 
-                return subscriptions.ForTopic(topic);
+                HashSet<string> subscribers;
+
+                return subscriptions.TryGetValue(topic, out subscribers)
+                    ? subscribers.ToArray()
+                    : new string[0];
             }
             finally
             {
@@ -52,7 +57,9 @@ namespace Rebus.Persistence.FileSystem
 
                 var subscriptions = GetSubscriptions();
 
-                subscriptions.Subscribe(topic, subscriberAddress);
+                subscriptions
+                    .GetOrAdd(topic, () => new HashSet<string>())
+                    .Add(subscriberAddress);
 
                 SaveSubscriptions(subscriptions);
             }
@@ -70,7 +77,9 @@ namespace Rebus.Persistence.FileSystem
 
                 var subscriptions = GetSubscriptions();
 
-                subscriptions.Unsubscribe(topic, subscriberAddress);
+                subscriptions
+                    .GetOrAdd(topic, () => new HashSet<string>())
+                    .Remove(subscriberAddress);
 
                 SaveSubscriptions(subscriptions);
             }
@@ -80,26 +89,26 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
-        void SaveSubscriptions(Subscriptions subscriptions)
+        void SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
         {
             var jsonText = JsonConvert.SerializeObject(subscriptions);
 
             File.WriteAllText(_jsonFilePath, jsonText, FileEncoding);
         }
 
-        Subscriptions GetSubscriptions()
+        Dictionary<string, HashSet<String>> GetSubscriptions()
         {
             try
             {
                 var jsonText = File.ReadAllText(_jsonFilePath, FileEncoding);
 
-                var subscriptions = JsonConvert.DeserializeObject<Subscriptions>(jsonText);
+                var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<String>>>(jsonText);
 
                 return subscriptions;
             }
             catch (FileNotFoundException)
             {
-                return new Subscriptions();
+                return new Dictionary<string, HashSet<string>>();
             }
         }
 
@@ -109,42 +118,42 @@ namespace Rebus.Persistence.FileSystem
             private set;
         }
 
-        class Subscriptions
-        {
-            public Subscriptions()
-            {
-                Topics = new List<TopicSubs>();
-            }
+        //class Subscriptions
+        //{
+        //    public Subscriptions()
+        //    {
+        //        Topics = new List<TopicSubs>();
+        //    }
             
-            public List<TopicSubs> Topics { get; private set; }
+        //    public List<TopicSubs> Topics { get; private set; }
 
-            public string[] ForTopic(string topic)
-            {
-                var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-                if (topicSub == null) return new string[0];
+        //    public string[] ForTopic(string topic)
+        //    {
+        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
+        //        if (topicSub == null) return new string[0];
 
-                return topicSub.Subscribers.ToArray();
-            }
+        //        return topicSub.Subscribers.ToArray();
+        //    }
 
-            public void Subscribe(string topic, string subscriberAddress)
-            {
-                var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-                if (topicSub == null)
-                {
-                    topicSub = new TopicSubs(topic);
-                    Topics.Add(topicSub);
-                }
-                topicSub.Subscribers.Add(subscriberAddress);
-            }
+        //    public void Subscribe(string topic, string subscriberAddress)
+        //    {
+        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
+        //        if (topicSub == null)
+        //        {
+        //            topicSub = new TopicSubs(topic);
+        //            Topics.Add(topicSub);
+        //        }
+        //        topicSub.Subscribers.Add(subscriberAddress);
+        //    }
 
-            public void Unsubscribe(string topic, string subscriberAddress)
-            {
-                var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-                if (topicSub == null) return;
+        //    public void Unsubscribe(string topic, string subscriberAddress)
+        //    {
+        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
+        //        if (topicSub == null) return;
                 
-                topicSub.Subscribers.Remove(subscriberAddress);
-            }
-        }
+        //        topicSub.Subscribers.Remove(subscriberAddress);
+        //    }
+        //}
 
         class TopicSubs
         {

@@ -12,7 +12,9 @@ namespace Rebus.Tests.Persistence.SqlServer
         
         public ISubscriptionStorage Create()
         {
-            if (File.Exists(_xmlDataFilePath)) File.Delete(_xmlDataFilePath);
+            CleanupOldDataFile();
+
+            Console.WriteLine("Using JSON file at {0}", _xmlDataFilePath);
 
             var storage = new JsonFileSubscriptionStorage(_xmlDataFilePath);
 
@@ -20,6 +22,11 @@ namespace Rebus.Tests.Persistence.SqlServer
         }
 
         public void Cleanup()
+        {
+            CleanupOldDataFile();
+        }
+
+        void CleanupOldDataFile()
         {
             if (File.Exists(_xmlDataFilePath)) File.Delete(_xmlDataFilePath);
         }
