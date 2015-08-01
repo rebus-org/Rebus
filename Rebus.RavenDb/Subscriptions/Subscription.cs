@@ -3,6 +3,9 @@ using System.Linq;
 
 namespace Rebus.RavenDb.Subscriptions
 {
+    /// <summary>
+    /// RavenDb document to contain subscription informations
+    /// </summary>
     public class Subscription
     {
         public const string Id = "Subscriptions/1";
