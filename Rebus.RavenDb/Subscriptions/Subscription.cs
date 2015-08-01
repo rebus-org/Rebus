@@ -35,8 +35,6 @@ namespace Rebus.RavenDb.Subscriptions
                     Subscriptions.Remove(topic);
                 }
             }
-
-
         }
 
         public string[] GetSubscriberAddresses(string topic)

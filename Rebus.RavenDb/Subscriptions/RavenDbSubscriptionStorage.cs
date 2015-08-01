@@ -1,6 +1,6 @@
-using System.Threading.Tasks;
 using Raven.Client;
 using Rebus.Subscriptions;
+using System.Threading.Tasks;
 
 namespace Rebus.RavenDb.Subscriptions
 {
@@ -8,9 +8,10 @@ namespace Rebus.RavenDb.Subscriptions
     {
         private readonly IDocumentStore _documentStore;
 
-        public RavenDbSubscriptionStorage(IDocumentStore documentStore)
+        public RavenDbSubscriptionStorage(IDocumentStore documentStore, bool isCentralized = false)
         {
             _documentStore = documentStore;
+            IsCentralized = isCentralized;
         }
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
