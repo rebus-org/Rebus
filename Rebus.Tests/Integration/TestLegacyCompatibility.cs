@@ -96,7 +96,7 @@ namespace Rebus.Tests.Integration
                 Assert.That(headers["rebus-msg-id"], Is.Not.Empty);
                 Assert.That(headers["rebus-content-type"], Is.EqualTo("text/json"));
                 Assert.That(headers["rebus-encoding"], Is.EqualTo("utf-7"));
-                Assert.That(headers["rebus-return-address"], Is.EqualTo(_newEndpoint));
+                Assert.That(headers["rebus-return-address"], Is.EqualTo(_newEndpoint + "@" + Environment.MachineName));
             }
         }
 

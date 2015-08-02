@@ -40,29 +40,38 @@ namespace Rebus.Legacy
 
         void MapSpecialHeaders(Dictionary<string, string> headers)
         {
+            MapContentType(headers);
+        }
+
+        static void MapContentType(Dictionary<string, string> headers)
+        {
             string contentType;
-            if (headers.TryGetValue("rebus-content-type", out contentType))
+            if (!headers.TryGetValue("rebus-content-type", out contentType)) return;
+
+            if (contentType == "text/json")
             {
-                if (contentType == "text/json")
+                string contentEncoding;
+
+                if (headers.TryGetValue("rebus-encoding", out contentEncoding))
                 {
-                    string contentEncoding;
+                    headers.Remove("rebus-content-type");
+                    headers.Remove("rebus-encoding");
 
-                    if (headers.TryGetValue("rebus-encoding", out contentEncoding))
-                    {
-                        headers.Remove("rebus-content-type");
-                        headers.Remove("rebus-encoding");
-
-                        headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonSerializer.JsonContentType, contentEncoding);
-                    }
-                    else
-                    {
-                        throw new FormatException("Content type was 'text/json', but the 'rebus-encoding' header was not present!");
-                    }
+                    headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonSerializer.JsonContentType,
+                        contentEncoding);
                 }
                 else
                 {
-                    throw new FormatException(string.Format("Sorry, but the '{0}' content type is currently not supported by the legacy header mapper", contentType));
+                    throw new FormatException(
+                        "Content type was 'text/json', but the 'rebus-encoding' header was not present!");
                 }
+            }
+            else
+            {
+                throw new FormatException(
+                    string.Format(
+                        "Sorry, but the '{0}' content type is currently not supported by the legacy header mapper",
+                        contentType));
             }
         }
 
