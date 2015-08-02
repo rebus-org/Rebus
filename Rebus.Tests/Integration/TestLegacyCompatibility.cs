@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Messaging;
 using System.Runtime.Serialization;
 using System.Text;
@@ -89,10 +90,12 @@ namespace Rebus.Tests.Integration
 
                 var headers = new ExtensionSerializer().Deserialize(message.Extension);
 
-                Assert.That(headers["rebus-return-address"], Is.EqualTo(_newEndpoint));
+                Console.WriteLine(@"Headers:
+{0}", string.Join(Environment.NewLine, headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
                 Assert.That(headers["rebus-msg-id"], Is.Not.Empty);
                 Assert.That(headers["rebus-content-type"], Is.EqualTo("text/json"));
                 Assert.That(headers["rebus-encoding"], Is.EqualTo("utf-7"));
+                Assert.That(headers["rebus-return-address"], Is.EqualTo(_newEndpoint));
             }
         }
 

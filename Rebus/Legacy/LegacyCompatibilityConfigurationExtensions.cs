@@ -34,6 +34,9 @@ namespace Rebus.Legacy
                 pipeline = new PipelineStepInjector(pipeline)
                     .OnSend(new PackLegacyMessageOutgoingStep(), PipelineRelativePosition.Before, typeof(SerializeOutgoingMessageStep));
 
+                pipeline = new PipelineStepInjector(pipeline)
+                    .OnSend(new MapLegacyHeadersOutgoingStep(), PipelineRelativePosition.Before, typeof(SendOutgoingMessageStep));
+
                 return pipeline;
             });
 
