@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.Pipeline;
 
 namespace Rebus.Legacy
 {
@@ -13,7 +14,13 @@ namespace Rebus.Legacy
         /// </summary>
         public static void EnableLegacyCompatibility(this OptionsConfigurer configurer)
         {
-            
+            configurer.Decorate<IPipeline>(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+
+                return new PipelineStepConcatenator(pipeline)
+                    .OnReceive(new MapLegacyHeadersIncomingStep(), PipelineAbsolutePosition.Front);
+            });
         }
     }
 }

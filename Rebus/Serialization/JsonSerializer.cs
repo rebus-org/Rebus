@@ -14,7 +14,10 @@ namespace Rebus.Serialization
     /// </summary>
     internal class JsonSerializer : ISerializer
     {
-        const string JsonUtf8ContentType = "application/json;charset=utf-8";
+        /// <summary>
+        /// Proper content type when a message has been serialized with this serializer (or another compatible JSON serializer)
+        /// </summary>
+        public const string JsonUtf8ContentType = "application/json;charset=utf-8";
 
         static readonly JsonSerializerSettings DefaultSettings = new JsonSerializerSettings
         {
