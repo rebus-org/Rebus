@@ -56,7 +56,11 @@ namespace Rebus.Tests.Integration
 
             Configure.With(activator)
                 .Transport(t => t.UseMsmq(newEndpoint))
-                .Options(o => o.EnableLegacyCompatibility())
+                .Options(o =>
+                {
+                    o.EnableLegacyCompatibility();
+                    o.LogPipeline(true);
+                })
                 .Start();
 
             var correlationId = Guid.NewGuid().ToString();
