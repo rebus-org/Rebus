@@ -6,7 +6,9 @@ using System.Linq;
 namespace Rebus.Pipeline
 {
     /// <summary>
-    /// Step injector that may be promoted to become the default pipeline step injector
+    /// Decorator of <see cref="IPipeline"/> that can inject one or more steps into either pipeline,
+    /// positionint the injected steps relatively to another step by its type.
+    /// Could probably be extended with more ways of detecting "the other step" than by its concrete type.
     /// </summary>
     public class PipelineStepInjector : IPipeline
     {

@@ -2,12 +2,19 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 
 namespace Rebus.Tests.Extensions
 {
     public static class TestEx
     {
+        public static string ToNormalizedJson(this string jsonText)
+        {
+            return JsonConvert.DeserializeObject<JObject>(jsonText).ToString();
+        }
+
         public static string Limit(this string line, int maxNumberOfChars)
         {
             if (line.Length + 3 <= maxNumberOfChars) return line;

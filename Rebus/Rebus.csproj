@@ -68,9 +68,16 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Legacy\MapLegacyHeadersOutgoingStep.cs" />
+    <Compile Include="Legacy\PackLegacyMessageOutgoingStep.cs" />
+    <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
+    <Compile Include="Legacy\MapLegacyHeadersIncomingStep.cs" />
+    <Compile Include="Legacy\UnpackLegacyMessageIncomingStep.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorage.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
+    <Compile Include="Pipeline\PipelineAbsolutePosition.cs" />
     <Compile Include="Pipeline\PipelineCache.cs" />
+    <Compile Include="Pipeline\PipelineStepConcatenator.cs" />
     <Compile Include="Pipeline\PipelineStepInjector.cs" />
     <Compile Include="Pipeline\PipelineRelativePosition.cs" />
     <Compile Include="Compression\UnzipMessagesIncomingStep.cs" />
