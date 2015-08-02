@@ -543,6 +543,10 @@
 
 * Added RavenDB persistence for subscriptions and timeouts - thanks [mclausen]
 
+## 0.90.4
+
+* Added experimental legacy compatility option (`.Options(o => o.EnableLegacyCompatibility())`)
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
