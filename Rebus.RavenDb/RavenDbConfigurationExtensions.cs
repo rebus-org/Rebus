@@ -8,7 +8,10 @@ using System;
 
 namespace Rebus.RavenDb
 {
-    public static class RavenDbConfigurationExstensions
+    /// <summary>
+    /// Configuration extensions for RavenDB persistence
+    /// </summary>
+    public static class RavenDbConfigurationExtensions
     {
         /// <summary>
         /// Configures Rebus to use RavenDb to store subscriptions. Use <see cref="isCentralized"/> = true to indicate whether it's OK to short-circuit
