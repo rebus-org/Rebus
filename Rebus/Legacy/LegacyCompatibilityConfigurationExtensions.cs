@@ -1,5 +1,6 @@
 ﻿using Rebus.Config;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
 
 namespace Rebus.Legacy
 {
@@ -18,8 +19,11 @@ namespace Rebus.Legacy
             {
                 var pipeline = c.Get<IPipeline>();
 
-                return new PipelineStepConcatenator(pipeline)
+                var concatenator = new PipelineStepConcatenator(pipeline)
                     .OnReceive(new MapLegacyHeadersIncomingStep(), PipelineAbsolutePosition.Front);
+
+                return new PipelineStepInjector(concatenator)
+                    .OnReceive(new UnpackLegacyMessageIncomingStep(), PipelineRelativePosition.After, typeof (DeserializeIncomingMessageStep));
             });
         }
     }

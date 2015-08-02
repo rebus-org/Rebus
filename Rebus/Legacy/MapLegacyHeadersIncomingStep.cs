@@ -11,30 +11,58 @@ namespace Rebus.Legacy
     [StepDocumentation("Mutates the headers of the incoming message by mapping understood Rebus1 headers to their counterparts in Rebus2")]
     class MapLegacyHeadersIncomingStep : IIncomingStep
     {
+        internal const string LegacyMessageHeader = "rbs2-rebus-legacy-message";
+
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();
             var headers = transportMessage.Headers;
-            
-            var newHeaders = MapSpecialHeaders(MapTrivialHeaders(headers));
 
-            context.Save(new TransportMessage(newHeaders, transportMessage.Body));
+            if (headers.ContainsKey("rebus-msg-id"))
+            {
+                MutateLegacyTransportMessage(context, headers, transportMessage);
+            }
 
             await next();
         }
 
-        Dictionary<string, string> MapSpecialHeaders(Dictionary<string, string> headers)
+        void MutateLegacyTransportMessage(IncomingStepContext context, Dictionary<string, string> headers, TransportMessage transportMessage)
         {
-            return headers
-                .Select(kvp =>
-                {
-                    Func<KeyValuePair<string, string>, KeyValuePair<string, string>> mapper;
+            var newHeaders = MapTrivialHeaders(headers);
 
-                    return SpecialMappings.TryGetValue(kvp.Key, out mapper)
-                        ? mapper(kvp)
-                        : kvp;
-                })
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            MapSpecialHeaders(newHeaders);
+
+            newHeaders[LegacyMessageHeader] = "";
+
+            context.Save(new TransportMessage(newHeaders, transportMessage.Body));
+        }
+
+        void MapSpecialHeaders(Dictionary<string, string> headers)
+        {
+            string contentType;
+            if (headers.TryGetValue("rebus-content-type", out contentType))
+            {
+                if (contentType == "text/json")
+                {
+                    string contentEncoding;
+
+                    if (headers.TryGetValue("rebus-encoding", out contentEncoding))
+                    {
+                        headers.Remove("rebus-content-type");
+                        headers.Remove("rebus-encoding");
+
+                        headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonSerializer.JsonContentType, contentEncoding);
+                    }
+                    else
+                    {
+                        throw new FormatException("Content type was 'text/json', but the 'rebus-encoding' header was not present!");
+                    }
+                }
+                else
+                {
+                    throw new FormatException(string.Format("Sorry, but the '{0}' content type is currently not supported by the legacy header mapper", contentType));
+                }
+            }
         }
 
         Dictionary<string, string> MapTrivialHeaders(Dictionary<string, string> headers)
@@ -50,18 +78,6 @@ namespace Rebus.Legacy
                 })
                 .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-        }
-
-        static readonly Dictionary<string, Func<KeyValuePair<string,string>, KeyValuePair<string,string>>> SpecialMappings = new Dictionary<string, Func<KeyValuePair<string, string>, KeyValuePair<string, string>>>
-        {
-            {"rebus-content-type", MapContentType}
-        };
-
-        static KeyValuePair<string, string> MapContentType(KeyValuePair<string, string> header)
-        {
-            return header.Value == "text/json" 
-                ? new KeyValuePair<string, string>(Headers.ContentType, JsonSerializer.JsonUtf8ContentType) 
-                : header;
         }
 
         static readonly Dictionary<string, string> TrivialMappings = new Dictionary<string, string>

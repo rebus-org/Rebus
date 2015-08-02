@@ -70,6 +70,7 @@
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
     <Compile Include="Legacy\MapLegacyHeadersIncomingStep.cs" />
+    <Compile Include="Legacy\UnpackLegacyMessageIncomingStep.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorage.cs" />
     <Compile Include="Persistence\FileSystem\JsonFileSubscriptionStorageConfigurationExtensions.cs" />
     <Compile Include="Pipeline\PipelineAbsolutePosition.cs" />

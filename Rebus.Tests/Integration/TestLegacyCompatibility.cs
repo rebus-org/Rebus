@@ -89,7 +89,7 @@ namespace Rebus.Tests.Integration
         {
             var message = new Message
             {
-                BodyStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonText)),
+                BodyStream = new MemoryStream(Encoding.UTF7.GetBytes(jsonText)),
                 Extension = new ExtensionSerializer().Serialize(headers)
             };
             queue.Send(message, MessageQueueTransactionType.Single);
