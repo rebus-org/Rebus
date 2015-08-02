@@ -539,6 +539,10 @@
 
 * Added ability to storage subscriptions in a JSON file
 
+## 0.90.3
+
+* Added RavenDB persistence for subscriptions and timeouts - thanks [mclausen]
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -554,6 +558,7 @@
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
+[mclausen]: https://github.com/mclausen
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
 [oguzhaneren]: https://github.com/oguzhaneren
