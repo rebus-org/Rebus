@@ -68,6 +68,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Legacy\PackLegacyMessageOutgoingStep.cs" />
     <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
     <Compile Include="Legacy\MapLegacyHeadersIncomingStep.cs" />
     <Compile Include="Legacy\UnpackLegacyMessageIncomingStep.cs" />

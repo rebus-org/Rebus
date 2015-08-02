@@ -1,6 +1,9 @@
-﻿using Rebus.Config;
+﻿using System.Text;
+using Rebus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Pipeline.Send;
+using Rebus.Serialization;
 
 namespace Rebus.Legacy
 {
@@ -15,15 +18,30 @@ namespace Rebus.Legacy
         /// </summary>
         public static void EnableLegacyCompatibility(this OptionsConfigurer configurer)
         {
-            configurer.Decorate<IPipeline>(c =>
+            configurer.Decorate(c =>
             {
                 var pipeline = c.Get<IPipeline>();
 
-                var concatenator = new PipelineStepConcatenator(pipeline)
+                // map headers of incoming message from v1 to v2
+                pipeline = new PipelineStepConcatenator(pipeline)
                     .OnReceive(new MapLegacyHeadersIncomingStep(), PipelineAbsolutePosition.Front);
 
-                return new PipelineStepInjector(concatenator)
+                // unpack object[] of transport message
+                pipeline = new PipelineStepInjector(pipeline)
                     .OnReceive(new UnpackLegacyMessageIncomingStep(), PipelineRelativePosition.After, typeof (DeserializeIncomingMessageStep));
+
+                // pack into object[]
+                pipeline = new PipelineStepInjector(pipeline)
+                    .OnSend(new PackLegacyMessageOutgoingStep(), PipelineRelativePosition.Before, typeof(SerializeOutgoingMessageStep));
+
+                return pipeline;
+            });
+
+            configurer.Register<ISerializer>(c =>
+            {
+                var defaultLegacyEncoding = Encoding.UTF7;
+
+                return new JsonSerializer(defaultLegacyEncoding);
             });
         }
     }

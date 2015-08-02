@@ -6,8 +6,10 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Legacy;
 using Rebus.Tests.Extensions;
@@ -18,6 +20,10 @@ namespace Rebus.Tests.Integration
     [TestFixture]
     public class TestLegacyCompatibility : FixtureBase
     {
+        BuiltinHandlerActivator _activator;
+        IBus _bus;
+        string _newEndpoint;
+        string _oldEndpoint;
         const string ValidLegacyRebusMessage = @"{
   ""$type"": ""System.Object[], mscorlib"",
   ""$values"": [
@@ -33,20 +39,69 @@ namespace Rebus.Tests.Integration
             public string KeyChar { get; set; }
         }
 
-        [Test]
-        public void CanUnderstandOldFormat()
+        protected override void SetUp()
         {
-            var newEndpoint = TestConfig.QueueName("newendpoint");
-            var oldEndpoint = TestConfig.QueueName("oldendpoint");
+            _newEndpoint = TestConfig.QueueName("newendpoint");
+            _oldEndpoint = TestConfig.QueueName("oldendpoint");
 
-            MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(newEndpoint));
-            MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(oldEndpoint));
+            MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(_newEndpoint));
+            MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(_oldEndpoint));
 
-            var activator = Using(new BuiltinHandlerActivator());
+            _activator = Using(new BuiltinHandlerActivator());
 
+            _bus = Configure.With(_activator)
+                .Transport(t => t.UseMsmq(_newEndpoint))
+                .Options(o =>
+                {
+                    o.EnableLegacyCompatibility();
+                    //o.LogPipeline(true);
+                })
+                .Start();
+        }
+
+        protected override void TearDown()
+        {
+            MsmqUtil.Delete(_newEndpoint);
+            MsmqUtil.Delete(_oldEndpoint);
+        }
+
+        [Test]
+        public void CanSendOldFormat()
+        {
+            _bus.Route(_oldEndpoint, new OldSchoolMessage {KeyChar = "g"}).Wait();
+
+            using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_oldEndpoint)))
+            {
+                queue.MessageReadPropertyFilter = new MessagePropertyFilter
+                {
+                    Body = true,
+                    Extension = true,
+                };
+
+                var message = queue.Receive(TimeSpan.FromSeconds(3));
+                
+                using (var streamReader = new StreamReader(message.BodyStream, Encoding.UTF7))
+                {
+                    var jsonText = streamReader.ReadToEnd();
+
+                    Assert.That(jsonText.ToNormalizedJson(), Is.EqualTo(ValidLegacyRebusMessage.ToNormalizedJson()));
+                }
+
+                var headers = new ExtensionSerializer().Deserialize(message.Extension);
+
+                Assert.That(headers["rebus-return-address"], Is.EqualTo(_newEndpoint));
+                Assert.That(headers["rebus-msg-id"], Is.Not.Empty);
+                Assert.That(headers["rebus-content-type"], Is.EqualTo("text/json"));
+                Assert.That(headers["rebus-encoding"], Is.EqualTo("utf-7"));
+            }
+        }
+
+        [Test]
+        public void CanReceiveOldFormat()
+        {
             var gotIt = new ManualResetEvent(false);
 
-            activator.Handle<OldSchoolMessage>(async message =>
+            _activator.Handle<OldSchoolMessage>(async message =>
             {
                 if (message.KeyChar == "g")
                 {
@@ -54,31 +109,22 @@ namespace Rebus.Tests.Integration
                 }
             });
 
-            Configure.With(activator)
-                .Transport(t => t.UseMsmq(newEndpoint))
-                .Options(o =>
-                {
-                    o.EnableLegacyCompatibility();
-                    o.LogPipeline(true);
-                })
-                .Start();
-
             var correlationId = Guid.NewGuid().ToString();
             var messageId = Guid.NewGuid().ToString();
 
-            using (var queue = new MessageQueue(MsmqUtil.GetFullPath(newEndpoint)))
-            {
-                var headers = new Dictionary<string, string>
+            var headers = new Dictionary<string, string>
                 {
-                    {"rebus-return-address", newEndpoint},
+                    {"rebus-return-address", _newEndpoint},
                     {"rebus-correlation-id", correlationId},
                     {"rebus-msg-id", messageId},
                     {"rebus-content-type", "text/json"},
                     {"rebus-encoding", "utf-7"}
                 };
 
-                var jsonBody = ValidLegacyRebusMessage;
+            var jsonBody = ValidLegacyRebusMessage;
 
+            using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_newEndpoint)))
+            {
                 SendLegacyRebusMessage(queue, jsonBody, headers);
             }
 
@@ -106,7 +152,7 @@ namespace Rebus.Tests.Integration
                 return DefaultEncoding.GetBytes(jsonString);
             }
 
-            public Dictionary<string, string> Deserialize(byte[] bytes, string msmqMessageId)
+            public Dictionary<string, string> Deserialize(byte[] bytes)
             {
                 var jsonString = DefaultEncoding.GetString(bytes);
 
@@ -116,8 +162,7 @@ namespace Rebus.Tests.Integration
                 }
                 catch (Exception exception)
                 {
-                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension for message with physical message ID {0} - expected valid JSON text, got '{1}'",
-                        msmqMessageId, jsonString), exception);
+                    throw new SerializationException("Could not deserialize MSMQ extension", exception);
                 }
             }
         }

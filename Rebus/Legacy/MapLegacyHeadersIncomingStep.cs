@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Encryption;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Serialization;
@@ -86,6 +87,10 @@ namespace Rebus.Legacy
             {"rebus-correlation-id", Headers.CorrelationId},
             {"rebus-return-address", Headers.ReturnAddress},
             {"rebus-msg-id", Headers.MessageId},
+            
+            //{"rebus-encrypted", EncryptionHeaders.ContentEncryption},
+            //{"rebus-salt", iv},
+            //{"rebus-rijndael", Headers.ContentEncoding},
         };
     }
 }

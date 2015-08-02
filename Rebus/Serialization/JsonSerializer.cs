@@ -33,21 +33,33 @@ namespace Rebus.Serialization
         static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
         readonly JsonSerializerSettings _settings;
+        readonly Encoding _encoding;
 
         public JsonSerializer()
+            : this(DefaultSettings, DefaultEncoding)
         {
-            _settings = DefaultSettings;
+        }
+
+        internal JsonSerializer(Encoding encoding)
+            : this(DefaultSettings, encoding)
+        {
         }
 
         internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings)
+            : this(jsonSerializerSettings, DefaultEncoding)
+        {
+        }
+
+        internal JsonSerializer(JsonSerializerSettings jsonSerializerSettings, Encoding encoding)
         {
             _settings = jsonSerializerSettings;
+            _encoding = encoding;
         }
 
         public async Task<TransportMessage> Serialize(Message message)
         {
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
-            var bytes = DefaultEncoding.GetBytes(jsonText);
+            var bytes = _encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
             var messageType = message.Body.GetType();
             headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
@@ -61,7 +73,7 @@ namespace Rebus.Serialization
 
             if (contentType == JsonUtf8ContentType)
             {
-                return GetMessage(transportMessage, DefaultEncoding);
+                return GetMessage(transportMessage, _encoding);
             }
 
             if (contentType.StartsWith(JsonContentType))
@@ -83,7 +95,7 @@ namespace Rebus.Serialization
 
             if (charset == null)
             {
-                return DefaultEncoding;
+                return _encoding;
             }
 
             var encodingName = charset[1];
