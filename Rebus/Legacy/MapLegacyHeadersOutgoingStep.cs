@@ -18,7 +18,7 @@ namespace Rebus.Legacy
 
             var newHeaders = MapTrivialHeaders(headers);
 
-            context.Save(new TransportMessage(headers, body));
+            context.Save(new TransportMessage(newHeaders, body));
 
             await next();
         }

@@ -63,7 +63,7 @@ namespace Rebus.Serialization
             var headers = message.Headers.Clone();
             var messageType = message.Body.GetType();
             headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
-            headers[Headers.ContentType] = JsonUtf8ContentType;
+            headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonContentType, _encoding.HeaderName);
             return new TransportMessage(headers, bytes);
         }
 

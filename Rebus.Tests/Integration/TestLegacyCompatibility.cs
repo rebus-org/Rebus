@@ -92,6 +92,7 @@ namespace Rebus.Tests.Integration
 
                 Console.WriteLine(@"Headers:
 {0}", string.Join(Environment.NewLine, headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+
                 Assert.That(headers["rebus-msg-id"], Is.Not.Empty);
                 Assert.That(headers["rebus-content-type"], Is.EqualTo("text/json"));
                 Assert.That(headers["rebus-encoding"], Is.EqualTo("utf-7"));
