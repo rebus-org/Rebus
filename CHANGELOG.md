@@ -551,6 +551,11 @@
 
 * Made MSMQ transport work better in legacy mode
 
+## 0.90.6
+
+* Added ability to use external timeout manager
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
