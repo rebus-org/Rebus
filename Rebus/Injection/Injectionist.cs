@@ -28,7 +28,7 @@ namespace Rebus.Injection
         /// </summary>
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
         {
-            Register<TService>(resolverMethod, isDecorator: false);
+            Register(resolverMethod, isDecorator: false);
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Rebus.Injection
         /// </summary>
         public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod)
         {
-            Register<TService>(resolverMethod, isDecorator: true);
+            Register(resolverMethod, isDecorator: true);
         }
 
         void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator)
