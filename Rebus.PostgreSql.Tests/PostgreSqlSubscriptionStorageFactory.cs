@@ -13,7 +13,7 @@ namespace Rebus.PostgreSql.Tests
         public ISubscriptionStorage Create()
         {
             var subscriptionStorage = new PostgreSqlSubscriptionStorage(PostgreSqlTestHelper.ConnectionHelper, "subscriptions", true);
-            subscriptionStorage.Initialize();
+            subscriptionStorage.EnsureTableIsCreated();
             return subscriptionStorage;
         }
 

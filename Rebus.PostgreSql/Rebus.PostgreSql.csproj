@@ -50,6 +50,7 @@
     <Compile Include="PostgresConnection.cs" />
     <Compile Include="PostgresConnectionHelper.cs" />
     <Compile Include="Magic.cs" />
+    <Compile Include="PostgreSqlConfigurationExtensions.cs" />
     <Compile Include="PostgreSqlSubscriptionStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

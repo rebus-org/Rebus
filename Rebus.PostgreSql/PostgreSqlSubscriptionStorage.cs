@@ -3,14 +3,16 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Npgsql;
 using NpgsqlTypes;
-using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Subscriptions;
 
 namespace Rebus.PostgreSql
 {
-    public class PostgreSqlSubscriptionStorage : ISubscriptionStorage, IInitializable
+    /// <summary>
+    /// Implementation of <see cref="ISubscriptionStorage"/> that uses Postgres to do its thing
+    /// </summary>
+    public class PostgreSqlSubscriptionStorage : ISubscriptionStorage
     {
         const string UniqueKeyViolation = "23505";
         static ILog _log;
@@ -23,6 +25,11 @@ namespace Rebus.PostgreSql
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
 
+        /// <summary>
+        /// Constructs the subscription storage, storing subscriptions in the specified <paramref name="tableName"/>.
+        /// If <paramref name="isCentralized"/> is true, subscribing/unsubscribing will be short-circuited by manipulating
+        /// subscriptions directly, instead of requesting via messages
+        /// </summary>
         public PostgreSqlSubscriptionStorage(PostgresConnectionHelper connectionHelper, string tableName, bool isCentralized)
         {
             _connectionHelper = connectionHelper;
@@ -30,7 +37,10 @@ namespace Rebus.PostgreSql
             IsCentralized = isCentralized;
         }
 
-        public void Initialize()
+        /// <summary>
+        /// Creates the subscriptions table if no table with the specified name exists
+        /// </summary>
+        public void EnsureTableIsCreated()
         {
             using (var connection = _connectionHelper.GetConnection().Result)
             {

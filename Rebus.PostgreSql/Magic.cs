@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Npgsql;
 
 namespace Rebus.PostgreSql
 {
