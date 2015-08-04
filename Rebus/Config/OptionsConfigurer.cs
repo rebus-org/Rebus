@@ -54,6 +54,12 @@ namespace Rebus.Config
                 throw new ArgumentException(string.Format("Cannot use '{0}' as an external timeout manager address!", timeoutManagerAddress), "timeoutManagerAddress");
             }
 
+            if (!string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull))
+            {
+                throw new InvalidOperationException(string.Format("Cannot set external timeout manager address to '{0}' because it has already been set to '{1}' - please set it only once!  (this operation COULD have been accepted, but it is probably an indication of an error in your configuration code that this value is configured twice, so we figured it was best to let you know)", 
+                    timeoutManagerAddress, _options.ExternalTimeoutManagerAddressOrNull));
+            }
+
             _injectionist.Register<ITimeoutManager>(c => new ThrowingTimeoutManager());
             _options.ExternalTimeoutManagerAddressOrNull = timeoutManagerAddress;
             
@@ -61,7 +67,7 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <see cref="TService"/> service
+        /// Registers the given factory function as a resolver of the given primary implementation of the <typeparamref name="TService"/> service
         /// </summary>
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
         {
@@ -69,11 +75,11 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Registers the given factory function as a resolve of the given <see cref="TService"/> service
+        /// Registers the given factory function as a resolve of the given decorator of the <typeparamref name="TService"/> service
         /// </summary>
-        public void Decorate<TService>(Func<IResolutionContext, TService> factoryMethod)
+        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod)
         {
-            _injectionist.Register(factoryMethod, isDecorator: true);
+            _injectionist.Decorate(resolverMethod);
         }
 
         /// <summary>
@@ -89,7 +95,7 @@ namespace Rebus.Config
             {
                 if (serviceType != typeof (IPipeline)) return;
 
-                _injectionist.Register(c =>
+                _injectionist.Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
 
@@ -110,7 +116,7 @@ Receive pipeline:
 
 
                     return pipeline;
-                }, isDecorator: true);
+                });
             };
 
             return this;

@@ -29,7 +29,7 @@ namespace Rebus.Config
         /// </summary>
         public void Decorate(Func<IResolutionContext, TService> factoryMethod)
         {
-            _injectionist.Register(factoryMethod, isDecorator: true);
+            _injectionist.Decorate(factoryMethod);
         }
     }
 }

@@ -221,13 +221,13 @@ namespace Rebus.Config
                 return bus;
             });
 
-            _injectionist.Register<IHandlerActivator>(c =>
+            _injectionist.Decorate<IHandlerActivator>(c =>
             {
                 var handlerActivator = c.Get<IHandlerActivator>();
                 var subscriptionStorage = c.Get<ISubscriptionStorage>();
                 var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
                 return internalHandlersContributor;
-            }, isDecorator: true);
+            });
 
             var busInstance = _injectionist.Get<IBus>();
 
@@ -254,7 +254,7 @@ namespace Rebus.Config
 
         void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
         {
-            _injectionist.Register(factoryMethod, isDecorator: true);
+            _injectionist.Decorate(factoryMethod);
         }
     }
 }
