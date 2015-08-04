@@ -4,6 +4,8 @@ using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Serialization;
+using Rebus.Transport;
+using Rebus.Transport.Msmq;
 
 namespace Rebus.Legacy
 {
@@ -45,6 +47,18 @@ namespace Rebus.Legacy
                 var defaultLegacyEncoding = Encoding.UTF7;
 
                 return new JsonSerializer(defaultLegacyEncoding);
+            });
+
+            configurer.Decorate(c =>
+            {
+                var transport = c.Get<ITransport>();
+
+                if (transport is MsmqTransport)
+                {
+                    ((MsmqTransport) transport).UseLegacyHeaderSerialization();
+                }
+
+                return transport;
             });
         }
     }

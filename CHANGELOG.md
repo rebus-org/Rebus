@@ -547,6 +547,9 @@
 
 * Added experimental legacy compatility option (`.Options(o => o.EnableLegacyCompatibility())`)
 
+## 0.90.5
+
+* Made MSMQ transport work better in legacy mode
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

@@ -15,7 +15,7 @@ using Rebus.Legacy;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
 
-namespace Rebus.Tests.Integration
+namespace Rebus.Tests.Integration.Legacy
 {
     [TestFixture]
     public class TestLegacyCompatibility : FixtureBase
@@ -28,7 +28,7 @@ namespace Rebus.Tests.Integration
   ""$type"": ""System.Object[], mscorlib"",
   ""$values"": [
     {
-      ""$type"": ""Rebus.Tests.Integration.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
       ""KeyChar"": ""g""
     }
   ]
@@ -146,18 +146,18 @@ namespace Rebus.Tests.Integration
 
         class ExtensionSerializer
         {
-            static readonly Encoding DefaultEncoding = Encoding.UTF8;
+            static readonly Encoding DefaultLegacyEncoding = Encoding.UTF7;
 
             public byte[] Serialize(Dictionary<string, string> headers)
             {
                 var jsonString = JsonConvert.SerializeObject(headers);
 
-                return DefaultEncoding.GetBytes(jsonString);
+                return DefaultLegacyEncoding.GetBytes(jsonString);
             }
 
             public Dictionary<string, string> Deserialize(byte[] bytes)
             {
-                var jsonString = DefaultEncoding.GetString(bytes);
+                var jsonString = DefaultLegacyEncoding.GetString(bytes);
 
                 try
                 {

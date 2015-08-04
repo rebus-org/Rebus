@@ -275,18 +275,25 @@ namespace Rebus.Transport.Msmq
 
         class ExtensionSerializer
         {
-            static readonly Encoding DefaultEncoding = Encoding.UTF8;
+            public ExtensionSerializer()
+            {
+                Encoding = Encoding.UTF8;
+            }
+
+            public Encoding Encoding { get; set; }
 
             public byte[] Serialize(Dictionary<string, string> headers)
             {
                 var jsonString = JsonConvert.SerializeObject(headers);
 
-                return DefaultEncoding.GetBytes(jsonString);
+                return Encoding.GetBytes(jsonString);
             }
 
             public Dictionary<string, string> Deserialize(byte[] bytes, string msmqMessageId)
             {
-                var jsonString = DefaultEncoding.GetString(bytes);
+                var jsonString = IsUtf7(bytes)
+                    ? Encoding.UTF7.GetString(bytes)
+                    : Encoding.GetString(bytes);
 
                 try
                 {
@@ -294,9 +301,17 @@ namespace Rebus.Transport.Msmq
                 }
                 catch (Exception exception)
                 {
-                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension for message with physical message ID {0} - expected valid JSON text, got '{1}'", 
+                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension for message with physical message ID {0} - expected valid JSON text, got '{1}'",
                         msmqMessageId, jsonString), exception);
                 }
+            }
+
+            static bool IsUtf7(byte[] bytes)
+            {
+                // auto-detect UTF7-encoded headers
+                // 43, 65, 72, 115, 45 == an UTF7-encoded '{'
+
+                return bytes.Length > 5 && bytes[0] == 43 && bytes[1] == 65 && bytes[2] == 72 && bytes[3] == 115 && bytes[4] == 45;
             }
         }
 
@@ -315,6 +330,14 @@ namespace Rebus.Transport.Msmq
                 _inputQueue.Dispose();
                 _inputQueue = null;
             }
+        }
+
+        /// <summary>
+        /// Configures the transport to serialize headers in "legacy mode", which means that they're UTF7-encoded and not UTF8
+        /// </summary>
+        public void UseLegacyHeaderSerialization()
+        {
+            _extensionSerializer.Encoding = Encoding.UTF7;
         }
     }
 }
