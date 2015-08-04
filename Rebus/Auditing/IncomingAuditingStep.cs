@@ -14,21 +14,21 @@ namespace Rebus.Auditing
     [StepDocumentation("Wraps the execution of the entire receive pipeline and forwards a copy of the current transport message to the configured audit queue if processing was successful, including some useful headers.")]
     class IncomingAuditingStep : IIncomingStep, IInitializable
     {
-        readonly string _auditQueue;
+        readonly AuditingHelper _auditingHelper;
         readonly ITransport _transport;
 
         /// <summary>
         /// Constructs the step
         /// </summary>
-        public IncomingAuditingStep(string auditQueue, ITransport transport)
+        public IncomingAuditingStep(AuditingHelper auditingHelper, ITransport transport)
         {
-            _auditQueue = auditQueue;
+            _auditingHelper = auditingHelper;
             _transport = transport;
         }
 
         public void Initialize()
         {
-            _transport.CreateQueue(_auditQueue);
+            _auditingHelper.EnsureAuditQueueHasBeenCreated();
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -41,11 +41,12 @@ namespace Rebus.Auditing
             var transportMessage = context.Load<TransportMessage>();
 
             var clone = transportMessage.Clone();
-            clone.Headers[AuditHeaders.HandleTime] = begin.ToString("O");
-            clone.Headers[AuditHeaders.AuditTime] = RebusTime.Now.ToString("O");
-            clone.Headers[AuditHeaders.HandleQueue] = _transport.Address;
+            
+            _auditingHelper.SetCommonHeaders(clone);
 
-            await _transport.Send(_auditQueue, clone, transactionContext);
+            clone.Headers[AuditHeaders.HandleTime] = begin.ToString("O");
+
+            await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
         }
     }
 }

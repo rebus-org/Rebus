@@ -5,7 +5,7 @@ namespace Rebus.Messages
     /// <summary>
     /// Contains keys of headers known &amp; used by Rebus
     /// </summary>
-    public class Headers
+    public static class Headers
     {
         /// <summary>
         /// Id of the message. Either set the ID explicitly when sending a message, or Rebus will assign one to the message.

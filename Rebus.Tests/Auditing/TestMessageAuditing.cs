@@ -37,6 +37,23 @@ namespace Rebus.Tests.Auditing
         }
 
         [Test]
+        public async Task DoesNotCopyFailedMessage()
+        {
+            _adapter.Handle<string>(async _ =>
+            {
+                throw new Exception("w00t!!");
+            });
+
+            await _bus.SendLocal("woohooo!!!!");
+
+            await Task.Delay(TimeSpan.FromSeconds(3));
+
+            var message = _network.GetNextOrNull("audit");
+
+            Assert.That(message, Is.Null, "Apparently, a message copy was received anyway!!");
+        }
+
+        [Test]
         public async Task CopiesProperlyHandledMessageToAuditQueue()
         {
             var gotTheMessage = new ManualResetEvent(false);
@@ -63,13 +80,18 @@ namespace Rebus.Tests.Auditing
                 }
             }
 
-            Console.WriteLine(@"Headers:
-{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+            PrintHeaders(message);
 
             Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
             Assert.That(message.Headers.ContainsKey(AuditHeaders.HandleTime));
             Assert.That(message.Headers.ContainsKey(Headers.Intent));
             Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
+        }
+
+        static void PrintHeaders(InMemTransportMessage message)
+        {
+            Console.WriteLine(@"Headers:
+{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
         }
 
         [Test]
@@ -89,6 +111,8 @@ namespace Rebus.Tests.Auditing
                     Assert.Fail("Did not receive message copy within 2 seconds of waiting....");
                 }
             }
+
+            PrintHeaders(message);
 
             Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
             Assert.That(message.Headers.ContainsKey(Headers.Intent));

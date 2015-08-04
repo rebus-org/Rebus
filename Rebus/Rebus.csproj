@@ -52,6 +52,7 @@
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
     <Compile Include="Auditing\AuditHeaders.cs" />
+    <Compile Include="Auditing\AuditingHelper.cs" />
     <Compile Include="Auditing\AuditingConfigurationExtensions.cs" />
     <Compile Include="Auditing\IncomingAuditingStep.cs" />
     <Compile Include="Auditing\OutgoingAuditingStep.cs" />

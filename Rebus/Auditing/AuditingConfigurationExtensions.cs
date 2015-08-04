@@ -1,6 +1,7 @@
 ﻿using System;
 using Rebus.Config;
 using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Transport;
 
@@ -20,15 +21,17 @@ namespace Rebus.Auditing
             if (configurer == null) throw new ArgumentNullException("configurer");
             if (string.IsNullOrWhiteSpace(auditQueue)) throw new ArgumentNullException("auditQueue");
 
-            configurer.Register(c => new OutgoingAuditingStep(auditQueue, c.Get<ITransport>()));
+            configurer.Register(c => new AuditingHelper(c.Get<ITransport>(), auditQueue));
+
+            configurer.Register(c => new OutgoingAuditingStep(c.Get<AuditingHelper>(), c.Get<ITransport>()));
 
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
                 .OnSend(c.Get<OutgoingAuditingStep>(), PipelineRelativePosition.After, typeof(SendOutgoingMessageStep)));
 
-            configurer.Register(c => new IncomingAuditingStep(auditQueue, c.Get<ITransport>()));
+            configurer.Register(c => new IncomingAuditingStep(c.Get<AuditingHelper>(), c.Get<ITransport>()));
 
-            configurer.Decorate<IPipeline>(c => new PipelineStepConcatenator(c.Get<IPipeline>())
-                .OnReceive(c.Get<IncomingAuditingStep>(), PipelineAbsolutePosition.Front));
+            configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
+                .OnReceive(c.Get<IncomingAuditingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep)));
         }
     }
 }

@@ -102,7 +102,7 @@ namespace Rebus.Tests.Pipeline
             public async Task Process(IncomingStepContext context, Func<Task> next) { }
         }
 
-        class Step2 : IIncomingStep
+        class Step2 : IIncomingStep, IMarker
         {
             public async Task Process(IncomingStepContext context, Func<Task> next) { }
         }
@@ -117,5 +117,9 @@ namespace Rebus.Tests.Pipeline
             public async Task Process(IncomingStepContext context, Func<Task> next) { }
         }
 
+        interface IMarker
+        {
+        }
     }
+
 }

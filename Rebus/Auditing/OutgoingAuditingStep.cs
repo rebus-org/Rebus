@@ -14,21 +14,21 @@ namespace Rebus.Auditing
     [StepDocumentation("Forwards a copy of published messages to the configured audit queue, including some useful headers.")]
     class OutgoingAuditingStep : IOutgoingStep, IInitializable
     {
-        readonly string _auditQueue;
+        readonly AuditingHelper _auditingHelper;
         readonly ITransport _transport;
 
         /// <summary>
         /// Constructs the step
         /// </summary>
-        public OutgoingAuditingStep(string auditQueue, ITransport transport)
+        public OutgoingAuditingStep(AuditingHelper auditingHelper, ITransport transport)
         {
-            _auditQueue = auditQueue;
+            _auditingHelper = auditingHelper;
             _transport = transport;
         }
 
         public void Initialize()
         {
-            _transport.CreateQueue(_auditQueue);
+            _auditingHelper.EnsureAuditQueueHasBeenCreated();
         }
 
         public async Task Process(OutgoingStepContext context, Func<Task> next)
@@ -40,9 +40,10 @@ namespace Rebus.Auditing
                 var transactionContext = context.Load<ITransactionContext>();
 
                 var clone = transportMessage.Clone();
-                clone.Headers[AuditHeaders.AuditTime] = RebusTime.Now.ToString("O");
 
-                await _transport.Send(_auditQueue, clone, transactionContext);
+                _auditingHelper.SetCommonHeaders(clone);
+
+                await _transport.Send(_auditingHelper.AuditQueue, clone, transactionContext);
             }
 
             await next();
