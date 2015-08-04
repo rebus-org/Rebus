@@ -79,6 +79,8 @@
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
+    <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
+    <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />

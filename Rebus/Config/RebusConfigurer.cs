@@ -159,7 +159,7 @@ namespace Rebus.Config
             {
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport);
+                return new HandleDeferredMessagesStep(timeoutManager, transport, _options);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
@@ -191,7 +191,8 @@ namespace Rebus.Config
                     c.Get<ITransport>(),
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
-                    c.Get<ISubscriptionStorage>());
+                    c.Get<ISubscriptionStorage>(),
+                    _options);
 
                 bus.Disposed += () =>
                 {

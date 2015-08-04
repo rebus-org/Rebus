@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -8,6 +7,7 @@ using Rebus.Extensions;
 using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Pipeline;
+using Rebus.Timeouts;
 
 namespace Rebus.Config
 {
@@ -41,6 +41,22 @@ namespace Rebus.Config
         public OptionsConfigurer SetMaxParallelism(int maxParallelism)
         {
             _options.MaxParallelism = maxParallelism;
+            return this;
+        }
+
+        /// <summary>
+        /// Configures Rebus to use another endpoint as the timeout manager
+        /// </summary>
+        public OptionsConfigurer UseExternalTimeoutManager(string timeoutManagerAddress)
+        {
+            if (string.IsNullOrWhiteSpace(timeoutManagerAddress))
+            {
+                throw new ArgumentException(string.Format("Cannot use '{0}' as an external timeout manager address!", timeoutManagerAddress), "timeoutManagerAddress");
+            }
+
+            _injectionist.Register<ITimeoutManager>(c => new ThrowingTimeoutManager());
+            _options.ExternalTimeoutManagerAddressOrNull = timeoutManagerAddress;
+            
             return this;
         }
 

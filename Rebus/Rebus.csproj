@@ -123,6 +123,7 @@
     <Compile Include="Threading\ParallelOperationsManager.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
+    <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
