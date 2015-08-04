@@ -85,15 +85,10 @@ namespace Rebus.Messages
             public const string PointToPoint = "p2p";
 
             /// <summary>
-            /// This value indicates that the message was published to zero or more recipients, i.e. it might not actually be received by anyone (which,
-            /// when auditing, would mean that the message could potentially never have a copy stored anywhere)
+            /// This value indicates that the message was published to zero or more recipients, i.e. it might not actually be received by anyone.
+            /// When auditing is enabled, a copy is always stored of published messages, regardless of the number of recipients.
             /// </summary>
             public const string PublishSubscribe = "pub";
         }
-
-        /// <summary>
-        /// Headers with <see cref="DateTimeOffset"/> (serialized with the format string 'O') of the time when the message copy was forwarded to the audit queue.
-        /// </summary>
-        public const string AuditTime = "rbs2-audittime";
     }
 }

@@ -51,7 +51,10 @@
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
+    <Compile Include="Auditing\AuditHeaders.cs" />
     <Compile Include="Auditing\AuditingConfigurationExtensions.cs" />
+    <Compile Include="Auditing\IncomingAuditingStep.cs" />
+    <Compile Include="Auditing\OutgoingAuditingStep.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -27,7 +28,11 @@ namespace Rebus.Tests.Auditing
             
             _bus = Configure.With(_adapter)
                 .Transport(t => t.UseInMemoryTransport(_network, "test"))
-                .Options(o => o.EnableMessageAuditing("audit"))
+                .Options(o =>
+                {
+                    o.LogPipeline(true);
+                    o.EnableMessageAuditing("audit");
+                })
                 .Start();
         }
 
@@ -58,7 +63,11 @@ namespace Rebus.Tests.Auditing
                 }
             }
 
-            Assert.That(message.Headers.ContainsKey(Headers.AuditTime));
+            Console.WriteLine(@"Headers:
+{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.HandleTime));
             Assert.That(message.Headers.ContainsKey(Headers.Intent));
             Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
         }
@@ -81,7 +90,7 @@ namespace Rebus.Tests.Auditing
                 }
             }
 
-            Assert.That(message.Headers.ContainsKey(Headers.AuditTime));
+            Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
             Assert.That(message.Headers.ContainsKey(Headers.Intent));
             Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
         }
