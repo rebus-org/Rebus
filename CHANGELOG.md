@@ -535,6 +535,26 @@
 
 * Added `TransactionScope` support via the `Rebus.TransactionScope` package (note: requires at least .NET 4.5.1 for `TransactionScopeAsyncFlowOption.Enabled` to be there)
 
+## 0.90.2
+
+* Added ability to storage subscriptions in a JSON file
+
+## 0.90.3
+
+* Added RavenDB persistence for subscriptions and timeouts - thanks [mclausen]
+
+## 0.90.4
+
+* Added experimental legacy compatility option (`.Options(o => o.EnableLegacyCompatibility())`)
+
+## 0.90.5
+
+* Made MSMQ transport work better in legacy mode
+
+## 0.90.6
+
+* Added ability to use external timeout manager
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -550,6 +570,7 @@
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
+[mclausen]: https://github.com/mclausen
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
 [oguzhaneren]: https://github.com/oguzhaneren

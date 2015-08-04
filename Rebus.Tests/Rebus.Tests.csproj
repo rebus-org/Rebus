@@ -72,8 +72,15 @@
     <Compile Include="Encryption\TestEncryption.cs" />
     <Compile Include="Encryption\TestEncryptor.cs" />
     <Compile Include="Integration\TestIdempotentSagas.cs" />
+    <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
+    <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
+    <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
+    <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
+    <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
+    <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />

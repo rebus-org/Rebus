@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
+using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -43,11 +44,12 @@ namespace Rebus.Bus
         readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly ISubscriptionStorage _subscriptionStorage;
+        readonly Options _options;
 
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -55,6 +57,7 @@ namespace Rebus.Bus
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _subscriptionStorage = subscriptionStorage;
+            _options = options;
         }
 
         /// <summary>
@@ -126,11 +129,6 @@ namespace Rebus.Bus
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-
-            if (!logicalMessage.HasReturnAddress())
-            {
-                logicalMessage.SetReturnAddressFromTransport(_transport);
-            }
 
             logicalMessage.SetDeferHeader(RebusTime.Now + delay);
 
@@ -212,6 +210,11 @@ namespace Rebus.Bus
 
         string GetTimeoutManagerAddress()
         {
+            if (!string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull))
+            {
+                return _options.ExternalTimeoutManagerAddressOrNull;
+
+            }
             var address = _transport.Address;
             if (string.IsNullOrWhiteSpace(address))
             {

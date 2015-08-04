@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Threading;
@@ -33,16 +35,18 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
         readonly ITimeoutManager _timeoutManager;
         readonly ITransport _transport;
+        readonly Options _options;
         readonly AsyncTask _dueMessagesSenderBackgroundTask;
 
         /// <summary>
         /// Constructs the step, using the specified <see cref="ITimeoutManager"/> to defer relevant messages
         /// and the specified <see cref="ITransport"/> to deliver messages when they're due.
         /// </summary>
-        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport)
+        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options)
         {
             _timeoutManager = timeoutManager;
             _transport = transport;
+            _options = options;
 
             _dueMessagesSenderBackgroundTask = new AsyncTask("DueMessagesSender", TimerElapsed)
             {
@@ -57,7 +61,20 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
         public void Initialize()
         {
-            _dueMessagesSenderBackgroundTask.Start();
+            if (UsingExternalTimeoutManager)
+            {
+                _log.Info("Using external timeout manager with this address: '{0}'",
+                    _options.ExternalTimeoutManagerAddressOrNull);
+            }
+            else
+            {
+                _dueMessagesSenderBackgroundTask.Start();
+            }
+        }
+
+        bool UsingExternalTimeoutManager
+        {
+            get { return !string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull); }
         }
 
         async Task TimerElapsed()
@@ -108,12 +125,37 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                     Headers.ReturnAddress));
             }
 
+            if (UsingExternalTimeoutManager)
+            {
+                var transactionContext = context.Load<ITransactionContext>();
+
+                await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext);
+            }
+            else
+            {
+                await StoreMessageUntilDue(deferredUntil, headers, transportMessage);
+            }
+        }
+
+        async Task ForwardMessageToExternalTimeoutManager(TransportMessage transportMessage, ITransactionContext transactionContext)
+        {
+            var timeoutManagerAddress = _options.ExternalTimeoutManagerAddressOrNull;
+
+            _log.Info("Forwarding deferred message {0} to external timeout manager '{1}'",
+                transportMessage.GetMessageLabel(), timeoutManagerAddress);
+
+            await _transport.Send(timeoutManagerAddress, transportMessage, transactionContext);
+        }
+
+        async Task StoreMessageUntilDue(string deferredUntil, Dictionary<string, string> headers, TransportMessage transportMessage)
+        {
             DateTimeOffset approximateDueTime;
             if (!DateTimeOffset.TryParseExact(deferredUntil, DateTimeOffsetFormat, CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind, out approximateDueTime))
+                DateTimeStyles.RoundtripKind, out approximateDueTime))
             {
-                throw new FormatException(string.Format("Could not parse the '{0}' header value '{1}' into a valid DateTimeOffset!",
-                    Headers.DeferredUntil, deferredUntil));
+                throw new FormatException(
+                    string.Format("Could not parse the '{0}' header value '{1}' into a valid DateTimeOffset!",
+                        Headers.DeferredUntil, deferredUntil));
             }
 
             _log.Info("Deferring message {0} until {1}", headers[Headers.MessageId], approximateDueTime);
@@ -129,6 +171,9 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             Dispose(true);
         }
 
+        /// <summary>
+        /// Stops the background task
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             _dueMessagesSenderBackgroundTask.Dispose();

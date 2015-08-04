@@ -24,11 +24,22 @@ namespace Rebus.Injection
         }
 
         /// <summary>
-        /// Registers a factory method that can provide an instance of <typeparamref name="TService"/>. If <paramref name="isDecorator"/> is set to true,
-        /// the factory method will be called before the factory method where <paramref name="isDecorator"/> is set to false (which is the default).
-        /// There can be only one factory method with <paramref name="isDecorator"/>=false for each type of <typeparamref name="TService"/>.
+        /// Registers a factory method that can provide an instance of the primary implementation of <typeparamref name="TService"/>
         /// </summary>
-        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator = false)
+        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
+        {
+            Register<TService>(resolverMethod, isDecorator: false);
+        }
+
+        /// <summary>
+        /// Registers a factory method that can provide a decorator of <typeparamref name="TService"/>
+        /// </summary>
+        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod)
+        {
+            Register<TService>(resolverMethod, isDecorator: true);
+        }
+
+        void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator)
         {
             var key = typeof(TService);
             if (!_resolvers.ContainsKey(key))

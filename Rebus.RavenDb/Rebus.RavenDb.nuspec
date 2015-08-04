@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.RavenDb</id>
+    <version>$version$</version>
+    <title>Rebus.RavenDb</title>
+    <authors>mclausen</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>RavenDb persisters for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus ravendb</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[0.90.0, 1)" />
+        <dependency id="RavenDB.Client" version="[3.0, 3.1)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.RavenDb.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.RavenDb.xml" target="lib\NET45" />
+  </files>
+</package>

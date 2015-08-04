@@ -17,7 +17,7 @@ namespace Rebus.Tests.Injection
         public void CanDecorateSoSoDeep()
         {
             _injectionist.Register<ISomething>(c => new ActualSomething());
-            _injectionist.Register<ISomething>(c => new Decorator(c.Get<ISomething>(), "4"), isDecorator: true);
+            _injectionist.Decorate<ISomething>(c => new Decorator(c.Get<ISomething>(), "4"));
 
             var instance = _injectionist.Get<ISomething>();
 
@@ -28,7 +28,7 @@ namespace Rebus.Tests.Injection
         [Test]
         public void CanDecorateSoSoDeepAlsoWhenRegistrationsAreMadeInOppositeOrder()
         {
-            _injectionist.Register<ISomething>(c => new Decorator(c.Get<ISomething>(), "4"), isDecorator: true);
+            _injectionist.Decorate<ISomething>(c => new Decorator(c.Get<ISomething>(), "4"));
             _injectionist.Register<ISomething>(c => new ActualSomething());
 
             var instance = _injectionist.Get<ISomething>();

@@ -159,7 +159,7 @@ namespace Rebus.Config
             {
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport);
+                return new HandleDeferredMessagesStep(timeoutManager, transport, _options);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
@@ -191,7 +191,8 @@ namespace Rebus.Config
                     c.Get<ITransport>(),
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
-                    c.Get<ISubscriptionStorage>());
+                    c.Get<ISubscriptionStorage>(),
+                    _options);
 
                 bus.Disposed += () =>
                 {
@@ -220,13 +221,13 @@ namespace Rebus.Config
                 return bus;
             });
 
-            _injectionist.Register<IHandlerActivator>(c =>
+            _injectionist.Decorate<IHandlerActivator>(c =>
             {
                 var handlerActivator = c.Get<IHandlerActivator>();
                 var subscriptionStorage = c.Get<ISubscriptionStorage>();
                 var internalHandlersContributor = new InternalHandlersContributor(handlerActivator, subscriptionStorage);
                 return internalHandlersContributor;
-            }, isDecorator: true);
+            });
 
             var busInstance = _injectionist.Get<IBus>();
 
@@ -253,7 +254,7 @@ namespace Rebus.Config
 
         void RegisterDecorator<TService>(Func<IResolutionContext, TService> factoryMethod)
         {
-            _injectionist.Register(factoryMethod, isDecorator: true);
+            _injectionist.Decorate(factoryMethod);
         }
     }
 }

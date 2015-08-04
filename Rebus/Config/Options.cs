@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Rebus.Config
+﻿namespace Rebus.Config
 {
     /// <summary>
     /// Contains additional options for configuring Rebus internals
@@ -37,5 +35,10 @@ namespace Rebus.Config
         /// regardless of the number of workers
         /// </summary>
         public int MaxParallelism { get; set; }
+
+        /// <summary>
+        /// Gets/sets the address to use if an external timeout manager is to be used
+        /// </summary>
+        public string ExternalTimeoutManagerAddressOrNull { get; set; }
     }
 }
