@@ -555,6 +555,10 @@
 
 * Added ability to use external timeout manager
 
+## vnext
+
+* Added some more headers to audited messages
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
