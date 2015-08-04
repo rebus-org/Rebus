@@ -51,6 +51,7 @@
     <Compile Include="PostgreSqlSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="PostgreSqlSubscriptionStorageFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PostgreSqlTestHelper.cs" />
     <Compile Include="TestCategory.cs" />
   </ItemGroup>
   <ItemGroup>

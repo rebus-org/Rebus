@@ -17,6 +17,14 @@ namespace Rebus.Extensions
         }
 
         /// <summary>
+        /// Returns the items of the sequence in a new <see cref="HashSet{T}"/>, checking equality with the given <paramref name="equalityComparer"/>
+        /// </summary>
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> items, IEqualityComparer<T> equalityComparer)
+        {
+            return new HashSet<T>(items, equalityComparer);
+        }
+
+        /// <summary>
         /// Iterates the sequence, calling the given <paramref name="itemAction"/> for each item
         /// </summary>
         public static void ForEach<T>(this IEnumerable<T> items, Action<T> itemAction)

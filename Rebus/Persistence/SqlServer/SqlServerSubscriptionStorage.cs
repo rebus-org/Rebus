@@ -30,6 +30,7 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public SqlServerSubscriptionStorage(DbConnectionProvider connectionProvider, string tableName, bool isCentralized)
         {
+
             IsCentralized = isCentralized;
             _connectionProvider = connectionProvider;
             _tableName = tableName;

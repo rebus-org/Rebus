@@ -30,6 +30,21 @@ namespace Rebus.Tests.Contracts.Subscriptions
         }
 
         [Test]
+        public async Task CanRegisterSameSubscriberMoreThanOnce()
+        {
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+            await _storage.RegisterSubscriber("topic1", "subscriber1");
+
+            var topic1Subscribers = (await _storage.GetSubscriberAddresses("topic1")).OrderBy(a => a).ToList();
+
+            Assert.That(topic1Subscribers, Is.EqualTo(new[] { "subscriber1" }));
+        }
+
+        [Test]
         public async Task CanRegisterSubscribers()
         {
             await _storage.RegisterSubscriber("topic1", "subscriber1");
