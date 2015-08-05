@@ -555,9 +555,10 @@
 
 * Added ability to use external timeout manager
 
-## vnext
+## 0.90.7
 
 * Added some more headers to audited messages
+* Added PostgreSQL persistence
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
