@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.PostgreSql</id>
+    <version>$version$</version>
+    <title>Rebus.PostgreSql</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>PostgreSql persisters for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus postgres postgresql npgsql</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[0.90.0, 1)" />
+        <dependency id="Npgsql" version="[2.2.5, 2.3)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.PostgreSql.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.PostgreSql.xml" target="lib\NET45" />
+  </files>
+</package>

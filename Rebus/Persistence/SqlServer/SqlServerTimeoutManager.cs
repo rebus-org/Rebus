@@ -24,7 +24,7 @@ namespace Rebus.Persistence.SqlServer
 
         readonly DbConnectionProvider _connectionProvider;
         readonly string _tableName;
-        readonly JsonSerializerSettings _serializerSettings = new JsonSerializerSettings();
+        readonly JsonSerializerSettings _headerSerializationSettings = new JsonSerializerSettings();
 
         /// <summary>
         /// Constructs the timeout manager, using the specified connection provider and table to store the messages until they're due.
@@ -86,7 +86,7 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
 
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            var headersString = JsonConvert.SerializeObject(headers, _serializerSettings);
+            var headersString = JsonConvert.SerializeObject(headers, _headerSerializationSettings);
 
             using (var connection = await _connectionProvider.GetConnection())
             {
@@ -108,15 +108,17 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var connection = await _connectionProvider.GetConnection();
-            var dueMessages = new List<DueMessage>();
-
-            const int maxDueTimeouts = 1000;
-
-            using (var command = connection.CreateCommand())
+            try
             {
-                command.CommandText =
-                    string.Format(
-                        @"
+                var dueMessages = new List<DueMessage>();
+
+                const int maxDueTimeouts = 1000;
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText =
+                        string.Format(
+                            @"
 SELECT 
     [id],
     [headers],
@@ -125,42 +127,48 @@ FROM [{0}] WITH (UPDLOCK, READPAST, ROWLOCK)
 WHERE [due_time] <= @current_time 
 ORDER BY [due_time] ASC
 ",
-                        _tableName);
+                            _tableName);
 
-                command.Parameters.AddWithValue("current_time", RebusTime.Now);
+                    command.Parameters.AddWithValue("current_time", RebusTime.Now);
 
-                using (var reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
+                    using (var reader = command.ExecuteReader())
                     {
-                        var id = (int) reader["id"];
-                        var headersString = (string)reader["headers"];
-                        var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersString, _serializerSettings);
-                        var body = (byte[]) reader["body"];
-
-                        var sqlTimeout = new DueMessage(headers, body, () =>
+                        while (reader.Read())
                         {
-                            using (var deleteCommand = connection.CreateCommand())
+                            var id = (int)reader["id"];
+                            var headersString = (string)reader["headers"];
+                            var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersString, _headerSerializationSettings);
+                            var body = (byte[])reader["body"];
+
+                            var sqlTimeout = new DueMessage(headers, body, () =>
                             {
-                                deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                                deleteCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
-                                deleteCommand.ExecuteNonQuery();
-                            }    
-                        });
+                                using (var deleteCommand = connection.CreateCommand())
+                                {
+                                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                                    deleteCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
+                                    deleteCommand.ExecuteNonQuery();
+                                }
+                            });
 
-                        dueMessages.Add(sqlTimeout);
+                            dueMessages.Add(sqlTimeout);
 
-                        if (dueMessages.Count >= maxDueTimeouts) break;
+                            if (dueMessages.Count >= maxDueTimeouts) break;
+                        }
                     }
-                }
 
-                return new DueMessagesResult(dueMessages, async () =>
-                {
-                    using (connection)
+                    return new DueMessagesResult(dueMessages, async () =>
                     {
-                        await connection.Complete();
-                    }
-                });
+                        using (connection)
+                        {
+                            await connection.Complete();
+                        }
+                    });
+                }
+            }
+            catch (Exception)
+            {
+                connection.Dispose();
+                throw;
             }
         }
     }
