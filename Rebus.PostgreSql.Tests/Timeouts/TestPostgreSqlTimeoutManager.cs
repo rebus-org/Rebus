@@ -8,7 +8,6 @@ namespace Rebus.PostgreSql.Tests.Timeouts
     [TestFixture]
     public class TestPostgreSqlTimeoutManager : BasicStoreAndRetrieveOperations<PostgreSqlTimeoutManagerFactory>
     {
-         
     }
 
     public class PostgreSqlTimeoutManagerFactory : ITimeoutManagerFactory
@@ -27,7 +26,7 @@ namespace Rebus.PostgreSql.Tests.Timeouts
 
         public void Cleanup()
         {
-            //PostgreSqlTestHelper.DropTable("timeouts");
+            PostgreSqlTestHelper.DropTable("timeouts");
         }
     }
 
