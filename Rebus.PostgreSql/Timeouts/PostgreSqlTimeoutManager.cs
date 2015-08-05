@@ -6,11 +6,16 @@ using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Time;
 using Rebus.Timeouts;
+// ReSharper disable AccessToDisposedClosure
 
 #pragma warning disable 1998
 
 namespace Rebus.PostgreSql.Timeouts
 {
+    /// <summary>
+    /// Implementation of <see cref="ITimeoutManager"/> that uses PostgreSQL to do its thing. Can be used safely by multiple processes competing
+    /// over the same table of timeouts because row-level locking is used when querying for due timeouts.
+    /// </summary>
     public class PostgreSqlTimeoutManager : ITimeoutManager
     {
         readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
@@ -23,6 +28,9 @@ namespace Rebus.PostgreSql.Timeouts
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// Constructs the timeout manager
+        /// </summary>
         public PostgreSqlTimeoutManager(PostgresConnectionHelper connectionHelper, string tableName)
         {
             _connectionHelper = connectionHelper;
@@ -111,6 +119,9 @@ FOR UPDATE;
             }
         }
 
+        /// <summary>
+        /// Checks if the configured timeouts table exists - if it doesn't, it will be created.
+        /// </summary>
         public void EnsureTableIsCreated()
         {
             using (var connection = _connectionHelper.GetConnection().Result)

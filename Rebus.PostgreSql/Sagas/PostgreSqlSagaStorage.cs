@@ -13,6 +13,9 @@ using Rebus.Serialization;
 
 namespace Rebus.PostgreSql.Sagas
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaStorage"/> that uses PostgreSQL to do its thing
+    /// </summary>
     public class PostgreSqlSagaStorage : ISagaStorage
     {
         const bool IndexNullProperties = false;
@@ -31,6 +34,9 @@ namespace Rebus.PostgreSql.Sagas
         readonly string _dataTableName;
         readonly string _indexTableName;
 
+        /// <summary>
+        /// Constructs the saga storage
+        /// </summary>
         public PostgreSqlSagaStorage(PostgresConnectionHelper connectionHelper, string dataTableName, string indexTableName)
         {
             _connectionHelper = connectionHelper;
@@ -38,6 +44,10 @@ namespace Rebus.PostgreSql.Sagas
             _indexTableName = indexTableName;
         }
 
+        /// <summary>
+        /// Checks to see if the configured saga data and saga index table exists. If they both exist, we'll continue, if
+        /// neigther of them exists, we'll try to create them. If one of them exists, we'll throw an error.
+        /// </summary>
         public void EnsureTablesAreCreated()
         {
             using (var connection = _connectionHelper.GetConnection().Result)
@@ -371,6 +381,5 @@ INSERT
                 .Where(kvp => IndexNullProperties || kvp.Value != null)
                 .ToList();
         }
-
     }
 }

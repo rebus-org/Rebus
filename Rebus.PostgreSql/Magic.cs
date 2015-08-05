@@ -2,7 +2,7 @@
 
 namespace Rebus.PostgreSql
 {
-    internal static class PostgreSqlMagic
+    static class PostgreSqlMagic
     {
         public static List<string> GetTableNames(this PostgresConnection connection)
         {
