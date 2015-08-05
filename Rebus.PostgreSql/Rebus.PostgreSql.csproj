@@ -51,9 +51,9 @@
     <Compile Include="PostgresConnectionHelper.cs" />
     <Compile Include="Magic.cs" />
     <Compile Include="PostgreSqlConfigurationExtensions.cs" />
-    <Compile Include="PostgreSqlSagaStorage.cs" />
-    <Compile Include="PostgreSqlSubscriptionStorage.cs" />
-    <Compile Include="PostgreSqlTimeoutStorage.cs" />
+    <Compile Include="Sagas\PostgreSqlSagaStorage.cs" />
+    <Compile Include="Subscriptions\PostgreSqlSubscriptionStorage.cs" />
+    <Compile Include="Timeouts\PostgreSqlTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

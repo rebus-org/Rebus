@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Sagas;
 
-namespace Rebus.PostgreSql
+namespace Rebus.PostgreSql.Sagas
 {
     public class PostgreSqlSagaStorage : ISagaStorage
     {

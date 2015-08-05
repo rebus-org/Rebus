@@ -1,4 +1,7 @@
 ﻿using Rebus.Config;
+using Rebus.PostgreSql.Sagas;
+using Rebus.PostgreSql.Subscriptions;
+using Rebus.PostgreSql.Timeouts;
 using Rebus.Sagas;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
@@ -37,7 +40,7 @@ namespace Rebus.PostgreSql
         {
             configurer.Register(c =>
             {
-                var subscriptionStorage = new PostgreSqlTimeoutStorage(new PostgresConnectionHelper(connectionString), tableName);
+                var subscriptionStorage = new PostgreSqlTimeoutManager(new PostgresConnectionHelper(connectionString), tableName);
 
                 if (automaticallyCreateTables)
                 {

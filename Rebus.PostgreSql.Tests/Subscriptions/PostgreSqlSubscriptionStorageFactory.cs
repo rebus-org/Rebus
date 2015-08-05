@@ -1,7 +1,8 @@
-﻿using Rebus.Subscriptions;
+﻿using Rebus.PostgreSql.Subscriptions;
+using Rebus.Subscriptions;
 using Rebus.Tests.Contracts.Subscriptions;
 
-namespace Rebus.PostgreSql.Tests
+namespace Rebus.PostgreSql.Tests.Subscriptions
 {
     public class PostgreSqlSubscriptionStorageFactory : ISubscriptionStorageFactory
     {

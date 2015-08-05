@@ -7,7 +7,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Subscriptions;
 
-namespace Rebus.PostgreSql
+namespace Rebus.PostgreSql.Subscriptions
 {
     /// <summary>
     /// Implementation of <see cref="ISubscriptionStorage"/> that uses Postgres to do its thing
