@@ -90,7 +90,18 @@ namespace Rebus.Threading
 
                         token.ThrowIfCancellationRequested();
 
-                        await _action();
+                        try
+                        {
+                            await _action();
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            throw;
+                        }
+                        catch (Exception exception)
+                        {
+                            _log.Warn("Exception in periodic task '{0}': {1}", _description, exception);
+                        }
                     }
                 }
                 catch (TaskCanceledException)
