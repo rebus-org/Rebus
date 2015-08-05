@@ -18,6 +18,7 @@ namespace Rebus.Persistence.FileSystem
     public class JsonFileSubscriptionStorage : ISubscriptionStorage
     {
         static readonly Encoding FileEncoding = Encoding.UTF8;
+
         readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
         readonly string _jsonFilePath;
 
@@ -29,6 +30,9 @@ namespace Rebus.Persistence.FileSystem
             _jsonFilePath = jsonFilePath;
         }
 
+        /// <summary>
+        /// Gets all subscribers of the given topic from the JSON file
+        /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             try
@@ -49,6 +53,9 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Adds the subscriber to the list of subscribers from the given topic
+        /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
             try
@@ -69,6 +76,9 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Removes the subscriber from the list of subscribers of the given topic
+        /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
             try
@@ -112,66 +122,12 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Gets whether this subscription storage is centralized (which it shouldn't be - that would probably cause some pretty nasty locking exceptions!)
+        /// </summary>
         public bool IsCentralized
         {
-            get;
-            private set;
-        }
-
-        //class Subscriptions
-        //{
-        //    public Subscriptions()
-        //    {
-        //        Topics = new List<TopicSubs>();
-        //    }
-            
-        //    public List<TopicSubs> Topics { get; private set; }
-
-        //    public string[] ForTopic(string topic)
-        //    {
-        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-        //        if (topicSub == null) return new string[0];
-
-        //        return topicSub.Subscribers.ToArray();
-        //    }
-
-        //    public void Subscribe(string topic, string subscriberAddress)
-        //    {
-        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-        //        if (topicSub == null)
-        //        {
-        //            topicSub = new TopicSubs(topic);
-        //            Topics.Add(topicSub);
-        //        }
-        //        topicSub.Subscribers.Add(subscriberAddress);
-        //    }
-
-        //    public void Unsubscribe(string topic, string subscriberAddress)
-        //    {
-        //        var topicSub = Topics.FirstOrDefault(t => t.Matches(topic));
-        //        if (topicSub == null) return;
-                
-        //        topicSub.Subscribers.Remove(subscriberAddress);
-        //    }
-        //}
-
-        class TopicSubs
-        {
-            public TopicSubs(string topic)
-            {
-                if (topic == null) throw new ArgumentNullException("topic");
-                Topic = topic;
-                Subscribers = new HashSet<string>();
-            }
-
-            public string Topic { get; private set; }
-            
-            public HashSet<string> Subscribers { get; private set; }
-
-            public bool Matches(string topic)
-            {
-                return topic == Topic;
-            }
+            get { return false; }
         }
     }
 }

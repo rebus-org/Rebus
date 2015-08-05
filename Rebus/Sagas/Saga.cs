@@ -36,7 +36,7 @@ namespace Rebus.Sagas
     }
 
     /// <summary>
-    /// Generic saga base class that must be made concrete by supplying the <see cref="TSagaData"/> type parameter.
+    /// Generic saga base class that must be made concrete by supplying the <typeparamref name="TSagaData"/> type parameter.
     /// </summary>
     public abstract class Saga<TSagaData> : Saga where TSagaData : ISagaData, new()
     {

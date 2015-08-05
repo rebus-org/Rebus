@@ -34,6 +34,9 @@ namespace Rebus.Timeouts
         }
 
 
+        /// <summary>
+        /// Returns all due messages from this result
+        /// </summary>
         public IEnumerator<DueMessage> GetEnumerator()
         {
             return _dueMessages.GetEnumerator();

@@ -32,6 +32,9 @@ namespace Rebus.Persistence.InMem
             }
         }
 
+        /// <summary>
+        /// Gets due messages as of now, given the approximate due time that they were stored with when <see cref="ITimeoutManager.Defer"/> was called
+        /// </summary>
         public async Task<DueMessagesResult> GetDueMessages()
         {
             lock (_deferredMessages)

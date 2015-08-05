@@ -37,6 +37,13 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             _sagaStorage = sagaStorage;
         }
 
+        /// <summary>
+        /// For each <see cref="HandlerInvoker"/> found in the current <see cref="IncomingStepContext"/>'s <see cref="HandlerInvokers"/>,
+        /// this step will see if the invoker's handler is actually a <see cref="Saga"/>. If that is the case, the saga's correlation properties
+        /// are used to see if a piece of existing saga data can be retrieved and mounted on the <see cref="Saga{TSagaData}.Data"/> property.
+        /// If no existing instance was found, but the saga implements <see cref="IAmInitiatedBy{TMessage}"/> for the current message,
+        /// a new saga data instance will be created (and mounted). Otherwise, the message is ignored.
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var handlerInvokersForSagas = context.Load<HandlerInvokers>()

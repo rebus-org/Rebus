@@ -34,7 +34,7 @@ namespace Rebus.Threading
         TimeSpan _interval;
 
         /// <summary>
-        /// Constructs the periodic background task with the given <see cref="description"/>, periodically executing the given <see cref="action"/>,
+        /// Constructs the periodic background task with the given <paramref name="description"/>, periodically executing the given <paramref name="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
         public AsyncTask(string description, Func<Task> action, bool prettyInsignificant = false)
@@ -45,6 +45,9 @@ namespace Rebus.Threading
             Interval = DefaultInterval;
         }
 
+        /// <summary>
+        /// Last-resort shutdown of the task (if it wasn't properly disposed)
+        /// </summary>
         ~AsyncTask()
         {
             Dispose(false);

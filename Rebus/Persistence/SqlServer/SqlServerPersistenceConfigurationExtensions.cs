@@ -33,7 +33,7 @@ namespace Rebus.Persistence.SqlServer
         }
 
         /// <summary>
-        /// Configures Rebus to use SQL Server to store subscriptions. Use <see cref="isCentralized"/> = true to indicate whether it's OK to short-circuit
+        /// Configures Rebus to use SQL Server to store subscriptions. Use <paramref name="isCentralized"/> = true to indicate whether it's OK to short-circuit
         /// subscribing and unsubscribing by manipulating the subscription directly from the subscriber or just let it default to false to preserve the
         /// default behavior.
         /// </summary>

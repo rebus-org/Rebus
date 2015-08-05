@@ -44,8 +44,8 @@ namespace Rebus.Transport.InMem
         }
 
         /// <summary>
-        /// Delivers the specified <see cref="InMemTransportMessage"/> to the address specified by <see cref="destinationAddress"/>.
-        /// If <see cref="alwaysQuiet"/> is set to true, no events will ever be printed to <see cref="Console.Out"/>
+        /// Delivers the specified <see cref="InMemTransportMessage"/> to the address specified by <paramref name="destinationAddress"/>.
+        /// If <paramref name="alwaysQuiet"/> is set to true, no events will ever be printed to <see cref="Console.Out"/>
         /// (can be used by an in-mem transport to return a message to a queue, as if there was a queue transaction that was rolled back)
         /// </summary>
         public void Deliver(string destinationAddress, InMemTransportMessage msg, bool alwaysQuiet = false)

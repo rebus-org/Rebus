@@ -19,6 +19,9 @@ namespace Rebus.Pipeline.Send
             _addresses = addresses.ToList();
         }
 
+        /// <summary>
+        /// Gets all the addresses that this <see cref="DestinationAddresses"/> object contains
+        /// </summary>
         public IEnumerator<string> GetEnumerator()
         {
             return _addresses.GetEnumerator();

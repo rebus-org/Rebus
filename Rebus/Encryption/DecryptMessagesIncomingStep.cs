@@ -37,7 +37,7 @@ namespace Rebus.Encryption
                 var encryptedBodyBytes = transportMessage.Body;
 
                 var iv = GetIv(headers);
-                var bodyBytes = _encryptor.Decrypt(encryptedBodyBytes, iv);
+                var bodyBytes = _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv));
 
                 context.Save(new TransportMessage(headers, bodyBytes));
             }

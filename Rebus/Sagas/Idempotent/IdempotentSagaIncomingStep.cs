@@ -37,6 +37,10 @@ If that is the case, message dispatch is skipped, but any messages stored as out
             _transport = transport;
         }
 
+        /// <summary>
+        /// Checks the loaded saga data to see if the message currently being handled is a duplicate of a message that has previously been handled. 
+        /// If that is the case, message dispatch is skipped, but any messages stored as outgoing messages from previously handling the incoming message will be sent.
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var handlerInvokersForSagas = context.Load<HandlerInvokers>()

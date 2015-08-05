@@ -33,6 +33,10 @@ namespace Rebus.Pipeline.Send
             _transport = transport;
         }
 
+        /// <summary>
+        /// Sends the outgoing message using the configured <see cref="ITransport"/>, sending to the <see cref="DestinationAddresses"/>
+        /// found in the <see cref="OutgoingStepContext"/>.
+        /// </summary>
         public async Task Process(OutgoingStepContext context, Func<Task> next)
         {
             var logicalMessage = context.Load<Message>();

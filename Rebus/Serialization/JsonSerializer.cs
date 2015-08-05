@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Extensions;
 using Rebus.Messages;
+#pragma warning disable 1998
 
 namespace Rebus.Serialization
 {
@@ -56,6 +57,9 @@ namespace Rebus.Serialization
             _encoding = encoding;
         }
 
+        /// <summary>
+        /// Serializes the given <see cref="Message"/> into a <see cref="TransportMessage"/>
+        /// </summary>
         public async Task<TransportMessage> Serialize(Message message)
         {
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
@@ -67,6 +71,9 @@ namespace Rebus.Serialization
             return new TransportMessage(headers, bytes);
         }
 
+        /// <summary>
+        /// Deserializes the given <see cref="TransportMessage"/> back into a <see cref="Message"/>
+        /// </summary>
         public async Task<Message> Deserialize(TransportMessage transportMessage)
         {
             var contentType = transportMessage.Headers.GetValue(Headers.ContentType);

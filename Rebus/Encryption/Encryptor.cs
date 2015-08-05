@@ -47,6 +47,10 @@ I promise that the suggested key has been generated this instant - if you don't 
             }
         }
 
+        /// <summary>
+        /// Encrypts the given array of bytes, using the configured key. Returns an <see cref="EncryptedData"/> containing the encrypted
+        /// bytes and the generated salt.
+        /// </summary>
         public EncryptedData Encrypt(byte[] bytes)
         {
             using (var rijndael = new RijndaelManaged())
@@ -66,8 +70,14 @@ I promise that the suggested key has been generated this instant - if you don't 
             }
         }
 
-        public byte[] Decrypt(byte[] bytes, byte[] iv)
+        /// <summary>
+        /// Decrypts the given <see cref="EncryptedData"/> using the configured key.
+        /// </summary>
+        public byte[] Decrypt(EncryptedData encryptedData)
         {
+            var iv = encryptedData.Iv;
+            var bytes = encryptedData.Bytes;
+
             using (var rijndael = new RijndaelManaged())
             {
                 rijndael.IV = iv;
@@ -86,15 +96,30 @@ I promise that the suggested key has been generated this instant - if you don't 
         }
     }
 
+    /// <summary>
+    /// Represents a chunk of encrypted data along with the salt (a.k.a. "Initialization Vector"/"IV") that was used to encrypt it.
+    /// </summary>
     public class EncryptedData
     {
+        /// <summary>
+        /// Constructs an instance from the given bytes and iv.
+        /// </summary>
         public EncryptedData(byte[] bytes, byte[] iv)
         {
+            if (bytes == null) throw new ArgumentNullException("bytes");
+            if (iv == null) throw new ArgumentNullException("iv");
             Bytes = bytes;
             Iv = iv;
         }
 
+        /// <summary>
+        /// Gets the raw data from this encrypted data instance
+        /// </summary>
         public byte[] Bytes { get; private set; }
+        
+        /// <summary>
+        /// Gets the salt (a.k.a. "Initialization Vector"/"IV") from this encrypted data instance
+        /// </summary>
         public byte[] Iv { get; private set; }
     }
 }

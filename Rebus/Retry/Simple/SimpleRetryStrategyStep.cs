@@ -23,6 +23,7 @@ namespace Rebus.Retry.Simple
 If the maximum number of delivery attempts is reached, the message is moved to the error queue.")]
     public class SimpleRetryStrategyStep : IRetryStrategyStep, IInitializable, IDisposable
     {
+        const string BackgroundTaskName = "CleanupTrackedErrors";
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
         static ILog _log;
 
@@ -45,17 +46,24 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
-            _cleanupOldTrackedErrorsTask = new AsyncTask("CleanupTrackedErrors", CleanupOldTrackedErrors)
+            _cleanupOldTrackedErrorsTask = new AsyncTask(BackgroundTaskName, CleanupOldTrackedErrors)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };
         }
 
+        /// <summary>
+        /// Last-resort shudown of the background task for cleaning up tracked errors (<see cref="BackgroundTaskName"/>)
+        /// </summary>
         ~SimpleRetryStrategyStep()
         {
             Dispose(false);
         }
 
+        /// <summary>
+        /// Executes the entire message processing pipeline in an exception handler, tracking the number of failed delivery attempts.
+        /// Forwards the message to the error queue when the max number of delivery attempts has been exceeded.
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();

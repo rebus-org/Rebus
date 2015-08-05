@@ -43,6 +43,9 @@ namespace Rebus.Transport.Msmq
             _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
         }
 
+        /// <summary>
+        /// Last-resort disposal of the transport's message queues
+        /// </summary>
         ~MsmqTransport()
         {
             Dispose(false);

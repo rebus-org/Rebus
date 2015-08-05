@@ -28,6 +28,10 @@ namespace Rebus.Sagas
         /// <param name="sagaType">Specifies the saga type (i.e. the handler type) that contains the logic of the saga</param>
         public CorrelationProperty(Type messageType, Func<object, object> valueFromMessage, Type sagaDataType, string propertyName, Type sagaType)
         {
+            if (messageType == null) throw new ArgumentNullException("messageType");
+            if (sagaDataType == null) throw new ArgumentNullException("sagaDataType");
+            if (propertyName == null) throw new ArgumentNullException("propertyName");
+            if (sagaType == null) throw new ArgumentNullException("sagaType");
             PropertyName = propertyName;
             SagaType = sagaType;
             ValueFromMessage = valueFromMessage;
@@ -57,8 +61,14 @@ namespace Rebus.Sagas
         /// </summary>
         public Func<object, object> ValueFromMessage { get; private set; }
         
+        /// <summary>
+        /// Gets the type of the saga's saga data
+        /// </summary>
         public Type SagaDataType { get; private set; }
 
+        /// <summary>
+        /// Gets the name of the correlation property
+        /// </summary>
         public string PropertyName { get; private set; }
         
         /// <summary>

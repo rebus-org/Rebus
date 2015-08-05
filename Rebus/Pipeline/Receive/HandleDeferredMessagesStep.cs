@@ -26,6 +26,8 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public const string DateTimeOffsetFormat = "O";
 
+        const string DueMessagesSenderTaskName = "DueMessagesSender";
+
         static ILog _log;
 
         static HandleDeferredMessagesStep()
@@ -48,17 +50,23 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             _transport = transport;
             _options = options;
 
-            _dueMessagesSenderBackgroundTask = new AsyncTask("DueMessagesSender", TimerElapsed)
+            _dueMessagesSenderBackgroundTask = new AsyncTask(DueMessagesSenderTaskName, TimerElapsed)
             {
                 Interval = TimeSpan.FromSeconds(1)
             };
         }
 
+        /// <summary>
+        /// Last-resort disposal of resources, including shutting down the <see cref="DueMessagesSenderTaskName"/> background task.
+        /// </summary>
         ~HandleDeferredMessagesStep()
         {
             Dispose(false);
         }
 
+        /// <summary>
+        /// Initialized the step (starts the <see cref="DueMessagesSenderTaskName"/> background task if using the internal timeout manager)
+        /// </summary>
         public void Initialize()
         {
             if (UsingExternalTimeoutManager)

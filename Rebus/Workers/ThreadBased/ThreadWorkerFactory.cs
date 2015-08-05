@@ -33,6 +33,9 @@ namespace Rebus.Workers.ThreadBased
             _parallelOperationsManager = new ParallelOperationsManager(maxParallelism);
         }
 
+        /// <summary>
+        /// Creates a new worker (i.e. a new thread) with the given name
+        /// </summary>
         public IWorker CreateWorker(string workerName)
         {
             return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext, _parallelOperationsManager);

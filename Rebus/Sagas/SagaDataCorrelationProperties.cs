@@ -44,6 +44,9 @@ namespace Rebus.Sagas
             return potentialCorrelationproperties;
         }
 
+        /// <summary>
+        /// Gets the correlation properties contained in this collection
+        /// </summary>
         public IEnumerator<CorrelationProperty> GetEnumerator()
         {
             return _correlationProperties.SelectMany(kvp => kvp.Value).GetEnumerator();

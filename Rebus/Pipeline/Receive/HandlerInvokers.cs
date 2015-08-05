@@ -19,6 +19,9 @@ namespace Rebus.Pipeline.Receive
             _handlerInvokers = handlerInvokers.ToList();
         }
 
+        /// <summary>
+        /// Gets all the <see cref="HandlerInvoker"/>s that this <see cref="HandlerInvokers"/> contains
+        /// </summary>
         public IEnumerator<HandlerInvoker> GetEnumerator()
         {
             return _handlerInvokers.GetEnumerator();
