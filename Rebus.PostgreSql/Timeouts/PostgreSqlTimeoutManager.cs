@@ -59,7 +59,7 @@ INSERT INTO ""{0}"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @he
                 {
                     command.CommandText = string.Format(@"
 
-SELECT 
+SELECT
     ""id"",
     ""headers"", 
     ""body"" 
@@ -69,6 +69,8 @@ FROM ""{0}""
 WHERE ""due_time"" <= @current_time 
 
 ORDER BY ""due_time""
+
+FOR UPDATE;
 
 ", _tableName);
                     command.Parameters.Add("current_time", NpgsqlDbType.Timestamp).Value = RebusTime.Now.ToUniversalTime().DateTime;
