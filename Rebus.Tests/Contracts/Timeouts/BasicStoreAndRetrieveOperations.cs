@@ -38,7 +38,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task IsCapableOfReturningTheMessageBodyAsWell()
         {
-            var someTimeInThePast = DateTimeOffset.Now.AddMinutes(-1);
+            var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
 
             const string stringBody = "hello there!";
 
@@ -59,7 +59,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task ImmediatelyGetsTimeoutWhenItIsDueInThePast()
         {
-            var someTimeInThePast = DateTimeOffset.Now.AddMinutes(-1);
+            var someTimeInThePast = RebusTime.Now.AddMinutes(-1);
 
             await _timeoutManager.Defer(someTimeInThePast, HeadersWith("i know u"), EmptyBody());
 
@@ -75,7 +75,7 @@ namespace Rebus.Tests.Contracts.Timeouts
         [Test]
         public async Task TimeoutsAreNotRemovedIfTheyAreNotMarkedAsComplete()
         {
-            var theFuture = DateTimeOffset.Now.AddMinutes(1);
+            var theFuture = RebusTime.Now.AddMinutes(1);
 
             await _timeoutManager.Defer(theFuture, HeadersWith("i know u"), EmptyBody());
             

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NpgsqlTypes;
 using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Time;
 using Rebus.Timeouts;
+
 #pragma warning disable 1998
 
 namespace Rebus.PostgreSql.Timeouts
@@ -95,7 +94,11 @@ ORDER BY ""due_time""
                             }));
                         }
 
-                        return new DueMessagesResult(dueMessages, async () => connection.Dispose());
+                        return new DueMessagesResult(dueMessages, async () =>
+                        {
+                            connection.Complete();
+                            connection.Dispose();
+                        });
                     }
                 }
             }
