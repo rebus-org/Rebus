@@ -33,7 +33,7 @@ namespace Rebus.Tests.Timeouts
             _gotTheMessage = new ManualResetEvent(false);
 
             // start the client
-            var client = new BuiltinHandlerActivator();
+            var client = Using(new BuiltinHandlerActivator());
 
             client.Handle<string>(async str => _gotTheMessage.Set());
 
