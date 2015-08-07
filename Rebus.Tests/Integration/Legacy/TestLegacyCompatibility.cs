@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,6 +10,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
 using Rebus.Legacy;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
@@ -28,6 +30,24 @@ namespace Rebus.Tests.Integration.Legacy
     {
       ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
       ""KeyChar"": ""g""
+    }
+  ]
+}";
+
+        const string ValidLegacyRebusMessageWithMultipleLogicalMessages = @"{
+  ""$type"": ""System.Object[], mscorlib"",
+  ""$values"": [
+    {
+      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""KeyChar"": ""a""
+    },
+    {
+      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""KeyChar"": ""b""
+    },
+    {
+      ""$type"": ""Rebus.Tests.Integration.Legacy.TestLegacyCompatibility+OldSchoolMessage, Rebus.Tests"",
+      ""KeyChar"": ""c""
     }
   ]
 }";
@@ -124,6 +144,43 @@ namespace Rebus.Tests.Integration.Legacy
             }
 
             gotIt.WaitOrDie(TimeSpan.FromSeconds(5));
+        }
+
+        [Test]
+        public void CorrectlyHandlesMultipleLogicalMessages()
+        {
+            var gotWhat = new Dictionary<string, ManualResetEvent>
+            {
+                {"a", new ManualResetEvent(false)},
+                {"b", new ManualResetEvent(false)},
+                {"c", new ManualResetEvent(false)},
+            };
+
+            _activator.Handle<OldSchoolMessage>(async message =>
+            {
+                gotWhat[message.KeyChar].Set();
+            });
+
+            var correlationId = Guid.NewGuid().ToString();
+            var messageId = Guid.NewGuid().ToString();
+
+            var headers = new Dictionary<string, string>
+                {
+                    {"rebus-return-address", _newEndpoint},
+                    {"rebus-correlation-id", correlationId},
+                    {"rebus-msg-id", messageId},
+                    {"rebus-content-type", "text/json"},
+                    {"rebus-encoding", "utf-7"}
+                };
+
+            var jsonBody = ValidLegacyRebusMessageWithMultipleLogicalMessages;
+
+            using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_newEndpoint)))
+            {
+                queue.SendLegacyRebusMessage(jsonBody, headers);
+            }
+
+            gotWhat.ForEach(kvp => kvp.Value.WaitOrDie(TimeSpan.FromSeconds(5), string.Format("Did not get message with KeyChar = '{0}'", kvp.Key)));
         }
     }
 }
