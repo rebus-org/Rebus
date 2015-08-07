@@ -40,7 +40,7 @@ namespace Rebus.Bus
         /// </summary>
         public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
         {
-            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToString(HandleDeferredMessagesStep.DateTimeOffsetFormat);
+            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
         }
 
         /// <summary>

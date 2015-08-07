@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Threading;
@@ -21,11 +22,6 @@ namespace Rebus.Pipeline.Receive
 This is done by checking if the incoming message has a '" + Headers.DeferredUntil + @"' header with a desired time to be delivered.")]
     public class HandleDeferredMessagesStep : IIncomingStep, IDisposable, IInitializable
     {
-        /// <summary>
-        /// The format string to use when serializing/deserializing the <see cref="DateTimeOffset"/>
-        /// </summary>
-        public const string DateTimeOffsetFormat = "O";
-
         const string DueMessagesSenderTaskName = "DueMessagesSender";
 
         static ILog _log;
@@ -157,20 +153,25 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
         async Task StoreMessageUntilDue(string deferredUntil, Dictionary<string, string> headers, TransportMessage transportMessage)
         {
-            DateTimeOffset approximateDueTime;
-            if (!DateTimeOffset.TryParseExact(deferredUntil, DateTimeOffsetFormat, CultureInfo.InvariantCulture,
-                DateTimeStyles.RoundtripKind, out approximateDueTime))
-            {
-                throw new FormatException(
-                    string.Format("Could not parse the '{0}' header value '{1}' into a valid DateTimeOffset!",
-                        Headers.DeferredUntil, deferredUntil));
-            }
+            var approximateDueTime = GetTimeToBeDelivered(deferredUntil);
 
             _log.Info("Deferring message {0} until {1}", headers[Headers.MessageId], approximateDueTime);
 
             headers.Remove(Headers.DeferredUntil);
 
             await _timeoutManager.Defer(approximateDueTime, headers, transportMessage.Body);
+        }
+
+        static DateTimeOffset GetTimeToBeDelivered(string deferredUntil)
+        {
+            try
+            {
+                return deferredUntil.ToDateTimeOffset();
+            }
+            catch (Exception exception)
+            {
+                throw new FormatException(string.Format("Could not parse the '{0}' header value", Headers.DeferredUntil), exception);
+            }
         }
 
         public void Dispose()

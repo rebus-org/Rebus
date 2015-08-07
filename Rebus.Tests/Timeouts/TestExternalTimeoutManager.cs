@@ -7,8 +7,8 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Pipeline.Receive;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
 
@@ -50,7 +50,7 @@ namespace Rebus.Tests.Timeouts
         {
             var headers = new Dictionary<string, string>
             {
-                {Headers.DeferredUntil, DateTimeOffset.Now.Add(TimeSpan.FromSeconds(5)).ToString(HandleDeferredMessagesStep.DateTimeOffsetFormat)}
+                {Headers.DeferredUntil, DateTimeOffset.Now.Add(TimeSpan.FromSeconds(5)).ToIso8601DateTimeOffset()}
             };
 
             var stopwatch = Stopwatch.StartNew();
