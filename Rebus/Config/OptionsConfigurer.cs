@@ -118,7 +118,7 @@ Receive pipeline:
                     return pipeline;
                 });
             };
-
+            
             return this;
         }
 

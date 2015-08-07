@@ -1,8 +1,6 @@
-﻿using System;
-using System.Text;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿using System.Text;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
@@ -18,36 +16,11 @@ namespace Rebus.Legacy
     /// </summary>
     public static class LegacyCompatibilityConfigurationExtensions
     {
-        static readonly JsonSerializerSettings SpecialSettings = new JsonSerializerSettings
-        {
-            Binder = new LegacySubscriptionMessagesBinder(),
-            TypeNameHandling = TypeNameHandling.All
-        };
+        static ILog _log;
 
-        /// <summary>
-        /// Type binder for JSON.NET that maps old Rebus' SubscriptionMessage to <see cref="LegacySubscriptionMessage"/>
-        /// </summary>
-        class LegacySubscriptionMessagesBinder : DefaultSerializationBinder
+        static LegacyCompatibilityConfigurationExtensions()
         {
-            public override void BindToName(Type serializedType, out string assemblyName, out string typeName)
-            {
-                if (serializedType == typeof(LegacySubscriptionMessage))
-                {
-                    assemblyName = "Rebus";
-                    typeName = "Rebus.Messages.SubscriptionMessage";
-                    return;
-                }
-                base.BindToName(serializedType, out assemblyName, out typeName);
-            }
-
-            public override Type BindToType(string assemblyName, string typeName)
-            {
-                if (assemblyName == "Rebus" && typeName == "Rebus.Messages.SubscriptionMessage")
-                {
-                    return typeof(LegacySubscriptionMessage);
-                }
-                return base.BindToType(assemblyName, typeName);
-            }
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
         /// <summary>
@@ -58,8 +31,9 @@ namespace Rebus.Legacy
         {
             configurer.Register<ISerializer>(c =>
             {
-                var specialSettings = SpecialSettings;
-                var jsonSerializer = new JsonSerializer(specialSettings, Encoding.UTF7);
+                var specialSettings = LegacySubscriptionMessagesBinder.JsonSerializerSettings;
+                var legacyEncoding = Encoding.UTF7;
+                var jsonSerializer = new JsonSerializer(specialSettings, legacyEncoding);
                 return jsonSerializer;
             });
 
@@ -94,6 +68,7 @@ namespace Rebus.Legacy
 
                 if (transport is MsmqTransport)
                 {
+                    _log.Info("MSMQ transport detected - changing to UTF7 for serialized message header encoding");
                     ((MsmqTransport) transport).UseLegacyHeaderSerialization();
                 }
 

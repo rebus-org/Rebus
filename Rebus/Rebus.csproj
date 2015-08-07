@@ -73,6 +73,7 @@
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
+    <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />
     <Compile Include="Legacy\MapLegacyHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\PackLegacyMessageOutgoingStep.cs" />
     <Compile Include="Legacy\LegacyCompatibilityConfigurationExtensions.cs" />
