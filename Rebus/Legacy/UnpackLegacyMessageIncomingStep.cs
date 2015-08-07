@@ -43,7 +43,7 @@ namespace Rebus.Legacy
 
         static object PossiblyConvertBody(object messageBody, IReadOnlyDictionary<string, string> headers)
         {
-            var legacySubscriptionMessage = messageBody as LegacySubscriptionMessageSerializer.LegacySubscriptionMessage;
+            var legacySubscriptionMessage = messageBody as LegacySubscriptionMessage;
 
             if (legacySubscriptionMessage == null)
             {

@@ -29,7 +29,7 @@ namespace Rebus.Legacy
             {
                 headers[Headers.ReturnAddress] = subscribeRequest.SubscriberAddress;
 
-                return new LegacySubscriptionMessageSerializer.LegacySubscriptionMessage
+                return new LegacySubscriptionMessage
                 {
                     Type = subscribeRequest.Topic,
                     Action = 0 //< subscribe
@@ -41,7 +41,7 @@ namespace Rebus.Legacy
             {
                 headers[Headers.ReturnAddress] = unsubscribeRequest.SubscriberAddress;
 
-                return new LegacySubscriptionMessageSerializer.LegacySubscriptionMessage
+                return new LegacySubscriptionMessage
                 {
                     Type = unsubscribeRequest.Topic,
                     Action = 1 //< unsubscribe
