@@ -560,6 +560,10 @@
 * Added some more headers to audited messages
 * Added PostgreSQL persistence
 
+## 0.90.8
+
+* Added pub/sub support to legacy compatibility mode
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

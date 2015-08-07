@@ -166,9 +166,16 @@ namespace Rebus.Bus
         /// </summary>
         public async Task Subscribe(string topic)
         {
+            var subscriberAddress = _transport.Address;
+
+            if (subscriberAddress == null)
+            {
+                throw new InvalidOperationException(string.Format("Cannot subscribe to '{0}' because this endpoint does not have an input queue!", topic));
+            }
+
             if (_subscriptionStorage.IsCentralized)
             {
-                await _subscriptionStorage.RegisterSubscriber(topic, _transport.Address);
+                await _subscriptionStorage.RegisterSubscriber(topic, subscriberAddress);
             }
             else
             {
@@ -177,7 +184,7 @@ namespace Rebus.Bus
                 var logicalMessage = CreateMessage(new SubscribeRequest
                 {
                     Topic = topic,
-                    SubscriberAddress = _transport.Address,
+                    SubscriberAddress = subscriberAddress,
                 }, Operation.Subscribe);
 
                 await InnerSend(new[] { destinationAddress }, logicalMessage);
@@ -190,9 +197,16 @@ namespace Rebus.Bus
         /// </summary>
         public async Task Unsubscribe(string topic)
         {
+            var subscriberAddress = _transport.Address;
+
+            if (subscriberAddress == null)
+            {
+                throw new InvalidOperationException(string.Format("Cannot unsubscribe from '{0}' because this endpoint does not have an input queue!", topic));
+            }
+
             if (_subscriptionStorage.IsCentralized)
             {
-                await _subscriptionStorage.UnregisterSubscriber(topic, _transport.Address);
+                await _subscriptionStorage.UnregisterSubscriber(topic, subscriberAddress);
             }
             else
             {
@@ -201,7 +215,7 @@ namespace Rebus.Bus
                 var logicalMessage = CreateMessage(new UnsubscribeRequest
                 {
                     Topic = topic,
-                    SubscriberAddress = _transport.Address,
+                    SubscriberAddress = subscriberAddress,
                 }, Operation.Unsubscribe);
 
                 await InnerSend(new[] { destinationAddress }, logicalMessage);

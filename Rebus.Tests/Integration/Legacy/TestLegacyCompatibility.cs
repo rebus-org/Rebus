@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Messaging;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
@@ -72,13 +70,7 @@ namespace Rebus.Tests.Integration.Legacy
 
             using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_oldEndpoint)))
             {
-                queue.MessageReadPropertyFilter = new MessagePropertyFilter
-                {
-                    Body = true,
-                    Extension = true,
-                };
-
-                var message = queue.Receive(TimeSpan.FromSeconds(3));
+                var message = queue.GetNextMessage();
                 
                 using (var streamReader = new StreamReader(message.BodyStream, Encoding.UTF7))
                 {
@@ -87,7 +79,7 @@ namespace Rebus.Tests.Integration.Legacy
                     Assert.That(jsonText.ToNormalizedJson(), Is.EqualTo(ValidLegacyRebusMessage.ToNormalizedJson()));
                 }
 
-                var headers = new ExtensionSerializer().Deserialize(message.Extension);
+                var headers = message.DeserializeHeaders();
 
                 Console.WriteLine(@"Headers:
 {0}", string.Join(Environment.NewLine, headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
@@ -128,47 +120,10 @@ namespace Rebus.Tests.Integration.Legacy
 
             using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_newEndpoint)))
             {
-                SendLegacyRebusMessage(queue, jsonBody, headers);
+                queue.SendLegacyRebusMessage(jsonBody, headers);
             }
 
             gotIt.WaitOrDie(TimeSpan.FromSeconds(5));
         }
-
-        static void SendLegacyRebusMessage(MessageQueue queue, string jsonText, Dictionary<string, string> headers)
-        {
-            var message = new Message
-            {
-                BodyStream = new MemoryStream(Encoding.UTF7.GetBytes(jsonText)),
-                Extension = new ExtensionSerializer().Serialize(headers)
-            };
-            queue.Send(message, MessageQueueTransactionType.Single);
-        }
-
-        class ExtensionSerializer
-        {
-            static readonly Encoding DefaultLegacyEncoding = Encoding.UTF7;
-
-            public byte[] Serialize(Dictionary<string, string> headers)
-            {
-                var jsonString = JsonConvert.SerializeObject(headers);
-
-                return DefaultLegacyEncoding.GetBytes(jsonString);
-            }
-
-            public Dictionary<string, string> Deserialize(byte[] bytes)
-            {
-                var jsonString = DefaultLegacyEncoding.GetString(bytes);
-
-                try
-                {
-                    return JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonString);
-                }
-                catch (Exception exception)
-                {
-                    throw new SerializationException("Could not deserialize MSMQ extension", exception);
-                }
-            }
-        }
-
     }
 }

@@ -71,6 +71,8 @@
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
     <Compile Include="Encryption\TestEncryption.cs" />
     <Compile Include="Encryption\TestEncryptor.cs" />
+    <Compile Include="Integration\Legacy\MsmqEx.cs" />
+    <Compile Include="Integration\Legacy\TestLegacyPubSub.cs" />
     <Compile Include="Integration\TestIdempotentSagas.cs" />
     <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />

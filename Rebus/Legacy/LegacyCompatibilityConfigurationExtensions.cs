@@ -4,6 +4,7 @@ using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Serialization;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
 
@@ -20,6 +21,15 @@ namespace Rebus.Legacy
         /// </summary>
         public static void EnableLegacyCompatibility(this OptionsConfigurer configurer)
         {
+            configurer.Register(c => new LegacySubscriptionMessageSerializer());
+
+            configurer.Register<ISerializer>(c =>
+            {
+                var specialSettings = c.Get<LegacySubscriptionMessageSerializer>().GetSpecialSettings();
+                var jsonSerializer = new JsonSerializer(specialSettings, Encoding.UTF7);
+                return jsonSerializer;
+            });
+
             configurer.Decorate(c =>
             {
                 var pipeline = c.Get<IPipeline>();
@@ -39,14 +49,10 @@ namespace Rebus.Legacy
                 pipeline = new PipelineStepInjector(pipeline)
                     .OnSend(new MapLegacyHeadersOutgoingStep(), PipelineRelativePosition.Before, typeof(SendOutgoingMessageStep));
 
+                //pipeline = new PipelineStepInjector(pipeline)
+                //    .OnReceive(new HandleLegacySubscriptionRequestIncomingStep(c.Get<ISubscriptionStorage>(), c.Get<LegacySubscriptionMessageSerializer>()), PipelineRelativePosition.Before, typeof(MapLegacyHeadersIncomingStep));
+
                 return pipeline;
-            });
-
-            configurer.Register<ISerializer>(c =>
-            {
-                var defaultLegacyEncoding = Encoding.UTF7;
-
-                return new JsonSerializer(defaultLegacyEncoding);
             });
 
             configurer.Decorate(c =>

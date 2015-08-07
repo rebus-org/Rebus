@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
 using Npgsql;
-using Rebus.Persistence.SqlServer;
 using Rebus.Tests;
 
 namespace Rebus.PostgreSql.Tests

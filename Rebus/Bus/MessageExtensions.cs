@@ -48,7 +48,9 @@ namespace Rebus.Bus
         /// </summary>
         public static string GetMessageType(this Message message)
         {
-            return message.Headers.GetValueOrNull(Headers.Type) ?? "<unknown>";
+            return message.Headers.GetValueOrNull(Headers.Type)
+                   ?? GetTypeNameFromBodyObjectOrNull(message.Body)
+                   ?? "<unknown>";
         }
 
         /// <summary>
@@ -104,6 +106,11 @@ namespace Rebus.Bus
             }
 
             return string.Format("{0}/{1}", type, id);
+        }
+
+        static string GetTypeNameFromBodyObjectOrNull(object body)
+        {
+            return body == null ? null : body.GetType().GetSimpleAssemblyQualifiedName();
         }
     }
 }

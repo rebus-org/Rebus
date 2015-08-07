@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Rebus.Encryption;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Serialization;
