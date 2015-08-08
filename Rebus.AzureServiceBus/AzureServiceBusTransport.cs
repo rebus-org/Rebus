@@ -318,6 +318,8 @@ namespace Rebus.AzureServiceBus
 
                 _ignorant.Reset();
 
+                if (!brokeredMessages.Any()) return null; 
+
                 _log.Debug("Received new batch of {0} messages", brokeredMessages.Count);
 
                 foreach (var receivedMessage in brokeredMessages)
@@ -326,6 +328,7 @@ namespace Rebus.AzureServiceBus
                 }
 
                 _prefetchQueue.TryDequeue(out nextMessage);
+
                 return nextMessage; //< just accept null at this point if there was nothing
             }
 
