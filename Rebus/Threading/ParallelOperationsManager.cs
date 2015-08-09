@@ -61,6 +61,9 @@ namespace Rebus.Threading
                 _canContinue = canContinue;
             }
 
+            /// <summary>
+            /// Ends this parallel operation
+            /// </summary>
             public void Dispose()
             {
                 _disposeAction();

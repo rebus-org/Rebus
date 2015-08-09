@@ -58,6 +58,9 @@ namespace Rebus.Transport.Msmq
                 : string.Format("{0}@{1}", inputQueueName, Environment.MachineName);
         }
 
+        /// <summary>
+        /// Initializes the transport by creating the input queue
+        /// </summary>
         public void Initialize()
         {
             _log.Info("Initializing MSMQ transport - input queue: '{0}'", _inputQueueName);
@@ -65,6 +68,10 @@ namespace Rebus.Transport.Msmq
             GetInputQueue();
         }
 
+        /// <summary>
+        /// Creates a queue with the given address, unless the address is of a remote queue - in that case,
+        /// this call is ignored
+        /// </summary>
         public void CreateQueue(string address)
         {
             if (!MsmqUtil.IsLocal(address)) return;

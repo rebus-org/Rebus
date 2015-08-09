@@ -72,6 +72,9 @@ CREATE TABLE [dbo].[{0}] (
             }
         }
 
+        /// <summary>
+        /// Gets all destination addresses for the given topic
+        /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             using (var connection = await _connectionProvider.GetConnection())

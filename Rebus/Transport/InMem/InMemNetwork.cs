@@ -65,7 +65,7 @@ namespace Rebus.Transport.InMem
         }
 
         /// <summary>
-        /// Gets the next message from the queue with the given <see cref="inputQueueName"/>, returning null if no messages are available.
+        /// Gets the next message from the queue with the given <paramref name="inputQueueName"/>, returning null if no messages are available.
         /// </summary>
         public InMemTransportMessage GetNextOrNull(string inputQueueName)
         {

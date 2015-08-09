@@ -57,7 +57,7 @@ namespace Rebus.Bus
         Task Unsubscribe(string topic);
 
         /// <summary>
-        /// Explicitly routes the <see cref="explicitlyRoutedMessage"/> to the destination specified by <see cref="destinationAddress"/>
+        /// Explicitly routes the <paramref name="explicitlyRoutedMessage"/> to the destination specified by <paramref name="destinationAddress"/>
         /// </summary>
         Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null);
 

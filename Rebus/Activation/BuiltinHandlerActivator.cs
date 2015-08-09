@@ -64,7 +64,7 @@ namespace Rebus.Activation
         }
 
         /// <summary>
-        /// Sets up an inline handler for messages of type <see cref="TMessage"/> with the <see cref="IBus"/> and the current <see cref="IMessageContext"/> available
+        /// Sets up an inline handler for messages of type <typeparamref name="TMessage"/> with the <see cref="IBus"/> and the current <see cref="IMessageContext"/> available
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, IMessageContext, TMessage, Task> handlerFunction)
         {
@@ -73,7 +73,7 @@ namespace Rebus.Activation
         }
 
         /// <summary>
-        /// Sets up an inline handler for messages of type <see cref="TMessage"/> with the <see cref="IBus"/> available
+        /// Sets up an inline handler for messages of type <typeparamref name="TMessage"/> with the <see cref="IBus"/> available
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<IBus, TMessage, Task> handlerFunction)
         {
@@ -82,7 +82,7 @@ namespace Rebus.Activation
         }
 
         /// <summary>
-        /// Sets up an inline handler for messages of type <see cref="TMessage"/>
+        /// Sets up an inline handler for messages of type <typeparamref name="TMessage"/>
         /// </summary>
         public BuiltinHandlerActivator Handle<TMessage>(Func<TMessage, Task> handlerFunction)
         {

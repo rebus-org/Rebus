@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Logging;
+#pragma warning disable 1998
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -71,6 +72,9 @@ namespace Rebus.Persistence.SqlServer
             return connectionStringOrConnectionStringName;
         }
 
+        /// <summary>
+        /// Gets a nice ready-to-use database connection with an open transaction
+        /// </summary>
         public async Task<IDbConnection> GetConnection()
         {
             SqlConnection connection = null;

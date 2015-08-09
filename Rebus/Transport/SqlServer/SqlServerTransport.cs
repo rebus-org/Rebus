@@ -69,6 +69,9 @@ namespace Rebus.Transport.SqlServer
             };
         }
 
+        /// <summary>
+        /// Last-resort disposal of resoures - shuts down the 'ExpiredMessagesCleanup' background task
+        /// </summary>
         ~SqlServerTransport()
         {
             Dispose(false);
