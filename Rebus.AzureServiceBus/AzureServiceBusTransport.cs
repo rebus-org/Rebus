@@ -471,37 +471,44 @@ namespace Rebus.AzureServiceBus
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
             var normalizedTopic = NormalizeTopic(topic);
+            var topicDescription = EnsureTopicExists(normalizedTopic);
 
-            EnsureTopicExists(normalizedTopic);
+            var subscriptionAlreadyExisted = false;
 
-            _subscriptions.GetOrAdd(normalizedTopic, t =>
+            try
             {
-                try
-                {
-                    var subscription = _namespaceManager.CreateSubscription(normalizedTopic, _inputQueueAddress);
+                var subscription = await _namespaceManager.CreateSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
 
-                    subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
+                subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
 
-                    _namespaceManager.UpdateSubscription(subscription);
+                await _namespaceManager.UpdateSubscriptionAsync(subscription);
+            }
+            catch (MessagingEntityAlreadyExistsException)
+            {
+                subscriptionAlreadyExisted = true;
+            }
 
-                    return subscription;
-                }
-                catch (MessagingEntityAlreadyExistsException)
-                {
-                    return _namespaceManager.GetSubscription(normalizedTopic, _inputQueueAddress);
-                }
-                catch (Exception exception)
-                {
-                    throw new ArgumentException(string.Format("Could not create subscription on topic '{0}' with name '{1}'", normalizedTopic, _inputQueueAddress), exception);
-                }
-            });
+            if (subscriptionAlreadyExisted)
+            {
+                var subscription = await _namespaceManager.GetSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
+
+                subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
+
+                await _namespaceManager.UpdateSubscriptionAsync(subscription);
+            }
         }
 
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
             var normalizedTopic = NormalizeTopic(topic);
-            
-            EnsureTopicExists(normalizedTopic);
+
+            var topicDescription = EnsureTopicExists(normalizedTopic);
+
+            try
+            {
+                await _namespaceManager.DeleteSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
+            }
+            catch (MessagingEntityNotFoundException) { }
         }
 
         readonly ConcurrentDictionary<string, TopicDescription> _topics = new ConcurrentDictionary<string, TopicDescription>();
