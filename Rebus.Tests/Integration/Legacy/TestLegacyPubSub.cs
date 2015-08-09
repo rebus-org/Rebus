@@ -33,7 +33,7 @@ namespace Rebus.Tests.Integration.Legacy
   ""$values"": [
     {
       ""$type"": ""Rebus.Messages.SubscriptionMessage, Rebus"",
-      ""Type"": ""NewEndpoint.Messages.NewRequest, NewEndpoint.Messages, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null"",
+      ""Type"": ""NewEndpoint.Messages.NewRequest, NewEndpoint.Messages"",
       ""Action"": 0
     }
   ]
@@ -46,7 +46,7 @@ namespace Rebus.Tests.Integration.Legacy
   ""$values"": [
     {
       ""$type"": ""Rebus.Messages.SubscriptionMessage, Rebus"",
-      ""Type"": ""System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089"",
+      ""Type"": ""System.String, mscorlib"",
       ""Action"": 0
     }
   ]
@@ -97,7 +97,7 @@ namespace Rebus.Tests.Integration.Legacy
 
             await Task.Delay(1000);
 
-            var topic = "NewEndpoint.Messages.NewRequest, NewEndpoint.Messages, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null";
+            var topic = "NewEndpoint.Messages.NewRequest, NewEndpoint.Messages";
 
             Assert.That(_subscriptions.Count, Is.EqualTo(1));
             Assert.That(_subscriptions[topic].Count, Is.EqualTo(1));
