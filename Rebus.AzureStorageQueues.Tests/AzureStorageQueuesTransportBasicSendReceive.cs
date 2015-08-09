@@ -3,6 +3,6 @@ using Rebus.Tests.Contracts.Transports;
 
 namespace Rebus.AzureStorageQueues.Tests
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.Azure)]
     public class AzureStorageQueuesTransportBasicSendReceive : BasicSendReceive<AzureStorageQueuesTransportFactory> { }
 }

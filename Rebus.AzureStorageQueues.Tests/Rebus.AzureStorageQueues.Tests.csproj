@@ -70,6 +70,7 @@
     <Compile Include="AzureStorageQueuesTransportMessageExpiration.cs" />
     <Compile Include="AzureStorageQueuesTransportBasicSendReceive.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestCategory.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

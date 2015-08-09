@@ -17,7 +17,7 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.Azure)]
     public class AzureServiceBusPrefetchTest : FixtureBase
     {
         const string QueueName = "prefetch";

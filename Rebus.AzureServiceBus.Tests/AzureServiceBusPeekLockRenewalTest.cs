@@ -13,7 +13,7 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.Azure)]
     public class AzureServiceBusPeekLockRenewalTest : FixtureBase
     {
         static readonly string QueueName = TestConfig.QueueName("input");
