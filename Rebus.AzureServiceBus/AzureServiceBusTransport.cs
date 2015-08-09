@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -13,6 +12,8 @@ using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Threading;
 using Rebus.Transport;
+
+#pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus
 {
@@ -46,6 +47,7 @@ namespace Rebus.AzureServiceBus
             TimeSpan.FromSeconds(10),
         };
 
+        readonly ConcurrentDictionary<string, TopicDescription> _topics = new ConcurrentDictionary<string, TopicDescription>(StringComparer.InvariantCultureIgnoreCase);
         readonly ConcurrentDictionary<string, TopicClient> _topicClients = new ConcurrentDictionary<string, TopicClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
@@ -453,33 +455,34 @@ namespace Rebus.AzureServiceBus
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            var normalizedTopic = NormalizeTopic(topic);
+            var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
 
             return new[] {string.Format("subscription/{0}", normalizedTopic)};
         }
 
-        string NormalizeTopic(string topic)
-        {
-            var normalizedTopicChars = new List<char>();
-            foreach (var c in topic)
-            {
-                normalizedTopicChars.Add(char.IsLetterOrDigit(c) ? c : '_');
-            }
-            return string.Concat(normalizedTopicChars);
-        }
-
+        /// <summary>
+        /// Registers this endpoint as a subscriber by creating a subscription for the given topic, setting up
+        /// auto-forwarding from that subscription to this endpoint's input queue
+        /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            var normalizedTopic = NormalizeTopic(topic);
+            VerifyIsOwnInputQueueAddress(subscriberAddress);
+
+            var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
             var topicDescription = EnsureTopicExists(normalizedTopic);
+            var inputQueueClient = GetQueueClient(_inputQueueAddress);
+
+            var inputQueuePath = inputQueueClient.Path;
+            var topicPath = topicDescription.Path;
+            var subscriptionName = GetSubscriptionName();
 
             var subscriptionAlreadyExisted = false;
 
             try
             {
-                var subscription = await _namespaceManager.CreateSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
+                var subscription = await _namespaceManager.CreateSubscriptionAsync(topicPath, subscriptionName);
 
-                subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
+                subscription.ForwardTo = inputQueuePath;
 
                 await _namespaceManager.UpdateSubscriptionAsync(subscription);
             }
@@ -490,29 +493,47 @@ namespace Rebus.AzureServiceBus
 
             if (subscriptionAlreadyExisted)
             {
-                var subscription = await _namespaceManager.GetSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
+                var subscription = await _namespaceManager.GetSubscriptionAsync(topicPath, subscriptionName);
 
-                subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
+                subscription.ForwardTo = inputQueuePath;
 
                 await _namespaceManager.UpdateSubscriptionAsync(subscription);
             }
         }
 
+        /// <summary>
+        /// Unregisters this endpoint as a subscriber by deleting the subscription for the given topic
+        /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            var normalizedTopic = NormalizeTopic(topic);
+            VerifyIsOwnInputQueueAddress(subscriberAddress);
 
+            var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
             var topicDescription = EnsureTopicExists(normalizedTopic);
+            var topicPath = topicDescription.Path;
+            var subscriptionName = GetSubscriptionName();
 
             try
             {
-                await _namespaceManager.DeleteSubscriptionAsync(topicDescription.Path, _inputQueueAddress);
+                await _namespaceManager.DeleteSubscriptionAsync(topicPath, subscriptionName);
             }
             catch (MessagingEntityNotFoundException) { }
         }
 
-        readonly ConcurrentDictionary<string, TopicDescription> _topics = new ConcurrentDictionary<string, TopicDescription>();
-        readonly ConcurrentDictionary<string, SubscriptionDescription> _subscriptions = new ConcurrentDictionary<string, SubscriptionDescription>();
+        string GetSubscriptionName()
+        {
+            return _inputQueueAddress.ToValidAzureServiceBusEntityName();
+        }
+
+        void VerifyIsOwnInputQueueAddress(string subscriberAddress)
+        {
+            if (subscriberAddress == _inputQueueAddress) return;
+
+            throw new ArgumentException(
+                string.Format(
+                    "Cannot register subscriptions endpoint with input queue '{0}' in endpoint with input queue '{1}'! The Azure Service Bus transport functions as a centralized subscription storage, which means that all subscribers are capable of managing their own subscriptions",
+                    subscriberAddress, _inputQueueAddress));
+        }
 
         TopicDescription EnsureTopicExists(string normalizedTopic)
         {
@@ -533,6 +554,9 @@ namespace Rebus.AzureServiceBus
             });
         }
 
+        /// <summary>
+        /// Always returns true because Azure Service Bus topics and subscriptions are global
+        /// </summary>
         public bool IsCentralized
         {
             get { return true; }

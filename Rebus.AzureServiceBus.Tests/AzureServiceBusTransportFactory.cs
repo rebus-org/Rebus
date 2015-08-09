@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Microsoft.ServiceBus;
+using Microsoft.ServiceBus.Messaging;
 using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
@@ -81,6 +82,22 @@ namespace Rebus.AzureServiceBus.Tests
 
                 namespaceManager.DeleteQueue(queueName);
             });
+        }
+
+        public static void DeleteTopic(string topic)
+        {
+            var namespaceManager = NamespaceManager.CreateFromConnectionString(ConnectionString);
+
+            try
+            {
+                Console.Write("Deleting topic '{0}' ...", topic);
+                namespaceManager.DeleteTopic(topic);
+                Console.WriteLine("OK!");
+            }
+            catch (MessagingEntityNotFoundException)
+            {
+                Console.WriteLine("OK! (wasn't even there)");
+            }
         }
     }
 }
