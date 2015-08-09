@@ -563,9 +563,6 @@
 ## 0.90.8
 
 * Added pub/sub support to legacy compatibility mode
-
-## 0.90.9
-
 * Changed `AzureServiceBusTransport` to work with topics when doing pub/sub which then avoids having to configure subscription storage when working with Azure Service Bus
 
 
