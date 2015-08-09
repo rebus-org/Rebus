@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -9,6 +10,7 @@ using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Subscriptions;
 using Rebus.Threading;
 using Rebus.Transport;
 
@@ -17,7 +19,7 @@ namespace Rebus.AzureServiceBus
     /// <summary>
     /// Implementation of <see cref="ITransport"/> that uses Azure Service Bus queues to send/receive messages.
     /// </summary>
-    public class AzureServiceBusTransport : ITransport, IInitializable, IDisposable
+    public class AzureServiceBusTransport : ITransport, IInitializable, IDisposable, ISubscriptionStorage
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
         static ILog _log;
@@ -44,6 +46,7 @@ namespace Rebus.AzureServiceBus
             TimeSpan.FromSeconds(10),
         };
 
+        readonly ConcurrentDictionary<string, TopicClient> _topicClients = new ConcurrentDictionary<string, TopicClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
@@ -66,7 +69,7 @@ namespace Rebus.AzureServiceBus
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
             if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
-            
+
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
             _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
@@ -254,7 +257,14 @@ namespace Rebus.AzureServiceBus
                                 {
                                     using (var brokeredMessageToSend = CreateBrokeredMessage(message))
                                     {
-                                        await GetQueueClient(destinationAddress).SendAsync(brokeredMessageToSend);
+                                        try
+                                        {
+                                            await Send(destinationAddress, brokeredMessageToSend);
+                                        }
+                                        catch (MessagingEntityNotFoundException exception)
+                                        {
+                                            throw new MessagingEntityNotFoundException(string.Format("Could not send to '{0}'!", destinationAddress), exception);
+                                        }
                                     }
                                 });
                             })
@@ -268,6 +278,35 @@ namespace Rebus.AzureServiceBus
             });
         }
 
+        async Task Send(string destinationAddress, BrokeredMessage brokeredMessageToSend)
+        {
+            if (destinationAddress.StartsWith("subscription/"))
+            {
+                var topic = destinationAddress.Substring(destinationAddress.IndexOf('/')+1);
+
+                await GetTopicClient(topic).SendAsync(brokeredMessageToSend);
+            }
+            else
+            {
+                await GetQueueClient(destinationAddress).SendAsync(brokeredMessageToSend);
+            }
+        }
+
+        TopicClient GetTopicClient(string topic)
+        {
+            return _topicClients.GetOrAdd(topic, t =>
+            {
+                _log.Debug("Initializing new topic client for {0}", topic);
+
+                var topicDescription = EnsureTopicExists(topic);
+
+                var fromConnectionString = TopicClient.CreateFromConnectionString(_connectionString, topicDescription.Path);
+
+                return fromConnectionString;
+            });
+        }
+
+        
         IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
         {
             if (_automaticallyRenewPeekLock)
@@ -318,7 +357,7 @@ namespace Rebus.AzureServiceBus
 
                 _ignorant.Reset();
 
-                if (!brokeredMessages.Any()) return null; 
+                if (!brokeredMessages.Any()) return null;
 
                 _log.Debug("Received new batch of {0} messages", brokeredMessages.Count);
 
@@ -410,6 +449,86 @@ namespace Rebus.AzureServiceBus
                     }
                 }
             }
+        }
+
+        public async Task<string[]> GetSubscriberAddresses(string topic)
+        {
+            var normalizedTopic = NormalizeTopic(topic);
+
+            return new[] {string.Format("subscription/{0}", normalizedTopic)};
+        }
+
+        string NormalizeTopic(string topic)
+        {
+            var normalizedTopicChars = new List<char>();
+            foreach (var c in topic)
+            {
+                normalizedTopicChars.Add(char.IsLetterOrDigit(c) ? c : '_');
+            }
+            return string.Concat(normalizedTopicChars);
+        }
+
+        public async Task RegisterSubscriber(string topic, string subscriberAddress)
+        {
+            var normalizedTopic = NormalizeTopic(topic);
+
+            EnsureTopicExists(normalizedTopic);
+
+            _subscriptions.GetOrAdd(normalizedTopic, t =>
+            {
+                try
+                {
+                    var subscription = _namespaceManager.CreateSubscription(normalizedTopic, _inputQueueAddress);
+
+                    subscription.ForwardTo = GetQueueClient(_inputQueueAddress).Path;
+
+                    _namespaceManager.UpdateSubscription(subscription);
+
+                    return subscription;
+                }
+                catch (MessagingEntityAlreadyExistsException)
+                {
+                    return _namespaceManager.GetSubscription(normalizedTopic, _inputQueueAddress);
+                }
+                catch (Exception exception)
+                {
+                    throw new ArgumentException(string.Format("Could not create subscription on topic '{0}' with name '{1}'", normalizedTopic, _inputQueueAddress), exception);
+                }
+            });
+        }
+
+        public async Task UnregisterSubscriber(string topic, string subscriberAddress)
+        {
+            var normalizedTopic = NormalizeTopic(topic);
+            
+            EnsureTopicExists(normalizedTopic);
+        }
+
+        readonly ConcurrentDictionary<string, TopicDescription> _topics = new ConcurrentDictionary<string, TopicDescription>();
+        readonly ConcurrentDictionary<string, SubscriptionDescription> _subscriptions = new ConcurrentDictionary<string, SubscriptionDescription>();
+
+        TopicDescription EnsureTopicExists(string normalizedTopic)
+        {
+            return _topics.GetOrAdd(normalizedTopic, t =>
+            {
+                try
+                {
+                    return _namespaceManager.CreateTopic(normalizedTopic);
+                }
+                catch (MessagingEntityAlreadyExistsException)
+                {
+                    return _namespaceManager.GetTopic(normalizedTopic);
+                }
+                catch (Exception exception)
+                {
+                    throw new ArgumentException(string.Format("Could not create topic '{0}'", normalizedTopic), exception);
+                }
+            });
+        }
+
+        public bool IsCentralized
+        {
+            get { return true; }
         }
     }
 }

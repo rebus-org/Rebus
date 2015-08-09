@@ -26,8 +26,8 @@ namespace Rebus.Extensions
         public static Task Subscribe<TEvent>(this IBus bus)
         {
             if (bus == null) throw new ArgumentNullException("bus");
-            
-            var topic = typeof(TEvent).AssemblyQualifiedName;
+
+            var topic = typeof (TEvent).GetSimpleAssemblyQualifiedName();
             
             return bus.Subscribe(topic);
         }
@@ -39,7 +39,7 @@ namespace Rebus.Extensions
         {
             if (bus == null) throw new ArgumentNullException("bus");
 
-            var topic = typeof(TEvent).AssemblyQualifiedName;
+            var topic = typeof(TEvent).GetSimpleAssemblyQualifiedName();
 
             return bus.Unsubscribe(topic);
         }
@@ -64,7 +64,7 @@ namespace Rebus.Extensions
 
             var messageType = eventMessage.GetType();
 
-            return bus.Publish(messageType.AssemblyQualifiedName, eventMessage, optionalHeaders);
+            return bus.Publish(messageType.GetSimpleAssemblyQualifiedName(), eventMessage, optionalHeaders);
         }
     }
 }

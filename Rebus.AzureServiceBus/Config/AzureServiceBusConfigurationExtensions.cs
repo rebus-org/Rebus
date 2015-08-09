@@ -1,5 +1,6 @@
 ﻿using System.Configuration;
 using Rebus.AzureServiceBus;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 
 // ReSharper disable once CheckNamespace
@@ -19,22 +20,30 @@ namespace Rebus.Config
             var connectionString = GetConnectionString(connectionStringNameOrConnectionString);
             var settingsBuilder = new AzureServiceBusTransportSettings();
 
-            configurer.Register(c =>
-            {
-                var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress);
-
-                if (settingsBuilder.PrefetchingEnabled)
+            configurer
+                .OtherService<AzureServiceBusTransport>()
+                .Register(c =>
                 {
-                    transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
-                }
+                    var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress);
 
-                if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
-                {
-                    transport.AutomaticallyRenewPeekLock();
-                }
+                    if (settingsBuilder.PrefetchingEnabled)
+                    {
+                        transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
+                    }
 
-                return transport;
-            });
+                    if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
+                    {
+                        transport.AutomaticallyRenewPeekLock();
+                    }
+
+                    return transport;
+                });
+
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(c => c.Get<AzureServiceBusTransport>());
+
+            configurer.Register(c => c.Get<AzureServiceBusTransport>());
 
             return settingsBuilder;
         }

@@ -31,5 +31,10 @@ namespace Rebus.Config
         {
             _injectionist.Decorate(factoryMethod);
         }
+
+        public StandardConfigurer<TOther> OtherService<TOther>()
+        {
+            return new StandardConfigurer<TOther>(_injectionist);
+        } 
     }
 }
