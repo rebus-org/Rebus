@@ -1,5 +1,7 @@
 using System;
 using Rebus.Injection;
+using Rebus.Subscriptions;
+using Rebus.Transport;
 
 namespace Rebus.Config
 {
@@ -32,6 +34,10 @@ namespace Rebus.Config
             _injectionist.Decorate(factoryMethod);
         }
 
+        /// <summary>
+        /// Gets a typed configurer for another service. Can be useful if e.g. a configuration extension for a <see cref="ITransport"/>
+        /// wants to replace the <see cref="ISubscriptionStorage"/> because it is capable of using the transport layer to do pub/sub
+        /// </summary>
         public StandardConfigurer<TOther> OtherService<TOther>()
         {
             return new StandardConfigurer<TOther>(_injectionist);
