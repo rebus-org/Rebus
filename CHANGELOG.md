@@ -569,6 +569,7 @@
 ## 0.90.9
 
 * Separated error tracking out behind `IErrorTracker` interface, allowing for e.g. keeping error counts in a database somewhere, thus allowing for multiple parallel workers to not exceed maximum delivery attempts
+* Added ability to auto-add headers to outgoing messages by using `[Header("some_headers", "some_value")]`
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
