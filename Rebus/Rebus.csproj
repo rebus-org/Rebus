@@ -72,6 +72,8 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Messages\HeaderAttribute.cs" />
+    <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />
     <Compile Include="Legacy\MapLegacyHeadersOutgoingStep.cs" />

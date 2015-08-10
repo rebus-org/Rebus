@@ -185,6 +185,7 @@ namespace Rebus.Config
                 .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
                 .OnSend(new AssignDateTimeOffsetHeader())
                 .OnSend(new FlowCorrelationIdStep())
+                .OnSend(new AutoHeadersOutgoingStep())
                 .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
                 .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
                 );
