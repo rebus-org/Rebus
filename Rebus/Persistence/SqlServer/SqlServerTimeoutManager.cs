@@ -136,7 +136,7 @@ ORDER BY [due_time] ASC
 ",
                             _tableName);
 
-                    command.Parameters.AddWithValue("current_time", RebusTime.Now.UtcDateTime);
+                    command.Parameters.Add("current_time", SqlDbType.DateTime2).Value = RebusTime.Now.UtcDateTime;
 
                     using (var reader = command.ExecuteReader())
                     {
