@@ -77,6 +77,9 @@ namespace Rebus.Transport.SqlServer
             Dispose(false);
         }
 
+        /// <summary>
+        /// Initializes the transport by starting a task that deletes expired messages from the SQL table
+        /// </summary>
         public void Initialize()
         {
             _expiredMessagesCleanupTask.Start();

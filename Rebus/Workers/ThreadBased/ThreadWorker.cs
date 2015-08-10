@@ -5,6 +5,7 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Threading;
+using Rebus.Time;
 using Rebus.Transport;
 
 namespace Rebus.Workers.ThreadBased
@@ -61,7 +62,7 @@ namespace Rebus.Workers.ThreadBased
                 DoWork();
             }
 
-            var stopTime = DateTime.UtcNow;
+            var stopTime = RebusTime.Now;
 
             if (_parallelOperationsManager.HasPendingTasks)
             {

@@ -79,6 +79,9 @@ namespace Rebus.Routing.TypeBased
             _messageTypeAddresses[messageType] = destinationAddress;
         }
 
+        /// <summary>
+        /// Gets the destination address for the given message
+        /// </summary>
         public async Task<string> GetDestinationAddress(Message message)
         {
             if (message == null) throw new ArgumentNullException("message");

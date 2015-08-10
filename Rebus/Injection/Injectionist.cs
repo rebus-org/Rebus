@@ -78,7 +78,7 @@ namespace Rebus.Injection
         public event Action<Type> ResolveRequested = delegate { };
 
         /// <summary>
-        /// Returns whether there exists a registration for the specified <see cref="TService"/>.
+        /// Returns whether there exists a registration for the specified <typeparamref name="TService"/>.
         /// </summary>
         public bool Has<TService>(bool primary = true)
         {

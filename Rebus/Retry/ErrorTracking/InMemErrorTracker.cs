@@ -7,6 +7,8 @@ using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Threading;
+using Rebus.Time;
+
 #pragma warning disable 1998
 
 namespace Rebus.Retry.ErrorTracking
@@ -42,16 +44,25 @@ namespace Rebus.Retry.ErrorTracking
             };
         }
 
+        /// <summary>
+        /// Last-resort disposal of the in-mem error tracker's background cleaning task
+        /// </summary>
         ~InMemErrorTracker()
         {
             Dispose(false);
         }
 
+        /// <summary>
+        /// Initializes the in-mem error tracker - starts a background task that periodically cleans up tracked errors that haven't had any activity for 10 minutes or more
+        /// </summary>
         public void Initialize()
         {
             _cleanupOldTrackedErrorsTask.Start();
         }
 
+        /// <summary>
+        /// Registers the given <paramref name="exception"/> under the supplied <paramref name="messageId"/>
+        /// </summary>
         public void RegisterError(string messageId, Exception exception)
         {
             var errorTracking = _trackedErrors.AddOrUpdate(messageId,
@@ -61,6 +72,9 @@ namespace Rebus.Retry.ErrorTracking
             _log.Warn("Unhandled exception {0} while handling message with ID {1}: {2}", errorTracking.Errors.Count(), messageId, exception);
         }
 
+        /// <summary>
+        /// Gets whether too many errors have been tracked for the given <paramref name="messageId"/>
+        /// </summary>
         public bool HasFailedTooManyTimes(string messageId)
         {
             ErrorTracking existingTracking;
@@ -73,6 +87,10 @@ namespace Rebus.Retry.ErrorTracking
             return hasFailedTooManyTimes;
         }
 
+        /// <summary>
+        /// Gets a short description of the tracked errors for the given <paramref name="messageId"/> on the form
+        /// "n unhandled exceptions"
+        /// </summary>
         public string GetShortErrorDescription(string messageId)
         {
             ErrorTracking errorTracking;
@@ -85,6 +103,10 @@ namespace Rebus.Retry.ErrorTracking
             return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
         }
 
+        /// <summary>
+        /// Gets a long and detailed description of the tracked errors for the given <paramref name="messageId"/>
+        /// consisting of time and full exception details for all registered exceptions
+        /// </summary>
         public string GetFullErrorDescription(string messageId)
         {
             ErrorTracking errorTracking;
@@ -99,6 +121,9 @@ namespace Rebus.Retry.ErrorTracking
             return string.Format("{0} unhandled exceptions: {1}", errorTracking.Errors.Count(), fullExceptionInfo);
         }
 
+        /// <summary>
+        /// Cleans up whichever tracking wr have done for the given <paramref name="messageId"/>
+        /// </summary>
         public void CleanUp(string messageId)
         {
             ErrorTracking dummy;
@@ -146,7 +171,7 @@ namespace Rebus.Retry.ErrorTracking
                 {
                     var timeOfMostRecentError = _caughtExceptions.Max(e => e.Time);
 
-                    var elapsedSinceLastError = DateTime.UtcNow - timeOfMostRecentError;
+                    var elapsedSinceLastError = timeOfMostRecentError.ElapsedUntilNow();
 
                     return elapsedSinceLastError;
                 }
@@ -158,11 +183,11 @@ namespace Rebus.Retry.ErrorTracking
             public CaughtException(Exception exception)
             {
                 Exception = exception;
-                Time = DateTime.UtcNow;
+                Time = RebusTime.Now;
             }
 
             public Exception Exception { get; private set; }
-            public DateTime Time { get; private set; }
+            public DateTimeOffset Time { get; private set; }
         }
 
         public void Dispose()

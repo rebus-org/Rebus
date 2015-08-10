@@ -84,6 +84,10 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
             }
         }
 
+        /// <summary>
+        /// Defers the message to the time specified by <paramref name="approximateDueTime"/> at which point in time the message will be
+        /// returned to whoever calls <see cref="GetDueMessages"/>
+        /// </summary>
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             var headersString = JsonConvert.SerializeObject(headers, _headerSerializationSettings);
@@ -105,6 +109,9 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
             }
         }
 
+        /// <summary>
+        /// Gets messages due for delivery at the current time
+        /// </summary>
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var connection = await _connectionProvider.GetConnection();
@@ -129,7 +136,7 @@ ORDER BY [due_time] ASC
 ",
                             _tableName);
 
-                    command.Parameters.AddWithValue("current_time", RebusTime.Now);
+                    command.Parameters.AddWithValue("current_time", RebusTime.Now.UtcDateTime);
 
                     using (var reader = command.ExecuteReader())
                     {

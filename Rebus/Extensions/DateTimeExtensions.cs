@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Globalization;
+using Rebus.Time;
 
 namespace Rebus.Extensions
 {
     static class DateTimeExtensions
     {
-        public static TimeSpan ElapsedUntilNow(this DateTime dateTime)
+        public static TimeSpan ElapsedUntilNow(this DateTimeOffset dateTime)
         {
-            return DateTime.UtcNow - dateTime.ToUniversalTime();
+            return RebusTime.Now - dateTime.ToUniversalTime();
         }
 
         public static string ToIso8601DateTimeOffset(this DateTimeOffset dateTimeOffset)
