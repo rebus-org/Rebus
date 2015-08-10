@@ -11,6 +11,7 @@ using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Retry;
+using Rebus.Retry.ErrorTracking;
 using Rebus.Retry.Simple;
 using Rebus.Routing;
 using Rebus.Routing.TypeBased;
@@ -144,11 +145,18 @@ namespace Rebus.Config
                 return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism);
             });
 
+            PossiblyRegisterDefault<IErrorTracker>(c =>
+            {
+                var settings = c.Get<SimpleRetryStrategySettings>();
+                return new InMemErrorTracker(settings.MaxDeliveryAttempts);
+            });
+
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
                 var transport = c.Get<ITransport>();
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
-                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings);
+                var errorTracker = c.Get<IErrorTracker>();
+                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());

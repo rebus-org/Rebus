@@ -566,6 +566,11 @@
 * Changed `AzureServiceBusTransport` to work with topics when doing pub/sub which then avoids having to configure subscription storage when working with Azure Service Bus
 
 
+## vnext
+
+* Separated error tracking out behind `IErrorTracker` interface, allowing for e.g. keeping error counts in a database somewhere, thus allowing for multiple parallel workers to not exceed maximum delivery attempts
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

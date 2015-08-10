@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.Retry.Simple
@@ -21,9 +16,8 @@ namespace Rebus.Retry.Simple
     [StepDocumentation(@"Wraps the invocation of the entire receive pipeline in an exception handler, tracking the number of times the received message has been attempted to be delivered.
 
 If the maximum number of delivery attempts is reached, the message is moved to the error queue.")]
-    public class SimpleRetryStrategyStep : IRetryStrategyStep, IInitializable, IDisposable
+    public class SimpleRetryStrategyStep : IRetryStrategyStep
     {
-        const string BackgroundTaskName = "CleanupTrackedErrors";
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
         static ILog _log;
 
@@ -32,32 +26,18 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
-        readonly AsyncTask _cleanupOldTrackedErrorsTask;
+        readonly IErrorTracker _errorTracker;
         readonly ITransport _transport;
-
-        bool _disposed;
 
         /// <summary>
         /// Constructs the step, using the given transport and settings
         /// </summary>
-        public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings)
+        public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker)
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
-            _cleanupOldTrackedErrorsTask = new AsyncTask(BackgroundTaskName, CleanupOldTrackedErrors)
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
-        }
-
-        /// <summary>
-        /// Last-resort shudown of the background task for cleaning up tracked errors (<see cref="BackgroundTaskName"/>)
-        /// </summary>
-        ~SimpleRetryStrategyStep()
-        {
-            Dispose(false);
+            _errorTracker = errorTracker;
         }
 
         /// <summary>
@@ -83,12 +63,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 return;
             }
 
-            if (HasFailedTooManyTimes(messageId))
+            if (_errorTracker.HasFailedTooManyTimes(messageId))
             {
                 await MoveMessageToErrorQueue(messageId, transportMessage, transactionContext, GetErrorDescriptionFor(messageId), GetErrorDescriptionFor(messageId, brief: true));
 
-                RemoveErrorTracking(messageId);
-
+                _errorTracker.CleanUp(messageId);
                 return;
             }
 
@@ -98,58 +77,20 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
             catch (Exception exception)
             {
-                var errorTracking = _trackedErrors.AddOrUpdate(messageId,
-                    id => new ErrorTracking(exception),
-                    (id, tracking) => tracking.AddError(exception));
-
-                _log.Warn("Unhandled exception {0} while handling message with ID {1}: {2}",
-                    errorTracking.Errors.Count(), messageId, exception);
+                _errorTracker.RegisterError(messageId, exception);
 
                 transactionContext.Abort();
             }
         }
 
-        void RemoveErrorTracking(string messageId)
-        {
-            ErrorTracking dummy;
-            _trackedErrors.TryRemove(messageId, out dummy);
-        }
-
-        /// <summary>
-        /// Initializes the step, starting the background task that cleans up old tracked errors
-        /// </summary>
-        public void Initialize()
-        {
-            _cleanupOldTrackedErrorsTask.Start();
-        }
-
-        async Task CleanupOldTrackedErrors()
-        {
-            ErrorTracking _;
-
-            _trackedErrors
-                .ToList()
-                .Where(e => e.Value.ElapsedSinceLastError > TimeSpan.FromMinutes(10))
-                .ForEach(tracking => _trackedErrors.TryRemove(tracking.Key, out _));
-        }
-
         string GetErrorDescriptionFor(string messageId, bool brief = false)
         {
-            ErrorTracking errorTracking;
-
-            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
-            {
-                return "Could not get error details for the message";
-            }
-
             if (brief)
             {
-                return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
+                return _errorTracker.GetShortErrorDescription(messageId);
             }
 
-            var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e => string.Format("{0}: {1}", e.Time, e.Exception)));
-
-            return string.Format("{0} unhandled exceptions: {1}", errorTracking.Errors.Count(), fullExceptionInfo);
+            return _errorTracker.GetFullErrorDescription(messageId);
         }
 
         async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription, string shortErrorDescription = null)
@@ -180,87 +121,6 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             if (moveToErrorQueueFailed)
             {
                 await Task.Delay(MoveToErrorQueueFailedPause);
-            }
-        }
-
-        bool HasFailedTooManyTimes(string messageId)
-        {
-            ErrorTracking existingTracking;
-            var hasTrackingForThisMessage = _trackedErrors.TryGetValue(messageId, out existingTracking);
-
-            if (!hasTrackingForThisMessage) return false;
-
-            var hasFailedTooManyTimes = existingTracking.ErrorCount >= _simpleRetryStrategySettings.MaxDeliveryAttempts;
-
-            return hasFailedTooManyTimes;
-        }
-
-        class ErrorTracking
-        {
-            readonly ConcurrentQueue<CaughtException> _caughtExceptions = new ConcurrentQueue<CaughtException>();
-
-            public ErrorTracking(Exception exception)
-            {
-                AddError(exception);
-            }
-
-            public int ErrorCount
-            {
-                get { return _caughtExceptions.Count; }
-            }
-
-            public IEnumerable<CaughtException> Errors
-            {
-                get { return _caughtExceptions; }
-            }
-
-            public ErrorTracking AddError(Exception caughtException)
-            {
-                _caughtExceptions.Enqueue(new CaughtException(caughtException));
-                return this;
-            }
-
-            public TimeSpan ElapsedSinceLastError
-            {
-                get
-                {
-                    var timeOfMostRecentError = _caughtExceptions.Max(e => e.Time);
-
-                    var elapsedSinceLastError = DateTime.UtcNow - timeOfMostRecentError;
-
-                    return elapsedSinceLastError;
-                }
-            }
-        }
-
-        class CaughtException
-        {
-            public CaughtException(Exception exception)
-            {
-                Exception = exception;
-                Time = DateTime.UtcNow;
-            }
-
-            public Exception Exception { get; set; }
-            public DateTime Time { get; set; }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            try
-            {
-                _cleanupOldTrackedErrorsTask.Dispose();
-            }
-            finally
-            {
-                _disposed = true;
             }
         }
     }

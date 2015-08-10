@@ -109,6 +109,8 @@
     <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
+    <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
+    <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Sagas\IAmInitiatedBy.cs" />
     <Compile Include="Sagas\Idempotent\IdempotencyData.cs" />
