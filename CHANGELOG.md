@@ -571,6 +571,11 @@
 * Separated error tracking out behind `IErrorTracker` interface, allowing for e.g. keeping error counts in a database somewhere, thus allowing for multiple parallel workers to not exceed maximum delivery attempts
 * Added ability to auto-add headers to outgoing messages by using `[Header("some_headers", "some_value")]`
 
+## 0.91.0
+
+* Changed SQL persistence to work with `IDbConnectionProvider` as originally intended - thanks [MrMDavidson]
+
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -589,6 +594,7 @@
 [mclausen]: https://github.com/mclausen
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
+[MrMDavidson]: https://github.com/MrMDavidson
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pruiz]: https://github.com/pruiz
