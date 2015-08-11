@@ -63,6 +63,7 @@
     <Compile Include="AzureServiceBusPeekLockRenewalTest.cs" />
     <Compile Include="AzureServiceBusPrefetchTest.cs" />
     <Compile Include="AzureServiceBusTransportFactory.cs" />
+    <Compile Include="NativeDeferTest.cs" />
     <Compile Include="TestAsbTopicsPubSub.cs" />
     <Compile Include="TestCategory.cs" />
     <Content Include="asb_connection_string.txt" />

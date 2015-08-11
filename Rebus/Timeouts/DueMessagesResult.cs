@@ -13,6 +13,7 @@ namespace Rebus.Timeouts
     {
         readonly Action _cleanupAction;
         readonly List<DueMessage> _dueMessages;
+        static readonly DueMessagesResult EmptyResult = new DueMessagesResult(Enumerable.Empty<DueMessage>());
 
         /// <summary>
         /// Constructs the result, wrapping the given list of due messages, performing the given action when the instance is disposed
@@ -21,6 +22,14 @@ namespace Rebus.Timeouts
         {
             _cleanupAction = cleanupAction;
             _dueMessages = dueMessages.ToList();
+        }
+
+        /// <summary>
+        /// Gets an empty due messages result
+        /// </summary>
+        public static DueMessagesResult Empty
+        {
+            get { return EmptyResult; }
         }
 
         /// <summary>

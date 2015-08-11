@@ -4,18 +4,30 @@ using Rebus.Time;
 
 namespace Rebus.Extensions
 {
-    static class DateTimeExtensions
+    /// <summary>
+    /// Defines a few nice extensions for making working with <see cref="DateTimeOffset"/> more nice
+    /// </summary>
+    public static class DateTimeExtensions
     {
+        /// <summary>
+        /// Gets the time from this instant until now (as returned by <see cref="RebusTime.Now"/>)
+        /// </summary>
         public static TimeSpan ElapsedUntilNow(this DateTimeOffset dateTime)
         {
             return RebusTime.Now - dateTime.ToUniversalTime();
         }
 
+        /// <summary>
+        /// Serializes this instant with the "O" format, i.e. ISO8601-compliant
+        /// </summary>
         public static string ToIso8601DateTimeOffset(this DateTimeOffset dateTimeOffset)
         {
             return dateTimeOffset.ToString("O", CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Parses an ISO8601-compliant string into a proper <see cref="DateTimeOffset"/>
+        /// </summary>
         public static DateTimeOffset ToDateTimeOffset(this string iso8601String)
         {
             DateTimeOffset result;

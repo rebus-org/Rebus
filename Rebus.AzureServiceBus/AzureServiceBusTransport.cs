@@ -154,11 +154,19 @@ namespace Rebus.AzureServiceBus
                 brokeredMessage.Properties[kvp.Key] = kvp.Value;
             }
 
-            if (headers.ContainsKey(Headers.TimeToBeReceived))
+            string timeToBeReceivedStr;
+            if (headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
             {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+                timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
                 var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
                 brokeredMessage.TimeToLive = timeToBeReceived;
+            }
+
+            string deferUntilTime;
+            if (headers.TryGetValue(Headers.DeferredUntil, out deferUntilTime))
+            {
+                var deferUntilDateTimeOffset = deferUntilTime.ToDateTimeOffset();
+                brokeredMessage.ScheduledEnqueueTimeUtc = deferUntilDateTimeOffset.UtcDateTime;
             }
 
             return brokeredMessage;

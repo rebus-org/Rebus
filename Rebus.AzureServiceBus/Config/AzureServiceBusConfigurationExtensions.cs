@@ -1,5 +1,7 @@
 ﻿using System.Configuration;
 using Rebus.AzureServiceBus;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
 using Rebus.Subscriptions;
 using Rebus.Transport;
 
@@ -44,6 +46,14 @@ namespace Rebus.Config
                 .Register(c => c.Get<AzureServiceBusTransport>());
 
             configurer.Register(c => c.Get<AzureServiceBusTransport>());
+
+            configurer.OtherService<IPipeline>().Decorate(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+
+                return new PipelineStepRemover(pipeline)
+                    .RemoveIncomingStep(s => s.GetType() == typeof(HandleDeferredMessagesStep));
+            });
 
             return settingsBuilder;
         }
