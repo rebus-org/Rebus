@@ -7,6 +7,7 @@ using Rebus.AzureStorageQueues;
 using Rebus.AzureStorageQueues.Tests;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 
@@ -39,10 +40,14 @@ namespace Rebus.AzureServiceBus.Tests
         {
             var done = new ManualResetEvent(false);
             var receiveTime = DateTimeOffset.MinValue;
+            var hadDeferredUntilHeader = false;
 
-            _activator.Handle<TimedMessage>(async message =>
+            _activator.Handle<TimedMessage>(async (bus, context, message) =>
             {
                 receiveTime = DateTimeOffset.Now;
+
+                hadDeferredUntilHeader = context.TransportMessage.Headers.ContainsKey(Headers.DeferredUntil);
+
                 done.Set();
             });
 
@@ -57,6 +62,8 @@ namespace Rebus.AzureServiceBus.Tests
             Console.WriteLine("Message was delayed {0}", delay);
 
             Assert.That(delay, Is.GreaterThan(TimeSpan.FromSeconds(5)), "The message not delayed at least 5 seconds as expected!");
+
+            Assert.That(hadDeferredUntilHeader, Is.False, "Received message still had the '{0}' header - we must remove that", Headers.DeferredUntil);
         }
 
         class TimedMessage

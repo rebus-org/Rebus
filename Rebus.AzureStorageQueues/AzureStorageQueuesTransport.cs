@@ -65,11 +65,12 @@ namespace Rebus.AzureStorageQueues
         {
             context.OnCommitted(async () =>
             {
+                var headers = message.Headers.Clone();
                 var queue = GetQueue(destinationAddress);
                 var messageId = Guid.NewGuid().ToString();
                 var popReceipt = Guid.NewGuid().ToString();
-                var timeToBeReceivedOrNull = GetTimeToBeReceivedOrNull(message);
-                var queueVisibilityDelayOrNull = GetQueueVisibilityDelayOrNull(message);
+                var timeToBeReceivedOrNull = GetTimeToBeReceivedOrNull(headers);
+                var queueVisibilityDelayOrNull = GetQueueVisibilityDelayOrNull(headers);
                 var cloudQueueMessage = Serialize(message, messageId, popReceipt);
 
                 try
@@ -110,11 +111,11 @@ namespace Rebus.AzureStorageQueues
             return Deserialize(cloudQueueMessage);
         }
 
-        static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
+        static TimeSpan? GetTimeToBeReceivedOrNull(Dictionary<string, string> headers)
         {
             string timeToBeReceivedStr;
 
-            if (!message.Headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
+            if (!headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
             {
                 return null;
             }
@@ -123,14 +124,16 @@ namespace Rebus.AzureStorageQueues
             return timeToBeReceived;
         }
 
-        static TimeSpan? GetQueueVisibilityDelayOrNull(TransportMessage message)
+        static TimeSpan? GetQueueVisibilityDelayOrNull(Dictionary<string, string> headers)
         {
             string deferredUntilDateTimeOffsetString;
 
-            if (!message.Headers.TryGetValue(Headers.DeferredUntil, out deferredUntilDateTimeOffsetString))
+            if (!headers.TryGetValue(Headers.DeferredUntil, out deferredUntilDateTimeOffsetString))
             {
                 return null;
             }
+
+            headers.Remove(Headers.DeferredUntil);
 
             var enqueueTime = deferredUntilDateTimeOffsetString.ToDateTimeOffset();
 

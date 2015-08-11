@@ -145,14 +145,9 @@ namespace Rebus.AzureServiceBus
 
         static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
         {
-            var headers = message.Headers;
+            var headers = message.Headers.Clone();
             var body = message.Body;
             var brokeredMessage = new BrokeredMessage(body);
-
-            foreach (var kvp in headers)
-            {
-                brokeredMessage.Properties[kvp.Key] = kvp.Value;
-            }
 
             string timeToBeReceivedStr;
             if (headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
@@ -167,6 +162,12 @@ namespace Rebus.AzureServiceBus
             {
                 var deferUntilDateTimeOffset = deferUntilTime.ToDateTimeOffset();
                 brokeredMessage.ScheduledEnqueueTimeUtc = deferUntilDateTimeOffset.UtcDateTime;
+                headers.Remove(Headers.DeferredUntil);
+            }
+
+            foreach (var kvp in headers)
+            {
+                brokeredMessage.Properties[kvp.Key] = kvp.Value;
             }
 
             return brokeredMessage;
