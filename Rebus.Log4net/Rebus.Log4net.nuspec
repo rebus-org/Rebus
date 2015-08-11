@@ -14,7 +14,7 @@
     <tags>rebus logn4et logging</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[0.90.0, 1)" />
+        <dependency id="Rebus" version="[0.91.0, 1)" />
         <dependency id="log4net" version="2.0.3" />
     </dependencies>
   </metadata>
