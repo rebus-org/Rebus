@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="AzureStorageQueuesConfigurationExtensions.cs" />
     <Compile Include="AzureStorageQueuesTransport.cs" />
+    <Compile Include="DisabledTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

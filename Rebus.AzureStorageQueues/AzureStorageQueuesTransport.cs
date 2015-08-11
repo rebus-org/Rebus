@@ -9,8 +9,10 @@ using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Time;
 using Rebus.Transport;
 
 #pragma warning disable 1998
@@ -66,7 +68,8 @@ namespace Rebus.AzureStorageQueues
                 var queue = GetQueue(destinationAddress);
                 var messageId = Guid.NewGuid().ToString();
                 var popReceipt = Guid.NewGuid().ToString();
-                var timeToBeReceived = GetTimeToBeReceivedOrNull(message);
+                var timeToBeReceivedOrNull = GetTimeToBeReceivedOrNull(message);
+                var queueVisibilityDelayOrNull = GetQueueVisibilityDelayOrNull(message);
                 var cloudQueueMessage = Serialize(message, messageId, popReceipt);
 
                 try
@@ -74,7 +77,7 @@ namespace Rebus.AzureStorageQueues
                     var options = new QueueRequestOptions {RetryPolicy = new ExponentialRetry()};
                     var operationContext = new OperationContext();
 
-                    await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceived, null, options, operationContext);
+                    await queue.AddMessageAsync(cloudQueueMessage, timeToBeReceivedOrNull, queueVisibilityDelayOrNull, options, operationContext);
                 }
                 catch (Exception exception)
                 {
@@ -109,14 +112,29 @@ namespace Rebus.AzureStorageQueues
 
         static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
         {
-            var headers = message.Headers;
-            TimeSpan? timeToBeReceived = null;
-            if (headers.ContainsKey(Headers.TimeToBeReceived))
+            string timeToBeReceivedStr;
+
+            if (!message.Headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
             {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+                return null;
             }
+            
+            TimeSpan? timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
             return timeToBeReceived;
+        }
+
+        static TimeSpan? GetQueueVisibilityDelayOrNull(TransportMessage message)
+        {
+            string deferredUntilDateTimeOffsetString;
+
+            if (!message.Headers.TryGetValue(Headers.DeferredUntil, out deferredUntilDateTimeOffsetString))
+            {
+                return null;
+            }
+
+            var enqueueTime = deferredUntilDateTimeOffsetString.ToDateTimeOffset();
+
+            return enqueueTime - RebusTime.Now;
         }
 
         static CloudQueueMessage Serialize(TransportMessage message, string messageId, string popReceipt)

@@ -1,6 +1,9 @@
 ﻿using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Auth;
 using Rebus.Config;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
+using Rebus.Timeouts;
 using Rebus.Transport;
 
 namespace Rebus.AzureStorageQueues
@@ -41,6 +44,16 @@ namespace Rebus.AzureStorageQueues
         static void Register(StandardConfigurer<ITransport> configurer, string inputQueueAddress, CloudStorageAccount storageAccount)
         {
             configurer.Register(c => new AzureStorageQueuesTransport(storageAccount, inputQueueAddress));
+
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+
+            configurer.OtherService<IPipeline>().Decorate(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+                
+                return new PipelineStepRemover(pipeline)
+                    .RemoveIncomingStep(s => s.GetType() == typeof(HandleDeferredMessagesStep));
+            });
         }
     }
 }
