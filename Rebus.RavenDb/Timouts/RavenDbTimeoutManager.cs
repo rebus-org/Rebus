@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 namespace Rebus.RavenDb.Timouts
 {
+    /// <summary>
+    /// Implementation of <see cref="ITimeoutManager"/> that stores timeouts in RavenDB
+    /// </summary>
     public class RavenDbTimeoutManager : ITimeoutManager
     {
         private readonly IDocumentStore _documentStore;
@@ -22,6 +25,9 @@ namespace Rebus.RavenDb.Timouts
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// Creates the timeout manager, using the given document store to store <see cref="Timeout"/> documents
+        /// </summary>
         public RavenDbTimeoutManager(IDocumentStore documentStore)
         {
             _documentStore = documentStore;
@@ -47,7 +53,7 @@ namespace Rebus.RavenDb.Timouts
             using (var session = _documentStore.OpenAsyncSession())
             {
                 var timeouts = await session.Query<Timeout, TimeoutIndex>()
-                                            .Customize(x => x.WaitForNonStaleResults(TimeSpan.FromMilliseconds(1000)))
+                                            .Customize(x => x.WaitForNonStaleResults(TimeSpan.FromSeconds(10)))
                                             .Where(x => x.DueTimeUtc <= now)
                                             .ToListAsync();
 
@@ -59,7 +65,7 @@ namespace Rebus.RavenDb.Timouts
             return dueMessagesResult;
         }
 
-        public Action CreateCleanUpProcedure(string id)
+        Action CreateCleanUpProcedure(string id)
         {
             if (string.IsNullOrEmpty(id)) return () => { };
 
