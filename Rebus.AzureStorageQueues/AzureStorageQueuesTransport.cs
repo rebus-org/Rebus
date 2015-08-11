@@ -71,7 +71,7 @@ namespace Rebus.AzureStorageQueues
                 var popReceipt = Guid.NewGuid().ToString();
                 var timeToBeReceivedOrNull = GetTimeToBeReceivedOrNull(headers);
                 var queueVisibilityDelayOrNull = GetQueueVisibilityDelayOrNull(headers);
-                var cloudQueueMessage = Serialize(message, messageId, popReceipt);
+                var cloudQueueMessage = Serialize(messageId, popReceipt, headers, message.Body);
 
                 try
                 {
@@ -140,12 +140,12 @@ namespace Rebus.AzureStorageQueues
             return enqueueTime - RebusTime.Now;
         }
 
-        static CloudQueueMessage Serialize(TransportMessage message, string messageId, string popReceipt)
+        static CloudQueueMessage Serialize(string messageId, string popReceipt, Dictionary<string, string> headers, byte[] body)
         {
             var cloudStorageQueueTransportMessage = new CloudStorageQueueTransportMessage
             {
-                Headers = message.Headers,
-                Body = message.Body
+                Headers = headers,
+                Body = body
             };
 
             var cloudQueueMessage = new CloudQueueMessage(messageId, popReceipt);
