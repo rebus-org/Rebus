@@ -33,6 +33,7 @@ namespace Rebus.RabbitMq
         public RabbitMqTransport(string connectionString, string inputQueueAddress)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress);
+            
             Address = inputQueueAddress;
         }
 
@@ -164,6 +165,10 @@ namespace Rebus.RabbitMq
                 {
                     props.Expiration = timeToBeDelivered.Value.TotalMilliseconds.ToString("0");
                 }
+
+                var express = headers.ContainsKey(Headers.Express);
+
+                props.Persistent = !express;
 
                 model.BasicPublish(ExchangeName, destinationAddress, props, message.Body);
             }

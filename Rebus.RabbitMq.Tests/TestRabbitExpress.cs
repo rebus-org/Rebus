@@ -34,8 +34,8 @@ namespace Rebus.RabbitMq.Tests
                 .Start();
         }
 
-        [TestCase(100000, true)]
-        [TestCase(100000, false)]
+        [TestCase(10000, true)]
+        [TestCase(10000, false)]
         public async Task TestPerformance(int messageCount, bool express)
         {
             var receivedMessages = 0L;
