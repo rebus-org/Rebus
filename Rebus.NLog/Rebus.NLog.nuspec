@@ -14,7 +14,7 @@
     <tags>rebus nlog logging</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[0.92.0, 1)" />
+        <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="NLog" version="[3, 4)" />
     </dependencies>
   </metadata>

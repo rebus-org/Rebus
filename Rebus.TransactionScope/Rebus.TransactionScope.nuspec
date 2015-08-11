@@ -14,7 +14,7 @@
     <tags>rebus configuration config transactions transactionscope</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[0.92.0, 1)" />
+        <dependency id="Rebus" version="[$version$, 1)" />
     </dependencies>
   </metadata>
   <files>

@@ -14,7 +14,7 @@
     <tags>rebus azure azure-storage-queues</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[0.92.0, 1)" />
+        <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="Microsoft.Data.Edm" version="[5.6.2, 5.6.3)" />
         <dependency id="Microsoft.Data.OData" version="[5.6.2, 5.6.3)" />
         <dependency id="Microsoft.Data.Services.Client" version="[5.6.2, 5.6.3)" />
