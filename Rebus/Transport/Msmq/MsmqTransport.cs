@@ -146,7 +146,8 @@ namespace Rebus.Transport.Msmq
 
             var expressDelivery = headers.ContainsKey(Headers.Express);
 
-            var hasTimeout = headers.ContainsKey(Headers.TimeToBeReceived);
+            string timeToBeReceivedStr;
+            var hasTimeout = headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr);
 
             var msmqMessage = new Message
             {
@@ -159,7 +160,6 @@ namespace Rebus.Transport.Msmq
 
             if (hasTimeout)
             {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
                 msmqMessage.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
             }
 

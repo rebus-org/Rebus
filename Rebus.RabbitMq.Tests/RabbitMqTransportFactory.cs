@@ -9,7 +9,7 @@ namespace Rebus.RabbitMq.Tests
 {
     public class RabbitMqTransportFactory : ITransportFactory
     {
-        const string ConnectionString = "amqp://localhost";
+        public const string ConnectionString = "amqp://localhost";
         readonly List<IDisposable> _disposables = new List<IDisposable>();
         readonly HashSet<string> _queuesToDelete = new HashSet<string>();
 
@@ -37,7 +37,7 @@ namespace Rebus.RabbitMq.Tests
             _queuesToDelete.Clear();
         }
 
-        void DeleteQueue(string queueName)
+        public static void DeleteQueue(string queueName)
         {
             var connectionFactory = new ConnectionFactory {Uri = ConnectionString};
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using RabbitMQ.Client;
 using Rebus.Logging;
 
@@ -18,13 +19,25 @@ namespace Rebus.RabbitMq
 
         IConnection _activeConnection;
 
-        public ConnectionManager(string connectionString)
+        public ConnectionManager(string connectionString, string inputQueueAddress)
         {
             _log.Info("Initializing RabbitMQ connection manager");
 
             _connectionFactory = new ConnectionFactory
             {
-                Uri = connectionString
+                Uri = connectionString,
+                ClientProperties = CreateClientProperties(inputQueueAddress)
+            };
+        }
+
+        IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
+        {
+            return new Dictionary<string, object>
+            {
+                {"Machine", Environment.MachineName},
+                {"InputQueue", inputQueueAddress ?? "<one-way client>"},
+                {"Domain", Environment.UserDomainName},
+                {"User", Environment.UserName},
             };
         }
 
@@ -41,9 +54,9 @@ namespace Rebus.RabbitMq
                 if (connection != null) return connection;
 
                 _log.Info("Creating new RabbitMQ connection");
-                connection = _connectionFactory.CreateConnection();
+                _activeConnection = _connectionFactory.CreateConnection();
 
-                return connection;
+                return _activeConnection;
             }
         }
 

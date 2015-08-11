@@ -32,7 +32,7 @@ namespace Rebus.RabbitMq
         /// </summary>
         public RabbitMqTransport(string connectionString, string inputQueueAddress)
         {
-            _connectionManager = new ConnectionManager(connectionString);
+            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress);
             Address = inputQueueAddress;
         }
 
@@ -98,6 +98,14 @@ namespace Rebus.RabbitMq
                     throw;
                 }
             }
+        }
+
+        /// <summary>
+        /// Sets max for how many messages the RabbitMQ driver should download in the background
+        /// </summary>
+        public void SetPrefetching(int value)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
