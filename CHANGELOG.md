@@ -574,7 +574,7 @@
 ## 0.91.0
 
 * Changed SQL persistence to work with `IDbConnectionProvider` as originally intended - thanks [MrMDavidson]
-
+* Made Azure Service Bus transport use the native message deferral mechanism
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
