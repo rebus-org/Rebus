@@ -36,6 +36,8 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         readonly Options _options;
         readonly AsyncTask _dueMessagesSenderBackgroundTask;
 
+        bool _disposed;
+
         /// <summary>
         /// Constructs the step, using the specified <see cref="ITimeoutManager"/> to defer relevant messages
         /// and the specified <see cref="ITransport"/> to deliver messages when they're due.
@@ -65,6 +67,9 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public void Initialize()
         {
+            // if the step has already been disposed, it is because it has been removed from the pipeline.... we might as well avoid doing stuff here, so let's just ignore the call
+            if (_disposed) return;
+
             if (UsingExternalTimeoutManager)
             {
                 _log.Info("Using external timeout manager with this address: '{0}'",
@@ -185,7 +190,16 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            _dueMessagesSenderBackgroundTask.Dispose();
+            if (_disposed) return;
+
+            try
+            {
+                _dueMessagesSenderBackgroundTask.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }

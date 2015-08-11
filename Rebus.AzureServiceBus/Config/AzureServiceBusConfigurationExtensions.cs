@@ -1,8 +1,10 @@
 ﻿using System.Configuration;
 using Rebus.AzureServiceBus;
+using Rebus.AzureServiceBus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Subscriptions;
+using Rebus.Timeouts;
 using Rebus.Transport;
 
 // ReSharper disable once CheckNamespace
@@ -54,6 +56,8 @@ namespace Rebus.Config
                 return new PipelineStepRemover(pipeline)
                     .RemoveIncomingStep(s => s.GetType() == typeof(HandleDeferredMessagesStep));
             });
+
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
 
             return settingsBuilder;
         }

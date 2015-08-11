@@ -26,9 +26,16 @@ namespace Rebus.Pipeline
         /// </summary>
         public IEnumerable<IOutgoingStep> SendPipeline()
         {
-            return _pipeline
-                .SendPipeline()
-                .Where(s => !_outgoingStepPredicates.Any(p => p(s)));
+            foreach (var step in _pipeline.SendPipeline())
+            {
+                if (HasMatch(step))
+                {
+                    PossiblyDispose(step);
+                    continue;
+                }
+
+                yield return step;
+            }
         }
 
         /// <summary>
@@ -36,9 +43,16 @@ namespace Rebus.Pipeline
         /// </summary>
         public IEnumerable<IIncomingStep> ReceivePipeline()
         {
-            return _pipeline
-                .ReceivePipeline()
-                .Where(s => !_incomingStepPredicates.Any(p => p(s)));
+            foreach (var step in _pipeline.ReceivePipeline())
+            {
+                if (HasMatch(step))
+                {
+                    PossiblyDispose(step);
+                    continue;
+                }
+
+                yield return step;
+            }
         }
 
         /// <summary>
@@ -57,6 +71,29 @@ namespace Rebus.Pipeline
         {
             _outgoingStepPredicates.Add(stepPredicate);
             return this;
+        }
+
+        bool HasMatch(IOutgoingStep step)
+        {
+            return _outgoingStepPredicates.Any(p => p(step));
+        }
+
+        bool HasMatch(IIncomingStep step)
+        {
+            return _incomingStepPredicates.Any(p => p(step));
+        }
+
+        readonly HashSet<IDisposable> _alreadyDisposedSteps = new HashSet<IDisposable>();
+
+        void PossiblyDispose(IStep step)
+        {
+            var disposable = step as IDisposable;
+            if (disposable == null) return;
+
+            if (_alreadyDisposedSteps.Contains(disposable)) return;
+
+            disposable.Dispose();
+            _alreadyDisposedSteps.Add(disposable);
         }
     }
 }
