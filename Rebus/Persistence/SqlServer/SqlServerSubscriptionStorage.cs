@@ -20,7 +20,7 @@ namespace Rebus.Persistence.SqlServer
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly DbConnectionProvider _connectionProvider;
+		readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Rebus.Persistence.SqlServer
         /// storage is shared by all subscribers and publishers, the <paramref name="isCentralized"/> parameter can be set to true
         /// in order to subscribe/unsubscribe directly instead of sending subscription/unsubscription requests
         /// </summary>
-        public SqlServerSubscriptionStorage(DbConnectionProvider connectionProvider, string tableName, bool isCentralized)
+        public SqlServerSubscriptionStorage(IDbConnectionProvider connectionProvider, string tableName, bool isCentralized)
         {
 
             IsCentralized = isCentralized;

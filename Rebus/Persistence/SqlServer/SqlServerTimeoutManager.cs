@@ -22,14 +22,14 @@ namespace Rebus.Persistence.SqlServer
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly DbConnectionProvider _connectionProvider;
+        readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly JsonSerializerSettings _headerSerializationSettings = new JsonSerializerSettings();
 
         /// <summary>
         /// Constructs the timeout manager, using the specified connection provider and table to store the messages until they're due.
         /// </summary>
-        public SqlServerTimeoutManager(DbConnectionProvider connectionProvider, string tableName)
+        public SqlServerTimeoutManager(IDbConnectionProvider connectionProvider, string tableName)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;

@@ -31,7 +31,7 @@ namespace Rebus.Persistence.SqlServer
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
-        readonly DbConnectionProvider _connectionProvider;
+		readonly IDbConnectionProvider _connectionProvider;
         readonly string _dataTableName;
         readonly string _indexTableName;
         readonly string _idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
@@ -40,7 +40,7 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Constructs the saga storage, using the specified connection provider and tables for persistence.
         /// </summary>
-        public SqlServerSagaStorage(DbConnectionProvider connectionProvider, string dataTableName, string indexTableName)
+		public SqlServerSagaStorage(IDbConnectionProvider connectionProvider, string dataTableName, string indexTableName)
         {
             _connectionProvider = connectionProvider;
             _dataTableName = dataTableName;
