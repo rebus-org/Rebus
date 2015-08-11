@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="RabbitMqConfigurationExtensions.cs" />
+    <Compile Include="RabbitMqOptionsBuilder.cs" />
     <Compile Include="RabbitMqTransport.cs" />
     <Compile Include="ConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

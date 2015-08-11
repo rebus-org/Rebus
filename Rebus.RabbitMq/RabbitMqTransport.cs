@@ -105,7 +105,6 @@ namespace Rebus.RabbitMq
         /// </summary>
         public void SetPrefetching(int value)
         {
-            throw new NotImplementedException();
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)

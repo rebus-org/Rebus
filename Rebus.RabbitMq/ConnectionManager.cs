@@ -26,7 +26,9 @@ namespace Rebus.RabbitMq
             _connectionFactory = new ConnectionFactory
             {
                 Uri = connectionString,
-                ClientProperties = CreateClientProperties(inputQueueAddress)
+                ClientProperties = CreateClientProperties(inputQueueAddress),
+                AutomaticRecoveryEnabled = true,
+                NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
             };
         }
 
