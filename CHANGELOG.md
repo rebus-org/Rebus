@@ -577,6 +577,9 @@
 * Made Azure Service Bus transport use the native message deferral mechanism
 * Made Azure Storage Queues transport use the native message deferral mechanism
 
+## 0.92.0
+
+* Made SQL Server transport use a `visible` field in the database to implement message deferral (warning: schema change)
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

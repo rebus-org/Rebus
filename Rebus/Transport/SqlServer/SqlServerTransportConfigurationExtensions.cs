@@ -1,5 +1,8 @@
 ﻿using Rebus.Config;
 using Rebus.Persistence.SqlServer;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
+using Rebus.Timeouts;
 
 namespace Rebus.Transport.SqlServer
 {
@@ -21,6 +24,16 @@ namespace Rebus.Transport.SqlServer
                 var transport = new SqlServerTransport(connectionProvider, tableName, inputQueueName);
                 transport.EnsureTableIsCreated();
                 return transport;
+            });
+
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+
+            configurer.OtherService<IPipeline>().Decorate(c =>
+            {
+                var pipeline = c.Get<IPipeline>();
+
+                return new PipelineStepRemover(pipeline)
+                    .RemoveIncomingStep(s => s.GetType() == typeof (HandleDeferredMessagesStep));
             });
         }
     }

@@ -12,6 +12,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
 using Rebus.Threading;
+using Rebus.Time;
 using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.Transport.SqlServer
@@ -128,6 +129,7 @@ INSERT INTO [{0}]
     [headers],
     [body],
     [priority],
+    [visible],
     [expiration]
 )
 VALUES
@@ -136,20 +138,45 @@ VALUES
     @headers,
     @body,
     @priority,
+    dateadd(ss, @visible, getdate()),
     dateadd(ss, @ttlseconds, getdate())
 )",
                     _tableName);
 
-                var priority = GetMessagePriority(message);
+                var headers = message.Headers.Clone();
+
+                var priority = GetMessagePriority(headers);
+                var initialVisibilityDelay = GetInitialVisibilityDelay(headers);
+                var ttlSeconds = GetTtlSeconds(headers);
+
+                // must be last because the other functions on the headers might change them
+                var serializedHeaders = _headerSerializer.Serialize(headers);
 
                 command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = destinationAddress;
-                command.Parameters.Add("headers", SqlDbType.VarBinary).Value = _headerSerializer.Serialize(message.Headers);
+                command.Parameters.Add("headers", SqlDbType.VarBinary).Value = serializedHeaders;
                 command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
                 command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
-                command.Parameters.Add("@ttlseconds", SqlDbType.Int).Value = GetTtlSeconds(message.Headers);
+                command.Parameters.Add("ttlseconds", SqlDbType.Int).Value = ttlSeconds;
+                command.Parameters.Add("visible", SqlDbType.Int).Value = initialVisibilityDelay;
 
                 await command.ExecuteNonQueryAsync();
             }
+        }
+
+        int GetInitialVisibilityDelay(Dictionary<string, string> headers)
+        {
+            string deferredUntilDateTimeOffsetString;
+
+            if (!headers.TryGetValue(Headers.DeferredUntil, out deferredUntilDateTimeOffsetString))
+            {
+                return 0;
+            }
+
+            var deferredUntilTime = deferredUntilDateTimeOffsetString.ToDateTimeOffset();
+
+            headers.Remove(Headers.DeferredUntil);
+
+            return (int)(deferredUntilTime - RebusTime.Now).TotalSeconds;
         }
 
         static int GetTtlSeconds(Dictionary<string, string> headers)
@@ -201,6 +228,7 @@ FROM [{0}]
 WITH (UPDLOCK, READPAST, ROWLOCK)
 WHERE 
     [recipient] = @recipient 
+    AND [visible] < getdate()
     AND [expiration] > getdate()
 ORDER BY 
     [priority] ASC, 
@@ -208,8 +236,7 @@ ORDER BY
 
 ", _tableName);
 
-                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
-                        _inputQueueName;
+                    selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
                     using (var reader = await selectCommand.ExecuteReaderAsync())
                     {
@@ -242,9 +269,9 @@ ORDER BY
             }
         }
 
-        int GetMessagePriority(TransportMessage message)
+        int GetMessagePriority(Dictionary<string, string> headers)
         {
-            var valueOrNull = message.Headers.GetValueOrNull(MessagePriorityHeaderKey);
+            var valueOrNull = headers.GetValueOrNull(MessagePriorityHeaderKey);
             if (valueOrNull == null) return 0;
 
             try
@@ -308,6 +335,7 @@ CREATE TABLE [dbo].[{0}]
 	[recipient] [nvarchar](200) NOT NULL,
 	[priority] [int] NOT NULL,
     [expiration] [datetime2] NOT NULL,
+    [visible] [datetime2] NOT NULL,
 	[headers] [varbinary](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
     CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
@@ -330,6 +358,7 @@ CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
 (
 	[recipient] ASC,
 	[priority] ASC,
+    [visible] ASC,
     [expiration] ASC,
 	[id] ASC
 )
