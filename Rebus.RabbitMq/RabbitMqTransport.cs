@@ -53,7 +53,7 @@ namespace Rebus.RabbitMq
                     {
                         {"x-ha-policy", "all"}
                     });
-                model.QueueBind(address, ExchangeName, Address);
+                model.QueueBind(address, ExchangeName, address);
             }
         }
 
