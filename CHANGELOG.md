@@ -585,6 +585,10 @@
 
 * Fixed RabbitMQ NuGet dependency to explicitly depend on 3.5.4 because silly NuGet will default to the lowest version and that does not play well with strong naming and actually having versions on assemblies
 
+## 0.93.2
+
+* Fixed RabbitMQ transport bug that would create wrong queue bindings - please update to this version :)
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
