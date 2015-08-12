@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.MongoDb</id>
+    <version>0.0.1</version>
+    <title>Rebus.MongoDb</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000,rasmuskl</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides MongoDB saga persister and subscription storage</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus mongodb</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+      <dependency id="mongocsharpdriver" version="1.10.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.MongoDb.dll" target="lib" />
+    <file src="..\deploy\**\Rebus.MongoDb.xml" target="lib" />
+  </files>
+</package>

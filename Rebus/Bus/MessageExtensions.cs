@@ -1,0 +1,116 @@
+﻿using System;
+using System.Collections.Generic;
+using Rebus.Extensions;
+using Rebus.Messages;
+using Rebus.Pipeline.Receive;
+using Rebus.Transport;
+
+namespace Rebus.Bus
+{
+    /// <summary>
+    /// Small helpers that make it easier to work with the <see cref="Message"/> class
+    /// </summary>
+    public static class MessageExtensions
+    {
+        /// <summary>
+        /// Gets whether the message's <see cref="Headers.ReturnAddress"/> header is set to something
+        /// </summary>
+        public static bool HasReturnAddress(this Message message)
+        {
+            return message.Headers.ContainsKey(Headers.ReturnAddress);
+        }
+
+        /// <summary>
+        /// Uses the transport's input queue address as the <see cref="Headers.ReturnAddress"/> on the message
+        /// </summary>
+        public static void SetReturnAddressFromTransport(this Message message, ITransport transport)
+        {
+            var returnAddress = transport.Address;
+
+            if (string.IsNullOrWhiteSpace(returnAddress))
+            {
+                throw new InvalidOperationException("Cannot set return address from the given transport because it is not capable of receiving messages");
+            }
+
+            message.Headers[Headers.ReturnAddress] = returnAddress;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
+        /// </summary>
+        public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
+        {
+            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
+        }
+
+        /// <summary>
+        /// Gets the message type from the message
+        /// </summary>
+        public static string GetMessageType(this Message message)
+        {
+            return message.Headers.GetValueOrNull(Headers.Type)
+                   ?? GetTypeNameFromBodyObjectOrNull(message.Body)
+                   ?? "<unknown>";
+        }
+
+        /// <summary>
+        /// Gets the message ID from the message
+        /// </summary>
+        public static string GetMessageId(this Message message)
+        {
+            return message.Headers.GetValue(Headers.MessageId);
+        }
+
+        /// <summary>
+        /// Gets a nice label for the message, consisting of message type and ID if possible
+        /// </summary>
+        public static string GetMessageLabel(this Message message)
+        {
+            return GetMessageLabel(message.Headers);
+        }
+
+        /// <summary>
+        /// Gets a nice label for the message, consisting of message type and ID if possible
+        /// </summary>
+        public static string GetMessageLabel(this TransportMessage message)
+        {
+            return GetMessageLabel(message.Headers);
+        }
+
+        /// <summary>
+        /// Returns a cloned instance of the transport message
+        /// </summary>
+        public static TransportMessage Clone(this TransportMessage message)
+        {
+            return new TransportMessage(message.Headers.Clone(), message.Body);
+        }
+
+        static string GetMessageLabel(Dictionary<string, string> headers)
+        {
+            var id = headers.GetValue(Headers.MessageId);
+
+            string type;
+
+            if (headers.TryGetValue(Headers.Type, out type))
+            {
+                var dotnetType = Type.GetType(type);
+
+                if (dotnetType != null)
+                {
+                    type = dotnetType.Name;
+                }
+            }
+            else
+            {
+                type = "<unknown>";
+            }
+
+            return string.Format("{0}/{1}", type, id);
+        }
+
+        static string GetTypeNameFromBodyObjectOrNull(object body)
+        {
+            return body == null ? null : body.GetType().GetSimpleAssemblyQualifiedName();
+        }
+    }
+}

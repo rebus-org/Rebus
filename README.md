@@ -1,6 +1,15 @@
+# Rebus 2
+
 #### _"As friendly as machinely possible."_
 
-![Bedford OB](http://mookid.dk/oncode/wp-content/2011/10/logo400x150.png)
+NOTE: This is Rebus2 - if you've used Rebus before up until version 0.84.0, you will experience a minor bump in the road when you update to 0.90.0, which functions as the beta versions until Rebus 2.0.0 is ready!
+
+Moreover - since the wiki actually contains quite a bit of content - please be patient until the content has been updated to reflect Rebus 2 :)
+
+![Bedford OB](http://mookid.dk/oncode/wp-content/2015/07/small-bus-logo-1.png)
+
+[![install from nuget](http://img.shields.io/nuget/v/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)[![downloads](http://img.shields.io/nuget/dt/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
+
 
 What?
 ====
@@ -36,7 +45,7 @@ How?
 Rebus is a simple .NET library, and everything revolves around the `RebusBus` class. One way to get Rebus up and running, is to manually go
 
 	var bus = new RebusBus(...);
-	bus.Start();
+	bus.Start(1); //< 1 worker thread
 
 	// use the bus for the duration of the application lifetime
 
@@ -45,7 +54,7 @@ Rebus is a simple .NET library, and everything revolves around the `RebusBus` cl
 
 where `...` is a bunch of dependencies that vary depending on how you want to send/receive messages etc. Another way is to use the configuration API, in which case you would go
 
-    var someContainerAdapter = new BuiltinContainerAdapter();
+    var someContainerAdapter = new BuiltinHandlerActivator();
 
 for the built-in container adapter, or
 
@@ -54,10 +63,9 @@ for the built-in container adapter, or
 to integrate with your favorite IoC container, and then
 
 	Configure.With(someContainerAdapter)
-		.Logging(l => l.Log4Net())
-		.Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-		.MessageOwnership(d => d.FromRebusConfigurationSection())
-		.CreateBus()
+		.Logging(l => l.Serilog())
+		.Transport(t => t.UseMsmq("myInputQueue"))
+		.Routing(r => r.TypeBased().MapAssemblyOf<SomeMessageType>("anotherInputQueue"))
 		.Start();
 
 	// have IBus injected in application services for the duration of the application lifetime
@@ -70,9 +78,9 @@ which will stuff the resulting `IBus` in the container as a singleton and use th
 License
 ====
 
-Rebus is licensed under [Apache License, Version 2.0][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
+Rebus is licensed under [The MIT License (MIT)][1]. Basically, this license grants you the right to use Rebus in any way you see fit. See [LICENSE.md](/LICENSE.md) for more info.
 
-[1]: http://www.apache.org/licenses/LICENSE-2.0.html
+[1]: http://opensource.org/licenses/MIT
 [2]: http://twitter.com/#!/mookid8000
 [3]: http://nservicebus.com/
 [4]: http://masstransit-project.com/

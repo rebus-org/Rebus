@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.SimpleInjector</id>
+    <version>$version$</version>
+    <title>Rebus.SimpleInjector</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Simple Injector container adapter for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus ioc simple-injector simple injector simpleinjector</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[$version$, 1)" />
+        <dependency id="SimpleInjector" version="[2.8, 2.9)"/>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.SimpleInjector.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.SimpleInjector.xml" target="lib\NET45" />
+  </files>
+</package>
