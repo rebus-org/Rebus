@@ -581,6 +581,10 @@
 
 * Made SQL Server transport use a `visible` field in the database to implement message deferral (warning: schema change)
 
+## 0.92.1
+
+* Fixed RabbitMQ NuGet dependency to explicitly depend on 3.5.4 because silly NuGet will default to the lowest version and that does not play well with strong naming and actually having versions on assemblies
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
