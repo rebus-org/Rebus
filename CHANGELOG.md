@@ -589,6 +589,10 @@
 
 * Fixed RabbitMQ transport bug that would create wrong queue bindings - please update to this version :)
 
+## 0.92.3
+
+* Changed `SqlTransport` to use the cryptic `DELETE OUTPUT` style query yielding ~ 10 times performance improvement - thanks [MrMDavidson] for a very well-documented PR :)
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
