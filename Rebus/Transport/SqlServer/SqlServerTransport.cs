@@ -218,23 +218,28 @@ VALUES
 
                 using (var selectCommand = connection.CreateCommand())
                 {
-                    selectCommand.CommandText =
-                        string.Format(@"
-SELECT TOP 1
-    [id],
-    [headers],
-    [body]
-FROM [{0}] 
-WITH (UPDLOCK, READPAST, ROWLOCK)
-WHERE 
-    [recipient] = @recipient 
-    AND [visible] < getdate()
-    AND [expiration] > getdate()
-ORDER BY 
-    [priority] ASC, 
-    [id] asc
+                    selectCommand.CommandText = string.Format(@"
+	SET NOCOUNT ON
 
-", _tableName);
+	;WITH TopCTE AS (
+		SELECT	TOP 1
+				[id],
+				[headers],
+				[body]
+		FROM	{0} M WITH (ROWLOCK, READPAST)
+		WHERE	M.[recipient] = @recipient
+		AND		M.[visible] < getdate()
+		AND		M.[expiration] > getdate()
+		ORDER
+		BY		[priority] ASC,
+				[id] ASC
+	)
+	DELETE	FROM TopCTE
+	OUTPUT	deleted.[id] as [id],
+			deleted.[headers] as [headers],
+			deleted.[body] as [body]
+						
+						", _tableName);
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
@@ -257,13 +262,6 @@ ORDER BY
                     return null;
                 }
 
-                using (var deleteCommand = connection.CreateCommand())
-                {
-                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
-                    deleteCommand.Parameters.Add("id", SqlDbType.BigInt).Value = idOfMessageToDelete;
-
-                    await deleteCommand.ExecuteNonQueryAsync();
-                }
 
                 return receivedTransportMessage;
             }
