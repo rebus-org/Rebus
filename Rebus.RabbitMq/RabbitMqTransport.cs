@@ -39,6 +39,8 @@ namespace Rebus.RabbitMq
 
         public void Initialize()
         {
+            if (Address == null) return;
+
             CreateQueue(Address);
         }
 
@@ -110,6 +112,11 @@ namespace Rebus.RabbitMq
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
+            if (Address == null)
+            {
+                throw new InvalidOperationException("This RabbitMQ transport does not have an input queue, hence it is not possible to reveive anything");
+            }
+
             var model = GetModel(context);
             var result = model.BasicGet(Address, false);
 

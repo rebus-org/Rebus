@@ -15,9 +15,16 @@ namespace Rebus.Tests.Transport.InMem
     {
         readonly InMemNetwork _network = new InMemNetwork();
 
+        public ITransport CreateOneWayClient()
+        {
+            return Create(null);
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
-            return new InMemTransport(_network, inputQueueAddress);
+            var transport = new InMemTransport(_network, inputQueueAddress);
+            transport.Initialize();
+            return transport;
         }
 
         public void CleanUp()

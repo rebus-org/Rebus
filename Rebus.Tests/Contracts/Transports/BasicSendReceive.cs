@@ -28,6 +28,31 @@ namespace Rebus.Tests.Contracts.Transports
         }
 
         [Test]
+        public async Task HasOneWayClient()
+        {
+            var receiverQueue = TestConfig.QueueName("receiver");
+            
+            var client = _factory.CreateOneWayClient();
+            var receiver = _factory.Create(receiverQueue);
+
+            await WithContext(async context =>
+            {
+                await client.Send(receiverQueue, MessageWith("greetings!"), context);
+            });
+
+            await WithContext(async context =>
+            {
+                var transportMessage = await receiver.Receive(context);
+
+                Assert.That(transportMessage, Is.Not.Null);
+
+                var stringBody = GetStringBody(transportMessage);
+
+                Assert.That(stringBody, Is.EqualTo("greetings!"));
+            });
+        }
+
+        [Test]
         public async Task EmptyQueueReturnsNull()
         {
             var emptyQueue = _factory.Create(TestConfig.QueueName("empty"));

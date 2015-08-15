@@ -56,8 +56,22 @@ namespace Rebus.AzureServiceBus.Tests
 
         readonly Dictionary<string, AzureServiceBusTransport> _queuesToDelete = new Dictionary<string, AzureServiceBusTransport>();
 
+        public ITransport CreateOneWayClient()
+        {
+            return Create(null);
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
+            if (inputQueueAddress == null)
+            {
+                var transport = new AzureServiceBusTransport(ConnectionString, null);
+
+                transport.Initialize();
+
+                return transport;
+            }
+
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
             {
                 var transport = new AzureServiceBusTransport(ConnectionString, inputQueueAddress);

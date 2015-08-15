@@ -21,7 +21,14 @@ namespace Rebus.RabbitMq
 
         public ConnectionManager(string connectionString, string inputQueueAddress)
         {
-            _log.Info("Initializing RabbitMQ connection manager");
+            if (inputQueueAddress != null)
+            {
+                _log.Info("Initializing RabbitMQ connection manager for transport with input queue '{0}'", inputQueueAddress);
+            }
+            else
+            {
+                _log.Info("Initializing RabbitMQ connection manager for one-way transport");
+            }
 
             _connectionFactory = new ConnectionFactory
             {
