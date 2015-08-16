@@ -74,6 +74,7 @@
     <Compile Include="Integration\Legacy\MsmqEx.cs" />
     <Compile Include="Integration\Legacy\TestLegacyPubSub.cs" />
     <Compile Include="Integration\Msmq\TestMsmqExpress.cs" />
+    <Compile Include="Integration\Msmq\TestOneWayClient.cs" />
     <Compile Include="Integration\Sql\NativeDeferTest.cs" />
     <Compile Include="Integration\TestAutoHeaders.cs" />
     <Compile Include="Integration\TestIdempotentSagas.cs" />

@@ -1,4 +1,5 @@
 ﻿using Rebus.Bus.Advanced;
+
 // ReSharper disable CheckNamespace
 
 namespace Rebus.Bus
@@ -35,14 +36,9 @@ namespace Rebus.Bus
                 get { return _rebusBus.GetNumberOfWorkers(); }
             }
 
-            public void AddWorker()
+            public void SetNumberOfWorkers(int numberOfWorkers)
             {
-                _rebusBus.AddWorker();
-            }
-
-            public void RemoveWorker()
-            {
-                _rebusBus.RemoveWorker();
+                _rebusBus.SetNumberOfWorkers(numberOfWorkers);
             }
         }
     }
