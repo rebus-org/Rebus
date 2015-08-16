@@ -94,8 +94,6 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public void PurgeInputQueue()
         {
-            if (_inputQueueName == null) return;
-
             if (!MsmqUtil.QueueExists(_inputQueueName))
             {
                 _log.Info("Purging {0} (but the queue doesn't exist...)", _inputQueueName);

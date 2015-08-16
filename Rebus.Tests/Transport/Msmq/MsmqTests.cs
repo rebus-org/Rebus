@@ -30,11 +30,17 @@ namespace Rebus.Tests.Transport.Msmq
 
             _disposables.Add(transport);
 
-            transport.PurgeInputQueue();
+            if (inputQueueAddress != null)
+            {
+                transport.PurgeInputQueue();
+            }
 
             transport.Initialize();
 
-            _queuesToDelete.Add(inputQueueAddress);
+            if (inputQueueAddress != null)
+            {
+                _queuesToDelete.Add(inputQueueAddress);
+            }
 
             return transport;
         }
