@@ -38,9 +38,10 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public MsmqTransport(string inputQueueAddress)
         {
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
-
-            _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
+            if (inputQueueAddress != null)
+            {
+                _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
+            }
         }
 
         /// <summary>
@@ -63,9 +64,16 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public void Initialize()
         {
-            _log.Info("Initializing MSMQ transport - input queue: '{0}'", _inputQueueName);
+            if (_inputQueueName != null)
+            {
+                _log.Info("Initializing MSMQ transport - input queue: '{0}'", _inputQueueName);
 
-            GetInputQueue();
+                GetInputQueue();
+            }
+            else
+            {
+                _log.Info("Initializing one-way MSMQ transport");
+            }
         }
 
         /// <summary>
@@ -169,6 +177,10 @@ namespace Rebus.Transport.Msmq
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            if (_inputQueueName == null)
+            {
+                throw new InvalidOperationException("This MSMQ transport does not have an input queue, hence it is not possible to reveive anything");
+            }
 
             var queue = GetInputQueue();
 
