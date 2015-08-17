@@ -46,6 +46,11 @@ namespace Rebus.MongoDb.Timeouts
                 var dueTimeout = await _timeouts.FindOneAndUpdateAsync(Builders<Timeout>.Filter.Lte(t => t.DueTimeUtc, now),
                                             Builders<Timeout>.Update.Set(t => t.DueTimeUtc, now.AddMinutes(1)));
 
+                if (dueTimeout == null)
+                {
+                    break;
+                }
+
                 dueTimeouts.Add(dueTimeout);
             }
 
