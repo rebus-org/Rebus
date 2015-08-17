@@ -593,6 +593,10 @@
 
 * Changed `SqlTransport` to use the cryptic `DELETE OUTPUT` style query yielding ~ 10 times performance improvement - thanks [MrMDavidson] for a very well-documented PR :)
 
+## 0.92.4
+
+* Added one-way client mode + appropriate configuration extensions for all transports but Amazon SQS (it requires some more work)
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
