@@ -20,7 +20,7 @@ namespace Rebus.MongoDb.Tests
             return mongoUrl;
         }
 
-        public static MongoDatabase GetMongoDatabase()
+        public static IMongoDatabase GetMongoDatabase(IMongoClient mongoClient)
         {
             var url = GetUrl();
             var settings = new MongoDatabaseSettings
@@ -28,8 +28,17 @@ namespace Rebus.MongoDb.Tests
                 GuidRepresentation = GuidRepresentation.Standard,
                 WriteConcern = WriteConcern.Acknowledged
             };
-            var mongoDatabase = new MongoClient(url).GetServer().GetDatabase(url.DatabaseName, settings);
+            var mongoDatabase = mongoClient.GetDatabase(url.DatabaseName, settings);
             return mongoDatabase;
+        }
+
+        public static IMongoClient GetMongoClient()
+        {
+            var url = GetUrl();
+
+            var mongoClient = new MongoClient(url);
+
+            return mongoClient;
         }
     }
 }

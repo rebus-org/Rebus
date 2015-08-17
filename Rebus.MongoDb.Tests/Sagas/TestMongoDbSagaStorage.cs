@@ -7,18 +7,21 @@ namespace Rebus.MongoDb.Tests.Sagas
 {
     public class TestMongoDbSagaStorage : ISagaStorageFactory
     {
-        MongoDatabase _mongoDatabase;
+        IMongoDatabase _mongoDatabase;
+        IMongoClient _mongoClient;
 
         public ISagaStorage GetSagaStorage()
         {
-            _mongoDatabase = MongoTestHelper.GetMongoDatabase();
+            _mongoClient = MongoTestHelper.GetMongoClient();
+            _mongoDatabase = MongoTestHelper.GetMongoDatabase(_mongoClient);
 
             return new MongoDbSagaStorage(_mongoDatabase);
         }
 
         public void CleanUp()
         {
-            _mongoDatabase.Drop();
+            _mongoClient.DropDatabaseAsync(_mongoDatabase.DatabaseNamespace.DatabaseName).Wait();
+            _mongoClient = null;
             _mongoDatabase = null;
         }
     }

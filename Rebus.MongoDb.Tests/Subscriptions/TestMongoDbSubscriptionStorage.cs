@@ -11,18 +11,21 @@ namespace Rebus.MongoDb.Tests.Subscriptions
 
     public class TestMongoDbSubscriptionStorage : ISubscriptionStorageFactory
     {
-        MongoDatabase _mongoDatabase;
+        IMongoDatabase _mongoDatabase;
+        IMongoClient _mongoClient;
 
         public ISubscriptionStorage Create()
         {
-            _mongoDatabase = MongoTestHelper.GetMongoDatabase();
+            _mongoClient = MongoTestHelper.GetMongoClient();
+            _mongoDatabase = MongoTestHelper.GetMongoDatabase(_mongoClient);
             
             return new MongoDbSubscriptionStorage(_mongoDatabase, "subscriptions", true);
         }
 
         public void Cleanup()
         {
-            _mongoDatabase.Drop();
+            _mongoClient.DropDatabaseAsync(_mongoDatabase.DatabaseNamespace.DatabaseName).Wait();
+            _mongoClient = null;
             _mongoDatabase = null;
         }
     }
