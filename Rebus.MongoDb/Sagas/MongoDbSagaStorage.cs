@@ -49,12 +49,12 @@ namespace Rebus.MongoDb.Sagas
         {
             var collection = GetCollection(sagaData.GetType());
 
-            var criteria = Builders<ISagaData>.Filter.And(Builders<ISagaData>.Filter.Eq(x => x.Id, sagaData.Id),
-                Builders<ISagaData>.Filter.Eq(x => x.Revision, sagaData.Revision));
+            var criteria = Builders<BsonDocument>.Filter.And(Builders<BsonDocument>.Filter.Eq("_id", sagaData.Id),
+                Builders<BsonDocument>.Filter.Eq("Revision", sagaData.Revision));
 
             sagaData.Revision++;
 
-            var result = await collection.ReplaceOneAsync(criteria.ToBsonDocument(), sagaData.ToBsonDocument(sagaData.GetType()));
+            var result = await collection.ReplaceOneAsync(criteria, sagaData.ToBsonDocument(sagaData.GetType()));
 
             if (!result.IsModifiedCountAvailable || result.ModifiedCount != 1)
             {
