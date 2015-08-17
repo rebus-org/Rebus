@@ -57,7 +57,7 @@ namespace Rebus.Tests.Timeouts
 
             await _bus.SendLocal("denne besked skal stadig udsættes!", headers);
 
-            _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(6), "Message was not received within 6,5 seconds (which it should have been since it was only deferred 5 seconds)");
+            _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(6.5), "Message was not received within 6,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
             Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(5)), "It must take more than 5 second to get the message back");
         }
@@ -69,7 +69,7 @@ namespace Rebus.Tests.Timeouts
 
             await _bus.Defer(TimeSpan.FromSeconds(5), "hej med dig min ven!");
 
-            _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(6), "Message was not received within 6,5 seconds (which it should have been since it was only deferred 5 seconds)");
+            _gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(6.5), "Message was not received within 6,5 seconds (which it should have been since it was only deferred 5 seconds)");
 
             Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(5)), "It must take more than 5 second to get the message back");
         }
