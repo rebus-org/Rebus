@@ -9,6 +9,16 @@ namespace Rebus.RabbitMq
     public static class RabbitMqConfigurationExtensions
     {
         /// <summary>
+        /// Configures Rebus to use RabbitMQ to transport messages as a one-way client (i.e. will not be able to receive any messages)
+        /// </summary>
+        public static void UseRabbitMqAsOneWayClient(this StandardConfigurer<ITransport> configurer, string connectionString)
+        {
+            configurer.Register(c => new RabbitMqTransport(connectionString, null));
+
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+        }
+
+        /// <summary>
         /// Configures Rebus to use RabbitMQ to move messages around
         /// </summary>
         public static RabbitMqOptionsBuilder UseRabbitMq(this StandardConfigurer<ITransport> configurer,  string connectionString, string inputQueueName)

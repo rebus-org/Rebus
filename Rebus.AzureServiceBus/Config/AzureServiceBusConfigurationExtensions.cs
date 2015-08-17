@@ -16,6 +16,28 @@ namespace Rebus.Config
     public static class AzureServiceBusConfigurationExtensions
     {
         /// <summary>
+        /// Configures Rebus to use Azure Service Bus to transport messages as a one-way client (i.e. will not be able to receive any messages)
+        /// </summary>
+        public static void UseAzureServiceBusAsOneWayClient(this StandardConfigurer<ITransport> configurer, string connectionStringNameOrConnectionString)
+        {
+            var connectionString = GetConnectionString(connectionStringNameOrConnectionString);
+            
+            configurer
+                .OtherService<AzureServiceBusTransport>()
+                .Register(c => new AzureServiceBusTransport(connectionString, null));
+
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(c => c.Get<AzureServiceBusTransport>());
+
+            configurer.Register(c => c.Get<AzureServiceBusTransport>());
+
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+        }
+
+        /// <summary>
         /// Configures Rebus to use Azure Service Bus queues to transport messages, connecting to the service bus instance pointed to by the connection string
         /// (or the connection string with the specified name from the current app.config)
         /// </summary>

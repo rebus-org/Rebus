@@ -22,7 +22,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
-            if (network == null) throw new ArgumentNullException("network");
+            if (network == null) throw new ArgumentNullException("network", "You need to provide a network that this in-mem transport should use for communication");
 
             _network = network;
             _inputQueueAddress = inputQueueAddress;

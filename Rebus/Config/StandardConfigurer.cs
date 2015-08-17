@@ -20,7 +20,7 @@ namespace Rebus.Config
             _options = options;
         }
 
-        public Options Options
+        internal Options Options
         {
             get { return _options; }
         }

@@ -27,9 +27,7 @@ namespace Rebus.Transport.Msmq
         {
             configurer.Register(context => new MsmqTransport(null));
 
-            configurer.Options.NumberOfWorkers = 0;
-
-            configurer.OtherService<IBus>().Decorate(c => new OneWayClientBusDecorator(c.Get<IBus>()));
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
     }
 
