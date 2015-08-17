@@ -29,8 +29,13 @@ namespace Rebus.MongoDb.Sagas
             var criteria = new BsonDocument(propertyName, BsonValue.Create(propertyValue));
 
             var result = await collection.Find(criteria).FirstOrDefaultAsync();
+            ISagaData sagaData = null;
+            if (result != null)
+            {
+                sagaData = (ISagaData) BsonSerializer.Deserialize(result, sagaDataType);
+            }
 
-            return (ISagaData)BsonSerializer.Deserialize(result, sagaDataType);
+            return sagaData;
         }
 
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
