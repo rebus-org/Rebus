@@ -597,6 +597,10 @@
 
 * Added one-way client mode + appropriate configuration extensions for all transports but Amazon SQS (it requires some more work)
 
+## 0.93.0
+
+* Updated MongoDB driver dependency to 2.0.1 and rewrote MongoDB persistence to take advantage of `async`/`await` - thanks [kevbite]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -608,6 +612,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
+[kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
