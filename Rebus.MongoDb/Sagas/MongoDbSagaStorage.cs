@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 using Rebus.Exceptions;
 using Rebus.Sagas;
+using MongoDB.Bson.Serialization;
 
 namespace Rebus.MongoDb.Sagas
 {
     public class MongoDbSagaStorage : ISagaStorage
     {
-        readonly MongoDatabase _mongoDatabase;
+        readonly IMongoDatabase _mongoDatabase;
         readonly Func<Type, string> _collectionNameResolver;
 
-        public MongoDbSagaStorage(MongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
+        public MongoDbSagaStorage(IMongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
         {
             _mongoDatabase = mongoDatabase;
             _collectionNameResolver = collectionNameResolver ?? (type => type.Name);
@@ -26,11 +26,16 @@ namespace Rebus.MongoDb.Sagas
 
             if (propertyName == "Id") propertyName = "_id";
 
-            var criteria = Query.EQ(propertyName, BsonValue.Create(propertyValue));
+            var criteria = new BsonDocument(propertyName, BsonValue.Create(propertyValue));
 
-            var result = collection.FindOneAs(sagaDataType, new FindOneArgs {Query = criteria});
+            var result = await collection.Find(criteria).FirstOrDefaultAsync().ConfigureAwait(false);
+            ISagaData sagaData = null;
+            if (result != null)
+            {
+                sagaData = (ISagaData) BsonSerializer.Deserialize(result, sagaDataType);
+            }
 
-            return (ISagaData)result;
+            return sagaData;
         }
 
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
@@ -42,39 +47,24 @@ namespace Rebus.MongoDb.Sagas
 
             var collection = GetCollection(sagaData.GetType());
 
-            var result = collection.Insert(sagaData);
-
-            try
-            {
-                CheckResult(result,0);
-            }
-            catch (Exception exception)
-            {
-                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be inserted!", 
-                    sagaData.GetType(), sagaData.Id, collection.Name);
-            }
+            await collection.InsertOneAsync(sagaData.ToBsonDocument()).ConfigureAwait(false);
         }
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var collection = GetCollection(sagaData.GetType());
 
-            var criteria = Query.And(
-                Query.EQ("_id", sagaData.Id),
-                Query.EQ("Revision", sagaData.Revision));
+            var criteria = Builders<BsonDocument>.Filter.And(Builders<BsonDocument>.Filter.Eq("_id", sagaData.Id),
+                Builders<BsonDocument>.Filter.Eq("Revision", sagaData.Revision));
 
             sagaData.Revision++;
 
-            var result = collection.Update(criteria, MongoDB.Driver.Builders.Update.Replace(sagaData));
+            var result = await collection.ReplaceOneAsync(criteria, sagaData.ToBsonDocument(sagaData.GetType())).ConfigureAwait(false);
 
-            try
+            if (!result.IsModifiedCountAvailable || result.ModifiedCount != 1)
             {
-                CheckResult(result, 1);
-            }
-            catch (Exception exception)
-            {
-                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be updated!",
-                    sagaData.GetType(), sagaData.Id, collection.Name);
+                throw new ConcurrencyException("Saga data {0} with ID {1} in collection {2} could not be updated!",
+                    sagaData.GetType(), sagaData.Id, collection.CollectionNamespace);
             }
         }
 
@@ -82,33 +72,16 @@ namespace Rebus.MongoDb.Sagas
         {
             var collection = GetCollection(sagaData.GetType());
 
-            var result = collection.Remove(Query.EQ("_id", sagaData.Id));
+            var result = await collection.DeleteManyAsync(new BsonDocument("_id", sagaData.Id)).ConfigureAwait(false);
 
-            try
+            if (result.DeletedCount != 1)
             {
-                CheckResult(result, 1);
-            }
-            catch (Exception exception)
-            {
-                throw new ConcurrencyException(exception, "Saga data {0} with ID {1} in collection {2} could not be deleted", 
-                    sagaData.GetType(), sagaData.Id, collection.Name);
+                throw new ConcurrencyException("Saga data {0} with ID {1} in collection {2} could not be deleted", 
+                    sagaData.GetType(), sagaData.Id, collection.CollectionNamespace);
             }
         }
 
-        void CheckResult(WriteConcernResult result, int expectedNumberOfAffectedDocuments)
-        {
-            if (!result.Ok)
-            {
-                throw new MongoWriteConcernException("Not OK result returned from the server", result);
-            }
-
-            if (result.DocumentsAffected != expectedNumberOfAffectedDocuments)
-            {
-                throw new MongoWriteConcernException(string.Format("DocumentsAffected != {0}", expectedNumberOfAffectedDocuments), result);
-            }
-        }
-
-        MongoCollection GetCollection(Type sagaDataType)
+        IMongoCollection<BsonDocument> GetCollection(Type sagaDataType)
         {
             try
             {

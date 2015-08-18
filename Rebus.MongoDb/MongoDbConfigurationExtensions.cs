@@ -16,7 +16,7 @@ namespace Rebus.MongoDb
         /// Configures Rebus to use MongoDB to store sagas, using the specified collection name resolver function. If the collection name resolver is omitted,
         /// collection names will be determined by using the <code>Name</code> property of the saga data's <see cref="Type"/>
         /// </summary>
-        public static void StoreInMongoDb(this StandardConfigurer<ISagaStorage> configurer, MongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
+        public static void StoreInMongoDb(this StandardConfigurer<ISagaStorage> configurer, IMongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
         {
             if (configurer == null) throw new ArgumentNullException("configurer");
             if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
@@ -37,7 +37,7 @@ namespace Rebus.MongoDb
         /// subscribing and unsubscribing by manipulating the subscription directly from the subscriber or just let it default to false to preserve the
         /// default behavior.
         /// </summary>
-        public static void StoreInMongoDb(this StandardConfigurer<ISubscriptionStorage> configurer, MongoDatabase mongoDatabase, string collectionName, bool isCentralized = false)
+        public static void StoreInMongoDb(this StandardConfigurer<ISubscriptionStorage> configurer, IMongoDatabase mongoDatabase, string collectionName, bool isCentralized = false)
         {
             if (configurer == null) throw new ArgumentNullException("configurer");
             if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
@@ -54,7 +54,7 @@ namespace Rebus.MongoDb
         /// <summary>
         /// Configures Rebus to use MongoDB to store timeouts.
         /// </summary>
-        public static void StoreInMongoDb(this StandardConfigurer<ITimeoutManager> configurer, MongoDatabase mongoDatabase, string collectionName)
+        public static void StoreInMongoDb(this StandardConfigurer<ITimeoutManager> configurer, IMongoDatabase mongoDatabase, string collectionName)
         {
             configurer.Register(c =>
             {
