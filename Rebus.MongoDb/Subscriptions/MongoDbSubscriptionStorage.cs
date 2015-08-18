@@ -21,7 +21,7 @@ namespace Rebus.MongoDb.Subscriptions
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            var doc = await _subscriptions.Find(new BsonDocument("_id", topic)).FirstOrDefaultAsync();
+            var doc = await _subscriptions.Find(new BsonDocument("_id", topic)).FirstOrDefaultAsync().ConfigureAwait(false);
 
             if (doc == null) return NoSubscribers;
 
@@ -34,14 +34,14 @@ namespace Rebus.MongoDb.Subscriptions
         {
              await _subscriptions.UpdateOneAsync(new BsonDocument("_id", topic),
                 Builders<BsonDocument>.Update.AddToSet("addresses", subscriberAddress),
-                new UpdateOptions() { IsUpsert = true });
+                new UpdateOptions() { IsUpsert = true }).ConfigureAwait(false);
         }
 
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
             await _subscriptions.UpdateOneAsync(new BsonDocument("_id", topic),
                  Builders<BsonDocument>.Update.Pull("addresses", subscriberAddress),
-                new UpdateOptions() { IsUpsert = true });
+                new UpdateOptions() { IsUpsert = true }).ConfigureAwait(false);
         }
 
         public bool IsCentralized { get; private set; }

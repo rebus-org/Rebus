@@ -28,7 +28,7 @@ namespace Rebus.MongoDb.Sagas
 
             var criteria = new BsonDocument(propertyName, BsonValue.Create(propertyValue));
 
-            var result = await collection.Find(criteria).FirstOrDefaultAsync();
+            var result = await collection.Find(criteria).FirstOrDefaultAsync().ConfigureAwait(false);
             ISagaData sagaData = null;
             if (result != null)
             {
@@ -47,7 +47,7 @@ namespace Rebus.MongoDb.Sagas
 
             var collection = GetCollection(sagaData.GetType());
 
-            await collection.InsertOneAsync(sagaData.ToBsonDocument());
+            await collection.InsertOneAsync(sagaData.ToBsonDocument()).ConfigureAwait(false);
         }
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
@@ -59,7 +59,7 @@ namespace Rebus.MongoDb.Sagas
 
             sagaData.Revision++;
 
-            var result = await collection.ReplaceOneAsync(criteria, sagaData.ToBsonDocument(sagaData.GetType()));
+            var result = await collection.ReplaceOneAsync(criteria, sagaData.ToBsonDocument(sagaData.GetType())).ConfigureAwait(false);
 
             if (!result.IsModifiedCountAvailable || result.ModifiedCount != 1)
             {
@@ -72,7 +72,7 @@ namespace Rebus.MongoDb.Sagas
         {
             var collection = GetCollection(sagaData.GetType());
 
-            var result = await collection.DeleteManyAsync(new BsonDocument("_id", sagaData.Id));
+            var result = await collection.DeleteManyAsync(new BsonDocument("_id", sagaData.Id)).ConfigureAwait(false);
 
             if (result.DeletedCount != 1)
             {
@@ -87,7 +87,7 @@ namespace Rebus.MongoDb.Sagas
             {
                 var collectionName = _collectionNameResolver(sagaDataType);
 
-                return _mongoDatabase.GetCollection<BsonDocument>(collectionName).WithWriteConcern(WriteConcern.WMajority);
+                return _mongoDatabase.GetCollection<BsonDocument>(collectionName);
             }
             catch (Exception exception)
             {

@@ -33,7 +33,7 @@ namespace Rebus.MongoDb.Timeouts
         {
             var newTimeout = new Timeout(headers, body, approximateDueTime.UtcDateTime);
             _log.Debug("Deferring message with ID {0} until {1} (doc ID {2})", headers.GetValue(Headers.MessageId), approximateDueTime, newTimeout.Id);
-            await _timeouts.InsertOneAsync(newTimeout);
+            await _timeouts.InsertOneAsync(newTimeout).ConfigureAwait(false);
         }
 
         public async Task<DueMessagesResult> GetDueMessages()
@@ -44,7 +44,7 @@ namespace Rebus.MongoDb.Timeouts
             while (dueTimeouts.Count < 100)
             {
                 var dueTimeout = await _timeouts.FindOneAndUpdateAsync(Builders<Timeout>.Filter.Lte(t => t.DueTimeUtc, now),
-                                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, now.AddMinutes(1)));
+                                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, now.AddMinutes(1))).ConfigureAwait(false);
 
                 if (dueTimeout == null)
                 {
@@ -60,7 +60,7 @@ namespace Rebus.MongoDb.Timeouts
                 .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, async () =>
                 {
                     _log.Debug("Completing timeout for message with ID {0} (doc ID {1})", timeout.Headers.GetValue(Headers.MessageId), timeout.Id);
-                    await _timeouts.DeleteOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id));
+                    await _timeouts.DeleteOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id)).ConfigureAwait(false); ;
                     timeoutsNotCompleted.Remove(timeout.Id);
                 }))
                 .ToList();
@@ -76,7 +76,7 @@ namespace Rebus.MongoDb.Timeouts
                             timeoutNotCompleted.OriginalDueTimeUtc);
 
                         await _timeouts.UpdateOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeoutNotCompleted.Id),
-                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, timeoutNotCompleted.OriginalDueTimeUtc));
+                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, timeoutNotCompleted.OriginalDueTimeUtc)).ConfigureAwait(false);
                     }
                     catch(Exception exception)
                     {
