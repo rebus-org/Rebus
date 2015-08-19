@@ -146,16 +146,25 @@ namespace Rebus.Pipeline.Receive
             _transactionContext = transactionContext;
         }
 
+        /// <summary>
+        /// Gets the contained handler object
+        /// </summary>
         public override object Handler
         {
             get { return _handler; }
         }
 
+        /// <summary>
+        /// Gets whther the contained handler object has a saga
+        /// </summary>
         public override bool HasSaga
         {
             get { return _handler is Saga; }
         }
 
+        /// <summary>
+        /// If <see cref="HasSaga"/> returned true, the <see cref="Handler"/> can be retrieved as a <see cref="Saga"/> here
+        /// </summary>
         public override Saga Saga
         {
             get

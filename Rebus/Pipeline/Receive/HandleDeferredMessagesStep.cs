@@ -111,6 +111,10 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             }
         }
 
+        /// <summary>
+        /// Checks to see if the incoming message has the <see cref="Headers.DeferredUntil"/> header. If that is the case, the message is either stored for later delivery
+        /// or forwarded to the configured external timeout manager. If not, the message will be passed on down the pipeline.
+        /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();

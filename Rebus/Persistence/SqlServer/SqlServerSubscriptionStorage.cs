@@ -100,6 +100,9 @@ CREATE TABLE [dbo].[{0}] (
             }
         }
 
+        /// <summary>
+        /// Registers the given <paramref name="subscriberAddress"/> as a subscriber of the given <paramref name="topic"/>
+        /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
             using (var connection = await _connectionProvider.GetConnection())
@@ -124,6 +127,9 @@ END
             }
         }
 
+        /// <summary>
+        /// Unregisters the given <paramref name="subscriberAddress"/> as a subscriber of the given <paramref name="topic"/>
+        /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
             using (var connection = await _connectionProvider.GetConnection())
@@ -143,6 +149,9 @@ DELETE FROM [{0}] WHERE [topic] = @topic AND [address] = @address
             }
         }
 
+        /// <summary>
+        /// Gets whether this subscription storage is centralized
+        /// </summary>
         public bool IsCentralized { get; private set; }
     }
 }

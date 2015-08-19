@@ -117,10 +117,16 @@ namespace Rebus.Activation
             return this;
         }
 
+        /// <summary>
+        /// Disposes the contained bus instance
+        /// </summary>
         public void Dispose()
         {
             if (Bus == null) return;
-            Bus.Dispose();
+
+            var disposable = Bus;
+            Bus = null;
+            disposable.Dispose();
         }
     }
 }

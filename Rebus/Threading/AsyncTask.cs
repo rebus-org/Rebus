@@ -114,6 +114,9 @@ namespace Rebus.Threading
             }, token);
         }
 
+        /// <summary>
+        /// Stops the background task
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
