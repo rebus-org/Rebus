@@ -601,6 +601,10 @@
 
 * Updated MongoDB driver dependency to 2.0.1 and rewrote MongoDB persistence to take advantage of `async`/`await` - thanks [kevbite]
 
+## 0.94.0
+
+* Made the type-based pub/sub API default and moved the raw string-based topic API into `bus.Advanced.Topics`
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
