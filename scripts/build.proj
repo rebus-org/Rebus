@@ -43,7 +43,7 @@
 
     <Target Name="package" DependsOnTargets="build">
         <ItemGroup>
-            <NuSpecs Include="$(Root)\**\*.nuspec" Exclude="$(Root)\deploy\*.*; $(Root)\old\**\*.*"/>
+            <NuSpecs Include="$(Root)\**\*.nuspec" Exclude="$(Root)\deploy\*.*; $(Root)\old\**\*.*; $(Root)\packages\*.*;"/>
         </ItemGroup>
 
         <PropertyGroup>
