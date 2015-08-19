@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
@@ -8,9 +8,9 @@ using Rebus.Extensions;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
-namespace Rebus.AzureServiceBus.Tests
+namespace Rebus.AzureServiceBus.Tests.Factories
 {
-    public class AzureServiceBusTransportFactory : ITransportFactory
+    public class BasicAzureServiceBusTransportFactory : ITransportFactory
     {
         public static string ConnectionString
         {
@@ -54,7 +54,7 @@ namespace Rebus.AzureServiceBus.Tests
             return File.ReadAllText(filePath);
         }
 
-        readonly Dictionary<string, AzureServiceBusTransport> _queuesToDelete = new Dictionary<string, AzureServiceBusTransport>();
+        readonly Dictionary<string, BasicAzureServiceBusTransport> _queuesToDelete = new Dictionary<string, BasicAzureServiceBusTransport>();
 
         public ITransport CreateOneWayClient()
         {
@@ -74,7 +74,7 @@ namespace Rebus.AzureServiceBus.Tests
 
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
             {
-                var transport = new AzureServiceBusTransport(ConnectionString, inputQueueAddress);
+                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress);
 
                 transport.PurgeInputQueue();
 

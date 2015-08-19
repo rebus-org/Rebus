@@ -3,6 +3,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.AzureServiceBus.Config;
+using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Extensions;
@@ -13,24 +15,31 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
 {
-    [TestFixture, Category(TestCategory.Azure)]
+    [TestFixture(AzureServiceBusMode.Basic), Category(TestCategory.Azure)]
+    [TestFixture(AzureServiceBusMode.Standard), Category(TestCategory.Azure)]
     public class AzureServiceBusPeekLockRenewalTest : FixtureBase
     {
+        readonly AzureServiceBusMode _azureServiceBusMode;
         static readonly string QueueName = TestConfig.QueueName("input");
 
         BuiltinHandlerActivator _activator;
         IBus _bus;
         AzureServiceBusTransport _transport;
 
+        public AzureServiceBusPeekLockRenewalTest(AzureServiceBusMode azureServiceBusMode)
+        {
+            _azureServiceBusMode = azureServiceBusMode;
+        }
+
         protected override void SetUp()
         {
-            _transport = new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, QueueName);
+            _transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName);
             _transport.PurgeInputQueue();
 
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
-                .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName)
+                .Transport(t => t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, _azureServiceBusMode)
                 .AutomaticallyRenewPeekLock())
                 .Options(o =>
                 {

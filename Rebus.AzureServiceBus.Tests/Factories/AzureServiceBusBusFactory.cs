@@ -2,15 +2,23 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Activation;
+using Rebus.AzureServiceBus.Config;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
 
-namespace Rebus.AzureServiceBus.Tests
+namespace Rebus.AzureServiceBus.Tests.Factories
 {
-    public class AzureServiceBusBusFactory : IBusFactory
+    public abstract class AzureServiceBusBusFactory : IBusFactory
     {
+        readonly AzureServiceBusMode _mode;
+
+        protected AzureServiceBusBusFactory(AzureServiceBusMode mode)
+        {
+            _mode = mode;
+        }
+
         readonly List<IDisposable> _stuffToDispose = new List<IDisposable>();
 
         public IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler)
@@ -24,7 +32,7 @@ namespace Rebus.AzureServiceBus.Tests
             PurgeQueue(queueName);
 
             var bus = Configure.With(builtinHandlerActivator)
-                .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, queueName))
+                .Transport(t => t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, queueName, _mode))
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(10);
@@ -39,7 +47,7 @@ namespace Rebus.AzureServiceBus.Tests
 
         static void PurgeQueue(string queueName)
         {
-            new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, queueName)
+            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, queueName)
                 .PurgeInputQueue();
         }
 

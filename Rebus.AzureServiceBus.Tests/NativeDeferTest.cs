@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
@@ -20,12 +21,12 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
-            new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, QueueName).PurgeInputQueue();
+            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName).PurgeInputQueue();
 
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
-                .Transport(t => t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName))
+                .Transport(t => t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName))
                 .Options(o =>
                 {
                     o.LogPipeline();
