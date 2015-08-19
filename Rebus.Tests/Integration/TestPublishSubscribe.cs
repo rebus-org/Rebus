@@ -58,7 +58,7 @@ namespace Rebus.Tests.Integration
                 receivedStringMessage = true;
             });
 
-            await _publisherBus.Publish("someTopic", "hej med dig min ven!!!!!");
+            await _publisherBus.Advanced.Topics.Publish("someTopic", "hej med dig min ven!!!!!");
 
             await Task.Delay(2000);
 
@@ -71,7 +71,7 @@ namespace Rebus.Tests.Integration
             var subscriberReceivedMessage = new ManualResetEvent(false);
             const string topicName = "someTopic";
 
-            await _subscriberBus.Subscribe(topicName);
+            await _subscriberBus.Advanced.Topics.Subscribe(topicName);
 
             _subscriberHandlers.Handle<string>(async str =>
             {
@@ -80,7 +80,7 @@ namespace Rebus.Tests.Integration
 
             await Task.Delay(1000);
 
-            await _publisherBus.Publish(topicName, "hej med dig min ven!!!!!");
+            await _publisherBus.Advanced.Topics.Publish(topicName, "hej med dig min ven!!!!!");
 
             subscriberReceivedMessage.WaitOrDie(TimeSpan.FromSeconds(30), "Expected to have received a message");
         }
@@ -96,15 +96,15 @@ namespace Rebus.Tests.Integration
                 receivedStringMessage = true;
             });
 
-            await _subscriberBus.Subscribe(topicName);
+            await _subscriberBus.Advanced.Topics.Subscribe(topicName);
             
             await Task.Delay(1000);
 
-            await _subscriberBus.Unsubscribe(topicName);
+            await _subscriberBus.Advanced.Topics.Unsubscribe(topicName);
 
             await Task.Delay(1000);
 
-            await _publisherBus.Publish(topicName, "hej med dig min ven!!!!!");
+            await _publisherBus.Advanced.Topics.Publish(topicName, "hej med dig min ven!!!!!");
 
             await Task.Delay(1000);
 

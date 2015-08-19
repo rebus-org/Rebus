@@ -97,7 +97,7 @@ namespace Rebus.Tests.Auditing
         [Test]
         public async Task CopiesPublishedMessageToAuditQueue()
         {
-            await _bus.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
+            await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
 
             InMemTransportMessage message;
             var timer = Stopwatch.StartNew();

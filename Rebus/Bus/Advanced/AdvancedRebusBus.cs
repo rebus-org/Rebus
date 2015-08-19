@@ -1,4 +1,6 @@
-﻿using Rebus.Bus.Advanced;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
 
 // ReSharper disable CheckNamespace
 
@@ -20,6 +22,11 @@ namespace Rebus.Bus
             {
                 get { return new WorkersApi(_rebusBus); }
             }
+
+            public ITopicsApi Topics
+            {
+                get { return new TopicsApi(_rebusBus); }
+            }
         }
 
         class WorkersApi : IWorkersApi
@@ -39,6 +46,31 @@ namespace Rebus.Bus
             public void SetNumberOfWorkers(int numberOfWorkers)
             {
                 _rebusBus.SetNumberOfWorkers(numberOfWorkers);
+            }
+        }
+
+        class TopicsApi : ITopicsApi
+        {
+            readonly RebusBus _rebusBus;
+
+            public TopicsApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
+            }
+
+            public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _rebusBus.InnerPublish(topic, eventMessage, optionalHeaders);
+            }
+
+            public Task Subscribe(string topic)
+            {
+                return _rebusBus.InnerSubscribe(topic);
+            }
+
+            public Task Unsubscribe(string topic)
+            {
+                return _rebusBus.InnerUnsubscribe(topic);
             }
         }
     }

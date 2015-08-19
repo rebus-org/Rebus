@@ -58,6 +58,7 @@
     <Compile Include="Auditing\OutgoingAuditingStep.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
+    <Compile Include="Bus\Advanced\ITopicsApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
@@ -68,7 +69,6 @@
     <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Exceptions\RebusApplicationException.cs" />
-    <Compile Include="Extensions\BusExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />

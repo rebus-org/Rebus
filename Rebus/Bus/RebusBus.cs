@@ -111,17 +111,6 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
-        /// </summary>
-        public async Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
-        {
-            var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
-            var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
-
-            await InnerSend(subscriberAddresses, logicalMessage);
-        }
-
-        /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.ReturnAddress"/> is specified
         /// in a header, the instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
@@ -161,10 +150,75 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
+        /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
+        /// which can be enabled by going 
+        /// <code>
+        /// Configure.With(...)
+        ///     .(...)
+        ///     .Routing(r => r.TypeBased()
+        ///             .Map&lt;SomeMessage&gt;("someEndpoint")
+        ///             .(...))
+        /// </code>
+        /// in the configuration
+        /// </summary>
+        public Task Subscribe<TEvent>()
+        {
+            var topic = typeof(TEvent).GetSimpleAssemblyQualifiedName();
+
+            return InnerSubscribe(topic);
+        }
+
+        /// <summary>
+        /// Unsubscribes from the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>
+        /// </summary>
+        public Task Unsubscribe<TEvent>()
+        {
+            var topic = typeof(TEvent).GetSimpleAssemblyQualifiedName();
+
+            return InnerUnsubscribe(topic);
+        }
+
+        /// <summary>
+        /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.
+        /// While this kind of pub/sub can work universally with the general topic-based routing, it works especially well with type-based routing,
+        /// which can be enabled by going 
+        /// <code>
+        /// Configure.With(...)
+        ///     .(...)
+        ///     .Routing(r => r.TypeBased()
+        ///             .Map&lt;SomeMessage&gt;("someEndpoint")
+        ///             .(...))
+        /// </code>
+        /// in the configuration
+        /// </summary>
+        public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            if (eventMessage == null) throw new ArgumentNullException("eventMessage");
+
+            var messageType = eventMessage.GetType();
+            var topic = messageType.GetSimpleAssemblyQualifiedName();
+
+            return InnerPublish(topic, eventMessage, optionalHeaders);
+        }
+
+
+        /// <summary>
+        /// Publishes the specified event message on the specified topic, optionally specifying some headers to attach to the message
+        /// </summary>
+        async Task InnerPublish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            var logicalMessage = CreateMessage(eventMessage, Operation.Publish, optionalHeaders);
+            var subscriberAddresses = await _subscriptionStorage.GetSubscriberAddresses(topic);
+
+            await InnerSend(subscriberAddresses, logicalMessage);
+        }
+
+        /// <summary>
         /// Subscribes to the specified topic. If the current subscription storage is centralized, the subscription will be established right away. Otherwise, a <see cref="SubscribeRequest"/>
         /// will be sent to the address mapped as the owner (i.e. the publisher) of the given topic.
         /// </summary>
-        public async Task Subscribe(string topic)
+        async Task InnerSubscribe(string topic)
         {
             var subscriberAddress = _transport.Address;
 
@@ -195,7 +249,7 @@ namespace Rebus.Bus
         /// Unsubscribes from the specified topic. If the current subscription storage is centralized, the subscription will be removed right away. Otherwise, an <see cref="UnsubscribeRequest"/>
         /// will be sent to the address mapped as the owner (i.e. the publisher) of the given topic.
         /// </summary>
-        public async Task Unsubscribe(string topic)
+        async Task InnerUnsubscribe(string topic)
         {
             var subscriberAddress = _transport.Address;
 

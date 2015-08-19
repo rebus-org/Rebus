@@ -98,6 +98,21 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             public IAdvancedApi Advanced { get; private set; }
+            
+            public Task Subscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Unsubscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [Test]

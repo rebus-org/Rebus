@@ -59,11 +59,11 @@ namespace Rebus.Tests.Integration
         public async Task CheckRealisticScenarioWithSqlAllTheWay()
         {
             await Task.WhenAll(
-                _bus2.Subscribe(typeof(string).FullName),
-                _bus3.Subscribe(typeof(string).FullName)
+                _bus2.Advanced.Topics.Subscribe(typeof(string).FullName),
+                _bus3.Advanced.Topics.Subscribe(typeof(string).FullName)
                 );
 
-            await _bus1.Publish(typeof (string).FullName, "hej");
+            await _bus1.Advanced.Topics.Publish(typeof(string).FullName, "hej");
 
             await _receivedMessages.WaitUntil(q => q.Count >= 2);
 

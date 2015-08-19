@@ -31,30 +31,10 @@ namespace Rebus.Bus
         Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
-        /// Publishes the specified message to the specified topic. Default behavior is to look up the addresses of those who subscribed to the given topic
-        /// by calling <see cref="ISubscriptionStorage.GetSubscriberAddresses"/> but the transport may override this behavior if it has special capabilities.
-        /// </summary>
-        Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null);
-
-        /// <summary>
         /// Defers the delivery of the message by attaching a <see cref="Headers.DeferredUntil"/> header to it and delivering it to the configured timeout manager endpoint
         /// (defaults to be ourselves). When the time is right, the deferred message is returned to the address indicated by the <see cref="Headers.ReturnAddress"/> header.
         /// </summary>
         Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
-
-        /// <summary>
-        /// Subscribes the current endpoint to the given topic. If the <see cref="ISubscriptionStorage"/> is centralized (determined by checking <see cref="ISubscriptionStorage.IsCentralized"/>),
-        /// the subscription is registered immediately. If not, the owner of the given topic is checked (by calling <see cref="IRouter.GetOwnerAddress"/>), and a
-        /// <see cref="SubscribeRequest"/> is sent to the owning endpoint).
-        /// </summary>
-        Task Subscribe(string topic);
-
-        /// <summary>
-        /// Unsubscribes the current endpoint from the given topic. If the <see cref="ISubscriptionStorage"/> is centralized (determined by checking <see cref="ISubscriptionStorage.IsCentralized"/>),
-        /// the subscription is removed immediately. If not, the owner of the given topic is checked (by calling <see cref="IRouter.GetOwnerAddress"/>), and an
-        /// <see cref="UnsubscribeRequest"/> is sent to the owning endpoint).
-        /// </summary>
-        Task Unsubscribe(string topic);
 
         /// <summary>
         /// Explicitly routes the <paramref name="explicitlyRoutedMessage"/> to the destination specified by <paramref name="destinationAddress"/>
@@ -65,5 +45,40 @@ namespace Rebus.Bus
         /// Gets the API for advanced features of the bus
         /// </summary>
         IAdvancedApi Advanced { get; }
+
+        /// <summary>
+        /// Subscribes to the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>. 
+        /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
+        /// which can be enabled by going 
+        /// <code>
+        /// Configure.With(...)
+        ///     .(...)
+        ///     .Routing(r => r.TypeBased()
+        ///             .Map&lt;SomeMessage&gt;("someEndpoint")
+        ///             .(...))
+        /// </code>
+        /// in the configuration
+        /// </summary>
+        Task Subscribe<TEvent>();
+
+        /// <summary>
+        /// Unsubscribes from the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>
+        /// </summary>
+        Task Unsubscribe<TEvent>();
+
+        /// <summary>
+        /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.
+        /// While this kind of pub/sub can work universally with the general topic-based routing, it works especially well with type-based routing,
+        /// which can be enabled by going 
+        /// <code>
+        /// Configure.With(...)
+        ///     .(...)
+        ///     .Routing(r => r.TypeBased()
+        ///             .Map&lt;SomeMessage&gt;("someEndpoint")
+        ///             .(...))
+        /// </code>
+        /// in the configuration
+        /// </summary>
+        Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null);
     }
 }

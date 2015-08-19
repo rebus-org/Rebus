@@ -62,24 +62,9 @@ namespace Rebus.Transport.Msmq
             return _innerBus.Reply(replyMessage, optionalHeaders);
         }
 
-        public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
-        {
-            return _innerBus.Publish(topic, eventMessage, optionalHeaders);
-        }
-
         public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             return _innerBus.Defer(delay, message, optionalHeaders);
-        }
-
-        public Task Subscribe(string topic)
-        {
-            return _innerBus.Subscribe(topic);
-        }
-
-        public Task Unsubscribe(string topic)
-        {
-            return _innerBus.Unsubscribe(topic);
         }
 
         public Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
@@ -90,6 +75,21 @@ namespace Rebus.Transport.Msmq
         public IAdvancedApi Advanced
         {
             get { return _advancedApiDecorator; }
+        }
+
+        public Task Subscribe<TEvent>()
+        {
+            return _innerBus.Subscribe<TEvent>();
+        }
+
+        public Task Unsubscribe<TEvent>()
+        {
+            return _innerBus.Unsubscribe<TEvent>();
+        }
+
+        public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+        {
+            return _innerBus.Publish(eventMessage, optionalHeaders);
         }
 
         class AdvancedApiDecorator : IAdvancedApi
@@ -104,6 +104,11 @@ namespace Rebus.Transport.Msmq
             public IWorkersApi Workers
             {
                 get { return new OneWayClientWorkersApi(); }
+            }
+
+            public ITopicsApi Topics
+            {
+                get { return _innerAdvancedApi.Topics; }
             }
         }
 
