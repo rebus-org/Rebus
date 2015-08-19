@@ -1,5 +1,4 @@
-﻿using MongoDB.Bson;
-using MongoDB.Driver;
+﻿using MongoDB.Driver;
 using NUnit.Framework;
 using Rebus.MongoDb.Timeouts;
 using Rebus.Tests;
@@ -8,7 +7,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.MongoDb.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(MongoTestHelper.TestCategory)]
     public class TestMongoDbTimeoutManager : BasicStoreAndRetrieveOperations<MongoDbTimeoutManagerFactory>
     {
          
@@ -18,12 +17,10 @@ namespace Rebus.MongoDb.Tests.Timeouts
     {
         readonly IMongoDatabase _mongoDatabase;
         readonly string _collectionName = string.Format("timeouts_{0}", TestConfig.Suffix);
-        private IMongoClient _mongoClient;
 
         public MongoDbTimeoutManagerFactory()
         {
-            _mongoClient = MongoTestHelper.GetMongoClient();
-            _mongoDatabase = MongoTestHelper.GetMongoDatabase(_mongoClient);
+            _mongoDatabase = MongoTestHelper.GetMongoDatabase();
             DropCollection(_collectionName);
         }
         
@@ -39,7 +36,7 @@ namespace Rebus.MongoDb.Tests.Timeouts
 
         void DropCollection(string collectionName)
         {
-            _mongoDatabase.DropCollectionAsync(_collectionName).Wait();
+            _mongoDatabase.DropCollectionAsync(collectionName).Wait();
         }
     }
 }

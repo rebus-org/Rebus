@@ -6,27 +6,23 @@ using Rebus.Tests.Contracts.Subscriptions;
 
 namespace Rebus.MongoDb.Tests.Subscriptions
 {
-    [TestFixture]
+    [TestFixture, Category(MongoTestHelper.TestCategory)]
     public class BasicSubscriptionOperations : BasicSubscriptionOperations<TestMongoDbSubscriptionStorage> { }
 
     public class TestMongoDbSubscriptionStorage : ISubscriptionStorageFactory
     {
         IMongoDatabase _mongoDatabase;
-        IMongoClient _mongoClient;
 
         public ISubscriptionStorage Create()
         {
-            _mongoClient = MongoTestHelper.GetMongoClient();
-            _mongoDatabase = MongoTestHelper.GetMongoDatabase(_mongoClient);
+            _mongoDatabase = MongoTestHelper.GetMongoDatabase();
             
             return new MongoDbSubscriptionStorage(_mongoDatabase, "subscriptions", true);
         }
 
         public void Cleanup()
         {
-            _mongoClient.DropDatabaseAsync(_mongoDatabase.DatabaseNamespace.DatabaseName).Wait();
-            _mongoClient = null;
-            _mongoDatabase = null;
+            MongoTestHelper.DropMongoDatabase();
         }
     }
 }

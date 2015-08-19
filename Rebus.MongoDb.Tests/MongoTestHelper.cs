@@ -7,6 +7,8 @@ namespace Rebus.MongoDb.Tests
 {
     public class MongoTestHelper
     {
+        public const string TestCategory = "mongodb";
+
         public static MongoUrl GetUrl()
         {
             var suffix = TestConfig.Suffix;
@@ -20,7 +22,17 @@ namespace Rebus.MongoDb.Tests
             return mongoUrl;
         }
 
-        public static IMongoDatabase GetMongoDatabase(IMongoClient mongoClient)
+        public static IMongoDatabase GetMongoDatabase()
+        {
+            return GetMongoDatabase(GetMongoClient());
+        }
+
+        public static void DropMongoDatabase()
+        {
+            GetMongoClient().DropDatabaseAsync(GetUrl().DatabaseName).Wait();
+        }
+
+        static IMongoDatabase GetMongoDatabase(IMongoClient mongoClient)
         {
             var url = GetUrl();
             var settings = new MongoDatabaseSettings
@@ -32,7 +44,7 @@ namespace Rebus.MongoDb.Tests
             return mongoDatabase;
         }
 
-        public static IMongoClient GetMongoClient()
+        static IMongoClient GetMongoClient()
         {
             var url = GetUrl();
 
