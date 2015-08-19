@@ -605,6 +605,10 @@
 
 * Made the type-based pub/sub API default and moved the raw string-based topic API into `bus.Advanced.Topics`
 
+## 0.95.0
+
+* Re-introduced the previous Azure Service Bus implementation that relied only on queues to work - can be used with the Azure Service Bus Basic tier
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
