@@ -43,7 +43,7 @@
 
     <Target Name="package" DependsOnTargets="build">
         <ItemGroup>
-            <NuSpecs Include="$(Root)\Rebus.*\*.nuspec"/>
+            <NuSpecs Include="$(Root)\Rebus\Rebus.nuspec; $(Root)\Rebus.*\*.nuspec"/>
         </ItemGroup>
 
         <PropertyGroup>
