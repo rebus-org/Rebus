@@ -59,7 +59,7 @@ namespace Rebus.Tests.Encryption
                 gotTheMessage.Set();
             });
 
-            await _bus.Route("bimse", plainTextMessage);
+            await _bus.Advanced.Routing.Send("bimse", plainTextMessage);
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(2));
 

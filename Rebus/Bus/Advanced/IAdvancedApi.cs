@@ -14,5 +14,10 @@ namespace Rebus.Bus.Advanced
         /// Gets an API to do pub/sub on raw string-based topics
         /// </summary>
         ITopicsApi Topics { get; }
+
+        /// <summary>
+        /// Gets an API to explicitly route messages
+        /// </summary>
+        IRoutingApi Routing { get; }
     }
 }

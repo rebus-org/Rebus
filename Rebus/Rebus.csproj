@@ -58,6 +58,7 @@
     <Compile Include="Auditing\OutgoingAuditingStep.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
+    <Compile Include="Bus\Advanced\IRoutingApi.cs" />
     <Compile Include="Bus\Advanced\ITopicsApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />

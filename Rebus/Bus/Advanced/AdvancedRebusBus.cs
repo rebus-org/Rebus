@@ -27,6 +27,28 @@ namespace Rebus.Bus
             {
                 get { return new TopicsApi(_rebusBus); }
             }
+
+            public IRoutingApi Routing
+            {
+                get { return new RoutingApi(_rebusBus); }
+            }
+        }
+
+        class RoutingApi : IRoutingApi
+        {
+            readonly RebusBus _rebusBus;
+
+            public RoutingApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
+            }
+
+            public Task Send(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
+
+                return  _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
+            }
         }
 
         class WorkersApi : IWorkersApi

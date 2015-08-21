@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
 using Rebus.Messages;
-using Rebus.Messages.Control;
 using Rebus.Routing;
-using Rebus.Subscriptions;
 
 namespace Rebus.Bus
 {
@@ -35,11 +33,6 @@ namespace Rebus.Bus
         /// (defaults to be ourselves). When the time is right, the deferred message is returned to the address indicated by the <see cref="Headers.ReturnAddress"/> header.
         /// </summary>
         Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null);
-
-        /// <summary>
-        /// Explicitly routes the <paramref name="explicitlyRoutedMessage"/> to the destination specified by <paramref name="destinationAddress"/>
-        /// </summary>
-        Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null);
 
         /// <summary>
         /// Gets the API for advanced features of the bus

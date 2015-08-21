@@ -609,6 +609,11 @@
 
 * Re-introduced the previous Azure Service Bus implementation that relied only on queues to work - can be used with the Azure Service Bus Basic tier
 
+## 0.96.0
+
+* Moved the explicit routing function to an advanced routing API
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

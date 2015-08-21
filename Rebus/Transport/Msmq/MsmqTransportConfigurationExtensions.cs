@@ -67,11 +67,6 @@ namespace Rebus.Transport.Msmq
             return _innerBus.Defer(delay, message, optionalHeaders);
         }
 
-        public Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
-        {
-            return _innerBus.Route(destinationAddress, explicitlyRoutedMessage, optionalHeaders);
-        }
-
         public IAdvancedApi Advanced
         {
             get { return _advancedApiDecorator; }
@@ -109,6 +104,11 @@ namespace Rebus.Transport.Msmq
             public ITopicsApi Topics
             {
                 get { return _innerAdvancedApi.Topics; }
+            }
+
+            public IRoutingApi Routing
+            {
+                get { return _innerAdvancedApi.Routing; }
             }
         }
 

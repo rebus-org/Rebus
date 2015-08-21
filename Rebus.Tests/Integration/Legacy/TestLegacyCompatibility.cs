@@ -86,7 +86,7 @@ namespace Rebus.Tests.Integration.Legacy
         [Test]
         public void CanSendOldFormat()
         {
-            _bus.Route(_oldEndpoint, new OldSchoolMessage {KeyChar = "g"}).Wait();
+            _bus.Advanced.Routing.Send(_oldEndpoint, new OldSchoolMessage { KeyChar = "g" }).Wait();
 
             using (var queue = new MessageQueue(MsmqUtil.GetFullPath(_oldEndpoint)))
             {

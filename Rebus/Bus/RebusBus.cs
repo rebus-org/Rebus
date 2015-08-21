@@ -101,16 +101,6 @@ namespace Rebus.Bus
         }
 
         /// <summary>
-        /// Sends the specified command message to the address specified as <paramref name="destinationAddress"/>, optionally specifying some headers to attach to the message
-        /// </summary>
-        public async Task Route(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
-        {
-            var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
-
-            await InnerSend(new[] { destinationAddress }, logicalMessage);
-        }
-
-        /// <summary>
         /// Defers into the future the specified message, optionally specifying some headers to attach to the message. Unless the <see cref="Headers.ReturnAddress"/> is specified
         /// in a header, the instance's own input address will be set as the return address, which will cause the message to be delivered to that address when the <paramref name="delay"/>
         /// has elapsed.
