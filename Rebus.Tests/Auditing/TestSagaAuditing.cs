@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Auditing.Sagas;
@@ -47,7 +48,7 @@ namespace Rebus.Tests.Auditing
 
             var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString);
 
-            var storedCopies = new List<Tuple<Guid, int, ISagaData>>();
+            var storedCopies = new List<Tuple<Guid, int, ISagaData, Dictionary<string,string>>>();
 
             using (var connection = await connectionProvider.GetConnection())
             {
@@ -59,11 +60,14 @@ namespace Rebus.Tests.Auditing
                     {
                         while (await reader.ReadAsync())
                         {
-                            Console.WriteLine("{0} / {1} / {2}", reader["id"], reader["revision"], reader["data"]);
+                            var id = (Guid)reader["id"];
+                            var revision = (int)reader["revision"];
+                            var sagaData = (ISagaData)new ObjectSerializer().Deserialize(Encoding.UTF8.GetBytes((string)reader["data"]));
+                            var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>((string)reader["metadata"]);
 
-                            storedCopies.Add(Tuple.Create((Guid)reader["id"],
-                                (int)reader["revision"],
-                                (ISagaData)new ObjectSerializer().Deserialize(Encoding.UTF8.GetBytes((string)reader["data"]))));
+                            var tuple = Tuple.Create(id, revision, sagaData, metadata);
+
+                            storedCopies.Add(tuple);
                         }
                     }
                 }
@@ -72,6 +76,7 @@ namespace Rebus.Tests.Auditing
             }
 
             Assert.That(storedCopies.Count, Is.EqualTo(3));
+            Assert.That(storedCopies.OrderBy(t => t.Item2).Select(t => t.Item2), Is.EqualTo(new[] {0, 1, 2}), "Expected three initial revisions");
         }
 
         class MySaga : Saga<MySagaData>, IAmInitiatedBy<string>
