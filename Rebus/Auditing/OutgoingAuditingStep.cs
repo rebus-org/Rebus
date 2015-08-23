@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Pipeline;
-using Rebus.Time;
 using Rebus.Transport;
 
 namespace Rebus.Auditing

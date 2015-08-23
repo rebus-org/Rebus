@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Rebus.Messages;
 using Rebus.Time;
 using Rebus.Transport;

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Rebus.Extensions;
 using Rebus.Messages;
-using Rebus.Pipeline.Receive;
 using Rebus.Transport;
 
 namespace Rebus.Bus
