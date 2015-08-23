@@ -5,12 +5,12 @@ using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Transport;
 
-namespace Rebus.Auditing
+namespace Rebus.Auditing.Messages
 {
     /// <summary>
     /// Configuration extensions for the auditing configuration
     /// </summary>
-    public static class AuditingConfigurationExtensions
+    public static class MessageAuditingConfigurationExtensions
     {
         /// <summary>
         /// Enables message auditing whereby Rebus will forward to the audit queue a copy of each properly handled message and

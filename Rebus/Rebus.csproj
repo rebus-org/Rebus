@@ -49,11 +49,13 @@
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
-    <Compile Include="Auditing\AuditHeaders.cs" />
-    <Compile Include="Auditing\AuditingHelper.cs" />
-    <Compile Include="Auditing\AuditingConfigurationExtensions.cs" />
-    <Compile Include="Auditing\IncomingAuditingStep.cs" />
-    <Compile Include="Auditing\OutgoingAuditingStep.cs" />
+    <Compile Include="Auditing\Messages\AuditHeaders.cs" />
+    <Compile Include="Auditing\Messages\AuditingHelper.cs" />
+    <Compile Include="Auditing\Messages\MessageAuditingConfigurationExtensions.cs" />
+    <Compile Include="Auditing\Messages\IncomingAuditingStep.cs" />
+    <Compile Include="Auditing\Messages\OutgoingAuditingStep.cs" />
+    <Compile Include="Auditing\Sagas\ISagaSnapshotStorage.cs" />
+    <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
@@ -73,6 +75,7 @@
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Messages\HeaderAttribute.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />

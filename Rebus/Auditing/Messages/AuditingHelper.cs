@@ -3,7 +3,7 @@ using Rebus.Messages;
 using Rebus.Time;
 using Rebus.Transport;
 
-namespace Rebus.Auditing
+namespace Rebus.Auditing.Messages
 {
     class AuditingHelper
     {

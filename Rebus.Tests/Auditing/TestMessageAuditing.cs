@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Auditing;
+using Rebus.Auditing.Messages;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;

@@ -25,6 +25,11 @@ namespace Rebus.Config
             _injectionist = injectionist;
         }
 
+        internal StandardConfigurer<TService> GetConfigurer<TService>()
+        {
+            return new StandardConfigurer<TService>(_injectionist, _options);
+        }
+
         /// <summary>
         /// Configures the number of workers to start competing over the input queue
         /// </summary>

@@ -5,7 +5,7 @@ using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
 
-namespace Rebus.Auditing
+namespace Rebus.Auditing.Messages
 {
     /// <summary>
     /// Implementation of <see cref="IIncomingStep"/> and <see cref="IOutgoingStep"/> that handles message auditing

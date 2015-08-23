@@ -1,7 +1,7 @@
 ﻿using System;
 using Rebus.Messages;
 
-namespace Rebus.Auditing
+namespace Rebus.Auditing.Messages
 {
     /// <summary>
     /// Headers relevant when using message auditing

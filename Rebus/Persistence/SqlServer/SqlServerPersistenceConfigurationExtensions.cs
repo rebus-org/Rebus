@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using Rebus.Auditing.Sagas;
+using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
@@ -10,6 +11,27 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public static class SqlServerPersistenceConfigurationExtensions
     {
+        /// <summary>
+        /// Configures Rebus to store saga snapshots in SQL Server
+        /// </summary>
+        public static void StoreInSqlServer(this StandardConfigurer<ISagaSnapshotStorage> configurer,
+            string connectionStringOrConnectionStringName, string tableName, bool automaticallyCreateTables = true)
+        {
+            configurer.Register(c =>
+            {
+                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName);
+
+                var snapshotStorage = new SqlServerSagaSnapshotStorage(connectionProvider, tableName);
+
+                if (automaticallyCreateTables)
+                {
+                    snapshotStorage.EnsureTableIsCreated();
+                }
+
+                return snapshotStorage;
+            });
+        }
+
         /// <summary>
         /// Configures Rebus to use SQL Server to store sagas, using the tables specified to store data and indexed properties respectively.
         /// </summary>
