@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,8 +25,11 @@ namespace Rebus.Persistence.SqlServer
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
 
-        static readonly JsonSerializerSettings Settings =
+        static readonly JsonSerializerSettings DataSettings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+
+        static readonly JsonSerializerSettings MetadataSettings =
+            new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
 
         public SqlServerSagaSnapshotStorage(IDbConnectionProvider connectionProvider, string tableName)
         {
@@ -56,6 +60,7 @@ CREATE TABLE [dbo].[{0}] (
 	[id] [uniqueidentifier] NOT NULL,
 	[revision] [int] NOT NULL,
 	[data] [nvarchar](max) NOT NULL,
+	[metadata] [nvarchar](max) NOT NULL,
     CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
     (
 	    [id] ASC,
@@ -70,16 +75,31 @@ CREATE TABLE [dbo].[{0}] (
             }
         }
 
-        public async Task Save(ISagaData sagaData)
+        public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
         {
             using (var connection = await _connectionProvider.GetConnection())
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"INSERT INTO [{0}] ([id], [revision], [data]) VALUES (@id, @revision, @data)", _tableName);
+                    command.CommandText = string.Format(@"
+
+INSERT INTO [{0}] (
+    [id],
+    [revision],
+    [data],
+    [metadata]
+) VALUES (
+    @id, 
+    @revision, 
+    @data,
+    @metadata
+)
+
+", _tableName);
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
-                    command.Parameters.Add("data", SqlDbType.NVarChar).Value = JsonConvert.SerializeObject(sagaData, Settings);
+                    command.Parameters.Add("data", SqlDbType.NVarChar).Value = JsonConvert.SerializeObject(sagaData, DataSettings);
+                    command.Parameters.Add("metadata", SqlDbType.NVarChar).Value = JsonConvert.SerializeObject(sagaAuditMetadata, MetadataSettings);
 
                     await command.ExecuteNonQueryAsync();
                 }

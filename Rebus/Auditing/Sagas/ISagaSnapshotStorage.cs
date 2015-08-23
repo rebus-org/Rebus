@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rebus.Sagas;
 
 namespace Rebus.Auditing.Sagas
@@ -11,6 +12,6 @@ namespace Rebus.Auditing.Sagas
         /// <summary>
         /// Archives the given saga data under its current ID and revision
         /// </summary>
-        Task Save(ISagaData sagaData);
+        Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata);
     }
 }
