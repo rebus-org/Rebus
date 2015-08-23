@@ -35,10 +35,12 @@ namespace Rebus.Tests.Auditing
                 .Start();
         }
 
+
+
         [Test]
         public async Task ItWorks()
         {
-            _handlerActivator.Register(() => new MySaga());
+            _handlerActivator.Register(() => new MySaga(false));
 
             await _bus.SendLocal("hej/med dig");
             await _bus.SendLocal("hej/med jer");
@@ -48,7 +50,37 @@ namespace Rebus.Tests.Auditing
 
             var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString);
 
-            var storedCopies = new List<Tuple<Guid, int, ISagaData, Dictionary<string,string>>>();
+            var storedCopies = await LoadStoredCopies(connectionProvider);
+
+            Assert.That(storedCopies.Count, Is.EqualTo(3));
+
+            Assert.That(storedCopies.OrderBy(t => t.Item2).Select(t => t.Item2), Is.EqualTo(new[] {0, 1, 2}), "Expected initial revision + two edits");
+            Assert.That(storedCopies.All(c => c.Item1 == storedCopies.First().Item1));
+        }
+
+        [Test]
+        public async Task WorksAlsoWhenSagaImmediatelyTerminates()
+        {
+            _handlerActivator.Register(() => new MySaga(true));
+
+            await _bus.SendLocal("hej/med dig");
+            await _bus.SendLocal("hej/med jer");
+            await _bus.SendLocal("hej/igen");
+
+            await Task.Delay(1000);
+
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString);
+
+            var storedCopies = await LoadStoredCopies(connectionProvider);
+
+            Assert.That(storedCopies.Count, Is.EqualTo(3));
+            Assert.That(storedCopies.OrderBy(t => t.Item2).Select(t => t.Item2), Is.EqualTo(new[] { 0, 0, 0 }), "Expected three initial revisions");
+            Assert.That(storedCopies.GroupBy(c => c.Item1).Count(), Is.EqualTo(3), "Expected three different IDs because each saga terminated immediately");
+        }
+
+        static async Task<List<Tuple<Guid, int, ISagaData, Dictionary<string, string>>>> LoadStoredCopies(DbConnectionProvider connectionProvider)
+        {
+            var storedCopies = new List<Tuple<Guid, int, ISagaData, Dictionary<string, string>>>();
 
             using (var connection = await connectionProvider.GetConnection())
             {
@@ -60,10 +92,11 @@ namespace Rebus.Tests.Auditing
                     {
                         while (await reader.ReadAsync())
                         {
-                            var id = (Guid)reader["id"];
-                            var revision = (int)reader["revision"];
-                            var sagaData = (ISagaData)new ObjectSerializer().Deserialize(Encoding.UTF8.GetBytes((string)reader["data"]));
-                            var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>((string)reader["metadata"]);
+                            var id = (Guid) reader["id"];
+                            var revision = (int) reader["revision"];
+                            var sagaData =
+                                (ISagaData) new ObjectSerializer().Deserialize(Encoding.UTF8.GetBytes((string) reader["data"]));
+                            var metadata = JsonConvert.DeserializeObject<Dictionary<string, string>>((string) reader["metadata"]);
 
                             var tuple = Tuple.Create(id, revision, sagaData, metadata);
 
@@ -74,13 +107,18 @@ namespace Rebus.Tests.Auditing
 
                 await connection.Complete();
             }
-
-            Assert.That(storedCopies.Count, Is.EqualTo(3));
-            Assert.That(storedCopies.OrderBy(t => t.Item2).Select(t => t.Item2), Is.EqualTo(new[] {0, 1, 2}), "Expected three initial revisions");
+            return storedCopies;
         }
 
         class MySaga : Saga<MySagaData>, IAmInitiatedBy<string>
         {
+            readonly bool _immediatelyMarkAsComplete;
+
+            public MySaga(bool immediatelyMarkAsComplete)
+            {
+                _immediatelyMarkAsComplete = immediatelyMarkAsComplete;
+            }
+
             protected override void CorrelateMessages(ICorrelationConfig<MySagaData> config)
             {
                 config.Correlate<string>(GetCorrelationId, d => d.CorrelationId);
@@ -99,6 +137,11 @@ namespace Rebus.Tests.Auditing
                 }
 
                 Data.ReceivedMessages.Add(message);
+
+                if (_immediatelyMarkAsComplete)
+                {
+                    MarkAsComplete();
+                }
             }
         }
 
