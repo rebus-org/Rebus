@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -9,11 +10,19 @@ using MongoDB.Bson.Serialization;
 
 namespace Rebus.MongoDb.Sagas
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaStorage"/> that uses MongoDB to store saga data
+    /// </summary>
     public class MongoDbSagaStorage : ISagaStorage
     {
         readonly IMongoDatabase _mongoDatabase;
         readonly Func<Type, string> _collectionNameResolver;
 
+        /// <summary>
+        /// Constructs the saga storage to use the given database. If specified, the given <paramref name="collectionNameResolver"/> will
+        /// be used to get names for each type of saga data that needs to be persisted. By default, the saga data's <see cref="Type.Name"/>
+        /// will be used.
+        /// </summary>
         public MongoDbSagaStorage(IMongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
         {
             _mongoDatabase = mongoDatabase;

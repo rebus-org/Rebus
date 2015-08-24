@@ -612,6 +612,7 @@
 ## 0.96.0
 
 * Moved the explicit routing function to an advanced routing API
+* Added saga data snapshotting + snapshot storages for SQL Server and MongoDB
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

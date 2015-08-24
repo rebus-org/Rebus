@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Config;
 using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Injection;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -87,22 +88,31 @@ Configure.With(..)
 
             var createdAndUpdatedSagaData = handlerInvokers
                 .Where(i => i.HasSaga)
-                .Select(i => i.GetSagaData())
+                .Select(i => new
+                {
+                    Handler = i.Handler,
+                    SagaData = i.GetSagaData()
+                })
                 .ToList();
 
-            var metadata = GetMetadata();
-
             var saveTasks = createdAndUpdatedSagaData
-                .Select(sagaData => _sagaSnapshotStorage.Save(sagaData, metadata));
+                .Select(sagaData =>
+                {
+                    var metadata = GetMetadata(sagaData.SagaData, sagaData.Handler);
+
+                    return _sagaSnapshotStorage.Save(sagaData.SagaData, metadata);
+                });
 
             await Task.WhenAll(saveTasks);
         }
 
-        Dictionary<string,string> GetMetadata()
+        Dictionary<string, string> GetMetadata(ISagaData sagaData, object handler)
         {
             return new Dictionary<string, string>
             {
-                {"handlequeue", _transport.Address}
+                {SagaAuditingMetadataKeys.HandleQueue, _transport.Address},
+                {SagaAuditingMetadataKeys.SagaDataType, sagaData.GetType().GetSimpleAssemblyQualifiedName()},
+                {SagaAuditingMetadataKeys.SagaHandlerType, handler.GetType().GetSimpleAssemblyQualifiedName()}
             };
         }
     }

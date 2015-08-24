@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MongoDbConfigurationExtensions.cs" />
+    <Compile Include="Sagas\MongoDbSagaSnapshotStorage.cs" />
     <Compile Include="Sagas\MongoDbSagaStorage.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Subscriptions\MongoDbSubscriptionStorage.cs" />

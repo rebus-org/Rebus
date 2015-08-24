@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -23,12 +22,14 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             _factory = new TFactory();
 
-            _activator = Using(new BuiltinHandlerActivator());
+            _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_snapshots_integration_testerino"))
                 .Options(o => o.EnableSagaAuditing().Register(c => _factory.Create()))
                 .Start();
+
+            Using(_bus);
         }
 
         [Test]
@@ -36,7 +37,7 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sharedCounter = new SharedCounter(3, "Message counter")
             {
-                Delay = TimeSpan.FromSeconds(0.5)
+                Delay = TimeSpan.FromSeconds(1)
             };
 
             _activator.Register(() => new SomeSaga(sharedCounter, false));
@@ -65,7 +66,7 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sharedCounter = new SharedCounter(3, "Message counter")
             {
-                Delay = TimeSpan.FromSeconds(0.5)
+                Delay = TimeSpan.FromSeconds(1)
             };
 
             _activator.Register(() => new SomeSaga(sharedCounter, true));

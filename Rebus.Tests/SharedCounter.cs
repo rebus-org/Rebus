@@ -36,7 +36,7 @@ namespace Rebus.Tests
 
             if (newValue == 0)
             {
-                if (Delay >= TimeSpan.FromSeconds(0))
+                if (Delay <= TimeSpan.FromSeconds(0))
                 {
                     Console.WriteLine("Counter '{0}' reached 0!", _name);
                     _resetEvent.Set();

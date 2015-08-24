@@ -53,7 +53,6 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Auditing\TestMessageAuditing.cs" />
-    <Compile Include="Auditing\TestSagaAuditing.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Compression\TestCompressionIntegration.cs" />
     <Compile Include="Compression\TestZipper.cs" />
@@ -85,6 +84,7 @@
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSnapshotStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
