@@ -613,6 +613,7 @@
 
 * Moved the explicit routing function to an advanced routing API
 * Added saga data snapshotting + snapshot storages for SQL Server and MongoDB
+* Updated Newtonsoft JSON.NET dep to 7.0.1
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
