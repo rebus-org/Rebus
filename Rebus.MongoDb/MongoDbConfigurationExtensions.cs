@@ -1,5 +1,6 @@
 ﻿using System;
 using MongoDB.Driver;
+using Rebus.Auditing.Sagas;
 using Rebus.Config;
 using Rebus.MongoDb.Sagas;
 using Rebus.MongoDb.Subscriptions;
@@ -10,8 +11,23 @@ using Rebus.Timeouts;
 
 namespace Rebus.MongoDb
 {
+    /// <summary>
+    /// Configuration extensions for MongoDB persistence
+    /// </summary>
     public static class MongoDbConfigurationExtensions
     {
+        /// <summary>
+        /// Configures Rebus to store saga data snapshots in MongoDB
+        /// </summary>
+        public static void StoreInMongoDb(this StandardConfigurer<ISagaSnapshotStorage> configurer, IMongoDatabase mongoDatabase, string collectionName)
+        {
+            if (configurer == null) throw new ArgumentNullException("configurer");
+            if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
+            if (collectionName == null) throw new ArgumentNullException("collectionName");
+
+            configurer.Register(c => new MongoDbSagaSnapshotStorage(mongoDatabase, collectionName));
+        }
+
         /// <summary>
         /// Configures Rebus to use MongoDB to store sagas, using the specified collection name resolver function. If the collection name resolver is omitted,
         /// collection names will be determined by using the <code>Name</code> property of the saga data's <see cref="Type"/>
@@ -20,9 +36,6 @@ namespace Rebus.MongoDb
         {
             if (configurer == null) throw new ArgumentNullException("configurer");
             if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
-
-            collectionNameResolver = collectionNameResolver
-                                     ?? (sagaDataType => sagaDataType.Name);
 
             configurer.Register(c =>
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -13,6 +12,9 @@ using Rebus.Timeouts;
 
 namespace Rebus.MongoDb.Timeouts
 {
+    /// <summary>
+    /// Implementation of <see cref="ITimeoutManager"/> that uses MongoDB to save timeouts
+    /// </summary>
     public class MongoDbTimeoutManager : ITimeoutManager
     {
         static ILog _log;
@@ -24,6 +26,9 @@ namespace Rebus.MongoDb.Timeouts
 
         readonly IMongoCollection<Timeout> _timeouts;
 
+        /// <summary>
+        /// Constructs the timeout manager
+        /// </summary>
         public MongoDbTimeoutManager(IMongoDatabase database, string collectionName)
         {
             _timeouts = database.GetCollection<Timeout>(collectionName);
