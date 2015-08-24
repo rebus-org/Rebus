@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using Rebus.Tests.Extensions;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests
@@ -27,14 +28,29 @@ namespace Rebus.Tests
             _statusTimer.Start();
         }
 
+        public TimeSpan Delay { get; set; }
+
         public void Decrement()
         {
             var newValue = Interlocked.Decrement(ref _counter);
 
             if (newValue == 0)
             {
-                Console.WriteLine("Counter '{0}' reached 0!", _name);
-                _resetEvent.Set();
+                if (Delay >= TimeSpan.FromSeconds(0))
+                {
+                    Console.WriteLine("Counter '{0}' reached 0!", _name);
+                    _resetEvent.Set();
+                }
+                else
+                {
+                    Console.WriteLine("Counter '{0}' reached 0 - setting reset event in {1}!", _name, Delay);
+
+                    ThreadPool.QueueUserWorkItem(_ =>
+                    {
+                        Thread.Sleep(Delay);
+                        _resetEvent.Set();
+                    });
+                }
             }
         }
 
@@ -46,6 +62,14 @@ namespace Rebus.Tests
         public void Dispose()
         {
             _statusTimer.Dispose();
+        }
+
+        public void WaitForResetEvent(int timeoutSeconds = 5)
+        {
+            var errorMessage = string.Format("Reset event for shared counter '{0}' was not set within {1} second timeout!",
+                _name, timeoutSeconds);
+
+            ResetEvent.WaitOrDie(TimeSpan.FromSeconds(timeoutSeconds), errorMessage);
         }
     }
 }

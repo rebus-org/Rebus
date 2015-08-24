@@ -62,7 +62,9 @@
     <Compile Include="Contracts\Activation\IContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Activation\RealContainerTests.cs" />
     <Compile Include="Contracts\Sagas\BasicLoadAndSaveAndFindOperations.cs" />
+    <Compile Include="Contracts\Sagas\ISagaSnapshotStorageFactory.cs" />
     <Compile Include="Contracts\Sagas\SagaIntegrationTests.cs" />
+    <Compile Include="Contracts\Sagas\SagaSnapshotStorageTest.cs" />
     <Compile Include="Contracts\Subscriptions\BasicSubscriptionOperations.cs" />
     <Compile Include="Contracts\Subscriptions\ISubscriptionStorageFactory.cs" />
     <Compile Include="Contracts\Timeouts\BasicStoreAndRetrieveOperations.cs" />
@@ -82,6 +84,7 @@
     <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
