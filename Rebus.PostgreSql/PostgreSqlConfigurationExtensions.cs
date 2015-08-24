@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using Rebus.Auditing.Sagas;
+using Rebus.Config;
 using Rebus.PostgreSql.Sagas;
 using Rebus.PostgreSql.Subscriptions;
 using Rebus.PostgreSql.Timeouts;
@@ -13,6 +14,25 @@ namespace Rebus.PostgreSql
     /// </summary>
     public static class PostgreSqlConfigurationExtensions
     {
+        /// <summary>
+        /// Configures Rebus to use SQL Server to store saga data snapshots, using the specified table to store the data
+        /// </summary>
+        public static void StoreInPostgres(this StandardConfigurer<ISagaSnapshotStorage> configurer,
+            string connectionString, string tableName, bool automaticallyCreateTables = true)
+        {
+            configurer.Register(c =>
+            {
+                var sagaStorage = new PostgreSqlSagaSnapshotStorage(new PostgresConnectionHelper(connectionString), tableName);
+
+                if (automaticallyCreateTables)
+                {
+                    sagaStorage.EnsureTableIsCreated();
+                }
+
+                return sagaStorage;
+            });
+        }
+
         /// <summary>
         /// Configures Rebus to use SQL Server to store sagas, using the tables specified to store data and indexed properties respectively.
         /// </summary>

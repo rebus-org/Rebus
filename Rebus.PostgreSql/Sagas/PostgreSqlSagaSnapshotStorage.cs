@@ -8,6 +8,9 @@ using Rebus.Serialization;
 
 namespace Rebus.PostgreSql.Sagas
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaSnapshotStorage"/> that uses PostgreSQL to store the snapshots
+    /// </summary>
     public class PostgreSqlSagaSnapshotStorage : ISagaSnapshotStorage
     {
         readonly ObjectSerializer _objectSerializer = new ObjectSerializer();
@@ -15,6 +18,9 @@ namespace Rebus.PostgreSql.Sagas
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
 
+        /// <summary>
+        /// Constructs the storage
+        /// </summary>
         public PostgreSqlSagaSnapshotStorage(PostgresConnectionHelper connectionHelper, string tableName)
         {
             _connectionHelper = connectionHelper;
