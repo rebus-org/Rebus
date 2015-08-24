@@ -8,7 +8,7 @@ namespace Rebus.Serialization
     /// Generic serializer that serializes <see cref="Dictionary{TKey,TValue}"/> of <see cref="String"/> keys and <see cref="String"/> values
     /// into JSON and back
     /// </summary>
-    public class HeaderSerializer
+    public class DictionarySerializer
     {
         readonly JsonSerializerSettings _settings = new JsonSerializerSettings();
 

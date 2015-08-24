@@ -31,6 +31,9 @@ namespace Rebus.Persistence.SqlServer
         static readonly JsonSerializerSettings MetadataSettings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
 
+        /// <summary>
+        /// Constructs the snapshot storage
+        /// </summary>
         public SqlServerSagaSnapshotStorage(IDbConnectionProvider connectionProvider, string tableName)
         {
             _connectionProvider = connectionProvider;

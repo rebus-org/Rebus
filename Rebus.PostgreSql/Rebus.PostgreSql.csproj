@@ -52,6 +52,7 @@
     <Compile Include="Magic.cs" />
     <Compile Include="PostgreSqlConfigurationExtensions.cs" />
     <Compile Include="Reflection\Ponder.cs" />
+    <Compile Include="Sagas\PostgreSqlSagaSnapshotStorage.cs" />
     <Compile Include="Sagas\PostgreSqlSagaStorage.cs" />
     <Compile Include="Subscriptions\PostgreSqlSubscriptionStorage.cs" />
     <Compile Include="Timeouts\PostgreSqlTimeoutManager.cs" />

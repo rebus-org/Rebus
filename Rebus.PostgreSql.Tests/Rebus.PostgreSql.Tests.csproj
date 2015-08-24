@@ -33,6 +33,10 @@
     <Reference Include="Mono.Security">
       <HintPath>..\packages\Npgsql.2.2.5\lib\net45\Mono.Security.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Npgsql">
       <HintPath>..\packages\Npgsql.2.2.5\lib\net45\Npgsql.dll</HintPath>
     </Reference>
@@ -50,7 +54,9 @@
   <ItemGroup>
     <Compile Include="Sagas\BasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Sagas\ConcurrencyHandling.cs" />
+    <Compile Include="Sagas\PostgreSqlSagaSnapshotTest.cs" />
     <Compile Include="Sagas\PostgreSqlSagaStorageFactory.cs" />
+    <Compile Include="Sagas\PostgreSqlSnapshotStorageFactory.cs" />
     <Compile Include="Sagas\SagaIntegrationTests.cs" />
     <Compile Include="Subscriptions\PostgreSqlSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Subscriptions\PostgreSqlSubscriptionStorageFactory.cs" />

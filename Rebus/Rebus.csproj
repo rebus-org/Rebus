@@ -133,7 +133,7 @@
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Sagas\SagaData.cs" />
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
-    <Compile Include="Serialization\HeaderSerializer.cs" />
+    <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />
