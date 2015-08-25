@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -63,11 +62,6 @@ namespace Rebus.Workers.ThreadBased
             }
 
             var stopTime = RebusTime.Now;
-
-            if (_parallelOperationsManager.HasPendingTasks)
-            {
-                _log.Info("Continuations are waiting to be posted.... will wait up to 1 minute");
-            }
 
             while (_parallelOperationsManager.HasPendingTasks)
             {
