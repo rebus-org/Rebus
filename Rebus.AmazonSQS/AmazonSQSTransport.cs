@@ -197,6 +197,7 @@ namespace Rebus.AmazonSQS
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+
             var client = GetClientFromTransactionContext(context);
 
             var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(_queueUrl)

@@ -46,6 +46,11 @@ namespace Rebus.AmazonSQS.Tests
 
         }
 
+        public ITransport CreateOneWayClient()
+        {
+            return Create(null, TimeSpan.FromSeconds(30));
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
             return Create(inputQueueAddress, TimeSpan.FromSeconds(30));

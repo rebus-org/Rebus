@@ -58,7 +58,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Transport(Action<StandardConfigurer<ITransport>> configurer)
         {
-            configurer(new StandardConfigurer<ITransport>(_injectionist));
+            configurer(new StandardConfigurer<ITransport>(_injectionist, _options));
             return this;
         }
 
@@ -67,7 +67,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Routing(Action<StandardConfigurer<IRouter>> configurer)
         {
-            configurer(new StandardConfigurer<IRouter>(_injectionist));
+            configurer(new StandardConfigurer<IRouter>(_injectionist, _options));
             return this;
         }
 
@@ -76,7 +76,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Sagas(Action<StandardConfigurer<ISagaStorage>> configurer)
         {
-            configurer(new StandardConfigurer<ISagaStorage>(_injectionist));
+            configurer(new StandardConfigurer<ISagaStorage>(_injectionist, _options));
             return this;
         }
 
@@ -85,7 +85,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Subscriptions(Action<StandardConfigurer<ISubscriptionStorage>> configurer)
         {
-            configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist));
+            configurer(new StandardConfigurer<ISubscriptionStorage>(_injectionist, _options));
             return this;
         }
 
@@ -94,7 +94,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Serialization(Action<StandardConfigurer<ISerializer>> configurer)
         {
-            configurer(new StandardConfigurer<ISerializer>(_injectionist));
+            configurer(new StandardConfigurer<ISerializer>(_injectionist, _options));
             return this;
         }
 
@@ -103,7 +103,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Timeouts(Action<StandardConfigurer<ITimeoutManager>> configurer)
         {
-            configurer(new StandardConfigurer<ITimeoutManager>(_injectionist));
+            configurer(new StandardConfigurer<ITimeoutManager>(_injectionist, _options));
             return this;
         }
 

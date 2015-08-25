@@ -18,7 +18,7 @@ namespace Rebus.PostgreSql.Timeouts
     /// </summary>
     public class PostgreSqlTimeoutManager : ITimeoutManager
     {
-        readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
+        readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
         static ILog _log;
@@ -47,7 +47,7 @@ namespace Rebus.PostgreSql.Timeouts
 INSERT INTO ""{0}"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @headers, @body)", _tableName);
 
                     command.Parameters.Add("due_time", NpgsqlDbType.Timestamp).Value = approximateDueTime.ToUniversalTime().DateTime;
-                    command.Parameters.Add("headers", NpgsqlDbType.Text).Value = _headerSerializer.SerializeToString(headers);
+                    command.Parameters.Add("headers", NpgsqlDbType.Text).Value = _dictionarySerializer.SerializeToString(headers);
                     command.Parameters.Add("body", NpgsqlDbType.Bytea).Value = body;
 
                     await command.ExecuteNonQueryAsync();
@@ -90,7 +90,7 @@ FOR UPDATE;
                         while (reader.Read())
                         {
                             var id = (long)reader["id"];
-                            var headers = _headerSerializer.DeserializeFromString((string) reader["headers"]);
+                            var headers = _dictionarySerializer.DeserializeFromString((string) reader["headers"]);
                             var body = (byte[]) reader["body"];
 
                             dueMessages.Add(new DueMessage(headers, body, () =>

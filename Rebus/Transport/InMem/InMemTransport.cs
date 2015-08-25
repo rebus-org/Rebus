@@ -22,13 +22,10 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
-            if (network == null) throw new ArgumentNullException("network");
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
+            if (network == null) throw new ArgumentNullException("network", "You need to provide a network that this in-mem transport should use for communication");
 
             _network = network;
             _inputQueueAddress = inputQueueAddress;
-
-            _network.CreateQueue(inputQueueAddress);
         }
 
         /// <summary>
@@ -62,6 +59,7 @@ namespace Rebus.Transport.InMem
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            if (_inputQueueAddress == null) throw new InvalidOperationException("This in-mem transport is initialized without an input queue, hence it is not possible to receive anything!");
 
             var nextMessage = _network.GetNextOrNull(_inputQueueAddress);
             
@@ -85,6 +83,8 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public void Initialize()
         {
+            if (_inputQueueAddress == null) return;
+
             CreateQueue(_inputQueueAddress);
         }
 

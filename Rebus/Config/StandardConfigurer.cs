@@ -12,10 +12,17 @@ namespace Rebus.Config
     public class StandardConfigurer<TService>
     {
         readonly Injectionist _injectionist;
+        readonly Options _options;
 
-        internal StandardConfigurer(Injectionist injectionist)
+        internal StandardConfigurer(Injectionist injectionist, Options options)
         {
             _injectionist = injectionist;
+            _options = options;
+        }
+
+        internal Options Options
+        {
+            get { return _options; }
         }
 
         /// <summary>
@@ -40,7 +47,7 @@ namespace Rebus.Config
         /// </summary>
         public StandardConfigurer<TOther> OtherService<TOther>()
         {
-            return new StandardConfigurer<TOther>(_injectionist);
+            return new StandardConfigurer<TOther>(_injectionist, _options);
         } 
     }
 }

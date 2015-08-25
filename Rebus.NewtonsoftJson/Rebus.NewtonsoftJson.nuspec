@@ -15,7 +15,7 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="Newtonsoft.Json" version="[6, 7)" />
+        <dependency id="Newtonsoft.Json" version="7.0.1" />
     </dependencies>
   </metadata>
   <files>

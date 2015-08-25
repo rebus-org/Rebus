@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Auditing;
+using Rebus.Auditing.Messages;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
@@ -97,7 +97,7 @@ namespace Rebus.Tests.Auditing
         [Test]
         public async Task CopiesPublishedMessageToAuditQueue()
         {
-            await _bus.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
+            await _bus.Advanced.Topics.Publish("TOPIC: 'whocares/nosubscribers'", "woohooo!!!!");
 
             InMemTransportMessage message;
             var timer = Stopwatch.StartNew();

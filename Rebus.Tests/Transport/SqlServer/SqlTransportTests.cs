@@ -20,6 +20,22 @@ namespace Rebus.Tests.Transport.SqlServer
         readonly HashSet<string> _tablesToDrop = new HashSet<string>();
         readonly List<IDisposable> _disposables = new List<IDisposable>();
 
+        public ITransport CreateOneWayClient()
+        {
+            var tableName = ("RebusMessages_" + TestConfig.Suffix).TrimEnd('_');
+
+            _tablesToDrop.Add(tableName);
+
+            var transport = new SqlServerTransport(new DbConnectionProvider(SqlTestHelper.ConnectionString), tableName, null);
+
+            _disposables.Add(transport);
+
+            transport.EnsureTableIsCreated();
+            transport.Initialize();
+
+            return transport;
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
             var tableName = ("RebusMessages_" + TestConfig.Suffix).TrimEnd('_');

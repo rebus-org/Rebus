@@ -11,13 +11,8 @@ namespace Rebus.Bus.Advanced
         int Count { get; }
 
         /// <summary>
-        /// Adds a new worker to the collection of workers. Beware that there's no ceiling on this operation, and adding many workers can severely impact performance.
+        /// Sets the number of workers, blocking until the desired number has been reached
         /// </summary>
-        void AddWorker();
-
-        /// <summary>
-        /// Removes a worker from the collection of workers. Ignores the call if there's zero workers.
-        /// </summary>
-        void RemoveWorker();
+        void SetNumberOfWorkers(int numberOfWorkers);
     }
 }

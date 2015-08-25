@@ -1,4 +1,7 @@
-﻿using Rebus.Bus.Advanced;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Rebus.Bus.Advanced;
+
 // ReSharper disable CheckNamespace
 
 namespace Rebus.Bus
@@ -19,6 +22,33 @@ namespace Rebus.Bus
             {
                 get { return new WorkersApi(_rebusBus); }
             }
+
+            public ITopicsApi Topics
+            {
+                get { return new TopicsApi(_rebusBus); }
+            }
+
+            public IRoutingApi Routing
+            {
+                get { return new RoutingApi(_rebusBus); }
+            }
+        }
+
+        class RoutingApi : IRoutingApi
+        {
+            readonly RebusBus _rebusBus;
+
+            public RoutingApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
+            }
+
+            public Task Send(string destinationAddress, object explicitlyRoutedMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
+
+                return  _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
+            }
         }
 
         class WorkersApi : IWorkersApi
@@ -35,14 +65,34 @@ namespace Rebus.Bus
                 get { return _rebusBus.GetNumberOfWorkers(); }
             }
 
-            public void AddWorker()
+            public void SetNumberOfWorkers(int numberOfWorkers)
             {
-                _rebusBus.AddWorker();
+                _rebusBus.SetNumberOfWorkers(numberOfWorkers);
+            }
+        }
+
+        class TopicsApi : ITopicsApi
+        {
+            readonly RebusBus _rebusBus;
+
+            public TopicsApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
             }
 
-            public void RemoveWorker()
+            public Task Publish(string topic, object eventMessage, Dictionary<string, string> optionalHeaders = null)
             {
-                _rebusBus.RemoveWorker();
+                return _rebusBus.InnerPublish(topic, eventMessage, optionalHeaders);
+            }
+
+            public Task Subscribe(string topic)
+            {
+                return _rebusBus.InnerSubscribe(topic);
+            }
+
+            public Task Unsubscribe(string topic)
+            {
+                return _rebusBus.InnerUnsubscribe(topic);
             }
         }
     }

@@ -70,18 +70,26 @@ namespace Rebus.AzureServiceBus
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
-            _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
+
+            if (inputQueueAddress != null)
+            {
+                _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
+            }
         }
 
         public void Initialize()
         {
-            _log.Info("Initializing Azure Service Bus transport with queue '{0}'", _inputQueueAddress);
+            if (_inputQueueAddress != null)
+            {
+                _log.Info("Initializing Azure Service Bus transport with queue '{0}'", _inputQueueAddress);
+                CreateQueue(_inputQueueAddress);
+                return;
+            }
 
-            CreateQueue(_inputQueueAddress);
+            _log.Info("Initializing one-way Azure Service Bus transport");
         }
 
         /// <summary>
@@ -186,6 +194,11 @@ namespace Rebus.AzureServiceBus
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
+            if (_inputQueueAddress == null)
+            {
+                throw new InvalidOperationException("This Azure Service Bus transport does not have an input queue, hence it is not possible to reveive anything");
+            }
+
             using (await _bottleneck.Enter())
             {
                 var brokeredMessage = await ReceiveBrokeredMessage();

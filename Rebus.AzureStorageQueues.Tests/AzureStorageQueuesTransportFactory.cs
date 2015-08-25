@@ -12,8 +12,23 @@ namespace Rebus.AzureStorageQueues.Tests
     {
         readonly ConcurrentDictionary<string, AzureStorageQueuesTransport> _transports = new ConcurrentDictionary<string, AzureStorageQueuesTransport>(StringComparer.InvariantCultureIgnoreCase);
 
+        public ITransport CreateOneWayClient()
+        {
+            return Create(null);
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
+            if (inputQueueAddress == null)
+            {
+                var storageAccount = CloudStorageAccount.Parse(ConnectionString);
+                var transport = new AzureStorageQueuesTransport(storageAccount, null);
+
+                transport.Initialize();
+
+                return transport;
+            }
+
             return _transports.GetOrAdd(inputQueueAddress, address =>
             {
                 var storageAccount = CloudStorageAccount.Parse(ConnectionString);

@@ -52,7 +52,9 @@
   <ItemGroup>
     <Compile Include="AsbStringExtensions.cs" />
     <Compile Include="AzureServiceBusTransport.cs" />
+    <Compile Include="BasicAzureServiceBusTransport.cs" />
     <Compile Include="Config\AzureServiceBusConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureServiceBusMode.cs" />
     <Compile Include="Config\AzureServiceBusTransportSettings.cs" />
     <Compile Include="Config\DisabledTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

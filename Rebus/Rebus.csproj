@@ -33,16 +33,14 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
-    <Reference Include="System.Transactions" />
-    <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
@@ -51,28 +49,36 @@
   <ItemGroup>
     <Compile Include="Activation\BuiltinHandlerActivator.cs" />
     <Compile Include="Activation\IContainerAdapter.cs" />
-    <Compile Include="Auditing\AuditHeaders.cs" />
-    <Compile Include="Auditing\AuditingHelper.cs" />
-    <Compile Include="Auditing\AuditingConfigurationExtensions.cs" />
-    <Compile Include="Auditing\IncomingAuditingStep.cs" />
-    <Compile Include="Auditing\OutgoingAuditingStep.cs" />
+    <Compile Include="Auditing\Messages\AuditHeaders.cs" />
+    <Compile Include="Auditing\Messages\AuditingHelper.cs" />
+    <Compile Include="Auditing\Messages\MessageAuditingConfigurationExtensions.cs" />
+    <Compile Include="Auditing\Messages\IncomingAuditingStep.cs" />
+    <Compile Include="Auditing\Messages\OutgoingAuditingStep.cs" />
+    <Compile Include="Auditing\Sagas\ISagaSnapshotStorage.cs" />
+    <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
+    <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
+    <Compile Include="Bus\Advanced\IRoutingApi.cs" />
+    <Compile Include="Bus\Advanced\ITopicsApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Config\OneWayClientBackdoor.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
     <Compile Include="Encryption\EncryptionConfigurationExtensions.cs" />
     <Compile Include="Encryption\EncryptionHeaders.cs" />
     <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
     <Compile Include="Exceptions\RebusApplicationException.cs" />
-    <Compile Include="Extensions\BusExtensions.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Messages\HeaderAttribute.cs" />
+    <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
+    <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
@@ -129,7 +135,7 @@
     <Compile Include="Sagas\ISagaData.cs" />
     <Compile Include="Sagas\SagaData.cs" />
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
-    <Compile Include="Serialization\HeaderSerializer.cs" />
+    <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />

@@ -14,5 +14,15 @@ namespace Rebus.Transport.InMem
         {
             configurer.Register(context => new InMemTransport(network, inputQueueName));
         }
+
+        /// <summary>
+        /// Configures Rebus to use in-mem message queues, configuring this instance to be a one-way client
+        /// </summary>
+        public static void UseInMemoryTransportAsOneWayClient(this StandardConfigurer<ITransport> configurer, InMemNetwork network)
+        {
+            configurer.Register(c => new InMemTransport(network, null));
+
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+        }
     }
 }

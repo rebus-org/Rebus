@@ -41,10 +41,7 @@ namespace Rebus.RabbitMq.Tests
             var receivedMessages = 0L;
             _activator.Handle<object>(async msg => Interlocked.Increment(ref receivedMessages));
 
-            while (_bus.Advanced.Workers.Count > 0)
-            {
-                _bus.Advanced.Workers.RemoveWorker();
-            }
+            _bus.Advanced.Workers.SetNumberOfWorkers(0);
 
             await Task.WhenAll(Enumerable.Range(0, messageCount)
                 .Select(i => express ? (object) new ExpressMessage() : new NormalMessage())
@@ -52,10 +49,7 @@ namespace Rebus.RabbitMq.Tests
 
             var stopwatch = Stopwatch.StartNew();
 
-            while (_bus.Advanced.Workers.Count < 5)
-            {
-                _bus.Advanced.Workers.AddWorker();
-            }
+            _bus.Advanced.Workers.SetNumberOfWorkers(5);
 
             while (Interlocked.Read(ref receivedMessages) < messageCount)
             {

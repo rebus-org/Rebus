@@ -11,6 +11,7 @@ using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 using Message = System.Messaging.Message;
+#pragma warning disable 1998
 
 namespace Rebus.Transport.Msmq
 {
@@ -38,9 +39,10 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public MsmqTransport(string inputQueueAddress)
         {
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
-
-            _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
+            if (inputQueueAddress != null)
+            {
+                _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
+            }
         }
 
         /// <summary>
@@ -63,9 +65,16 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public void Initialize()
         {
-            _log.Info("Initializing MSMQ transport - input queue: '{0}'", _inputQueueName);
+            if (_inputQueueName != null)
+            {
+                _log.Info("Initializing MSMQ transport - input queue: '{0}'", _inputQueueName);
 
-            GetInputQueue();
+                GetInputQueue();
+            }
+            else
+            {
+                _log.Info("Initializing one-way MSMQ transport");
+            }
         }
 
         /// <summary>
@@ -97,6 +106,10 @@ namespace Rebus.Transport.Msmq
             MsmqUtil.PurgeQueue(_inputQueueName);
         }
 
+        /// <summary>
+        /// Sends the given transport message to the specified destination address using MSMQ. Will use the existing <see cref="MessageQueueTransaction"/> stashed
+        /// under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>, or else it will create one and add it.
+        /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
@@ -140,35 +153,18 @@ namespace Rebus.Transport.Msmq
             sendQueue.Send(logicalMessage, messageQueueTransaction);
         }
 
-        Message CreateMsmqMessage(TransportMessage message)
-        {
-            var headers = message.Headers;
-
-            var expressDelivery = headers.ContainsKey(Headers.Express);
-
-            string timeToBeReceivedStr;
-            var hasTimeout = headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr);
-
-            var msmqMessage = new Message
-            {
-                Extension = _extensionSerializer.Serialize(headers),
-                BodyStream = new MemoryStream(message.Body),
-                UseJournalQueue = false,
-                Recoverable = !expressDelivery,
-                UseDeadLetterQueue = !(expressDelivery || hasTimeout)
-            };
-
-            if (hasTimeout)
-            {
-                msmqMessage.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-            }
-
-            return msmqMessage;
-        }
-
+        /// <summary>
+        /// Received the next available transport message from the input queue via MSMQ. Will create a new <see cref="MessageQueueTransaction"/> and stash
+        /// it under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>. If one already exists, an exception will be thrown
+        /// (because we should never have to receive multiple messages in the same transaction)
+        /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            if (_inputQueueName == null)
+            {
+                throw new InvalidOperationException("This MSMQ transport does not have an input queue, hence it is not possible to reveive anything");
+            }
 
             var queue = GetInputQueue();
 
@@ -224,6 +220,32 @@ namespace Rebus.Transport.Msmq
                     string.Format("Could not receive next message from MSMQ queue '{0}'", _inputQueueName),
                     exception);
             }
+        }
+
+        Message CreateMsmqMessage(TransportMessage message)
+        {
+            var headers = message.Headers;
+
+            var expressDelivery = headers.ContainsKey(Headers.Express);
+
+            string timeToBeReceivedStr;
+            var hasTimeout = headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr);
+
+            var msmqMessage = new Message
+            {
+                Extension = _extensionSerializer.Serialize(headers),
+                BodyStream = new MemoryStream(message.Body),
+                UseJournalQueue = false,
+                Recoverable = !expressDelivery,
+                UseDeadLetterQueue = !(expressDelivery || hasTimeout)
+            };
+
+            if (hasTimeout)
+            {
+                msmqMessage.TimeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+            }
+
+            return msmqMessage;
         }
 
         public string Address

@@ -37,9 +37,9 @@
     <Reference Include="Microsoft.WindowsAzure.Configuration">
       <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.3.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Newtonsoft.Json.6.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="nunit.framework">
       <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
@@ -57,12 +57,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureServiceBusBasicSendReceive.cs" />
-    <Compile Include="AzureServiceBusBusFactory.cs" />
+    <Compile Include="Factories\AzureServiceBusBusFactory.cs" />
     <Compile Include="AzureServiceBusManyMessages.cs" />
     <Compile Include="AzureServiceBusMessageExpiration.cs" />
     <Compile Include="AzureServiceBusPeekLockRenewalTest.cs" />
     <Compile Include="AzureServiceBusPrefetchTest.cs" />
-    <Compile Include="AzureServiceBusTransportFactory.cs" />
+    <Compile Include="Factories\BasicAzureServiceBusBusFactory.cs" />
+    <Compile Include="Factories\BasicAzureServiceBusTransportFactory.cs" />
+    <Compile Include="Factories\StandardAzureServiceBusBusFactory.cs" />
+    <Compile Include="Factories\StandardAzureServiceBusTransportFactory.cs" />
     <Compile Include="NativeDeferTest.cs" />
     <Compile Include="TestAsbTopicsPubSub.cs" />
     <Compile Include="TestCategory.cs" />

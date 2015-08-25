@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Extensions;
 using Rebus.Persistence.SqlServer;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;

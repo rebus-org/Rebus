@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Tests;
@@ -16,7 +17,7 @@ namespace Rebus.AzureServiceBus.Tests
         readonly string _inputQueueName1 = TestConfig.QueueName("pubsub1");
         readonly string _inputQueueName2 = TestConfig.QueueName("pubsub2");
         readonly string _inputQueueName3 = TestConfig.QueueName("pubsub3");
-        readonly string _connectionString = AzureServiceBusTransportFactory.ConnectionString;
+        readonly string _connectionString = StandardAzureServiceBusTransportFactory.ConnectionString;
         
         BuiltinHandlerActivator _bus1;
         BuiltinHandlerActivator _bus2;
@@ -24,7 +25,7 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
-            AzureServiceBusTransportFactory.DeleteTopic(typeof (string).GetSimpleAssemblyQualifiedName().ToValidAzureServiceBusEntityName());
+            StandardAzureServiceBusTransportFactory.DeleteTopic(typeof (string).GetSimpleAssemblyQualifiedName().ToValidAzureServiceBusEntityName());
 
             _bus1 = StartBus(_inputQueueName1);
             _bus2 = StartBus(_inputQueueName2);

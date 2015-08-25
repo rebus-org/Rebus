@@ -42,10 +42,13 @@ namespace Rebus.AzureStorageQueues
         public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName)
         {
             if (storageAccount == null) throw new ArgumentNullException("storageAccount");
-            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
 
-            _inputQueueName = inputQueueName.ToLowerInvariant();
             _queueClient = storageAccount.CreateCloudQueueClient();
+
+            if (inputQueueName != null)
+            {
+                _inputQueueName = inputQueueName.ToLowerInvariant();
+            }
         }
 
         /// <summary>
@@ -92,6 +95,10 @@ namespace Rebus.AzureStorageQueues
         /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
+            if (_inputQueueName == null)
+            {
+                throw new InvalidOperationException("This Azure Storage Queues transport does not have an input queue, hence it is not possible to reveive anything");
+            }
             var inputQueue = GetQueue(_inputQueueName);
 
             var cloudQueueMessage = await inputQueue.GetMessageAsync(_initialVisibilityDelay, new QueueRequestOptions(), new OperationContext());
@@ -173,7 +180,14 @@ namespace Rebus.AzureStorageQueues
 
         public void Initialize()
         {
-            CreateQueue(_inputQueueName);
+            if (_inputQueueName != null)
+            {
+                _log.Info("Initializing Azure Storage Queues transport with queue '{0}'", _inputQueueName);
+                CreateQueue(_inputQueueName);
+                return;
+            }
+
+            _log.Info("Initializing one-way Azure Storage Queues transport");
         }
 
         CloudQueue GetQueue(string address)

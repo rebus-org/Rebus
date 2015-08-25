@@ -7,7 +7,7 @@ namespace Rebus.MongoDb.Tests.Sagas
 {
     public class TestMongoDbSagaStorage : ISagaStorageFactory
     {
-        MongoDatabase _mongoDatabase;
+        IMongoDatabase _mongoDatabase;
 
         public ISagaStorage GetSagaStorage()
         {
@@ -18,8 +18,7 @@ namespace Rebus.MongoDb.Tests.Sagas
 
         public void CleanUp()
         {
-            _mongoDatabase.Drop();
-            _mongoDatabase = null;
+            MongoTestHelper.DropMongoDatabase();
         }
     }
 }

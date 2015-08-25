@@ -6,12 +6,12 @@ using Rebus.Tests.Contracts.Subscriptions;
 
 namespace Rebus.MongoDb.Tests.Subscriptions
 {
-    [TestFixture]
+    [TestFixture, Category(MongoTestHelper.TestCategory)]
     public class BasicSubscriptionOperations : BasicSubscriptionOperations<TestMongoDbSubscriptionStorage> { }
 
     public class TestMongoDbSubscriptionStorage : ISubscriptionStorageFactory
     {
-        MongoDatabase _mongoDatabase;
+        IMongoDatabase _mongoDatabase;
 
         public ISubscriptionStorage Create()
         {
@@ -22,8 +22,7 @@ namespace Rebus.MongoDb.Tests.Subscriptions
 
         public void Cleanup()
         {
-            _mongoDatabase.Drop();
-            _mongoDatabase = null;
+            MongoTestHelper.DropMongoDatabase();
         }
     }
 }

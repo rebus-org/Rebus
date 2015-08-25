@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.AzureServiceBus.Config;
+using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -17,10 +19,17 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
 {
-    [TestFixture, Category(TestCategory.Azure)]
+    [TestFixture(AzureServiceBusMode.Basic), Category(TestCategory.Azure)]
+    [TestFixture(AzureServiceBusMode.Standard), Category(TestCategory.Azure)]
     public class AzureServiceBusPrefetchTest : FixtureBase
     {
+        readonly AzureServiceBusMode _mode;
         const string QueueName = "prefetch";
+
+        public AzureServiceBusPrefetchTest(AzureServiceBusMode mode)
+        {
+            _mode = mode;
+        }
 
         /// <summary>
         /// Initial: 
@@ -73,27 +82,25 @@ namespace Rebus.AzureServiceBus.Tests
 
             Console.WriteLine("Sending {0} messages", numberOfMessages);
 
-            using (var transport = GetTransport())
-            {
-                var tasks = Enumerable.Range(0, numberOfMessages)
-                    .Select(i => string.Format("THIS IS MESSAGE # {0}", i))
-                    .Select(async msg =>
+            var transport = GetTransport();
+            var tasks = Enumerable.Range(0, numberOfMessages)
+                .Select(i => string.Format("THIS IS MESSAGE # {0}", i))
+                .Select(async msg =>
+                {
+                    using (var context = new DefaultTransactionContext())
                     {
-                        using (var context = new DefaultTransactionContext())
-                        {
-                            var headers = DefaultHeaders();
-                            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg));
-                            var transportMessage = new TransportMessage(headers, body);
+                        var headers = DefaultHeaders();
+                        var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg));
+                        var transportMessage = new TransportMessage(headers, body);
 
-                            await transport.Send(QueueName, transportMessage, context);
+                        await transport.Send(QueueName, transportMessage, context);
 
-                            await context.Complete();
-                        }
-                    })
-                    .ToArray();
+                        await context.Complete();
+                    }
+                })
+                .ToArray();
 
-                Task.WhenAll(tasks).Wait();
-            }
+            Task.WhenAll(tasks).Wait();
 
             Console.WriteLine("Receiving {0} messages", numberOfMessages);
 
@@ -102,7 +109,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (Configure.With(activator)
                 .Transport(t =>
                 {
-                    t.UseAzureServiceBus(AzureServiceBusTransportFactory.ConnectionString, QueueName)
+                    t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, _mode)
                         .EnablePrefetching(prefetch);
                 })
                 .Options(o =>
@@ -130,9 +137,17 @@ namespace Rebus.AzureServiceBus.Tests
             };
         }
 
-        static AzureServiceBusTransport GetTransport()
+        ITransport GetTransport()
         {
-            var transport = new AzureServiceBusTransport(AzureServiceBusTransportFactory.ConnectionString, QueueName);
+            if (_mode == AzureServiceBusMode.Basic)
+            {
+                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName);
+                basicTransport.Initialize();
+                basicTransport.PurgeInputQueue();
+                return basicTransport;
+            }
+            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName);
+            Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();
             return transport;

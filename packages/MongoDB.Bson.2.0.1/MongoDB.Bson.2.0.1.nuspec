@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>MongoDB.Bson</id>
+    <version>2.0.1</version>
+    <authors>MongoDB,  Inc.</authors>
+    <owners>MongoDB,  Inc.</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://www.mongodb.org/display/DOCS/CSharp+Language+Center</projectUrl>
+    <iconUrl>http://jobs.mongodb.org/files/logos/889002/889002.png</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>MongoDB's Official Bson Library.</description>
+    <language>en-US</language>
+    <tags>mongodb mongo nosql bson</tags>
+  </metadata>
+</package>

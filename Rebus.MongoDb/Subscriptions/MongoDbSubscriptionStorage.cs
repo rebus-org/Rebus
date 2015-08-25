@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using MongoDB.Driver.Builders;
 using Rebus.Subscriptions;
 
 namespace Rebus.MongoDb.Subscriptions
@@ -12,9 +11,9 @@ namespace Rebus.MongoDb.Subscriptions
     {
         static readonly string[] NoSubscribers = new string[0];
 
-        readonly MongoCollection<BsonDocument> _subscriptions;
+        readonly IMongoCollection<BsonDocument> _subscriptions;
 
-        public MongoDbSubscriptionStorage(MongoDatabase database, string collectionName, bool isCentralized)
+        public MongoDbSubscriptionStorage(IMongoDatabase database, string collectionName, bool isCentralized)
         {
             IsCentralized = isCentralized;
             _subscriptions = database.GetCollection<BsonDocument>(collectionName);
@@ -22,7 +21,8 @@ namespace Rebus.MongoDb.Subscriptions
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            var doc = _subscriptions.FindOneById(topic);
+            var doc = await _subscriptions.Find(new BsonDocument("_id", topic)).FirstOrDefaultAsync().ConfigureAwait(false);
+
             if (doc == null) return NoSubscribers;
 
             return doc["addresses"].AsBsonArray
@@ -32,16 +32,16 @@ namespace Rebus.MongoDb.Subscriptions
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            _subscriptions.Update(Query.EQ("_id", topic),
-                Update.AddToSet("addresses", subscriberAddress),
-                UpdateFlags.Upsert);
+             await _subscriptions.UpdateOneAsync(new BsonDocument("_id", topic),
+                Builders<BsonDocument>.Update.AddToSet("addresses", subscriberAddress),
+                new UpdateOptions() { IsUpsert = true }).ConfigureAwait(false);
         }
 
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            _subscriptions.Update(Query.EQ("_id", topic),
-                Update.Pull("addresses", subscriberAddress),
-                UpdateFlags.Upsert);
+            await _subscriptions.UpdateOneAsync(new BsonDocument("_id", topic),
+                 Builders<BsonDocument>.Update.Pull("addresses", subscriberAddress),
+                new UpdateOptions() { IsUpsert = true }).ConfigureAwait(false);
         }
 
         public bool IsCentralized { get; private set; }

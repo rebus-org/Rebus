@@ -90,6 +90,9 @@ namespace Rebus.Routing.TypeBased
             return GetDestinationAddressForMessageType(message.Body.GetType());
         }
 
+        /// <summary>
+        /// Looks up the owner of the topic which is assumed to be an assembly-qualified name of an available .NET type
+        /// </summary>
         public async Task<string> GetOwnerAddress(string topic)
         {
             if (topic == null) throw new ArgumentNullException("topic");

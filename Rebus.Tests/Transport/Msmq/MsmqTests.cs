@@ -19,17 +19,28 @@ namespace Rebus.Tests.Transport.Msmq
         readonly List<IDisposable> _disposables = new List<IDisposable>();
         readonly HashSet<string> _queuesToDelete = new HashSet<string>();
 
+        public ITransport CreateOneWayClient()
+        {
+            return Create(null);
+        }
+
         public ITransport Create(string inputQueueAddress)
         {
             var transport = new MsmqTransport(inputQueueAddress);
 
             _disposables.Add(transport);
 
-            transport.PurgeInputQueue();
+            if (inputQueueAddress != null)
+            {
+                transport.PurgeInputQueue();
+            }
 
             transport.Initialize();
 
-            _queuesToDelete.Add(inputQueueAddress);
+            if (inputQueueAddress != null)
+            {
+                _queuesToDelete.Add(inputQueueAddress);
+            }
 
             return transport;
         }

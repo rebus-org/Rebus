@@ -589,6 +589,34 @@
 
 * Fixed RabbitMQ transport bug that would create wrong queue bindings - please update to this version :)
 
+## 0.92.3
+
+* Changed `SqlTransport` to use the cryptic `DELETE OUTPUT` style query yielding ~ 10 times performance improvement - thanks [MrMDavidson] for a very well-documented PR :)
+
+## 0.92.4
+
+* Added one-way client mode + appropriate configuration extensions for all transports but Amazon SQS (it requires some more work)
+
+## 0.93.0
+
+* Updated MongoDB driver dependency to 2.0.1 and rewrote MongoDB persistence to take advantage of `async`/`await` - thanks [kevbite]
+
+## 0.94.0
+
+* Made the type-based pub/sub API default and moved the raw string-based topic API into `bus.Advanced.Topics`
+
+## 0.95.0
+
+* Re-introduced the previous Azure Service Bus implementation that relied only on queues to work - can be used with the Azure Service Bus Basic tier
+
+## 0.96.0
+
+* Moved the explicit routing function to an advanced routing API
+* Added saga data snapshotting + snapshot storages for SQL Server and MongoDB
+* Updated Newtonsoft JSON.NET dep to 7.0.1
+* Added file system-based saga snapshot storage
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -600,6 +628,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
+[kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337

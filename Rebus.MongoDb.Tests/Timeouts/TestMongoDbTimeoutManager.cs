@@ -7,7 +7,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.MongoDb.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(MongoTestHelper.TestCategory)]
     public class TestMongoDbTimeoutManager : BasicStoreAndRetrieveOperations<MongoDbTimeoutManagerFactory>
     {
          
@@ -15,7 +15,7 @@ namespace Rebus.MongoDb.Tests.Timeouts
 
     public class MongoDbTimeoutManagerFactory : ITimeoutManagerFactory
     {
-        readonly MongoDatabase _mongoDatabase;
+        readonly IMongoDatabase _mongoDatabase;
         readonly string _collectionName = string.Format("timeouts_{0}", TestConfig.Suffix);
 
         public MongoDbTimeoutManagerFactory()
@@ -36,7 +36,7 @@ namespace Rebus.MongoDb.Tests.Timeouts
 
         void DropCollection(string collectionName)
         {
-            _mongoDatabase.GetCollection(collectionName).Drop();
+            _mongoDatabase.DropCollectionAsync(collectionName).Wait();
         }
     }
 }
