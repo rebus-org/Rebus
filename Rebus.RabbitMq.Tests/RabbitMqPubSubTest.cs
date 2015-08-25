@@ -9,7 +9,7 @@ using Rebus.Tests.Extensions;
 
 namespace Rebus.RabbitMq.Tests
 {
-    [TestFixture]
+    [TestFixture, Category("rabbitmq")]
     public class RabbitMqPubSubTest : FixtureBase
     {
         readonly string _publisherQueueName = TestConfig.QueueName("publisher");
