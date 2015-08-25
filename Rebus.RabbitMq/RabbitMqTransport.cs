@@ -8,6 +8,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using Rebus.Bus;
 using Rebus.Messages;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 
 #pragma warning disable 1998
@@ -17,7 +18,7 @@ namespace Rebus.RabbitMq
     /// <summary>
     /// Implementation of <see cref="ITransport"/> that uses RabbitMQ to send/receive messages
     /// </summary>
-    public class RabbitMqTransport : ITransport, IDisposable, IInitializable
+    public class RabbitMqTransport : ITransport, IDisposable, IInitializable, ISubscriptionStorage
     {
         const string ExchangeName = "Rebus";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
@@ -222,6 +223,41 @@ namespace Rebus.RabbitMq
         public void Dispose()
         {
             _connectionManager.Dispose();
+        }
+
+        public async Task<string[]> GetSubscriberAddresses(string topic)
+        {
+            return new[] { NormalizeTopic(topic) };
+        }
+
+        public async Task RegisterSubscriber(string topic, string subscriberAddress)
+        {
+            var connection = _connectionManager.GetConnection();
+
+            using (var model = connection.CreateModel())
+            {
+                model.QueueBind(Address, ExchangeName, NormalizeTopic(topic));
+            }
+        }
+
+        public async Task UnregisterSubscriber(string topic, string subscriberAddress)
+        {
+            var connection = _connectionManager.GetConnection();
+
+            using (var model = connection.CreateModel())
+            {
+                model.QueueUnbind(Address, ExchangeName, NormalizeTopic(topic), new Dictionary<string, object>());
+            }
+        }
+
+        static string NormalizeTopic(string rawTopic)
+        {
+            return string.Format("subscription/{0}", rawTopic);
+        }
+
+        public bool IsCentralized
+        {
+            get { return true; }
         }
     }
 }

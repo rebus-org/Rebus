@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.Subscriptions;
 using Rebus.Transport;
 
 namespace Rebus.RabbitMq
@@ -13,7 +14,15 @@ namespace Rebus.RabbitMq
         /// </summary>
         public static void UseRabbitMqAsOneWayClient(this StandardConfigurer<ITransport> configurer, string connectionString)
         {
-            configurer.Register(c => new RabbitMqTransport(connectionString, null));
+            configurer
+                .OtherService<RabbitMqTransport>()
+                .Register(c => new RabbitMqTransport(connectionString, null));
+
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(c => c.Get<RabbitMqTransport>());
+
+            configurer.Register(c => c.Get<RabbitMqTransport>());
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
@@ -25,17 +34,25 @@ namespace Rebus.RabbitMq
         {
             var options = new RabbitMqOptionsBuilder();
 
-            configurer.Register(c =>
-            {
-                var transport = new RabbitMqTransport(connectionString, inputQueueName);
-
-                if (options.NumberOfMessagesToprefetch.HasValue)
+            configurer
+                .OtherService<RabbitMqTransport>()
+                .Register(c =>
                 {
-                    transport.SetPrefetching(options.NumberOfMessagesToprefetch.Value);
-                }
+                    var transport = new RabbitMqTransport(connectionString, inputQueueName);
 
-                return transport;
-            });
+                    if (options.NumberOfMessagesToprefetch.HasValue)
+                    {
+                        transport.SetPrefetching(options.NumberOfMessagesToprefetch.Value);
+                    }
+
+                    return transport;
+                });
+
+            configurer
+                .OtherService<ISubscriptionStorage>()
+                .Register(c => c.Get<RabbitMqTransport>());
+
+            configurer.Register(c => c.Get<RabbitMqTransport>());
 
             return options;
         }

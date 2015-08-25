@@ -616,6 +616,10 @@
 * Updated Newtonsoft JSON.NET dep to 7.0.1
 * Added file system-based saga snapshot storage
 
+## 0.97.0
+
+* Change RabbitMQ transport to allow for using Rabbit's native pub/sub capabilities, thus removing the need for a subscription storage
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
