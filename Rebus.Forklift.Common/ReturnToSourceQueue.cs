@@ -52,7 +52,7 @@ namespace Rebus.Forklift.Common
 
             Prompt(message, options);
 
-            PrintLine();
+            Text.PrintLine();
         }
 
         void MoveMessage(TransportMessage transportMessage, ITransactionContext transactionContext, string destinationQueue)
@@ -63,41 +63,27 @@ namespace Rebus.Forklift.Common
                 _initializedQueues.Add(destinationQueue);
             }
 
-            Print("  => '{0}' - ", destinationQueue);
+            Text.Print("  => '{0}' - ", destinationQueue);
 
             try
             {
                 _transport.Send(destinationQueue, transportMessage, transactionContext).Wait();
 
-                PrintLine("OK");
+                Text.PrintLine("OK");
             }
             catch (Exception exception)
             {
-                PrintLine(exception.Message);
+                Text.PrintLine(exception.Message);
                 throw;
             }
         }
 
-        void PrintLine()
-        {
-            Console.WriteLine();
-        }
-
-        void PrintLine(string message, params object[] objs)
-        {
-            Console.WriteLine(message, objs);
-        }
-
-        void Print(string message, params object[] objs)
-        {
-            Console.Write(message, objs);
-        }
 
         void Prompt(string message, IEnumerable<KeyOption> availableOptions)
         {
             var options = availableOptions.ToList();
 
-            PrintLine(@"{0}
+            Text.PrintLine(@"{0}
 {1}", message, string.Join(Environment.NewLine, options.Select(o => "  " + o.ToString())));
 
             while (true)
@@ -114,14 +100,14 @@ namespace Rebus.Forklift.Common
 
         public void Run()
         {
-            PrintLine("Will start receiving messages from '{0}'", InputQueue);
+            Text.PrintLine("Will start receiving messages from '{0}'", InputQueue);
 
             if (DefaultOutputQueue != null)
             {
-                PrintLine("(will provide '{0}' as the default queue to forward messages to)", DefaultOutputQueue);
+                Text.PrintLine("(will provide '{0}' as the default queue to forward messages to)", DefaultOutputQueue);
             }
 
-            PrintLine();
+            Text.PrintLine();
 
             while (true)
             {
@@ -139,9 +125,11 @@ namespace Rebus.Forklift.Common
                     }
                     catch (Exception exception)
                     {
-                        PrintLine("Failed: {0}", exception.Message);
+                        Text.PrintLine("Failed: {0}", exception.Message);
                     }
                 }
+
+                Text.PrintLine("No more messages");
             }
         }
     }

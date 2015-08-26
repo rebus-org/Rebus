@@ -16,15 +16,16 @@ namespace Rebus.Forklift.Msmq
 
         public void Run()
         {
-            var transport = new MsmqTransport(InputQueue);
-
-            var returnToSourceQueue = new ReturnToSourceQueue(transport)
+            using (var transport = new MsmqTransport(InputQueue))
             {
-                InputQueue = InputQueue,
-                DefaultOutputQueue = DefaultOutputQueue
-            };
+                var returnToSourceQueue = new ReturnToSourceQueue(transport)
+                {
+                    InputQueue = InputQueue,
+                    DefaultOutputQueue = DefaultOutputQueue
+                };
 
-            returnToSourceQueue.Run();
+                returnToSourceQueue.Run();
+            }
         }
     }
 }
