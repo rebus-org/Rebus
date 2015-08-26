@@ -155,6 +155,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "transports", "transports", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Forklift.RabbitMq", "Rebus.Forklift.RabbitMq\Rebus.Forklift.RabbitMq.csproj", "{23BC81DE-220E-4B39-8056-18467C05DF07}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Forklift.AzureServiceBus", "Rebus.Forklift.AzureServiceBus\Rebus.Forklift.AzureServiceBus.csproj", "{52A213C3-D621-4859-96DB-2B2ACF72A91A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -325,6 +327,10 @@ Global
 		{23BC81DE-220E-4B39-8056-18467C05DF07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{23BC81DE-220E-4B39-8056-18467C05DF07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{23BC81DE-220E-4B39-8056-18467C05DF07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52A213C3-D621-4859-96DB-2B2ACF72A91A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52A213C3-D621-4859-96DB-2B2ACF72A91A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52A213C3-D621-4859-96DB-2B2ACF72A91A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52A213C3-D621-4859-96DB-2B2ACF72A91A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -398,5 +404,6 @@ Global
 		{EE1EF14E-78B6-4F9C-B3C2-FAFF43A7DF1B} = {96EC6477-8462-4103-BE7D-4ED17FDA3E1C}
 		{966F247E-2413-4C57-8943-0CDFA518C990} = {96EC6477-8462-4103-BE7D-4ED17FDA3E1C}
 		{23BC81DE-220E-4B39-8056-18467C05DF07} = {966F247E-2413-4C57-8943-0CDFA518C990}
+		{52A213C3-D621-4859-96DB-2B2ACF72A91A} = {966F247E-2413-4C57-8943-0CDFA518C990}
 	EndGlobalSection
 EndGlobal

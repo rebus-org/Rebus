@@ -1,6 +1,5 @@
 ﻿using System.Configuration;
 using GoCommando;
-using GoCommando.Api;
 using GoCommando.Attributes;
 using Rebus.Forklift.Common;
 using Rebus.RabbitMq;
@@ -8,7 +7,7 @@ using Rebus.RabbitMq;
 namespace Rebus.Forklift.RabbitMq
 {
     [Banner(@"Rebus Forklift - simple message mover - RabbitMQ edition")]
-    class Program : ForkliftBase, ICommando
+    class Program : ForkliftBase
     {
         [NamedArgument("host", "host", Default = "amqp://localhost")]
         [Description("RabbitMQ connection string or name of connection string")]
@@ -21,7 +20,7 @@ namespace Rebus.Forklift.RabbitMq
             Go.Run<Program>(args);
         }
 
-        public void Run()
+        protected override void DoRun()
         {
             using (var transport = new RabbitMqTransport(GetConnectionString(HostnameOrConnectionString), InputQueue))
             {

@@ -133,7 +133,7 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                _log.Info("Input queue '{0}' does not exist - will create it now", _inputQueueAddress);
+                _log.Info("Queue '{0}' does not exist - will create it now", address);
                 _namespaceManager.CreateQueue(queueDescription);
                 _log.Info("Created!");
             }
