@@ -34,8 +34,10 @@ namespace Rebus.Tests.Integration.Msmq
                 .Start();
         }
 
-        [TestCase(10000, true)]
-        [TestCase(10000, false)]
+        [TestCase(10000, true, Ignore = true, IgnoreReason = "too slow on the build server")]
+        [TestCase(10000, false, Ignore = true, IgnoreReason = "too slow on the build server")]
+        [TestCase(100, true)]
+        [TestCase(100, false)]
         public async Task TestPerformance(int messageCount, bool express)
         {
             var receivedMessages = 0L;
@@ -44,7 +46,7 @@ namespace Rebus.Tests.Integration.Msmq
             _bus.Advanced.Workers.SetNumberOfWorkers(0);
 
             await Task.WhenAll(Enumerable.Range(0, messageCount)
-                .Select(i => express ? (object) new ExpressMessage() : new NormalMessage())
+                .Select(i => express ? (object)new ExpressMessage() : new NormalMessage())
                 .Select(msg => _bus.SendLocal(msg)));
 
             var stopwatch = Stopwatch.StartNew();
@@ -58,7 +60,7 @@ namespace Rebus.Tests.Integration.Msmq
             }
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine("Received {0} messages in {1:0.0} s - that's {2:0.0} msg/s", messageCount, totalSeconds, messageCount/totalSeconds);
+            Console.WriteLine("Received {0} messages in {1:0.0} s - that's {2:0.0} msg/s", messageCount, totalSeconds, messageCount / totalSeconds);
         }
 
         [Express]
@@ -72,7 +74,8 @@ namespace Rebus.Tests.Integration.Msmq
 
         class ExpressAttribute : HeaderAttribute
         {
-            public ExpressAttribute() : base(Headers.Express, "")
+            public ExpressAttribute()
+                : base(Headers.Express, "")
             {
             }
         }
