@@ -15,6 +15,9 @@ namespace Rebus.Config
     /// </summary>
     public static class AzureServiceBusConfigurationExtensions
     {
+        const string AsbSubStorageText = "The Azure Service Bus transport was inserted as the subscriptions storage because it has native support for pub/sub messaging";
+        const string AsbTimeoutManagerText = "A disabled timeout manager was installed as part of the Azure Service Bus configuration, becuase the transport has native support for deferred messages";
+
         /// <summary>
         /// Configures Rebus to use Azure Service Bus to transport messages as a one-way client (i.e. will not be able to receive any messages)
         /// </summary>
@@ -35,11 +38,11 @@ namespace Rebus.Config
 
             configurer
                 .OtherService<ISubscriptionStorage>()
-                .Register(c => c.Get<AzureServiceBusTransport>());
+                .Register(c => c.Get<AzureServiceBusTransport>(), description: AsbSubStorageText);
 
             configurer.Register(c => c.Get<AzureServiceBusTransport>());
 
-            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager(), description: AsbTimeoutManagerText);
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
@@ -96,7 +99,7 @@ namespace Rebus.Config
 
             configurer
                 .OtherService<ISubscriptionStorage>()
-                .Register(c => c.Get<AzureServiceBusTransport>());
+                .Register(c => c.Get<AzureServiceBusTransport>(), description: AsbSubStorageText);
 
             configurer.Register(c => c.Get<AzureServiceBusTransport>());
 
@@ -108,7 +111,7 @@ namespace Rebus.Config
                     .RemoveIncomingStep(s => s.GetType() == typeof(HandleDeferredMessagesStep));
             });
 
-            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager(), description: AsbTimeoutManagerText);
 
             return settingsBuilder;
         }

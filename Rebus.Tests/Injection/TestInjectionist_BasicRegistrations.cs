@@ -57,7 +57,7 @@ namespace Rebus.Tests.Injection
         [Test]
         public void CannotRegisterTwoPrimaryImplementations()
         {
-            _injectionist.Register(c => DateTime.Now);
+            _injectionist.Register(c => DateTime.Now, description: "Registered DateTime.Now at this point because it was an important time");
 
             var ex = Assert.Throws<InvalidOperationException>(() => _injectionist.Register(c => DateTime.Now));
 

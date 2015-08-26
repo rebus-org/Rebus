@@ -9,6 +9,8 @@ namespace Rebus.RabbitMq
     /// </summary>
     public static class RabbitMqConfigurationExtensions
     {
+        const string RabbitMqSubText = "The RabbitMQ transport was inserted as the subscriptions storage because it has native support for pub/sub messaging";
+
         /// <summary>
         /// Configures Rebus to use RabbitMQ to transport messages as a one-way client (i.e. will not be able to receive any messages)
         /// </summary>
@@ -20,7 +22,7 @@ namespace Rebus.RabbitMq
 
             configurer
                 .OtherService<ISubscriptionStorage>()
-                .Register(c => c.Get<RabbitMqTransport>());
+                .Register(c => c.Get<RabbitMqTransport>(), description: RabbitMqSubText);
 
             configurer.Register(c => c.Get<RabbitMqTransport>());
 
@@ -50,7 +52,7 @@ namespace Rebus.RabbitMq
 
             configurer
                 .OtherService<ISubscriptionStorage>()
-                .Register(c => c.Get<RabbitMqTransport>());
+                .Register(c => c.Get<RabbitMqTransport>(), description: RabbitMqSubText);
 
             configurer.Register(c => c.Get<RabbitMqTransport>());
 

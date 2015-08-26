@@ -9,7 +9,7 @@ namespace Rebus.Injection
     /// with caching of instances so that the same instance of each class is used throughout the tree. Should probably not be used for
     /// anything at runtime, is only meant to be used in configuration scenarios.
     /// </summary>
-    public class Injectionist
+    class Injectionist
     {
         readonly Dictionary<Type, List<Resolver>> _resolvers = new Dictionary<Type, List<Resolver>>();
 
@@ -26,20 +26,20 @@ namespace Rebus.Injection
         /// <summary>
         /// Registers a factory method that can provide an instance of the primary implementation of <typeparamref name="TService"/>
         /// </summary>
-        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
+        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)
         {
-            Register(resolverMethod, isDecorator: false);
+            Register(resolverMethod, isDecorator: false, description: description);
         }
 
         /// <summary>
         /// Registers a factory method that can provide a decorator of <typeparamref name="TService"/>
         /// </summary>
-        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod)
+        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)
         {
-            Register(resolverMethod, isDecorator: true);
+            Register(resolverMethod, isDecorator: true, description: description);
         }
 
-        void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator)
+        void Register<TService>(Func<IResolutionContext, TService> resolverMethod, bool isDecorator, string description)
         {
             var key = typeof(TService);
             if (!_resolvers.ContainsKey(key))
@@ -49,18 +49,18 @@ namespace Rebus.Injection
 
             var resolverList = _resolvers[key];
 
+            var resolver = new Resolver<TService>(resolverMethod, isDecorator: isDecorator, description: description);
+
             if (!isDecorator)
             {
                 var existingPrimaryRegistration = resolverList.FirstOrDefault(r => !r.IsDecorator);
 
                 if (existingPrimaryRegistration != null)
                 {
-                    throw new InvalidOperationException(string.Format("Attempted to register {0} as primary implementation of {1}, but a primary registration already exists: {2}",
-                        resolverMethod, typeof(TService), existingPrimaryRegistration));
+                    throw new InvalidOperationException(string.Format("Attempted to register {0} as primary resolver of {1}, but a primary registration already exists: {2}",
+                        resolver, typeof(TService), existingPrimaryRegistration));
                 }
             }
-
-            var resolver = new Resolver<TService>(resolverMethod, isDecorator: isDecorator);
 
             if (!resolver.IsDecorator)
             {
@@ -78,9 +78,9 @@ namespace Rebus.Injection
         public event Action<Type> ResolveRequested = delegate { };
 
         /// <summary>
-        /// Returns whether there exists a registration for the specified <typeparamref name="TService"/>.
+        /// Returns whether there exists a primary registration for the specified <typeparamref name="TService"/>.
         /// </summary>
-        public bool Has<TService>(bool primary = true)
+        public bool Has<TService>()
         {
             var key = typeof(TService);
             return _resolvers.ContainsKey(key) 
@@ -105,11 +105,13 @@ namespace Rebus.Injection
         class Resolver<TService> : Resolver
         {
             readonly Func<IResolutionContext, TService> _resolver;
+            readonly string _description;
 
-            public Resolver(Func<IResolutionContext, TService> resolver, bool isDecorator)
+            public Resolver(Func<IResolutionContext, TService> resolver, bool isDecorator, string description)
                 : base(isDecorator)
             {
                 _resolver = resolver;
+                _description = description;
             }
 
             public TService InvokeResolver(IResolutionContext context)
@@ -119,10 +121,16 @@ namespace Rebus.Injection
 
             public override string ToString()
             {
-                return string.Format("{0} ({1} {2})",
-                    _resolver,
+                var text = string.Format("({0} {1})",
                     IsDecorator ? "decorator ->" : "primary ->",
                     typeof (TService));
+
+                if (!string.IsNullOrWhiteSpace(_description))
+                {
+                    text += string.Format(": {0}", _description);
+                }
+
+                return text;
             }
         }
 

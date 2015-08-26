@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
+using Rebus.Logging;
 
 namespace Rebus.Transport.Msmq
 {
@@ -114,6 +115,13 @@ namespace Rebus.Transport.Msmq
 
         class OneWayClientWorkersApi : IWorkersApi
         {
+            static ILog _log;
+
+            static OneWayClientWorkersApi()
+            {
+                RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+            }
+
             public int Count
             {
                 get { return 0; }
@@ -121,6 +129,9 @@ namespace Rebus.Transport.Msmq
 
             public void SetNumberOfWorkers(int numberOfWorkers)
             {
+                if (numberOfWorkers <= 0) return;
+
+                _log.Warn("Attempted to set number of workers to {0}, but this is a one-way client!", numberOfWorkers);
             }
         }
     }

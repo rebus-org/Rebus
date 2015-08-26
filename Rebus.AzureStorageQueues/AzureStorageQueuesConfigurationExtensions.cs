@@ -13,6 +13,8 @@ namespace Rebus.AzureStorageQueues
     /// </summary>
     public static class AzureStorageQueuesConfigurationExtensions
     {
+        const string AsqTimeoutManagerText = "A disabled timeout manager was installed as part of the Azure Storage Queues configuration, becuase the transport has native support for deferred messages";
+
         /// <summary>
         /// Configures Rebus to use Azure Storage Queues to transport messages as a one-way client (i.e. will not be able to receive any messages)
         /// </summary>
@@ -79,7 +81,7 @@ namespace Rebus.AzureStorageQueues
         {
             configurer.Register(c => new AzureStorageQueuesTransport(storageAccount, inputQueueAddress));
 
-            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager());
+            configurer.OtherService<ITimeoutManager>().Register(c => new DisabledTimeoutManager(), description: AsqTimeoutManagerText);
 
             configurer.OtherService<IPipeline>().Decorate(c =>
             {

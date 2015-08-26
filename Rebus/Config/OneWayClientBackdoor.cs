@@ -10,6 +10,8 @@ namespace Rebus.Config
     /// </summary>
     public class OneWayClientBackdoor
     {
+        const string OneWayDecoratorDescription = "IBus was decorated with OneWayClientBusDecorator in order to disable the ability to change the number of workers";
+
         /// <summary>
         /// Uses the given <see cref="StandardConfigurer{TService}"/> of <see cref="ITransport"/> to set the number of workers
         /// to zero (effectively disabling message processing) and installs a decorator of <see cref="IBus"/> that prevents
@@ -19,7 +21,12 @@ namespace Rebus.Config
         {
             configurer.Options.NumberOfWorkers = 0;
 
-            configurer.OtherService<IBus>().Decorate(c => new OneWayClientBusDecorator(c.Get<IBus>()));
+            configurer.OtherService<IBus>().Decorate(c =>
+            {
+                configurer.Options.NumberOfWorkers = 0;
+                var resolveRealBus = c.Get<IBus>();
+                return new OneWayClientBusDecorator(resolveRealBus);
+            }, description: OneWayDecoratorDescription);
         } 
     }
 }
