@@ -4,16 +4,15 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0B48ED3C-E3AF-4B5A-9DFE-8376C7F053BF}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{EE1EF14E-78B6-4F9C-B3C2-FAFF43A7DF1B}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.Forklift.Msmq</RootNamespace>
-    <AssemblyName>Rebus.Forklift.Msmq</AssemblyName>
+    <RootNamespace>Rebus.Forklift.Common</RootNamespace>
+    <AssemblyName>Rebus.Forklift.Common</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +22,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -32,9 +30,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GoCommando">
-      <HintPath>..\packages\GoCommando.0.3\lib\net35\GoCommando.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -44,18 +39,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.cs" />
+    <Compile Include="KeyOption.cs" />
+    <Compile Include="ReturnToSourceQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Rebus.Forklift.Common\Rebus.Forklift.Common.csproj">
-      <Project>{EE1EF14E-78B6-4F9C-B3C2-FAFF43A7DF1B}</Project>
-      <Name>Rebus.Forklift.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
       <Name>Rebus</Name>
