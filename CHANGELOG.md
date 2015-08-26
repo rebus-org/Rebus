@@ -625,6 +625,8 @@
 * Updated SimpleInjector dependency to 3.0.1
 * Added saga auditing mechanism that can output mutations to the log
 * Added file system transport
+* Updated Azure Service Bus dependency to 3.0.1 
+* Updated Azure Storage dep to 5.0.0
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
