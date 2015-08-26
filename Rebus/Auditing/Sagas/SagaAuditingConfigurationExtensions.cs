@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Rebus.Config;
 using Rebus.Exceptions;
-using Rebus.Extensions;
 using Rebus.Injection;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
-using Rebus.Sagas;
 using Rebus.Transport;
 
 namespace Rebus.Auditing.Sagas
@@ -35,6 +30,16 @@ namespace Rebus.Auditing.Sagas
             });
 
             return configurer.GetConfigurer<ISagaSnapshotStorage>();
+        }
+
+        /// <summary>
+        /// Configures Rebus to output saga snapshots to the log. Each saga data mutation will be logged as a serialized JSON object without type information
+        /// with INFO level to the class-logger of <see cref="LoggerSagaSnapperShotter"/>.
+        /// This is probably mostly useful in debugging scenarios, or as a simple auditing mechanism in cases where sagas don't expect a lot of traffic.
+        /// </summary>
+        public static void OutputToLog(this StandardConfigurer<ISagaSnapshotStorage> configurer)
+        {
+            configurer.Register(c => new LoggerSagaSnapperShotter());
         }
 
         static ITransport GetTransport(IResolutionContext c)
@@ -66,54 +71,6 @@ Configure.With(..)
     .Options(o => o.EnableSagaAuditing().StoreInSqlServer(....))
     .(...)");
             }
-        }
-    }
-
-    class SaveSagaDataSnapshotStep : IIncomingStep
-    {
-        readonly ISagaSnapshotStorage _sagaSnapshotStorage;
-        readonly ITransport _transport;
-
-        public SaveSagaDataSnapshotStep(ISagaSnapshotStorage sagaSnapshotStorage, ITransport transport)
-        {
-            _sagaSnapshotStorage = sagaSnapshotStorage;
-            _transport = transport;
-        }
-
-        public async Task Process(IncomingStepContext context, Func<Task> next)
-        {
-            await next();
-
-            var handlerInvokers = context.Load<HandlerInvokers>();
-
-            var createdAndUpdatedSagaData = handlerInvokers
-                .Where(i => i.HasSaga)
-                .Select(i => new
-                {
-                    Handler = i.Handler,
-                    SagaData = i.GetSagaData()
-                })
-                .ToList();
-
-            var saveTasks = createdAndUpdatedSagaData
-                .Select(sagaData =>
-                {
-                    var metadata = GetMetadata(sagaData.SagaData, sagaData.Handler);
-
-                    return _sagaSnapshotStorage.Save(sagaData.SagaData, metadata);
-                });
-
-            await Task.WhenAll(saveTasks);
-        }
-
-        Dictionary<string, string> GetMetadata(ISagaData sagaData, object handler)
-        {
-            return new Dictionary<string, string>
-            {
-                {SagaAuditingMetadataKeys.HandleQueue, _transport.Address},
-                {SagaAuditingMetadataKeys.SagaDataType, sagaData.GetType().GetSimpleAssemblyQualifiedName()},
-                {SagaAuditingMetadataKeys.SagaHandlerType, handler.GetType().GetSimpleAssemblyQualifiedName()}
-            };
         }
     }
 }

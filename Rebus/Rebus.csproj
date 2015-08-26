@@ -55,8 +55,10 @@
     <Compile Include="Auditing\Messages\IncomingAuditingStep.cs" />
     <Compile Include="Auditing\Messages\OutgoingAuditingStep.cs" />
     <Compile Include="Auditing\Sagas\ISagaSnapshotStorage.cs" />
+    <Compile Include="Auditing\Sagas\LoggerSagaSnapperShotter.cs" />
     <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
     <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
+    <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />

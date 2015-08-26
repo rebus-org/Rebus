@@ -620,6 +620,11 @@
 
 * Change RabbitMQ transport to allow for using Rabbit's native pub/sub capabilities, thus removing the need for a subscription storage
 
+## 0.98.0
+
+* Updated SimpleInjector dependency to 3.0.1
+* Added saga auditing mechanism that can output mutations to the log
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

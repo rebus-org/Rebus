@@ -1,0 +1,32 @@
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
+using Rebus.Logging;
+using Rebus.Sagas;
+#pragma warning disable 1998
+
+namespace Rebus.Auditing.Sagas
+{
+    class LoggerSagaSnapperShotter : ISagaSnapshotStorage
+    {
+        static ILog _log;
+
+        static LoggerSagaSnapperShotter()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
+        public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
+        {
+            var logData = new
+            {
+                Data = sagaData,
+                Metadata = sagaAuditMetadata
+            };
+            
+            var jsonText = JsonConvert.SerializeObject(logData, Formatting.None);
+
+            _log.Info(jsonText);
+        }
+    }
+}
