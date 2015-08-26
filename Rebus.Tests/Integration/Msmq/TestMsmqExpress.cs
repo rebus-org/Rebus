@@ -13,7 +13,7 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Integration.Msmq
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class TestMsmqExpress : FixtureBase
     {
         BuiltinHandlerActivator _activator;
