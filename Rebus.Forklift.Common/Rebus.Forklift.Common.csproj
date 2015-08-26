@@ -30,15 +30,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GoCommando">
+      <HintPath>..\packages\GoCommando.0.3\lib\net35\GoCommando.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ForkliftBase.cs" />
     <Compile Include="KeyOption.cs" />
     <Compile Include="ReturnToSourceQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -48,6 +47,9 @@
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
       <Name>Rebus</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
