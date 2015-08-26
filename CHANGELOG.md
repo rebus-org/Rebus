@@ -624,6 +624,7 @@
 
 * Updated SimpleInjector dependency to 3.0.1
 * Added saga auditing mechanism that can output mutations to the log
+* Added file system transport
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

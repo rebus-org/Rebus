@@ -7,7 +7,7 @@ using Rebus.Transport;
 
 namespace Rebus.Tests.Contracts.Transports
 {
-    public class MessageExpiration<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
+    public abstract class MessageExpiration<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
         TTransportFactory _factory;
 

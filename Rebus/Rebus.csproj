@@ -147,6 +147,8 @@
     <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
+    <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
+    <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IWorker.cs" />

@@ -92,6 +92,11 @@
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
+    <Compile Include="Transport\FileSystem\FileSystemTransportFactory.cs" />
+    <Compile Include="Transport\FileSystem\FileSystemTransportBasicSendReceive.cs" />
+    <Compile Include="Transport\FileSystem\FileSystemTransportMessageExpiration.cs" />
+    <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
+    <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
@@ -140,7 +145,7 @@
     <Compile Include="Timers\TestAsyncTask.cs" />
     <Compile Include="Transport\InMem\InMemNetworkTests.cs" />
     <Compile Include="Transport\InMem\TestInMemNetwork.cs" />
-    <Compile Include="Transport\Msmq\MsmqTests.cs" />
+    <Compile Include="Transport\Msmq\MsmqBasicSendReceive.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransport.cs" />
     <Compile Include="Pipeline\TestDefaultPipelineInvoker.cs" />
     <Compile Include="TransportMessageHelpers.cs" />
