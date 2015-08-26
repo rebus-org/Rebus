@@ -39,7 +39,7 @@ namespace Rebus.Persistence.FileSystem
             {
                 _readerWriterLockSlim.EnterReadLock();
 
-                var subscriptions = GetSubscriptions();
+                var subscriptions = await GetSubscriptions();
 
                 HashSet<string> subscribers;
 
@@ -62,13 +62,13 @@ namespace Rebus.Persistence.FileSystem
             {
                 _readerWriterLockSlim.EnterWriteLock();
 
-                var subscriptions = GetSubscriptions();
+                var subscriptions = await GetSubscriptions();
 
                 subscriptions
                     .GetOrAdd(topic, () => new HashSet<string>())
                     .Add(subscriberAddress);
 
-                SaveSubscriptions(subscriptions);
+                await SaveSubscriptions(subscriptions);
             }
             finally
             {
@@ -85,13 +85,13 @@ namespace Rebus.Persistence.FileSystem
             {
                 _readerWriterLockSlim.EnterWriteLock();
 
-                var subscriptions = GetSubscriptions();
+                var subscriptions = await GetSubscriptions();
 
                 subscriptions
                     .GetOrAdd(topic, () => new HashSet<string>())
                     .Remove(subscriberAddress);
 
-                SaveSubscriptions(subscriptions);
+                await SaveSubscriptions(subscriptions);
             }
             finally
             {
@@ -99,22 +99,30 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
-        void SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
+        async Task SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
         {
             var jsonText = JsonConvert.SerializeObject(subscriptions, Formatting.Indented);
 
-            File.WriteAllText(_jsonFilePath, jsonText, FileEncoding);
+            using (var stream = File.OpenWrite(_jsonFilePath))
+            using (var writer = new StreamWriter(stream, FileEncoding))
+            {
+                await writer.WriteAsync(jsonText);
+            }
         }
 
-        Dictionary<string, HashSet<String>> GetSubscriptions()
+        async Task<Dictionary<string, HashSet<String>>> GetSubscriptions()
         {
             try
             {
-                var jsonText = File.ReadAllText(_jsonFilePath, FileEncoding);
+                using (var stream = File.OpenRead(_jsonFilePath))
+                using (var reader = new StreamReader(stream, FileEncoding))
+                {
+                    var jsonText = await reader.ReadToEndAsync();
 
-                var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<String>>>(jsonText);
+                    var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<string>>>(jsonText);
 
-                return subscriptions;
+                    return subscriptions;
+                }
             }
             catch (FileNotFoundException)
             {
