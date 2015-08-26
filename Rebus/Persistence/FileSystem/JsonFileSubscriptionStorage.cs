@@ -13,14 +13,16 @@ using Rebus.Subscriptions;
 namespace Rebus.Persistence.FileSystem
 {
     /// <summary>
-    /// Implementation of <see cref="ISubscriptionStorage"/> that stores subscriptions in a JSON file
+    /// Implementation of <see cref="ISubscriptionStorage"/> that stores subscriptions in a JSON file. Access to the file is synchronized within the process with a <see cref="ReaderWriterLockSlim"/>
     /// </summary>
-    public class JsonFileSubscriptionStorage : ISubscriptionStorage
+    public class JsonFileSubscriptionStorage : ISubscriptionStorage, IDisposable
     {
         static readonly Encoding FileEncoding = Encoding.UTF8;
 
         readonly ReaderWriterLockSlim _readerWriterLockSlim = new ReaderWriterLockSlim();
         readonly string _jsonFilePath;
+
+        bool _disposed;
 
         /// <summary>
         /// Constructs the subscription storage
@@ -30,26 +32,26 @@ namespace Rebus.Persistence.FileSystem
             _jsonFilePath = jsonFilePath;
         }
 
+        ~JsonFileSubscriptionStorage()
+        {
+            Dispose(false);
+        }
+
         /// <summary>
         /// Gets all subscribers of the given topic from the JSON file
         /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            try
+            // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
+            using (_readerWriterLockSlim.ReadLock())
             {
-                _readerWriterLockSlim.EnterReadLock();
-
-                var subscriptions = await GetSubscriptions();
+                var subscriptions = GetSubscriptions();
 
                 HashSet<string> subscribers;
 
                 return subscriptions.TryGetValue(topic, out subscribers)
                     ? subscribers.ToArray()
                     : new string[0];
-            }
-            finally
-            {
-                _readerWriterLockSlim.ExitReadLock();
             }
         }
 
@@ -58,21 +60,16 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            try
+            // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
+            using (_readerWriterLockSlim.WriteLock())
             {
-                _readerWriterLockSlim.EnterWriteLock();
-
-                var subscriptions = await GetSubscriptions();
+                var subscriptions = GetSubscriptions();
 
                 subscriptions
                     .GetOrAdd(topic, () => new HashSet<string>())
                     .Add(subscriberAddress);
 
-                await SaveSubscriptions(subscriptions);
-            }
-            finally
-            {
-                _readerWriterLockSlim.ExitWriteLock();
+                SaveSubscriptions(subscriptions);
             }
         }
 
@@ -81,48 +78,37 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            try
+            // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
+            using (_readerWriterLockSlim.WriteLock())
             {
-                _readerWriterLockSlim.EnterWriteLock();
-
-                var subscriptions = await GetSubscriptions();
+                var subscriptions = GetSubscriptions();
 
                 subscriptions
                     .GetOrAdd(topic, () => new HashSet<string>())
                     .Remove(subscriberAddress);
 
-                await SaveSubscriptions(subscriptions);
-            }
-            finally
-            {
-                _readerWriterLockSlim.ExitWriteLock();
+                SaveSubscriptions(subscriptions);
             }
         }
 
-        async Task SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
+        void SaveSubscriptions(Dictionary<string, HashSet<string>> subscriptions)
         {
+            // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
             var jsonText = JsonConvert.SerializeObject(subscriptions, Formatting.Indented);
 
-            using (var stream = File.OpenWrite(_jsonFilePath))
-            using (var writer = new StreamWriter(stream, FileEncoding))
-            {
-                await writer.WriteAsync(jsonText);
-            }
+            File.WriteAllText(_jsonFilePath, jsonText, FileEncoding);
         }
 
-        async Task<Dictionary<string, HashSet<String>>> GetSubscriptions()
+        Dictionary<string, HashSet<String>> GetSubscriptions()
         {
+            // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
             try
             {
-                using (var stream = File.OpenRead(_jsonFilePath))
-                using (var reader = new StreamReader(stream, FileEncoding))
-                {
-                    var jsonText = await reader.ReadToEndAsync();
+                var jsonText = File.ReadAllText(_jsonFilePath, FileEncoding);
 
-                    var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<string>>>(jsonText);
+                var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<String>>>(jsonText);
 
-                    return subscriptions;
-                }
+                return subscriptions;
             }
             catch (FileNotFoundException)
             {
@@ -136,6 +122,28 @@ namespace Rebus.Persistence.FileSystem
         public bool IsCentralized
         {
             get { return false; }
+        }
+
+        /// <summary>
+        /// Releases the reader/writer lock held by the subscription storage
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
+            {
+                _readerWriterLockSlim.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(false);
         }
     }
 }

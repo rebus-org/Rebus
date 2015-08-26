@@ -80,6 +80,7 @@
     <Compile Include="Messages\HeaderAttribute.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
