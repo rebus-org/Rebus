@@ -21,8 +21,7 @@ namespace Rebus.Tests.Contracts.Activation
         {
             _factory = new TFactory();
 
-            DisposableHandler.WasCalledAllright = false;
-            DisposableHandler.WasDisposedAllright = false;
+            DisposableHandler.Reset();
         }
 
         [Test]
@@ -191,8 +190,9 @@ namespace Rebus.Tests.Contracts.Activation
 
         class DisposableHandler : IHandleMessages<string>, IDisposable
         {
-            public static volatile bool WasCalledAllright;
-            public static volatile bool WasDisposedAllright;
+            public static bool WasCalledAllright { get; private set; }
+            
+            public static bool WasDisposedAllright { get; private set; }
 
             public async Task Handle(string message)
             {
@@ -202,6 +202,12 @@ namespace Rebus.Tests.Contracts.Activation
             public void Dispose()
             {
                 WasDisposedAllright = true;
+            }
+
+            public static void Reset()
+            {
+                WasCalledAllright = false;
+                WasDisposedAllright = false;
             }
         }
     }

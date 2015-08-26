@@ -1,0 +1,290 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SimpleInjector.Extensions.LifetimeScoping</name>
+    </assembly>
+    <members>
+        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope">
+            <summary>
+            Thread and container specific cache for services that are registered with one of the 
+            <see cref="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">RegisterLifetimeScope</see> extension method overloads.
+            </summary>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged 
+            resources.
+            </summary>
+            <param name="disposing">True to release both managed and unmanaged resources; false to release 
+            only unmanaged resources.</param>
+        </member>
+        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle">
+            <summary>
+            Defines a lifestyle that caches instances during the lifetime of an explicitly defined scope using the
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>
+            method. A scope is thread-specific, each thread should define its own scope. Scopes can be nested and
+            nested scopes will get their own instance. Instances created by this lifestyle can be disposed when 
+            the created scope gets disposed. 
+            </summary>
+            <example>
+            The following example shows the usage of the <b>LifetimeScopeLifestyle</b> class:
+            <code lang="cs"><![CDATA[
+            var container = new Container();
+            
+            container.Register<IUnitOfWork, EntityFrameworkUnitOfWork>(new LifetimeScopeLifestyle());
+            
+            using (container.BeginLifetimeScope())
+            {
+                var instance1 = container.GetInstance<IUnitOfWork>();
+                
+                // This call will return the same instance.
+                var instance2 = container.GetInstance<IUnitOfWork>();
+                
+                Assert.IsTrue(object.ReferenceEquals(instance1, instance2));
+                
+                // Create a nested scope.
+                using (container.BeginLifetimeScope())
+                {
+                    // A nested scope gets its own instance.
+                    var instance3 = container.GetInstance<IUnitOfWork>();
+            
+                    Assert.IsFalse(object.ReferenceEquals(instance1, instance3));
+                
+                    // This call will return the same instance.
+                    var instance4 = container.GetInstance<IUnitOfWork>();
+                    
+                    Assert.IsTrue(object.ReferenceEquals(instance3, instance4));
+                }
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.#ctor">
+            <summary>Initializes a new instance of the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle"/> class. The instance
+            will ensure that created and cached instance will be disposed after the execution of the web
+            request ended and when the created object implements <see cref="T:System.IDisposable"/>.</summary>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.#ctor(System.Boolean)">
+            <summary>Initializes a new instance of the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle"/> class.</summary>
+            <param name="disposeInstanceWhenLifetimeScopeEnds">
+            Specifies whether the created and cached instance will be disposed when the created 
+            <see cref="T:SimpleInjector.Scope"/> instance gets disposed and when the created object implements 
+            <see cref="T:System.IDisposable"/>. 
+            </param>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.WhenCurrentScopeEnds(SimpleInjector.Container,System.Action)">
+            <summary>
+            Allows registering an <paramref name="action"/> delegate that will be called when the current
+            lifetime scope ends, but before the scope disposes any instances.
+            </summary>
+            <param name="container">The <see cref="T:SimpleInjector.Container"/> instance.</param>
+            <param name="action">The delegate to run when the scope ends.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when one of the arguments is a null reference
+            (Nothing in VB).</exception>
+            <exception cref="T:System.InvalidOperationException">Will be thrown when there is currently no active
+            lifetime scope in the supplied <paramref name="container"/> instance.</exception>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.GetCurrentScopeCore(SimpleInjector.Container)">
+            <summary>
+            Returns the current <see cref="T:SimpleInjector.Scope"/> for this lifestyle and the given 
+            <paramref name="container"/>, or null when this method is executed outside the context of a scope.
+            </summary>
+            <param name="container">The container instance that is related to the scope to return.</param>
+            <returns>A <see cref="T:SimpleInjector.Scope"/> instance or null when there is no scope active in this context.</returns>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.CreateCurrentScopeProvider(SimpleInjector.Container)">
+            <summary>
+            Creates a delegate that upon invocation return the current <see cref="T:SimpleInjector.Scope"/> for this
+            lifestyle and the given <paramref name="container"/>, or null when the delegate is executed outside
+            the context of such scope.
+            </summary>
+            <param name="container">The container for which the delegate gets created.</param>
+            <returns>A <see cref="T:System.Func`1"/> delegate. This method never returns null.</returns>
+        </member>
+        <member name="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">
+            <summary>
+            Extension methods for enabling lifetime scoping for the Simple Injector.
+            </summary>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.EnableLifetimeScoping(SimpleInjector.Container)">
+            <summary>This method is obsolete.</summary>
+            <param name="container">The container.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown when the container is locked.</exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``1(SimpleInjector.Container)">
+            <summary>
+            Registers that a single instance of <typeparamref name="TConcrete"/> will be returned for
+            each lifetime scope that has been started using 
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>. When the 
+            lifetime scope is disposed and <typeparamref name="TConcrete"/> implements <see cref="T:System.IDisposable"/>,
+            the cached instance will be disposed as well.
+            Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TConcrete">The concrete type that will be registered.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when an 
+            the <typeparamref name="TConcrete"/> has already been registered.
+            </exception>
+            <exception cref="T:System.ArgumentException">Thrown when the <typeparamref name="TConcrete"/> is a type
+            that can not be created by the container.</exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``2(SimpleInjector.Container)">
+            <summary>
+            Registers that a single instance of <typeparamref name="TImplementation"/> will be returned for
+            each lifetime scope that has been started using 
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>. When the 
+            lifetime scope is disposed and <typeparamref name="TImplementation"/> implements 
+            <see cref="T:System.IDisposable"/>, the cached instance will be disposed as well.
+            Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TService">The interface or base type that can be used to retrieve the instances.</typeparam>
+            <typeparam name="TImplementation">The concrete type that will be registered.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when an 
+            the <typeparamref name="TService"/> has already been registered.</exception>
+            <exception cref="T:System.ArgumentException">Thrown when the given <typeparamref name="TImplementation"/> 
+            type is not a type that can be created by the container.
+            </exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``1(SimpleInjector.Container,System.Func{``0})">
+            <summary>
+            Registers the specified delegate that allows returning instances of <typeparamref name="TService"/>,
+            and returned instances are cached during the lifetime of a given scope that has been started using
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>. When the lifetime scope is disposed, and 
+            the cached instance implements <see cref="T:System.IDisposable"/>, that cached instance will be disposed as
+            well. Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TService">The interface or base type that can be used to retrieve instances.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <param name="instanceCreator">The delegate that allows building or creating new instances.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when either the <paramref name="container"/>, or <paramref name="instanceCreator"/> are
+            null references.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when the
+            <typeparamref name="TService"/> has already been registered.</exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``1(SimpleInjector.Container,System.Boolean)">
+            <summary>
+            Registers that a single instance of <typeparamref name="TConcrete"/> will be returned for
+            each lifetime scope that has been started using 
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>. When the 
+            lifetime scope is disposed and <typeparamref name="TConcrete"/> implements <see cref="T:System.IDisposable"/>,
+            the cached instance will be disposed as well.
+            Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TConcrete">The concrete type that will be registered.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <param name="disposeWhenLifetimeScopeEnds">If set to <c>true</c> the cached instance will be
+            disposed at the end of its lifetime.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when an 
+            the <typeparamref name="TConcrete"/> has already been registered.
+            </exception>
+            <exception cref="T:System.ArgumentException">Thrown when the <typeparamref name="TConcrete"/> is a type
+            that can not be created by the container.</exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``2(SimpleInjector.Container,System.Boolean)">
+            <summary>
+            Registers that a single instance of <typeparamref name="TImplementation"/> will be returned for
+            each lifetime scope that has been started using 
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>.  When the lifetime scope is disposed, 
+            <paramref name="disposeWhenLifetimeScopeEnds"/> is set to <b>true</b>, and the cached instance
+            implements <see cref="T:System.IDisposable"/>, that cached instance will be disposed as well.
+            Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TService">The interface or base type that can be used to retrieve the instances.</typeparam>
+            <typeparam name="TImplementation">The concrete type that will be registered.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <param name="disposeWhenLifetimeScopeEnds">If set to <c>true</c> the cached instance will be
+            disposed at the end of its lifetime.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when an 
+            the <typeparamref name="TService"/> has already been registered.</exception>
+            <exception cref="T:System.ArgumentException">Thrown when the given <typeparamref name="TImplementation"/> 
+            type is not a type that can be created by the container.
+            </exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``1(SimpleInjector.Container,System.Func{``0},System.Boolean)">
+            <summary>
+            Registers the specified delegate that allows returning instances of <typeparamref name="TService"/>,
+            and returned instances are cached during the lifetime of a given scope that has been started using
+            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>. When the lifetime scope is disposed, 
+            <paramref name="disposeWhenLifetimeScopeEnds"/> is set to <b>true</b>, and the cached instance
+            implements <see cref="T:System.IDisposable"/>, that cached instance will be disposed as well.
+            Scopes can be nested, and each scope gets its own instance.
+            </summary>
+            <typeparam name="TService">The interface or base type that can be used to retrieve instances.</typeparam>
+            <param name="container">The container to make the registrations in.</param>
+            <param name="instanceCreator">The delegate that allows building or creating new instances.</param>
+            <param name="disposeWhenLifetimeScopeEnds">If set to <c>true</c> the cached instance will be
+            disposed at the end of its lifetime.</param>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when either the <paramref name="container"/>, or <paramref name="instanceCreator"/> are
+            null references.</exception>
+            <exception cref="T:System.InvalidOperationException">
+            Thrown when this container instance is locked and can not be altered, or when the
+            <typeparamref name="TService"/> has already been registered.</exception>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">
+             <summary>
+             Begins a new lifetime scope for the given <paramref name="container"/> on the current thread. 
+             Services, registered with 
+             <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``2(SimpleInjector.Container)">RegisterLifetimeScope</see> or
+             using the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle"/> and are requested within the same thread as where the 
+             lifetime scope is created, are cached during the lifetime of that scope.
+             The scope should be disposed explicitly when the scope ends.
+             </summary>
+             <param name="container">The container.</param>
+             <returns>A new <see cref="T:SimpleInjector.Scope"/> instance.</returns>
+             <exception cref="T:System.ArgumentNullException">
+             Thrown when the <paramref name="container"/> is a null reference.</exception>
+             <exception cref="T:System.InvalidOperationException">Thrown when <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.EnableLifetimeScoping(SimpleInjector.Container)"/> has
+             not been called previously.</exception>
+             <example>
+             <code lang="cs"><![CDATA[
+             using (container.BeginLifetimeScope())
+             {
+                 var handler container.GetInstance(rootType) as IRequestHandler;
+            
+                 handler.Handle(request);
+             }
+             ]]></code>
+             </example>
+        </member>
+        <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.GetCurrentLifetimeScope(SimpleInjector.Container)">
+            <summary>
+            Gets the <see cref="T:SimpleInjector.Scope"/> that is currently in scope or <b>null</b> when no
+            <see cref="T:SimpleInjector.Scope"/> is currently in scope.
+            </summary>
+            <example>
+            The following example registers a <b>ServiceImpl</b> type as transient (a new instance will be
+            returned every time) and registers an initializer for that type that will register that instance
+            for disposal in the <see cref="T:SimpleInjector.Scope"/> in which context it is created:
+            <code lang="cs"><![CDATA[
+            container.Register<IService, ServiceImpl>();
+            container.RegisterInitializer<ServiceImpl>(instance =>
+            {
+                container.GetCurrentLifetimeScope().RegisterForDisposal(instance);
+            });
+            ]]></code>
+            </example>
+            <param name="container">The container.</param>
+            <returns>A new <see cref="T:SimpleInjector.Scope"/> instance.</returns>
+            <exception cref="T:System.ArgumentNullException">
+            Thrown when the <paramref name="container"/> is a null reference.</exception>
+        </member>
+    </members>
+</doc>

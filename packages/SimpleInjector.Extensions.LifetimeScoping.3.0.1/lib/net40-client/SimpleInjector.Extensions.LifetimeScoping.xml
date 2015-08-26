@@ -4,27 +4,13 @@
         <name>SimpleInjector.Extensions.LifetimeScoping</name>
     </assembly>
     <members>
-        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope">
-            <summary>
-            Thread and container specific cache for services that are registered with one of the 
-            <see cref="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">RegisterLifetimeScope</see> extension method overloads.
-            </summary>
-        </member>
-        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">
-            <summary>
-            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged 
-            resources.
-            </summary>
-            <param name="disposing">True to release both managed and unmanaged resources; false to release 
-            only unmanaged resources.</param>
-        </member>
         <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle">
             <summary>
             Defines a lifestyle that caches instances during the lifetime of an explicitly defined scope using the
             <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.BeginLifetimeScope(SimpleInjector.Container)">BeginLifetimeScope</see>
             method. A scope is thread-specific, each thread should define its own scope. Scopes can be nested and
             nested scopes will get their own instance. Instances created by this lifestyle can be disposed when 
-            the created scope gets <see cref="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">disposed</see>. 
+            the created scope gets disposed. 
             </summary>
             <example>
             The following example shows the usage of the <b>LifetimeScopeLifestyle</b> class:
@@ -68,7 +54,7 @@
             <summary>Initializes a new instance of the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle"/> class.</summary>
             <param name="disposeInstanceWhenLifetimeScopeEnds">
             Specifies whether the created and cached instance will be disposed when the created 
-            <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> instance gets disposed and when the created object implements 
+            <see cref="T:SimpleInjector.Scope"/> instance gets disposed and when the created object implements 
             <see cref="T:System.IDisposable"/>. 
             </param>
         </member>
@@ -101,9 +87,19 @@
             <param name="container">The container for which the delegate gets created.</param>
             <returns>A <see cref="T:System.Func`1"/> delegate. This method never returns null.</returns>
         </member>
-        <member name="P:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle.Length">
-            <summary>Gets the length of the lifestyle.</summary>
-            <value>The <see cref="T:System.Int32"/> representing the length of this lifestyle.</value>
+        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope">
+            <summary>
+            Thread and container specific cache for services that are registered with one of the 
+            <see cref="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">RegisterLifetimeScope</see> extension method overloads.
+            </summary>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged 
+            resources.
+            </summary>
+            <param name="disposing">True to release both managed and unmanaged resources; false to release 
+            only unmanaged resources.</param>
         </member>
         <member name="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">
             <summary>
@@ -111,14 +107,7 @@
             </summary>
         </member>
         <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.EnableLifetimeScoping(SimpleInjector.Container)">
-            <summary>
-            Enables the lifetime scoping for the given <paramref name="container"/>. Lifetime scoping is
-            enabled automatically when services get registered using one of the 
-            <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.RegisterLifetimeScope``2(SimpleInjector.Container)">RegisterLifetimeScope</see> overloads
-            or making registrations using the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle"/>. When no services are 
-            registered using this lifestyle, but lifetime scoping is still needed (for instance when you want 
-            instances to be disposed at the end of a lifetime scope), lifetime scoping must be enabled explicitly.
-            </summary>
+            <summary>This method is obsolete.</summary>
             <param name="container">The container.</param>
             <exception cref="T:System.ArgumentNullException">
             Thrown when the <paramref name="container"/> is a null reference.</exception>
@@ -259,7 +248,7 @@
              The scope should be disposed explicitly when the scope ends.
              </summary>
              <param name="container">The container.</param>
-             <returns>A new <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> instance.</returns>
+             <returns>A new <see cref="T:SimpleInjector.Scope"/> instance.</returns>
              <exception cref="T:System.ArgumentNullException">
              Thrown when the <paramref name="container"/> is a null reference.</exception>
              <exception cref="T:System.InvalidOperationException">Thrown when <see cref="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.EnableLifetimeScoping(SimpleInjector.Container)"/> has
@@ -277,13 +266,13 @@
         </member>
         <member name="M:SimpleInjector.SimpleInjectorLifetimeScopeExtensions.GetCurrentLifetimeScope(SimpleInjector.Container)">
             <summary>
-            Gets the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> that is currently in scope or <b>null</b> when no
-            <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> is currently in scope.
+            Gets the <see cref="T:SimpleInjector.Scope"/> that is currently in scope or <b>null</b> when no
+            <see cref="T:SimpleInjector.Scope"/> is currently in scope.
             </summary>
             <example>
             The following example registers a <b>ServiceImpl</b> type as transient (a new instance will be
             returned every time) and registers an initializer for that type that will register that instance
-            for disposal in the <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> in which context it is created:
+            for disposal in the <see cref="T:SimpleInjector.Scope"/> in which context it is created:
             <code lang="cs"><![CDATA[
             container.Register<IService, ServiceImpl>();
             container.RegisterInitializer<ServiceImpl>(instance =>
@@ -293,7 +282,7 @@
             ]]></code>
             </example>
             <param name="container">The container.</param>
-            <returns>A new <see cref="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope"/> instance.</returns>
+            <returns>A new <see cref="T:SimpleInjector.Scope"/> instance.</returns>
             <exception cref="T:System.ArgumentNullException">
             Thrown when the <paramref name="container"/> is a null reference.</exception>
         </member>

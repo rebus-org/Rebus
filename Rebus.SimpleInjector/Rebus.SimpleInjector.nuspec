@@ -15,7 +15,7 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="SimpleInjector" version="[2.8, 2.9)"/>
+        <dependency id="SimpleInjector" version="[3.0.1, 3.1.0)"/>
     </dependencies>
   </metadata>
   <files>

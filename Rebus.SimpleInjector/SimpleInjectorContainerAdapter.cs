@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
+using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Transport;
 using SimpleInjector;
@@ -18,6 +19,13 @@ namespace Rebus.SimpleInjector
     /// </summary>
     public class SimpleInjectorContainerAdapter : IContainerAdapter, IDisposable
     {
+        static ILog _log;
+
+        static SimpleInjectorContainerAdapter()
+        {
+            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+        }
+
         readonly HashSet<IDisposable> _disposables = new HashSet<IDisposable>();
         readonly Container _container;
 
@@ -27,6 +35,12 @@ namespace Rebus.SimpleInjector
         public SimpleInjectorContainerAdapter(Container container)
         {
             _container = container;
+
+            if (container.Options.ResolveUnregisteredCollections) return;
+
+            _log.Warn("The SimpleInjector Container has its Options.ResolveUnregisteredCollections property set to false, which means that Rebus would get an exception when trying to resolve handlers... therefore, it will not be set to true!");
+                
+            container.Options.ResolveUnregisteredCollections = true;
         }
 
         /// <summary>
@@ -56,7 +70,7 @@ namespace Rebus.SimpleInjector
         /// </summary>
         public void SetBus(IBus bus)
         {
-            _container.RegisterSingle(bus);
+            _container.RegisterSingleton(bus);
             
             _disposables.Add(bus);
 

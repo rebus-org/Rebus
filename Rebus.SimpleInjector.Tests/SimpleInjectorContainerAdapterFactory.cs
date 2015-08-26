@@ -31,7 +31,8 @@ namespace Rebus.SimpleInjector.Tests
                     var serviceType = a.Key;
 
                     Console.WriteLine("Registering {0} => {1}", serviceType, string.Join(", ", a));
-                    _container.RegisterAll(serviceType, a.Select(g => g.ConcreteType));
+
+                    _container.RegisterCollection(serviceType, a.Select(g => g.ConcreteType));
                 });
 
             _handlerTypesToRegister.Clear();
