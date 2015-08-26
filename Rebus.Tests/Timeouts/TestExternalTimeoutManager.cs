@@ -14,7 +14,7 @@ using Rebus.Transport.Msmq;
 
 namespace Rebus.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(Categories.Msmq)]
     public class TestExternalTimeoutManager : FixtureBase
     {
         readonly string _queueName = TestConfig.QueueName("client");
