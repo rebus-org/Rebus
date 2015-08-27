@@ -54,6 +54,7 @@
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Auditing\TestMessageAuditing.cs" />
+    <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Compression\TestCompressionIntegration.cs" />
     <Compile Include="Compression\TestZipper.cs" />
@@ -90,6 +91,7 @@
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
+    <Compile Include="Routing\TestHeaderBasedRouting.cs" />
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />

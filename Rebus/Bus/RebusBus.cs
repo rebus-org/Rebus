@@ -283,7 +283,7 @@ namespace Rebus.Bus
 
         static Message CreateMessage(object commandMessage, Operation operation, Dictionary<string, string> optionalHeaders = null)
         {
-            var headers = optionalHeaders ?? new Dictionary<string, string>();
+            var headers = CreateHeaders(optionalHeaders);
 
             switch (operation)
             {
@@ -297,6 +297,13 @@ namespace Rebus.Bus
             }
 
             return new Message(headers, commandMessage);
+        }
+
+        static Dictionary<string, string> CreateHeaders(Dictionary<string, string> optionalHeaders)
+        {
+            return optionalHeaders != null
+                ? optionalHeaders.Clone()
+                : new Dictionary<string, string>();
         }
 
         enum Operation
