@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Message = System.Messaging.Message;
@@ -238,7 +239,7 @@ namespace Rebus.Transport.Msmq
                 UseJournalQueue = false,
                 Recoverable = !expressDelivery,
                 UseDeadLetterQueue = !(expressDelivery || hasTimeout),
-                Label = message.GetMessageLabel(),
+                Label = GetMessageLabel(message),
             };
 
             if (hasTimeout)
@@ -247,6 +248,21 @@ namespace Rebus.Transport.Msmq
             }
 
             return msmqMessage;
+        }
+
+        static string GetMessageLabel(TransportMessage message)
+        {
+            try
+            {
+                return message.GetMessageLabel();
+            }
+            catch
+            {
+                // if that failed, it's most likely because we're running in legacy mode - therefore:
+                return message.Headers.GetValueOrNull(Headers.MessageId)
+                       ?? message.Headers.GetValueOrNull("rebus-msg-id")
+                       ?? "<unknown ID>";
+            }
         }
 
         public string Address
