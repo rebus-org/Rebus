@@ -237,7 +237,8 @@ namespace Rebus.Transport.Msmq
                 BodyStream = new MemoryStream(message.Body),
                 UseJournalQueue = false,
                 Recoverable = !expressDelivery,
-                UseDeadLetterQueue = !(expressDelivery || hasTimeout)
+                UseDeadLetterQueue = !(expressDelivery || hasTimeout),
+                Label = message.GetMessageLabel(),
             };
 
             if (hasTimeout)

@@ -628,6 +628,10 @@
 * Updated Azure Service Bus dependency to 3.0.1 
 * Updated Azure Storage dep to 5.0.0
 
+## 0.98.1
+
+* Set message label on sent MSMQ messages (is shown in MSMQ tools like Rebus Snoop etc.)
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
