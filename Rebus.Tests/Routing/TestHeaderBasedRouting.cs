@@ -72,7 +72,7 @@ namespace Rebus.Tests.Routing
                 {
                     var nextDestinationIndex = 0;
 
-                    r.AddTransportMessageForwarder(transportMessage =>
+                    r.AddTransportMessageForwarder(async transportMessage =>
                     {
                         var headers = transportMessage.Headers;
 

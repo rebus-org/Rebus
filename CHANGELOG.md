@@ -632,6 +632,10 @@
 
 * Set message label on sent MSMQ messages (is shown in MSMQ tools like Rebus Snoop etc.)
 
+## 0.98.2
+
+* Added transport message routing capability
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

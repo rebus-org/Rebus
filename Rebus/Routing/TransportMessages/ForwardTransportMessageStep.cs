@@ -22,7 +22,7 @@ namespace Rebus.Routing.TransportMessages
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly Func<TransportMessage, ForwardAction> _routingFunction;
+        readonly Func<TransportMessage, Task<ForwardAction>> _routingFunction;
         readonly ITransport _transport;
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace Rebus.Routing.TransportMessages
         /// </summary>
         /// <param name="routingFunction"></param>
         /// <param name="transport"></param>
-        public ForwardTransportMessageStep(Func<TransportMessage, ForwardAction> routingFunction, ITransport transport)
+        public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport)
         {
             _routingFunction = routingFunction;
             _transport = transport;
@@ -42,7 +42,7 @@ namespace Rebus.Routing.TransportMessages
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var transportMessage = context.Load<TransportMessage>();
-            var routingResult = _routingFunction(transportMessage) ?? ForwardAction.None;
+            var routingResult = (await _routingFunction(transportMessage)) ?? ForwardAction.None;
             var actionType = routingResult.ActionType;
 
             switch (actionType)

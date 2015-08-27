@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -15,7 +16,7 @@ namespace Rebus.Routing.TransportMessages
         /// Adds the given routing function - should return <see cref="ForwardAction.None"/> to do nothing, or another action
         /// available on <see cref="ForwardAction"/> in order to do something to the message
         /// </summary>
-        public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer, Func<TransportMessage, ForwardAction> routingFunction)
+        public static void AddTransportMessageForwarder(this StandardConfigurer<IRouter> configurer, Func<TransportMessage, Task<ForwardAction>> routingFunction)
         {
             configurer.OtherService<IPipeline>()
                 .Decorate(c =>
