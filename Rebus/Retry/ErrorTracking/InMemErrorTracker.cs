@@ -190,8 +190,12 @@ namespace Rebus.Retry.ErrorTracking
             public DateTimeOffset Time { get; private set; }
         }
 
+        /// <summary>
+        /// Stops the periodic cleanup of tracked messages
+        /// </summary>
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             Dispose(true);
         }
 

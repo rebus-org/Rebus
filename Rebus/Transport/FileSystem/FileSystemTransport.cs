@@ -45,6 +45,9 @@ namespace Rebus.Transport.FileSystem
             _inputQueue = inputQueue;
         }
 
+        /// <summary>
+        /// Creates a "queue" (i.e. a directory) with the given name
+        /// </summary>
         public void CreateQueue(string address)
         {
             EnsureQueueInitialized(address);

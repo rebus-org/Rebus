@@ -183,6 +183,9 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             }
         }
 
+        /// <summary>
+        /// Last-resort disposal of the due messages background task
+        /// </summary>
         public void Dispose()
         {
             GC.SuppressFinalize(this);

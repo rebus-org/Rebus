@@ -265,6 +265,9 @@ namespace Rebus.Transport.Msmq
             }
         }
 
+        /// <summary>
+        /// Gets the input queue address of this MSMQ queue
+        /// </summary>
         public string Address
         {
             get { return _inputQueueName; }
@@ -364,6 +367,9 @@ namespace Rebus.Transport.Msmq
             }
         }
 
+        /// <summary>
+        /// Disposes the input message queue object
+        /// </summary>
         public void Dispose()
         {
             Dispose(true);
