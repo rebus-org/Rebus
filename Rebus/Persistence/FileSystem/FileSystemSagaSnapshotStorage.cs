@@ -35,6 +35,10 @@ namespace Rebus.Persistence.FileSystem
             _snapshotDirectory = snapshotDirectory;
         }
 
+        /// <summary>
+        /// Initializes the file system-based saga snapshot storage by ensuring that the snapshot directory exists and
+        /// making sure that it's writable
+        /// </summary>
         public void Initialize()
         {
             if (Directory.Exists(_snapshotDirectory)) return;
@@ -69,6 +73,9 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Saves a snapshot of the saga data along with the given metadata
+        /// </summary>
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
         {
             var jsonText = JsonConvert.SerializeObject(new Snapshot

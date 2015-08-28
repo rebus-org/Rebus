@@ -78,6 +78,9 @@ CREATE TABLE [dbo].[{0}] (
             }
         }
 
+        /// <summary>
+        /// Saves a snapshot of the saga data along with the given metadata
+        /// </summary>
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
         {
             using (var connection = await _connectionProvider.GetConnection())

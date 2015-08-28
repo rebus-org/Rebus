@@ -152,8 +152,14 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
+        /// <summary>
+        /// Gets the name of this thread worker
+        /// </summary>
         public string Name { get; private set; }
 
+        /// <summary>
+        /// Stops this thread worker
+        /// </summary>
         public void Stop()
         {
             if (_keepWorking)
@@ -163,6 +169,9 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
+        /// <summary>
+        /// Stops the thread worker, waiting for it to finish whatever it was doing (up to 5 seconds)
+        /// </summary>
         public void Dispose()
         {
             Stop();

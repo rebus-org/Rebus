@@ -175,6 +175,9 @@ namespace Rebus.Pipeline.Receive
             }
         }
 
+        /// <summary>
+        /// Invokes the handler within this handler invoker
+        /// </summary>
         public override async Task Invoke()
         {
             if (!_invokeHandler) return;
@@ -192,6 +195,9 @@ namespace Rebus.Pipeline.Receive
             }
         }
 
+        /// <summary>
+        /// Sets a saga instance on the handler
+        /// </summary>
         public override void SetSagaData(ISagaData sagaData)
         {
             if (!HasSaga)
@@ -213,11 +219,18 @@ namespace Rebus.Pipeline.Receive
             _sagaData = sagaData;
         }
 
+        /// <summary>
+        /// Gets the saga data (if any) that was previously set with <see cref="SetSagaData"/>. Returns null
+        /// if none has been set
+        /// </summary>
         public override ISagaData GetSagaData()
         {
             return _sagaData;
         }
 
+        /// <summary>
+        /// Gets whether a message of the given type is allowed to cause a new saga data instance to be created
+        /// </summary>
         public override bool CanBeInitiatedBy(Type messageType)
         {
             var handlerTypeToLookFor = typeof(IAmInitiatedBy<>).MakeGenericType(messageType);
@@ -225,6 +238,9 @@ namespace Rebus.Pipeline.Receive
             return _handler.GetType().GetInterfaces().Contains(handlerTypeToLookFor);
         }
 
+        /// <summary>
+        /// Marks this handler invoker to skip its invocation, causing it to do nothin when <see cref="Invoke"/> is called
+        /// </summary>
         public override void SkipInvocation()
         {
             _invokeHandler = false;

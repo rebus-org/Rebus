@@ -51,7 +51,7 @@ namespace Rebus.Transport.FileSystem
         }
 
         /// <summary>
-        /// Sends the specified message to the logical queue specified by <seealso cref="destinationQueueName"/> by writing
+        /// Sends the specified message to the logical queue specified by <paramref name="destinationQueueName"/> by writing
         /// a JSON serialied text to a file in the corresponding directory. The actual write operation is delayed until
         /// the commit phase of the queue transaction unless we're non-transactional, in which case it is written immediately.
         /// </summary>

@@ -32,6 +32,9 @@ namespace Rebus.Persistence.FileSystem
             _jsonFilePath = jsonFilePath;
         }
 
+        /// <summary>
+        /// Last-resort disposal of the <see cref="ReaderWriterLockSlim"/>
+        /// </summary>
         ~JsonFileSubscriptionStorage()
         {
             Dispose(false);
@@ -141,6 +144,9 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Disposes the <see cref="ReaderWriterLockSlim"/> that guards access to the file
+        /// </summary>
         public void Dispose()
         {
             Dispose(false);
