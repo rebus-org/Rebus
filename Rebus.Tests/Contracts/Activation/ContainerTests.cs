@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using Rebus.Bus;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
 using Rebus.Handlers;
+using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 
@@ -50,7 +52,7 @@ namespace Rebus.Tests.Contracts.Activation
         class FakeBus : IBus
         {
             public bool Disposed { get; private set; }
-            
+
             public void Dispose()
             {
                 Disposed = true;
@@ -97,7 +99,7 @@ namespace Rebus.Tests.Contracts.Activation
             }
 
             public IAdvancedApi Advanced { get; private set; }
-            
+
             public Task Subscribe<TEvent>()
             {
                 throw new NotImplementedException();
@@ -175,7 +177,7 @@ namespace Rebus.Tests.Contracts.Activation
 
             await bus.SendLocal("hej med dig");
 
-            await Task.Delay(500);
+            await DisposableHandler.Events.WaitUntil(c => c.Count == 2);
 
             Assert.That(DisposableHandler.WasCalledAllright, Is.True, "The handler was apparently not called");
             Assert.That(DisposableHandler.WasDisposedAllright, Is.True, "The handler was apparently not disposed");
@@ -190,24 +192,31 @@ namespace Rebus.Tests.Contracts.Activation
 
         class DisposableHandler : IHandleMessages<string>, IDisposable
         {
+            public static ConcurrentQueue<string> Events { get; set; }
+
             public static bool WasCalledAllright { get; private set; }
-            
+
             public static bool WasDisposedAllright { get; private set; }
 
             public async Task Handle(string message)
             {
                 WasCalledAllright = true;
+
+                Events.Enqueue(string.Format("handled {0}", message));
             }
 
             public void Dispose()
             {
                 WasDisposedAllright = true;
+
+                Events.Enqueue("disposed");
             }
 
             public static void Reset()
             {
                 WasCalledAllright = false;
                 WasDisposedAllright = false;
+                Events = new ConcurrentQueue<string>();
             }
         }
     }
