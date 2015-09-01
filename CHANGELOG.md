@@ -636,6 +636,10 @@
 
 * Added transport message routing capability
 
+## 0.98.3
+
+* Made disposal of resources more consistent (still not entirely consistent though, depends on importance)
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
