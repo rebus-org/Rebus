@@ -133,16 +133,19 @@ namespace Rebus.Threading
 
             try
             {
-                // if it was never started, we don't do anything
-                if (_task == null) return;
-
-                LogStartStop("Stopping periodic task '{0}'", _description);
-
-                _tokenSource.Cancel();
-
-                if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
+                if (disposing)
                 {
-                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
+                    // if it was never started, we don't do anything
+                    if (_task == null) return;
+
+                    LogStartStop("Stopping periodic task '{0}'", _description);
+
+                    _tokenSource.Cancel();
+
+                    if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
+                    {
+                        _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
+                    }
                 }
             }
             finally

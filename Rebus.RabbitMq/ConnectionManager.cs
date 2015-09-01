@@ -18,6 +18,7 @@ namespace Rebus.RabbitMq
         readonly ConnectionFactory _connectionFactory;
 
         IConnection _activeConnection;
+        bool _disposed;
 
         public ConnectionManager(string connectionString, string inputQueueAddress)
         {
@@ -37,6 +38,11 @@ namespace Rebus.RabbitMq
                 AutomaticRecoveryEnabled = true,
                 NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
             };
+        }
+
+        ~ConnectionManager()
+        {
+            Dispose(false);
         }
 
         IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
@@ -71,17 +77,35 @@ namespace Rebus.RabbitMq
 
         public void Dispose()
         {
-            lock (_activeConnectionLock)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
             {
-                var connection = _activeConnection;
-
-                if (connection != null)
+                if (disposing)
                 {
-                    _log.Info("Disposing RabbitMQ connection");
+                    lock (_activeConnectionLock)
+                    {
+                        var connection = _activeConnection;
 
-                    connection.Dispose();
-                    _activeConnection = null;
+                        if (connection != null)
+                        {
+                            _log.Info("Disposing RabbitMQ connection");
+
+                            connection.Dispose();
+                            _activeConnection = null;
+                        }
+                    }
                 }
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
     }

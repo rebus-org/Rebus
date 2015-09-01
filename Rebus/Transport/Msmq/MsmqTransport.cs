@@ -34,6 +34,7 @@ namespace Rebus.Transport.Msmq
         readonly string _inputQueueName;
 
         volatile MessageQueue _inputQueue;
+        bool _disposed;
 
         /// <summary>
         /// Constructs the transport with the specified input queue address
@@ -380,10 +381,22 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         protected virtual void Dispose(bool disposing)
         {
-            if (_inputQueue != null)
+            if (_disposed) return;
+
+            try
             {
-                _inputQueue.Dispose();
-                _inputQueue = null;
+                if (disposing)
+                {
+                    if (_inputQueue != null)
+                    {
+                        _inputQueue.Dispose();
+                        _inputQueue = null;
+                    }
+                }
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
 

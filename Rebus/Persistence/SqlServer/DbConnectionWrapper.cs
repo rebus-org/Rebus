@@ -94,22 +94,23 @@ namespace Rebus.Persistence.SqlServer
 
             try
             {
-                try
+                if (disposing)
                 {
-                    if (_currentTransaction != null)
+                    try
                     {
-                        using (_currentTransaction)
+                        if (_currentTransaction != null)
                         {
-                            _currentTransaction.Rollback();
-                            _currentTransaction = null;
+                            using (_currentTransaction)
+                            {
+                                _currentTransaction.Rollback();
+                                _currentTransaction = null;
+                            }
                         }
                     }
-
-                    _connection.Close();
-                }
-                finally
-                {
-                    _connection.Dispose();
+                    finally
+                    {
+                        _connection.Dispose();
+                    }
                 }
             }
             finally

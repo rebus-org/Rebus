@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Config;
@@ -188,8 +187,8 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -201,7 +200,10 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             try
             {
-                _dueMessagesSenderBackgroundTask.Dispose();
+                if (disposing)
+                {
+                    _dueMessagesSenderBackgroundTask.Dispose();
+                }
             }
             finally
             {

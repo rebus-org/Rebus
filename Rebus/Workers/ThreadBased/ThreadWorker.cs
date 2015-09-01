@@ -32,6 +32,7 @@ namespace Rebus.Workers.ThreadBased
         readonly ParallelOperationsManager _parallelOperationsManager;
 
         volatile bool _keepWorking = true;
+        bool _disposed;
 
         internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager)
         {
@@ -48,6 +49,11 @@ namespace Rebus.Workers.ThreadBased
                 IsBackground = true
             };
             _workerThread.Start();
+        }
+
+        ~ThreadWorker()
+        {
+            Dispose(false);
         }
 
         void ThreadStart()
@@ -174,11 +180,29 @@ namespace Rebus.Workers.ThreadBased
         /// </summary>
         public void Dispose()
         {
-            Stop();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
             {
-                _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
+                if (disposing)
+                {
+                    Stop();
+
+                    if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
+                    {
+                        _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
+                    }
+                }
+            }
+            finally
+            {
+                _disposed = true;
             }
         }
     }

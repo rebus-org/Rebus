@@ -136,7 +136,10 @@ namespace Rebus.Persistence.FileSystem
 
             try
             {
-                _readerWriterLockSlim.Dispose();
+                if (disposing)
+                {
+                    _readerWriterLockSlim.Dispose();
+                }
             }
             finally
             {

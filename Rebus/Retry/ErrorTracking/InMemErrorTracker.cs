@@ -195,20 +195,23 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
         /// Shuts down the background task that removes tracked message IDs where nothing has happened for too long
         /// </summary>
-        protected virtual  void Dispose(bool disposing)
+        protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
 
             try
             {
-                _cleanupOldTrackedErrorsTask.Dispose();
+                if (disposing)
+                {
+                    _cleanupOldTrackedErrorsTask.Dispose();
+                }
             }
             finally
             {

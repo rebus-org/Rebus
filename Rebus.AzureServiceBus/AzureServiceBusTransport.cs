@@ -63,6 +63,7 @@ namespace Rebus.AzureServiceBus
         bool _automaticallyRenewPeekLock;
         bool _prefetchingEnabled;
         int _numberOfMessagesToPrefetch;
+        bool _disposed;
 
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
@@ -78,6 +79,11 @@ namespace Rebus.AzureServiceBus
             {
                 _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
             }
+        }
+
+        ~AzureServiceBusTransport()
+        {
+            Dispose(false);
         }
 
         public void Initialize()
@@ -451,9 +457,30 @@ namespace Rebus.AzureServiceBus
 
         public void Dispose()
         {
-            DisposePrefetchedMessages();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-            _queueClients.Values.ForEach(CloseQueueClient);
+        /// <summary>
+        /// 
+        /// </summary>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
+            {
+                if (disposing)
+                {
+                    DisposePrefetchedMessages();
+
+                    _queueClients.Values.ForEach(CloseQueueClient);
+                }
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
 
         void DisposePrefetchedMessages()

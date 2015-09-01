@@ -12,6 +12,7 @@ namespace Rebus.PostgreSql
         readonly NpgsqlTransaction _currentTransaction;
 
         bool _completed;
+        bool _disposed;
 
         /// <summary>
         /// Constructs the wrapper with the given connection and transaction
@@ -46,12 +47,30 @@ namespace Rebus.PostgreSql
         /// </summary>
         public void Dispose()
         {
-            if (!_completed)
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+
+            try
             {
-                _currentTransaction.Rollback();
+                if (disposing)
+                {
+                    if (!_completed)
+                    {
+                        _currentTransaction.Rollback();
+                    }
+                    _currentTransaction.Dispose();
+                    _currentConnection.Dispose();
+                }
             }
-            _currentTransaction.Dispose();
-            _currentConnection.Dispose();
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }
