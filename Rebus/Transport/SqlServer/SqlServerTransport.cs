@@ -130,6 +130,7 @@ CREATE TABLE [dbo].[{0}]
 (
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
+	[type] [nvarchar](max) NULL,
 	[priority] [int] NOT NULL,
     [expiration] [datetime2] NOT NULL,
     [visible] [datetime2] NOT NULL,
@@ -196,6 +197,7 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 INSERT INTO [{0}]
 (
     [recipient],
+	[type],
     [headers],
     [body],
     [priority],
@@ -205,6 +207,7 @@ INSERT INTO [{0}]
 VALUES
 (
     @recipient,
+	@type,
     @headers,
     @body,
     @priority,
@@ -214,6 +217,8 @@ VALUES
                     _tableName);
 
                 var headers = message.Headers.Clone();
+	            var messageType = string.Empty;
+	            headers.TryGetValue(Headers.Type, out messageType);
 
                 var priority = GetMessagePriority(headers);
                 var initialVisibilityDelay = GetInitialVisibilityDelay(headers);
@@ -223,6 +228,7 @@ VALUES
                 var serializedHeaders = _headerSerializer.Serialize(headers);
 
                 command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = destinationAddress;
+	            command.Parameters.Add("type", SqlDbType.NVarChar).Value = messageType;
                 command.Parameters.Add("headers", SqlDbType.VarBinary).Value = serializedHeaders;
                 command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
                 command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
