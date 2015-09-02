@@ -51,6 +51,9 @@ namespace Rebus.Workers.ThreadBased
             _workerThread.Start();
         }
 
+        /// <summary>
+        /// Disposes any unmanaged held resources
+        /// </summary>
         ~ThreadWorker()
         {
             Dispose(false);
@@ -184,6 +187,9 @@ namespace Rebus.Workers.ThreadBased
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Ensures that the worker thread is stopped and waits for it to exit
+        /// </summary>
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
