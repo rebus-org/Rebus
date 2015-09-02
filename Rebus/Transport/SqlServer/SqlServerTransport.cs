@@ -356,7 +356,7 @@ VALUES
             }
         }
 
-        class HeaderSerializer
+        public class HeaderSerializer
         {
             static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
