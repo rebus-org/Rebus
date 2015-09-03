@@ -644,6 +644,10 @@
 
 * Added `IsNew` property to `Saga` base class allowing saga handlers to easily determine whether the instance is new
 
+## 0.98.5
+
+* Added one-way client mode for Amazon SQS transport
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

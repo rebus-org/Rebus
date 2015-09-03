@@ -12,12 +12,7 @@ namespace Rebus.AmazonSQS.Tests
 {
     public class AmazonSQSTransportFactory : ITransportFactory
     {
-        public string BaseUrl
-        {
-            get { return ConnectionInfo.BaseQueueUrl; }
-        }
-
-        private static ConnectionInfo _connectionInfo = null;
+        private static ConnectionInfo _connectionInfo;
 
         internal static ConnectionInfo ConnectionInfo
         {
@@ -32,18 +27,22 @@ namespace Rebus.AmazonSQS.Tests
 
         public ITransport Create(string inputQueueAddress, TimeSpan peeklockDuration)
         {
-
-
-            return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
+            if (inputQueueAddress == null)
             {
+                return CreateTransport(inputQueueAddress, peeklockDuration);
+            }
 
-                var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey, RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint));
+            return _queuesToDelete.GetOrAdd(inputQueueAddress, () => CreateTransport(inputQueueAddress, peeklockDuration));
+        }
 
-                transport.Initialize(peeklockDuration);
-                transport.Purge();
-                return transport;
-            });
+        static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
+        {
+            var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
+                RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint));
 
+            transport.Initialize(peeklockDuration);
+            transport.Purge();
+            return transport;
         }
 
         public ITransport CreateOneWayClient()
@@ -120,7 +119,6 @@ namespace Rebus.AmazonSQS.Tests
     {
         internal string AccessKeyId;
         internal string SecretAccessKey;
-        internal string BaseQueueUrl;
         internal string RegionEndpoint;
         /// <summary>
         /// Expects format Key=Value¤Key=Value¤Key=Value
@@ -130,9 +128,15 @@ namespace Rebus.AmazonSQS.Tests
         /// <returns></returns>
         internal static ConnectionInfo CreateFromString(string textString)
         {
-            Console.WriteLine("Parsing connectionInfo from string:{0}", textString);
-            var keyValuePairs = textString.Split('¤');
-            Console.WriteLine("Found {0} pairs. Expected 4", keyValuePairs.Length);
+            Console.WriteLine("Parsing connectionInfo from string: {0}", textString);
+            
+            var keyValuePairs = textString.Split("; ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            
+            Console.WriteLine(@"Found {0} pairs. Expected 3 on the form
+
+AccessKeyId=blabla; SecretAccessKey=blablalba; RegionEndpoint=something
+
+", keyValuePairs.Length);
             try
             {
                 var keysAndValues = keyValuePairs.ToDictionary((kv) => kv.Split('=')[0], (kv) => kv.Split('=')[1]);
@@ -140,7 +144,6 @@ namespace Rebus.AmazonSQS.Tests
                 {
                     AccessKeyId = keysAndValues["AccessKeyId"],
                     SecretAccessKey = keysAndValues["SecretAccessKey"],
-                    BaseQueueUrl = keysAndValues["BaseQueueUrl"].EndsWith("/") ? keysAndValues["BaseQueueUrl"] : keysAndValues["BaseQueueUrl"] + "/",
                     RegionEndpoint = keysAndValues["RegionEndpoint"]
                 };
 

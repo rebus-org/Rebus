@@ -45,21 +45,26 @@ namespace Rebus.AmazonSQS
         /// </summary>
         public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
         {
-            if (inputQueueAddress == null) throw new ArgumentNullException("inputQueueAddress");
             if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
             if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
 
             if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
+            
             _inputQueueAddress = inputQueueAddress;
-            if (_inputQueueAddress.Contains("/") && !Uri.IsWellFormedUriString(_inputQueueAddress, UriKind.Absolute))
+            
+            if (_inputQueueAddress != null)
             {
-                throw new ArgumentException("You could either have a simple queue name without slash (eg. \"inputqueue\") - or a complete URL for the queue endpoint. (eg. \"https://sqs.eu-central-1.amazonaws.com/234234234234234/somqueue\")", "inputQueueAddress");
+                if (_inputQueueAddress.Contains("/") && !Uri.IsWellFormedUriString(_inputQueueAddress, UriKind.Absolute))
+                {
+                    throw new ArgumentException(
+                        "You could either have a simple queue name without slash (eg. \"inputqueue\") - or a complete URL for the queue endpoint. (eg. \"https://sqs.eu-central-1.amazonaws.com/234234234234234/somqueue\")",
+                        "inputQueueAddress");
+                }
             }
 
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _regionEndpoint = regionEndpoint;
-
         }
 
         /// <summary>
@@ -68,8 +73,8 @@ namespace Rebus.AmazonSQS
         public void Initialize(TimeSpan peeklockDuration)
         {
             _peekLockDuration = peeklockDuration;
-
             _peekLockRenewalInterval = TimeSpan.FromMinutes(_peekLockDuration.TotalMinutes * 0.8);
+
             CreateQueue(_inputQueueAddress);
         }
 
@@ -81,8 +86,9 @@ namespace Rebus.AmazonSQS
 
         public void CreateQueue(string address)
         {
-            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _regionEndpoint);
+            if (_inputQueueAddress == null) return;
 
+            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _regionEndpoint);
 
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _regionEndpoint))
             {
@@ -104,10 +110,10 @@ namespace Rebus.AmazonSQS
         /// </summary>
         public void Purge()
         {
+            if (_inputQueueAddress == null) return;
+
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
             {
-
-
                 try
                 {
                     var response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
@@ -197,6 +203,10 @@ namespace Rebus.AmazonSQS
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            if (_inputQueueAddress == null)
+            {
+                throw new InvalidOperationException("This Amazon SQS transport does not have an input queue, hence it is not possible to reveive anything");
+            }
 
             var client = GetClientFromTransactionContext(context);
 

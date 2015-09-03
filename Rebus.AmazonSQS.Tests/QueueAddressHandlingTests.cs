@@ -17,72 +17,72 @@ namespace Rebus.AmazonSQS.Tests
 
         }
 
-        [Test]
-        public async void WhenTheInputAddressIsAFullUrlAndDestinationIsQueueName_ThenItsStillWorks()
-        {
-            //arrange
+        //[Test]
+        //public async void WhenTheInputAddressIsAFullUrlAndDestinationIsQueueName_ThenItsStillWorks()
+        //{
+        //    //arrange
 
 
 
-            var queueName = "test" + Guid.NewGuid().ToString();
-            var fullUrl = _transportFactory.BaseUrl + queueName;
-            var outputTransport = _transportFactory.Create(fullUrl);
-            var destinationQueueName = "testDeux" + Guid.NewGuid().ToString();
-            var receivingTransport = _transportFactory.Create(destinationQueueName);
-            //act
+        //    var queueName = "test" + Guid.NewGuid().ToString();
+        //    var fullUrl = _transportFactory.BaseUrl + queueName;
+        //    var outputTransport = _transportFactory.Create(fullUrl);
+        //    var destinationQueueName = "testDeux" + Guid.NewGuid().ToString();
+        //    var receivingTransport = _transportFactory.Create(destinationQueueName);
+        //    //act
 
-            await TestSendReceive(outputTransport, destinationQueueName, receivingTransport);
-
-
-            //assert
+        //    await TestSendReceive(outputTransport, destinationQueueName, receivingTransport);
 
 
-
-        }
-
-        [Test]
-        public async void WhenTheInputIsAQueueNameAndDestinationIsFullUrl_ThenItsStillWorks()
-        {
-            //arrange
+        //    //assert
 
 
 
-            var queueName = "test" + Guid.NewGuid().ToString();
+        //}
 
-            var outputTransport = _transportFactory.Create(queueName);
-
-            var destinationFullUrl = _transportFactory.BaseUrl + "testDeux" + Guid.NewGuid().ToString();
-            var receivingTransport = _transportFactory.Create(destinationFullUrl);
-            //act
-
-            await TestSendReceive(outputTransport, destinationFullUrl, receivingTransport);
-
-
-            //assert
+        //[Test]
+        //public async void WhenTheInputIsAQueueNameAndDestinationIsFullUrl_ThenItsStillWorks()
+        //{
+        //    //arrange
 
 
 
-        }
+        //    var queueName = "test" + Guid.NewGuid().ToString();
 
-        [Test]
-        public async void WhenBothInputAndDestinationIsFullUrl_ThenItWorks()
-        {
-            //arrange
+        //    var outputTransport = _transportFactory.Create(queueName);
 
-            var inputqueue = _transportFactory.BaseUrl + "output" + Guid.NewGuid();
-            var outputTransport = _transportFactory.Create(inputqueue);
+        //    var destinationFullUrl = _transportFactory.BaseUrl + "testDeux" + Guid.NewGuid().ToString();
+        //    var receivingTransport = _transportFactory.Create(destinationFullUrl);
+        //    //act
 
-            var destinationFullUrl = _transportFactory.BaseUrl + "testDeux" + Guid.NewGuid().ToString(); ;
-            var receivingTransport = _transportFactory.Create(destinationFullUrl);
-            //act
+        //    await TestSendReceive(outputTransport, destinationFullUrl, receivingTransport);
 
-            await TestSendReceive(outputTransport, destinationFullUrl, receivingTransport);
+
+        //    //assert
 
 
 
-            //assert
+        //}
 
-        }
+        //[Test]
+        //public async void WhenBothInputAndDestinationIsFullUrl_ThenItWorks()
+        //{
+        //    //arrange
+
+        //    var inputqueue = _transportFactory.BaseUrl + "output" + Guid.NewGuid();
+        //    var outputTransport = _transportFactory.Create(inputqueue);
+
+        //    var destinationFullUrl = _transportFactory.BaseUrl + "testDeux" + Guid.NewGuid().ToString(); ;
+        //    var receivingTransport = _transportFactory.Create(destinationFullUrl);
+        //    //act
+
+        //    await TestSendReceive(outputTransport, destinationFullUrl, receivingTransport);
+
+
+
+        //    //assert
+
+        //}
 
         [Test]
         public void WhenUsingAQueuNameWithSlash_ThenArgumentExcetiopIsThrown()

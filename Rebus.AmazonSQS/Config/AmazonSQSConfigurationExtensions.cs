@@ -12,9 +12,19 @@ namespace Rebus.AmazonSQS.Config
         /// <summary>
         /// Configures Rebus to use Amazon Simple Queue Service as the message transport
         /// </summary>
-        public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey,  RegionEndpoint regionEndpoint, string inputQueueAddress)
+        public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, string inputQueueAddress)
         {
             configurer.Register(c => new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint));
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Amazon Simple Queue Service as the message transport
+        /// </summary>
+        public static void UseAmazonSqsAsOneWayClient(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
+        {
+            configurer.Register(c => new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint));
+
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
     }
 }
