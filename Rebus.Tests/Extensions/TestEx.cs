@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -54,6 +56,26 @@ namespace Rebus.Tests.Extensions
 
                 throw new TimeoutException(string.Format("Criteria {0} not satisfied within {1} s timeout", criteria, timeoutSeconds));
             }
+        }
+
+        public static IEnumerable<TItem> InRandomOrder<TItem>(this IEnumerable<TItem> items)
+        {
+            var random = new Random(DateTime.Now.GetHashCode());
+            var list = items.ToList();
+
+            list.Count.Times(() =>
+            {
+                var index1 = random.Next(list.Count);
+                var index2 = random.Next(list.Count);
+
+                var item1 = list[index1];
+                var item2 = list[index2];
+
+                list[index1] = item2;
+                list[index2] = item1;
+            });
+
+            return list;
         }
     }
 }

@@ -640,6 +640,10 @@
 
 * Made disposal of resources more consistent (still not entirely consistent though, depends on importance)
 
+## 0.98.4
+
+* Added `IsNew` property to `Saga` base class allowing saga handlers to easily determine whether the instance is new
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
