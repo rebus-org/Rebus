@@ -11,7 +11,7 @@ namespace Rebus.RavenDb.Tests.Subscriptions
 
         public ISubscriptionStorage Create()
         {
-            _documentStore = new EmbeddableDocumentStore()
+            _documentStore = new EmbeddableDocumentStore
             {
                 RunInMemory = true,
             };

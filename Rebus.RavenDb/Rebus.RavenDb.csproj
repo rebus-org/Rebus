@@ -50,6 +50,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RavenDbConfigurationExtensions.cs" />
+    <Compile Include="Sagas\RavenDbSagaStorage.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorage.cs" />
     <Compile Include="Subscriptions\Subscription.cs" />
     <Compile Include="Timouts\RavenDbTimeoutManager.cs" />
