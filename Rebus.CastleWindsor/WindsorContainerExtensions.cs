@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Castle.MicroKernel.Registration;
+using Castle.MicroKernel.Registration.Lifestyle;
 using Castle.Windsor;
 using Rebus.Handlers;
 
@@ -11,6 +12,22 @@ namespace Rebus.CastleWindsor
     /// </summary>
     public static class WindsorContainerExtensions
     {
+        /// <summary>
+        /// Uses an instance lifestyle where the instance is bound to (and thus will re-used across) the current Rebus transaction context
+        /// </summary>
+        public static ComponentRegistration<TService> PerRebusMessage<TService>(this LifestyleGroup<TService> lifestyleGroup) where TService : class
+        {
+            return lifestyleGroup.Registration.LifestylePerRebusMessage();
+        }
+
+        /// <summary>
+        /// Uses an instance lifestyle where the instance is bound to (and thus will re-used across) the current Rebus transaction context
+        /// </summary>
+        public static ComponentRegistration<TService> LifestylePerRebusMessage<TService>(this ComponentRegistration<TService> registration) where TService : class
+        {
+            return registration.LifestyleScoped<RebusScopeAccessor>();
+        }
+
         /// <summary>
         /// Automatically picks up all handler types from the calling assembly and registers them in the container
         /// </summary>

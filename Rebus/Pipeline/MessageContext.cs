@@ -54,7 +54,10 @@ namespace Rebus.Pipeline
             get
             {
                 var transactionContext = AmbientTransactionContext.Current;
-                return transactionContext == null ? null : new MessageContext(transactionContext);
+                
+                return transactionContext == null 
+                    ? null 
+                    : new MessageContext(transactionContext);
             }
         }
     }

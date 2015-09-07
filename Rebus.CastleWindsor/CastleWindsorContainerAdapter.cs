@@ -10,6 +10,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+// ReSharper disable ClassNeverInstantiated.Local
 #pragma warning disable 1998
 
 namespace Rebus.CastleWindsor

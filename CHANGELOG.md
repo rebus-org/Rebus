@@ -648,6 +648,10 @@
 
 * Added one-way client mode for Amazon SQS transport
 
+## 0.98.6
+
+* Added "per Rebus message" lifestyle to Windsor container configuration extensions
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
