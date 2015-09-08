@@ -18,6 +18,11 @@ namespace Rebus.CastleWindsor.Tests
     [TestFixture]
     public class CastleWindsorLifestyleTest : FixtureBase
     {
+        protected override void SetUp()
+        {
+            SomeDependency.Reset();
+        }
+
         [Test]
         public async Task CanUseRebusHandlerLifestyle()
         {
@@ -59,12 +64,20 @@ namespace Rebus.CastleWindsor.Tests
         {
             var container = GetContainer();
 
-            using (var defaultTransactionContext = new DefaultTransactionContext())
+            try
             {
-                AmbientTransactionContext.Current = defaultTransactionContext;
+                using (var defaultTransactionContext = new DefaultTransactionContext())
+                {
+                    AmbientTransactionContext.Current = defaultTransactionContext;
 
-                container.Resolve<SomeHandler>();
-                container.Resolve<AnotherHandler>();
+                    container.Resolve<SomeHandler>();
+                    container.Resolve<AnotherHandler>();
+                }
+
+            }
+            finally
+            {
+                AmbientTransactionContext.Current = null;
             }
         }
 
@@ -139,8 +152,14 @@ namespace Rebus.CastleWindsor.Tests
 
         class SomeDependency : IDisposable
         {
-            readonly ConcurrentQueue<string> _thingsThatHappened;
             static int _instanceCounter;
+
+            public static void Reset()
+            {
+                _instanceCounter = 0;
+            }
+
+            readonly ConcurrentQueue<string> _thingsThatHappened;
 
             readonly int _instanceNumber = Interlocked.Increment(ref _instanceCounter);
 
