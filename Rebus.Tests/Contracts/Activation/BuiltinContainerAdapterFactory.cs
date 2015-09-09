@@ -1,13 +1,10 @@
 ﻿using System;
-using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    [TestFixture]
-    public class BuiltinHandlerActivatorContainerTests : ContainerTests<BuiltinContainerAdapterFactory> { }
-
     public class BuiltinContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly BuiltinHandlerActivator _builtinHandlerActivator = new BuiltinHandlerActivator();
@@ -25,6 +22,11 @@ namespace Rebus.Tests.Contracts.Activation
         public void CleanUp()
         {
             _builtinHandlerActivator.Dispose();
+        }
+
+        public IBus GetBus()
+        {
+            return _builtinHandlerActivator.Bus;
         }
     }
 }

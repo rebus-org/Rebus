@@ -3,6 +3,7 @@ using System.Linq;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
 
@@ -30,6 +31,11 @@ namespace Rebus.CastleWindsor.Tests
         public void CleanUp()
         {
             _windsorContainer.Dispose();
+        }
+
+        public IBus GetBus()
+        {
+            return _windsorContainer.Resolve<IBus>();
         }
 
         Type[] GetHandlerInterfaces(Type type)

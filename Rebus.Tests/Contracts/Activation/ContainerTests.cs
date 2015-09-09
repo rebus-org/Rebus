@@ -15,7 +15,7 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
+    public abstract class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         TFactory _factory;
 
@@ -24,6 +24,76 @@ namespace Rebus.Tests.Contracts.Activation
             _factory = new TFactory();
 
             DisposableHandler.Reset();
+        }
+
+        [Test]
+        public void CanGetDecoratedBus()
+        {
+            var busReturnedFromConfiguration = Configure.With(_factory.GetActivator())
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
+                .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>())))
+                .Start();
+
+            var busReturnedFromContainer = _factory.GetBus();
+
+            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>());
+            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>());
+
+        }
+
+        class TestBusDecorator : IBus
+        {
+            readonly IBus _bus;
+
+            public TestBusDecorator(IBus bus)
+            {
+                _bus = bus;
+            }
+
+            public void Dispose()
+            {
+                _bus.Dispose();
+            }
+
+            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.SendLocal(commandMessage, optionalHeaders);
+            }
+
+            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.SendLocal(commandMessage, optionalHeaders);
+            }
+
+            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Reply(replyMessage, optionalHeaders);
+            }
+
+            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Defer(delay, message, optionalHeaders);
+            }
+
+            public IAdvancedApi Advanced
+            {
+                get { return _bus.Advanced; }
+            }
+            
+            public Task Subscribe<TEvent>()
+            {
+                return _bus.Subscribe<TEvent>();
+            }
+
+            public Task Unsubscribe<TEvent>()
+            {
+                return _bus.Unsubscribe<TEvent>();
+            }
+
+            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Publish(eventMessage, optionalHeaders);
+            }
         }
 
         [Test]

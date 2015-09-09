@@ -59,6 +59,7 @@
     <Compile Include="Compression\TestCompressionIntegration.cs" />
     <Compile Include="Compression\TestZipper.cs" />
     <Compile Include="Contracts\Activation\BuiltinContainerAdapterFactory.cs" />
+    <Compile Include="Contracts\Activation\BuiltinHandlerActivatorContainerTests.cs" />
     <Compile Include="Contracts\Activation\ContainerTests.cs" />
     <Compile Include="Contracts\Activation\IContainerAdapterFactory.cs" />
     <Compile Include="Contracts\Activation\RealContainerTests.cs" />

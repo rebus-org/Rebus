@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
 using StructureMap;
 
 namespace Rebus.StructureMap.Tests
 {
-    public class CastleWindsorContainerAdapterFactory : IContainerAdapterFactory
+    public class StructureMapContainerAdapterFactory : IContainerAdapterFactory
     {
         readonly IContainer _container = new Container();
 
@@ -30,6 +31,11 @@ namespace Rebus.StructureMap.Tests
         public void CleanUp()
         {
             _container.Dispose();
+        }
+
+        public IBus GetBus()
+        {
+            return _container.GetInstance<IBus>();
         }
 
         Type[] GetHandlerInterfaces(Type type)

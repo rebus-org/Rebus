@@ -192,6 +192,10 @@ namespace Rebus.Config
 
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
+            // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
+            IContainerAdapter containerAdapter = null;
+            Action startAction = null;
+
             PossiblyRegisterDefault<IBus>(c =>
             {
                 var bus = new RebusBus(
@@ -222,10 +226,10 @@ namespace Rebus.Config
 
                 if (_injectionist.Has<IContainerAdapter>())
                 {
-                    c.Get<IContainerAdapter>().SetBus(bus);
+                    containerAdapter = c.Get<IContainerAdapter>();
                 }
 
-                bus.Start(_options.NumberOfWorkers);
+                startAction = () => bus.Start(_options.NumberOfWorkers);
 
                 return bus;
             });
@@ -239,6 +243,12 @@ namespace Rebus.Config
             });
 
             var busInstance = _injectionist.Get<IBus>();
+
+            if (containerAdapter != null)
+            {
+                containerAdapter.SetBus(busInstance);
+                startAction();
+            }
 
             return busInstance;
         }
