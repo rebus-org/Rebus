@@ -652,6 +652,11 @@
 
 * Added "per Rebus message" lifestyle to Windsor container configuration extensions
 
+## 0.98.7
+
+* Added simple 2nd level retries mechanism
+* Added ability to forward the current transport message (optionally supplying some extra headers)
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
