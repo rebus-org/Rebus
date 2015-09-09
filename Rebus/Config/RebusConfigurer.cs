@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Linq;
 using Rebus.Activation;
+using Rebus.Backoff;
 using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Injection;
@@ -136,13 +137,16 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
+            
+            PossiblyRegisterDefault<IBackoffStrategy>(c => new SimpleConstantPollingBackoffStrategy());
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
             {
                 var transport = c.Get<ITransport>();
                 var pipeline = c.Get<IPipeline>();
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism);
+                var backoffStrategy = c.Get<IBackoffStrategy>();
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>

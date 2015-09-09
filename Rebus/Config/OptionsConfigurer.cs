@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Rebus.Backoff;
 using Rebus.Extensions;
 using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Timeouts;
+using Rebus.Workers;
 
 namespace Rebus.Config
 {

@@ -1,11 +1,12 @@
 ﻿using System.Threading.Tasks;
+using Rebus.Workers;
 
-namespace Rebus.Workers.ThreadBased
+namespace Rebus.Backoff
 {
     /// <summary>
-    /// Helper thingie that can help with implementing a backoff strategy, e.g. exponential or something else. Pretty crude for now.
+    /// Simple constant polling strategy
     /// </summary>
-    public class BackoffHelper
+    public class SimpleConstantPollingBackoffStrategy : IBackoffStrategy
     {
         /// <summary>
         /// Asynchronously executes the next wait operation, possibly advancing the wait cursor to a different wait time for the next time

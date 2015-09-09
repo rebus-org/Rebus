@@ -17,19 +17,22 @@ namespace Rebus.Workers.ThreadBased
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
         readonly IPipelineInvoker _pipelineInvoker;
+        readonly IBackoffStrategy _backoffStrategy;
 
         /// <summary>
         /// Constructs the worker factory
         /// </summary>
-        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelism)
+        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelism, IBackoffStrategy backoffStrategy)
         {
             if (transport == null) throw new ArgumentNullException("transport");
             if (pipeline == null) throw new ArgumentNullException("pipeline");
             if (pipelineInvoker == null) throw new ArgumentNullException("pipelineInvoker");
+            if (backoffStrategy == null) throw new ArgumentNullException("backoffStrategy");
             if (maxParallelism <= 0) throw new ArgumentOutOfRangeException(string.Format("Cannot use value '{0}' as max parallelism!", maxParallelism));
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
+            _backoffStrategy = backoffStrategy;
             _parallelOperationsManager = new ParallelOperationsManager(maxParallelism);
         }
 
@@ -38,7 +41,14 @@ namespace Rebus.Workers.ThreadBased
         /// </summary>
         public IWorker CreateWorker(string workerName)
         {
-            return new ThreadWorker(_transport, _pipeline, _pipelineInvoker, workerName, _threadWorkerSynchronizationContext, _parallelOperationsManager);
+            return new ThreadWorker(
+                _transport,
+                _pipeline,
+                _pipelineInvoker,
+                workerName,
+                _threadWorkerSynchronizationContext,
+                _parallelOperationsManager,
+                _backoffStrategy);
         }
     }
 }

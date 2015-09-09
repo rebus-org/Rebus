@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Backoff;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Pipeline;
@@ -13,7 +14,6 @@ using Rebus.Threading;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
-using Rebus.Workers.ThreadBased;
 
 namespace Rebus.Tests.Integration
 {
@@ -105,7 +105,7 @@ namespace Rebus.Tests.Integration
                 RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
             }
 
-            readonly BackoffHelper _backoffHelper = new BackoffHelper();
+            readonly SimpleConstantPollingBackoffStrategy _backoffHelper = new SimpleConstantPollingBackoffStrategy();
             readonly ParallelOperationsManager _parallelOperationsManager;
             readonly ITransport _transport;
             readonly IPipeline _pipeline;

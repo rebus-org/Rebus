@@ -59,6 +59,8 @@
     <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
     <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
     <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
+    <Compile Include="Backoff\BackoffConfigurationExtensions.cs" />
+    <Compile Include="Backoff\SimpleCustomizedBackoffStrategy.cs" />
     <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
@@ -160,7 +162,8 @@
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
-    <Compile Include="Workers\ThreadBased\BackoffHelper.cs" />
+    <Compile Include="Backoff\SimpleConstantPollingBackoffStrategy.cs" />
+    <Compile Include="Workers\IBackoffStrategy.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />

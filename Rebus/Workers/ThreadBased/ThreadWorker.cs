@@ -22,8 +22,8 @@ namespace Rebus.Workers.ThreadBased
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly BackoffHelper _backoffHelper = new BackoffHelper();
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
+        readonly IBackoffStrategy _backoffStrategy;
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
@@ -34,7 +34,7 @@ namespace Rebus.Workers.ThreadBased
         volatile bool _keepWorking = true;
         bool _disposed;
 
-        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager)
+        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy)
         {
             Name = workerName;
 
@@ -43,6 +43,7 @@ namespace Rebus.Workers.ThreadBased
             _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _parallelOperationsManager = parallelOperationsManager;
+            _backoffStrategy = backoffStrategy;
             _workerThread = new Thread(ThreadStart)
             {
                 Name = workerName,
@@ -134,19 +135,19 @@ namespace Rebus.Workers.ThreadBased
                         {
                             // finish the tx and wait....
                             await transactionContext.Complete();
-                            await _backoffHelper.Wait();
+                            await _backoffStrategy.Wait();
                             return;
                         }
 
-                        _backoffHelper.Reset();
+                        // we got a message, so we reset the backoff strategy
+                        _backoffStrategy.Reset();
 
                         var context = new IncomingStepContext(message, transactionContext);
-                        transactionContext.Items[StepContext.StepContextKey] = context;
-
+                        
                         var stagedReceiveSteps = _pipeline.ReceivePipeline();
-
+                        
                         await _pipelineInvoker.Invoke(context, stagedReceiveSteps);
-
+                        
                         await transactionContext.Complete();
                     }
                     catch (Exception exception)
