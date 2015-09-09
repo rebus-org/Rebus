@@ -251,6 +251,10 @@ namespace Rebus.Config
             if (containerAdapter != null)
             {
                 containerAdapter.SetBus(busInstance);
+            }
+
+            if (startAction != null)
+            {
                 startAction();
             }
 
