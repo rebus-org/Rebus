@@ -124,6 +124,7 @@
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
     <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
+    <Compile Include="Retry\Simple\Failed.cs" />
     <Compile Include="Routing\TransportMessages\ActionType.cs" />
     <Compile Include="Routing\TransportMessages\ForwardAction.cs" />
     <Compile Include="Routing\TransportMessages\ForwardTransportMessageStep.cs" />

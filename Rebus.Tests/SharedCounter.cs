@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading;
+using NUnit.Framework;
 using Rebus.Tests.Extensions;
 using Timer = System.Timers.Timer;
 
@@ -15,6 +16,8 @@ namespace Rebus.Tests
         readonly string _name;
         readonly int _initialValue;
         int _counter;
+        bool _failure;
+        string _failureText;
 
         public SharedCounter(int initialValue, string name = null)
         {
@@ -29,6 +32,14 @@ namespace Rebus.Tests
         }
 
         public TimeSpan Delay { get; set; }
+
+        public void Fail(string message, params object[] objs)
+        {
+            _failure = true;
+            _failureText = string.Format(message, objs);
+
+            _resetEvent.Set();
+        }
 
         public void Decrement()
         {
@@ -70,6 +81,11 @@ namespace Rebus.Tests
                 _name, timeoutSeconds);
 
             ResetEvent.WaitOrDie(TimeSpan.FromSeconds(timeoutSeconds), errorMessage);
+
+            if (_failure)
+            {
+                throw new AssertionException(_failureText);
+            }
         }
     }
 }

@@ -25,11 +25,12 @@ namespace Rebus.Retry.ErrorTracking
             RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
         }
 
-        readonly int _maxDeliveryAttempts;
         const string BackgroundTaskName = "CleanupTrackedErrors";
 
+        readonly int _maxDeliveryAttempts;
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly AsyncTask _cleanupOldTrackedErrorsTask;
+        
         bool _disposed;
 
         /// <summary>

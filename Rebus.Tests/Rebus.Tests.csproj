@@ -84,6 +84,7 @@
     <Compile Include="Integration\TestIdempotentSagas.cs" />
     <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
     <Compile Include="Integration\TestSagaIsNew.cs" />
+    <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
