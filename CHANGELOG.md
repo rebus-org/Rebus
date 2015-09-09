@@ -656,6 +656,7 @@
 
 * Added simple 2nd level retries mechanism
 * Added ability to forward the current transport message (optionally supplying some extra headers)
+* Added configurable idle time backoff strategy
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
