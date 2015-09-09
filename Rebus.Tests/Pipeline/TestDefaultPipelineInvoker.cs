@@ -52,6 +52,10 @@ namespace Rebus.Tests.Pipeline
         }
 
         class FakeTransactionContext : ITransactionContext {
+            public FakeTransactionContext()
+            {
+                Items = new ConcurrentDictionary<string, object>();
+            }
             public void Dispose()
             {
                 throw new NotImplementedException();
@@ -89,7 +93,9 @@ namespace Rebus.Tests.Pipeline
         {
             var invoker = new DefaultPipelineInvoker();
 
-            var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
             await invoker.Invoke(stepContext, new IIncomingStep[]
             {
