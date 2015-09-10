@@ -34,6 +34,8 @@ namespace Rebus.Config
         readonly Injectionist _injectionist = new Injectionist();
         readonly Options _options = new Options();
 
+        bool _hasBeenStarted;
+
         internal RebusConfigurer(IHandlerActivator handlerActivator)
         {
             _injectionist.Register(c => handlerActivator);
@@ -258,11 +260,18 @@ namespace Rebus.Config
                 startAction();
             }
 
+            _hasBeenStarted = true;
+
             return busInstance;
         }
 
         void VerifyRequirements()
         {
+            if (_hasBeenStarted)
+            {
+                throw new InvalidOperationException("This configurer has already had .Start() called on it - this is not allowed, because it cannot be guaranteed that configuration extensions make their registrations in a way that allows for being called more than once. If you need to create multiple bus instances, please wrap the configuration from Configure.With(...) and on in a function that you can call multiple times.");
+            }
+
             if (!_injectionist.Has<ITransport>())
             {
                 throw new ConfigurationErrorsException(
