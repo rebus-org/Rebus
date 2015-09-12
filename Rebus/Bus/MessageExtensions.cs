@@ -39,7 +39,20 @@ namespace Rebus.Bus
         /// </summary>
         public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
         {
-            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
+            InnerSetDeferHeader(approximateDeliveryTime, message.Headers);
+        }
+
+        /// <summary>
+        /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
+        /// </summary>
+        public static void SetDeferHeader(this TransportMessage message, DateTimeOffset approximateDeliveryTime)
+        {
+            InnerSetDeferHeader(approximateDeliveryTime, message.Headers);
+        }
+
+        static void InnerSetDeferHeader(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers)
+        {
+            headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
         }
 
         /// <summary>

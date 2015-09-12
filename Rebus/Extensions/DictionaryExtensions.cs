@@ -12,6 +12,24 @@ namespace Rebus.Extensions
     public static class DictionaryExtensions
     {
         /// <summary>
+        /// Returns a new dictionary that contains all key-value pairs from both dictionaries. If the same key is present the value from <paramref name="otherDictionary"/> takes precedence
+        /// </summary>
+        public static Dictionary<TKey, TValue> MergedWith<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IDictionary<TKey, TValue> otherDictionary)
+        {
+            if (dictionary == null) throw new ArgumentNullException("dictionary");
+            if (otherDictionary == null) throw new ArgumentNullException("otherDictionary");
+
+            var result = new Dictionary<TKey, TValue>(dictionary);
+
+            foreach (var kvp in otherDictionary)
+            {
+                result[kvp.Key] = kvp.Value;
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Returns a new dictionary with the same key-value pairs as the target
         /// </summary>
         public static Dictionary<string, string> Clone(this Dictionary<string, string> dictionary)

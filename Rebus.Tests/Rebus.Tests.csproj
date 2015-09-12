@@ -96,7 +96,7 @@
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
-    <Compile Include="Routing\TestForwarding.cs" />
+    <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />

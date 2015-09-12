@@ -5,6 +5,7 @@ using Rebus.Bus.Advanced;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Time;
 using Rebus.Transport;
 
 // ReSharper disable CheckNamespace
@@ -37,6 +38,68 @@ namespace Rebus.Bus
             {
                 get { return new RoutingApi(_rebusBus); }
             }
+
+            public ITransportMessageApi TransportMessage
+            {
+                get { return new TransportMessageApi(_rebusBus); }
+            }
+        }
+
+        class TransportMessageApi : ITransportMessageApi
+        {
+            readonly RebusBus _rebusBus;
+
+            public TransportMessageApi(RebusBus rebusBus)
+            {
+                _rebusBus = rebusBus;
+            }
+
+            public async Task Forward(string destinationAddress, Dictionary<string, string> optionalAdditionalHeaders = null)
+            {
+                var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
+
+                await _rebusBus.SendTransportMessage(destinationAddress, transportMessage);
+            }
+
+            public async Task Defer(TimeSpan delay, Dictionary<string, string> optionalAdditionalHeaders = null)
+            {
+                var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
+                var timeoutManagerAddress = _rebusBus.GetTimeoutManagerAddress();
+
+                transportMessage.SetDeferHeader(RebusTime.Now + delay);
+
+                await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
+            }
+
+            static TransportMessage GetCloneOfCurrentTransportMessage(Dictionary<string, string> optionalAdditionalHeaders)
+            {
+                var transactionContext = AmbientTransactionContext.Current;
+
+                if (transactionContext == null)
+                {
+                    throw new InvalidOperationException(
+                        "Attempted to perform operation on the current transport message, but there was no transaction context and therefore no 'current transport message' to anything with! This call must be made from within a message handler... if you're actually doing that, you're probably experiencing this error because you're executing this operation on an independent thread somehow...");
+                }
+
+                var currentTransportMessage = transactionContext
+                    .GetOrThrow<IncomingStepContext>(StepContext.StepContextKey)
+                    .Load<TransportMessage>();
+
+                if (currentTransportMessage == null)
+                {
+                    throw new InvalidOperationException(
+                        "Attempted to perform operation on the current transport message, but no transport message could be found in the context.... this is odd because the entire receive pipeline will only get called when there is a transport message, so maybe it has somehow been removed?");
+                }
+
+                var headers = optionalAdditionalHeaders != null
+                    ? currentTransportMessage.Headers.MergedWith(optionalAdditionalHeaders)
+                    : currentTransportMessage.Headers.Clone();
+
+                var body = currentTransportMessage.Body;
+                var clone = new TransportMessage(headers, body);
+
+                return clone;
+            }
         }
 
         class RoutingApi : IRoutingApi
@@ -52,41 +115,7 @@ namespace Rebus.Bus
             {
                 var logicalMessage = CreateMessage(explicitlyRoutedMessage, Operation.Send, optionalHeaders);
 
-                return  _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
-            }
-
-            public async Task Forward(string destinationAddress, Dictionary<string, string> optionalAdditionalHeaders = null)
-            {
-                var transactionContext = AmbientTransactionContext.Current;
-
-                if (transactionContext == null)
-                {
-                    throw new InvalidOperationException("Attempted to forward current transport message, but there was no transaction context!");
-                }
-
-                var currentTransportMessage = transactionContext
-                    .GetOrThrow<IncomingStepContext>(StepContext.StepContextKey)
-                    .Load<TransportMessage>();
-
-                if (currentTransportMessage == null)
-                {
-                    throw new InvalidOperationException("Attempted to forward current transport message, but no transport message was found in the context!");
-                }
-
-                var headers = currentTransportMessage.Headers.Clone();
-
-                if (optionalAdditionalHeaders != null)
-                {
-                    foreach (var kvp in optionalAdditionalHeaders)
-                    {
-                        headers[kvp.Key] = kvp.Value;
-                    }
-                }
-
-                var body = currentTransportMessage.Body;
-                var forwardedTransportMessage = new TransportMessage(headers, body);
-
-                await _rebusBus.SendTransportMessage(destinationAddress, forwardedTransportMessage, transactionContext);
+                return _rebusBus.InnerSend(new[] { destinationAddress }, logicalMessage);
             }
         }
 

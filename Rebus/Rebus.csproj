@@ -65,6 +65,7 @@
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
     <Compile Include="Bus\Advanced\ITopicsApi.cs" />
+    <Compile Include="Bus\Advanced\ITransportMessageApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
@@ -157,6 +158,7 @@
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
+    <Compile Include="Config\OneWayClientBusDecorator.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IWorker.cs" />

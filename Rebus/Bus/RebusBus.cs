@@ -364,8 +364,15 @@ namespace Rebus.Bus
             await _pipelineInvoker.Invoke(context, _pipeline.SendPipeline());
         }
 
-        async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage, ITransactionContext transactionContext)
+        async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage)
         {
+            var transactionContext = AmbientTransactionContext.Current;
+
+            if (transactionContext == null)
+            {
+                throw new InvalidOperationException(string.Format("Attempted to send {0} to {1} outside of a transaction context!", transportMessage.GetMessageLabel(), destinationAddress));
+            }
+
             await _transport.Send(destinationAddress, transportMessage, transactionContext);
         }
 
