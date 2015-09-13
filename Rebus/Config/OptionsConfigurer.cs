@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Rebus.Backoff;
 using Rebus.Extensions;
 using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Timeouts;
-using Rebus.Workers;
 
 namespace Rebus.Config
 {
@@ -129,7 +127,7 @@ Receive pipeline:
             return this;
         }
 
-        string Format(IEnumerable<IStep> pipeline, bool verbose)
+        static string Format(IEnumerable<IStep> pipeline, bool verbose)
         {
             return string.Join(Environment.NewLine,
                 pipeline.Select((step, i) =>
@@ -153,7 +151,7 @@ Receive pipeline:
                 }));
         }
 
-        string GetDocsOrNull(IStep step)
+        static string GetDocsOrNull(IStep step)
         {
             var docsAttribute = step.GetType()
                 .GetCustomAttributes()
