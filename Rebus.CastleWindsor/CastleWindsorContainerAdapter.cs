@@ -95,7 +95,7 @@ namespace Rebus.CastleWindsor
             }
         }
 
-        IEnumerable<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
+        List<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
         {
             var handledMessageTypes = typeof(TMessage).GetBaseTypes()
                 .Concat(new[]{typeof(TMessage)});
@@ -107,7 +107,8 @@ namespace Rebus.CastleWindsor
 
                     return _windsorContainer.ResolveAll(implementedInterface).Cast<IHandleMessages>();
                 })
-                .Cast<IHandleMessages<TMessage>>();
+                .Cast<IHandleMessages<TMessage>>()
+                .ToList();
         }
     }
 }

@@ -658,6 +658,10 @@
 * Added ability to forward the current transport message (optionally supplying some extra headers)
 * Added configurable idle time backoff strategy
 
+## 0.98.8
+
+* Fixed bug that could result in double-resolving handler instances with Ninject, Castle Windsor, and Unity because of a lazy-evaluated `IEnumerable`
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

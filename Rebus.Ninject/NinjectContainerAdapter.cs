@@ -67,7 +67,7 @@ namespace Rebus.Ninject
             _kernel.Get<IBus>();
         }
 
-        IEnumerable<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
+        List<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
         {
             var handledMessageTypes = typeof(TMessage).GetBaseTypes()
                 .Concat(new[] { typeof(TMessage) });
@@ -75,11 +75,12 @@ namespace Rebus.Ninject
             return handledMessageTypes
                 .SelectMany(handledMessageType =>
                 {
-                    var implementedInterface = typeof(IHandleMessages<>).MakeGenericType(handledMessageType);
+                    var implementedInterface = typeof (IHandleMessages<>).MakeGenericType(handledMessageType);
 
                     return _kernel.GetAll(implementedInterface).Cast<IHandleMessages>();
                 })
-                .Cast<IHandleMessages<TMessage>>();
+                .Cast<IHandleMessages<TMessage>>()
+                .ToList();
         }
     }
 }

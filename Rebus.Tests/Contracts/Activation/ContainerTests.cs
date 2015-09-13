@@ -24,6 +24,60 @@ namespace Rebus.Tests.Contracts.Activation
             _factory = new TFactory();
 
             DisposableHandler.Reset();
+            SomeHandler.Reset();
+        }
+
+        [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
+        public void DoesNotDoubleResolveBecauseOfLazyEnumerableEvaluation()
+        {
+            _factory.RegisterHandlerType<SomeHandler>();
+            var handlerActivator = _factory.GetActivator();
+
+            using (var context = new DefaultTransactionContext())
+            {
+                var handlers = handlerActivator.GetHandlers("hej", context).Result.ToList();
+
+                //context.Complete().Wait();
+            }
+
+            var createdInstances = SomeHandler.CreatedInstances.ToList();
+            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }));
+
+            var disposedInstances = SomeHandler.DisposedInstances.ToList();
+            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }));
+        }
+
+        class SomeHandler : IHandleMessages<string>, IDisposable
+        {
+            public static readonly ConcurrentQueue<int> CreatedInstances = new ConcurrentQueue<int>();
+            public static readonly ConcurrentQueue<int> DisposedInstances = new ConcurrentQueue<int>();
+
+            static int _instanceIdCounter;
+            readonly int _instanceId = _instanceIdCounter++;
+
+            public SomeHandler()
+            {
+                CreatedInstances.Enqueue(_instanceId);
+            }
+
+            public Task Handle(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Dispose()
+            {
+                DisposedInstances.Enqueue(_instanceId);
+            }
+
+            public static void Reset()
+            {
+                while (DisposedInstances.Count > 0)
+                {
+                    int temp;
+                    DisposedInstances.TryDequeue(out temp);
+                }
+            }
         }
 
         [Test]
@@ -79,7 +133,7 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 get { return _bus.Advanced; }
             }
-            
+
             public Task Subscribe<TEvent>()
             {
                 return _bus.Subscribe<TEvent>();
