@@ -92,15 +92,18 @@ namespace Rebus.Workers.ThreadBased
             {
                 var nextContinuationOrNull = _threadWorkerSynchronizationContext.GetNextContinuationOrNull();
 
+                // if there's a continuation to run, run it
                 if (nextContinuationOrNull != null)
                 {
                     nextContinuationOrNull();
                     return;
                 }
 
-                if (!onlyRunContinuations)
+                var canTryToReceiveNewMessage = !onlyRunContinuations;
+
+                if (canTryToReceiveNewMessage)
                 {
-                    TryProcessMessage();
+                    TryReceiveNewMessage();
                 }
             }
             catch (ThreadAbortException)
@@ -114,11 +117,12 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        async void TryProcessMessage()
+        async void TryReceiveNewMessage()
         {
-            using (var op = _parallelOperationsManager.TryBegin())
+            using (var operation = _parallelOperationsManager.TryBegin())
             {
-                if (!op.CanContinue())
+                // if we didn't get to do our thing, pause the thread a very short while to avoid thrashing too much
+                if (!operation.CanContinue())
                 {
                     Thread.Sleep(10);
                     return;
@@ -133,7 +137,7 @@ namespace Rebus.Workers.ThreadBased
 
                         if (message == null)
                         {
-                            // finish the tx and wait....
+                            // no message: finish the tx and wait....
                             await transactionContext.Complete();
                             await _backoffStrategy.Wait();
                             return;
@@ -152,7 +156,9 @@ namespace Rebus.Workers.ThreadBased
                     }
                     catch (Exception exception)
                     {
-                        _log.Error(exception, "Unhandled exception in thread worker");
+                        // we should not end up here unless something is off....
+                        _log.Error(exception, "Unhandled exception in thread worker - the pipeline didn't handle its own errors (this is bad)");
+                        Thread.Sleep(100);
                     }
                     finally
                     {
@@ -172,11 +178,10 @@ namespace Rebus.Workers.ThreadBased
         /// </summary>
         public void Stop()
         {
-            if (_keepWorking)
-            {
-                _keepWorking = false;
-                _cancellationTokenSource.Cancel();
-            }
+            if (!_keepWorking) return;
+
+            _keepWorking = false;
+            _cancellationTokenSource.Cancel();
         }
 
         /// <summary>

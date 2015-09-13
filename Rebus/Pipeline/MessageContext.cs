@@ -1,5 +1,4 @@
-﻿using Rebus.Extensions;
-using Rebus.Messages;
+﻿using Rebus.Messages;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline
