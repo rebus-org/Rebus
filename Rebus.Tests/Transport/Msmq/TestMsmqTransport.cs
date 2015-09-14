@@ -9,6 +9,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Messages;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;

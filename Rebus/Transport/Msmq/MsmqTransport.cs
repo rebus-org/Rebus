@@ -145,9 +145,11 @@ namespace Rebus.Transport.Msmq
                 return messageQueues;
             });
 
-            var sendQueue = sendQueues.GetOrAdd(MsmqUtil.GetPath(destinationAddress), _ =>
+            var path = MsmqUtil.GetFullPath(destinationAddress);
+
+            var sendQueue = sendQueues.GetOrAdd(path, _ =>
             {
-                var messageQueue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send);
+                var messageQueue = new MessageQueue(path, QueueAccessMode.Send);
 
                 return messageQueue;
             });

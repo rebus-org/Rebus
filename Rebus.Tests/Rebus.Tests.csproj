@@ -106,6 +106,7 @@
     <Compile Include="Transport\FileSystem\FileSystemTransportMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
+    <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />

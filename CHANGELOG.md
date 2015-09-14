@@ -662,6 +662,9 @@
 
 * Fixed bug that could result in double-resolving handler instances with Ninject, Castle Windsor, and Unity because of a lazy-evaluated `IEnumerable`
 
+## 0.98.9
+
+* Fixed MSMQ remote queue path formatting
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
