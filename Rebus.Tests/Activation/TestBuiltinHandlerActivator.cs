@@ -17,6 +17,11 @@ namespace Rebus.Tests.Activation
             _activator = new BuiltinHandlerActivator();
         }
 
+        protected override void TearDown()
+        {
+            AmbientTransactionContext.Current = null;
+        }
+
         [Test]
         public void CanGetHandlerWithoutArguments()
         {
