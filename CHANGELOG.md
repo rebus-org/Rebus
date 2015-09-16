@@ -666,6 +666,10 @@
 
 * Fixed MSMQ remote queue path formatting
 
+## 0.98.10
+
+* Extended built-in handler activator with `Register` overloads that allow for registering handler factory functions that accept `IMessageContext` and `(IBus, IMessageContext)` as arguments
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

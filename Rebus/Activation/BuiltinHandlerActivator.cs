@@ -18,18 +18,47 @@ namespace Rebus.Activation
     public class BuiltinHandlerActivator : IContainerAdapter, IDisposable
     {
         readonly List<object> _handlerInstances = new List<object>();
-        readonly List<Delegate> _handlerFactories = new List<Delegate>();
+        readonly List<Delegate> _handlerFactoriesNoArguments = new List<Delegate>();
+        readonly List<Delegate> _handlerFactoriesMessageContextArgument = new List<Delegate>();
+        readonly List<Delegate> _handlerFactoriesBusAndMessageContextArguments = new List<Delegate>();
 
         /// <summary>
         /// Returns all relevant handler instances for the given message by looking up compatible registered functions and instance factory methods.
         /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
-            var factories = _handlerFactories.OfType<Func<IHandleMessages<TMessage>>>();
-            var instancesFromFactories = factories.Select(factory => factory());
+            var instancesFromNoArgumentFactories = _handlerFactoriesNoArguments
+                .OfType<Func<IHandleMessages<TMessage>>>().Select(factory => factory());
+
+            var instancesFromMessageContextArgumentFactories = _handlerFactoriesMessageContextArgument
+                .OfType<Func<IMessageContext, IHandleMessages<TMessage>>>().Select(factory =>
+                {
+                    var messageContext = MessageContext.Current;
+                    if (messageContext == null)
+                    {
+                        throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
+                    }
+                    return factory(messageContext);
+                });
+
+            var instancesFromBusAndMessageContextArgumentFactories = _handlerFactoriesBusAndMessageContextArguments
+                .OfType<Func<IBus, IMessageContext, IHandleMessages<TMessage>>>().Select(factory =>
+                {
+                    var messageContext = MessageContext.Current;
+                    if (messageContext == null)
+                    {
+                        throw new InvalidOperationException("Attempted to resolve handler with message context, but no current context could be found on MessageContext.Current");
+                    }
+                    return factory(Bus, messageContext);
+                });
+
             var instancesJustInstances = _handlerInstances.OfType<IHandleMessages<TMessage>>();
 
-            var handlerInstances = instancesJustInstances.Concat(instancesFromFactories).ToList();
+            var handlerInstances = instancesJustInstances
+                .Concat(instancesFromNoArgumentFactories)
+                .Concat(instancesFromMessageContextArgumentFactories)
+                .Concat(instancesFromBusAndMessageContextArgumentFactories)
+                .ToList();
 
             transactionContext.OnDisposed(() =>
             {
@@ -113,7 +142,27 @@ namespace Rebus.Activation
         /// </summary>
         public BuiltinHandlerActivator Register<THandler>(Func<THandler> handlerFactory) where THandler : IHandleMessages
         {
-            _handlerFactories.Add(handlerFactory);
+            _handlerFactoriesNoArguments.Add(handlerFactory);
+            return this;
+        }
+
+        /// <summary>
+        /// Registers the given factory method as a handler factory method for messages of the types determined by which
+        /// <see cref="IHandleMessages{TMessage}"/> interfaces are implemeted.
+        /// </summary>
+        public BuiltinHandlerActivator Register<THandler>(Func<IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
+        {
+            _handlerFactoriesMessageContextArgument.Add(handlerFactory);
+            return this;
+        }
+
+        /// <summary>
+        /// Registers the given factory method as a handler factory method for messages of the types determined by which
+        /// <see cref="IHandleMessages{TMessage}"/> interfaces are implemeted.
+        /// </summary>
+        public BuiltinHandlerActivator Register<THandler>(Func<IBus, IMessageContext, THandler> handlerFactory) where THandler : IHandleMessages
+        {
+            _handlerFactoriesBusAndMessageContextArguments.Add(handlerFactory);
             return this;
         }
 
