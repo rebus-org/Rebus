@@ -22,6 +22,8 @@ namespace Rebus.Tests.Pipeline
 
         protected override void SetUp()
         {
+            _shouldAbortPipelineInTransportMessageRoutingFilter = false;
+
             _activator = Using(new BuiltinHandlerActivator());
 
             _events = new ConcurrentQueue<string>();
