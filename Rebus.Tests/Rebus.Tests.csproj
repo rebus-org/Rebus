@@ -100,6 +100,8 @@
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
+    <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
+    <Compile Include="Sagas\TestMarkAsComplete.cs" />
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />

@@ -674,6 +674,10 @@
 
 * Added `IMessageContext.AbortDispatch()` which aborts dispatch of the current message to any handlers following the one currently being executed.
 
+## 0.98.12
+
+* Added ability to mark saga data as unchanged by calling `MarkAsUnchanged()` on the saga handler.
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

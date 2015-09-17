@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq.Expressions;
 using Rebus.Exceptions;
 using Rebus.Reflection;
@@ -25,6 +26,8 @@ namespace Rebus.Sagas
 
         internal bool WasMarkedAsComplete { get; set; }
 
+        internal bool WasMarkedAsUnchanged { get; set; }
+
         internal bool HoldsNewSagaDataInstance { get; set; }
 
         /// <summary>
@@ -34,6 +37,15 @@ namespace Rebus.Sagas
         protected virtual void MarkAsComplete()
         {
             WasMarkedAsComplete = true;
+        }
+
+        /// <summary>
+        /// Marks the current saga instance as unchanged, causing any changes made to it to be ignored. Its revision will NOT be
+        /// incremented
+        /// </summary>
+        protected virtual void MarkAsUnchanged()
+        {
+            WasMarkedAsUnchanged = true;
         }
 
         /// <summary>
