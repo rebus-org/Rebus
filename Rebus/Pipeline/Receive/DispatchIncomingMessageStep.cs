@@ -19,6 +19,11 @@ If no invokers were found, a RebusApplicationException is thrown.")]
     public class DispatchIncomingMessageStep : IIncomingStep
     {
         /// <summary>
+        /// Keys of an <see cref="IncomingStepContext"/> items that indicates that message dispatch must be stopped
+        /// </summary>
+        public const string AbortDispatchContextKey = "abort-dispatch-to-handlers";
+
+        /// <summary>
         /// Processes the message
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
@@ -26,12 +31,24 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             var invokers = context.Load<HandlerInvokers>();
             var didInvokeHandler = false;
 
+            // if dispatch has already been aborted (e.g. in a transport message filter or something else that
+            // was run before us....) bail out here:
+            if (context.Load<bool>(AbortDispatchContextKey))
+            {
+                await next();
+                return;
+            };
+
             foreach (var invoker in invokers)
             {
                 await invoker.Invoke();
                 didInvokeHandler = true;
+
+                // if dispatch was aborted at this point, bail out
+                if (context.Load<bool>(AbortDispatchContextKey)) break;
             }
 
+            // throw error if we should have executed a handler but we didn't
             if (!didInvokeHandler)
             {
                 var message = context.Load<Message>();

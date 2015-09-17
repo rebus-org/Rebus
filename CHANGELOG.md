@@ -670,6 +670,10 @@
 
 * Extended built-in handler activator with `Register` overloads that allow for registering handler factory functions that accept `IMessageContext` and `(IBus, IMessageContext)` as arguments
 
+## 0.98.11
+
+* Added `IMessageContext.AbortDispatch()` which aborts dispatch of the current message to any handlers following the one currently being executed.
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
