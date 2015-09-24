@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
+    <Compile Include="Assumptions\CanDoReflection.cs" />
     <Compile Include="Assumptions\Screenshot.cs" />
     <Compile Include="Assumptions\TestSpWho.cs" />
     <Compile Include="Assumptions\TestString.cs" />
