@@ -25,7 +25,7 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public DbConnectionProvider(string connectionStringOrConnectionStringName, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
 
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 

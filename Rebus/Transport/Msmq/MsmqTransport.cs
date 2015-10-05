@@ -35,7 +35,7 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
 
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 

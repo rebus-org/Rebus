@@ -30,7 +30,7 @@ namespace Rebus.Workers.ThreadBased
             if (pipeline == null) throw new ArgumentNullException("pipeline");
             if (pipelineInvoker == null) throw new ArgumentNullException("pipelineInvoker");
             if (backoffStrategy == null) throw new ArgumentNullException("backoffStrategy");
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
             if (maxParallelism <= 0) throw new ArgumentOutOfRangeException(string.Format("Cannot use value '{0}' as max parallelism!", maxParallelism));
             _transport = transport;
             _pipeline = pipeline;

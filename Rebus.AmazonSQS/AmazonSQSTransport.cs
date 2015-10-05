@@ -46,7 +46,7 @@ namespace Rebus.AmazonSQS
             if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
             if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
             if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
 
             _inputQueueAddress = inputQueueAddress;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
