@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
@@ -19,7 +20,7 @@ namespace Rebus.Tests.Transport.Msmq
 
         public ITransport Create(string inputQueueAddress)
         {
-            var transport = new MsmqTransport(inputQueueAddress);
+            var transport = new MsmqTransport(inputQueueAddress, new ConsoleLoggerFactory(true));
 
             _disposables.Add(transport);
 

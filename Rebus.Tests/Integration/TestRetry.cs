@@ -61,7 +61,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            using (var errorQueue = new MsmqTransport(ErrorQueueName))
+            using (var errorQueue = new MsmqTransport(ErrorQueueName, new ConsoleLoggerFactory(true)))
             {
                 var failedMessage = await errorQueue.AwaitReceive();
 
@@ -91,7 +91,7 @@ namespace Rebus.Tests.Integration
 
             await _bus.Send("hej");
 
-            using (var errorQueue = new MsmqTransport(ErrorQueueName))
+            using (var errorQueue = new MsmqTransport(ErrorQueueName, new ConsoleLoggerFactory(true)))
             {
                 var expectedNumberOfAttemptedDeliveries = numberOfRetries;
 

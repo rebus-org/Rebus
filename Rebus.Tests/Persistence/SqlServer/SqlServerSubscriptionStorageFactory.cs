@@ -1,4 +1,5 @@
-﻿using Rebus.Persistence.SqlServer;
+﻿using Rebus.Logging;
+using Rebus.Persistence.SqlServer;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts.Subscriptions;
 
@@ -10,7 +11,9 @@ namespace Rebus.Tests.Persistence.SqlServer
         
         public ISubscriptionStorage Create()
         {
-            var storage = new SqlServerSubscriptionStorage(new DbConnectionProvider(SqlTestHelper.ConnectionString), TableName, true);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(true);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            var storage = new SqlServerSubscriptionStorage(connectionProvider, TableName, true, consoleLoggerFactory);
 
             storage.EnsureTableIsCreated();
             

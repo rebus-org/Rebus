@@ -12,14 +12,16 @@ namespace Rebus.Routing.TypeBased
     /// </summary>
     public class TypeBasedRouter : IRouter
     {
-        static ILog _log;
-
-        static TypeBasedRouter()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly Dictionary<Type, string> _messageTypeAddresses = new Dictionary<Type, string>();
+        readonly ILog _log;
+
+        /// <summary>
+        /// Constructs the router
+        /// </summary>
+        public TypeBasedRouter(IRebusLoggerFactory rebusLoggerFactory)
+        {
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+        }
 
         /// <summary>
         /// Maps <paramref name="destinationAddress"/> as the owner of all message types found in the same assembly as <typeparamref name="TMessage"/>

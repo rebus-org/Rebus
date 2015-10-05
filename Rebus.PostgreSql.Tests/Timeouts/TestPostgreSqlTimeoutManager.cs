@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.PostgreSql.Timeouts;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Timeouts;
@@ -19,7 +20,7 @@ namespace Rebus.PostgreSql.Tests.Timeouts
 
         public ITimeoutManager Create()
         {
-            var postgreSqlTimeoutManager = new PostgreSqlTimeoutManager(PostgreSqlTestHelper.ConnectionHelper, "timeouts");
+            var postgreSqlTimeoutManager = new PostgreSqlTimeoutManager(PostgreSqlTestHelper.ConnectionHelper, "timeouts", new ConsoleLoggerFactory(false));
             postgreSqlTimeoutManager.EnsureTableIsCreated();
             return postgreSqlTimeoutManager;
         }

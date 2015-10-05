@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.AmazonSQS.Config;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
 
@@ -45,7 +46,7 @@ namespace Rebus.AmazonSQS.Tests
         private static void PurgeQueue(string queueName)
         {
             new AmazonSqsTransport(queueName, AmazonSQSTransportFactory.ConnectionInfo.AccessKeyId, AmazonSQSTransportFactory.ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(AmazonSQSTransportFactory.ConnectionInfo.RegionEndpoint)).Purge();
+                RegionEndpoint.GetBySystemName(AmazonSQSTransportFactory.ConnectionInfo.RegionEndpoint), new ConsoleLoggerFactory(false)).Purge();
 
         }
 

@@ -52,7 +52,7 @@ namespace Rebus.Config
         /// </summary>
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
-            configurer(new RebusLoggingConfigurer());
+            configurer(new RebusLoggingConfigurer(_injectionist));
             return this;
         }
 
@@ -130,7 +130,13 @@ namespace Rebus.Config
         {
             VerifyRequirements();
 
-            PossiblyRegisterDefault<IRouter>(c => new TypeBasedRouter());
+            PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+
+            PossiblyRegisterDefault<IRouter>(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new TypeBasedRouter(rebusLoggerFactory);
+            });
 
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
 
@@ -148,13 +154,15 @@ namespace Rebus.Config
                 var pipeline = c.Get<IPipeline>();
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
                 var backoffStrategy = c.Get<IBackoffStrategy>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
             {
                 var settings = c.Get<SimpleRetryStrategySettings>();
-                return new InMemErrorTracker(settings.MaxDeliveryAttempts);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault<IRetryStrategy>(c =>
@@ -162,7 +170,8 @@ namespace Rebus.Config
                 var transport = c.Get<ITransport>();
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
                 var errorTracker = c.Get<IErrorTracker>();
-                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
@@ -173,28 +182,34 @@ namespace Rebus.Config
             {
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport, _options);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
-            PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
+            PossiblyRegisterDefault<IPipeline>(c =>
+            {
+                var serializer = c.Get<ISerializer>();
+                var transport = c.Get<ITransport>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                .OnReceive(c.Get<IRetryStrategyStep>())
-                .OnReceive(c.Get<HandleDeferredMessagesStep>())
-                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()))
-                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()))
-                .OnReceive(new DispatchIncomingMessageStep())
+                return new DefaultPipeline()
+                    .OnReceive(c.Get<IRetryStrategyStep>())
+                    .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                    .OnReceive(new DeserializeIncomingMessageStep(serializer))
+                    .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
+                    .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
+                    .OnReceive(new DispatchIncomingMessageStep())
 
-                .OnSend(new AssignGuidMessageIdStep())
-                .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
-                .OnSend(new AssignDateTimeOffsetHeader())
-                .OnSend(new FlowCorrelationIdStep())
-                .OnSend(new AutoHeadersOutgoingStep())
-                .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
-                .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
-                );
+                    .OnSend(new AssignGuidMessageIdStep())
+                    .OnSend(new AssignReturnAddressStep(transport))
+                    .OnSend(new AssignDateTimeOffsetHeader())
+                    .OnSend(new FlowCorrelationIdStep())
+                    .OnSend(new AutoHeadersOutgoingStep())
+                    .OnSend(new SerializeOutgoingMessageStep(serializer))
+                    .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
+            });
 
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
@@ -211,7 +226,8 @@ namespace Rebus.Config
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
                     c.Get<ISubscriptionStorage>(),
-                    _options);
+                    _options,
+                    c.Get<IRebusLoggerFactory>());
 
                 bus.Disposed += () =>
                 {

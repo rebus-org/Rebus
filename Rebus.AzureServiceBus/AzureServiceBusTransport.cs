@@ -23,12 +23,6 @@ namespace Rebus.AzureServiceBus
     public class AzureServiceBusTransport : ITransport, IInitializable, IDisposable, ISubscriptionStorage
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
-        static ILog _log;
-
-        static AzureServiceBusTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
 
         static readonly TimeSpan[] RetryWaitTimes =
         {
@@ -52,7 +46,9 @@ namespace Rebus.AzureServiceBus
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
+        readonly IRebusLoggerFactory _rebusLoggerFactory;
         readonly string _inputQueueAddress;
+        readonly ILog _log;
 
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
@@ -68,12 +64,14 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public AzureServiceBusTransport(string connectionString, string inputQueueAddress)
+        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
+            _rebusLoggerFactory = rebusLoggerFactory;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueAddress != null)
             {
@@ -348,6 +346,7 @@ namespace Rebus.AzureServiceBus
 
                         await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
                     },
+                    _rebusLoggerFactory,
                     prettyInsignificant: true)
                 {
                     Interval = lockRenewalInterval

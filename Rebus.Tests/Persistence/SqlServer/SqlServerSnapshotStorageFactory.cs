@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Auditing.Sagas;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 using Rebus.Serialization;
@@ -21,9 +22,10 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         public ISagaSnapshotStorage Create()
         {
-            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(true);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
 
-            var snapperino = new SqlServerSagaSnapshotStorage(connectionProvider, TableName);
+            var snapperino = new SqlServerSagaSnapshotStorage(connectionProvider, TableName, consoleLoggerFactory);
 
             snapperino.EnsureTableIsCreated();
 
@@ -32,7 +34,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         public IEnumerable<SagaDataSnapshot> GetAllSnapshots()
         {
-            return LoadStoredCopies(new DbConnectionProvider(SqlTestHelper.ConnectionString), TableName).Result;
+            return LoadStoredCopies(new DbConnectionProvider(SqlTestHelper.ConnectionString, new ConsoleLoggerFactory(true)), TableName).Result;
         }
 
         static async Task<List<SagaDataSnapshot>> LoadStoredCopies(DbConnectionProvider connectionProvider, string tableName)

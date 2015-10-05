@@ -16,6 +16,7 @@ namespace Rebus.Logging
         /// Event that is raised when the global implementation of <see cref="IRebusLoggerFactory"/> is changed to something else.
         /// Note that the event is also raised immediately for each particular subscriber when they subscribe.
         /// </summary>
+        [Obsolete("This static bad boy will be removed - please configure logging using the Rebus configuration API, e.g. like this: Configure.With(...).Logging(l => l.Use(factory)).(...)")]
         public static event Action<IRebusLoggerFactory> Changed
         {
             [MethodImpl(MethodImplOptions.Synchronized)]
@@ -25,7 +26,8 @@ namespace Rebus.Logging
                 value(Current);
             }
             [MethodImpl(MethodImplOptions.Synchronized)]
-            remove { ChangedHandlers.Remove(value); }
+            remove
+            { ChangedHandlers.Remove(value); }
         }
 
         static readonly IRebusLoggerFactory Default = new ConsoleLoggerFactory(colored: true);
@@ -35,6 +37,7 @@ namespace Rebus.Logging
         /// Gets the currently configured implementation of <see cref="IRebusLoggerFactory"/>. The instance is global for the
         /// entire AppDomain
         /// </summary>
+        [Obsolete("This static bad boy will be removed - please configure logging using the Rebus configuration API, e.g. like this: Configure.With(...).Logging(l => l.Use(factory)).(...)")]
         public static IRebusLoggerFactory Current
         {
             get { return _current; }
@@ -67,6 +70,7 @@ Alternatively, if you're using the configuration API, you can disable logging li
         /// Resets the current implementation of <see cref="IRebusLoggerFactory"/> back to the default, which is a
         /// <see cref="ConsoleLoggerFactory"/> with colors turned ON
         /// </summary>
+        [Obsolete("This static bad boy will be removed - please configure logging using the Rebus configuration API, e.g. like this: Configure.With(...).Logging(l => l.Use(factory)).(...)")]
         public static void Reset()
         {
             Current = Default;

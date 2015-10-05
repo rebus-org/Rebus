@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
-using Rebus.Logging;
 using Rebus.Routing.TopicBased;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
@@ -25,8 +24,6 @@ namespace Rebus.Tests.Integration
 
         protected override void SetUp()
         {
-            AdjustLogging(LogLevel.Info);
-
             var network = new InMemNetwork(true);
 
             _subscriberHandlers = new BuiltinHandlerActivator();

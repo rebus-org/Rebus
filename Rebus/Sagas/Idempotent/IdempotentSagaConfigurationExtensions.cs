@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
@@ -24,8 +25,9 @@ namespace Rebus.Sagas.Idempotent
             {
                 var transport = c.Get<ITransport>();
                 var pipeline = c.Get<IPipeline>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                var incomingStep = new IdempotentSagaIncomingStep(transport);
+                var incomingStep = new IdempotentSagaIncomingStep(transport, rebusLoggerFactory);
 
                 var outgoingStep = new IdempotentSagaOutgoingStep();
 

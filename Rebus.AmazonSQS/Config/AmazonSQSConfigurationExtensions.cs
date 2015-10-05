@@ -1,5 +1,6 @@
 ﻿using Amazon;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Config
@@ -14,7 +15,11 @@ namespace Rebus.AmazonSQS.Config
         /// </summary>
         public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, string inputQueueAddress)
         {
-            configurer.Register(c => new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint));
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory);
+            });
         }
 
         /// <summary>
@@ -22,7 +27,11 @@ namespace Rebus.AmazonSQS.Config
         /// </summary>
         public static void UseAmazonSqsAsOneWayClient(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
         {
-            configurer.Register(c => new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint));
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory);
+            });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }

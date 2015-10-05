@@ -16,23 +16,19 @@ namespace Rebus.Persistence.FileSystem
     /// </summary>
     public class FileSystemSagaSnapshotStorage : ISagaSnapshotStorage, IInitializable
     {
-        static ILog _log;
-
-        static FileSystemSagaSnapshotStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly string _snapshotDirectory;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the snapshot storage which will write saga data snapshots to files using file names on the form "ID-REVISION.json"
         /// </summary>
-        public FileSystemSagaSnapshotStorage(string snapshotDirectory)
+        public FileSystemSagaSnapshotStorage(string snapshotDirectory, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (snapshotDirectory == null) throw new ArgumentNullException("snapshotDirectory");
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
             _snapshotDirectory = snapshotDirectory;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

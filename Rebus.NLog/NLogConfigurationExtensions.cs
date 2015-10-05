@@ -1,6 +1,5 @@
 ﻿using NLog;
 using Rebus.Config;
-using Rebus.Logging;
 
 namespace Rebus.NLog
 {
@@ -14,7 +13,7 @@ namespace Rebus.NLog
         /// </summary>
         public static void NLog(this RebusLoggingConfigurer configurer)
         {
-            RebusLoggerFactory.Current = new NLogLoggerFactory();
+            configurer.Use(new NLogLoggerFactory());
         }
     }
 }

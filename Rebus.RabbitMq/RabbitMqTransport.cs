@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
 using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Transport;
@@ -27,14 +28,16 @@ namespace Rebus.RabbitMq
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
 
         readonly ConnectionManager _connectionManager;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
-            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress);
-            
+            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+
             Address = inputQueueAddress;
         }
 

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Threading;
 
 namespace Rebus.Tests.Timers
@@ -24,7 +25,7 @@ namespace Rebus.Tests.Timers
                 }
 
                 taskWasCompleted = true;
-            })
+            }, new ConsoleLoggerFactory(false))
             {
                 Interval = TimeSpan.FromMilliseconds(400)
             })
@@ -54,7 +55,8 @@ namespace Rebus.Tests.Timers
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);
-                })
+                },
+                new ConsoleLoggerFactory(false))
             {
                 Interval = TimeSpan.FromSeconds(0.2)
             };

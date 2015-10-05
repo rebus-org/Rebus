@@ -17,20 +17,15 @@ namespace Rebus.MongoDb.Timeouts
     /// </summary>
     public class MongoDbTimeoutManager : ITimeoutManager
     {
-        static ILog _log;
-
-        static MongoDbTimeoutManager()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly IMongoCollection<Timeout> _timeouts;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the timeout manager
         /// </summary>
-        public MongoDbTimeoutManager(IMongoDatabase database, string collectionName)
+        public MongoDbTimeoutManager(IMongoDatabase database, string collectionName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             _timeouts = database.GetCollection<Timeout>(collectionName);
         }
 

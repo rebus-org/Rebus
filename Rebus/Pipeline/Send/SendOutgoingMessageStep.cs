@@ -16,21 +16,16 @@ namespace Rebus.Pipeline.Send
     [StepDocumentation("Final step that uses the current transport to send the transport message found in the context to all addresses found by looking up the DestinationAddress object from the context.")]
     public class SendOutgoingMessageStep : IOutgoingStep
     {
-        static ILog _log;
-
-        static SendOutgoingMessageStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly ITransport _transport;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the step, using the specified transport to send the messages
         /// </summary>
-        public SendOutgoingMessageStep(ITransport transport)
+        public SendOutgoingMessageStep(ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
             _transport = transport;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

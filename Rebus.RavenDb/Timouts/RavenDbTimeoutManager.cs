@@ -17,20 +17,16 @@ namespace Rebus.RavenDb.Timouts
     /// </summary>
     public class RavenDbTimeoutManager : ITimeoutManager
     {
-        private readonly IDocumentStore _documentStore;
-        private static ILog _log;
-
-        static RavenDbTimeoutManager()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
+        readonly IDocumentStore _documentStore;
+        readonly ILog _log;
 
         /// <summary>
         /// Creates the timeout manager, using the given document store to store <see cref="Timeout"/> documents
         /// </summary>
-        public RavenDbTimeoutManager(IDocumentStore documentStore)
+        public RavenDbTimeoutManager(IDocumentStore documentStore, IRebusLoggerFactory rebusLoggerFactory)
         {
             _documentStore = documentStore;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)

@@ -15,26 +15,22 @@ namespace Rebus.PostgreSql.Subscriptions
     public class PostgreSqlSubscriptionStorage : ISubscriptionStorage
     {
         const string UniqueKeyViolation = "23505";
-        static ILog _log;
-
-        static PostgreSqlSubscriptionStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
 
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
-
+        readonly ILog _log;
+        
         /// <summary>
         /// Constructs the subscription storage, storing subscriptions in the specified <paramref name="tableName"/>.
         /// If <paramref name="isCentralized"/> is true, subscribing/unsubscribing will be short-circuited by manipulating
         /// subscriptions directly, instead of requesting via messages
         /// </summary>
-        public PostgreSqlSubscriptionStorage(PostgresConnectionHelper connectionHelper, string tableName, bool isCentralized)
+        public PostgreSqlSubscriptionStorage(PostgresConnectionHelper connectionHelper, string tableName, bool isCentralized, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionHelper = connectionHelper;
             _tableName = tableName;
             IsCentralized = isCentralized;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

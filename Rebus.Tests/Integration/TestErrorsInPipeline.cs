@@ -27,9 +27,8 @@ namespace Rebus.Tests.Integration
             _adapter = new BuiltinHandlerActivator();
             _network = new InMemNetwork(outputEventsToConsole: true);
 
-            RebusLoggerFactory.Current = _listLoggerFactory;
-
             var bus = Configure.With(_adapter)
+                .Logging(l => l.Use(_listLoggerFactory))
                 .Transport(t => t.UseInMemoryTransport(_network, "test"))
                 .Options(o => o.SimpleRetryStrategy("error", 3))
                 .Start();

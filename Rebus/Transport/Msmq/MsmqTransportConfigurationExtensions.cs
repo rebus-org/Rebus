@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.Logging;
 
 namespace Rebus.Transport.Msmq
 {
@@ -12,7 +13,12 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public static void UseMsmq(this StandardConfigurer<ITransport> configurer, string inputQueueName)
         {
-            configurer.Register(context => new MsmqTransport(inputQueueName));
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+
+                return new MsmqTransport(inputQueueName, rebusLoggerFactory);
+            });
         }
 
         /// <summary>
@@ -20,7 +26,11 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public static void UseMsmqAsOneWayClient(this StandardConfigurer<ITransport> configurer)
         {
-            configurer.Register(context => new MsmqTransport(null));
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new MsmqTransport(null, rebusLoggerFactory);
+            });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }

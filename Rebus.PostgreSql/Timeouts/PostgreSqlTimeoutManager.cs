@@ -21,20 +21,16 @@ namespace Rebus.PostgreSql.Timeouts
         readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
-        static ILog _log;
-
-        static PostgreSqlTimeoutManager()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the timeout manager
         /// </summary>
-        public PostgreSqlTimeoutManager(PostgresConnectionHelper connectionHelper, string tableName)
+        public PostgreSqlTimeoutManager(PostgresConnectionHelper connectionHelper, string tableName, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionHelper = connectionHelper;
             _tableName = tableName;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)

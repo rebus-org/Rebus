@@ -1,5 +1,4 @@
 ﻿using Rebus.Config;
-using Rebus.Logging;
 using Serilog;
 
 namespace Rebus.Serilog
@@ -14,7 +13,7 @@ namespace Rebus.Serilog
         /// </summary>
         public static void Serilog(this RebusLoggingConfigurer configurer, LoggerConfiguration loggerConfiguration)
         {
-            RebusLoggerFactory.Current = new SerilogLoggerFactory(loggerConfiguration);
+            configurer.Use(new SerilogLoggerFactory(loggerConfiguration));
         }
 
         /// <summary>
@@ -22,7 +21,7 @@ namespace Rebus.Serilog
         /// </summary>
         public static void Serilog(this RebusLoggingConfigurer configurer, ILogger baseLogger)
         {
-            RebusLoggerFactory.Current = new SerilogLoggerFactory(baseLogger);
+            configurer.Use(new SerilogLoggerFactory(baseLogger));
         }
     }
 }

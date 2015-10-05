@@ -9,11 +9,11 @@ namespace Rebus.Auditing.Sagas
 {
     class LoggerSagaSnapperShotter : ISagaSnapshotStorage
     {
-        static ILog _log;
+        readonly ILog _log;
 
-        static LoggerSagaSnapperShotter()
+        public LoggerSagaSnapperShotter(IRebusLoggerFactory rebusLoggerFactory)
         {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)

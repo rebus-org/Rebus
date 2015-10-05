@@ -64,8 +64,6 @@ namespace Rebus.AzureServiceBus.Tests
         [TestCase(200, 10000)]
         public void WorksWithPrefetch(int prefetch, int numberOfMessages)
         {
-            AdjustLogging(LogLevel.Info);
-
             var activator = new BuiltinHandlerActivator();
             var receivedMessages = 0;
             var done = new ManualResetEvent(false);
@@ -141,12 +139,12 @@ namespace Rebus.AzureServiceBus.Tests
         {
             if (_mode == AzureServiceBusMode.Basic)
             {
-                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName);
+                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, new ConsoleLoggerFactory(false));
                 basicTransport.Initialize();
                 basicTransport.PurgeInputQueue();
                 return basicTransport;
             }
-            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName);
+            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, new ConsoleLoggerFactory(false));
             Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();

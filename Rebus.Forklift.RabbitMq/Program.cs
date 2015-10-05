@@ -22,7 +22,7 @@ namespace Rebus.Forklift.RabbitMq
 
         protected override void DoRun()
         {
-            using (var transport = new RabbitMqTransport(GetConnectionString(HostnameOrConnectionString), InputQueue))
+            using (var transport = new RabbitMqTransport(GetConnectionString(HostnameOrConnectionString), InputQueue, LoggerFactory))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {

@@ -14,13 +14,6 @@ namespace Rebus.XmlConfig
     /// </summary>
     public static class RoutingConfigurationExtensions
     {
-        static ILog _log;
-
-        static RoutingConfigurationExtensions()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         /// <summary>
         /// Adds mappings
         /// </summary>
@@ -87,7 +80,8 @@ Please note that explicitly mapped types will always take precedence over assemb
 
             configurer.Register(c =>
             {
-                var typeBasedRouter = new TypeBasedRouter();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var typeBasedRouter = new TypeBasedRouter(rebusLoggerFactory);
 
                 SetUpEndpointMappings(rebusRoutingConfigurationSection.MappingsCollection, (type, endpoint) => typeBasedRouter.Map(type, endpoint));
 
@@ -126,9 +120,6 @@ Please note that explicitly mapped types will always take precedence over assemb
                 if (element.IsAssemblyName)
                 {
                     var assemblyName = element.Messages;
-
-                    _log.Info("Mapping assembly: {0}", assemblyName);
-
                     var assembly = LoadAssembly(assemblyName);
 
                     foreach (var type in assembly.GetTypes())
@@ -139,9 +130,6 @@ Please note that explicitly mapped types will always take precedence over assemb
                 else
                 {
                     var typeName = element.Messages;
-
-                    _log.Info("Mapping type: {0}", typeName);
-
                     var messageType = Type.GetType(typeName);
 
                     if (messageType == null)

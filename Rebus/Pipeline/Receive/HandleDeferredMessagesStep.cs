@@ -23,17 +23,11 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
     {
         const string DueMessagesSenderTaskName = "DueMessagesSender";
 
-        static ILog _log;
-
-        static HandleDeferredMessagesStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly ITimeoutManager _timeoutManager;
         readonly ITransport _transport;
         readonly Options _options;
         readonly AsyncTask _dueMessagesSenderBackgroundTask;
+        readonly ILog _log;
 
         bool _disposed;
 
@@ -41,13 +35,14 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// Constructs the step, using the specified <see cref="ITimeoutManager"/> to defer relevant messages
         /// and the specified <see cref="ITransport"/> to deliver messages when they're due.
         /// </summary>
-        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options)
+        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options, IRebusLoggerFactory rebusLoggerFactory)
         {
             _timeoutManager = timeoutManager;
             _transport = transport;
             _options = options;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
-            _dueMessagesSenderBackgroundTask = new AsyncTask(DueMessagesSenderTaskName, TimerElapsed)
+            _dueMessagesSenderBackgroundTask = new AsyncTask(DueMessagesSenderTaskName, TimerElapsed, rebusLoggerFactory)
             {
                 Interval = TimeSpan.FromSeconds(1)
             };

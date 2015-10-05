@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
 using Rebus.Transport;
@@ -25,7 +26,9 @@ namespace Rebus.Tests.Transport.SqlServer
         {
             SqlTestHelper.DropTable(_tableName);
 
-            _transport = new SqlServerTransport(new DbConnectionProvider(SqlTestHelper.ConnectionString), _tableName, QueueName);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            _transport = new SqlServerTransport(connectionProvider, _tableName, QueueName, consoleLoggerFactory);
             _transport.EnsureTableIsCreated();
 
             Using(_transport);

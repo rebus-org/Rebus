@@ -1,4 +1,5 @@
-﻿using Rebus.PostgreSql.Sagas;
+﻿using Rebus.Logging;
+using Rebus.PostgreSql.Sagas;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
@@ -14,7 +15,7 @@ namespace Rebus.PostgreSql.Tests.Sagas
 
         public ISagaStorage GetSagaStorage()
         {
-            var postgreSqlSagaStorage = new PostgreSqlSagaStorage(PostgreSqlTestHelper.ConnectionHelper, "saga_data", "saga_index");
+            var postgreSqlSagaStorage = new PostgreSqlSagaStorage(PostgreSqlTestHelper.ConnectionHelper, "saga_data", "saga_index", new ConsoleLoggerFactory(false));
             postgreSqlSagaStorage.EnsureTablesAreCreated();
             return postgreSqlSagaStorage;
         }

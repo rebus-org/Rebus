@@ -1,5 +1,6 @@
 ﻿using Rebus.Auditing.Sagas;
 using Rebus.Config;
+using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem
 {
@@ -13,7 +14,11 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public static void UseJsonFile(this StandardConfigurer<ISagaSnapshotStorage> configurer, string directory)
         {
-            configurer.Register(c => new FileSystemSagaSnapshotStorage(directory));
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new FileSystemSagaSnapshotStorage(directory, rebusLoggerFactory);
+            });
         }
     }
 }

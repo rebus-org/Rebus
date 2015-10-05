@@ -6,6 +6,7 @@ using Rebus.Activation;
 using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
@@ -21,7 +22,7 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
-            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName).PurgeInputQueue();
+            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, new ConsoleLoggerFactory(false)).PurgeInputQueue();
 
             _activator = new BuiltinHandlerActivator();
 

@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Configuration;
 using System.IO;
 using Microsoft.WindowsAzure.Storage;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
@@ -22,7 +23,7 @@ namespace Rebus.AzureStorageQueues.Tests
             if (inputQueueAddress == null)
             {
                 var storageAccount = CloudStorageAccount.Parse(ConnectionString);
-                var transport = new AzureStorageQueuesTransport(storageAccount, null);
+                var transport = new AzureStorageQueuesTransport(storageAccount, null, new ConsoleLoggerFactory(false));
 
                 transport.Initialize();
 
@@ -32,7 +33,7 @@ namespace Rebus.AzureStorageQueues.Tests
             return _transports.GetOrAdd(inputQueueAddress, address =>
             {
                 var storageAccount = CloudStorageAccount.Parse(ConnectionString);
-                var transport = new AzureStorageQueuesTransport(storageAccount, inputQueueAddress);
+                var transport = new AzureStorageQueuesTransport(storageAccount, inputQueueAddress, new ConsoleLoggerFactory(false));
 
                 transport.PurgeInputQueue();
 

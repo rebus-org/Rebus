@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Raven.Client.Embedded;
+using Rebus.Logging;
 using Rebus.RavenDb.Timouts;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Timeouts;
@@ -28,7 +29,7 @@ namespace Rebus.RavenDb.Tests.Timeouts
             _documentStore.Initialize();
             _documentStore.ExecuteIndex(new TimeoutIndex());
 
-            return new RavenDbTimeoutManager(_documentStore);
+            return new RavenDbTimeoutManager(_documentStore, new ConsoleLoggerFactory(false));
         }
 
         public void Cleanup()

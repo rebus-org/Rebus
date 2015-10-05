@@ -5,6 +5,7 @@ using System.IO;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
@@ -65,7 +66,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
         {
             if (inputQueueAddress == null)
             {
-                var transport = new AzureServiceBusTransport(ConnectionString, null);
+                var transport = new AzureServiceBusTransport(ConnectionString, null, new ConsoleLoggerFactory(false));
 
                 transport.Initialize();
 
@@ -74,7 +75,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
             {
-                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress);
+                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress, new ConsoleLoggerFactory(false));
 
                 transport.PurgeInputQueue();
 

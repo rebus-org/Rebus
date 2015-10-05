@@ -10,13 +10,6 @@ namespace Rebus.Threading
     ///  </summary>
     public class AsyncTask : IDisposable
     {
-        static ILog _log;
-
-        static AsyncTask()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         /// <summary>
         /// This is the default interval between invocations if the periodic action, unless the <see cref="Interval"/> property is set to something else
         /// </summary>
@@ -27,6 +20,7 @@ namespace Rebus.Threading
         readonly bool _prettyInsignificant;
         readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
         readonly ManualResetEvent _finished = new ManualResetEvent(false);
+        readonly ILog _log;
 
         Task _task;
 
@@ -37,11 +31,12 @@ namespace Rebus.Threading
         /// Constructs the periodic background task with the given <paramref name="description"/>, periodically executing the given <paramref name="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
-        public AsyncTask(string description, Func<Task> action, bool prettyInsignificant = false)
+        public AsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant = false)
         {
             _description = description;
             _action = action;
             _prettyInsignificant = prettyInsignificant;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             Interval = DefaultInterval;
         }
 

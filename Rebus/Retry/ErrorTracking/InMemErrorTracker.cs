@@ -18,15 +18,9 @@ namespace Rebus.Retry.ErrorTracking
     /// </summary>
     public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     {
-        static ILog _log;
-
-        static InMemErrorTracker()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         const string BackgroundTaskName = "CleanupTrackedErrors";
 
+        readonly ILog _log;
         readonly int _maxDeliveryAttempts;
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
         readonly AsyncTask _cleanupOldTrackedErrorsTask;
@@ -36,10 +30,11 @@ namespace Rebus.Retry.ErrorTracking
         /// <summary>
         /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
         /// </summary>
-        public InMemErrorTracker(int maxDeliveryAttempts)
+        public InMemErrorTracker(int maxDeliveryAttempts, IRebusLoggerFactory rebusLoggerFactory)
         {
             _maxDeliveryAttempts = maxDeliveryAttempts;
-            _cleanupOldTrackedErrorsTask = new AsyncTask(BackgroundTaskName, CleanupOldTrackedErrors)
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _cleanupOldTrackedErrorsTask = new AsyncTask(BackgroundTaskName, CleanupOldTrackedErrors, rebusLoggerFactory)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };

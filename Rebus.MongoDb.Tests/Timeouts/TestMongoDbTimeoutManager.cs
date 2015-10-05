@@ -1,5 +1,6 @@
 ﻿using MongoDB.Driver;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.MongoDb.Timeouts;
 using Rebus.Tests;
 using Rebus.Tests.Contracts.Timeouts;
@@ -26,7 +27,7 @@ namespace Rebus.MongoDb.Tests.Timeouts
         
         public ITimeoutManager Create()
         {
-            return new MongoDbTimeoutManager(_mongoDatabase, _collectionName);
+            return new MongoDbTimeoutManager(_mongoDatabase, _collectionName, new ConsoleLoggerFactory(false));
         }
 
         public void Cleanup()

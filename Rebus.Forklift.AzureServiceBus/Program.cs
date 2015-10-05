@@ -23,7 +23,7 @@ namespace Rebus.Forklift.AzureServiceBus
 
         protected override void DoRun()
         {
-            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue))
+            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {

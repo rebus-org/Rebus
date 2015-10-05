@@ -5,6 +5,7 @@ using Rebus.Activation;
 using Rebus.AzureServiceBus.Config;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
 
@@ -47,7 +48,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
         static void PurgeQueue(string queueName)
         {
-            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, queueName)
+            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, queueName, new ConsoleLoggerFactory(false))
                 .PurgeInputQueue();
         }
 

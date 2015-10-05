@@ -15,22 +15,20 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class DbConnectionProvider : IDbConnectionProvider
     {
-        static ILog _log;
-
-        static DbConnectionProvider()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly string _connectionString;
+        readonly ILog _log;
 
         /// <summary>
         /// Wraps the connection string with the given name from app.config (if it is found), or interprets the given string as
         /// a connection string to use. Will use <see cref="System.Data.IsolationLevel.ReadCommitted"/> by default on transactions,
         /// unless another isolation level is set with the <see cref="IsolationLevel"/> property
         /// </summary>
-        public DbConnectionProvider(string connectionStringOrConnectionStringName)
+        public DbConnectionProvider(string connectionStringOrConnectionStringName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
 
             _connectionString = EnsureMarsIsEnabled(connectionString);

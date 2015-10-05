@@ -13,13 +13,6 @@ namespace Rebus.Transport.Msmq
     /// </summary>
     public static class MsmqUtil
     {
-        static ILog _log;
-
-        static MsmqUtil()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         /// <summary>
         /// Deletes all messages from the queue with the specified name
         /// </summary>
@@ -147,13 +140,13 @@ namespace Rebus.Transport.Msmq
         /// of the currently executing process will get <see cref="MessageQueueAccessRights.GenericWrite"/> permissions to it,
         /// and the local administrators group will get <see cref="MessageQueueAccessRights.FullControl"/>.
         /// </summary>
-        public static void EnsureQueueExists(string inputQueuePath)
+        public static void EnsureQueueExists(string inputQueuePath, ILog log = null)
         {
             if (MessageQueue.Exists(inputQueuePath)) return;
 
             try
             {
-                _log.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
+                log?.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
 
                 var newQueue = MessageQueue.Create(inputQueuePath, true);
 

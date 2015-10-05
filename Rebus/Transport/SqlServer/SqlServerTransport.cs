@@ -34,13 +34,6 @@ namespace Rebus.Transport.SqlServer
         /// </summary>
         public static readonly TimeSpan DefaultExpiredMessagesCleanupInterval = TimeSpan.FromSeconds(20);
 
-        static ILog _log;
-
-        static SqlServerTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         const string CurrentConnectionKey = "sql-server-transport-current-connection";
         const int RecipientColumnSize = 200;
 
@@ -48,6 +41,7 @@ namespace Rebus.Transport.SqlServer
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
+        readonly ILog _log;
 
         readonly AsyncTask _expiredMessagesCleanupTask;
         bool _disposed;
@@ -56,15 +50,16 @@ namespace Rebus.Transport.SqlServer
         /// Constructs the transport with the given <see cref="IDbConnectionProvider"/>, using the specified <paramref name="tableName"/> to send/receive messages,
         /// querying for messages with recipient = <paramref name="inputQueueName"/>
         /// </summary>
-        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
+        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
             _inputQueueName = inputQueueName;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
+            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle, rebusLoggerFactory)
             {
                 Interval = TimeSpan.FromMinutes(1)
             };

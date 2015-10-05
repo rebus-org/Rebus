@@ -1,4 +1,5 @@
 ﻿using Rebus.Bus;
+using Rebus.Logging;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
 
@@ -24,8 +25,9 @@ namespace Rebus.Config
             configurer.OtherService<IBus>().Decorate(c =>
             {
                 configurer.Options.NumberOfWorkers = 0;
-                var resolveRealBus = c.Get<IBus>();
-                return new OneWayClientBusDecorator(resolveRealBus);
+                var realBus = c.Get<IBus>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new OneWayClientBusDecorator(realBus, rebusLoggerFactory);
             }, description: OneWayDecoratorDescription);
         } 
     }

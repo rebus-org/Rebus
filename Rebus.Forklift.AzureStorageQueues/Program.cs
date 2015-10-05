@@ -23,7 +23,7 @@ namespace Rebus.Forklift.AzureStorageQueues
 
         protected override void DoRun()
         {
-            var transport = new AzureStorageQueuesTransport(GetStorageAccount(ConnectionStringName  ), InputQueue);
+            var transport = new AzureStorageQueuesTransport(GetStorageAccount(ConnectionStringName), InputQueue, LoggerFactory);
 
             var returnToSourceQueue = new ReturnToSourceQueue(transport)
             {

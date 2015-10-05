@@ -1,4 +1,5 @@
-﻿using Rebus.PostgreSql.Subscriptions;
+﻿using Rebus.Logging;
+using Rebus.PostgreSql.Subscriptions;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts.Subscriptions;
 
@@ -13,7 +14,7 @@ namespace Rebus.PostgreSql.Tests.Subscriptions
 
         public ISubscriptionStorage Create()
         {
-            var subscriptionStorage = new PostgreSqlSubscriptionStorage(PostgreSqlTestHelper.ConnectionHelper, "subscriptions", true);
+            var subscriptionStorage = new PostgreSqlSubscriptionStorage(PostgreSqlTestHelper.ConnectionHelper, "subscriptions", true, new ConsoleLoggerFactory(false));
             subscriptionStorage.EnsureTableIsCreated();
             return subscriptionStorage;
         }

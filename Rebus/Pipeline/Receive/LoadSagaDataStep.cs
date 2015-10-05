@@ -19,22 +19,17 @@ If that's the case, relevant saga data is loaded/created, and the rest of the pi
 Afterwards, all the created/loaded saga data is updated appropriately.")]
     public class LoadSagaDataStep : IIncomingStep
     {
-        static ILog _log;
-
-        static LoadSagaDataStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly SagaHelper _sagaHelper = new SagaHelper();
         readonly ISagaStorage _sagaStorage;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the step with the given saga storage
         /// </summary>
-        public LoadSagaDataStep(ISagaStorage sagaStorage)
+        public LoadSagaDataStep(ISagaStorage sagaStorage, IRebusLoggerFactory rebusLoggerFactory)
         {
             _sagaStorage = sagaStorage;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Timeouts;
@@ -16,7 +17,9 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         public ITimeoutManager Create()
         {
-            var timeoutManager = new SqlServerTimeoutManager(new DbConnectionProvider(SqlTestHelper.ConnectionString), TableName);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(true);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            var timeoutManager = new SqlServerTimeoutManager(connectionProvider, TableName, consoleLoggerFactory);
 
             timeoutManager.EnsureTableIsCreated();
 

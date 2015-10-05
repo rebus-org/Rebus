@@ -12,10 +12,10 @@ namespace Rebus.Config
         readonly IBus _innerBus;
         readonly AdvancedApiDecorator _advancedApiDecorator;
 
-        public OneWayClientBusDecorator(IBus innerBus)
+        public OneWayClientBusDecorator(IBus innerBus, IRebusLoggerFactory rebusLoggerFactory)
         {
             _innerBus = innerBus;
-            _advancedApiDecorator = new AdvancedApiDecorator(_innerBus.Advanced);
+            _advancedApiDecorator = new AdvancedApiDecorator(_innerBus.Advanced, rebusLoggerFactory);
         }
 
         public void Dispose()
@@ -66,15 +66,17 @@ namespace Rebus.Config
         class AdvancedApiDecorator : IAdvancedApi
         {
             readonly IAdvancedApi _innerAdvancedApi;
+            readonly IRebusLoggerFactory _rebusLoggerFactory;
 
-            public AdvancedApiDecorator(IAdvancedApi innerAdvancedApi)
+            public AdvancedApiDecorator(IAdvancedApi innerAdvancedApi, IRebusLoggerFactory rebusLoggerFactory)
             {
                 _innerAdvancedApi = innerAdvancedApi;
+                _rebusLoggerFactory = rebusLoggerFactory;
             }
 
             public IWorkersApi Workers
             {
-                get { return new OneWayClientWorkersApi(); }
+                get { return new OneWayClientWorkersApi(_rebusLoggerFactory); }
             }
 
             public ITopicsApi Topics
@@ -95,11 +97,11 @@ namespace Rebus.Config
 
         class OneWayClientWorkersApi : IWorkersApi
         {
-            static ILog _log;
+            readonly ILog _log;
 
-            static OneWayClientWorkersApi()
+            public OneWayClientWorkersApi(IRebusLoggerFactory rebusLoggerFactory)
             {
-                RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
+                _log = rebusLoggerFactory.GetCurrentClassLogger();
             }
 
             public int Count

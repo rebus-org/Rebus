@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 
 namespace Rebus.Tests.Transport.SqlServer
@@ -10,7 +11,7 @@ namespace Rebus.Tests.Transport.SqlServer
         [Test, Ignore("assumes existence of a bimse table")]
         public async Task CanDoWorkInTransaction()
         {
-            var provizzle = new DbConnectionProvider(SqlTestHelper.ConnectionString);
+            var provizzle = new DbConnectionProvider(SqlTestHelper.ConnectionString, new ConsoleLoggerFactory(true));
 
             using (var dbConnection = await provizzle.GetConnection())
             {

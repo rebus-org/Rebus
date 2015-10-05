@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RabbitMQ.Client;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
@@ -20,7 +21,7 @@ namespace Rebus.RabbitMq.Tests
 
         public ITransport Create(string inputQueueAddress)
         {
-            var transport = new RabbitMqTransport(ConnectionString, inputQueueAddress);
+            var transport = new RabbitMqTransport(ConnectionString, inputQueueAddress, new ConsoleLoggerFactory(false));
 
             _disposables.Add(transport);
 

@@ -1,5 +1,6 @@
 ﻿using Rebus.Auditing.Sagas;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
@@ -19,9 +20,9 @@ namespace Rebus.Persistence.SqlServer
         {
             configurer.Register(c =>
             {
-                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName);
-
-                var snapshotStorage = new SqlServerSagaSnapshotStorage(connectionProvider, tableName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName, rebusLoggerFactory);
+                var snapshotStorage = new SqlServerSagaSnapshotStorage(connectionProvider, tableName, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {
@@ -41,9 +42,9 @@ namespace Rebus.Persistence.SqlServer
         {
             configurer.Register(c =>
             {
-                var sagaStorage = new SqlServerSagaStorage(
-                    new DbConnectionProvider(connectionStringOrConnectionStringName),
-                    dataTableName, indexTableName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName, rebusLoggerFactory);
+                var sagaStorage = new SqlServerSagaStorage(connectionProvider, dataTableName, indexTableName, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {
@@ -64,9 +65,9 @@ namespace Rebus.Persistence.SqlServer
         {
             configurer.Register(c =>
             {
-                var subscriptionStorage = new SqlServerSubscriptionStorage(
-                    new DbConnectionProvider(connectionStringOrConnectionStringName),
-                    tableName, isCentralized);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName, rebusLoggerFactory);
+                var subscriptionStorage = new SqlServerSubscriptionStorage(connectionProvider, tableName, isCentralized, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {
@@ -84,7 +85,9 @@ namespace Rebus.Persistence.SqlServer
         {
             configurer.Register(c =>
             {
-                var subscriptionStorage = new SqlServerTimeoutManager(new DbConnectionProvider(connectionStringOrConnectionStringName), tableName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName, rebusLoggerFactory);
+                var subscriptionStorage = new SqlServerTimeoutManager(connectionProvider, tableName, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {

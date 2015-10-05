@@ -5,6 +5,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
@@ -19,7 +20,7 @@ namespace Rebus.Tests.Transport.Msmq
 
         protected override void SetUp()
         {
-            _transport = new MsmqTransport(_queueName);
+            _transport = new MsmqTransport(_queueName, new ConsoleLoggerFactory(true));
             _transport.CreateQueue(_queueName);
 
             Using(_transport);

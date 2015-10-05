@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using Amazon;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
@@ -38,7 +39,8 @@ namespace Rebus.AmazonSQS.Tests
         static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
         {
             var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint));
+                RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint),
+                new ConsoleLoggerFactory(false));
 
             transport.Initialize(peeklockDuration);
             transport.Purge();

@@ -24,25 +24,21 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         public const string DispatchAsFailedMessageKey = "dispatch-as-failed-message";
         
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
-        static ILog _log;
-
-        static SimpleRetryStrategyStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
 
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
         readonly IErrorTracker _errorTracker;
         readonly ITransport _transport;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the step, using the given transport and settings
         /// </summary>
-        public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker)
+        public SimpleRetryStrategyStep(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker, IRebusLoggerFactory rebusLoggerFactory)
         {
             _transport = transport;
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
             _errorTracker = errorTracker;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

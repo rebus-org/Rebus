@@ -23,34 +23,33 @@ namespace Rebus.AmazonSQS
     /// </summary>
     public class AmazonSqsTransport : ITransport, IInitializable
     {
-        static ILog _log;
-        static AmazonSqsTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-        private TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
-        private TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
-        private readonly string _inputQueueAddress;
-        private readonly string _accessKeyId;
-        private readonly string _secretAccessKey;
+        const string ClientContextKey = "SQS_Client";
+        const string OutgoingQueueContextKey = "SQS_outgoingQueue";
+        const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
 
-        private readonly RegionEndpoint _regionEndpoint;
-        private const string ClientContextKey = "SQS_Client";
-        private const string OutgoingQueueContextKey = "SQS_outgoingQueue";
-        private const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
-        private string _queueUrl;
+        readonly string _inputQueueAddress;
+        readonly string _accessKeyId;
+        readonly string _secretAccessKey;
+        readonly RegionEndpoint _regionEndpoint;
+        readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly ILog _log;
+
+        TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
+        TimeSpan _peekLockRenewalInterval = TimeSpan.FromMinutes(4);
+        string _queueUrl;
 
         /// <summary>
         /// Constructs the transport with the specified settings
         /// </summary>
-        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
+        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
             if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
-
             if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
-            
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
             _inputQueueAddress = inputQueueAddress;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             
             if (_inputQueueAddress != null)
             {
@@ -65,6 +64,7 @@ namespace Rebus.AmazonSQS
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _regionEndpoint = regionEndpoint;
+            _rebusLoggerFactory = rebusLoggerFactory;
         }
 
         /// <summary>
@@ -283,6 +283,7 @@ namespace Rebus.AmazonSQS
 
                     await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int)_peekLockDuration.TotalSeconds));
                 },
+                _rebusLoggerFactory,
                 prettyInsignificant: true)
                               {
                                   Interval = _peekLockRenewalInterval

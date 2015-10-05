@@ -7,21 +7,17 @@ namespace Rebus.RabbitMq
 {
     class ConnectionManager : IDisposable
     {
-        static ILog _log;
-
-        static ConnectionManager()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly object _activeConnectionLock = new object();
         readonly ConnectionFactory _connectionFactory;
+        readonly ILog _log;
 
         IConnection _activeConnection;
         bool _disposed;
 
-        public ConnectionManager(string connectionString, string inputQueueAddress)
+        public ConnectionManager(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+
             if (inputQueueAddress != null)
             {
                 _log.Info("Initializing RabbitMQ connection manager for transport with input queue '{0}'", inputQueueAddress);

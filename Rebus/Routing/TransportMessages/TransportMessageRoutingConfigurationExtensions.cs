@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
@@ -23,8 +24,9 @@ namespace Rebus.Routing.TransportMessages
                 {
                     var pipeline = c.Get<IPipeline>();
                     var transport = c.Get<ITransport>();
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                    var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport);
+                    var stepToAdd = new ForwardTransportMessageStep(routingFunction, transport, rebusLoggerFactory);
 
                     return new PipelineStepConcatenator(pipeline)
                         .OnReceive(stepToAdd, PipelineAbsolutePosition.Front);

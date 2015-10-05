@@ -3,7 +3,6 @@ using System.Linq;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Logging;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Pipeline
@@ -16,13 +15,13 @@ namespace Rebus.Tests.Pipeline
         protected override void SetUp()
         {
             _listLoggerFactory = new ListLoggerFactory();
-            RebusLoggerFactory.Current = _listLoggerFactory;
         }
 
         [Test]
         public void CanLogPipelineGood()
         {
             var bus = Configure.With(new BuiltinHandlerActivator())
+                .Logging(l => l.Use(_listLoggerFactory))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test"))
                 .Options(o => o.LogPipeline(verbose:true))
                 .Start();

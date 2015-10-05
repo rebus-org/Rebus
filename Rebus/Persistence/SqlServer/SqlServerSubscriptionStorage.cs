@@ -13,25 +13,19 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerSubscriptionStorage : ISubscriptionStorage
     {
-        static ILog _log;
-
-        static SqlServerSubscriptionStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
 		readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the storage using the specified connection provider and table to store its subscriptions. If the subscription
         /// storage is shared by all subscribers and publishers, the <paramref name="isCentralized"/> parameter can be set to true
         /// in order to subscribe/unsubscribe directly instead of sending subscription/unsubscription requests
         /// </summary>
-        public SqlServerSubscriptionStorage(IDbConnectionProvider connectionProvider, string tableName, bool isCentralized)
+        public SqlServerSubscriptionStorage(IDbConnectionProvider connectionProvider, string tableName, bool isCentralized, IRebusLoggerFactory rebusLoggerFactory)
         {
-
             IsCentralized = isCentralized;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             _connectionProvider = connectionProvider;
             _tableName = tableName;
         }
