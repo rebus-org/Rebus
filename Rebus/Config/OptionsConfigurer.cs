@@ -93,8 +93,6 @@ namespace Rebus.Config
         [MethodImpl(MethodImplOptions.NoInlining)]
         public OptionsConfigurer LogPipeline(bool verbose = false)
         {
-            var logger = _injectionist.Get<IRebusLoggerFactory>().GetCurrentClassLogger();
-
             // when the pipeline is resolved, we hook ourselves in and log it!
             _injectionist.ResolveRequested += serviceType =>
             {
@@ -103,6 +101,7 @@ namespace Rebus.Config
                 _injectionist.Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
+                    var logger = c.Get<IRebusLoggerFactory>().GetCurrentClassLogger();
 
                     var receivePipeline = pipeline.ReceivePipeline();
                     var sendPipeline = pipeline.SendPipeline();
