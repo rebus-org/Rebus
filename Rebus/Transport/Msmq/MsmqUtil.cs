@@ -146,7 +146,10 @@ namespace Rebus.Transport.Msmq
 
             try
             {
-                log?.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
+                if (log != null)
+                {
+                    log.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
+                }
 
                 var newQueue = MessageQueue.Create(inputQueuePath, true);
 
