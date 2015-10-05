@@ -678,6 +678,11 @@
 
 * Added ability to mark saga data as unchanged by calling `MarkAsUnchanged()` on the saga handler.
 
+## 0.99.0
+
+* Inject loggers. Will remove static logging things later.
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
