@@ -98,7 +98,7 @@ namespace Rebus.Tests.Routing
                     .Select(work => distributor.SendLocal(work, _forwardHeaders))
                 );
 
-            await _doneWork.WaitUntil(w => w.Count == numberOfMessages);
+            await _doneWork.WaitUntil(w => w.Count == numberOfMessages, timeoutSeconds: 10);
 
             var workByWorker = _doneWork.GroupBy(w => w.Worker).ToList();
 
