@@ -681,7 +681,9 @@
 ## 0.99.0
 
 * Inject loggers. Will remove static logging things later.
-* Allow for enabling partitioning with the Std. Azure Service Bus transport
+* Allow for enabling partitioning with Azure Service Bus transports
+* Changed Azure Service Bus transports to use streams as the message body to avoid silly XML-wrapping - thanks [meyce]
+
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -700,6 +702,7 @@
 [maeserichar]: https://github.com/maeserichar
 [maxx1337]: https://github.com/maxx1337
 [mclausen]: https://github.com/mclausen
+[meyce]: https://github.com/Meyce
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
 [MrMDavidson]: https://github.com/MrMDavidson
