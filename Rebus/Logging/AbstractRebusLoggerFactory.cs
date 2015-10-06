@@ -27,5 +27,13 @@ namespace Rebus.Logging
 
             return GetLogger(stackFrame.GetMethod().DeclaringType);
         }
+
+        /// <summary>
+        /// Gets a logger for the type <typeparamref name="T"/>
+        /// </summary>
+        public ILog GetLogger<T>()
+        {
+            return GetLogger(typeof (T));
+        }
     }
 }

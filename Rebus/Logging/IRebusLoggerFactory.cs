@@ -15,5 +15,10 @@ namespace Rebus.Logging
         /// some clunky <see cref="StackFrame"/> inspection.
         /// </summary>
         ILog GetCurrentClassLogger();
+
+        /// <summary>
+        /// Gets a logger for the type <typeparamref name="T"/>
+        /// </summary>
+        ILog GetLogger<T>();
     }
 }

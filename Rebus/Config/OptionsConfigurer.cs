@@ -101,7 +101,7 @@ namespace Rebus.Config
                 _injectionist.Decorate(c =>
                 {
                     var pipeline = c.Get<IPipeline>();
-                    var logger = c.Get<IRebusLoggerFactory>().GetCurrentClassLogger();
+                    var logger = c.Get<IRebusLoggerFactory>().GetLogger<OptionsConfigurer>();
 
                     var receivePipeline = pipeline.ReceivePipeline();
                     var sendPipeline = pipeline.SendPipeline();
