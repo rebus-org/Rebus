@@ -683,6 +683,8 @@
 * Inject loggers. Will remove static logging things later.
 * Allow for enabling partitioning with Azure Service Bus transports
 * Changed Azure Service Bus transports to use streams as the message body to avoid silly XML-wrapping - thanks [meyce]
+* Updated WindowsAzure.ServiceBus dependency to 3.0.4
+* Updated WindowsAzure.Storage dependency to 6.0.0
 
 
 
