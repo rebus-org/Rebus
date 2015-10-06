@@ -77,10 +77,9 @@ namespace Rebus.Config
                         transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
                     }
 
-                    if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
-                    {
-                        transport.AutomaticallyRenewPeekLock();
-                    }
+                    transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
+
+                    transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
 
                     return transport;
                 });

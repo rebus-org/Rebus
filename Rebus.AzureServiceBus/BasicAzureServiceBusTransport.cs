@@ -49,7 +49,6 @@ namespace Rebus.AzureServiceBus
 
         readonly ConcurrentQueue<BrokeredMessage> _prefetchQueue = new ConcurrentQueue<BrokeredMessage>();
 
-        bool _automaticallyRenewPeekLock;
         bool _prefetchingEnabled;
         int _numberOfMessagesToPrefetch;
 
@@ -106,10 +105,7 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Enables automatic peek lock renewal - only recommended if you truly need to handle messages for a very long time
         /// </summary>
-        public void AutomaticallyRenewPeekLock()
-        {
-            _automaticallyRenewPeekLock = true;
-        }
+        public bool AutomaticallyRenewPeekLock { get; set; }
 
         public void CreateQueue(string address)
         {
@@ -120,6 +116,7 @@ namespace Rebus.AzureServiceBus
                 MaxSizeInMegabytes = 1024,
                 MaxDeliveryCount = 100,
                 LockDuration = _peekLockDuration,
+                EnablePartitioning = PartitioningEnabled
             };
 
             try
@@ -269,7 +266,7 @@ namespace Rebus.AzureServiceBus
 
         IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
         {
-            if (_automaticallyRenewPeekLock)
+            if (AutomaticallyRenewPeekLock)
             {
                 var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
                     async () =>
@@ -383,6 +380,8 @@ namespace Rebus.AzureServiceBus
         {
             get { return _inputQueueAddress; }
         }
+
+        public bool PartitioningEnabled { get; set; }
 
         public void Dispose()
         {
