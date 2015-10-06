@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
@@ -144,8 +145,7 @@ namespace Rebus.AzureServiceBus
         static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
         {
             var headers = message.Headers;
-            var body = message.Body;
-            var brokeredMessage = new BrokeredMessage(body);
+            var brokeredMessage = new BrokeredMessage(new MemoryStream(message.Body), true);
 
             foreach (var kvp in headers)
             {
@@ -224,7 +224,11 @@ namespace Rebus.AzureServiceBus
                     brokeredMessage.Dispose();
                 });
 
-                return new TransportMessage(headers, brokeredMessage.GetBody<byte[]>());
+                using (var memoryStream = new MemoryStream())
+                {
+                    await brokeredMessage.GetBody<Stream>().CopyToAsync(memoryStream);
+                    return new TransportMessage(headers, memoryStream.ToArray());
+                }
             }
         }
 
