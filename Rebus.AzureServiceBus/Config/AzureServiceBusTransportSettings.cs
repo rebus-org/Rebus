@@ -9,6 +9,18 @@ namespace Rebus.Config
     {
         internal bool PrefetchingEnabled { get; set; }
         internal int NumberOfMessagesToPrefetch { get; set; }
+        internal bool PartitioningEnabled { get; set; }
+
+        /// <summary>
+        /// Enables partitioning whereby Azure Service Bus will be able to distribute messages between message stores
+        /// and this way increase throughput. Enabling partitioning only has an effect on newly created queues.
+        /// </summary>
+        public AzureServiceBusTransportSettings EnablePartitioning()
+        {
+            PartitioningEnabled = true;
+
+            return this;
+        }
 
         /// <summary>
         /// Enables prefetching whereby a batch of messages will be prefetched instead of only one at a time.

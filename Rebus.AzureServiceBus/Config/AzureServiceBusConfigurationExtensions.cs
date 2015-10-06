@@ -36,7 +36,7 @@ namespace Rebus.Config
                 OneWayClientBackdoor.ConfigureOneWayClient(configurer);
                 return;
             }
-           
+
             configurer
                 .OtherService<AzureServiceBusTransport>()
                 .Register(c =>
@@ -100,10 +100,9 @@ namespace Rebus.Config
                         transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
                     }
 
-                    if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
-                    {
-                        transport.AutomaticallyRenewPeekLock();
-                    }
+                    transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
+
+                    transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
 
                     return transport;
                 });

@@ -56,7 +56,6 @@ namespace Rebus.AzureServiceBus
 
         readonly ConcurrentQueue<BrokeredMessage> _prefetchQueue = new ConcurrentQueue<BrokeredMessage>();
 
-        bool _automaticallyRenewPeekLock;
         bool _prefetchingEnabled;
         int _numberOfMessagesToPrefetch;
         bool _disposed;
@@ -77,11 +76,6 @@ namespace Rebus.AzureServiceBus
             {
                 _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
             }
-        }
-
-        ~AzureServiceBusTransport()
-        {
-            Dispose(false);
         }
 
         public void Initialize()
@@ -119,10 +113,7 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Enables automatic peek lock renewal - only recommended if you truly need to handle messages for a very long time
         /// </summary>
-        public void AutomaticallyRenewPeekLock()
-        {
-            _automaticallyRenewPeekLock = true;
-        }
+        public bool AutomaticallyRenewPeekLock { get; set; }
 
         public void CreateQueue(string address)
         {
@@ -133,6 +124,7 @@ namespace Rebus.AzureServiceBus
                 MaxSizeInMegabytes = 1024,
                 MaxDeliveryCount = 100,
                 LockDuration = _peekLockDuration,
+                EnablePartitioning = PartitioningEnabled,
             };
 
             try
@@ -147,6 +139,8 @@ namespace Rebus.AzureServiceBus
                 _log.Info("MessagingEntityAlreadyExistsException - carrying on");
             }
         }
+
+        public bool PartitioningEnabled { get; set; }
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
@@ -214,9 +208,6 @@ namespace Rebus.AzureServiceBus
                     .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
 
                 var messageId = headers.GetValueOrNull(Headers.MessageId);
-
-                _log.Debug("Received brokered message with ID {0}", messageId);
-
                 var leaseDuration = (brokeredMessage.LockedUntilUtc - DateTime.UtcNow);
                 var lockRenewalInterval = TimeSpan.FromMinutes(0.8 * leaseDuration.TotalMinutes);
 
@@ -226,7 +217,6 @@ namespace Rebus.AzureServiceBus
                 {
                     renewalTask.Dispose();
 
-                    _log.Debug("Abandoning message with ID {0}", messageId);
                     try
                     {
                         brokeredMessage.Abandon();
@@ -245,8 +235,6 @@ namespace Rebus.AzureServiceBus
 
                 context.OnCompleted(async () =>
                 {
-                    _log.Debug("Completing message with ID {0}", messageId);
-
                     await GetRetrier().Execute(() => brokeredMessage.CompleteAsync());
                 });
 
@@ -254,7 +242,6 @@ namespace Rebus.AzureServiceBus
                 {
                     renewalTask.Dispose();
 
-                    _log.Debug("Disposing message with ID {0}", messageId);
                     brokeredMessage.Dispose();
                 });
 
@@ -275,8 +262,6 @@ namespace Rebus.AzureServiceBus
                     {
                         var destinationAddress = destinationAndMessages.Key;
                         var messages = destinationAndMessages.Value;
-
-                        _log.Debug("Sending {0} messages to {1}", messages.Count, destinationAddress);
 
                         var sendTasks = messages
                             .Select(async message =>
@@ -310,7 +295,7 @@ namespace Rebus.AzureServiceBus
         {
             if (destinationAddress.StartsWith("subscription/"))
             {
-                var topic = destinationAddress.Substring(destinationAddress.IndexOf('/')+1);
+                var topic = destinationAddress.Substring(destinationAddress.IndexOf('/') + 1);
 
                 await GetTopicClient(topic).SendAsync(brokeredMessageToSend);
             }
@@ -334,10 +319,10 @@ namespace Rebus.AzureServiceBus
             });
         }
 
-        
+
         IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
         {
-            if (_automaticallyRenewPeekLock)
+            if (AutomaticallyRenewPeekLock)
             {
                 var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
                     async () =>
@@ -456,25 +441,13 @@ namespace Rebus.AzureServiceBus
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
-                {
-                    DisposePrefetchedMessages();
+                DisposePrefetchedMessages();
 
-                    _queueClients.Values.ForEach(CloseQueueClient);
-                }
+                _queueClients.Values.ForEach(CloseQueueClient);
             }
             finally
             {
@@ -505,7 +478,7 @@ namespace Rebus.AzureServiceBus
         {
             var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
 
-            return new[] {string.Format("subscription/{0}", normalizedTopic)};
+            return new[] { string.Format("subscription/{0}", normalizedTopic) };
         }
 
         /// <summary>

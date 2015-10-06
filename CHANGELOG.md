@@ -681,6 +681,7 @@
 ## 0.99.0
 
 * Inject loggers. Will remove static logging things later.
+* Allow for enabling partitioning with the Std. Azure Service Bus transport
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
