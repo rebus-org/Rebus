@@ -146,8 +146,15 @@ namespace Rebus.Workers.ThreadBased
                         var stagedReceiveSteps = _pipeline.ReceivePipeline();
                         
                         await _pipelineInvoker.Invoke(context, stagedReceiveSteps);
-                        
-                        await transactionContext.Complete();
+
+                        try
+                        {
+                            await transactionContext.Complete();
+                        }
+                        catch (Exception exception)
+                        {
+                            _log.Error(exception, "An error occurred when attempting to complete the transaction context");
+                        }
                     }
                     catch (Exception exception)
                     {

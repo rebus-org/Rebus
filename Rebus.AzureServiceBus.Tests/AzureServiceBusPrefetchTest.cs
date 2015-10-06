@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -14,7 +13,6 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
-using Rebus.Tests.Extensions;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
@@ -24,7 +22,7 @@ namespace Rebus.AzureServiceBus.Tests
     public class AzureServiceBusPrefetchTest : FixtureBase
     {
         readonly AzureServiceBusMode _mode;
-        const string QueueName = "prefetch";
+        readonly string _queueName = TestConfig.QueueName("prefetch");
 
         public AzureServiceBusPrefetchTest(AzureServiceBusMode mode)
         {
@@ -56,26 +54,22 @@ namespace Rebus.AzureServiceBus.Tests
         ///     Receiving 10000 messages took 28,8 s - that's 347,6 msg/s
         /// 
         /// </summary>
-        [TestCase(10, 10000)]
-        [TestCase(20, 10000)]
-        [TestCase(30, 10000)]
-        [TestCase(50, 10000)]
-        [TestCase(100, 10000)]
-        [TestCase(200, 10000)]
+        [TestCase(10, 1000)]
+        [TestCase(50, 1000)]
+        [TestCase(100, 1000)]
+        [TestCase(10, 10000, Ignore = true)]
+        [TestCase(20, 10000, Ignore = true)]
+        [TestCase(30, 10000, Ignore = true)]
+        [TestCase(50, 10000, Ignore = true)]
+        [TestCase(100, 10000, Ignore = true)]
         public void WorksWithPrefetch(int prefetch, int numberOfMessages)
         {
-            var activator = new BuiltinHandlerActivator();
-            var receivedMessages = 0;
-            var done = new ManualResetEvent(false);
+            var activator = Using(new BuiltinHandlerActivator());
+            var counter = new SharedCounter(numberOfMessages);
 
             activator.Handle<string>(async str =>
             {
-                Interlocked.Increment(ref receivedMessages);
-
-                if (receivedMessages == numberOfMessages)
-                {
-                    done.Set();
-                }
+                counter.Decrement();
             });
 
             Console.WriteLine("Sending {0} messages", numberOfMessages);
@@ -91,7 +85,7 @@ namespace Rebus.AzureServiceBus.Tests
                         var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(msg));
                         var transportMessage = new TransportMessage(headers, body);
 
-                        await transport.Send(QueueName, transportMessage, context);
+                        await transport.Send(_queueName, transportMessage, context);
 
                         await context.Complete();
                     }
@@ -104,10 +98,10 @@ namespace Rebus.AzureServiceBus.Tests
 
             var stopwatch = Stopwatch.StartNew();
 
-            using (Configure.With(activator)
+            Configure.With(activator)
                 .Transport(t =>
                 {
-                    t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, _mode)
+                    t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, _mode)
                         .EnablePrefetching(prefetch);
                 })
                 .Options(o =>
@@ -115,15 +109,19 @@ namespace Rebus.AzureServiceBus.Tests
                     o.SetNumberOfWorkers(5);
                     o.SetMaxParallelism(10);
                 })
-                .Start())
-            {
-                done.WaitOrDie(TimeSpan.FromSeconds(numberOfMessages * 0.1 + 3));
-            }
+                .Start();
+
+            counter.WaitForResetEvent(timeoutSeconds: (int)(numberOfMessages * 0.1 + 3));
 
             var elapsedSeconds = stopwatch.Elapsed.TotalSeconds;
 
             Console.WriteLine("Receiving {0} messages took {1:0.0} s - that's {2:0.0} msg/s",
                 numberOfMessages, elapsedSeconds, numberOfMessages / elapsedSeconds);
+        }
+
+        protected override void TearDown()
+        {
+            //StandardAzureServiceBusTransportFactory.DeleteQueue(_queueName);
         }
 
         Dictionary<string, string> DefaultHeaders()
@@ -139,12 +137,12 @@ namespace Rebus.AzureServiceBus.Tests
         {
             if (_mode == AzureServiceBusMode.Basic)
             {
-                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, new ConsoleLoggerFactory(false));
+                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, new ConsoleLoggerFactory(false));
                 basicTransport.Initialize();
                 basicTransport.PurgeInputQueue();
                 return basicTransport;
             }
-            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, new ConsoleLoggerFactory(false));
+            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, new ConsoleLoggerFactory(false));
             Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();

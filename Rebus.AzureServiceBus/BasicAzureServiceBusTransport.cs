@@ -10,6 +10,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Threading;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus
 {
@@ -190,9 +191,6 @@ namespace Rebus.AzureServiceBus
                     .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
 
                 var messageId = headers.GetValueOrNull(Headers.MessageId);
-
-                _log.Debug("Received brokered message with ID {0}", messageId);
-
                 var leaseDuration = (brokeredMessage.LockedUntilUtc - DateTime.UtcNow);
                 var lockRenewalInterval = TimeSpan.FromMinutes(0.8 * leaseDuration.TotalMinutes);
 
@@ -202,7 +200,6 @@ namespace Rebus.AzureServiceBus
                 {
                     renewalTask.Dispose();
 
-                    _log.Debug("Abandoning message with ID {0}", messageId);
                     try
                     {
                         brokeredMessage.Abandon();
@@ -214,23 +211,16 @@ namespace Rebus.AzureServiceBus
                     }
                 });
 
-                context.OnCommitted(async () =>
-                {
-                    renewalTask.Dispose();
-                });
+                context.OnCommitted(async () => renewalTask.Dispose());
 
                 context.OnCompleted(async () =>
                 {
-                    _log.Debug("Completing message with ID {0}", messageId);
-
-                    await GetRetrier().Execute(() => brokeredMessage.CompleteAsync());
+                    await brokeredMessage.CompleteAsync();
                 });
 
                 context.OnDisposed(() =>
                 {
                     renewalTask.Dispose();
-
-                    _log.Debug("Disposing message with ID {0}", messageId);
                     brokeredMessage.Dispose();
                 });
 
@@ -251,8 +241,6 @@ namespace Rebus.AzureServiceBus
                     {
                         var destinationAddress = destinationAndMessages.Key;
                         var messages = destinationAndMessages.Value;
-
-                        _log.Debug("Sending {0} messages to {1}", messages.Count, destinationAddress);
 
                         var sendTasks = messages
                             .Select(async message =>
@@ -327,8 +315,6 @@ namespace Rebus.AzureServiceBus
                 _ignorant.Reset();
 
                 if (!brokeredMessages.Any()) return null; 
-
-                _log.Debug("Received new batch of {0} messages", brokeredMessages.Count);
 
                 foreach (var receivedMessage in brokeredMessages)
                 {

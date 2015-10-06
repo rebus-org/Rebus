@@ -125,8 +125,9 @@ namespace Rebus.AzureServiceBus
                 MaxDeliveryCount = 100,
                 LockDuration = _peekLockDuration,
                 EnablePartitioning = PartitioningEnabled,
+                UserMetadata = string.Format("Created by Rebus {0:yyyy-MM-dd} - {0:HH:mm:ss}", DateTime.Now)
             };
-
+            
             try
             {
                 _log.Info("Queue '{0}' does not exist - will create it now", address);
@@ -235,7 +236,7 @@ namespace Rebus.AzureServiceBus
 
                 context.OnCompleted(async () =>
                 {
-                    await GetRetrier().Execute(() => brokeredMessage.CompleteAsync());
+                    await brokeredMessage.CompleteAsync();
                 });
 
                 context.OnDisposed(() =>
@@ -322,27 +323,32 @@ namespace Rebus.AzureServiceBus
 
         IDisposable GetRenewalTaskOrFakeDisposable(string messageId, BrokeredMessage brokeredMessage, TimeSpan lockRenewalInterval)
         {
-            if (AutomaticallyRenewPeekLock)
+            if (!AutomaticallyRenewPeekLock)
             {
-                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
-                    async () =>
-                    {
-                        _log.Info("Renewing peek lock for message with ID {0}", messageId);
-
-                        await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
-                    },
-                    _rebusLoggerFactory,
-                    prettyInsignificant: true)
-                {
-                    Interval = lockRenewalInterval
-                };
-
-                renewalTask.Start();
-
-                return renewalTask;
+                return new FakeDisposable();
             }
 
-            return new FakeDisposable();
+            if (_prefetchingEnabled)
+            {
+                return new FakeDisposable();
+            }
+
+            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
+                async () =>
+                {
+                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
+
+                    await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
+                },
+                _rebusLoggerFactory,
+                prettyInsignificant: true)
+            {
+                Interval = lockRenewalInterval
+            };
+
+            renewalTask.Start();
+
+            return renewalTask;
         }
 
         class FakeDisposable : IDisposable
@@ -372,8 +378,6 @@ namespace Rebus.AzureServiceBus
                 _ignorant.Reset();
 
                 if (!brokeredMessages.Any()) return null;
-
-                _log.Debug("Received new batch of {0} messages", brokeredMessages.Count);
 
                 foreach (var receivedMessage in brokeredMessages)
                 {
