@@ -686,6 +686,9 @@
 * Updated WindowsAzure.ServiceBus dependency to 3.0.4
 * Updated WindowsAzure.Storage dependency to 6.0.0
 
+## 0.99.1
+
+* Added Serilog log event enricher + configuration extension for including Rebus' correlation ID in log events
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

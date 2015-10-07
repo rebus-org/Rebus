@@ -1,5 +1,6 @@
 ﻿using Rebus.Config;
 using Serilog;
+using Serilog.Configuration;
 
 namespace Rebus.Serilog
 {
@@ -22,6 +23,15 @@ namespace Rebus.Serilog
         public static void Serilog(this RebusLoggingConfigurer configurer, ILogger baseLogger)
         {
             configurer.Use(new SerilogLoggerFactory(baseLogger));
+        }
+
+        /// <summary>
+        /// Configures Serilog to add the correlation ID of the Rebus message currently being handled to log events as the <paramref name="propertyName"/>
+        /// field. Does nothing when called outside of a message handler.
+        /// </summary>
+        public static LoggerConfiguration RebusCorrelationId(this LoggerEnrichmentConfiguration configuration, string propertyName)
+        {
+            return configuration.With(new RebusCorrelationIdEnricher(propertyName));
         }
     }
 }
