@@ -689,6 +689,7 @@
 ## 0.99.1
 
 * Added Serilog log event enricher + configuration extension for including Rebus' correlation ID in log events
+* Added custom NLog layout renderer that outputs the correlation ID of the message currently being handled in the `${rebus-correlation-id}` variable
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
