@@ -68,7 +68,7 @@ namespace Rebus.NLog.Tests
 
             AssertLineIsThere(loggedLines, "1|known-correlation-id");
             AssertLineIsThere(loggedLines, "2|known-correlation-id");
-            AssertLineIsThere(loggedLines, "4|known-correlation-id");
+            AssertLineIsThere(loggedLines, "3|known-correlation-id");
 
         }
 
