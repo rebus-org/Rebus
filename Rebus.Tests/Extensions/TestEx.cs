@@ -58,6 +58,8 @@ namespace Rebus.Tests.Extensions
             }
         }
 
+
+
         public static IEnumerable<TItem> InRandomOrder<TItem>(this IEnumerable<TItem> items)
         {
             var random = new Random(DateTime.Now.GetHashCode());
