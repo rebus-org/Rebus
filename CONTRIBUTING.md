@@ -1,4 +1,4 @@
-Contributions are most welcome! :)
+## Contributions are most welcome! :)
 
 I do prefer it if we communicate a little bit before you send PRs, though.
 This is because _I value your time_, and it would be a shame if you spent time
@@ -33,4 +33,4 @@ each line of code if necessary.
 If you push additional changes to your fork during this process,
 the changes become immediately available in the pull request.
 
-When all is good, I accept your PR by merging it, and then you're awesome!
+When all is good, I accept your PR by merging it, and then you're (even more) awesome!
