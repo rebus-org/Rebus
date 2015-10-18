@@ -695,6 +695,11 @@
 
 * Fixed NLog nuget dependency
 
+# 0.99.3
+
+* Access to more useful information on `Failed<TMessage>`
+
+
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
