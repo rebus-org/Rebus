@@ -12,41 +12,38 @@ namespace Rebus.AmazonSQS.Tests
         public async void WhenMessageVisibilityIsRenewed_ThenItsNotVisibleForOthers()
         {
             //arrange
+            var peeklockDuration = TimeSpan.FromSeconds(3);
 
             var transportFactory = new AmazonSQSTransportFactory();
 
-            const string inputqueueName = "inputQueue";
-            var inputQueue = transportFactory.Create(TestConfig.QueueName(inputqueueName), TimeSpan.FromSeconds(3));
-            const string inputqueueName2 = "outputQueue";
-            var outputQueue = transportFactory.Create(TestConfig.QueueName(inputqueueName2));
+            var inputqueueName = TestConfig.QueueName("inputQueue");
+            var inputQueue = transportFactory.Create(inputqueueName, peeklockDuration);
+
+            var inputqueueName2 = TestConfig.QueueName("outputQueue");
+            var outputQueue = transportFactory.Create(inputqueueName2);
 
             await WithContext(async context =>
-                                    {
-                                        await outputQueue.Send(inputqueueName, MessageWith("hej"), context);
-                                    });
+            {
+                await outputQueue.Send(inputqueueName, MessageWith("hej"), context);
+            });
 
             await WithContext(async context =>
-                                    {
-                                        var transportMessage = await inputQueue.Receive(context);
+            {
+                var transportMessage = await inputQueue.Receive(context);
 
+                Assert.That(transportMessage, Is.Not.Null, "Expected to receive the message that we just sent");
 
-                                        await WithContext(async innerContext =>
-                                                                {
-                                                                    Thread.Sleep(6000);
-                                                                    var innerMessage = await inputQueue.Receive(innerContext);
+                // pretend that it takes a while to handle the message
+                Thread.Sleep(6000);
 
-                                                                    Assert.That(innerMessage, Is.Null);
-                                                                });
+                // pretend that another thread attempts to receive from the same input queue
+                await WithContext(async innerContext =>
+                {
+                    var innerMessage = await inputQueue.Receive(innerContext);
 
-
-                                        Assert.That(transportMessage, Is.Not.Null);
-
-                                    });
-
+                    Assert.That(innerMessage, Is.Null, "Did not expect to receive a message here because its peek lock should have been renewed automatically");
+                });
+            });
         }
-
-
-
-       
     }
 }
