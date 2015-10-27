@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
+using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -155,6 +156,20 @@ namespace Rebus.AzureServiceBus
                 var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
                 brokeredMessage.TimeToLive = timeToBeReceived;
             }
+
+            string contentType;
+            if (headers.TryGetValue(Headers.ContentType, out contentType))
+            {
+                brokeredMessage.ContentType = contentType;
+            }
+
+            string correlationId;
+            if (headers.TryGetValue(Headers.CorrelationId, out correlationId))
+            {
+                brokeredMessage.CorrelationId = correlationId;
+            }
+
+            brokeredMessage.Label = message.GetMessageLabel();
 
             return brokeredMessage;
         }

@@ -707,6 +707,10 @@
 
 * Replaced Windsor's assembly-scanning with manual scan
 
+# 0.99.6
+
+* Set correlation ID, content type, and label properties on brokered messages with Azure Service Bus transport
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

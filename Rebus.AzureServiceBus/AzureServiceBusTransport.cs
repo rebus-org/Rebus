@@ -128,7 +128,7 @@ namespace Rebus.AzureServiceBus
                 EnablePartitioning = PartitioningEnabled,
                 UserMetadata = string.Format("Created by Rebus {0:yyyy-MM-dd} - {0:HH:mm:ss}", DateTime.Now)
             };
-            
+
             try
             {
                 _log.Info("Queue '{0}' does not exist - will create it now", address);
@@ -171,6 +171,20 @@ namespace Rebus.AzureServiceBus
                 brokeredMessage.ScheduledEnqueueTimeUtc = deferUntilDateTimeOffset.UtcDateTime;
                 headers.Remove(Headers.DeferredUntil);
             }
+
+            string contentType;
+            if (headers.TryGetValue(Headers.ContentType, out contentType))
+            {
+                brokeredMessage.ContentType = contentType;
+            }
+
+            string correlationId;
+            if (headers.TryGetValue(Headers.CorrelationId, out correlationId))
+            {
+                brokeredMessage.CorrelationId = correlationId;
+            }
+
+            brokeredMessage.Label = message.GetMessageLabel();
 
             foreach (var kvp in headers)
             {

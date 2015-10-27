@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureServiceBusBasicSendReceive.cs" />
+    <Compile Include="AzureServiceBusContentTypeTest.cs" />
     <Compile Include="Factories\AzureServiceBusBusFactory.cs" />
     <Compile Include="AzureServiceBusManyMessages.cs" />
     <Compile Include="AzureServiceBusMessageExpiration.cs" />
