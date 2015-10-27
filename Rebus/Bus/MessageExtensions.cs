@@ -99,7 +99,7 @@ namespace Rebus.Bus
 
         static string GetMessageLabel(Dictionary<string, string> headers)
         {
-            var id = headers.GetValue(Headers.MessageId);
+            var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
             string type;
 
