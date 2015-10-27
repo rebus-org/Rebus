@@ -72,7 +72,7 @@ namespace Rebus.CastleWindsor
         /// </summary>
         public static IWindsorContainer RegisterHandler<THandler>(this IWindsorContainer container) where THandler : IHandleMessages
         {
-            RegisterType(container, typeof(THandler));
+            RegisterType(container, typeof(THandler), false);
             return container;
         }
 
@@ -89,13 +89,13 @@ namespace Rebus.CastleWindsor
 
             foreach (var type in typesToAutoRegister)
             {
-                RegisterType(container, type.Type);
+                RegisterType(container, type.Type, true);
             }
 
             return container;
         }
 
-        static void RegisterType(IWindsorContainer container, Type typeToRegister)
+        static void RegisterType(IWindsorContainer container, Type typeToRegister, bool auto)
         {
             var implementedHandlerInterfaces = GetImplementedHandlerInterfaces(typeToRegister).ToArray();
 
@@ -105,7 +105,7 @@ namespace Rebus.CastleWindsor
                 Component.For(implementedHandlerInterfaces)
                     .ImplementedBy(typeToRegister)
                     .LifestyleTransient()
-                    .Named(string.Format("{0} (auto-registered)", typeToRegister.FullName))
+                    .Named(string.Format("{0} ({1})", typeToRegister.FullName, auto ? "auto-registered" : "manually registered"))
                 );
         }
 
