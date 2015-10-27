@@ -55,6 +55,7 @@
     <Compile Include="CastleWindsorLifestyleTest.cs" />
     <Compile Include="CastleWindsorRealContainerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestAssemblyScanning.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.CastleWindsor\Rebus.CastleWindsor.csproj">

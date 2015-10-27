@@ -703,6 +703,10 @@
 
 * Added no-inlining jit directive to the Windsor package's `AutoRegisterHandlersFromThisAssembly` method because it looks like handlers are sometimes not picked up as they should
 
+# 0.99.5
+
+* Replaced Windsor's assembly-scanning with manual scan
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

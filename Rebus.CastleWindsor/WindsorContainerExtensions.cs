@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Castle.MicroKernel.Registration;
@@ -65,19 +67,52 @@ namespace Rebus.CastleWindsor
             return RegisterAssembly(container, assemblyToRegister);
         }
 
+        /// <summary>
+        /// Registers the given handler type under the implemented handler interfaces
+        /// </summary>
+        public static IWindsorContainer RegisterHandler<THandler>(this IWindsorContainer container) where THandler : IHandleMessages
+        {
+            RegisterType(container, typeof(THandler));
+            return container;
+        }
+
         static IWindsorContainer RegisterAssembly(IWindsorContainer container, Assembly assemblyToRegister)
         {
-            return container
-                .Register(
-                    Classes.FromAssembly(assemblyToRegister)
-                        .BasedOn<IHandleMessages>()
-                        .WithServiceAllInterfaces()
-                        .LifestyleTransient()
-                        .Configure(c =>
-                        {
-                            c.Named(string.Format("{0} (auto-registered)", c.Implementation.FullName));
-                        })
+            var typesToAutoRegister = assemblyToRegister.GetTypes()
+                .Where(type => !type.IsInterface && !type.IsAbstract)
+                .Select(type => new
+                {
+                    Type = type,
+                    ImplementedHandlerInterfaces = GetImplementedHandlerInterfaces(type).ToList()
+                })
+                .Where(a => a.ImplementedHandlerInterfaces.Any());
+
+            foreach (var type in typesToAutoRegister)
+            {
+                RegisterType(container, type.Type);
+            }
+
+            return container;
+        }
+
+        static void RegisterType(IWindsorContainer container, Type typeToRegister)
+        {
+            var implementedHandlerInterfaces = GetImplementedHandlerInterfaces(typeToRegister).ToArray();
+
+            if (!implementedHandlerInterfaces.Any()) return;
+
+            container.Register(
+                Component.For(implementedHandlerInterfaces)
+                    .ImplementedBy(typeToRegister)
+                    .LifestyleTransient()
+                    .Named(string.Format("{0} (auto-registered)", typeToRegister.FullName))
                 );
+        }
+
+        static IEnumerable<Type> GetImplementedHandlerInterfaces(Type type)
+        {
+            return type.GetInterfaces()
+                .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof (IHandleMessages<>));
         }
     }
 }
