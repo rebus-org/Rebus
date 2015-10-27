@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Castle.MicroKernel.Registration;
 using Castle.MicroKernel.Registration.Lifestyle;
 using Castle.Windsor;
@@ -31,6 +32,7 @@ namespace Rebus.CastleWindsor
         /// <summary>
         /// Automatically picks up all handler types from the calling assembly and registers them in the container
         /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static IWindsorContainer AutoRegisterHandlersFromThisAssembly(this IWindsorContainer container)
         {
             if (container == null) throw new ArgumentNullException("container");

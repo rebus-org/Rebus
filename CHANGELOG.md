@@ -699,7 +699,9 @@
 
 * Access to more useful information on `Failed<TMessage>`
 
+# 0.99.4
 
+* Added no-inlining jit directive to the Windsor package's `AutoRegisterHandlersFromThisAssembly` method because it looks like handlers are sometimes not picked up as they should
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
