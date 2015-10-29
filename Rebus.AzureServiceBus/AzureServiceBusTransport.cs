@@ -188,10 +188,22 @@ namespace Rebus.AzureServiceBus
 
             foreach (var kvp in headers)
             {
-                brokeredMessage.Properties[kvp.Key] = kvp.Value;
+                brokeredMessage.Properties[kvp.Key] = PossiblyLimitLength(kvp.Value);
             }
 
             return brokeredMessage;
+        }
+
+        static string PossiblyLimitLength(string str)
+        {
+            const int maxLengthPrettySafe = 16300;
+
+            if (str.Length < maxLengthPrettySafe) return str;
+
+            return string.Format("{0} (... cut out because length exceeded {1} characters ...) {2}",
+                str.Substring(0, 8000), 
+                maxLengthPrettySafe,
+                str.Substring(str.Length - 8000));
         }
 
         /// <summary>

@@ -711,6 +711,12 @@
 
 * Set correlation ID, content type, and label properties on brokered messages with Azure Service Bus transport
 
+# 0.99.7
+
+* Limit length of header values used when using Azure Service Bus transport
+
+
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
