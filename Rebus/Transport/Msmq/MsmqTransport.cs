@@ -306,11 +306,19 @@ namespace Rebus.Transport.Msmq
             {
                 if (_inputQueue != null) return _inputQueue;
 
-                var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
+                string inputQueuePath;
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+                if (MsmqUtil.IsLocal(_inputQueueName))
+                {
+                    inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+                    MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+                    MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+                }
+                else
+                {
+                    inputQueuePath = MsmqUtil.GetFullPath(_inputQueueName);
+                }
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {
