@@ -82,6 +82,9 @@ namespace Rebus.Transport
             _mustAbort = true;
         }
 
+        /// <summary>
+        /// Executes commit actions enlisted in the transaction with <see cref="ITransactionContext.OnCommitted"/>
+        /// </summary>
         public async Task Commit()
         {
             await Invoke(_onCommittedActions);

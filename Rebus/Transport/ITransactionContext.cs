@@ -43,6 +43,9 @@ namespace Rebus.Transport
         /// </summary>
         void Abort();
 
+        /// <summary>
+        /// Executes commit actions enlisted in the transaction with <see cref="OnCommitted"/>
+        /// </summary>
         Task Commit();
     }
 }
