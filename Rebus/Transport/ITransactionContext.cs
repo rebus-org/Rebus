@@ -42,5 +42,7 @@ namespace Rebus.Transport
         /// Signals that something is wrong and the queue transaction must be aborted
         /// </summary>
         void Abort();
+
+        Task Commit();
     }
 }

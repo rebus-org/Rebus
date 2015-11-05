@@ -715,7 +715,9 @@
 
 * Limit length of header values used when using Azure Service Bus transport
 
+# 0.99.8
 
+* Fixed it so that delivery will not be retried indefinitely on commit exceptions
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

@@ -105,6 +105,8 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             try
             {
                 await next();
+
+                await transactionContext.Commit();
             }
             catch (Exception exception)
             {

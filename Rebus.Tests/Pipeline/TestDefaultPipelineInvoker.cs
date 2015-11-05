@@ -86,6 +86,11 @@ namespace Rebus.Tests.Pipeline
             {
                 throw new NotImplementedException();
             }
+
+            public Task Commit()
+            {
+                throw new NotImplementedException();
+            }
         }
 
         [Test]

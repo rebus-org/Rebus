@@ -106,6 +106,7 @@
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
+    <Compile Include="Transactions\TestUnitOfWork.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportFactory.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportBasicSendReceive.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportMessageExpiration.cs" />

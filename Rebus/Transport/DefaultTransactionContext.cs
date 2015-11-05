@@ -82,6 +82,11 @@ namespace Rebus.Transport
             _mustAbort = true;
         }
 
+        public async Task Commit()
+        {
+            await Invoke(_onCommittedActions);
+        }
+
         /// <summary>
         /// Performs the registered cleanup actions. If the transaction has not been committed, it will be aborted before the cleanup happens.
         /// </summary>
@@ -111,7 +116,7 @@ namespace Rebus.Transport
         }
 
         /// <summary>
-        /// Ends the current transaction but either committing it or aborting it, depending on whether someone voted for abortion
+        /// Ends the current transaction by either committing it or aborting it, depending on whether someone voted for abortion
         /// </summary>
         public async Task Complete()
         {
@@ -146,17 +151,25 @@ namespace Rebus.Transport
             _completed = true;
         }
 
-        static void Invoke(IEnumerable<Action> actions)
+        static void Invoke(ConcurrentQueue<Action> actions)
         {
-            foreach (var action in actions)
+            Action action;
+            while (actions.TryDequeue(out action))
             {
                 action();
             }    
         }
 
-        static async Task Invoke(IEnumerable<Func<Task>> actions)
+        static async Task Invoke(ConcurrentQueue<Func<Task>> actions)
         {
-            await Task.WhenAll(actions.Select(a => a()).ToArray());
+            Func<Task> action;
+            var actionsToExecuteNow = new List<Func<Task>>();
+            while (actions.TryDequeue(out action))
+            {
+                actionsToExecuteNow.Add(action);
+            }
+
+            await Task.WhenAll(actionsToExecuteNow.Select(a => a()));
         }
     }
 }
