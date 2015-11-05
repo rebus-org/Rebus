@@ -719,6 +719,9 @@
 
 * Fixed it so that delivery will not be retried indefinitely on commit exceptions
 
+# 0.99.9
+
+* Changed RabbitMQ routing to use two exchanges: one for direct addressing, and one for pub/sub messaging. This way, "clean" RabbitMQ topics can be subscribed to and then used when publishing, allowing for subscribing to topics using wildcards.
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

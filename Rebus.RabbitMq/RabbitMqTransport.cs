@@ -21,7 +21,8 @@ namespace Rebus.RabbitMq
     /// </summary>
     public class RabbitMqTransport : ITransport, IDisposable, IInitializable, ISubscriptionStorage
     {
-        const string ExchangeName = "Rebus";
+        const string DirectExchangeName = "RebusDirect";
+        const string TopicExchangeName = "RebusTopics";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
 
@@ -54,12 +55,17 @@ namespace Rebus.RabbitMq
          
             using (var model = connection.CreateModel())
             {
-                model.ExchangeDeclare(ExchangeName, ExchangeType.Topic, true);
-                model.QueueDeclare(address, true, false, false, new Dictionary<string, object>
-                    {
-                        {"x-ha-policy", "all"}
-                    });
-                model.QueueBind(address, ExchangeName, address);
+                model.ExchangeDeclare(DirectExchangeName, ExchangeType.Direct, true);
+                model.ExchangeDeclare(TopicExchangeName, ExchangeType.Topic, true);
+
+                var arguments = new Dictionary<string, object>
+                {
+                    {"x-ha-policy", "all"}
+                };
+
+                model.QueueDeclare(address, exclusive: false, durable: true, autoDelete: false, arguments: arguments);
+
+                model.QueueBind(address, DirectExchangeName, address);
             }
         }
 
@@ -67,9 +73,11 @@ namespace Rebus.RabbitMq
         {
             var outgoingMessages = context.GetOrAdd(OutgoingMessagesItemsKey, () =>
             {
-                context.OnCommitted(async () => SendOutgoingMessages(context));
+                var messages = new ConcurrentQueue<OutgoingMessage>();
 
-                return new ConcurrentQueue<OutgoingMessage>();
+                context.OnCommitted(() => SendOutgoingMessages(context, messages));
+
+                return messages;
             });
 
             outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
@@ -156,9 +164,8 @@ namespace Rebus.RabbitMq
             return new TransportMessage(headers, result.Body);
         }
 
-        async Task SendOutgoingMessages(ITransactionContext context)
+        async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
         {
-            var outgoingMessages = context.GetOrThrow<ConcurrentQueue<OutgoingMessage>>(OutgoingMessagesItemsKey);
             var model = GetModel(context);
 
             foreach (var outgoingMessage in outgoingMessages)
@@ -181,8 +188,34 @@ namespace Rebus.RabbitMq
 
                 props.Persistent = !express;
 
-                model.BasicPublish(ExchangeName, destinationAddress, props, message.Body);
+                var routingKey = new FullyQualifiedRoutingKey(destinationAddress);
+
+                model.BasicPublish(routingKey.ExchangeName, routingKey.RoutingKey, props, message.Body);
             }
+        }
+
+        class FullyQualifiedRoutingKey
+        {
+            public FullyQualifiedRoutingKey(string destinationAddress)
+            {
+                if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
+
+                var tokens = destinationAddress.Split('@');
+
+                if (tokens.Length > 1)
+                {
+                    ExchangeName = tokens.Last();
+                    RoutingKey = string.Join("@", tokens.Take(tokens.Length - 1));
+                }
+                else
+                {
+                    ExchangeName = DirectExchangeName;
+                    RoutingKey = destinationAddress;
+                }
+            }
+
+            public string ExchangeName { get; private set; }
+            public string RoutingKey { get; private set; }
         }
 
         static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
@@ -230,7 +263,7 @@ namespace Rebus.RabbitMq
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            return new[] { NormalizeTopic(topic) };
+            return new[] { string.Format("{0}@{1}", topic, TopicExchangeName) };
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
@@ -239,7 +272,7 @@ namespace Rebus.RabbitMq
 
             using (var model = connection.CreateModel())
             {
-                model.QueueBind(Address, ExchangeName, NormalizeTopic(topic));
+                model.QueueBind(Address, TopicExchangeName, topic);
             }
         }
 
@@ -249,13 +282,8 @@ namespace Rebus.RabbitMq
 
             using (var model = connection.CreateModel())
             {
-                model.QueueUnbind(Address, ExchangeName, NormalizeTopic(topic), new Dictionary<string, object>());
+                model.QueueUnbind(Address, TopicExchangeName, topic, new Dictionary<string, object>());
             }
-        }
-
-        static string NormalizeTopic(string rawTopic)
-        {
-            return string.Format("subscription/{0}", rawTopic);
         }
 
         public bool IsCentralized
