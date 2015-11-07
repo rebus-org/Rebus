@@ -61,7 +61,7 @@
     <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
     <Compile Include="Backoff\BackoffConfigurationExtensions.cs" />
     <Compile Include="Backoff\SimpleCustomizedBackoffStrategy.cs" />
-    <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
+    <Compile Include="Bus\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
     <Compile Include="Bus\Advanced\ITopicsApi.cs" />
@@ -207,7 +207,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManager.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
     <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
-    <Compile Include="Pipeline\Receive\LoadSagaDataStep.cs" />
+    <Compile Include="Sagas\LoadSagaDataStep.cs" />
     <Compile Include="Pipeline\Send\FlowCorrelationIdStep.cs" />
     <Compile Include="Pipeline\Send\SendOutgoingMessageStep.cs" />
     <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />

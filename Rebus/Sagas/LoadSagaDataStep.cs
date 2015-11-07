@@ -5,9 +5,10 @@ using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
-using Rebus.Sagas;
+using Rebus.Pipeline;
+using Rebus.Pipeline.Receive;
 
-namespace Rebus.Pipeline.Receive
+namespace Rebus.Sagas
 {
     /// <summary>
     /// Incoming step that loads and saves relevant saga data.

@@ -8,11 +8,11 @@ using Rebus.Pipeline;
 using Rebus.Time;
 using Rebus.Transport;
 
-// ReSharper disable CheckNamespace
-
 namespace Rebus.Bus
 {
-    // private classes with access to private members of RebusBus
+    /// <summary>
+    /// The implementations of the advanced APIs are private classes inside <see cref="RebusBus"/> so that they can access private functions and stuff
+    /// </summary>
     public partial class RebusBus
     {
         class AdvancedApi : IAdvancedApi

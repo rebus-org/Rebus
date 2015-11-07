@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq.Expressions;
 using Rebus.Exceptions;
 using Rebus.Reflection;
