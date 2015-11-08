@@ -10,6 +10,7 @@ using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.SqlServer;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {

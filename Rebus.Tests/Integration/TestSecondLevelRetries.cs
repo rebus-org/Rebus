@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {

@@ -16,6 +16,7 @@ using Rebus.Sagas.Idempotent;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
@@ -29,7 +30,7 @@ namespace Rebus.Tests.Integration
 
         protected override void SetUp()
         {
-            _activator = new BuiltinHandlerActivator();
+            _activator = Using(new BuiltinHandlerActivator());
 
             _persistentSagaData = new ConcurrentDictionary<Guid, ISagaData>();
 

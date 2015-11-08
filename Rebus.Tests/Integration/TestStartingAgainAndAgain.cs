@@ -3,7 +3,6 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Compression;
 using Rebus.Config;
-using Rebus.Encryption;
 using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Integration

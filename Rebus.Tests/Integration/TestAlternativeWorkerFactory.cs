@@ -14,6 +14,7 @@ using Rebus.Threading;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
