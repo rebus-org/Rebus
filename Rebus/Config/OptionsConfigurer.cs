@@ -74,17 +74,17 @@ namespace Rebus.Config
         /// <summary>
         /// Registers the given factory function as a resolver of the given primary implementation of the <typeparamref name="TService"/> service
         /// </summary>
-        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod)
+        public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)
         {
-            _injectionist.Register(resolverMethod);
+            _injectionist.Register(resolverMethod, description);
         }
 
         /// <summary>
         /// Registers the given factory function as a resolve of the given decorator of the <typeparamref name="TService"/> service
         /// </summary>
-        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod)
+        public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)
         {
-            _injectionist.Decorate(resolverMethod);
+            _injectionist.Decorate(resolverMethod, description);
         }
 
         /// <summary>
