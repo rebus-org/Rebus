@@ -12,6 +12,7 @@ using Rebus.Retry.Simple;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
@@ -74,9 +75,6 @@ namespace Rebus.Tests.Integration
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(5)]
-        [TestCase(40)]
-        [TestCase(70)]
-        [TestCase(90)]
         public async Task CanConfigureNumberOfRetries(int numberOfRetries)
         {
             InitializeBus(numberOfRetries);
