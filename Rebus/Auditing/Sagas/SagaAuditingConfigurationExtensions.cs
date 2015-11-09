@@ -4,7 +4,6 @@ using Rebus.Exceptions;
 using Rebus.Injection;
 using Rebus.Logging;
 using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
 using Rebus.Sagas;
 using Rebus.Transport;
 

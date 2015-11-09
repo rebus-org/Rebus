@@ -1,7 +1,6 @@
 ﻿using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Transport;
-using Rebus.Transport.Msmq;
 
 namespace Rebus.Config
 {
