@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using Rebus.Pipeline.Receive;
+﻿using Rebus.Pipeline.Receive;
 
 namespace Rebus.Pipeline
 {

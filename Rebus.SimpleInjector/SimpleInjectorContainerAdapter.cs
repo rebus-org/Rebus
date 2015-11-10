@@ -6,7 +6,6 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
-using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Transport;
 using SimpleInjector;

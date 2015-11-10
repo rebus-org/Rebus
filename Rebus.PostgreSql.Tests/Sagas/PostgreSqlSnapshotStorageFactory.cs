@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Newtonsoft.Json;
 using Rebus.Auditing.Sagas;
 using Rebus.PostgreSql.Sagas;
 using Rebus.Sagas;

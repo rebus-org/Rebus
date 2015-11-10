@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Logging;
 using Rebus.Tests.Extensions;
 using Timer = System.Timers.Timer;
 
