@@ -73,7 +73,7 @@ namespace Rebus.Tests.Integration.Legacy
                 .Options(o =>
                 {
                     o.EnableLegacyCompatibility();
-                    o.LogPipeline(false);
+                    o.LogPipeline();
                 })
                 .Start();
         }

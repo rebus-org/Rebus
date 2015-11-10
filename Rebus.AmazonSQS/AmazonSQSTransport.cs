@@ -294,10 +294,9 @@ namespace Rebus.AmazonSQS
         private bool MessageIsExpired(Message message)
         {
             MessageAttributeValue value;
-            TimeSpan timeToBeReceived;
             if (message.MessageAttributes.TryGetValue(Headers.TimeToBeReceived, out value))
             {
-                timeToBeReceived = TimeSpan.Parse(value.StringValue);
+                var timeToBeReceived = TimeSpan.Parse(value.StringValue);
 
                 if (MessageIsExpiredUsingRebusSentTime(message, timeToBeReceived)) return true;
                 if (MessageIsExpiredUsingNativeSqsSentTimestamp(message, timeToBeReceived)) return true;

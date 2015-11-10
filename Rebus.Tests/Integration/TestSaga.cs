@@ -7,7 +7,6 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
-using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Sagas;
 using Rebus.Transport.InMem;
@@ -28,7 +27,7 @@ namespace Rebus.Tests.Integration
             _handlerActivator.Register(() => new MySaga(_recordedCalls));
 
             _bus = Configure.With(_handlerActivator)
-                .Logging(l => l.Console(minLevel: LogLevel.Debug))
+                .Logging(l => l.Console())
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(true), "test.sagas.input"))
                 .Options(o =>
                 {
