@@ -59,7 +59,7 @@ namespace Rebus.Tests.Integration
                 AnInt = 23
             });
 
-            await events.WaitUntil(e => e.Count >= 4, timeoutSeconds: 5);
+            await events.WaitUntil(e => e.Count >= 4);
 
             await Task.Delay(500);
 

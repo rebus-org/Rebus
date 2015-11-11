@@ -37,7 +37,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
             {
                 await next();
                 return;
-            };
+            }
 
             foreach (var invoker in invokers)
             {
