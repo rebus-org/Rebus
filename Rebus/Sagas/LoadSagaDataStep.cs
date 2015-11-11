@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -103,12 +104,12 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
             foreach (var sagaDataToInsert in newlyCreatedSagaDataToSave)
             {
-                await _sagaStorage.Insert(sagaDataToInsert.SagaData, sagaDataToInsert.CorrelationProperties);
+                await InsertSagaData(sagaDataToInsert);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToUpdate)
             {
-                await _sagaStorage.Update(sagaDataToUpdate.SagaData, sagaDataToUpdate.CorrelationProperties);
+                await UpdateSagaData(sagaDataToUpdate);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToDelete)
@@ -117,12 +118,98 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             }
         }
 
+        async Task InsertSagaData(RelevantSagaInfo sagaDataToInsert)
+        {
+            var sagaData = sagaDataToInsert.SagaData;
+            var saga = sagaDataToInsert.Saga;
+
+            var insertAttempts = 0;
+
+            var updateInstead = false;
+
+            while (insertAttempts < 10)
+            {
+                try
+                {
+                    insertAttempts++;
+
+                    if (updateInstead)
+                    {
+                        await _sagaStorage.Update(sagaData, sagaDataToInsert.CorrelationProperties);
+                    }
+
+                    await _sagaStorage.Insert(sagaData, sagaDataToInsert.CorrelationProperties);
+                }
+                catch (ConcurrencyException)
+                {
+                    var userHasOverriddenConflictResolutionMethod = saga.UserHasOverriddenConflictResolutionMethod();
+
+                    if (!userHasOverriddenConflictResolutionMethod)
+                    {
+                        throw;
+                    }
+
+                    var freshSagaData = await _sagaStorage.Find(sagaData.GetType(), "Id", sagaData.Id);
+
+                    if (freshSagaData == null)
+                        throw new ApplicationException(string.Format("Could not find saga data with ID {0} when attempting to invoke conflict resolution - it must have been deleted",
+                            sagaData.Id));
+
+
+                    await saga.InvokeConflictResolution(freshSagaData);
+
+                    sagaData.Revision = freshSagaData.Revision;
+
+                    updateInstead = true;
+                }
+            }
+        }
+
+        async Task UpdateSagaData(RelevantSagaInfo sagaDataToUpdate)
+        {
+            var sagaData = sagaDataToUpdate.SagaData;
+            var saga = sagaDataToUpdate.Saga;
+
+            var updateAttempts = 0;
+
+            while (updateAttempts < 10)
+            {
+                try
+                {
+                    updateAttempts++;
+
+                    await _sagaStorage.Update(sagaData, sagaDataToUpdate.CorrelationProperties);
+
+                    return;
+                }
+                catch (ConcurrencyException)
+                {
+                    var userHasOverriddenConflictResolutionMethod = sagaDataToUpdate.Saga.UserHasOverriddenConflictResolutionMethod();
+
+                    if (!userHasOverriddenConflictResolutionMethod)
+                    {
+                        throw;
+                    }
+
+                    var freshSagaData = await _sagaStorage.Find(sagaData.GetType(), "Id", sagaData.Id);
+
+                    if (freshSagaData == null)
+                        throw new ApplicationException(string.Format("Could not find saga data with ID {0} when attempting to invoke conflict resolution - it must have been deleted",
+                            sagaData.Id));
+
+                    await saga.InvokeConflictResolution(freshSagaData);
+
+                    sagaData.Revision = freshSagaData.Revision;
+                }
+            }
+        }
+
         class RelevantSagaInfo
         {
             public RelevantSagaInfo(ISagaData sagaData, IEnumerable<CorrelationProperty> correlationProperties, Saga saga)
             {
                 SagaData = sagaData;
-                
+
                 // only keep necessary correlation properties, i.e.
                 CorrelationProperties = correlationProperties
                     .GroupBy(p => p.PropertyName)
@@ -133,9 +220,9 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             }
 
             public ISagaData SagaData { get; private set; }
-            
+
             public List<CorrelationProperty> CorrelationProperties { get; private set; }
-            
+
             public Saga Saga { get; private set; }
         }
     }

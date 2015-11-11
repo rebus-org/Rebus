@@ -52,6 +52,7 @@
     <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
     <Compile Include="Assumptions\CanDoReflection.cs" />
     <Compile Include="Assumptions\Screenshot.cs" />
+    <Compile Include="Assumptions\TestReflectInheritance.cs" />
     <Compile Include="Assumptions\TestSpWho.cs" />
     <Compile Include="Assumptions\TestString.cs" />
     <Compile Include="Assumptions\TestTask.cs" />
@@ -101,6 +102,7 @@
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
+    <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
     <Compile Include="SharedCounter.cs" />

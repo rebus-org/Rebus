@@ -191,7 +191,6 @@
     <Compile Include="Logging\LoggingColors.cs" />
     <Compile Include="Logging\LogLevel.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
-    <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="Messages\Control\SubscribeRequest.cs" />
     <Compile Include="Messages\Control\UnsubscribeRequest.cs" />
