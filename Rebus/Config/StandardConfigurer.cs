@@ -48,6 +48,6 @@ namespace Rebus.Config
         public StandardConfigurer<TOther> OtherService<TOther>()
         {
             return new StandardConfigurer<TOther>(_injectionist, _options);
-        } 
+        }
     }
 }

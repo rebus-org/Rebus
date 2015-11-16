@@ -727,6 +727,11 @@
 
 * Fixed nuspec on StructureMap package, made SimpleInjector package dependency version criteria more tolerant, and updated the Unity dependency to v 4
 
+# 0.99.11
+
+* Added ability to immediately forward messages on certain exception types (optionally when those exceptions satisfy some predicate)
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
