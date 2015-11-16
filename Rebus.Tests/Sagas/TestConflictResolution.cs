@@ -39,7 +39,7 @@ namespace Rebus.Tests.Sagas
         [Test]
         public async Task ItWorks()
         {
-            const int messageCount = 100;
+            const int messageCount = 3;
 
             var resetEvent = new ManualResetEvent(false);
 
@@ -57,7 +57,7 @@ namespace Rebus.Tests.Sagas
 
             var linesWithInfoOrAbove = _loggerFactory.Where(l => l.Level > LogLevel.Debug);
 
-            Console.WriteLine(string.Join(Environment.NewLine, linesWithInfoOrAbove.Select(l => l.Text.Limit(120))));
+            Console.WriteLine(string.Join(Environment.NewLine, linesWithInfoOrAbove.Select(l => l.Text.Limit(120000))));
 
             resetEvent.WaitOrDie(TimeSpan.FromSeconds(4), "Did not receive the AllDone message!! One or more messages must have been moved to the error queue!");
 
@@ -108,7 +108,7 @@ namespace Rebus.Tests.Sagas
                     Data.IdsOfHandledMessages.Add(id);
                 }
 
-                Console.WriteLine("Hot diggity!! Mergins {0} into {1}", otherSagaData.Revision, Data.Revision);
+                Console.WriteLine("Hot diggity!! Merging {0} into {1}", otherSagaData.Revision, Data.Revision);
 
                 await PossiblyComplete();
             }
@@ -117,7 +117,11 @@ namespace Rebus.Tests.Sagas
             {
                 var messageId = _messageContext.Message.GetMessageId();
 
+                Console.WriteLine("ADDING {0}", messageId);
+
                 Data.IdsOfHandledMessages.Add(messageId);
+
+                await Task.Delay(100);
 
                 await PossiblyComplete();
             }

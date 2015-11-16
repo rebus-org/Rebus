@@ -43,6 +43,7 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
+            // first we get the relevant handler invokers
             var handlerInvokersForSagas = context.Load<HandlerInvokers>()
                 .Where(l => l.HasSaga)
                 .ToList();
@@ -51,65 +52,33 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             var label = message.GetMessageLabel();
 
             var body = message.Body;
+
+            // keep track of saga data instances in these two lists
             var loadedSagaData = new List<RelevantSagaInfo>();
             var newlyCreatedSagaData = new List<RelevantSagaInfo>();
 
+            // and then we process them
             foreach (var sagaInvoker in handlerInvokersForSagas)
             {
-                var foundExistingSagaData = false;
-
-                var correlationProperties = _sagaHelper.GetCorrelationProperties(body, sagaInvoker.Saga);
-                var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body);
-
-                foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
-                {
-                    var valueFromMessage = correlationProperty.ValueFromMessage(body);
-                    var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
-
-                    if (sagaData == null) continue;
-
-                    sagaInvoker.SetSagaData(sagaData);
-                    foundExistingSagaData = true;
-                    loadedSagaData.Add(new RelevantSagaInfo(sagaData, correlationProperties, sagaInvoker.Saga));
-
-                    _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, label);
-                    break;
-                }
-
-                if (!foundExistingSagaData)
-                {
-                    var messageType = body.GetType();
-                    var canBeInitiatedByThisMessageType = sagaInvoker.CanBeInitiatedBy(messageType);
-
-                    if (canBeInitiatedByThisMessageType)
-                    {
-                        var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
-                        sagaInvoker.SetSagaData(newSagaData);
-                        _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
-                        newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
-                    }
-                    else
-                    {
-                        _log.Debug("Could not find existing saga data for message {0}", label);
-                        sagaInvoker.SkipInvocation();
-                    }
-                }
+                await TryMountSagaDataOnInvoker(sagaInvoker, body, label, loadedSagaData, newlyCreatedSagaData);
             }
 
+            // invoke the rest of the pipeline (most likely also dispatching the incoming message to the now-ready saga handlers)
             await next();
 
+            // everything went well - let's divide saga data instances into those to insert, update, and delete
             var newlyCreatedSagaDataToSave = newlyCreatedSagaData.Where(s => !s.Saga.WasMarkedAsComplete && !s.Saga.WasMarkedAsUnchanged);
             var loadedSagaDataToUpdate = loadedSagaData.Where(s => !s.Saga.WasMarkedAsComplete && !s.Saga.WasMarkedAsUnchanged);
             var loadedSagaDataToDelete = loadedSagaData.Where(s => s.Saga.WasMarkedAsComplete);
 
             foreach (var sagaDataToInsert in newlyCreatedSagaDataToSave)
             {
-                await InsertSagaData(sagaDataToInsert);
+                await SaveSagaData(sagaDataToInsert, insert: true);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToUpdate)
             {
-                await UpdateSagaData(sagaDataToUpdate);
+                await SaveSagaData(sagaDataToUpdate, insert: false);
             }
 
             foreach (var sagaDataToUpdate in loadedSagaDataToDelete)
@@ -118,72 +87,78 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             }
         }
 
-        async Task InsertSagaData(RelevantSagaInfo sagaDataToInsert)
+        async Task TryMountSagaDataOnInvoker(HandlerInvoker sagaInvoker, object body, string label, List<RelevantSagaInfo> loadedSagaData, List<RelevantSagaInfo> newlyCreatedSagaData)
         {
-            var sagaData = sagaDataToInsert.SagaData;
-            var saga = sagaDataToInsert.Saga;
+            var foundExistingSagaData = false;
 
-            var insertAttempts = 0;
+            var correlationProperties = _sagaHelper.GetCorrelationProperties(body, sagaInvoker.Saga);
+            var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body);
 
-            var updateInstead = false;
-
-            while (insertAttempts < 10)
+            foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
             {
-                try
+                var valueFromMessage = correlationProperty.ValueFromMessage(body);
+                var sagaData =
+                    await
+                        _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
+
+                if (sagaData == null) continue;
+
+                sagaInvoker.SetSagaData(sagaData);
+                foundExistingSagaData = true;
+                loadedSagaData.Add(new RelevantSagaInfo(sagaData, correlationProperties, sagaInvoker.Saga));
+
+                _log.Debug("Found existing saga data with ID {0} for message {1}", sagaData.Id, label);
+                break;
+            }
+
+            if (!foundExistingSagaData)
+            {
+                var messageType = body.GetType();
+                var canBeInitiatedByThisMessageType = sagaInvoker.CanBeInitiatedBy(messageType);
+
+                if (canBeInitiatedByThisMessageType)
                 {
-                    insertAttempts++;
-
-                    if (updateInstead)
-                    {
-                        await _sagaStorage.Update(sagaData, sagaDataToInsert.CorrelationProperties);
-                    }
-
-                    await _sagaStorage.Insert(sagaData, sagaDataToInsert.CorrelationProperties);
+                    var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
+                    sagaInvoker.SetSagaData(newSagaData);
+                    _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
+                    newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
                 }
-                catch (ConcurrencyException)
+                else
                 {
-                    var userHasOverriddenConflictResolutionMethod = saga.UserHasOverriddenConflictResolutionMethod();
-
-                    if (!userHasOverriddenConflictResolutionMethod)
-                    {
-                        throw;
-                    }
-
-                    var freshSagaData = await _sagaStorage.Find(sagaData.GetType(), "Id", sagaData.Id);
-
-                    if (freshSagaData == null)
-                        throw new ApplicationException(string.Format("Could not find saga data with ID {0} when attempting to invoke conflict resolution - it must have been deleted",
-                            sagaData.Id));
-
-
-                    await saga.InvokeConflictResolution(freshSagaData);
-
-                    sagaData.Revision = freshSagaData.Revision;
-
-                    updateInstead = true;
+                    _log.Debug("Could not find existing saga data for message {0}", label);
+                    sagaInvoker.SkipInvocation();
                 }
             }
         }
 
-        async Task UpdateSagaData(RelevantSagaInfo sagaDataToUpdate)
+        async Task SaveSagaData(RelevantSagaInfo sagaDataToUpdate, bool insert)
         {
             var sagaData = sagaDataToUpdate.SagaData;
             var saga = sagaDataToUpdate.Saga;
 
-            var updateAttempts = 0;
+            var saveAttempts = 0;
 
-            while (updateAttempts < 10)
+            while (true)
             {
                 try
                 {
-                    updateAttempts++;
+                    saveAttempts++;
 
-                    await _sagaStorage.Update(sagaData, sagaDataToUpdate.CorrelationProperties);
+                    if (insert)
+                    {
+                        await _sagaStorage.Insert(sagaData, sagaDataToUpdate.CorrelationProperties);
+                    }
+                    else
+                    {
+                        await _sagaStorage.Update(sagaData, sagaDataToUpdate.CorrelationProperties);
+                    }
 
                     return;
                 }
-                catch (ConcurrencyException)
+                catch (ConcurrencyException ex)
                 {
+                    if (saveAttempts > 10) throw;
+
                     var userHasOverriddenConflictResolutionMethod = sagaDataToUpdate.Saga.UserHasOverriddenConflictResolutionMethod();
 
                     if (!userHasOverriddenConflictResolutionMethod)
