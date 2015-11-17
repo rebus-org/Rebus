@@ -24,7 +24,7 @@ namespace Rebus.LightInject
         {
             _serviceContainer = container;
 
-            _serviceContainer.Register<IMessageContext>(factory => getCurrentMessageContext());
+            _serviceContainer.Register(factory => GetCurrentMessageContext());
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Rebus.LightInject
         /// </summary>
         public void SetBus(IBus bus)
         {
-            _serviceContainer.Register<IBus>(factory => bus, new PerContainerLifetime());
+            _serviceContainer.Register(factory => bus, new PerContainerLifetime());
 
             // Force the per container lifetime to get the reference to the bus object so it will be disposed when the container is disposed
             _serviceContainer.GetInstance<IBus>();
@@ -64,7 +64,7 @@ namespace Rebus.LightInject
         /// Returns the current message context and ensures it is not null
         /// </summary>
         /// <returns>IMessageContext</returns>
-        private IMessageContext getCurrentMessageContext()
+        static IMessageContext GetCurrentMessageContext()
         {
             var currentMessageContext = MessageContext.Current;
             if (currentMessageContext == null)

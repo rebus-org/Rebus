@@ -28,6 +28,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Release\Rebus.LightInject.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="LightInject, Version=4.0.0.0, Culture=neutral, processorArchitecture=MSIL">
@@ -48,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Rebus.LightInject.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus\Rebus.csproj">

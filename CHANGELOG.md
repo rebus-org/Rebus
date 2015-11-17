@@ -731,6 +731,10 @@
 
 * Added ability to immediately forward messages on certain exception types (optionally when those exceptions satisfy some predicate)
 
+# 0.99.12
+
+* Added LightInject container adapter - thanks [puzsol]
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -755,6 +759,7 @@
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pruiz]: https://github.com/pruiz
+[puzsol]: https://github.com/puzsol
 [seankearon]: https://github.com/seankearon
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
