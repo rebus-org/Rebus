@@ -25,7 +25,7 @@ namespace Rebus.LightInject.Tests
             {
                 var componentName = string.Format("{0}:{1}", typeof(THandler).FullName, handlerInterfaceType.FullName);
 
-                _serviceContainer.Register(handlerInterfaceType, typeof(THandler),componentName);
+                _serviceContainer.Register(handlerInterfaceType, typeof(THandler), componentName);
             }
         }
 
