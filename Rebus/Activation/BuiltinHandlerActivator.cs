@@ -27,6 +27,9 @@ namespace Rebus.Activation
         /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
+
             var instancesFromNoArgumentFactories = _handlerFactoriesNoArguments
                 .OfType<Func<IHandleMessages<TMessage>>>().Select(factory => factory());
 
