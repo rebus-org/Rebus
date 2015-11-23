@@ -180,7 +180,7 @@ namespace Rebus.Bus
         /// </summary>
         public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
         {
-            if (eventMessage == null) throw new ArgumentNullException("eventMessage");
+            if (eventMessage == null) throw new ArgumentNullException(nameof(eventMessage));
 
             var messageType = eventMessage.GetType();
             var topic = messageType.GetSimpleAssemblyQualifiedName();
@@ -210,7 +210,7 @@ namespace Rebus.Bus
 
             if (subscriberAddress == null)
             {
-                throw new InvalidOperationException(string.Format("Cannot subscribe to '{0}' because this endpoint does not have an input queue!", topic));
+                throw new InvalidOperationException($"Cannot subscribe to '{topic}' because this endpoint does not have an input queue!");
             }
 
             if (_subscriptionStorage.IsCentralized)
@@ -241,7 +241,7 @@ namespace Rebus.Bus
 
             if (subscriberAddress == null)
             {
-                throw new InvalidOperationException(string.Format("Cannot unsubscribe from '{0}' because this endpoint does not have an input queue!", topic));
+                throw new InvalidOperationException($"Cannot unsubscribe from '{topic}' because this endpoint does not have an input queue!");
             }
 
             if (_subscriptionStorage.IsCentralized)
@@ -316,8 +316,9 @@ namespace Rebus.Bus
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException(string.Format("Could not get the return address from the '{0}' header of the incoming message with ID {1}",
-                    Headers.ReturnAddress, transportMessage.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>"), exception);
+                var message = $"Could not get the return address from the '{Headers.ReturnAddress}' header of the incoming" +
+                              $" message with ID {transportMessage.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>"}";
+                throw new RebusApplicationException(message, exception);
             }
         }
 
@@ -329,8 +330,10 @@ namespace Rebus.Bus
             }
             catch (Exception exception)
             {
-                throw new InvalidOperationException(string.Format("Attempted to reply, but could not get the current receive context - are you calling Reply outside of a message handler? Reply can only be called within a message handler because the destination address is found as the '{0}' header on the incoming message",
-                    Headers.ReturnAddress), exception);
+                var message = "Attempted to reply, but could not get the current receive context - are you calling Reply outside of" +
+                              " a message handler? Reply can only be called within a message handler because the destination address" +
+                              $" is found as the '{Headers.ReturnAddress}' header on the incoming message";
+                throw new InvalidOperationException(message, exception);
             }
         }
 
@@ -366,7 +369,7 @@ namespace Rebus.Bus
 
             if (transactionContext == null)
             {
-                throw new InvalidOperationException(string.Format("Attempted to send {0} to {1} outside of a transaction context!", transportMessage.GetMessageLabel(), destinationAddress));
+                throw new InvalidOperationException($"Attempted to send {transportMessage.GetMessageLabel()} to {destinationAddress} outside of a transaction context!");
             }
 
             await _transport.Send(destinationAddress, transportMessage, transactionContext);
@@ -445,7 +448,8 @@ namespace Rebus.Bus
         {
             lock (_workers)
             {
-                var workerName = string.Format("Rebus {0} worker {1}", _busId, _workers.Count + 1);
+                var workerName = $"Rebus {_busId} worker {_workers.Count + 1}";
+
                 _log.Debug("Adding worker {0}", workerName);
 
                 try
@@ -455,7 +459,7 @@ namespace Rebus.Bus
                 }
                 catch (Exception exception)
                 {
-                    throw new RebusApplicationException(string.Format("Could not create {0}", workerName), exception);
+                    throw new RebusApplicationException($"Could not create {workerName}", exception);
                 }
             }
         }
@@ -480,16 +484,12 @@ namespace Rebus.Bus
         /// </summary>
         public override string ToString()
         {
-            return string.Format("RebusBus {0}", _busId);
+            return $"RebusBus {_busId}";
         }
 
         /// <summary>
         /// Gets the API for advanced features of the bus
         /// </summary>
-        public IAdvancedApi Advanced
-        {
-            // the advanced API is defined in the other partial RebusBus class definition in the AdvancedRebusBus.cs file
-            get { return new AdvancedApi(this); }
-        }
+        public IAdvancedApi Advanced => new AdvancedApi(this);
     }
 }

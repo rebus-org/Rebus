@@ -56,13 +56,13 @@ namespace Rebus.Config
         {
             if (string.IsNullOrWhiteSpace(timeoutManagerAddress))
             {
-                throw new ArgumentException(string.Format("Cannot use '{0}' as an external timeout manager address!", timeoutManagerAddress), "timeoutManagerAddress");
+                throw new ArgumentException($"Cannot use '{timeoutManagerAddress}' as an external timeout manager address!", nameof(timeoutManagerAddress));
             }
 
             if (!string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull))
             {
-                throw new InvalidOperationException(string.Format("Cannot set external timeout manager address to '{0}' because it has already been set to '{1}' - please set it only once!  (this operation COULD have been accepted, but it is probably an indication of an error in your configuration code that this value is configured twice, so we figured it was best to let you know)", 
-                    timeoutManagerAddress, _options.ExternalTimeoutManagerAddressOrNull));
+                throw new InvalidOperationException(
+                    $"Cannot set external timeout manager address to '{timeoutManagerAddress}' because it has already been set to '{_options.ExternalTimeoutManagerAddressOrNull}' - please set it only once!  (this operation COULD have been accepted, but it is probably an indication of an error in your configuration code that this value is configured twice, so we figured it was best to let you know)");
             }
 
             _injectionist.Register<ITimeoutManager>(c => new ThrowingTimeoutManager());
@@ -132,7 +132,7 @@ Receive pipeline:
                 pipeline.Select((step, i) =>
                 {
                     var stepType = step.GetType().FullName;
-                    var stepString = string.Format("    {0}", stepType);
+                    var stepString = $"    {stepType}";
 
                     if (verbose)
                     {
@@ -157,9 +157,7 @@ Receive pipeline:
                 .OfType<StepDocumentationAttribute>()
                 .FirstOrDefault();
 
-            return docsAttribute != null
-                ? docsAttribute.Text
-                : null;
+            return docsAttribute?.Text;
         }
     }
 }

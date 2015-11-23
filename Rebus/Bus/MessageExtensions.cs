@@ -117,12 +117,12 @@ namespace Rebus.Bus
                 type = "<unknown>";
             }
 
-            return string.Format("{0}/{1}", type, id);
+            return $"{type}/{id}";
         }
 
         static string GetTypeNameFromBodyObjectOrNull(object body)
         {
-            return body == null ? null : body.GetType().GetSimpleAssemblyQualifiedName();
+            return body?.GetType().GetSimpleAssemblyQualifiedName();
         }
     }
 }

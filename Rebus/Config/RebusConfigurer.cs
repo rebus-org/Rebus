@@ -265,15 +265,9 @@ namespace Rebus.Config
 
             var busInstance = _injectionist.Get<IBus>();
 
-            if (containerAdapter != null)
-            {
-                containerAdapter.SetBus(busInstance);
-            }
+            containerAdapter?.SetBus(busInstance);
 
-            if (startAction != null)
-            {
-                startAction();
-            }
+            startAction?.Invoke();
 
             _hasBeenStarted = true;
 

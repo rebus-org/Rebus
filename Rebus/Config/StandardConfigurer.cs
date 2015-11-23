@@ -20,10 +20,7 @@ namespace Rebus.Config
             _options = options;
         }
 
-        internal Options Options
-        {
-            get { return _options; }
-        }
+        internal Options Options => _options;
 
         /// <summary>
         /// Registers the given factory function as a resolve of the given <typeparamref name="TService"/> service

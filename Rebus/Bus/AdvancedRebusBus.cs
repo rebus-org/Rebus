@@ -24,25 +24,13 @@ namespace Rebus.Bus
                 _rebusBus = rebusBus;
             }
 
-            public IWorkersApi Workers
-            {
-                get { return new WorkersApi(_rebusBus); }
-            }
+            public IWorkersApi Workers => new WorkersApi(_rebusBus);
 
-            public ITopicsApi Topics
-            {
-                get { return new TopicsApi(_rebusBus); }
-            }
+            public ITopicsApi Topics => new TopicsApi(_rebusBus);
 
-            public IRoutingApi Routing
-            {
-                get { return new RoutingApi(_rebusBus); }
-            }
+            public IRoutingApi Routing => new RoutingApi(_rebusBus);
 
-            public ITransportMessageApi TransportMessage
-            {
-                get { return new TransportMessageApi(_rebusBus); }
-            }
+            public ITransportMessageApi TransportMessage => new TransportMessageApi(_rebusBus);
         }
 
         class TransportMessageApi : ITransportMessageApi
@@ -128,10 +116,7 @@ namespace Rebus.Bus
                 _rebusBus = rebusBus;
             }
 
-            public int Count
-            {
-                get { return _rebusBus.GetNumberOfWorkers(); }
-            }
+            public int Count => _rebusBus.GetNumberOfWorkers();
 
             public void SetNumberOfWorkers(int numberOfWorkers)
             {

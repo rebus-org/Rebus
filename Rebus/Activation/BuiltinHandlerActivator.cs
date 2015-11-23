@@ -85,13 +85,13 @@ namespace Rebus.Activation
         {
             if (bus == null)
             {
-                throw new ArgumentNullException("bus", "You need to provide a bus instance in order to call this method!");
+                throw new ArgumentNullException(nameof(bus), "You need to provide a bus instance in order to call this method!");
             }
             if (Bus != null)
             {
-                throw new InvalidOperationException(string.Format("Cannot set bus to {0} because it has already been set to {1}",
-                bus, Bus));
+                throw new InvalidOperationException($"Cannot set bus to {bus} because it has already been set to {Bus}");
             }
+
             Bus = bus;
         }
 

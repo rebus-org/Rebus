@@ -18,8 +18,8 @@ namespace Rebus.Auditing.Messages
         /// </summary>
         public static void EnableMessageAuditing(this OptionsConfigurer configurer, string auditQueue)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (string.IsNullOrWhiteSpace(auditQueue)) throw new ArgumentNullException("auditQueue");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (string.IsNullOrWhiteSpace(auditQueue)) throw new ArgumentNullException(nameof(auditQueue));
 
             configurer.Register(c => new AuditingHelper(c.Get<ITransport>(), auditQueue));
 

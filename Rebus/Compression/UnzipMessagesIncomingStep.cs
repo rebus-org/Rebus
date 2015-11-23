@@ -45,8 +45,11 @@ namespace Rebus.Compression
 
             if (contentEncoding != ZipMessagesOutgoingStep.GzipEncodingHeader)
             {
-                throw new ArgumentException(string.Format("The message {0} has a '{1}' with the value '{2}', but this middleware only knows how to decompress '{3}'",
-                    transportMessage.GetMessageLabel(), Headers.ContentEncoding, contentEncoding, ZipMessagesOutgoingStep.GzipEncodingHeader));
+                var message = $"The message {transportMessage.GetMessageLabel()} has a '{Headers.ContentEncoding}' with the" +
+                              $" value '{contentEncoding}', but this middleware only knows how to decompress" +
+                              $" '{ZipMessagesOutgoingStep.GzipEncodingHeader}'";
+
+                throw new ArgumentException(message);
             }
 
             var headers = transportMessage.Headers.Clone();

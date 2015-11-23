@@ -16,7 +16,7 @@ namespace Rebus.Auditing.Messages
             _transport = transport;
         }
 
-        public string AuditQueue { get; private set; }
+        public string AuditQueue { get; }
 
         public void EnsureAuditQueueHasBeenCreated()
         {
