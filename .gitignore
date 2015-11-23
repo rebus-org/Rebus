@@ -21,3 +21,6 @@ sqs_connectionstring.txt
 azure_storage_connection_string.txt
 .vs
 .vs/*
+_NCrunch_*
+*.user
+*.backup
