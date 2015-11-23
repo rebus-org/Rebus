@@ -735,11 +735,16 @@
 
 * Added LightInject container adapter - thanks [puzsol]
 
+# 0.99.13
+
+* Added DryIoc container adapter - thanks [dadhi]
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
 [caspertdk]: https://github.com/caspertdk
+[dadhi]: https://github.com/dadhi
 [dev4ce]: https://github.com/dev4ce
 [dimajanzen]: https://github.com/dimajanzen
 [DixonD-git]: https://github.com/DixonD-git
