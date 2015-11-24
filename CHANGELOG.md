@@ -739,6 +739,11 @@
 
 * Added DryIoc container adapter - thanks [dadhi]
 
+# 0.99.14
+
+* General handling of receive errors by logging as warning
+
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
