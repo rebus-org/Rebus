@@ -25,6 +25,11 @@ namespace Rebus.AzureServiceBus
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
 
+        /// <summary>
+        /// Subscriber "addresses" are prefixed with this bad boy so we can recognize it and publish to a topic client instead
+        /// </summary>
+        const string MagicSubscriptionPrefix = "subscription/";
+
         static readonly TimeSpan[] RetryWaitTimes =
         {
             TimeSpan.FromSeconds(0.1),
@@ -66,7 +71,7 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
@@ -200,10 +205,10 @@ namespace Rebus.AzureServiceBus
 
             if (str.Length < maxLengthPrettySafe) return str;
 
-            return string.Format("{0} (... cut out because length exceeded {1} characters ...) {2}",
-                str.Substring(0, 8000), 
-                maxLengthPrettySafe,
-                str.Substring(str.Length - 8000));
+            var firstPart = str.Substring(0, 8000);
+            var lastPart = str.Substring(str.Length - 8000);
+
+            return $"{firstPart} (... cut out because length exceeded {maxLengthPrettySafe} characters ...) {lastPart}";
         }
 
         /// <summary>
@@ -307,7 +312,7 @@ namespace Rebus.AzureServiceBus
                                         }
                                         catch (MessagingEntityNotFoundException exception)
                                         {
-                                            throw new MessagingEntityNotFoundException(string.Format("Could not send to '{0}'!", destinationAddress), exception);
+                                            throw new MessagingEntityNotFoundException($"Could not send to '{destinationAddress}'!", exception);
                                         }
                                     }
                                 });
@@ -324,9 +329,9 @@ namespace Rebus.AzureServiceBus
 
         async Task Send(string destinationAddress, BrokeredMessage brokeredMessageToSend)
         {
-            if (destinationAddress.StartsWith("subscription/"))
+            if (destinationAddress.StartsWith(MagicSubscriptionPrefix))
             {
-                var topic = destinationAddress.Substring(destinationAddress.IndexOf('/') + 1);
+                var topic = destinationAddress.Substring(MagicSubscriptionPrefix.Length);
 
                 await GetTopicClient(topic).SendAsync(brokeredMessageToSend);
             }
@@ -363,7 +368,7 @@ namespace Rebus.AzureServiceBus
                 return new FakeDisposable();
             }
 
-            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
+            var renewalTask = new AsyncTask($"RenewPeekLock-{messageId}",
                 async () =>
                 {
                     _log.Info("Renewing peek lock for message with ID {0}", messageId);
@@ -468,10 +473,7 @@ namespace Rebus.AzureServiceBus
             return queueClient;
         }
 
-        public string Address
-        {
-            get { return _inputQueueAddress; }
-        }
+        public string Address => _inputQueueAddress;
 
         public void Dispose()
         {
@@ -512,7 +514,7 @@ namespace Rebus.AzureServiceBus
         {
             var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
 
-            return new[] { string.Format("subscription/{0}", normalizedTopic) };
+            return new[] {$"{MagicSubscriptionPrefix}{normalizedTopic}"};
         }
 
         /// <summary>
@@ -584,10 +586,11 @@ namespace Rebus.AzureServiceBus
         {
             if (subscriberAddress == _inputQueueAddress) return;
 
-            throw new ArgumentException(
-                string.Format(
-                    "Cannot register subscriptions endpoint with input queue '{0}' in endpoint with input queue '{1}'! The Azure Service Bus transport functions as a centralized subscription storage, which means that all subscribers are capable of managing their own subscriptions",
-                    subscriberAddress, _inputQueueAddress));
+            var message = $"Cannot register subscriptions endpoint with input queue '{subscriberAddress}' in endpoint with input" +
+                          $" queue '{_inputQueueAddress}'! The Azure Service Bus transport functions as a centralized subscription" +
+                          " storage, which means that all subscribers are capable of managing their own subscriptions";
+
+            throw new ArgumentException(message);
         }
 
         TopicDescription EnsureTopicExists(string normalizedTopic)
@@ -604,7 +607,7 @@ namespace Rebus.AzureServiceBus
                 }
                 catch (Exception exception)
                 {
-                    throw new ArgumentException(string.Format("Could not create topic '{0}'", normalizedTopic), exception);
+                    throw new ArgumentException($"Could not create topic '{normalizedTopic}'", exception);
                 }
             });
         }
@@ -612,9 +615,6 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Always returns true because Azure Service Bus topics and subscriptions are global
         /// </summary>
-        public bool IsCentralized
-        {
-            get { return true; }
-        }
+        public bool IsCentralized => true;
     }
 }
