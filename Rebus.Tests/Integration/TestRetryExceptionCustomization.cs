@@ -52,7 +52,7 @@ namespace Rebus.Tests.Integration
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             var significantStuff = _listLoggerFactory.Where(l => l.Level >= LogLevel.Warn).ToList();
 
