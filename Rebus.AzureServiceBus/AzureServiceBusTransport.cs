@@ -372,8 +372,7 @@ namespace Rebus.AzureServiceBus
                 async () =>
                 {
                     _log.Info("Renewing peek lock for message with ID {0}", messageId);
-
-                    await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
+                    await brokeredMessage.RenewLockAsync();
                 },
                 _rebusLoggerFactory,
                 prettyInsignificant: true)
