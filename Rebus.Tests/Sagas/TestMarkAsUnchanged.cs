@@ -26,7 +26,7 @@ namespace Rebus.Tests.Sagas
         }
 
         [Test]
-        public async Task CanMarkSagaAsComplete()
+        public async Task CanMarkSagaAsUnchanged()
         {
             var registeredRevisions = new ConcurrentQueue<int>();
             _activator.Register(() => new SomeSaga(registeredRevisions));
