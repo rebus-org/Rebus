@@ -743,7 +743,9 @@
 
 * General handling of receive errors by logging as warning
 
+# 0.99.15
 
+* Changed back to logging full exception details in the final ERROR log event
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
