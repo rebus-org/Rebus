@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Rebus.TransactionScope")]
+[assembly: AssemblyTitle("Rebus.TransactionScopes.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Rebus.TransactionScope")]
+[assembly: AssemblyProduct("Rebus.TransactionScopes.Tests")]
 [assembly: AssemblyCopyright("Copyright ©  2015")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("63fde9a0-6880-4a72-bde0-78b1e019bdcd")]
+[assembly: Guid("6eeb0bce-70dd-4c20-9ea6-5303c4284736")]
 
 // Version information for an assembly consists of the following four values:
 //

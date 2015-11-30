@@ -7,8 +7,8 @@
     <ProjectGuid>{C92056C5-6A52-42A7-ACD5-0D06D0390F57}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.TransactionScope.Tests</RootNamespace>
-    <AssemblyName>Rebus.TransactionScope.Tests</AssemblyName>
+    <RootNamespace>Rebus.TransactionScopes.Tests</RootNamespace>
+    <AssemblyName>Rebus.TransactionScopes.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestClientTransactionScope.cs" />
     <Compile Include="TestTransactionScopeSupport.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -51,9 +52,9 @@
       <Project>{959C65AB-D21A-4582-BC4F-06D1425FF274}</Project>
       <Name>Rebus.Tests</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rebus.TransactionScope\Rebus.TransactionScope.csproj">
+    <ProjectReference Include="..\Rebus.TransactionScopes\Rebus.TransactionScopes.csproj">
       <Project>{A750AD17-F3ED-4167-9664-667A44AA2B76}</Project>
-      <Name>Rebus.TransactionScope</Name>
+      <Name>Rebus.TransactionScopes</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>

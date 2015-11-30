@@ -3,7 +3,7 @@ using Rebus.Config;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 
-namespace Rebus.TransactionScope
+namespace Rebus.TransactionScopes
 {
     /// <summary>
     /// Configuration extensions for enabling automatic execution if handlers inside <see cref="TransactionScope"/>

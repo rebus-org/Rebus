@@ -8,7 +8,7 @@ using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.TransactionScope.Tests
+namespace Rebus.TransactionScopes.Tests
 {
     [TestFixture]
     public class TestTransactionScopeSupport : FixtureBase

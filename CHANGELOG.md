@@ -747,6 +747,11 @@
 
 * Changed back to logging full exception details in the final ERROR log event
 
+# 0.99.16
+
+* Added `EnlistRebus` option to `Rebus.TransactionScopes`, allowing for easily enlisting an ambient Rebus transaction in an ambient .NET transaction
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

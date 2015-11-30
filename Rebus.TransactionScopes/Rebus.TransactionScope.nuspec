@@ -9,7 +9,7 @@
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Automatic TransactionScope support for Rebus</description>
+    <description>TransactionScope support for Rebus, both for clients and handlers</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus configuration config transactions transactionscope</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
@@ -18,7 +18,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Rebus.TransactionScope.dll" target="lib\NET45" />
-    <file src="bin\Release\Rebus.TransactionScope.xml" target="lib\NET45" />
+    <file src="bin\Release\Rebus.TransactionScopes.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.TransactionScopes.xml" target="lib\NET45" />
   </files>
 </package>
