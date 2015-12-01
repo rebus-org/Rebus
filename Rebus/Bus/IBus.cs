@@ -55,9 +55,29 @@ namespace Rebus.Bus
         Task Subscribe<TEvent>();
 
         /// <summary>
+        /// Subscribes to the topic defined by the assembly-qualified name of <paramref name="eventType"/>. 
+        /// While this kind of subscription can work universally with the general topic-based routing, it works especially well with type-based routing,
+        /// which can be enabled by going 
+        /// <code>
+        /// Configure.With(...)
+        ///     .(...)
+        ///     .Routing(r => r.TypeBased()
+        ///             .Map&lt;SomeMessage&gt;("someEndpoint")
+        ///             .(...))
+        /// </code>
+        /// in the configuration
+        /// </summary>
+        Task Subscribe(Type eventType);
+
+        /// <summary>
         /// Unsubscribes from the topic defined by the assembly-qualified name of <typeparamref name="TEvent"/>
         /// </summary>
         Task Unsubscribe<TEvent>();
+        
+        /// <summary>
+        /// Unsubscribes from the topic defined by the assembly-qualified name of <paramref name="eventType"/>
+        /// </summary>
+        Task Unsubscribe(Type eventType);
 
         /// <summary>
         /// Publishes the event message on the topic defined by the assembly-qualified name of the type of the message.

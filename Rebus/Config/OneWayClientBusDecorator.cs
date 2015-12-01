@@ -50,9 +50,19 @@ namespace Rebus.Config
             return _innerBus.Subscribe<TEvent>();
         }
 
+        public Task Subscribe(Type eventType)
+        {
+            return _innerBus.Subscribe(eventType);
+        }
+
         public Task Unsubscribe<TEvent>()
         {
             return _innerBus.Unsubscribe<TEvent>();
+        }
+
+        public Task Unsubscribe(Type eventType)
+        {
+            return _innerBus.Unsubscribe(eventType);
         }
 
         public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
