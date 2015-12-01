@@ -751,6 +751,11 @@
 
 * Added `EnlistRebus` option to `Rebus.TransactionScopes`, allowing for easily enlisting an ambient Rebus transaction in an ambient .NET transaction
 
+# 0.99.17
+
+* Added `IBus` API overloads for `Subscribe` and `Unsubscribe` that accept a `Type` as a parameter - thanks [gertjvr]
+
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -761,6 +766,7 @@
 [dimajanzen]: https://github.com/dimajanzen
 [DixonD-git]: https://github.com/DixonD-git
 [fritsduus]: https://github.com/fritsduus
+[gertjvr]: https://github.com/gertjvr
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
