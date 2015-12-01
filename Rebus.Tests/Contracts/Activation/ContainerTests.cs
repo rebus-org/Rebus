@@ -139,9 +139,19 @@ namespace Rebus.Tests.Contracts.Activation
                 return _bus.Subscribe<TEvent>();
             }
 
+            public Task Subscribe(Type eventType)
+            {
+                return _bus.Subscribe(eventType);
+            }
+
             public Task Unsubscribe<TEvent>()
             {
                 return _bus.Unsubscribe<TEvent>();
+            }
+
+            public Task Unsubscribe(Type eventType)
+            {
+                return _bus.Unsubscribe(eventType);
             }
 
             public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
@@ -229,7 +239,17 @@ namespace Rebus.Tests.Contracts.Activation
                 throw new NotImplementedException();
             }
 
+            public Task Subscribe(Type eventType)
+            {
+                throw new NotImplementedException();
+            }
+
             public Task Unsubscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Unsubscribe(Type eventType)
             {
                 throw new NotImplementedException();
             }
