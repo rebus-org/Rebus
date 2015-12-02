@@ -25,7 +25,6 @@ namespace Rebus.Bus
     /// </summary>
     public partial class RebusBus : IBus
     {
-
         static int _busIdCounter;
 
         readonly int _busId = Interlocked.Increment(ref _busIdCounter);

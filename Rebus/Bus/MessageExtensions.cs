@@ -53,18 +53,9 @@ namespace Rebus.Bus
 
         static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
         {
-            // if we're currently handling a message
-            var returnAddress = AmbientTransactionContext.Current
-                ?.GetOrNull<IncomingStepContext>(StepContext.StepContextKey)
-                ?.Load<TransportMessage>().Headers.GetValueOrNull(Headers.ReturnAddress);
-
-            if (returnAddress != null)
-            {
-                headers[Headers.ReturnAddress] = returnAddress;
-            }
-
             headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
 
+            // do not overwrite the recipient if it has been set
             if (!headers.ContainsKey(Headers.DeferredRecipient))
             {
                 headers[Headers.DeferredRecipient] = destinationAddress;

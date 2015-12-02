@@ -1,4 +1,5 @@
-﻿using Rebus.Messages;
+﻿using System.Collections.Generic;
+using Rebus.Messages;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline
@@ -34,6 +35,12 @@ namespace Rebus.Pipeline
         /// Gets the <see cref="IMessageContext.Message"/> model for the message currently being handled.
         /// </summary>
         public Message Message => IncomingStepContext.Load<Message>();
+
+        /// <summary>
+        /// Gets the headers dictionary of the incoming message (same as accessing <see cref="IMessageContext.TransportMessage.Headers"/>
+        /// or <see cref="IMessageContext.Message.Headers"/> if the message has been properly deserialized)
+        /// </summary>
+        public Dictionary<string, string> Headers => TransportMessage.Headers;
 
         /// <summary>
         /// Gets the current message context from the current <see cref="AmbientTransactionContext"/> (accessed by
