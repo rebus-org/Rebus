@@ -754,7 +754,7 @@
 # 0.99.17
 
 * Added `IBus` API overloads for `Subscribe` and `Unsubscribe` that accept a `Type` as a parameter - thanks [gertjvr]
-
+* Fixed `ExpiredMessagesCleanup` warning because of locked rows when handling message for a long time with the SQL Server transport
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
