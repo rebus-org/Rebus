@@ -46,7 +46,7 @@
   <ItemGroup>
     <Compile Include="AmazonSQSTransport.cs" />
     <Compile Include="Config\AmazonSQSConfigurationExtensions.cs" />
-    <Compile Include="Config\OutputQueue.cs" />
+    <Compile Include="Config\Ey.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
