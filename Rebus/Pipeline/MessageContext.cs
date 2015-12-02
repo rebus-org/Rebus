@@ -37,8 +37,8 @@ namespace Rebus.Pipeline
         public Message Message => IncomingStepContext.Load<Message>();
 
         /// <summary>
-        /// Gets the headers dictionary of the incoming message (same as accessing <see cref="IMessageContext.TransportMessage.Headers"/>
-        /// or <see cref="IMessageContext.Message.Headers"/> if the message has been properly deserialized)
+        /// Gets the headers dictionary of the incoming message (same as accessing the Headers of the context's transport message,
+        /// or the logical message if the message has been properly deserialized)
         /// </summary>
         public Dictionary<string, string> Headers => TransportMessage.Headers;
 
