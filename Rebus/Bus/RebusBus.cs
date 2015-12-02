@@ -104,8 +104,8 @@ namespace Rebus.Bus
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-
-            logicalMessage.SetDeferHeader(RebusTime.Now + delay);
+            
+            logicalMessage.SetDeferHeaders(RebusTime.Now + delay, _transport.Address);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
 

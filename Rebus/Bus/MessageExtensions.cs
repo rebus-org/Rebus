@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.Bus
@@ -37,22 +38,37 @@ namespace Rebus.Bus
         /// <summary>
         /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
         /// </summary>
-        public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
+        public static void SetDeferHeaders(this Message message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
         {
-            InnerSetDeferHeader(approximateDeliveryTime, message.Headers);
+            InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
         }
 
         /// <summary>
         /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
         /// </summary>
-        public static void SetDeferHeader(this TransportMessage message, DateTimeOffset approximateDeliveryTime)
+        public static void SetDeferHeaders(this TransportMessage message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
         {
-            InnerSetDeferHeader(approximateDeliveryTime, message.Headers);
+            InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
         }
 
-        static void InnerSetDeferHeader(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers)
+        static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
         {
+            // if we're currently handling a message
+            var returnAddress = AmbientTransactionContext.Current
+                ?.GetOrNull<IncomingStepContext>(StepContext.StepContextKey)
+                ?.Load<TransportMessage>().Headers.GetValueOrNull(Headers.ReturnAddress);
+
+            if (returnAddress != null)
+            {
+                headers[Headers.ReturnAddress] = returnAddress;
+            }
+
             headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
+
+            if (!headers.ContainsKey(Headers.DeferredRecipient))
+            {
+                headers[Headers.DeferredRecipient] = destinationAddress;
+            }
         }
 
         /// <summary>

@@ -54,7 +54,7 @@ namespace Rebus.Bus
                 var transportMessage = GetCloneOfCurrentTransportMessage(optionalAdditionalHeaders);
                 var timeoutManagerAddress = _rebusBus.GetTimeoutManagerAddress();
 
-                transportMessage.SetDeferHeader(RebusTime.Now + delay);
+                transportMessage.SetDeferHeaders(RebusTime.Now + delay, _rebusBus._transport.Address);
 
                 await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
             }

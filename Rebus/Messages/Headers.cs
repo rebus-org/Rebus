@@ -55,6 +55,11 @@ namespace Rebus.Messages
         public const string DeferredUntil = "rbs2-deferred-until";
 
         /// <summary>
+        /// Indicates to which input queue the deferred message must be delivered back to
+        /// </summary>
+        public const string DeferredRecipient = "rbs2-deferred-recipient";
+
+        /// <summary>
         /// Indicates a time span (as a string, on the form hh:MM:ss) after which the queueing system can safely delete the message and thus never deliver it
         /// </summary>
         public const string TimeToBeReceived = "rbs2-time-to-be-received";
