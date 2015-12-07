@@ -37,16 +37,16 @@ namespace Rebus.Tests.Sagas
             await _activator.Bus.SendLocal("1/min");
             await _activator.Bus.SendLocal("1/ven");
 
-            await Task.Delay(400);
+            await Task.Delay(1000);
 
             await _activator.Bus.SendLocal("1/ignore!");
 
-            await Task.Delay(400);
+            await Task.Delay(1000);
 
             await _activator.Bus.SendLocal("1/hej");
             await _activator.Bus.SendLocal("1/igen");
 
-            await Task.Delay(400);
+            await Task.Delay(1000);
 
             Assert.That(registeredRevisions.ToArray(), Is.EqualTo(new[] { 0, 0, 1, 2, 3, 4, 4, 5 }));
         }
