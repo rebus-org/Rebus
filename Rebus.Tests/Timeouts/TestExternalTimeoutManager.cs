@@ -50,7 +50,8 @@ namespace Rebus.Tests.Timeouts
         {
             var headers = new Dictionary<string, string>
             {
-                {Headers.DeferredUntil, DateTimeOffset.Now.Add(TimeSpan.FromSeconds(5)).ToIso8601DateTimeOffset()}
+                {Headers.DeferredUntil, DateTimeOffset.Now.Add(TimeSpan.FromSeconds(5)).ToIso8601DateTimeOffset()},
+                {Headers.DeferredRecipient, _queueName}
             };
 
             var stopwatch = Stopwatch.StartNew();

@@ -28,6 +28,9 @@ namespace Rebus.Backoff
         /// </summary>
         public static OptionsConfigurer SetBackoffTimes(this OptionsConfigurer configurer, IEnumerable<TimeSpan> backoffTimes)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
+
             var list = backoffTimes.ToList();
 
             if (!list.Any())

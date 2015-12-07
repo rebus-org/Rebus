@@ -52,6 +52,7 @@
     <Compile Include="Activation\TestBuiltinHandlerActivator.cs" />
     <Compile Include="Assumptions\CanDoReflection.cs" />
     <Compile Include="Assumptions\Screenshot.cs" />
+    <Compile Include="Assumptions\TestConcurrentDictionary.cs" />
     <Compile Include="Assumptions\TestReflectInheritance.cs" />
     <Compile Include="Assumptions\TestSpWho.cs" />
     <Compile Include="Assumptions\TestString.cs" />
@@ -88,6 +89,8 @@
     <Compile Include="Integration\TestCustomizedBackoffTime.cs" />
     <Compile Include="Integration\TestIdempotentSagas.cs" />
     <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
+    <Compile Include="Integration\TestMessageDeferralAndRequestReply.cs" />
+    <Compile Include="Integration\TestRetryExceptionCustomization.cs" />
     <Compile Include="Integration\TestSagaIsNew.cs" />
     <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
@@ -116,6 +119,7 @@
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
+    <Compile Include="Transport\SqlServer\TestSqlServerTransportCleanup.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />

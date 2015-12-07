@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.LightInject</id>
+    <version>$version$</version>
+    <title>Rebus.LightInject</title>
+    <authors>puzsol</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>LightInject container adapter for Rebus</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>rebus ioc lightinject</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[$version$, 1)" />
+        <dependency id="LightInject" version="[4, 5)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.LightInject.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.LightInject.xml" target="lib\NET45" />
+  </files>
+</package>

@@ -7,14 +7,15 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
-using Rebus.AmazonSQS.Config;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Threading;
+using Rebus.Time;
 using Rebus.Transport;
 using Message = Amazon.SQS.Model.Message;
+#pragma warning disable 1998
 
 namespace Rebus.AmazonSQS
 {
@@ -24,10 +25,8 @@ namespace Rebus.AmazonSQS
     public class AmazonSqsTransport : ITransport, IInitializable
     {
         const string ClientContextKey = "SQS_Client";
-        const string OutgoingQueueContextKey = "SQS_outgoingQueue";
-        const string OutgoingQueueContextActionIsSetKey = "SQS_OutgoingQueueContextActionIsSet";
+        const string OutgoingMessagesItemsKey = "SQS_OutgoingMessages";
 
-        readonly string _inputQueueAddress;
         readonly string _accessKeyId;
         readonly string _secretAccessKey;
         readonly RegionEndpoint _regionEndpoint;
@@ -43,21 +42,21 @@ namespace Rebus.AmazonSQS
         /// </summary>
         public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (accessKeyId == null) throw new ArgumentNullException("accessKeyId");
-            if (secretAccessKey == null) throw new ArgumentNullException("secretAccessKey");
-            if (regionEndpoint == null) throw new ArgumentNullException("regionEndpoint");
-            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
+            if (accessKeyId == null) throw new ArgumentNullException(nameof(accessKeyId));
+            if (secretAccessKey == null) throw new ArgumentNullException(nameof(secretAccessKey));
+            if (regionEndpoint == null) throw new ArgumentNullException(nameof(regionEndpoint));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
-            _inputQueueAddress = inputQueueAddress;
+            Address = inputQueueAddress;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
-            
-            if (_inputQueueAddress != null)
+
+            if (Address != null)
             {
-                if (_inputQueueAddress.Contains("/") && !Uri.IsWellFormedUriString(_inputQueueAddress, UriKind.Absolute))
+                if (Address.Contains("/") && !Uri.IsWellFormedUriString(Address, UriKind.Absolute))
                 {
                     throw new ArgumentException(
                         "You could either have a simple queue name without slash (eg. \"inputqueue\") - or a complete URL for the queue endpoint. (eg. \"https://sqs.eu-central-1.amazonaws.com/234234234234234/somqueue\")",
-                        "inputQueueAddress");
+                        nameof(inputQueueAddress));
                 }
             }
 
@@ -75,18 +74,18 @@ namespace Rebus.AmazonSQS
             _peekLockDuration = peeklockDuration;
             _peekLockRenewalInterval = TimeSpan.FromMinutes(_peekLockDuration.TotalMinutes * 0.8);
 
-            CreateQueue(_inputQueueAddress);
+            CreateQueue(Address);
         }
 
         public void Initialize()
         {
-            CreateQueue(_inputQueueAddress);
+            CreateQueue(Address);
         }
 
 
         public void CreateQueue(string address)
         {
-            if (_inputQueueAddress == null) return;
+            if (Address == null) return;
 
             _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _regionEndpoint);
 
@@ -97,10 +96,9 @@ namespace Rebus.AmazonSQS
 
                 if (response.HttpStatusCode != HttpStatusCode.OK)
                 {
-
-                    _log.Error("Did not create queue with address: {0} - there was an error: ErrorCode: {1}", address, response.HttpStatusCode);
-                    //Not really sure when status code != ok - because sqlclient always throwsexceptions...
+                    throw new Exception($"Could not create queue '{queueName}' - got HTTP {response.HttpStatusCode}");
                 }
+
                 _queueUrl = response.QueueUrl;
             }
         }
@@ -110,16 +108,16 @@ namespace Rebus.AmazonSQS
         /// </summary>
         public void Purge()
         {
-            if (_inputQueueAddress == null) return;
+            if (Address == null) return;
 
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
             {
                 try
                 {
                     var response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
-                                          {
-                                              MaxNumberOfMessages = 10
-                                          });
+                    {
+                        MaxNumberOfMessages = 10
+                    });
 
                     while (response.Messages.Any())
                     {
@@ -130,9 +128,9 @@ namespace Rebus.AmazonSQS
                         if (!deleteResponse.Failed.Any())
                         {
                             response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
-                                                             {
-                                                                 MaxNumberOfMessages = 10
-                                                             });
+                            {
+                                MaxNumberOfMessages = 10
+                            });
                         }
                         else
                         {
@@ -155,128 +153,146 @@ namespace Rebus.AmazonSQS
 
 
         }
-        public Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
+
+        class OutgoingMessage
         {
-            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (message == null) throw new ArgumentNullException("message");
-            if (context == null) throw new ArgumentNullException("context");
+            public string DestinationAddress { get; }
+            public TransportMessage TransportMessage { get; }
 
-            var outputQueue = context.GetOrAdd(OutgoingQueueContextKey, () => new InMemOutputQueue());
-            var contextActionsSet = context.GetOrAdd(OutgoingQueueContextActionIsSetKey, () => false);
-
-            if (!contextActionsSet)
+            public OutgoingMessage(string destinationAddress, TransportMessage transportMessage)
             {
-                context.OnCommitted(async () =>
-                                          {
-
-                                              var client = GetClientFromTransactionContext(context);
-                                              var messageSendRequests = outputQueue.GetMessages();
-                                              var tasks = messageSendRequests.Select(r => client.SendMessageBatchAsync(new SendMessageBatchRequest(r.DestinationAddressUrl, r.Messages.ToList())));
-
-                                              var response = await Task.WhenAll(tasks);
-                                              if (response.Any(r => r.Failed.Any()))
-                                              {
-                                                  GenerateErrorsAndThrow(response);
-                                              }
-
-                                          });
-                context.OnAborted(outputQueue.Clear);
-
-                context.Items[OutgoingQueueContextActionIsSetKey] = true;
+                DestinationAddress = destinationAddress;
+                TransportMessage = transportMessage;
             }
-
-            var sendMessageRequest = new SendMessageBatchRequestEntry()
-                                     {
-
-                                         MessageAttributes = CreateAttributesFromHeaders(message.Headers),
-                                         MessageBody = GetBody(message.Body),
-                                         Id = message.Headers.GetValueOrNull(Headers.MessageId) ?? Guid.NewGuid().ToString(),
-                                     };
-
-            outputQueue.AddMessage(GetDestinationQueueUrlByName(destinationAddress, context), sendMessageRequest);
-
-            return _emptyTask;
         }
 
-        private readonly Task _emptyTask = Task.FromResult(0);
+        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
+        {
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+
+            var outgoingMessages = context.GetOrAdd(OutgoingMessagesItemsKey, () =>
+            {
+                var sendMessageBatchRequestEntries = new ConcurrentQueue<OutgoingMessage>();
+
+                context.OnCommitted(async () =>
+                {
+                    await SendOutgoingMessages(sendMessageBatchRequestEntries, context);
+                });
+
+                return sendMessageBatchRequestEntries;
+            });
+            
+            outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
+        }
+
+        async Task SendOutgoingMessages(ConcurrentQueue<OutgoingMessage> outgoingMessages, ITransactionContext context)
+        {
+            if (!outgoingMessages.Any()) return;
+
+            var client = GetClientFromTransactionContext(context);
+
+            var messagesByDestination = outgoingMessages
+                .GroupBy(m => m.DestinationAddress)
+                .ToList();
+
+            await Task.WhenAll(
+                messagesByDestination
+                    .Select(async batch =>
+                    {
+                        var entries = batch
+                            .Select(message =>
+                            {
+                                var transportMessage = message.TransportMessage;
+
+                                var headers = transportMessage.Headers;
+
+                                return new SendMessageBatchRequestEntry
+                                {
+                                    Id = headers[Headers.MessageId],
+                                    MessageBody = GetBody(transportMessage.Body),
+                                    MessageAttributes = CreateAttributesFromHeaders(headers),
+                                    DelaySeconds = GetDelaySeconds(headers)
+                                };
+                            })
+                            .ToList();
+
+                        var destinationUrl = GetDestinationQueueUrlByName(batch.Key, context);
+
+                        var request = new SendMessageBatchRequest(destinationUrl, entries);
+
+                        await client.SendMessageBatchAsync(request);
+                    })
+
+                );
+        }
+
+        static int GetDelaySeconds(Dictionary<string, string> headers)
+        {
+            string deferUntilTime;
+            if (!headers.TryGetValue(Headers.DeferredUntil, out deferUntilTime)) return 0;
+
+            var deferUntilDateTimeOffset = deferUntilTime.ToDateTimeOffset();
+
+            var delay = (int)Math.Ceiling((deferUntilDateTimeOffset - RebusTime.Now).TotalSeconds);
+
+            return delay;
+        }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (context == null) throw new ArgumentNullException("context");
-            if (_inputQueueAddress == null)
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (Address == null)
             {
                 throw new InvalidOperationException("This Amazon SQS transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
             var client = GetClientFromTransactionContext(context);
 
-            var response = await client.ReceiveMessageAsync(new ReceiveMessageRequest(_queueUrl)
-                                                            {
-                                                                MaxNumberOfMessages = 1,
-                                                                WaitTimeSeconds = 1,
-                                                                AttributeNames = new List<string>(new[] { "All" }),
-                                                                MessageAttributeNames = new List<string>(new[] { "All" })
-                                                            });
-
-
-
-            if (response.Messages.Any())
+            var request = new ReceiveMessageRequest(_queueUrl)
             {
-                var message = response.Messages.First();
+                MaxNumberOfMessages = 1,
+                WaitTimeSeconds = 1,
+                AttributeNames = new List<string>(new[] { "All" }),
+                MessageAttributeNames = new List<string>(new[] { "All" })
+            };
 
-                var renewalTask = CreateRenewalTaskForMessage(message, client);
+            var response = await client.ReceiveMessageAsync(request);
 
+            if (!response.Messages.Any()) return null;
 
-                context.OnCompleted(async () =>
-                {
-                    renewalTask.Dispose();
-                    var result = await client.DeleteMessageBatchAsync(new DeleteMessageBatchRequest(_queueUrl,
-                        response.Messages
-                            .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
-                            .ToList()));
+            var message = response.Messages.First();
 
-                    if (result.Failed.Any())
-                    {
-                        GenerateErrorsAndLog(result);
-                    }
-                });
+            var renewalTask = CreateRenewalTaskForMessage(message, client);
 
-                context.OnAborted(() =>
-                {
-                    renewalTask.Dispose();
-                    var result = client.ChangeMessageVisibilityBatch(new ChangeMessageVisibilityBatchRequest(_queueUrl,
-                        response.Messages
-                        .Select(m => new ChangeMessageVisibilityBatchRequestEntry(m.MessageId, m.ReceiptHandle)
-                        {
-                            VisibilityTimeout = 0
-                        }).ToList()));
-                    if (result.Failed.Any())
-                    {
-                        GenerateErrorsAndLog(result);
-                    }
-                });
+            context.OnCompleted(async () =>
+            {
+                renewalTask.Dispose();
 
+                await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
+            });
 
+            context.OnAborted(() =>
+            {
+                renewalTask.Dispose();
 
-                if (MessageIsExpired(message))
-                {
-                    await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
-                    return null;
-                }
-                renewalTask.Start();
-                var transportMessage = GetTransportMessage(message);
-                return transportMessage;
+                client.ChangeMessageVisibility(_queueUrl, message.ReceiptHandle, 0);
+            });
+
+            if (MessageIsExpired(message))
+            {
+                await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
+                return null;
             }
-
-            return null;
-
+            renewalTask.Start();
+            var transportMessage = GetTransportMessage(message);
+            return transportMessage;
         }
 
-
-
-        private AsyncTask CreateRenewalTaskForMessage(Message message, AmazonSQSClient client)
+        AsyncTask CreateRenewalTaskForMessage(Message message, AmazonSQSClient client)
         {
-            var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", message.MessageId),
+            var renewalTask = new AsyncTask($"RenewPeekLock-{message.MessageId}",
                 async () =>
                 {
                     _log.Info("Renewing peek lock for message with ID {0}", message.MessageId);
@@ -285,23 +301,22 @@ namespace Rebus.AmazonSQS
                 },
                 _rebusLoggerFactory,
                 prettyInsignificant: true)
-                              {
-                                  Interval = _peekLockRenewalInterval
-                              };
+            {
+                Interval = _peekLockRenewalInterval
+            };
             return renewalTask;
         }
 
-        private bool MessageIsExpired(Message message)
+        static bool MessageIsExpired(Message message)
         {
             MessageAttributeValue value;
-            TimeSpan timeToBeReceived;
-            if (message.MessageAttributes.TryGetValue(Headers.TimeToBeReceived, out value))
-            {
-                timeToBeReceived = TimeSpan.Parse(value.StringValue);
+            if (!message.MessageAttributes.TryGetValue(Headers.TimeToBeReceived, out value))
+                return false;
 
-                if (MessageIsExpiredUsingRebusSentTime(message, timeToBeReceived)) return true;
-                if (MessageIsExpiredUsingNativeSqsSentTimestamp(message, timeToBeReceived)) return true;
-            }
+            var timeToBeReceived = TimeSpan.Parse(value.StringValue);
+
+            if (MessageIsExpiredUsingRebusSentTime(message, timeToBeReceived)) return true;
+            if (MessageIsExpiredUsingNativeSqsSentTimestamp(message, timeToBeReceived)) return true;
 
             return false;
         }
@@ -361,7 +376,7 @@ namespace Rebus.AmazonSQS
 
         private TransportMessage GetTransportMessage(Message message)
         {
-            var headers = message.MessageAttributes.ToDictionary((kv) => kv.Key, (kv) => kv.Value.StringValue);
+            var headers = message.MessageAttributes.ToDictionary(kv => kv.Key, kv => kv.Value.StringValue);
 
             return new TransportMessage(headers, GetBodyBytes(message.Body));
 
@@ -378,15 +393,14 @@ namespace Rebus.AmazonSQS
         private Dictionary<string, MessageAttributeValue> CreateAttributesFromHeaders(Dictionary<string, string> headers)
         {
             return headers.ToDictionary(key => key.Key,
-                                        value => new MessageAttributeValue() { DataType = "String", StringValue = value.Value });
+                                        value => new MessageAttributeValue { DataType = "String", StringValue = value.Value });
         }
         private readonly ConcurrentDictionary<string, string> _queueUrls = new ConcurrentDictionary<string, string>();
+
         private string GetDestinationQueueUrlByName(string address, ITransactionContext transactionContext)
         {
-
-            var url = _queueUrls.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), (key) =>
+            var url = _queueUrls.GetOrAdd("DestinationAddress" + address.ToLowerInvariant(), key =>
                     {
-
                         if (Uri.IsWellFormedUriString(address, UriKind.Absolute))
                         {
                             return address;
@@ -400,13 +414,9 @@ namespace Rebus.AmazonSQS
                         {
                             return urlResponse.QueueUrl;
                         }
-                        else
-                        {
-                            _log.Warn("Could not get queue url from service by name: {0}", address);
-                            throw new ApplicationException(String.Format("could not find Url for address: {0} - got errorcode: {1}", address,
-                                urlResponse.HttpStatusCode));
-                        }
 
+                        _log.Warn("Could not get queue url from service by name: {0}", address);
+                        throw new ApplicationException($"could not find Url for address: {address} - got errorcode: {urlResponse.HttpStatusCode}");
                     });
 
             return url;
@@ -425,48 +435,7 @@ namespace Rebus.AmazonSQS
 
         }
 
-        public string Address
-        {
-            get { return _inputQueueAddress; }
-        }
-
-        private static void GenerateErrorsAndThrow(SendMessageBatchResponse[] response)
-        {
-            var failed = response.SelectMany(r => r.Failed);
-
-            var failedMessages = String.Join("\n", failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
-            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
-            var successMessages = response.SelectMany(r => r.Successful).ToList();
-            if (successMessages.Any())
-                errorMessage += "\n These message went through the loophole:\n" + String.Join("\n", successMessages.Select(s => "   Id: " + s.Id + " MessageId:" + s.MessageId));
-
-            throw new ApplicationException(errorMessage);
-        }
-
-        private void GenerateErrorsAndLog(DeleteMessageBatchResponse result)
-        {
-
-            var failedMessages = String.Join("\n", result.Failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
-            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
-
-            if (result.Successful.Any())
-                errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
-
-            _log.Warn("Not all completed messages is removed from the queue: {0} \n{1} failed.\n{2}", _inputQueueAddress, result.Failed.Count, errorMessage);
-        }
-
-        private void GenerateErrorsAndLog(ChangeMessageVisibilityBatchResponse result)
-        {
-
-            var failedMessages = String.Join("\n", result.Failed.Select(f => String.Format("Code:{0}, Id:{1}, Error:{2}", f.Code, f.Id, f.Message)));
-            var errorMessage = "There were 1 or more errors when sending messages on commit." + failedMessages;
-
-            if (result.Successful.Any())
-                errorMessage += "\n These message went through the loophole:\n" + String.Join(", ", result.Successful.Select(s => s.Id));
-
-            _log.Warn("Not all messages is set back to visible in the queue: {0} \n{1} failed.These will appear later when the global visibility time runs out. Details:\n{2}", _inputQueueAddress, result.Failed.Count, errorMessage);
-
-        }
+        public string Address { get; }
 
         public void DeleteQueue()
         {

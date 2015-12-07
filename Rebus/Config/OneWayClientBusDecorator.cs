@@ -43,19 +43,26 @@ namespace Rebus.Config
             return _innerBus.Defer(delay, message, optionalHeaders);
         }
 
-        public IAdvancedApi Advanced
-        {
-            get { return _advancedApiDecorator; }
-        }
+        public IAdvancedApi Advanced => _advancedApiDecorator;
 
         public Task Subscribe<TEvent>()
         {
             return _innerBus.Subscribe<TEvent>();
         }
 
+        public Task Subscribe(Type eventType)
+        {
+            return _innerBus.Subscribe(eventType);
+        }
+
         public Task Unsubscribe<TEvent>()
         {
             return _innerBus.Unsubscribe<TEvent>();
+        }
+
+        public Task Unsubscribe(Type eventType)
+        {
+            return _innerBus.Unsubscribe(eventType);
         }
 
         public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
@@ -74,25 +81,13 @@ namespace Rebus.Config
                 _rebusLoggerFactory = rebusLoggerFactory;
             }
 
-            public IWorkersApi Workers
-            {
-                get { return new OneWayClientWorkersApi(_rebusLoggerFactory); }
-            }
+            public IWorkersApi Workers => new OneWayClientWorkersApi(_rebusLoggerFactory);
 
-            public ITopicsApi Topics
-            {
-                get { return _innerAdvancedApi.Topics; }
-            }
+            public ITopicsApi Topics => _innerAdvancedApi.Topics;
 
-            public IRoutingApi Routing
-            {
-                get { return _innerAdvancedApi.Routing; }
-            }
+            public IRoutingApi Routing => _innerAdvancedApi.Routing;
 
-            public ITransportMessageApi TransportMessage
-            {
-                get { return _innerAdvancedApi.TransportMessage; }
-            }
+            public ITransportMessageApi TransportMessage => _innerAdvancedApi.TransportMessage;
         }
 
         class OneWayClientWorkersApi : IWorkersApi
@@ -104,10 +99,7 @@ namespace Rebus.Config
                 _log = rebusLoggerFactory.GetCurrentClassLogger();
             }
 
-            public int Count
-            {
-                get { return 0; }
-            }
+            public int Count => 0;
 
             public void SetNumberOfWorkers(int numberOfWorkers)
             {

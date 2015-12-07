@@ -60,7 +60,7 @@ namespace Rebus.MongoDb.Timeouts
                 .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, async () =>
                 {
                     _log.Debug("Completing timeout for message with ID {0} (doc ID {1})", timeout.Headers.GetValue(Headers.MessageId), timeout.Id);
-                    await _timeouts.DeleteOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id)).ConfigureAwait(false); ;
+                    await _timeouts.DeleteOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id)).ConfigureAwait(false);
                     timeoutsNotCompleted.Remove(timeout.Id);
                 }))
                 .ToList();

@@ -723,14 +723,50 @@
 
 * Changed RabbitMQ routing to use two exchanges: one for direct addressing, and one for pub/sub messaging. This way, "clean" RabbitMQ topics can be subscribed to and then used when publishing, allowing for subscribing to topics using wildcards.
 
+# 0.99.10
+
+* Fixed nuspec on StructureMap package, made SimpleInjector package dependency version criteria more tolerant, and updated the Unity dependency to v 4
+
+# 0.99.11
+
+* Added ability to immediately forward messages on certain exception types (optionally when those exceptions satisfy some predicate)
+
+# 0.99.12
+
+* Added LightInject container adapter - thanks [puzsol]
+
+# 0.99.13
+
+* Added DryIoc container adapter - thanks [dadhi]
+
+# 0.99.14
+
+* General handling of receive errors by logging as warning
+
+# 0.99.15
+
+* Changed back to logging full exception details in the final ERROR log event
+
+# 0.99.16
+
+* Added `EnlistRebus` option to `Rebus.TransactionScopes`, allowing for easily enlisting an ambient Rebus transaction in an ambient .NET transaction
+
+# 0.99.17
+
+* Added `IBus` API overloads for `Subscribe` and `Unsubscribe` that accept a `Type` as a parameter - thanks [gertjvr]
+* Fixed `ExpiredMessagesCleanup` warning because of locked rows when handling message for a long time with the SQL Server transport
+* Introduced `rbs2-defer-recipient` header to designate the queue to deliver the message to when it returns - allows for doing request/reply with a defer in the middle without losing the return address (which must be transferred manually, though, unless you `bus.Advanced.TransportMessage.Defer`)
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
 [caspertdk]: https://github.com/caspertdk
+[dadhi]: https://github.com/dadhi
 [dev4ce]: https://github.com/dev4ce
 [dimajanzen]: https://github.com/dimajanzen
 [DixonD-git]: https://github.com/DixonD-git
 [fritsduus]: https://github.com/fritsduus
+[gertjvr]: https://github.com/gertjvr
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
@@ -746,6 +782,7 @@
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pruiz]: https://github.com/pruiz
+[puzsol]: https://github.com/puzsol
 [seankearon]: https://github.com/seankearon
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor

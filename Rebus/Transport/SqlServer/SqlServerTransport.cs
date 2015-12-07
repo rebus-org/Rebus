@@ -237,12 +237,11 @@ VALUES
             {
                 var connection = await GetConnection(context);
 
-                long? idOfMessageToDelete;
                 TransportMessage receivedTransportMessage;
 
                 using (var selectCommand = connection.CreateCommand())
                 {
-                    selectCommand.CommandText = string.Format(@"
+                    selectCommand.CommandText = $@"
 	SET NOCOUNT ON
 
 	;WITH TopCTE AS (
@@ -250,7 +249,7 @@ VALUES
 				[id],
 				[headers],
 				[body]
-		FROM	{0} M WITH (ROWLOCK, READPAST)
+		FROM	[{_tableName}] M WITH (ROWLOCK, READPAST)
 		WHERE	M.[recipient] = @recipient
 		AND		M.[visible] < getdate()
 		AND		M.[expiration] > getdate()
@@ -263,7 +262,7 @@ VALUES
 			deleted.[headers] as [headers],
 			deleted.[body] as [body]
 						
-						", _tableName);
+						";
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
@@ -273,19 +272,11 @@ VALUES
 
                         var headers = reader["headers"];
                         var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
-
-                        idOfMessageToDelete = (long)reader["id"];
                         var body = (byte[])reader["body"];
 
                         receivedTransportMessage = new TransportMessage(headersDictionary, body);
                     }
                 }
-
-                if (!idOfMessageToDelete.HasValue)
-                {
-                    return null;
-                }
-
 
                 return receivedTransportMessage;
             }
@@ -322,25 +313,45 @@ VALUES
 
         async Task PerformExpiredMessagesCleanupCycle()
         {
-            int results;
+            var results = 0;
             var stopwatch = Stopwatch.StartNew();
 
-            using (var connection = await _connectionProvider.GetConnection())
+            while (true)
             {
-                using (var command = connection.CreateCommand())
+                using (var connection = await _connectionProvider.GetConnection())
                 {
-                    command.CommandText = string.Format("DELETE FROM [{0}] WHERE [recipient] = @recipient AND [expiration] < getdate()", _tableName);
-                    command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+                    int affectedRows;
 
-                    results = await command.ExecuteNonQueryAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText =
+                            $@"
+DELETE FROM [{_tableName}] 
+    WHERE [id] IN (
+        SELECT TOP 1 [id] FROM [{
+                                _tableName
+                                }] WITH (ROWLOCK, READPAST)
+            WHERE [recipient] = @recipient 
+                AND [expiration] < getdate()
+    )
+";
+                        command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+
+                        affectedRows = await command.ExecuteNonQueryAsync();
+                    }
+
+                    results += affectedRows;
+
+                    await connection.Complete();
+
+                    if (affectedRows == 0) break;
                 }
-
-                await connection.Complete();
             }
 
             if (results > 0)
             {
-                _log.Info("Performed expired messages cleanup in {0} - {1} expired messages with recipient {2} were deleted",
+                _log.Info(
+                    "Performed expired messages cleanup in {0} - {1} expired messages with recipient {2} were deleted",
                     stopwatch.Elapsed, results, _inputQueueName);
             }
         }

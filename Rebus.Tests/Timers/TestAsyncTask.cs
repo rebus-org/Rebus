@@ -5,18 +5,42 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Threading;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Timers
 {
     [TestFixture]
     public class TestAsyncTask : FixtureBase
     {
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(5)]
+        public async Task CanActuallyStopTaskWithLongInterval(int secondsToLetTheTaskRun)
+        {
+            using (var task = new AsyncTask("simulate-azure-service-bus-peek-lock-renewer", async () => { Console.WriteLine("INVOKED!!!"); }, new ConsoleLoggerFactory(false))
+            {
+                Interval = TimeSpan.FromMinutes(4.5)
+            })
+            {
+                task.Start();
+
+                Console.WriteLine($"Letting the task run for {secondsToLetTheTaskRun} seconds...");
+
+                await Task.Delay(TimeSpan.FromSeconds(secondsToLetTheTaskRun));
+
+                Console.WriteLine("Quitting....");
+            }
+
+            Console.WriteLine("Done!");
+        }
+
         [Test]
         public async Task DoesNotDieOnTransientErrors()
         {
             var throwException = true;
             var taskWasCompleted = false;
-            
+
             using (var task = new AsyncTask("bimse", async () =>
             {
                 if (throwException)

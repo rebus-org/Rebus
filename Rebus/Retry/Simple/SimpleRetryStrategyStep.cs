@@ -53,26 +53,26 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
             if (string.IsNullOrWhiteSpace(messageId))
             {
-                await MoveMessageToErrorQueue("<no message ID>", transportMessage,
-                    transactionContext, string.Format("Received message with empty or absent '{0}' header! All messages must be" +
-                                                      " supplied with an ID . If no ID is present, the message cannot be tracked" +
-                                                      " between delivery attempts, and other stuff would also be much harder to" +
-                                                      " do - therefore, it is a requirement that messages be supplied with an ID.",
-                        Headers.MessageId),
-                        shortErrorDescription: string.Format("Received message with empty or absent '{0}' header", Headers.MessageId));
+                await MoveMessageToErrorQueue("<no message ID>", 
+                    transportMessage,
+                    transactionContext,
+
+                    $"Received message with empty or absent '{Headers.MessageId}' header! All messages must be" +
+                    " supplied with an ID . If no ID is present, the message cannot be tracked" +
+                    " between delivery attempts, and other stuff would also be much harder to" +
+                    " do - therefore, it is a requirement that messages be supplied with an ID.");
 
                 return;
             }
 
             if (_errorTracker.HasFailedTooManyTimes(messageId))
             {
+                var errorDescriptionFor = GetErrorDescriptionFor(messageId);
+                
                 // if we don't have 2nd level retries, just get the message out of the way
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
-                    await
-                        MoveMessageToErrorQueue(messageId, transportMessage, transactionContext,
-                            GetErrorDescriptionFor(messageId), GetErrorDescriptionFor(messageId, brief: true));
-
+                    await MoveMessageToErrorQueue(messageId, transportMessage, transactionContext, errorDescriptionFor);
                     _errorTracker.CleanUp(messageId);
                     return;
                 }
@@ -82,10 +82,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
-                    await
-                        MoveMessageToErrorQueue(messageId, transportMessage, transactionContext,
-                            GetErrorDescriptionFor(messageId), GetErrorDescriptionFor(messageId, brief: true));
-
+                    await MoveMessageToErrorQueue(messageId, transportMessage, transactionContext, errorDescriptionFor);
                     _errorTracker.CleanUp(messageId);
                     _errorTracker.CleanUp(secondLevelMessageId);
                     return;
@@ -94,6 +91,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 context.Save(DispatchAsFailedMessageKey, true);
 
                 await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext);
+
                 return;
             }
 
@@ -126,7 +124,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             return _errorTracker.GetFullErrorDescription(messageId);
         }
 
-        async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription, string shortErrorDescription = null)
+        async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription)
         {
             var headers = transportMessage.Headers;
 
@@ -138,7 +136,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
             try
             {
-                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, shortErrorDescription);
+                _log.Error("Moving message with ID {0} to error queue '{1}' - reason: {2}", messageId, errorQueueAddress, errorDescription);
 
                 await _transport.Send(errorQueueAddress, transportMessage, transactionContext);
             }

@@ -38,8 +38,10 @@ namespace Rebus.AmazonSQS.Tests
 
         static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
         {
+            var region = RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint);
+
             var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint),
+                region,
                 new ConsoleLoggerFactory(false));
 
             transport.Initialize(peeklockDuration);
@@ -142,7 +144,7 @@ AccessKeyId=blabla; SecretAccessKey=blablalba; RegionEndpoint=something
             try
             {
                 var keysAndValues = keyValuePairs.ToDictionary((kv) => kv.Split('=')[0], (kv) => kv.Split('=')[1]);
-                return new ConnectionInfo()
+                return new ConnectionInfo
                 {
                     AccessKeyId = keysAndValues["AccessKeyId"],
                     SecretAccessKey = keysAndValues["SecretAccessKey"],

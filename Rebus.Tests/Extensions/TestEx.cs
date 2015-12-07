@@ -17,8 +17,13 @@ namespace Rebus.Tests.Extensions
             return JsonConvert.DeserializeObject<JObject>(jsonText).ToString();
         }
 
-        public static string Limit(this string line, int maxNumberOfChars)
+        public static string Limit(this string line, int maxNumberOfChars, bool singleLine = false)
         {
+            if (singleLine)
+            {
+                line = line.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            }
+
             if (line.Length + 3 <= maxNumberOfChars) return line;
 
             return line.Substring(0, maxNumberOfChars - 3) + "...";

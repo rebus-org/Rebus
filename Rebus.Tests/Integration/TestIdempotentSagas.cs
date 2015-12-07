@@ -39,16 +39,25 @@ namespace Rebus.Tests.Integration
                 .Transport(t =>
                 {
                     t.UseInMemoryTransport(new InMemNetwork(), "bimse");
-                    t.Decorate(c => new IntroducerOfTransportInstability(c.Get<ITransport>(), MakeEveryFifthMessageFail));
+                    t.Decorate(c =>
+                    {
+                        var transport = c.Get<ITransport>();
+
+                        return new IntroducerOfTransportInstability(transport, MakeEveryFifthMessageFail);
+                    });
                 })
                 .Sagas(s =>
                 {
-                    s.Decorate(c => new SagaStorageTap(c.Get<ISagaStorage>(), _persistentSagaData));
+                    s.Decorate(c =>
+                    {
+                        var sagaStorage = c.Get<ISagaStorage>();
+
+                        return new SagaStorageTap(sagaStorage, _persistentSagaData);
+                    });
                 })
                 .Options(o =>
                 {
                     o.EnableIdempotentSagas();
-                    o.LogPipeline(verbose: true);
                 })
                 .Start();
         }
@@ -64,7 +73,7 @@ namespace Rebus.Tests.Integration
             var allMessagesReceived = new ManualResetEvent(false);
             var receivedMessages = new ConcurrentQueue<OutgoingMessage>();
 
-            _activator.Register(() => new MyIdempotentSaga(allMessagesReceived, _activator.Bus));
+            _activator.Register((b, context) => new MyIdempotentSaga(allMessagesReceived, b));
             _activator.Register(() => new OutgoingMessageCollector(receivedMessages));
 
             var messagesToSend = Enumerable
@@ -80,9 +89,11 @@ namespace Rebus.Tests.Integration
 
             await Task.WhenAll(messagesToSend.Select(message => _bus.SendLocal(message)));
 
-            allMessagesReceived.WaitOrDie(TimeSpan.FromSeconds(5));
+            allMessagesReceived.WaitOrDie(TimeSpan.FromSeconds(10));
 
-            await Task.Delay(300);
+            Console.WriteLine("All messages processed by the saga - waiting for messages in outgoing message collector...");
+
+            await Task.Delay(1000);
 
             var allIdempotentSagaData = _persistentSagaData.Values
                 .OfType<MyIdempotentSagaData>()
@@ -206,11 +217,10 @@ namespace Rebus.Tests.Integration
             {
                 CountPerId = new Dictionary<int, int>();
             }
-            //public Guid Id { get; set; }
-            //public int Revision { get; set; }
+
             public string CorrelationId { get; set; }
-            public Dictionary<int, int> CountPerId { get; set; }
-            //public IdempotencyData IdempotencyData { get; set; }
+
+            public Dictionary<int, int> CountPerId { get; }
         }
 
         class MyMessage
@@ -221,7 +231,7 @@ namespace Rebus.Tests.Integration
             public bool SendOutgoingMessage { get; set; }
             public override string ToString()
             {
-                return string.Format("MyMessage {0}/{1}", Id, Total);
+                return $"MyMessage {Id}/{Total}";
             }
         }
 

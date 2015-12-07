@@ -13,6 +13,7 @@ namespace Rebus.Pipeline
         /// </summary>
         public StepDocumentationAttribute(string text)
         {
+            if (text == null) throw new ArgumentNullException(nameof(text));
             Text = text;
         }
 

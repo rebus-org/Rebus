@@ -47,8 +47,7 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Configures how Rebus logs things that happen by installing a <see cref="RebusLoggerFactory"/> instance
-        /// on <see cref="RebusLoggerFactory.Current"/>
+        /// Configures how Rebus logs stuff that happens
         /// </summary>
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
@@ -266,15 +265,9 @@ namespace Rebus.Config
 
             var busInstance = _injectionist.Get<IBus>();
 
-            if (containerAdapter != null)
-            {
-                containerAdapter.SetBus(busInstance);
-            }
+            containerAdapter?.SetBus(busInstance);
 
-            if (startAction != null)
-            {
-                startAction();
-            }
+            startAction?.Invoke();
 
             _hasBeenStarted = true;
 

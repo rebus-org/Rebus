@@ -8,11 +8,17 @@ namespace Rebus.Tests
 {
     public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
     {
+        readonly bool _outputToConsole;
         readonly ConcurrentQueue<LogLine> _loggedLines = new ConcurrentQueue<LogLine>();
+
+        public ListLoggerFactory(bool outputToConsole = false)
+        {
+            _outputToConsole = outputToConsole;
+        }
 
         protected override ILog GetLogger(Type type)
         {
-            return new ListLogger(_loggedLines, type);
+            return new ListLogger(_loggedLines, type, _outputToConsole);
         }
 
         public IEnumerator<LogLine> GetEnumerator()
@@ -29,11 +35,13 @@ namespace Rebus.Tests
         {
             readonly ConcurrentQueue<LogLine> _loggedLines;
             readonly Type _type;
+            readonly bool _outputToConsole;
 
-            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type)
+            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type, bool outputToConsole)
             {
                 _loggedLines = loggedLines;
                 _type = type;
+                _outputToConsole = outputToConsole;
             }
 
             public void Debug(string message, params object[] objs)
@@ -64,6 +72,11 @@ namespace Rebus.Tests
 
             void Append(LogLevel level, string message, params object[] objs)
             {
+                if (_outputToConsole)
+                {
+                    Console.WriteLine($"{level}: {string.Format(message, objs)}");
+                }
+
                 _loggedLines.Enqueue(new LogLine(level, SafeFormat(message, objs), _type));
             }
 
