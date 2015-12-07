@@ -758,6 +758,10 @@
 * Introduced `rbs2-defer-recipient` header to designate the queue to deliver the message to when it returns - allows for doing request/reply with a defer in the middle without losing the return address (which must be transferred manually, though, unless you `bus.Advanced.TransportMessage.Defer`)
 * Crude attempt at allowing for sagas to resolve their conflicts by overriding `ResolveConflict`
 
+# 0.99.18
+
+* Fixed bug that would fail saga data auditing when the message could not be correlated with a saga data instance
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

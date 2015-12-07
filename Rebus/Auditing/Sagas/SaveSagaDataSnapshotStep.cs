@@ -37,6 +37,7 @@ namespace Rebus.Auditing.Sagas
                     Handler = i.Handler,
                     SagaData = i.GetSagaData()
                 })
+                .Where(a => a.SagaData != null)
                 .ToList();
 
             var saveTasks = createdAndUpdatedSagaData

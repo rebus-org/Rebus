@@ -36,10 +36,7 @@ namespace Rebus.Tests
             }
         }
 
-        public static string DatabaseName
-        {
-            get { return string.Format("rebus2_test_{0}", TestConfig.Suffix).TrimEnd('_'); }
-        }
+        public static string DatabaseName => $"rebus2_test_{TestConfig.Suffix}".TrimEnd('_');
 
         public static void DropTable(string tableName)
         {
@@ -57,7 +54,7 @@ namespace Rebus.Tests
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            command.CommandText = string.Format("DROP TABLE [{0}]", tableName);
+                            command.CommandText = $"DROP TABLE [{tableName}]";
                             command.ExecuteNonQuery();
                         }
                     }
@@ -73,7 +70,7 @@ namespace Rebus.Tests
             {
                 DumpWho();
 
-                throw new ApplicationException(string.Format("Could not drop table '{0}'", tableName), exception);
+                throw new ApplicationException($"Could not drop table '{tableName}'", exception);
             }
         }
 
@@ -89,7 +86,7 @@ namespace Rebus.Tests
                     .Where(kvp => kvp["dbname"].Equals(DatabaseName, StringComparison.InvariantCultureIgnoreCase));
 
                 Console.WriteLine(string.Join(Environment.NewLine,
-                    who.Select(d => string.Join(", ", d.Select(kvp => string.Format("{0} = {1}", kvp.Key, kvp.Value))))));
+                    who.Select(d => string.Join(", ", d.Select(kvp => $"{kvp.Key} = {kvp.Value}")))));
 
                 Console.WriteLine();
             }
@@ -146,7 +143,7 @@ namespace Rebus.Tests
 
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = string.Format("CREATE DATABASE [{0}]", databaseName);
+                        command.CommandText = $"CREATE DATABASE [{databaseName}]";
                         command.ExecuteNonQuery();
                     }
                 }
@@ -156,13 +153,15 @@ namespace Rebus.Tests
             }
             catch (Exception exception)
             {
-                throw new ApplicationException(string.Format("Could not initialize database '{0}'", databaseName), exception);
+                throw new ApplicationException($"Could not initialize database '{databaseName}'", exception);
             }
         }
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
-            return string.Format("server=.; database={0}; trusted_connection=true;", databaseName);
+            return string.Equals(Environment.MachineName, "mhg-pc", StringComparison.InvariantCultureIgnoreCase)
+                ? $"server=.\\SQLEXPRESS; database={databaseName}; trusted_connection=true;"
+                : $"server=.; database={databaseName}; trusted_connection=true;";
         }
     }
 }
