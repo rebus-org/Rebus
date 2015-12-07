@@ -67,6 +67,8 @@ namespace Rebus.AzureServiceBus.Tests
             var activator = Using(new BuiltinHandlerActivator());
             var counter = new SharedCounter(numberOfMessages);
 
+            Using(counter);
+
             activator.Handle<string>(async str =>
             {
                 counter.Decrement();

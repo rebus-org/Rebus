@@ -8,7 +8,7 @@ namespace Rebus.Threading
     /// <summary>
     /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
     ///  </summary>
-    public class AsyncTask : IDisposable
+    public class AsyncTask : IAsyncTask
     {
         /// <summary>
         /// This is the default interval between invocations if the periodic action, unless the <see cref="Interval"/> property is set to something else

@@ -42,7 +42,9 @@ namespace Rebus.Tests.Contracts.Sagas
         [Test]
         public async Task DoesNotFailWhenSagaDataCouldNotBeFound()
         {
-            _activator.Register(() => new SomeSaga(new SharedCounter(1), false));
+            var sharedCounter = Using(new SharedCounter(1));
+
+            _activator.Register(() => new SomeSaga(sharedCounter, false));
 
             await _bus.SendLocal(new MessageThatCanNeverBeCorrelated());
 
@@ -69,6 +71,8 @@ as part of this:
             {
                 Delay = TimeSpan.FromSeconds(1)
             };
+
+            Using(sharedCounter);
 
             _activator.Register(() => new SomeSaga(sharedCounter, false));
 
@@ -98,6 +102,8 @@ as part of this:
             {
                 Delay = TimeSpan.FromSeconds(1)
             };
+
+            Using(sharedCounter);
 
             _activator.Register(() => new SomeSaga(sharedCounter, true));
 

@@ -56,6 +56,8 @@ namespace Rebus.Tests.Integration
 
             var counter = new SharedCounter(messages.Length);
 
+            Using(counter);
+
             _activator.Register(() => new MySaga(eventsPerCorrelationId, counter));
 
             await Task.WhenAll(messages.Select(message => _bus.SendLocal(message)));

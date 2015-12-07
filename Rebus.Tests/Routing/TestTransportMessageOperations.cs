@@ -37,6 +37,8 @@ namespace Rebus.Tests.Routing
         {
             var sharedCounter = new SharedCounter(1) { Delay = TimeSpan.FromSeconds(0.1) };
 
+            Using(sharedCounter);
+
             _forwarderActivator.Handle<string>(async (bus, str) =>
             {
                 await bus.Advanced.TransportMessage.Forward(ForwardedMessagesQueue, new Dictionary<string, string> {{"testheader", "OK"}});
@@ -71,6 +73,9 @@ namespace Rebus.Tests.Routing
         public void CanDeferTransportMessage()
         {
             var counter = new SharedCounter(1);
+
+            Using(counter);
+
             var customHeaders = new Dictionary<string, string>
             {
                 {"testheader", "customizzle valuizzle"}

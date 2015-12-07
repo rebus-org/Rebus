@@ -92,8 +92,6 @@ namespace Rebus.Tests.Timers
                 await Task.Delay(1199);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(0.7));
-
             Console.WriteLine(string.Join(Environment.NewLine, events));
 
             Assert.That(events.Count, Is.GreaterThanOrEqualTo(5));

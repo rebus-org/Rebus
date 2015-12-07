@@ -152,6 +152,7 @@
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\AsyncTask.cs" />
+    <Compile Include="Threading\IAsyncTask.cs" />
     <Compile Include="Threading\ParallelOperationsManager.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />

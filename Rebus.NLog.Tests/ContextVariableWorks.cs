@@ -36,6 +36,8 @@ namespace Rebus.NLog.Tests
 
             var counter = new SharedCounter(1);
 
+            Using(counter);
+
             var logger = LogManager.GetLogger("test");
 
             activator.Handle<string>(async str =>

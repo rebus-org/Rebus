@@ -39,6 +39,8 @@ namespace Rebus.Tests.Integration
         {
             var counter = new SharedCounter(1);
 
+            Using(counter);
+
             _activator.Handle<string>(async str =>
             {
                 throw new ApplicationException("1st level!!");
@@ -88,6 +90,8 @@ namespace Rebus.Tests.Integration
         public async Task FailedMessageAllowsForAccessingHeaders()
         {
             var counter = new SharedCounter(1);
+
+            Using(counter);
 
             _activator.Handle<string>(async str =>
             {

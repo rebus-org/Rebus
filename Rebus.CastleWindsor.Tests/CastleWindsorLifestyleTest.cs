@@ -87,6 +87,8 @@ namespace Rebus.CastleWindsor.Tests
             var registeredThings = new ConcurrentQueue<string>();
             var sharedCounter = new SharedCounter(2);
 
+            Using(sharedCounter);
+
             container.Register(
                 Component.For<ConcurrentQueue<string>>().Instance(registeredThings),
                 Component.For<SharedCounter>().Instance(sharedCounter),

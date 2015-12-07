@@ -20,6 +20,9 @@ namespace Rebus.AzureServiceBus.Tests
             using (var activator = new BuiltinHandlerActivator())
             {
                 var counter = new SharedCounter(1);
+
+                Using(counter);
+
                 activator.Handle<string>(async str => counter.Decrement());
 
                 var bus = Configure.With(activator)
