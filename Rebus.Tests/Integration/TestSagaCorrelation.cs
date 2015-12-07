@@ -42,7 +42,7 @@ namespace Rebus.Tests.Integration
             var events = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
 
-            activator.Register(() => new MySaga(events, activator.Bus));
+            activator.Register((b, context) => new MySaga(events, b));
 
             Using(activator);
 
