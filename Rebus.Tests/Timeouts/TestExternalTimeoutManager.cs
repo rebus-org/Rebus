@@ -25,8 +25,11 @@ namespace Rebus.Tests.Timeouts
 
         protected override void SetUp()
         {
+            var logger = new ListLoggerFactory(detailed: true);
+
             // start the external timeout manager
             Configure.With(Using(new BuiltinHandlerActivator()))
+                .Logging(l => l.Use(logger))
                 .Transport(t => t.UseMsmq(_queueNameTimeoutManager))
                 .Start();
 
@@ -38,6 +41,7 @@ namespace Rebus.Tests.Timeouts
             client.Handle<string>(async str => _gotTheMessage.Set());
 
             Configure.With(client)
+                .Logging(l => l.Use(logger))
                 .Transport(t => t.UseMsmq(_queueName))
                 .Options(o => o.UseExternalTimeoutManager(_queueNameTimeoutManager))
                 .Start();

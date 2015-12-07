@@ -9,16 +9,18 @@ namespace Rebus.Tests
     public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
     {
         readonly bool _outputToConsole;
+        readonly bool _detailed;
         readonly ConcurrentQueue<LogLine> _loggedLines = new ConcurrentQueue<LogLine>();
 
-        public ListLoggerFactory(bool outputToConsole = false)
+        public ListLoggerFactory(bool outputToConsole = false, bool detailed = false)
         {
-            _outputToConsole = outputToConsole;
+            _outputToConsole = outputToConsole || detailed;
+            _detailed = detailed;
         }
 
         protected override ILog GetLogger(Type type)
         {
-            return new ListLogger(_loggedLines, type, _outputToConsole);
+            return new ListLogger(_loggedLines, type, _outputToConsole, _detailed);
         }
 
         public IEnumerator<LogLine> GetEnumerator()
@@ -36,12 +38,14 @@ namespace Rebus.Tests
             readonly ConcurrentQueue<LogLine> _loggedLines;
             readonly Type _type;
             readonly bool _outputToConsole;
+            readonly bool _detailed;
 
-            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type, bool outputToConsole)
+            public ListLogger(ConcurrentQueue<LogLine> loggedLines, Type type, bool outputToConsole, bool detailed)
             {
                 _loggedLines = loggedLines;
                 _type = type;
                 _outputToConsole = outputToConsole;
+                _detailed = detailed;
             }
 
             public void Debug(string message, params object[] objs)
@@ -74,7 +78,16 @@ namespace Rebus.Tests
             {
                 if (_outputToConsole)
                 {
-                    Console.WriteLine($"{level}: {string.Format(message, objs)}");
+                    if (_detailed)
+                    {
+                        var now = DateTime.Now;
+
+                        Console.WriteLine($"{now:HH:mm:ss} {level}: {string.Format(message, objs)}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"{level}: {string.Format(message, objs)}");
+                    }
                 }
 
                 _loggedLines.Enqueue(new LogLine(level, SafeFormat(message, objs), _type));
