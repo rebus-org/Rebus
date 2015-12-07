@@ -756,6 +756,7 @@
 * Added `IBus` API overloads for `Subscribe` and `Unsubscribe` that accept a `Type` as a parameter - thanks [gertjvr]
 * Fixed `ExpiredMessagesCleanup` warning because of locked rows when handling message for a long time with the SQL Server transport
 * Introduced `rbs2-defer-recipient` header to designate the queue to deliver the message to when it returns - allows for doing request/reply with a defer in the middle without losing the return address (which must be transferred manually, though, unless you `bus.Advanced.TransportMessage.Defer`)
+* Crude attempt at allowing for sagas to resolve their conflicts by overriding `ResolveConflict`
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

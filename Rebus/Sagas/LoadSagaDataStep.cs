@@ -155,9 +155,12 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
 
                     return;
                 }
-                catch (ConcurrencyException ex)
+                catch (ConcurrencyException)
                 {
                     if (saveAttempts > 10) throw;
+
+                    // if we get a concurrencyexception on insert, we would not be able to look up the saga by its ID, we would have to look it up by correlating.... could do that too, but then it would swap the order of saga data instances when resolving the conflict
+                    if (insert) throw; //< ^^^ - therefore: disable conflict resolution on insert because: how?
 
                     var userHasOverriddenConflictResolutionMethod = sagaDataToUpdate.Saga.UserHasOverriddenConflictResolutionMethod();
 
@@ -169,8 +172,9 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                     var freshSagaData = await _sagaStorage.Find(sagaData.GetType(), "Id", sagaData.Id);
 
                     if (freshSagaData == null)
-                        throw new ApplicationException(string.Format("Could not find saga data with ID {0} when attempting to invoke conflict resolution - it must have been deleted",
-                            sagaData.Id));
+                    {
+                        throw new ApplicationException($"Could not find saga data with ID {sagaData.Id} when attempting to invoke conflict resolution - it must have been deleted");
+                    }
 
                     await saga.InvokeConflictResolution(freshSagaData);
 
@@ -194,11 +198,11 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                 Saga = saga;
             }
 
-            public ISagaData SagaData { get; private set; }
+            public ISagaData SagaData { get; }
 
-            public List<CorrelationProperty> CorrelationProperties { get; private set; }
+            public List<CorrelationProperty> CorrelationProperties { get; }
 
-            public Saga Saga { get; private set; }
+            public Saga Saga { get; }
         }
     }
 }

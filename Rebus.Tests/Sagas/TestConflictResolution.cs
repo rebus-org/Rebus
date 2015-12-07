@@ -27,7 +27,7 @@ namespace Rebus.Tests.Sagas
         {
             _builtinHandlerActivator = Using(new BuiltinHandlerActivator());
 
-            _loggerFactory = new ListLoggerFactory();
+            _loggerFactory = new ListLoggerFactory(outputToConsole: true);
 
             _bus = Configure.With(_builtinHandlerActivator)
                 .Logging(l => l.Use(_loggerFactory))
@@ -47,17 +47,17 @@ namespace Rebus.Tests.Sagas
 
             _builtinHandlerActivator.Register((bus, messageContext) => new MySaga(messageCount, messageContext, bus));
 
+            await _bus.SendLocal("warmup message");
+
+            await Task.Delay(1000);
+
             var tasks = Enumerable.Range(0, messageCount)
-                .Select(i => string.Format("message-{0}", i))
+                .Select(i => $"message-{i}")
                 .Select(async msg => await _bus.SendLocal(msg));
 
             await Task.WhenAll(tasks);
 
-            await Task.Delay(3000);
-
-            var linesWithInfoOrAbove = _loggerFactory.Where(l => l.Level > LogLevel.Debug);
-
-            Console.WriteLine(string.Join(Environment.NewLine, linesWithInfoOrAbove.Select(l => l.Text.Limit(120000))));
+            await Task.Delay(1000);
 
             resetEvent.WaitOrDie(TimeSpan.FromSeconds(4), "Did not receive the AllDone message!! One or more messages must have been moved to the error queue!");
 
@@ -66,7 +66,7 @@ namespace Rebus.Tests.Sagas
             Assert.That(warnings, Is.EqualTo(0), "Expected no warnings because all conflicts should have been resolved");
         }
 
-        class MySagaData : ISagaData
+        public class MySagaData : ISagaData
         {
             public const string ConstantCorrelationId = "hej";
 
@@ -83,7 +83,7 @@ namespace Rebus.Tests.Sagas
             public HashSet<string> IdsOfHandledMessages { get; set; }
         }
 
-        class MySaga : Saga<MySagaData>, IAmInitiatedBy<string>
+        public class MySaga : Saga<MySagaData>, IAmInitiatedBy<string>
         {
             readonly int _targetMessageCount;
             readonly IMessageContext _messageContext;
