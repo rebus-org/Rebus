@@ -762,6 +762,11 @@
 
 * Fixed bug that would fail saga data auditing when the message could not be correlated with a saga data instance
 
+# 0.99.19
+
+* Fixed Rebus' SimpleInjector container adapter registrations to be able to resolve `IMessageContext` as part of the container's verification process
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
