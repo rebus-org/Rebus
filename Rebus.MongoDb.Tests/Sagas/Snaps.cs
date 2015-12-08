@@ -3,7 +3,7 @@ using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.MongoDb.Tests.Sagas
 {
-    [TestFixture]
+    [TestFixture, Category(MongoTestHelper.TestCategory)]
     public class MongoDbSagaSnapshotStorageTest : SagaSnapshotStorageTest<MongoDbSnapshotStorageFactory>
     {
     }

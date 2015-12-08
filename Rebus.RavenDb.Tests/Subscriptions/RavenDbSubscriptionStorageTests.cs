@@ -3,7 +3,7 @@ using Rebus.Tests.Contracts.Subscriptions;
 
 namespace Rebus.RavenDb.Tests.Subscriptions
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.RavenDb)]
     public class RavenDbSubscriptionStorageTests : BasicSubscriptionOperations<RavenDbSubscriptionStorageFactory>
     {
     }

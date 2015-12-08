@@ -6,7 +6,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.PostgreSql.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.Postgres)]
     public class TestPostgreSqlTimeoutManager : BasicStoreAndRetrieveOperations<PostgreSqlTimeoutManagerFactory>
     {
     }
