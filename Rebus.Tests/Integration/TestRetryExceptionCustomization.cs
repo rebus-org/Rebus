@@ -77,7 +77,7 @@ namespace Rebus.Tests.Integration
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
-            await Task.Delay(500);
+            await Task.Delay(2000);
 
             Assert.That(deliveryAttempts, Is.EqualTo(1), "Only expected one single delivery attempt because we have disabled retries for ApplicationException");
         }
@@ -96,7 +96,7 @@ namespace Rebus.Tests.Integration
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
-            await Task.Delay(500);
+            await Task.Delay(2000);
 
             Assert.That(deliveryAttempts, Is.EqualTo(1), "Only expected one single delivery attempt because we threw a CustomException with ErrorCode = SecretErrorCode");
         }
@@ -115,7 +115,7 @@ namespace Rebus.Tests.Integration
 
             await _activator.Bus.SendLocal(new ShouldFail());
 
-            await Task.Delay(500);
+            await Task.Delay(2000);
 
             Assert.That(deliveryAttempts, Is.EqualTo(5), @"Expected the usual retries because we threw a CustomException that did not satisfy the predicate - here's what happened:
 
