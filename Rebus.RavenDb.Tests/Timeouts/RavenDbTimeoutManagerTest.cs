@@ -7,7 +7,7 @@ using Rebus.Timeouts;
 
 namespace Rebus.RavenDb.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.RavenDb)]
     public class RavenDbTimeoutManagerTest : BasicStoreAndRetrieveOperations<RavenDbTimoutManagerFactory>
     {
     }
