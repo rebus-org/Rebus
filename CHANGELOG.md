@@ -766,6 +766,9 @@
 
 * Fixed Rebus' SimpleInjector container adapter registrations to be able to resolve `IMessageContext` as part of the container's verification process
 
+# 0.99.20
+
+* Fixed bug in Amazon SQS transport that would silently ignore errors when sending messages - thanks [gertjvr]
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

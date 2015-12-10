@@ -49,10 +49,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AmazonSqsManyMessages.cs" />
-    <Compile Include="AmazonSQSManyMessagesTransportFactory.cs" />
+    <Compile Include="AmazonSqsManyMessagesTransportFactory.cs" />
     <Compile Include="AmazonSqsMessageExpiration.cs" />
-    <Compile Include="AmazonSQSSimpleSend.cs" />
-    <Compile Include="AmazonSQSTransportFactory.cs" />
+    <Compile Include="AmazonSqsSimpleSend.cs" />
+    <Compile Include="AmazonSqsTransportFactory.cs" />
     <Compile Include="AmazonSqsVisibiltyTimeout.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="DeferMessageTest.cs" />

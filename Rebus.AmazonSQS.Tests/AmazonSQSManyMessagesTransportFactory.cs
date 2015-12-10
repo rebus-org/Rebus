@@ -12,9 +12,9 @@ using Rebus.Tests.Integration.ManyMessages;
 
 namespace Rebus.AmazonSQS.Tests
 {
-    public class AmazonSQSManyMessagesTransportFactory : IBusFactory
+    public class AmazonSqsManyMessagesTransportFactory : IBusFactory
     {
-        private readonly List<IDisposable> _stuffToDispose = new List<IDisposable>();
+        readonly List<IDisposable> _stuffToDispose = new List<IDisposable>();
 
         public IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler)
         {
@@ -29,8 +29,8 @@ namespace Rebus.AmazonSQS.Tests
             var bus = Configure.With(builtinHandlerActivator)
                 .Transport(
                     t =>
-                        t.UseAmazonSqs(AmazonSQSTransportFactory.ConnectionInfo.AccessKeyId, AmazonSQSTransportFactory.ConnectionInfo.SecretAccessKey,
-                            RegionEndpoint.GetBySystemName(AmazonSQSTransportFactory.ConnectionInfo.RegionEndpoint), queueName))
+                        t.UseAmazonSqs(AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId, AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
+                            RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint), queueName))
                 .Options(o =>
                 {
                     o.SetNumberOfWorkers(10);
@@ -45,8 +45,8 @@ namespace Rebus.AmazonSQS.Tests
 
         private static void PurgeQueue(string queueName)
         {
-            new AmazonSqsTransport(queueName, AmazonSQSTransportFactory.ConnectionInfo.AccessKeyId, AmazonSQSTransportFactory.ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(AmazonSQSTransportFactory.ConnectionInfo.RegionEndpoint), new ConsoleLoggerFactory(false)).Purge();
+            new AmazonSqsTransport(queueName, AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId, AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
+                RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint), new ConsoleLoggerFactory(false)).Purge();
 
         }
 

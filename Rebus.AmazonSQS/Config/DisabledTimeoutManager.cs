@@ -9,7 +9,7 @@ namespace Rebus.AmazonSQS.Config
 {
     class DisabledTimeoutManager : ITimeoutManager
     {
-        public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
+        public Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             var messageIdToPrint = headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
@@ -22,9 +22,9 @@ namespace Rebus.AmazonSQS.Config
             throw new InvalidOperationException(message);
         }
 
-        public async Task<DueMessagesResult> GetDueMessages()
+        public Task<DueMessagesResult> GetDueMessages()
         {
-            return DueMessagesResult.Empty;
+            return Task.FromResult(DueMessagesResult.Empty);
         }
     }
 }

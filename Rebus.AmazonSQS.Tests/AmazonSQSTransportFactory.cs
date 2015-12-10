@@ -11,9 +11,9 @@ using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
 {
-    public class AmazonSQSTransportFactory : ITransportFactory
+    public class AmazonSqsTransportFactory : ITransportFactory
     {
-        private static ConnectionInfo _connectionInfo;
+        static ConnectionInfo _connectionInfo;
 
         internal static ConnectionInfo ConnectionInfo
         {

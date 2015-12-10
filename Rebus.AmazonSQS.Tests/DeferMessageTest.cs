@@ -21,7 +21,7 @@ namespace Rebus.AmazonSQS.Tests
 
         protected override void SetUp()
         {
-            var connectionInfo = AmazonSQSTransportFactory.ConnectionInfo;
+            var connectionInfo = AmazonSqsTransportFactory.ConnectionInfo;
 
             var accessKeyId = connectionInfo.AccessKeyId;
             var secretAccessKey = connectionInfo.SecretAccessKey;
