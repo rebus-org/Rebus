@@ -78,8 +78,9 @@ namespace Rebus.Tests.Timers
         }
 
         [Test]
-        public async Task ItWorks()
+        public async Task WorksWithSomeKindOfAccuracy()
         {
+            var tolerance = _factory.Tolerance;
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
             var task = _factory.CreateTask(TimeSpan.FromSeconds(0.2),
@@ -97,7 +98,7 @@ namespace Rebus.Tests.Timers
 
             Console.WriteLine(string.Join(Environment.NewLine, events));
 
-            Assert.That(events.Count, Is.GreaterThanOrEqualTo(5));
+            Assert.That(events.Count, Is.GreaterThanOrEqualTo(4), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
             Assert.That(events.Count, Is.LessThanOrEqualTo(7));
         }
     }
