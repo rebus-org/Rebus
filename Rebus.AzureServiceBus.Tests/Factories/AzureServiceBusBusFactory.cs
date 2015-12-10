@@ -8,6 +8,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
+using Rebus.Threading;
 
 namespace Rebus.AzureServiceBus.Tests.Factories
 {
@@ -48,7 +49,10 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
         static void PurgeQueue(string queueName)
         {
-            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, queueName, new ConsoleLoggerFactory(false))
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
+            var connectionString = StandardAzureServiceBusTransportFactory.ConnectionString;
+            new AzureServiceBusTransport(connectionString, queueName, consoleLoggerFactory, asyncTaskFactory)
                 .PurgeInputQueue();
         }
 

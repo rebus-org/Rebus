@@ -40,7 +40,7 @@ namespace Rebus.Tests.Timers
     {
         public IAsyncTask CreateTask(TimeSpan interval, Func<Task> action)
         {
-            var asyncTask = new AsyncTask("task", action, new ConsoleLoggerFactory(false));
+            var asyncTask = new TplAsyncTask("task", action, new ConsoleLoggerFactory(false));
             asyncTask.Interval = interval;
             return asyncTask;
         }

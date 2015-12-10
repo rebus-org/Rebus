@@ -9,6 +9,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
+using Rebus.Threading;
 
 namespace Rebus.AmazonSQS.Tests
 {
@@ -43,11 +44,13 @@ namespace Rebus.AmazonSQS.Tests
             return bus;
         }
 
-        private static void PurgeQueue(string queueName)
+        static void PurgeQueue(string queueName)
         {
-            new AmazonSqsTransport(queueName, AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId, AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint), new ConsoleLoggerFactory(false)).Purge();
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
 
+            new AmazonSqsTransport(queueName, AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId, AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
+                RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint), consoleLoggerFactory,
+                new TplAsyncTaskFactory(consoleLoggerFactory)).Purge();
         }
 
         public void Cleanup()

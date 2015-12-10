@@ -8,7 +8,7 @@ namespace Rebus.Threading
     /// <summary>
     /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
     ///  </summary>
-    public class AsyncTask : IAsyncTask
+    public class TplAsyncTask : IAsyncTask
     {
         /// <summary>
         /// This is the default interval between invocations if the periodic action, unless the <see cref="Interval"/> property is set to something else
@@ -31,21 +31,13 @@ namespace Rebus.Threading
         /// Constructs the periodic background task with the given <paramref name="description"/>, periodically executing the given <paramref name="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
-        public AsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant = false)
+        public TplAsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant = false)
         {
             _description = description;
             _action = action;
             _prettyInsignificant = prettyInsignificant;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
             Interval = DefaultInterval;
-        }
-
-        /// <summary>
-        /// Last-resort shutdown of the task (if it wasn't properly disposed)
-        /// </summary>
-        ~AsyncTask()
-        {
-            Dispose(false);
         }
 
         /// <summary>
@@ -114,33 +106,20 @@ namespace Rebus.Threading
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Cancels the background task so that it stops, waiting (up to 5 seconds) until it has exited properly
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
+                // if it was never started, we don't do anything
+                if (_task == null) return;
+
+                LogStartStop("Stopping periodic task '{0}'", _description);
+
+                _tokenSource.Cancel();
+
+                if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
                 {
-                    // if it was never started, we don't do anything
-                    if (_task == null) return;
-
-                    LogStartStop("Stopping periodic task '{0}'", _description);
-
-                    _tokenSource.Cancel();
-
-                    if (!_finished.WaitOne(TimeSpan.FromSeconds(5)))
-                    {
-                        _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
-                    }
+                    _log.Warn("Periodic task '{0}' did not finish within 5 second timeout!", _description);
                 }
             }
             finally
@@ -148,6 +127,7 @@ namespace Rebus.Threading
                 _disposed = true;
             }
         }
+
 
         void LogStartStop(string message, params object[] objs)
         {

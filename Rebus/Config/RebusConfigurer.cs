@@ -19,6 +19,7 @@ using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
+using Rebus.Threading;
 using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
@@ -131,6 +132,8 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
 
+            PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TplAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+
             PossiblyRegisterDefault<IRouter>(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
@@ -161,7 +164,8 @@ namespace Rebus.Config
             {
                 var settings = c.Get<SimpleRetryStrategySettings>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory);
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory, asyncTaskFactory);
             });
 
             PossiblyRegisterDefault<IRetryStrategy>(c =>
@@ -182,7 +186,8 @@ namespace Rebus.Config
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory);
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory, asyncTaskFactory);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());

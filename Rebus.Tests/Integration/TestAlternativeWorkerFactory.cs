@@ -120,7 +120,7 @@ namespace Rebus.Tests.Integration
             readonly ITransport _transport;
             readonly IPipeline _pipeline;
             readonly IPipelineInvoker _pipelineInvoker;
-            readonly AsyncTask _workerTask;
+            readonly TplAsyncTask _workerTask;
             readonly ILog _log;
 
             bool _workerStopped;
@@ -135,7 +135,7 @@ namespace Rebus.Tests.Integration
 
                 Name = name;
 
-                _workerTask = new AsyncTask(name, DoWork, new ConsoleLoggerFactory(false), prettyInsignificant: true)
+                _workerTask = new TplAsyncTask(name, DoWork, new ConsoleLoggerFactory(false), prettyInsignificant: true)
                 {
                     Interval = TimeSpan.FromMilliseconds(1)
                 };

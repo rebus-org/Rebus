@@ -13,6 +13,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests
@@ -137,14 +138,16 @@ namespace Rebus.AzureServiceBus.Tests
 
         ITransport GetTransport()
         {
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
             if (_mode == AzureServiceBusMode.Basic)
             {
-                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, new ConsoleLoggerFactory(false));
+                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
                 basicTransport.Initialize();
                 basicTransport.PurgeInputQueue();
                 return basicTransport;
             }
-            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, new ConsoleLoggerFactory(false));
+            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
             Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();

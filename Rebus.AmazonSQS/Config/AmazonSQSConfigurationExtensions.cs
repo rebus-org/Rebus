@@ -3,6 +3,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Threading;
 using Rebus.Timeouts;
 using Rebus.Transport;
 
@@ -23,8 +24,9 @@ namespace Rebus.AmazonSQS.Config
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
 
-                return new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory);
+                return new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory, asyncTaskFactory);
             });
 
             configurer
@@ -48,8 +50,9 @@ namespace Rebus.AmazonSQS.Config
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
 
-                return new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory);
+                return new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory, asyncTaskFactory);
             });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);

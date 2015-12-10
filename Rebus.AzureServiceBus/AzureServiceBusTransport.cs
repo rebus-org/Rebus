@@ -53,6 +53,7 @@ namespace Rebus.AzureServiceBus
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly string _inputQueueAddress;
         readonly ILog _log;
 
@@ -69,13 +70,14 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
             _rebusLoggerFactory = rebusLoggerFactory;
+            _asyncTaskFactory = asyncTaskFactory;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueAddress != null)
@@ -368,21 +370,24 @@ namespace Rebus.AzureServiceBus
                 return new FakeDisposable();
             }
 
-            var renewalTask = new AsyncTask($"RenewPeekLock-{messageId}",
-                async () =>
-                {
-                    _log.Info("Renewing peek lock for message with ID {0}", messageId);
-                    await brokeredMessage.RenewLockAsync();
-                },
-                _rebusLoggerFactory,
-                prettyInsignificant: true)
-            {
-                Interval = lockRenewalInterval
-            };
+            var renewalTask = _asyncTaskFactory
+                .Create($"RenewPeekLock-{messageId}",
+                    async () =>
+                    {
+                        await RenewPeekLock(messageId, brokeredMessage);
+                    },
+                    intervalSeconds: (int) lockRenewalInterval.TotalSeconds,
+                    prettyInsignificant: true);
 
             renewalTask.Start();
 
             return renewalTask;
+        }
+
+        async Task RenewPeekLock(string messageId, BrokeredMessage brokeredMessage)
+        {
+            _log.Info("Renewing peek lock for message with ID {0}", messageId);
+            await brokeredMessage.RenewLockAsync();
         }
 
         class FakeDisposable : IDisposable
@@ -513,7 +518,7 @@ namespace Rebus.AzureServiceBus
         {
             var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
 
-            return new[] {$"{MagicSubscriptionPrefix}{normalizedTopic}"};
+            return new[] { $"{MagicSubscriptionPrefix}{normalizedTopic}" };
         }
 
         /// <summary>

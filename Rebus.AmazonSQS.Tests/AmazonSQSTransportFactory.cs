@@ -7,6 +7,7 @@ using Amazon;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Threading;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
@@ -40,9 +41,11 @@ namespace Rebus.AmazonSQS.Tests
         {
             var region = RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint);
 
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
             var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
                 region,
-                new ConsoleLoggerFactory(false));
+                consoleLoggerFactory,
+                new TplAsyncTaskFactory(consoleLoggerFactory));
 
             transport.Initialize(peeklockDuration);
             transport.Purge();

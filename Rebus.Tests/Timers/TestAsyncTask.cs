@@ -18,7 +18,7 @@ namespace Rebus.Tests.Timers
         [TestCase(5)]
         public async Task CanActuallyStopTaskWithLongInterval(int secondsToLetTheTaskRun)
         {
-            using (var task = new AsyncTask("simulate-azure-service-bus-peek-lock-renewer", async () => { Console.WriteLine("INVOKED!!!"); }, new ConsoleLoggerFactory(false))
+            using (var task = new TplAsyncTask("simulate-azure-service-bus-peek-lock-renewer", async () => { Console.WriteLine("INVOKED!!!"); }, new ConsoleLoggerFactory(false))
             {
                 Interval = TimeSpan.FromMinutes(4.5)
             })
@@ -41,7 +41,7 @@ namespace Rebus.Tests.Timers
             var throwException = true;
             var taskWasCompleted = false;
 
-            using (var task = new AsyncTask("bimse", async () =>
+            using (var task = new TplAsyncTask("bimse", async () =>
             {
                 if (throwException)
                 {
@@ -75,7 +75,7 @@ namespace Rebus.Tests.Timers
         {
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
-            var task = new AsyncTask("test task",
+            var task = new TplAsyncTask("test task",
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);

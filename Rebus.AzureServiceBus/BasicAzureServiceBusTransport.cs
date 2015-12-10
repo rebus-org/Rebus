@@ -41,6 +41,7 @@ namespace Rebus.AzureServiceBus
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly string _inputQueueAddress;
 
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
@@ -56,13 +57,14 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (connectionString == null) throw new ArgumentNullException("connectionString");
             
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
             _rebusLoggerFactory = rebusLoggerFactory;
+            _asyncTaskFactory = asyncTaskFactory;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueAddress != null)
@@ -295,18 +297,15 @@ namespace Rebus.AzureServiceBus
         {
             if (AutomaticallyRenewPeekLock)
             {
-                var renewalTask = new AsyncTask(string.Format("RenewPeekLock-{0}", messageId),
+                var renewalTask = _asyncTaskFactory.Create($"RenewPeekLock-{messageId}",
                     async () =>
                     {
                         _log.Info("Renewing peek lock for message with ID {0}", messageId);
 
-                        await GetRetrier().Execute(brokeredMessage.RenewLockAsync);
+                        await brokeredMessage.RenewLockAsync();
                     },
-                    _rebusLoggerFactory,
-                    prettyInsignificant: true)
-                {
-                    Interval = lockRenewalInterval
-                };
+                    intervalSeconds: (int) lockRenewalInterval.TotalSeconds,
+                    prettyInsignificant: true);
 
                 renewalTask.Start();
 

@@ -43,14 +43,14 @@ namespace Rebus.Transport.SqlServer
         readonly string _inputQueueName;
         readonly ILog _log;
 
-        readonly AsyncTask _expiredMessagesCleanupTask;
+        readonly IAsyncTask _expiredMessagesCleanupTask;
         bool _disposed;
 
         /// <summary>
         /// Constructs the transport with the given <see cref="IDbConnectionProvider"/>, using the specified <paramref name="tableName"/> to send/receive messages,
         /// querying for messages with recipient = <paramref name="inputQueueName"/>
         /// </summary>
-        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory)
+        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
@@ -59,18 +59,7 @@ namespace Rebus.Transport.SqlServer
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle, rebusLoggerFactory)
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
-        }
-
-        /// <summary>
-        /// Last-resort disposal of resoures - shuts down the 'ExpiredMessagesCleanup' background task
-        /// </summary>
-        ~SqlServerTransport()
-        {
-            Dispose(false);
+            _expiredMessagesCleanupTask = asyncTaskFactory.Create("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle, intervalSeconds: 60);
         }
 
         /// <summary>
@@ -89,10 +78,7 @@ namespace Rebus.Transport.SqlServer
         /// <summary>
         /// Gets the name that this SQL transport will use to query by when checking the messages table
         /// </summary>
-        public string Address
-        {
-            get { return _inputQueueName; }
-        }
+        public string Address => _inputQueueName;
 
         /// <summary>
         /// The SQL transport doesn't really have queues, so this function does nothing
@@ -187,8 +173,8 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = string.Format(@"
-INSERT INTO [{0}]
+                command.CommandText = $@"
+INSERT INTO [{_tableName}]
 (
     [recipient],
     [headers],
@@ -205,8 +191,7 @@ VALUES
     @priority,
     dateadd(ss, @visible, getdate()),
     dateadd(ss, @ttlseconds, getdate())
-)",
-                    _tableName);
+)";
 
                 var headers = message.Headers.Clone();
 
@@ -382,7 +367,7 @@ DELETE FROM [{_tableName}]
             }
             catch (Exception exception)
             {
-                throw new FormatException(string.Format("Could not parse '{0}' into an Int32!", valueOrNull), exception);
+                throw new FormatException($"Could not parse '{valueOrNull}' into an Int32!", exception);
             }
         }
 
@@ -407,15 +392,6 @@ DELETE FROM [{_tableName}]
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
-            Dispose(true);
-        }
-
-        /// <summary>
-        /// Shuts down the background timer
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
@@ -427,5 +403,6 @@ DELETE FROM [{_tableName}]
                 _disposed = true;
             }
         }
+
     }
 }

@@ -30,7 +30,7 @@ namespace Rebus.AmazonSQS
         readonly string _accessKeyId;
         readonly string _secretAccessKey;
         readonly RegionEndpoint _regionEndpoint;
-        readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly ILog _log;
 
         TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
@@ -40,7 +40,7 @@ namespace Rebus.AmazonSQS
         /// <summary>
         /// Constructs the transport with the specified settings
         /// </summary>
-        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, IRebusLoggerFactory rebusLoggerFactory)
+        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (accessKeyId == null) throw new ArgumentNullException(nameof(accessKeyId));
             if (secretAccessKey == null) throw new ArgumentNullException(nameof(secretAccessKey));
@@ -63,7 +63,7 @@ namespace Rebus.AmazonSQS
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
             _regionEndpoint = regionEndpoint;
-            _rebusLoggerFactory = rebusLoggerFactory;
+            _asyncTaskFactory = asyncTaskFactory;
         }
 
         /// <summary>
@@ -226,7 +226,8 @@ namespace Rebus.AmazonSQS
 
                         if (response.Failed.Any())
                         {
-                            var failed = response.Failed.Select(f => new AmazonSQSException($"Failed {f.Message} with Id={f.Id}, Code={f.Code}, SenderFault={f.SenderFault}")).ToArray();
+                            var failed = response.Failed.Select(f => new AmazonSQSException($"Failed {f.Message} with Id={f.Id}, Code={f.Code}, SenderFault={f.SenderFault}"));
+
                             throw new AggregateException(failed);
                         }
                     })
@@ -296,21 +297,19 @@ namespace Rebus.AmazonSQS
             return transportMessage;
         }
 
-        AsyncTask CreateRenewalTaskForMessage(Message message, AmazonSQSClient client)
+        IAsyncTask CreateRenewalTaskForMessage(Message message, AmazonSQSClient client)
         {
-            var renewalTask = new AsyncTask($"RenewPeekLock-{message.MessageId}",
+            return _asyncTaskFactory.Create($"RenewPeekLock-{message.MessageId}",
                 async () =>
                 {
                     _log.Info("Renewing peek lock for message with ID {0}", message.MessageId);
 
-                    await client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl, message.ReceiptHandle, (int)_peekLockDuration.TotalSeconds));
+                    await
+                        client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl,
+                            message.ReceiptHandle, (int) _peekLockDuration.TotalSeconds));
                 },
-                _rebusLoggerFactory,
-                prettyInsignificant: true)
-            {
-                Interval = _peekLockRenewalInterval
-            };
-            return renewalTask;
+                intervalSeconds: (int) _peekLockRenewalInterval.TotalSeconds,
+                prettyInsignificant: true);
         }
 
         static bool MessageIsExpired(Message message)
@@ -327,14 +326,14 @@ namespace Rebus.AmazonSQS
             return false;
         }
 
-        private static bool MessageIsExpiredUsingRebusSentTime(Message message, TimeSpan timeToBeReceived)
+        static bool MessageIsExpiredUsingRebusSentTime(Message message, TimeSpan timeToBeReceived)
         {
             MessageAttributeValue rebusUtcTimeSentAttributeValue;
             if (message.MessageAttributes.TryGetValue(Headers.SentTime, out rebusUtcTimeSentAttributeValue))
             {
                 var rebusUtcTimeSent = DateTimeOffset.ParseExact(rebusUtcTimeSentAttributeValue.StringValue, "O", null);
 
-                if (Time.RebusTime.Now.UtcDateTime - rebusUtcTimeSent > timeToBeReceived)
+                if (RebusTime.Now.UtcDateTime - rebusUtcTimeSent > timeToBeReceived)
                 {
                     return true;
                 }
@@ -345,13 +344,13 @@ namespace Rebus.AmazonSQS
 
         }
 
-        private static bool MessageIsExpiredUsingNativeSqsSentTimestamp(Message message, TimeSpan timeToBeReceived)
+        static bool MessageIsExpiredUsingNativeSqsSentTimestamp(Message message, TimeSpan timeToBeReceived)
         {
             string sentTimeStampString;
             if (message.Attributes.TryGetValue("SentTimestamp", out sentTimeStampString))
             {
                 var sentTime = GetTimeFromUnixTimestamp(sentTimeStampString);
-                if (Time.RebusTime.Now.UtcDateTime - sentTime > timeToBeReceived)
+                if (RebusTime.Now.UtcDateTime - sentTime > timeToBeReceived)
                 {
                     return true;
                 }
