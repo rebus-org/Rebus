@@ -80,7 +80,6 @@ namespace Rebus.Tests.Timers
         [Test]
         public async Task WorksWithSomeKindOfAccuracy()
         {
-            var tolerance = _factory.Tolerance;
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
             var task = _factory.CreateTask(TimeSpan.FromSeconds(0.2),
