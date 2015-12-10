@@ -222,7 +222,13 @@ namespace Rebus.AmazonSQS
 
                         var request = new SendMessageBatchRequest(destinationUrl, entries);
 
-                        await client.SendMessageBatchAsync(request);
+                        var response = await client.SendMessageBatchAsync(request);
+
+                        if (response.Failed.Any())
+                        {
+                            var failed = response.Failed.Select(f => new AmazonSQSException($"Failed {f.Message} with Id={f.Id}, Code={f.Code}, SenderFault={f.SenderFault}")).ToArray();
+                            throw new AggregateException(failed);
+                        }
                     })
 
                 );

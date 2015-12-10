@@ -123,7 +123,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         static byte[] DontCareAboutTheBody()
         {
-            return new byte[] { 1, 2, 3 };
+            return System.Text.Encoding.UTF8.GetBytes("Dont Care About The Body");
         }
     }
 }
