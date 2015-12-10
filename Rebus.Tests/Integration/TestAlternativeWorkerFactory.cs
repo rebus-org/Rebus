@@ -11,6 +11,7 @@ using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Tests.Extensions;
 using Rebus.Threading;
+using Rebus.Threading.TaskBased;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Workers;

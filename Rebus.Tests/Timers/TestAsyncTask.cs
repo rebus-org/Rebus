@@ -3,25 +3,32 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Logging;
-using Rebus.Threading;
+using Rebus.Tests.Timers.Factories;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Timers
 {
-    [TestFixture]
-    public class TestAsyncTask : FixtureBase
+    [TestFixture(typeof(TplTaskFactory))]
+    [TestFixture(typeof(TimerTaskFactory))]
+    public class TestAsyncTask<TFactory> : FixtureBase where TFactory : IAsyncTaskFactory, new()
     {
+        TFactory _factory;
+
+        protected override void SetUp()
+        {
+            _factory = new TFactory();
+        }
+
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(2)]
         [TestCase(5)]
         public async Task CanActuallyStopTaskWithLongInterval(int secondsToLetTheTaskRun)
         {
-            using (var task = new TplAsyncTask("simulate-azure-service-bus-peek-lock-renewer", async () => { Console.WriteLine("INVOKED!!!"); }, new ConsoleLoggerFactory(false))
-            {
-                Interval = TimeSpan.FromMinutes(4.5)
-            })
+            var task = _factory.CreateTask(TimeSpan.FromMinutes(4.5), async () => { Console.WriteLine("INVOKED!!!"); });
+
+            using (task)
             {
                 task.Start();
 
@@ -41,7 +48,7 @@ namespace Rebus.Tests.Timers
             var throwException = true;
             var taskWasCompleted = false;
 
-            using (var task = new TplAsyncTask("bimse", async () =>
+            var task = _factory.CreateTask(TimeSpan.FromMilliseconds(400), async () =>
             {
                 if (throwException)
                 {
@@ -49,10 +56,9 @@ namespace Rebus.Tests.Timers
                 }
 
                 taskWasCompleted = true;
-            }, new ConsoleLoggerFactory(false))
-            {
-                Interval = TimeSpan.FromMilliseconds(400)
-            })
+            });
+
+            using (task)
             {
                 Console.WriteLine("Starting the task...");
                 task.Start();
@@ -75,15 +81,11 @@ namespace Rebus.Tests.Timers
         {
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
-            var task = new TplAsyncTask("test task",
+            var task = _factory.CreateTask(TimeSpan.FromSeconds(0.2),
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);
-                },
-                new ConsoleLoggerFactory(false))
-            {
-                Interval = TimeSpan.FromSeconds(0.2)
-            };
+                });
 
             using (task)
             {

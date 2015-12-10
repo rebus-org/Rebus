@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Logging;
-using Rebus.Threading;
+using Rebus.Tests.Timers.Factories;
+
 #pragma warning disable 1998
 
 namespace Rebus.Tests.Timers
 {
-    [Ignore, TestFixture(typeof(TplTaskFactory))]
+    [TestFixture(typeof(TimerTaskFactory))]
+    [TestFixture(typeof(TplTaskFactory))]
     public class CompareAsyncTasks<TTaskFactory> : FixtureBase where TTaskFactory : IAsyncTaskFactory, new()
     {
         TTaskFactory _factory;
@@ -18,36 +20,31 @@ namespace Rebus.Tests.Timers
         }
 
         [Test]
-        public async Task NizzleName()
+        public async Task CheckTimerDrift()
         {
-            var task = _factory.CreateTask(TimeSpan.FromSeconds(0.1), async () =>
+            const int testDurationSeconds = 10;
+
+            var counter = new SharedCounter(testDurationSeconds);
+            var stopwatch = Stopwatch.StartNew();
+
+            var task = _factory.CreateTask(TimeSpan.FromSeconds(1), async () =>
             {
                 var now = DateTime.Now;
-
-                Console.WriteLine($"{now:HH:mm:ss tt}");
+                Console.WriteLine($"{now:mm:ss}-{now.Millisecond:000}");
+                counter.Decrement();
             });
 
             using (task)
             {
                 task.Start();
 
-                await Task.Delay(20000);
+                counter.WaitForResetEvent(timeoutSeconds: 15);
             }
-        }
-    }
 
-    public class TplTaskFactory : IAsyncTaskFactory
-    {
-        public IAsyncTask CreateTask(TimeSpan interval, Func<Task> action)
-        {
-            var asyncTask = new TplAsyncTask("task", action, new ConsoleLoggerFactory(false));
-            asyncTask.Interval = interval;
-            return asyncTask;
-        }
-    }
+            var elapsed = stopwatch.Elapsed;
+            var drift = elapsed - TimeSpan.FromSeconds(testDurationSeconds);
 
-    public interface IAsyncTaskFactory
-    {
-        IAsyncTask CreateTask(TimeSpan interval, Func<Task> action);
+            Console.WriteLine($"Timer {task.GetType().Name} drifted {drift.TotalSeconds:0.000} s over duration {testDurationSeconds} s");
+        }
     }
 }

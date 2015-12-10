@@ -11,6 +11,8 @@ using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Threading;
+using Rebus.Threading.TaskBased;
+
 #pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus.Tests

@@ -112,6 +112,9 @@
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
     <Compile Include="Timers\CompareAsyncTasks.cs" />
+    <Compile Include="Timers\IAsyncTaskFactory.cs" />
+    <Compile Include="Timers\Factories\TimerTaskFactory.cs" />
+    <Compile Include="Timers\Factories\TplTaskFactory.cs" />
     <Compile Include="Transactions\TestUnitOfWork.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportFactory.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportBasicSendReceive.cs" />

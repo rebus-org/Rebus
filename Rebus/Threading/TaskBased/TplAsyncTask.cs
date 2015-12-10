@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Logging;
 
-namespace Rebus.Threading
+namespace Rebus.Threading.TaskBased
 {
     /// <summary>
     /// <see cref="Task"/>-based background timer thingie, that will periodically call an async <see cref="Func&lt;Task&gt;"/>
@@ -31,7 +31,7 @@ namespace Rebus.Threading
         /// Constructs the periodic background task with the given <paramref name="description"/>, periodically executing the given <paramref name="action"/>,
         /// waiting <see cref="Interval"/> between invocations.
         /// </summary>
-        public TplAsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant = false)
+        public TplAsyncTask(string description, Func<Task> action, IRebusLoggerFactory rebusLoggerFactory, bool prettyInsignificant)
         {
             _description = description;
             _action = action;
@@ -61,7 +61,7 @@ namespace Rebus.Threading
         {
             if (_disposed)
             {
-                throw new InvalidOperationException(string.Format("Cannot start periodic task '{0}' because it has been disposed!", _description));
+                throw new InvalidOperationException($"Cannot start periodic task '{_description}' because it has been disposed!");
             }
 
             LogStartStop("Starting periodic task '{0}' with interval {1}", _description, Interval);

@@ -14,6 +14,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Threading;
+using Rebus.Threading.TaskBased;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests

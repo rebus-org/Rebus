@@ -151,11 +151,13 @@
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
-    <Compile Include="Threading\TplAsyncTask.cs" />
+    <Compile Include="Threading\TaskBased\TplAsyncTask.cs" />
     <Compile Include="Threading\IAsyncTask.cs" />
     <Compile Include="Threading\IAsyncTaskFactory.cs" />
     <Compile Include="Threading\ParallelOperationsManager.cs" />
-    <Compile Include="Threading\TplAsyncTaskFactory.cs" />
+    <Compile Include="Threading\TaskBased\TplAsyncTaskFactory.cs" />
+    <Compile Include="Threading\TimerBased\TimerAsyncTask.cs" />
+    <Compile Include="Threading\TimerBased\TimerAsyncTaskFactory.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
     <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
