@@ -4,7 +4,7 @@ using GoCommando;
 using GoCommando.Attributes;
 using Rebus.AzureServiceBus;
 using Rebus.Forklift.Common;
-using Rebus.Threading.TaskBased;
+using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.Forklift.AzureServiceBus
 {

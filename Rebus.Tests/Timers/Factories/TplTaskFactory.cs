@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Rebus.Logging;
 using Rebus.Threading;
-using Rebus.Threading.TaskBased;
+using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.Tests.Timers.Factories
 {

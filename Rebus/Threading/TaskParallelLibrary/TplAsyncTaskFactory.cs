@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Rebus.Logging;
 
-namespace Rebus.Threading.TaskBased
+namespace Rebus.Threading.TaskParallelLibrary
 {
     /// <summary>
     /// Implementation of <see cref="IAsyncTaskFactory"/> that uses TPL to execute the background task

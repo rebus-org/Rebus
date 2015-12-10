@@ -10,7 +10,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
 using Rebus.Threading;
-using Rebus.Threading.TaskBased;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 using Rebus.Transport.SqlServer;
 using Timer = System.Timers.Timer;

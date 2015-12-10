@@ -10,7 +10,7 @@ using Rebus.Logging;
 using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
 using Rebus.Threading;
-using Rebus.Threading.TaskBased;
+using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.AmazonSQS.Tests
 {

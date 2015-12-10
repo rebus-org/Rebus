@@ -20,7 +20,7 @@ using Rebus.Sagas;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
 using Rebus.Threading;
-using Rebus.Threading.TaskBased;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;

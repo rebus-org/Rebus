@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Rebus.Logging;
 
-namespace Rebus.Threading.TimerBased
+namespace Rebus.Threading.SystemTimersTimer
 {
     /// <summary>
     /// Implementation of <see cref="IAsyncTask"/> that uses a <see cref="Timer"/> to schedule callbacks
