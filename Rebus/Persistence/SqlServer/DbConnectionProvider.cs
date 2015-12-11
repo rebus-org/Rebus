@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Configuration;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using Rebus.Logging;
+using IsolationLevel = System.Data.IsolationLevel;
+
 #pragma warning disable 1998
 
 namespace Rebus.Persistence.SqlServer
@@ -79,21 +81,21 @@ namespace Rebus.Persistence.SqlServer
 
             try
             {
-                connection = new SqlConnection(_connectionString);
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    connection = new SqlConnection(_connectionString);
 
-                connection.Open();
+                    connection.Open();
+                }
 
                 var transaction = connection.BeginTransaction(IsolationLevel);
 
                 return new DbConnectionWrapper(connection, transaction, false);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 _log.Warn("Could not open connection and begin transaction: {0}", exception);
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
+                connection?.Dispose();
                 throw;
             }
         }
