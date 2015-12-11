@@ -34,14 +34,21 @@ namespace Rebus.TransactionScopes
 
             var transactionContext = new DefaultTransactionContext();
 
-            Transaction.Current.EnlistVolatile(new AmbientTransactionBridge(transactionContext), EnlistmentOptions.None);
+            var ambientTransactionBridge = new AmbientTransactionBridge(transactionContext);
+
+            Transaction.Current.EnlistVolatile(ambientTransactionBridge, EnlistmentOptions.None);
+
+            Transaction.Current.TransactionCompleted += (o, ea) =>
+            {
+                ambientTransactionBridge.Dispose();
+            };
 
             AmbientTransactionContext.Current = transactionContext;
 
             return transactionScope;
         }
 
-        class AmbientTransactionBridge : IEnlistmentNotification
+        class AmbientTransactionBridge : IEnlistmentNotification, IDisposable
         {
             readonly DefaultTransactionContext _transactionContext;
 
@@ -57,35 +64,19 @@ namespace Rebus.TransactionScopes
 
             public void Commit(Enlistment enlistment)
             {
-                AssertTransactionIsThere();
-
-                try
-                {
-                    using (_transactionContext)
+                _transactionContext.Complete()
+                    .ContinueWith(_ =>
                     {
-                        _transactionContext.Complete().Wait();
-                    }
-                }
-                finally
-                {
-                    CleanUp();
-                }
-
-                enlistment.Done();
+                        using (_transactionContext)
+                        {
+                            enlistment.Done();
+                        }
+                    });
             }
 
             public void Rollback(Enlistment enlistment)
             {
-                AssertTransactionIsThere();
-
-                try
-                {
-                    _transactionContext.Dispose();
-                }
-                finally
-                {
-                    CleanUp();
-                }
+                _transactionContext.Dispose();
 
                 enlistment.Done();
             }
@@ -95,17 +86,14 @@ namespace Rebus.TransactionScopes
                 enlistment.Done();
             }
 
-            static void AssertTransactionIsThere()
-            {
-                if (AmbientTransactionContext.Current == null)
-                {
-                    throw new InvalidOperationException("WHERE IS THE REBUS TRANSCATION?");
-                }
-            }
-
             static void CleanUp()
             {
                 AmbientTransactionContext.Current = null;
+            }
+
+            public void Dispose()
+            {
+                CleanUp();
             }
         }
     }

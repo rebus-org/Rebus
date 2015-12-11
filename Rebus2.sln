@@ -1,6 +1,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "core", "core", "{63AB64A3-A453-4663-BDB6-530F2136609D}"
 EndProject
@@ -175,6 +175,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.TransactionScopes", "Rebus.TransactionScopes\Rebus.TransactionScopes.csproj", "{A750AD17-F3ED-4167-9664-667A44AA2B76}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.TransactionScopes.Tests", "Rebus.TransactionScopes.Tests\Rebus.TransactionScopes.Tests.csproj", "{C92056C5-6A52-42A7-ACD5-0D06D0390F57}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "sync", "sync", "{5E698EA2-32D7-4247-992E-4739564EF889}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Async", "Rebus.Async\Rebus.Async.csproj", "{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Async.Tests", "Rebus.Async.Tests\Rebus.Async.Tests.csproj", "{029A88C4-9350-497E-8EE8-B6965C7D7A90}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -374,6 +380,14 @@ Global
 		{C92056C5-6A52-42A7-ACD5-0D06D0390F57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C92056C5-6A52-42A7-ACD5-0D06D0390F57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C92056C5-6A52-42A7-ACD5-0D06D0390F57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{029A88C4-9350-497E-8EE8-B6965C7D7A90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{029A88C4-9350-497E-8EE8-B6965C7D7A90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{029A88C4-9350-497E-8EE8-B6965C7D7A90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{029A88C4-9350-497E-8EE8-B6965C7D7A90}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -456,5 +470,8 @@ Global
 		{DA39D60A-DE08-4D48-A19A-2E4F45E9F9EB} = {74D64F4A-F07F-41A1-A68F-731AE76E13F8}
 		{A750AD17-F3ED-4167-9664-667A44AA2B76} = {ADEE97CE-1965-4029-93D3-4BB13E4B2C3D}
 		{C92056C5-6A52-42A7-ACD5-0D06D0390F57} = {ADEE97CE-1965-4029-93D3-4BB13E4B2C3D}
+		{5E698EA2-32D7-4247-992E-4739564EF889} = {A54FE4CB-BB06-4198-8B4D-3EBD7152045B}
+		{206BFBFD-DD80-4BAC-A50A-CAEE097DA9AD} = {5E698EA2-32D7-4247-992E-4739564EF889}
+		{029A88C4-9350-497E-8EE8-B6965C7D7A90} = {5E698EA2-32D7-4247-992E-4739564EF889}
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -30,23 +31,36 @@ namespace Rebus.TransactionScopes.Tests
             _bus = _activator.Bus;
         }
 
-        [TestCase(true, true)]
-        [TestCase(false, false)]
-        public async Task SendsMessageOnlyWhenTransactionScopeIsCompleted(bool completeTheScope, bool expectToReceiveMessage)
+        [TestCase(true, false, true)]
+        [TestCase(false, false, false)]
+        [TestCase(false, true, false)]
+        public async Task SendsMessageOnlyWhenTransactionScopeIsCompleted(bool completeTheScope, bool throwException, bool expectToReceiveMessage)
         {
             var gotMessage = false;
             _activator.Handle<string>(async str => gotMessage = true);
 
-            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            try
             {
-                scope.EnlistRebus();
-
-                await _bus.SendLocal("hallå i stuen!1");
-
-                if (completeTheScope)
+                using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
                 {
-                    scope.Complete();
+                    scope.EnlistRebus();
+
+                    await _bus.SendLocal("hallå i stuen!1");
+
+                    if (throwException)
+                    {
+                        throw new ApplicationException("omg what is this?????");
+                    }
+
+                    if (completeTheScope)
+                    {
+                        scope.Complete();
+                    }
                 }
+            }
+            catch(ApplicationException exception) when (exception.Message == "omg what is this?????")
+            {
+                Console.WriteLine("An exception occurred... quite expected though");
             }
 
             await Task.Delay(1000);

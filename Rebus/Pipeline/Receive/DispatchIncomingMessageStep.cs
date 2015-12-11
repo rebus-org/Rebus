@@ -56,8 +56,7 @@ If no invokers were found, a RebusApplicationException is thrown.")]
                 var messageId = message.GetMessageId();
                 var messageType = message.GetMessageType();
 
-                var text = string.Format("Message with ID {0} and type {1} could not be dispatched to any handlers",
-                    messageId, messageType);
+                var text = $"Message with ID {messageId} and type {messageType} could not be dispatched to any handlers";
 
                 throw new RebusApplicationException(text);
             }

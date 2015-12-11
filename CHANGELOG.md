@@ -770,6 +770,10 @@
 
 * Fixed bug in Amazon SQS transport that would silently ignore errors when sending messages - thanks [gertjvr]
 
+# 0.99.21
+
+* Small changes to Rebus' `TransactionScope` enlistment support
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
