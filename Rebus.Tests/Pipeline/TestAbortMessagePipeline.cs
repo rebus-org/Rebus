@@ -54,7 +54,7 @@ namespace Rebus.Tests.Pipeline
             _activator.Register(context => new FirstHandler(_events, context, false));
             _activator.Register(() => new SecondHandler(_events));
 
-            _activator.Bus.SendLocal("hej med dig!!!").Wait();
+            await _activator.Bus.SendLocal("hej med dig!!!");
 
             await Task.Delay(1000);
 
@@ -67,7 +67,7 @@ namespace Rebus.Tests.Pipeline
             _activator.Register(context => new FirstHandler(_events, context, true));
             _activator.Register(() => new SecondHandler(_events));
 
-            _activator.Bus.SendLocal("hej med dig!!!").Wait();
+            await _activator.Bus.SendLocal("hej med dig!!!");
 
             await Task.Delay(1000);
 
@@ -80,7 +80,7 @@ namespace Rebus.Tests.Pipeline
             _activator.Register(context => new FirstHandler(_events, context, false));
             _activator.Register(() => new SecondHandler(_events));
 
-            _activator.Bus.SendLocal("hej med dig!!!").Wait();
+            await _activator.Bus.SendLocal("hej med dig!!!");
 
             await Task.Delay(1000);
 
