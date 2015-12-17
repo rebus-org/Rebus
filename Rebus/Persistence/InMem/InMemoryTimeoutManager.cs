@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +15,7 @@ namespace Rebus.Persistence.InMem
     /// <summary>
     /// Implementation of <see cref="ITimeoutManager"/> that "persists" timeouts in memory.
     /// </summary>
-    public class InMemoryTimeoutManager : ITimeoutManager
+    public class InMemoryTimeoutManager : ITimeoutManager, IEnumerable<InMemoryTimeoutManager.DeferredMessage>
     {
         readonly ConcurrentDictionary<string, DeferredMessage> _deferredMessages = new ConcurrentDictionary<string, DeferredMessage>();
 
@@ -65,18 +66,45 @@ namespace Rebus.Persistence.InMem
             }
         }
 
-        class DeferredMessage
+        /// <summary>
+        /// Represents a message whose delivery has been deferred into the future
+        /// </summary>
+        public class DeferredMessage
         {
-            public DateTimeOffset DueTime { get; private set; }
-            public Dictionary<string, string> Headers { get; private set; }
-            public byte[] Body { get; private set; }
+            /// <summary>
+            /// Gets the time of when delivery of this message is due
+            /// </summary>
+            public DateTimeOffset DueTime { get; }
+            
+            /// <summary>
+            /// Gets the message's headers
+            /// </summary>
+            public Dictionary<string, string> Headers { get; }
+            
+            /// <summary>
+            /// Gets the message's body
+            /// </summary>
+            public byte[] Body { get; }
 
-            public DeferredMessage(DateTimeOffset dueTime, Dictionary<string, string> headers, byte[] body)
+            internal DeferredMessage(DateTimeOffset dueTime, Dictionary<string, string> headers, byte[] body)
             {
                 DueTime = dueTime;
                 Headers = headers;
                 Body = body;
             }
+        }
+
+        /// <summary>
+        /// Gets an enumerator that allows for iterating through all stored deferred messages
+        /// </summary>
+        public IEnumerator<DeferredMessage> GetEnumerator()
+        {
+            return _deferredMessages.Values.ToList().GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

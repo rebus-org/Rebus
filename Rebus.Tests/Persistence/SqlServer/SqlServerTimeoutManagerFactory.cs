@@ -30,5 +30,10 @@ namespace Rebus.Tests.Persistence.SqlServer
         {
             SqlTestHelper.DropTable(TableName);
         }
+
+        public string GetDebugInfo()
+        {
+            return "could not provide debug info for this particular timeout manager.... implement if needed :)";
+        }
     }
 }

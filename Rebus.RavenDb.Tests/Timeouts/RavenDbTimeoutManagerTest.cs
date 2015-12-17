@@ -37,5 +37,10 @@ namespace Rebus.RavenDb.Tests.Timeouts
             _documentStore.Dispose();
             _documentStore = null;
         }
+
+        public string GetDebugInfo()
+        {
+            return "could not provide debug info for this particular timeout manager.... implement if needed :)";
+        }
     }
 }

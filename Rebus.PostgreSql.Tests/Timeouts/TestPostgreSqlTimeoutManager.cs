@@ -29,6 +29,11 @@ namespace Rebus.PostgreSql.Tests.Timeouts
         {
             PostgreSqlTestHelper.DropTable("timeouts");
         }
+
+        public string GetDebugInfo()
+        {
+            return "could not provide debug info for this particular timeout manager.... implement if needed :)";
+        }
     }
 
 }
