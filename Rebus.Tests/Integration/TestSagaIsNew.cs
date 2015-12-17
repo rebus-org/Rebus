@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -56,6 +55,8 @@ namespace Rebus.Tests.Integration
                 .ToArray();
 
             var counter = new SharedCounter(messages.Length);
+
+            Using(counter);
 
             _activator.Register(() => new MySaga(eventsPerCorrelationId, counter));
 

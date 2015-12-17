@@ -15,15 +15,9 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerSagaSnapshotStorage : ISagaSnapshotStorage
     {
-        static ILog _log;
-
-        static SqlServerSagaSnapshotStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
+        readonly ILog _log;
 
         static readonly JsonSerializerSettings DataSettings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
@@ -34,8 +28,9 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Constructs the snapshot storage
         /// </summary>
-        public SqlServerSagaSnapshotStorage(IDbConnectionProvider connectionProvider, string tableName)
+        public SqlServerSagaSnapshotStorage(IDbConnectionProvider connectionProvider, string tableName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             _connectionProvider = connectionProvider;
             _tableName = tableName;
         }

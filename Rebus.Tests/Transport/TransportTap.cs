@@ -24,6 +24,8 @@ namespace Rebus.Tests.Transport
         public event Action<TransportMessage> MessageSent = delegate { }; 
         
         public event Action<TransportMessage> MessageReceived = delegate { }; 
+        
+        public event Action NoMessageReceived = delegate { }; 
 
         public void CreateQueue(string address)
         {
@@ -48,6 +50,10 @@ namespace Rebus.Tests.Transport
                 _receivedMessages.Add(transportMessage);
 
                 MessageReceived(transportMessage);
+            }
+            else
+            {
+                NoMessageReceived();
             }
 
             return transportMessage;

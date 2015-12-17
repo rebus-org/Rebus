@@ -6,9 +6,14 @@ using Rebus.Activation;
 using Rebus.AzureServiceBus.Tests.Factories;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
+using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
+
+#pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus.Tests
 {
@@ -21,7 +26,9 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
-            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName).PurgeInputQueue();
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
+            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, consoleLoggerFactory, asyncTaskFactory).PurgeInputQueue();
 
             _activator = new BuiltinHandlerActivator();
 
@@ -63,7 +70,7 @@ namespace Rebus.AzureServiceBus.Tests
             Console.WriteLine("Message was delayed {0}", delay);
 
             Assert.That(delay, Is.GreaterThan(TimeSpan.FromSeconds(4)), "The message not delayed ~5 seconds as expected!");
-            Assert.That(delay, Is.LessThan(TimeSpan.FromSeconds(7)), "The message not delayed ~5 seconds as expected!");
+            Assert.That(delay, Is.LessThan(TimeSpan.FromSeconds(8)), "The message not delayed ~5 seconds as expected!");
 
             Assert.That(hadDeferredUntilHeader, Is.False, "Received message still had the '{0}' header - we must remove that", Headers.DeferredUntil);
         }

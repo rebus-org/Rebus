@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Threading;
 using Rebus.Time;
@@ -15,48 +17,36 @@ namespace Rebus.Workers.ThreadBased
     /// </summary>
     public class ThreadWorker : IWorker
     {
-        static ILog _log;
-
-        static ThreadWorker()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
-        readonly BackoffHelper _backoffHelper = new BackoffHelper();
         readonly ThreadWorkerSynchronizationContext _threadWorkerSynchronizationContext;
+        readonly IBackoffStrategy _backoffStrategy;
         readonly ITransport _transport;
         readonly IPipeline _pipeline;
         readonly Thread _workerThread;
         readonly IPipelineInvoker _pipelineInvoker;
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         readonly ParallelOperationsManager _parallelOperationsManager;
+        readonly ILog _log;
 
         volatile bool _keepWorking = true;
         bool _disposed;
 
-        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager)
+        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory)
         {
             Name = workerName;
 
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _parallelOperationsManager = parallelOperationsManager;
+            _backoffStrategy = backoffStrategy;
             _workerThread = new Thread(ThreadStart)
             {
                 Name = workerName,
-                IsBackground = true
+                IsBackground = true,
             };
             _workerThread.Start();
-        }
-
-        /// <summary>
-        /// Disposes any unmanaged held resources
-        /// </summary>
-        ~ThreadWorker()
-        {
-            Dispose(false);
         }
 
         void ThreadStart()
@@ -91,15 +81,18 @@ namespace Rebus.Workers.ThreadBased
             {
                 var nextContinuationOrNull = _threadWorkerSynchronizationContext.GetNextContinuationOrNull();
 
+                // if there's a continuation to run, run it
                 if (nextContinuationOrNull != null)
                 {
                     nextContinuationOrNull();
                     return;
                 }
 
-                if (!onlyRunContinuations)
+                var canTryToReceiveNewMessage = !onlyRunContinuations;
+
+                if (canTryToReceiveNewMessage)
                 {
-                    TryProcessMessage();
+                    TryReceiveNewMessage();
                 }
             }
             catch (ThreadAbortException)
@@ -113,11 +106,12 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        async void TryProcessMessage()
+        async void TryReceiveNewMessage()
         {
-            using (var op = _parallelOperationsManager.TryBegin())
+            using (var operation = _parallelOperationsManager.TryBegin())
             {
-                if (!op.CanContinue())
+                // if we didn't get to do our thing, pause the thread a very short while to avoid thrashing too much
+                if (!operation.CanContinue())
                 {
                     Thread.Sleep(10);
                     return;
@@ -128,30 +122,39 @@ namespace Rebus.Workers.ThreadBased
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
-                        var message = await _transport.Receive(transactionContext);
+                        var message = await TryReceiveTransportMessage(transactionContext);
 
                         if (message == null)
                         {
-                            // finish the tx and wait....
+                            // no message: finish the tx and wait....
                             await transactionContext.Complete();
-                            await _backoffHelper.Wait();
+                            await _backoffStrategy.Wait();
                             return;
                         }
 
-                        _backoffHelper.Reset();
+                        // we got a message, so we reset the backoff strategy
+                        _backoffStrategy.Reset();
 
                         var context = new IncomingStepContext(message, transactionContext);
-                        transactionContext.Items[StepContext.StepContextKey] = context;
 
                         var stagedReceiveSteps = _pipeline.ReceivePipeline();
 
                         await _pipelineInvoker.Invoke(context, stagedReceiveSteps);
 
-                        await transactionContext.Complete();
+                        try
+                        {
+                            await transactionContext.Complete();
+                        }
+                        catch (Exception exception)
+                        {
+                            _log.Error(exception, "An error occurred when attempting to complete the transaction context");
+                        }
                     }
                     catch (Exception exception)
                     {
-                        _log.Error(exception, "Unhandled exception in thread worker");
+                        // we should not end up here unless something is off....
+                        _log.Error(exception, "Unhandled exception in thread worker - the pipeline didn't handle its own errors (this is bad)");
+                        Thread.Sleep(100);
                     }
                     finally
                     {
@@ -161,21 +164,36 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
+        async Task<TransportMessage> TryReceiveTransportMessage(DefaultTransactionContext transactionContext)
+        {
+            try
+            {
+                var message = await _transport.Receive(transactionContext);
+
+                return message;
+            }
+            catch (Exception exception)
+            {
+                _log.Warn("An error occurred when attempting to receive transport message: {0}", exception);
+
+                return null;
+            }
+        }
+
         /// <summary>
         /// Gets the name of this thread worker
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
         /// <summary>
         /// Stops this thread worker
         /// </summary>
         public void Stop()
         {
-            if (_keepWorking)
-            {
-                _keepWorking = false;
-                _cancellationTokenSource.Cancel();
-            }
+            if (!_keepWorking) return;
+
+            _keepWorking = false;
+            _cancellationTokenSource.Cancel();
         }
 
         /// <summary>
@@ -183,27 +201,15 @@ namespace Rebus.Workers.ThreadBased
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Ensures that the worker thread is stopped and waits for it to exit
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
-                {
-                    Stop();
+                Stop();
 
-                    if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
-                    {
-                        _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
-                    }
+                if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
+                {
+                    _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
                 }
             }
             finally

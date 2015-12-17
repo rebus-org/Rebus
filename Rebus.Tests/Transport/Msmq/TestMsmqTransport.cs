@@ -9,6 +9,7 @@ using System.Threading;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.Msmq;
@@ -476,7 +477,7 @@ namespace Rebus.Tests.Transport.Msmq
 
         static List<int> SendMessages(int messageCount)
         {
-            var transport = new MsmqTransport(QueueName);
+            var transport = new MsmqTransport(QueueName, new ConsoleLoggerFactory(true));
 
             MsmqUtil.EnsureQueueExists(MsmqUtil.GetPath(QueueName));
 

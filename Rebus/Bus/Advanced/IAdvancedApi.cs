@@ -19,5 +19,10 @@ namespace Rebus.Bus.Advanced
         /// Gets an API to explicitly route messages
         /// </summary>
         IRoutingApi Routing { get; }
+
+        /// <summary>
+        /// Gets an API to perform operations with the transport message currently being handled
+        /// </summary>
+        ITransportMessageApi TransportMessage { get; }
     }
 }

@@ -9,6 +9,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Routing.TypeBased;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {

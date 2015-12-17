@@ -5,7 +5,10 @@ using System.IO;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus.Tests.Factories
@@ -63,9 +66,11 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
         public ITransport Create(string inputQueueAddress)
         {
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
             if (inputQueueAddress == null)
             {
-                var transport = new AzureServiceBusTransport(ConnectionString, null);
+                var transport = new AzureServiceBusTransport(ConnectionString, null, consoleLoggerFactory, asyncTaskFactory);
 
                 transport.Initialize();
 
@@ -74,7 +79,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
             {
-                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress);
+                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress, consoleLoggerFactory, asyncTaskFactory);
 
                 transport.PurgeInputQueue();
 

@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RebusCorrelationIdEnricher.cs" />
     <Compile Include="SerilogConfigurationExtensions.cs" />
     <Compile Include="SerilogLoggerFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

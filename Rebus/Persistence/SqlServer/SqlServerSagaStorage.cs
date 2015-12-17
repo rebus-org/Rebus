@@ -21,17 +21,11 @@ namespace Rebus.Persistence.SqlServer
     {
         const int MaximumSagaDataTypeNameLength = 40;
 
-        static ILog _log;
-
-        static SqlServerSagaStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         static readonly JsonSerializerSettings Settings =
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
-		readonly IDbConnectionProvider _connectionProvider;
+        readonly ILog _log;
+        readonly IDbConnectionProvider _connectionProvider;
         readonly string _dataTableName;
         readonly string _indexTableName;
         readonly string _idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
@@ -40,8 +34,9 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Constructs the saga storage, using the specified connection provider and tables for persistence.
         /// </summary>
-		public SqlServerSagaStorage(IDbConnectionProvider connectionProvider, string dataTableName, string indexTableName)
+		public SqlServerSagaStorage(IDbConnectionProvider connectionProvider, string dataTableName, string indexTableName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
             _connectionProvider = connectionProvider;
             _dataTableName = dataTableName;
             _indexTableName = indexTableName;

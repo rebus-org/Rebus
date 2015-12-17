@@ -34,13 +34,6 @@ namespace Rebus.Transport.SqlServer
         /// </summary>
         public static readonly TimeSpan DefaultExpiredMessagesCleanupInterval = TimeSpan.FromSeconds(20);
 
-        static ILog _log;
-
-        static SqlServerTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         const string CurrentConnectionKey = "sql-server-transport-current-connection";
         const int RecipientColumnSize = 200;
 
@@ -48,34 +41,25 @@ namespace Rebus.Transport.SqlServer
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
+        readonly ILog _log;
 
-        readonly AsyncTask _expiredMessagesCleanupTask;
+        readonly IAsyncTask _expiredMessagesCleanupTask;
         bool _disposed;
 
         /// <summary>
         /// Constructs the transport with the given <see cref="IDbConnectionProvider"/>, using the specified <paramref name="tableName"/> to send/receive messages,
         /// querying for messages with recipient = <paramref name="inputQueueName"/>
         /// </summary>
-        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName)
+        public SqlServerTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
             _inputQueueName = inputQueueName;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
-            _expiredMessagesCleanupTask = new AsyncTask("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle)
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
-        }
-
-        /// <summary>
-        /// Last-resort disposal of resoures - shuts down the 'ExpiredMessagesCleanup' background task
-        /// </summary>
-        ~SqlServerTransport()
-        {
-            Dispose(false);
+            _expiredMessagesCleanupTask = asyncTaskFactory.Create("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle, intervalSeconds: 60);
         }
 
         /// <summary>
@@ -94,10 +78,7 @@ namespace Rebus.Transport.SqlServer
         /// <summary>
         /// Gets the name that this SQL transport will use to query by when checking the messages table
         /// </summary>
-        public string Address
-        {
-            get { return _inputQueueName; }
-        }
+        public string Address => _inputQueueName;
 
         /// <summary>
         /// The SQL transport doesn't really have queues, so this function does nothing
@@ -192,8 +173,8 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = string.Format(@"
-INSERT INTO [{0}]
+                command.CommandText = $@"
+INSERT INTO [{_tableName}]
 (
     [recipient],
     [headers],
@@ -210,8 +191,7 @@ VALUES
     @priority,
     dateadd(ss, @visible, getdate()),
     dateadd(ss, @ttlseconds, getdate())
-)",
-                    _tableName);
+)";
 
                 var headers = message.Headers.Clone();
 
@@ -242,12 +222,11 @@ VALUES
             {
                 var connection = await GetConnection(context);
 
-                long? idOfMessageToDelete;
                 TransportMessage receivedTransportMessage;
 
                 using (var selectCommand = connection.CreateCommand())
                 {
-                    selectCommand.CommandText = string.Format(@"
+                    selectCommand.CommandText = $@"
 	SET NOCOUNT ON
 
 	;WITH TopCTE AS (
@@ -255,7 +234,7 @@ VALUES
 				[id],
 				[headers],
 				[body]
-		FROM	{0} M WITH (ROWLOCK, READPAST)
+		FROM	[{_tableName}] M WITH (ROWLOCK, READPAST)
 		WHERE	M.[recipient] = @recipient
 		AND		M.[visible] < getdate()
 		AND		M.[expiration] > getdate()
@@ -268,7 +247,7 @@ VALUES
 			deleted.[headers] as [headers],
 			deleted.[body] as [body]
 						
-						", _tableName);
+						";
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
@@ -278,19 +257,11 @@ VALUES
 
                         var headers = reader["headers"];
                         var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
-
-                        idOfMessageToDelete = (long)reader["id"];
                         var body = (byte[])reader["body"];
 
                         receivedTransportMessage = new TransportMessage(headersDictionary, body);
                     }
                 }
-
-                if (!idOfMessageToDelete.HasValue)
-                {
-                    return null;
-                }
-
 
                 return receivedTransportMessage;
             }
@@ -327,25 +298,45 @@ VALUES
 
         async Task PerformExpiredMessagesCleanupCycle()
         {
-            int results;
+            var results = 0;
             var stopwatch = Stopwatch.StartNew();
 
-            using (var connection = await _connectionProvider.GetConnection())
+            while (true)
             {
-                using (var command = connection.CreateCommand())
+                using (var connection = await _connectionProvider.GetConnection())
                 {
-                    command.CommandText = string.Format("DELETE FROM [{0}] WHERE [recipient] = @recipient AND [expiration] < getdate()", _tableName);
-                    command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+                    int affectedRows;
 
-                    results = await command.ExecuteNonQueryAsync();
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText =
+                            $@"
+DELETE FROM [{_tableName}] 
+    WHERE [id] IN (
+        SELECT TOP 1 [id] FROM [{
+                                _tableName
+                                }] WITH (ROWLOCK, READPAST)
+            WHERE [recipient] = @recipient 
+                AND [expiration] < getdate()
+    )
+";
+                        command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
+
+                        affectedRows = await command.ExecuteNonQueryAsync();
+                    }
+
+                    results += affectedRows;
+
+                    await connection.Complete();
+
+                    if (affectedRows == 0) break;
                 }
-
-                await connection.Complete();
             }
 
             if (results > 0)
             {
-                _log.Info("Performed expired messages cleanup in {0} - {1} expired messages with recipient {2} were deleted",
+                _log.Info(
+                    "Performed expired messages cleanup in {0} - {1} expired messages with recipient {2} were deleted",
                     stopwatch.Elapsed, results, _inputQueueName);
             }
         }
@@ -376,7 +367,7 @@ VALUES
             }
             catch (Exception exception)
             {
-                throw new FormatException(string.Format("Could not parse '{0}' into an Int32!", valueOrNull), exception);
+                throw new FormatException($"Could not parse '{valueOrNull}' into an Int32!", exception);
             }
         }
 
@@ -401,15 +392,6 @@ VALUES
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
-            Dispose(true);
-        }
-
-        /// <summary>
-        /// Shuts down the background timer
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
@@ -421,5 +403,6 @@ VALUES
                 _disposed = true;
             }
         }
+
     }
 }

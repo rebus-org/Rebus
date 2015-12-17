@@ -42,5 +42,10 @@ namespace Rebus.Transport
         /// Signals that something is wrong and the queue transaction must be aborted
         /// </summary>
         void Abort();
+
+        /// <summary>
+        /// Executes commit actions enlisted in the transaction with <see cref="OnCommitted"/>
+        /// </summary>
+        Task Commit();
     }
 }

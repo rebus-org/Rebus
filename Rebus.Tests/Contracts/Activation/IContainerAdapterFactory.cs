@@ -1,4 +1,5 @@
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 
 namespace Rebus.Tests.Contracts.Activation
@@ -10,5 +11,7 @@ namespace Rebus.Tests.Contracts.Activation
         void RegisterHandlerType<THandler>() where THandler : class, IHandleMessages;
 
         void CleanUp();
+
+        IBus GetBus();
     }
 }

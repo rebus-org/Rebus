@@ -20,28 +20,23 @@ namespace Rebus.PostgreSql.Sagas
     {
         const bool IndexNullProperties = false;
 
-        static ILog _log;
-
-        static PostgreSqlSagaStorage()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         static readonly string IdPropertyName = Reflect.Path<ISagaData>(d => d.Id);
 
         readonly ObjectSerializer _objectSerializer = new ObjectSerializer();
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _dataTableName;
         readonly string _indexTableName;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the saga storage
         /// </summary>
-        public PostgreSqlSagaStorage(PostgresConnectionHelper connectionHelper, string dataTableName, string indexTableName)
+        public PostgreSqlSagaStorage(PostgresConnectionHelper connectionHelper, string dataTableName, string indexTableName, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionHelper = connectionHelper;
             _dataTableName = dataTableName;
             _indexTableName = indexTableName;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

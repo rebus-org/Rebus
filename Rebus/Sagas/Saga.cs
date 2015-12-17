@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Threading.Tasks;
 using Rebus.Exceptions;
 using Rebus.Reflection;
+#pragma warning disable 1998
 
 namespace Rebus.Sagas
 {
@@ -12,6 +16,30 @@ namespace Rebus.Sagas
     /// </summary>
     public abstract class Saga
     {
+        static readonly ConcurrentDictionary<Type, bool> CachedUserHasOverriddenConflictResolutionMethod = new ConcurrentDictionary<Type, bool>();
+
+        /// <summary>
+        /// Checks whether the <see cref="Saga{TSagaData}.ResolveConflict"/> method is defined in <see cref="Saga{TSagaData}"/>, returning
+        /// true if it is NOT - because that means that the user has overridden the method and in this particular saga type can resolve conflicts. 
+        /// </summary>
+        internal bool UserHasOverriddenConflictResolutionMethod()
+        {
+            return CachedUserHasOverriddenConflictResolutionMethod
+                .GetOrAdd(GetType(), type =>
+                {
+                    var typeDeclaringTheConflictResolutionMethod = GetType()
+                        .GetMethod("ResolveConflict", BindingFlags.Instance | BindingFlags.NonPublic).DeclaringType;
+
+                    if (typeDeclaringTheConflictResolutionMethod == null)
+                    {
+                        return false;
+                    }
+
+                    return !(typeDeclaringTheConflictResolutionMethod.IsGenericType
+                             && typeDeclaringTheConflictResolutionMethod.GetGenericTypeDefinition() == typeof (Saga<>));
+                });
+        }
+
         internal IEnumerable<CorrelationProperty> GetCorrelationProperties()
         {
             return new List<CorrelationProperty>();
@@ -25,6 +53,8 @@ namespace Rebus.Sagas
 
         internal bool WasMarkedAsComplete { get; set; }
 
+        internal bool WasMarkedAsUnchanged { get; set; }
+
         internal bool HoldsNewSagaDataInstance { get; set; }
 
         /// <summary>
@@ -37,12 +67,23 @@ namespace Rebus.Sagas
         }
 
         /// <summary>
+        /// Marks the current saga instance as unchanged, causing any changes made to it to be ignored. Its revision will NOT be
+        /// incremented
+        /// </summary>
+        protected virtual void MarkAsUnchanged()
+        {
+            WasMarkedAsUnchanged = true;
+        }
+
+        /// <summary>
         /// Gets whether the saga data instance is new
         /// </summary>
         protected bool IsNew
         {
             get { return HoldsNewSagaDataInstance; }
         }
+
+        internal abstract Task InvokeConflictResolution(ISagaData otherSagaData);
     }
 
     /// <summary>
@@ -65,13 +106,26 @@ namespace Rebus.Sagas
         /// </summary>
         protected abstract void CorrelateMessages(ICorrelationConfig<TSagaData> config);
 
-        internal override IEnumerable<CorrelationProperty> GenerateCorrelationProperties()
+        internal sealed override IEnumerable<CorrelationProperty> GenerateCorrelationProperties()
         {
             var configuration = new CorrelationConfiguration(GetType());
             
             CorrelateMessages(configuration);
             
             return configuration.GetCorrelationProperties();
+        }
+
+        internal sealed override async Task InvokeConflictResolution(ISagaData otherSagaData)
+        {
+            await ResolveConflict((TSagaData) otherSagaData);
+        }
+
+        /// <summary>
+        /// Override this to be given an opportunity to resolve the conflict when a <see cref="ConcurrencyException"/> occurs on an update.
+        /// If a conflict cannot be resolved, feel free to bail out by throwing an exception.
+        /// </summary>
+        protected virtual async Task ResolveConflict(TSagaData otherSagaData)
+        {
         }
 
         class CorrelationConfiguration : ICorrelationConfig<TSagaData>

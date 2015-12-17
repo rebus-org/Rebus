@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Compression;
@@ -32,7 +31,7 @@ namespace Rebus.Tests.Integration
             _sentMessages = new List<TransportMessage>();
             _receivedMessages = new List<TransportMessage>();
 
-            _handlerActivator = new BuiltinHandlerActivator();
+            _handlerActivator = Using(new BuiltinHandlerActivator());
 
             _bus = Configure.With(_handlerActivator)
                 .Transport(t =>

@@ -8,6 +8,7 @@ using Rebus.Persistence.SqlServer;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
@@ -42,7 +43,7 @@ namespace Rebus.Tests.Integration
         {
             await _client1.Bus.Subscribe<SomeKindOfEvent>();
 
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             await _publisher.Bus.Publish(new SomeKindOfEvent());
 
@@ -54,7 +55,7 @@ namespace Rebus.Tests.Integration
         {
             await _client1.Bus.Subscribe<SomeKindOfEvent>();
 
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             object someKindOfEvent = new SomeKindOfEvent();
 
@@ -72,11 +73,8 @@ namespace Rebus.Tests.Integration
             var configurer = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(network, queueName));
 
-            if (additionalConfiguration != null)
-            {
-                additionalConfiguration(configurer);
-            }
-             
+            additionalConfiguration?.Invoke(configurer);
+
             configurer.Start();
 
             return activator;

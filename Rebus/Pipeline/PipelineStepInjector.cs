@@ -25,6 +25,7 @@ namespace Rebus.Pipeline
         /// </summary>
         public PipelineStepInjector(IPipeline pipeline)
         {
+            if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
             _pipeline = pipeline;
         }
 
@@ -129,8 +130,8 @@ namespace Rebus.Pipeline
         /// </summary>
         public PipelineStepInjector OnSend(IOutgoingStep step, PipelineRelativePosition position, Type anchorStep)
         {
-            if (step == null) throw new ArgumentNullException("step");
-            if (anchorStep == null) throw new ArgumentNullException("anchorStep");
+            if (step == null) throw new ArgumentNullException(nameof(step));
+            if (anchorStep == null) throw new ArgumentNullException(nameof(anchorStep));
 
             _outgoingInjectedSteps
                 .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IOutgoingStep>>())
@@ -146,8 +147,8 @@ namespace Rebus.Pipeline
         /// </summary>
         public PipelineStepInjector OnReceive(IIncomingStep step, PipelineRelativePosition position, Type anchorStep)
         {
-            if (step == null) throw new ArgumentNullException("step");
-            if (anchorStep == null) throw new ArgumentNullException("anchorStep");
+            if (step == null) throw new ArgumentNullException(nameof(step));
+            if (anchorStep == null) throw new ArgumentNullException(nameof(anchorStep));
 
             _incomingInjectedSteps
                 .GetOrAdd(anchorStep, _ => new List<Tuple<PipelineRelativePosition, IIncomingStep>>())

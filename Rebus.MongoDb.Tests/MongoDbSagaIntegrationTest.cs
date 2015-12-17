@@ -49,14 +49,14 @@ namespace Rebus.MongoDb.Tests
             _activator.Register(() => new MongoTestSaga(threadNames, sharedCounter));
 
             var sendTasks = Enumerable.Range(0, messageCount)
-                .Select(i => _bus.SendLocal(string.Format("message {0}", i%20)));
+                .Select(i => _bus.SendLocal($"message {i%20}"));
 
             await Task.WhenAll(sendTasks);
 
             sharedCounter.ResetEvent.WaitOrDie(TimeSpan.FromSeconds(20));
 
             Console.WriteLine("Thread names:");
-            Console.WriteLine(string.Join(Environment.NewLine, threadNames.Select(kvp => string.Format("   {0}: {1}", kvp.Key, kvp.Value))));
+            Console.WriteLine(string.Join(Environment.NewLine, threadNames.Select(kvp => $"   {kvp.Key}: {kvp.Value}")));
             Console.WriteLine();
 
             Assert.That(threadNames.Count, Is.EqualTo(1));
@@ -88,7 +88,7 @@ namespace Rebus.MongoDb.Tests
                 Data.SagaName = message;
             }
 
-            var threadName = Thread.CurrentThread.Name ?? string.Format("<unknown {0}>", Thread.CurrentThread.ManagedThreadId);
+            var threadName = Thread.CurrentThread.Name ?? $"<unknown {Thread.CurrentThread.ManagedThreadId}>";
 
             _threadNames.AddOrUpdate(threadName, name => 1, (name, value) => value + 1);
 

@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using Rebus.Auditing.Sagas;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.MongoDb.Sagas;
 using Rebus.MongoDb.Subscriptions;
 using Rebus.MongoDb.Timeouts;
@@ -71,7 +72,8 @@ namespace Rebus.MongoDb
         {
             configurer.Register(c =>
             {
-                var subscriptionStorage = new MongoDbTimeoutManager(mongoDatabase, collectionName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var subscriptionStorage = new MongoDbTimeoutManager(mongoDatabase, collectionName, rebusLoggerFactory);
 
                 return subscriptionStorage;
             });

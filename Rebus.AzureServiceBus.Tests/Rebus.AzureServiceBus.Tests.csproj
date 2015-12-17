@@ -31,8 +31,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.ServiceBus, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\WindowsAzure.ServiceBus.3.0.1\lib\net45-full\Microsoft.ServiceBus.dll</HintPath>
+      <HintPath>..\packages\WindowsAzure.ServiceBus.3.0.4\lib\net45-full\Microsoft.ServiceBus.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.Configuration">
       <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.3.1.0\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AzureServiceBusBasicSendReceive.cs" />
+    <Compile Include="AzureServiceBusContentTypeTest.cs" />
     <Compile Include="Factories\AzureServiceBusBusFactory.cs" />
     <Compile Include="AzureServiceBusManyMessages.cs" />
     <Compile Include="AzureServiceBusMessageExpiration.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="NativeDeferTest.cs" />
     <Compile Include="TestAsbTopicsPubSub.cs" />
     <Compile Include="TestCategory.cs" />
+    <Compile Include="WorksWhenEnablingPartitioning.cs" />
     <Content Include="asb_connection_string.txt" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

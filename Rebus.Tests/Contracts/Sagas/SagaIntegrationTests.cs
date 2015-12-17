@@ -8,7 +8,6 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Handlers;
 using Rebus.Logging;
-using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
@@ -35,7 +34,7 @@ namespace Rebus.Tests.Contracts.Sagas
             var done = new ManualResetEvent(false);
             var activator = new BuiltinHandlerActivator();
 
-            activator.Register(() => new MySaga(done, activator.Bus));
+            activator.Register((b, context) => new MySaga(done, b));
 
             var bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sagastuff"))

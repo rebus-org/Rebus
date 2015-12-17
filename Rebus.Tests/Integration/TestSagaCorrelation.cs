@@ -42,7 +42,7 @@ namespace Rebus.Tests.Integration
             var events = new ConcurrentQueue<Tuple<Guid, string>>();
             var activator = new BuiltinHandlerActivator();
 
-            activator.Register(() => new MySaga(events, activator.Bus));
+            activator.Register((b, context) => new MySaga(events, b));
 
             Using(activator);
 
@@ -59,7 +59,7 @@ namespace Rebus.Tests.Integration
                 AnInt = 23
             });
 
-            await events.WaitUntil(e => e.Count >= 4, timeoutSeconds: 5);
+            await events.WaitUntil(e => e.Count >= 4);
 
             await Task.Delay(500);
 

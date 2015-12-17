@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Pipeline;
 using Rebus.Transport;
 
 namespace Rebus.Bus
@@ -37,9 +38,28 @@ namespace Rebus.Bus
         /// <summary>
         /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
         /// </summary>
-        public static void SetDeferHeader(this Message message, DateTimeOffset approximateDeliveryTime)
+        public static void SetDeferHeaders(this Message message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
         {
-            message.Headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
+            InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
+        }
+
+        /// <summary>
+        /// Sets the <see cref="Headers.DeferredUntil"/> header to the specified time
+        /// </summary>
+        public static void SetDeferHeaders(this TransportMessage message, DateTimeOffset approximateDeliveryTime, string destinationAddress)
+        {
+            InnerSetDeferHeaders(approximateDeliveryTime, message.Headers, destinationAddress);
+        }
+
+        static void InnerSetDeferHeaders(DateTimeOffset approximateDeliveryTime, Dictionary<string, string> headers, string destinationAddress)
+        {
+            headers[Headers.DeferredUntil] = approximateDeliveryTime.ToIso8601DateTimeOffset();
+
+            // do not overwrite the recipient if it has been set
+            if (!headers.ContainsKey(Headers.DeferredRecipient))
+            {
+                headers[Headers.DeferredRecipient] = destinationAddress;
+            }
         }
 
         /// <summary>
@@ -86,7 +106,7 @@ namespace Rebus.Bus
 
         static string GetMessageLabel(Dictionary<string, string> headers)
         {
-            var id = headers.GetValue(Headers.MessageId);
+            var id = headers.GetValueOrNull(Headers.MessageId) ?? "<unknown>";
 
             string type;
 
@@ -104,12 +124,12 @@ namespace Rebus.Bus
                 type = "<unknown>";
             }
 
-            return string.Format("{0}/{1}", type, id);
+            return $"{type}/{id}";
         }
 
         static string GetTypeNameFromBodyObjectOrNull(object body)
         {
-            return body == null ? null : body.GetType().GetSimpleAssemblyQualifiedName();
+            return body?.GetType().GetSimpleAssemblyQualifiedName();
         }
     }
 }

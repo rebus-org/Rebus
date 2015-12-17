@@ -6,6 +6,8 @@ namespace Rebus.Forklift.Common
 {
     public abstract class ForkliftBase : ICommando
     {
+        protected IRebusLoggerFactory LoggerFactory;
+
         [PositionalArgument]
         [Description("Name of queue to receive messages from")]
         [Example("some_queue")]
@@ -27,18 +29,18 @@ namespace Rebus.Forklift.Common
             if (Verbose)
             {
                 Text.PrintLine("Enabling verbose logging");
-                
-                RebusLoggerFactory.Current = new ConsoleLoggerFactory(true)
+
+                LoggerFactory = new ConsoleLoggerFactory(true)
                 {
+                    ShowTimestamps = false,
                     MinLevel = LogLevel.Debug,
-                    ShowTimestamps = false
                 };
             }
             else
             {
                 Text.PrintLine("Verbose logging disabled (enable with -verbose)");
-                
-                RebusLoggerFactory.Current = new ConsoleLoggerFactory(true)
+
+                LoggerFactory = new ConsoleLoggerFactory(true)
                 {
                     MinLevel = LogLevel.Warn,
                     ShowTimestamps = false

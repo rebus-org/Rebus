@@ -1,4 +1,5 @@
-﻿using Rebus.Messages;
+﻿using System.Collections.Generic;
+using Rebus.Messages;
 using Rebus.Transport;
 
 namespace Rebus.Pipeline
@@ -30,5 +31,11 @@ namespace Rebus.Pipeline
         /// Gets the <see cref="Message"/> model for the message currently being handled.
         /// </summary>
         Message Message { get; }
+
+        /// <summary>
+        /// Gets the headers dictionary of the incoming message (same as accessing the Headers of the context's transport message,
+        /// or the logical message if the message has been properly deserialized)
+        /// </summary>
+        Dictionary<string,string> Headers { get; }
     }
 }

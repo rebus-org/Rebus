@@ -1,7 +1,9 @@
 ﻿using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Threading;
 using Rebus.Timeouts;
 
 namespace Rebus.Transport.SqlServer
@@ -37,8 +39,10 @@ namespace Rebus.Transport.SqlServer
         {
             configurer.Register(context =>
             {
-                var connectionProvider = new DbConnectionProvider(connectionString);
-                var transport = new SqlServerTransport(connectionProvider, tableName, inputQueueName);
+                var rebusLoggerFactory = context.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = context.Get<IAsyncTaskFactory>();
+                var connectionProvider = new DbConnectionProvider(connectionString, rebusLoggerFactory);
+                var transport = new SqlServerTransport(connectionProvider, tableName, inputQueueName, rebusLoggerFactory, asyncTaskFactory);
                 transport.EnsureTableIsCreated();
                 return transport;
             });

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using Rebus.Config;
+using Rebus.Logging;
 
 namespace Rebus.Routing.TypeBased
 {
@@ -14,9 +16,8 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public static TypeBasedRouterConfigurationBuilder TypeBased(this StandardConfigurer<IRouter> configurer)
         {
-            var router = new TypeBasedRouter();
-            var builder = new TypeBasedRouterConfigurationBuilder(router);
-            configurer.Register(c => router);
+            var builder = new TypeBasedRouterConfigurationBuilder();
+            configurer.Register(c => builder.Build(c.Get<IRebusLoggerFactory>()));
             return builder;
         }
 
@@ -25,11 +26,13 @@ namespace Rebus.Routing.TypeBased
         /// </summary>
         public class TypeBasedRouterConfigurationBuilder
         {
-            readonly TypeBasedRouter _router;
+            /// <summary>
+            /// We use this way of storing configuration actions in order to preserve the order
+            /// </summary>
+            readonly List<Action<TypeBasedRouter>> _configurationActions = new List<Action<TypeBasedRouter>>();
 
-            internal TypeBasedRouterConfigurationBuilder(TypeBasedRouter router)
+            internal TypeBasedRouterConfigurationBuilder()
             {
-                _router = router;
             }
 
             /// <summary>
@@ -37,7 +40,7 @@ namespace Rebus.Routing.TypeBased
             /// </summary>
             public TypeBasedRouterConfigurationBuilder Map<TMessage>(string destinationAddress)
             {
-                _router.Map<TMessage>(destinationAddress);
+                _configurationActions.Add(r => r.Map<TMessage>(destinationAddress));
                 return this;
             }
 
@@ -46,7 +49,7 @@ namespace Rebus.Routing.TypeBased
             /// </summary>
             public TypeBasedRouterConfigurationBuilder Map(Type messageType, string destinationAddress)
             {
-                _router.Map(messageType, destinationAddress);
+                _configurationActions.Add(r => r.Map(messageType, destinationAddress));
                 return this;
             }
 
@@ -55,8 +58,20 @@ namespace Rebus.Routing.TypeBased
             /// </summary>
             public TypeBasedRouterConfigurationBuilder MapAssemblyOf<TMessage>(string destinationAddress)
             {
-                _router.MapAssemblyOf<TMessage>(destinationAddress);
+                _configurationActions.Add(r => r.MapAssemblyOf<TMessage>(destinationAddress));
                 return this;
+            }
+
+            internal TypeBasedRouter Build(IRebusLoggerFactory rebusLoggerFactory)
+            {
+                var router = new TypeBasedRouter(rebusLoggerFactory);
+
+                foreach (var action in _configurationActions)
+                {
+                    action(router);
+                }
+
+                return router;
             }
         }
     }

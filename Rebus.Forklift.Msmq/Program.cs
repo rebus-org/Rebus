@@ -15,7 +15,7 @@ namespace Rebus.Forklift.Msmq
 
         protected override void DoRun()
         {
-            using (var transport = new MsmqTransport(InputQueue))
+            using (var transport = new MsmqTransport(InputQueue, LoggerFactory))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {

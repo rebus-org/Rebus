@@ -22,7 +22,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public InMemTransport(InMemNetwork network, string inputQueueAddress)
         {
-            if (network == null) throw new ArgumentNullException("network", "You need to provide a network that this in-mem transport should use for communication");
+            if (network == null) throw new ArgumentNullException(nameof(network), "You need to provide a network that this in-mem transport should use for communication");
 
             _network = network;
             _inputQueueAddress = inputQueueAddress;
@@ -41,13 +41,13 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
-            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (message == null) throw new ArgumentNullException("message");
-            if (context == null) throw new ArgumentNullException("context");
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             if (!_network.HasQueue(destinationAddress))
             {
-                throw new ArgumentException(string.Format("Destination queue address '{0}' does not exist!", destinationAddress));
+                throw new ArgumentException($"Destination queue address '{destinationAddress}' does not exist!");
             }
 
             context.OnCommitted(async () => _network.Deliver(destinationAddress, message.ToInMemTransportMessage()));
@@ -58,7 +58,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (context == null) throw new ArgumentNullException("context");
+            if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueAddress == null) throw new InvalidOperationException("This in-mem transport is initialized without an input queue, hence it is not possible to receive anything!");
 
             var nextMessage = _network.GetNextOrNull(_inputQueueAddress);
@@ -91,9 +91,6 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Gets the input queue
         /// </summary>
-        public string Address
-        {
-            get { return _inputQueueAddress; }
-        }
+        public string Address => _inputQueueAddress;
     }
 }

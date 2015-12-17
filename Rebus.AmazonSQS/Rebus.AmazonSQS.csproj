@@ -44,9 +44,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AmazonSQSTransport.cs" />
-    <Compile Include="Config\AmazonSQSConfigurationExtensions.cs" />
-    <Compile Include="Config\OutputQueue.cs" />
+    <Compile Include="AmazonSqsTransport.cs" />
+    <Compile Include="Config\AmazonSqsConfigurationExtensions.cs" />
+    <Compile Include="Config\DisabledTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

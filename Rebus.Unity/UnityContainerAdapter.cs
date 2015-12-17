@@ -46,7 +46,7 @@ namespace Rebus.Unity
             return resolvedHandlerInstances;
         }
 
-        IEnumerable<IHandleMessages<TMessage>> ResolvePoly<TMessage>()
+        List<IHandleMessages<TMessage>> ResolvePoly<TMessage>()
         {
             var handledMessageTypes = typeof(TMessage).GetBaseTypes()
                 .Concat(new[] { typeof(TMessage) });
@@ -58,7 +58,8 @@ namespace Rebus.Unity
 
                     return _unityContainer.ResolveAll(implementedInterface).Cast<IHandleMessages>();
                 })
-                .Cast<IHandleMessages<TMessage>>();
+                .Cast<IHandleMessages<TMessage>>()
+                .ToList();
         }
 
         /// <summary>

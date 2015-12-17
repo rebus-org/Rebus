@@ -6,7 +6,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
-using Rebus.Logging;
+using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Transport;
 using SimpleInjector;
@@ -19,13 +19,6 @@ namespace Rebus.SimpleInjector
     /// </summary>
     public class SimpleInjectorContainerAdapter : IContainerAdapter, IDisposable
     {
-        static ILog _log;
-
-        static SimpleInjectorContainerAdapter()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly HashSet<IDisposable> _disposables = new HashSet<IDisposable>();
         readonly Container _container;
 
@@ -38,8 +31,6 @@ namespace Rebus.SimpleInjector
 
             if (container.Options.ResolveUnregisteredCollections) return;
 
-            _log.Warn("The SimpleInjector Container has its Options.ResolveUnregisteredCollections property set to false, which means that Rebus would get an exception when trying to resolve handlers... therefore, it will not be set to true!");
-                
             container.Options.ResolveUnregisteredCollections = true;
         }
 
@@ -71,18 +62,37 @@ namespace Rebus.SimpleInjector
         public void SetBus(IBus bus)
         {
             _container.RegisterSingleton(bus);
-            
+
             _disposables.Add(bus);
 
             _container.Register(() =>
             {
                 var currentMessageContext = MessageContext.Current;
-                if (currentMessageContext == null)
+
+                if (currentMessageContext != null)
                 {
-                    throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
+                    return currentMessageContext;
                 }
-                return currentMessageContext;
+
+                if (_container.IsVerifying)
+                {
+                    return new FakeMessageContext();
+                }
+
+                throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
             });
+        }
+
+        /// <summary>
+        /// Fake implementation of <see cref="IMessageContext"/> that can be returned by SimpleInjector while verifying the configuration
+        /// </summary>
+        class FakeMessageContext : IMessageContext
+        {
+            public ITransactionContext TransactionContext { get; }
+            public IncomingStepContext IncomingStepContext { get; }
+            public TransportMessage TransportMessage { get; }
+            public Message Message { get; }
+            public Dictionary<string, string> Headers { get; }
         }
 
         /// <summary>

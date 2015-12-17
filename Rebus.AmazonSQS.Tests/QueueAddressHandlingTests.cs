@@ -8,12 +8,12 @@ namespace Rebus.AmazonSQS.Tests
     [TestFixture, Category(Category.AmazonSqs)]
     public class QueueAddressHandlingTests : SqsFixtureBase
     {
-        private AmazonSQSTransportFactory _transportFactory;
+        private AmazonSqsTransportFactory _transportFactory;
 
         protected override void SetUp()
         {
             base.SetUp();
-            _transportFactory = new AmazonSQSTransportFactory();
+            _transportFactory = new AmazonSqsTransportFactory();
 
         }
 

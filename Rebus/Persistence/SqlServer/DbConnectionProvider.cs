@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Configuration;
-using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Transactions;
 using Rebus.Logging;
+using IsolationLevel = System.Data.IsolationLevel;
+
 #pragma warning disable 1998
 
 namespace Rebus.Persistence.SqlServer
@@ -15,22 +17,20 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class DbConnectionProvider : IDbConnectionProvider
     {
-        static ILog _log;
-
-        static DbConnectionProvider()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly string _connectionString;
+        readonly ILog _log;
 
         /// <summary>
         /// Wraps the connection string with the given name from app.config (if it is found), or interprets the given string as
         /// a connection string to use. Will use <see cref="System.Data.IsolationLevel.ReadCommitted"/> by default on transactions,
         /// unless another isolation level is set with the <see cref="IsolationLevel"/> property
         /// </summary>
-        public DbConnectionProvider(string connectionStringOrConnectionStringName)
+        public DbConnectionProvider(string connectionStringOrConnectionStringName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
+
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
 
             _connectionString = EnsureMarsIsEnabled(connectionString);
@@ -81,21 +81,21 @@ namespace Rebus.Persistence.SqlServer
 
             try
             {
-                connection = new SqlConnection(_connectionString);
+                using (new TransactionScope(TransactionScopeOption.Suppress))
+                {
+                    connection = new SqlConnection(_connectionString);
 
-                connection.Open();
+                    connection.Open();
+                }
 
                 var transaction = connection.BeginTransaction(IsolationLevel);
 
                 return new DbConnectionWrapper(connection, transaction, false);
             }
-            catch(Exception exception)
+            catch (Exception exception)
             {
                 _log.Warn("Could not open connection and begin transaction: {0}", exception);
-                if (connection != null)
-                {
-                    connection.Dispose();
-                }
+                connection?.Dispose();
                 throw;
             }
         }

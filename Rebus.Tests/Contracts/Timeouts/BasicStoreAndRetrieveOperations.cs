@@ -84,13 +84,13 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1));
+                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
             }
 
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1));
+                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
             
                 // mark as complete
                 dueTimeoutsInTheFuture[0].MarkAsCompleted();
@@ -99,7 +99,7 @@ namespace Rebus.Tests.Contracts.Timeouts
             using (var result = await _timeoutManager.GetDueMessages())
             {
                 var dueTimeoutsInTheFuture = result.ToList();
-                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(0));
+                Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(0), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
             }
         }
 

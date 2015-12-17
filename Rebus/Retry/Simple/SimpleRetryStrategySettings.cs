@@ -19,10 +19,11 @@
         /// Creates the settings with the given error queue address and number of delivery attempts, defaulting to <see cref="DefaultErrorQueueName"/> and <see cref="DefaultNumberOfDeliveryAttempts"/> 
         /// as the error queue address and number of delivery attempts, respectively
         /// </summary>
-        public SimpleRetryStrategySettings(string errorQueueAddress = DefaultErrorQueueName, int maxDeliveryAttempts = DefaultNumberOfDeliveryAttempts)
+        public SimpleRetryStrategySettings(string errorQueueAddress = DefaultErrorQueueName, int maxDeliveryAttempts = DefaultNumberOfDeliveryAttempts, bool secondLevelRetriesEnabled = false)
         {
             ErrorQueueAddress = errorQueueAddress;
             MaxDeliveryAttempts = maxDeliveryAttempts;
+            SecondLevelRetriesEnabled = secondLevelRetriesEnabled;
         }
 
         /// <summary>
@@ -34,5 +35,10 @@
         /// Number of attempted deliveries to make before moving the poisonous message to the error queue
         /// </summary>
         public int MaxDeliveryAttempts { get; private set; }
+
+        /// <summary>
+        /// Configures whether an additional round of delivery attempts should be made with a <see cref="Failed{TMessage}"/> wrapping the originally failed messageS
+        /// </summary>
+        public bool SecondLevelRetriesEnabled { get; private set; }
     }
 }

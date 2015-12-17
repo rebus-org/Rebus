@@ -23,17 +23,11 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
     {
         const string DueMessagesSenderTaskName = "DueMessagesSender";
 
-        static ILog _log;
-
-        static HandleDeferredMessagesStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly ITimeoutManager _timeoutManager;
         readonly ITransport _transport;
         readonly Options _options;
-        readonly AsyncTask _dueMessagesSenderBackgroundTask;
+        readonly IAsyncTask _dueMessagesSenderBackgroundTask;
+        readonly ILog _log;
 
         bool _disposed;
 
@@ -41,24 +35,14 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// Constructs the step, using the specified <see cref="ITimeoutManager"/> to defer relevant messages
         /// and the specified <see cref="ITransport"/> to deliver messages when they're due.
         /// </summary>
-        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options)
+        public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             _timeoutManager = timeoutManager;
             _transport = transport;
             _options = options;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
-            _dueMessagesSenderBackgroundTask = new AsyncTask(DueMessagesSenderTaskName, TimerElapsed)
-            {
-                Interval = TimeSpan.FromSeconds(1)
-            };
-        }
-
-        /// <summary>
-        /// Last-resort disposal of resources, including shutting down the <see cref="DueMessagesSenderTaskName"/> background task.
-        /// </summary>
-        ~HandleDeferredMessagesStep()
-        {
-            Dispose(false);
+            _dueMessagesSenderBackgroundTask = asyncTaskFactory.Create(DueMessagesSenderTaskName, TimerElapsed, intervalSeconds: 1);
         }
 
         /// <summary>
@@ -71,8 +55,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
 
             if (UsingExternalTimeoutManager)
             {
-                _log.Info("Using external timeout manager with this address: '{0}'",
-                    _options.ExternalTimeoutManagerAddressOrNull);
+                _log.Info("Using external timeout manager with this address: '{0}'", _options.ExternalTimeoutManagerAddressOrNull);
             }
             else
             {
@@ -80,10 +63,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             }
         }
 
-        bool UsingExternalTimeoutManager
-        {
-            get { return !string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull); }
-        }
+        bool UsingExternalTimeoutManager => !string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull);
 
         async Task TimerElapsed()
         {
@@ -92,9 +72,13 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                 foreach (var dueMessage in result)
                 {
                     var transportMessage = dueMessage.ToTransportMessage();
-                    var returnAddress = transportMessage.Headers[Headers.ReturnAddress];
+                    var returnAddress = transportMessage.Headers[Headers.DeferredRecipient];
 
                     _log.Debug("Sending due message {0} to {1}",
+                        transportMessage.Headers[Headers.MessageId],
+                        returnAddress);
+
+                    Console.WriteLine("Sending due message {0} to {1}",
                         transportMessage.Headers[Headers.MessageId],
                         returnAddress);
 
@@ -128,13 +112,12 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                 return;
             }
 
-            if (!headers.ContainsKey(Headers.ReturnAddress))
+            if (!headers.ContainsKey(Headers.DeferredRecipient))
             {
-                throw new ApplicationException(string.Format("Received message {0} with the '{1}' header set to '{2}', but the message had no '{3}' header!",
-                    headers[Headers.MessageId],
-                    Headers.DeferredUntil,
-                    headers[Headers.DeferredUntil],
-                    Headers.ReturnAddress));
+                throw new ApplicationException(
+                    $"Received message {headers[Headers.MessageId]} with the '{Headers.DeferredUntil}' header" +
+                    $" set to '{headers[Headers.DeferredUntil]}', but the message had no" +
+                    $" '{Headers.DeferredRecipient}' header!");
             }
 
             if (UsingExternalTimeoutManager)
@@ -178,7 +161,7 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             }
             catch (Exception exception)
             {
-                throw new FormatException(string.Format("Could not parse the '{0}' header value", Headers.DeferredUntil), exception);
+                throw new FormatException($"Could not parse the '{Headers.DeferredUntil}' header value", exception);
             }
         }
 
@@ -187,23 +170,11 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Stops the background task
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
-                {
-                    _dueMessagesSenderBackgroundTask.Dispose();
-                }
+                _dueMessagesSenderBackgroundTask.Dispose();
             }
             finally
             {

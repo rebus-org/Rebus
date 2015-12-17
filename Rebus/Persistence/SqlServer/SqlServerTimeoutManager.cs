@@ -15,24 +15,19 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class SqlServerTimeoutManager : ITimeoutManager
     {
-        static ILog _log;
-
-        static SqlServerTimeoutManager()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly JsonSerializerSettings _headerSerializationSettings = new JsonSerializerSettings();
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the timeout manager, using the specified connection provider and table to store the messages until they're due.
         /// </summary>
-        public SqlServerTimeoutManager(IDbConnectionProvider connectionProvider, string tableName)
+        public SqlServerTimeoutManager(IDbConnectionProvider connectionProvider, string tableName, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionProvider = connectionProvider;
             _tableName = tableName;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

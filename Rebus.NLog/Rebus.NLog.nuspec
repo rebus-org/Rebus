@@ -15,7 +15,7 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="NLog" version="[3, 4)" />
+        <dependency id="NLog" version="[4.1.2, 5)" />
     </dependencies>
   </metadata>
   <files>

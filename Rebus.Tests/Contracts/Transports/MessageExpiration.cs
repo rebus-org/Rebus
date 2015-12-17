@@ -32,6 +32,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var headers = new Dictionary<string, string>
                 {
+                    {Headers.MessageId, Guid.NewGuid().ToString() },
                     {"recognizzle", id}
                 };
                 await transport.Send(queueName, MessageWith(headers), transactionContext);
@@ -65,6 +66,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var headers = new Dictionary<string, string>
                 {
+                    {Headers.MessageId, Guid.NewGuid().ToString() },
                     {"recognizzle", id},
                     {Headers.TimeToBeReceived, "00:00:04"} //< expires after 4 seconds!
                 };
@@ -94,6 +96,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 var headers = new Dictionary<string, string>
                 {
+                    {Headers.MessageId, Guid.NewGuid().ToString() },
                     {"recognizzle", id},
                     {Headers.TimeToBeReceived, "00:00:20"},
                     {Headers.SentTime,DateTimeOffset.UtcNow.ToString("O")}//< expires after 10 seconds!
@@ -120,7 +123,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         static byte[] DontCareAboutTheBody()
         {
-            return new byte[] { 1, 2, 3 };
+            return System.Text.Encoding.UTF8.GetBytes("Dont Care About The Body");
         }
     }
 }

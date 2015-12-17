@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 using Rebus.Transport.SqlServer;
 
@@ -26,7 +29,10 @@ namespace Rebus.Tests.Transport.SqlServer
 
             _tablesToDrop.Add(tableName);
 
-            var transport = new SqlServerTransport(new DbConnectionProvider(SqlTestHelper.ConnectionString), tableName, null);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
+            var transport = new SqlServerTransport(connectionProvider, tableName, null, consoleLoggerFactory, asyncTaskFactory);
 
             _disposables.Add(transport);
 
@@ -42,7 +48,10 @@ namespace Rebus.Tests.Transport.SqlServer
 
             _tablesToDrop.Add(tableName);
 
-            var transport = new SqlServerTransport(new DbConnectionProvider(SqlTestHelper.ConnectionString), tableName, inputQueueAddress);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
+            var transport = new SqlServerTransport(connectionProvider, tableName, inputQueueAddress, consoleLoggerFactory, asyncTaskFactory);
             
             _disposables.Add(transport);
             

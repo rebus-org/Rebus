@@ -1,9 +1,11 @@
 ﻿using System.Configuration;
 using Rebus.AzureServiceBus;
 using Rebus.AzureServiceBus.Config;
+using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
 using Rebus.Subscriptions;
+using Rebus.Threading;
 using Rebus.Timeouts;
 using Rebus.Transport;
 
@@ -27,14 +29,24 @@ namespace Rebus.Config
 
             if (mode == AzureServiceBusMode.Basic)
             {
-                configurer.Register(c => new BasicAzureServiceBusTransport(connectionString, null));
+                configurer.Register(c =>
+                {
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    return new BasicAzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory);
+                });
                 OneWayClientBackdoor.ConfigureOneWayClient(configurer);
                 return;
             }
-           
+
             configurer
                 .OtherService<AzureServiceBusTransport>()
-                .Register(c => new AzureServiceBusTransport(connectionString, null));
+                .Register(c =>
+                {
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                    var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    return new AzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory);
+                });
 
             configurer
                 .OtherService<ISubscriptionStorage>()
@@ -60,17 +72,18 @@ namespace Rebus.Config
             {
                 configurer.Register(c =>
                 {
-                    var transport = new BasicAzureServiceBusTransport(connectionString, inputQueueAddress);
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                    var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    var transport = new BasicAzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory);
 
                     if (settingsBuilder.PrefetchingEnabled)
                     {
                         transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
                     }
 
-                    if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
-                    {
-                        transport.AutomaticallyRenewPeekLock();
-                    }
+                    transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
+
+                    transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
 
                     return transport;
                 });
@@ -82,17 +95,18 @@ namespace Rebus.Config
                 .OtherService<AzureServiceBusTransport>()
                 .Register(c =>
                 {
-                    var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress);
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                    var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory);
 
                     if (settingsBuilder.PrefetchingEnabled)
                     {
                         transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
                     }
 
-                    if (settingsBuilder.AutomaticPeekLockRenewalEnabled)
-                    {
-                        transport.AutomaticallyRenewPeekLock();
-                    }
+                    transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
+
+                    transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
 
                     return transport;
                 });

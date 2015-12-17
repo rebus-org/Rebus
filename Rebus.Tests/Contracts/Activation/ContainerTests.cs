@@ -15,7 +15,7 @@ using Rebus.Transport.InMem;
 
 namespace Rebus.Tests.Contracts.Activation
 {
-    public class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
+    public abstract class ContainerTests<TFactory> : FixtureBase where TFactory : IContainerAdapterFactory, new()
     {
         TFactory _factory;
 
@@ -24,6 +24,140 @@ namespace Rebus.Tests.Contracts.Activation
             _factory = new TFactory();
 
             DisposableHandler.Reset();
+            SomeHandler.Reset();
+        }
+
+        [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
+        public void DoesNotDoubleResolveBecauseOfLazyEnumerableEvaluation()
+        {
+            _factory.RegisterHandlerType<SomeHandler>();
+            var handlerActivator = _factory.GetActivator();
+
+            using (var context = new DefaultTransactionContext())
+            {
+                var handlers = handlerActivator.GetHandlers("hej", context).Result.ToList();
+
+                //context.Complete().Wait();
+            }
+
+            var createdInstances = SomeHandler.CreatedInstances.ToList();
+            Assert.That(createdInstances, Is.EqualTo(new[] { 0 }));
+
+            var disposedInstances = SomeHandler.DisposedInstances.ToList();
+            Assert.That(disposedInstances, Is.EqualTo(new[] { 0 }));
+        }
+
+        class SomeHandler : IHandleMessages<string>, IDisposable
+        {
+            public static readonly ConcurrentQueue<int> CreatedInstances = new ConcurrentQueue<int>();
+            public static readonly ConcurrentQueue<int> DisposedInstances = new ConcurrentQueue<int>();
+
+            static int _instanceIdCounter;
+            readonly int _instanceId = _instanceIdCounter++;
+
+            public SomeHandler()
+            {
+                CreatedInstances.Enqueue(_instanceId);
+            }
+
+            public Task Handle(string message)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Dispose()
+            {
+                DisposedInstances.Enqueue(_instanceId);
+            }
+
+            public static void Reset()
+            {
+                while (DisposedInstances.Count > 0)
+                {
+                    int temp;
+                    DisposedInstances.TryDequeue(out temp);
+                }
+            }
+        }
+
+        [Test]
+        public void CanGetDecoratedBus()
+        {
+            var busReturnedFromConfiguration = Configure.With(_factory.GetActivator())
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "decorated-bus-test"))
+                .Options(o => o.Decorate<IBus>(c => new TestBusDecorator(c.Get<IBus>())))
+                .Start();
+
+            var busReturnedFromContainer = _factory.GetBus();
+
+            Assert.That(busReturnedFromConfiguration, Is.TypeOf<TestBusDecorator>());
+            Assert.That(busReturnedFromContainer, Is.TypeOf<TestBusDecorator>());
+
+        }
+
+        class TestBusDecorator : IBus
+        {
+            readonly IBus _bus;
+
+            public TestBusDecorator(IBus bus)
+            {
+                _bus = bus;
+            }
+
+            public void Dispose()
+            {
+                _bus.Dispose();
+            }
+
+            public Task SendLocal(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.SendLocal(commandMessage, optionalHeaders);
+            }
+
+            public Task Send(object commandMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.SendLocal(commandMessage, optionalHeaders);
+            }
+
+            public Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Reply(replyMessage, optionalHeaders);
+            }
+
+            public Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Defer(delay, message, optionalHeaders);
+            }
+
+            public IAdvancedApi Advanced
+            {
+                get { return _bus.Advanced; }
+            }
+
+            public Task Subscribe<TEvent>()
+            {
+                return _bus.Subscribe<TEvent>();
+            }
+
+            public Task Subscribe(Type eventType)
+            {
+                return _bus.Subscribe(eventType);
+            }
+
+            public Task Unsubscribe<TEvent>()
+            {
+                return _bus.Unsubscribe<TEvent>();
+            }
+
+            public Task Unsubscribe(Type eventType)
+            {
+                return _bus.Unsubscribe(eventType);
+            }
+
+            public Task Publish(object eventMessage, Dictionary<string, string> optionalHeaders = null)
+            {
+                return _bus.Publish(eventMessage, optionalHeaders);
+            }
         }
 
         [Test]
@@ -105,7 +239,17 @@ namespace Rebus.Tests.Contracts.Activation
                 throw new NotImplementedException();
             }
 
+            public Task Subscribe(Type eventType)
+            {
+                throw new NotImplementedException();
+            }
+
             public Task Unsubscribe<TEvent>()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Unsubscribe(Type eventType)
             {
                 throw new NotImplementedException();
             }

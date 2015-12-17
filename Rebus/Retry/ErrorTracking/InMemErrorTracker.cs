@@ -18,38 +18,23 @@ namespace Rebus.Retry.ErrorTracking
     /// </summary>
     public class InMemErrorTracker : IErrorTracker, IInitializable, IDisposable
     {
-        static ILog _log;
-
-        static InMemErrorTracker()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
-        readonly int _maxDeliveryAttempts;
         const string BackgroundTaskName = "CleanupTrackedErrors";
 
+        readonly ILog _log;
+        readonly int _maxDeliveryAttempts;
         readonly ConcurrentDictionary<string, ErrorTracking> _trackedErrors = new ConcurrentDictionary<string, ErrorTracking>();
-        readonly AsyncTask _cleanupOldTrackedErrorsTask;
+        readonly IAsyncTask _cleanupOldTrackedErrorsTask;
+
         bool _disposed;
 
         /// <summary>
         /// Constructs the in-mem error tracker with the configured number of delivery attempts as the MAX
         /// </summary>
-        public InMemErrorTracker(int maxDeliveryAttempts)
+        public InMemErrorTracker(int maxDeliveryAttempts, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             _maxDeliveryAttempts = maxDeliveryAttempts;
-            _cleanupOldTrackedErrorsTask = new AsyncTask(BackgroundTaskName, CleanupOldTrackedErrors)
-            {
-                Interval = TimeSpan.FromMinutes(1)
-            };
-        }
-
-        /// <summary>
-        /// Last-resort disposal of the in-mem error tracker's background cleaning task
-        /// </summary>
-        ~InMemErrorTracker()
-        {
-            Dispose(false);
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(BackgroundTaskName, CleanupOldTrackedErrors, intervalSeconds: 60);
         }
 
         /// <summary>
@@ -195,28 +180,17 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Shuts down the background task that removes tracked message IDs where nothing has happened for too long
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
-                {
-                    _cleanupOldTrackedErrorsTask.Dispose();
-                }
+                _cleanupOldTrackedErrorsTask.Dispose();
             }
             finally
             {
                 _disposed = true;
             }
         }
+
     }
 }

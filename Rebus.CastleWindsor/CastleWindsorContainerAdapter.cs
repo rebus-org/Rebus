@@ -10,6 +10,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+// ReSharper disable ClassNeverInstantiated.Local
 #pragma warning disable 1998
 
 namespace Rebus.CastleWindsor
@@ -94,7 +95,7 @@ namespace Rebus.CastleWindsor
             }
         }
 
-        IEnumerable<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
+        List<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()
         {
             var handledMessageTypes = typeof(TMessage).GetBaseTypes()
                 .Concat(new[]{typeof(TMessage)});
@@ -106,7 +107,8 @@ namespace Rebus.CastleWindsor
 
                     return _windsorContainer.ResolveAll(implementedInterface).Cast<IHandleMessages>();
                 })
-                .Cast<IHandleMessages<TMessage>>();
+                .Cast<IHandleMessages<TMessage>>()
+                .ToList();
         }
     }
 }

@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration.Msmq
 {

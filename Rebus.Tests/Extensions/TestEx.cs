@@ -17,8 +17,13 @@ namespace Rebus.Tests.Extensions
             return JsonConvert.DeserializeObject<JObject>(jsonText).ToString();
         }
 
-        public static string Limit(this string line, int maxNumberOfChars)
+        public static string Limit(this string line, int maxNumberOfChars, bool singleLine = false)
         {
+            if (singleLine)
+            {
+                line = line.Split(new[] {Environment.NewLine}, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+            }
+
             if (line.Length + 3 <= maxNumberOfChars) return line;
 
             return line.Substring(0, maxNumberOfChars - 3) + "...";
@@ -57,6 +62,8 @@ namespace Rebus.Tests.Extensions
                 throw new TimeoutException(string.Format("Criteria {0} not satisfied within {1} s timeout", criteria, timeoutSeconds));
             }
         }
+
+
 
         public static IEnumerable<TItem> InRandomOrder<TItem>(this IEnumerable<TItem> items)
         {

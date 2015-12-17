@@ -15,25 +15,18 @@ namespace Rebus.Routing.TransportMessages
     [StepDocumentation("This step allows for very quickly forwarding of the incoming transport message without performing any further actions")]
     public class ForwardTransportMessageStep : IIncomingStep
     {
-        static ILog _log;
-
-        static ForwardTransportMessageStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly Func<TransportMessage, Task<ForwardAction>> _routingFunction;
         readonly ITransport _transport;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the step
         /// </summary>
-        /// <param name="routingFunction"></param>
-        /// <param name="transport"></param>
-        public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport)
+        public ForwardTransportMessageStep(Func<TransportMessage, Task<ForwardAction>> routingFunction, ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
             _routingFunction = routingFunction;
             _transport = transport;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

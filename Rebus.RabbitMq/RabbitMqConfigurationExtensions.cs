@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Subscriptions;
 using Rebus.Transport;
 
@@ -18,7 +19,11 @@ namespace Rebus.RabbitMq
         {
             configurer
                 .OtherService<RabbitMqTransport>()
-                .Register(c => new RabbitMqTransport(connectionString, null));
+                .Register(c =>
+                {
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory);
+                });
 
             configurer
                 .OtherService<ISubscriptionStorage>()
@@ -40,7 +45,8 @@ namespace Rebus.RabbitMq
                 .OtherService<RabbitMqTransport>()
                 .Register(c =>
                 {
-                    var transport = new RabbitMqTransport(connectionString, inputQueueName);
+                    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                    var transport = new RabbitMqTransport(connectionString, inputQueueName, rebusLoggerFactory);
 
                     if (options.NumberOfMessagesToprefetch.HasValue)
                     {

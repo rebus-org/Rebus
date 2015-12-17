@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,6 +8,7 @@ using NUnit.Framework;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Tests.Extensions;
+using Rebus.Transport;
 
 namespace Rebus.Tests.Pipeline
 {
@@ -32,7 +34,7 @@ namespace Rebus.Tests.Pipeline
 
             1000000.Times(() =>
             {
-                var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), null);
+                var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
 
                 var pipeline = Enumerable.Range(0, 15)
                     .Select(stepNumber => new NamedStep(string.Format("step {0}", stepNumber)))
@@ -44,12 +46,61 @@ namespace Rebus.Tests.Pipeline
             Console.WriteLine("Execution took {0:0.0} s", stopwatch.Elapsed.TotalSeconds);
         }
 
+        ITransactionContext GetFakeTransactionContext()
+        {
+            return new FakeTransactionContext();
+        }
+
+        class FakeTransactionContext : ITransactionContext {
+            public FakeTransactionContext()
+            {
+                Items = new ConcurrentDictionary<string, object>();
+            }
+            public void Dispose()
+            {
+                throw new NotImplementedException();
+            }
+
+            public ConcurrentDictionary<string, object> Items { get; private set; }
+            public void OnCommitted(Func<Task> commitAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnAborted(Action abortedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnCompleted(Func<Task> completedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void OnDisposed(Action disposedAction)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void Abort()
+            {
+                throw new NotImplementedException();
+            }
+
+            public Task Commit()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         [Test]
         public async Task InvokesInOrder()
         {
             var invoker = new DefaultPipelineInvoker();
 
-            var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), null);
+            var transportMessage = new TransportMessage(new Dictionary<string, string>(), new byte[0]);
+            var fakeTransactionContext = GetFakeTransactionContext();
+            var stepContext = new IncomingStepContext(transportMessage, fakeTransactionContext);
 
             await invoker.Invoke(stepContext, new IIncomingStep[]
             {

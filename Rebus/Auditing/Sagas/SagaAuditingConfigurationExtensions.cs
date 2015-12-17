@@ -2,8 +2,9 @@
 using Rebus.Config;
 using Rebus.Exceptions;
 using Rebus.Injection;
+using Rebus.Logging;
 using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
+using Rebus.Sagas;
 using Rebus.Transport;
 
 namespace Rebus.Auditing.Sagas
@@ -39,7 +40,7 @@ namespace Rebus.Auditing.Sagas
         /// </summary>
         public static void OutputToLog(this StandardConfigurer<ISagaSnapshotStorage> configurer)
         {
-            configurer.Register(c => new LoggerSagaSnapperShotter());
+            configurer.Register(c => new LoggerSagaSnapperShotter(c.Get<IRebusLoggerFactory>()));
         }
 
         static ITransport GetTransport(IResolutionContext c)

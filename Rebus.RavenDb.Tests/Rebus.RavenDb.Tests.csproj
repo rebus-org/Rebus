@@ -86,6 +86,7 @@
     <Compile Include="Sagas\RavenDbSagaStorageFactory.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageFactory.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageTests.cs" />
+    <Compile Include="TestCategory.cs" />
     <Compile Include="Timeouts\RavenDbTimeoutManagerTest.cs" />
   </ItemGroup>
   <ItemGroup>

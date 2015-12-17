@@ -44,6 +44,7 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -59,10 +60,13 @@
     <Compile Include="Auditing\Sagas\SagaAuditingConfigurationExtensions.cs" />
     <Compile Include="Auditing\Sagas\SagaAuditingMetadataKeys.cs" />
     <Compile Include="Auditing\Sagas\SaveSagaDataSnapshotStep.cs" />
-    <Compile Include="Bus\Advanced\AdvancedRebusBus.cs" />
+    <Compile Include="Backoff\BackoffConfigurationExtensions.cs" />
+    <Compile Include="Backoff\SimpleCustomizedBackoffStrategy.cs" />
+    <Compile Include="Bus\AdvancedRebusBus.cs" />
     <Compile Include="Bus\Advanced\IAdvancedApi.cs" />
     <Compile Include="Bus\Advanced\IRoutingApi.cs" />
     <Compile Include="Bus\Advanced\ITopicsApi.cs" />
+    <Compile Include="Bus\Advanced\ITransportMessageApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
@@ -82,6 +86,7 @@
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
+    <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
@@ -124,6 +129,8 @@
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
     <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
+    <Compile Include="Retry\Simple\Failed.cs" />
+    <Compile Include="Routing\Exceptions\AutoForwardOnExceptionConfigurationExtensions.cs" />
     <Compile Include="Routing\TransportMessages\ActionType.cs" />
     <Compile Include="Routing\TransportMessages\ForwardAction.cs" />
     <Compile Include="Routing\TransportMessages\ForwardTransportMessageStep.cs" />
@@ -145,8 +152,15 @@
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
-    <Compile Include="Threading\AsyncTask.cs" />
+    <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTask.cs" />
+    <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTaskFactory.cs" />
+    <Compile Include="Threading\TaskParallelLibrary\TplAsyncTask.cs" />
+    <Compile Include="Threading\IAsyncTask.cs" />
+    <Compile Include="Threading\IAsyncTaskFactory.cs" />
     <Compile Include="Threading\ParallelOperationsManager.cs" />
+    <Compile Include="Threading\TaskParallelLibrary\TplAsyncTaskFactory.cs" />
+    <Compile Include="Threading\SystemTimersTimer\TimerAsyncTask.cs" />
+    <Compile Include="Threading\SystemTimersTimer\TimerAsyncTaskFactory.cs" />
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
     <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
@@ -154,12 +168,14 @@
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
+    <Compile Include="Config\OneWayClientBusDecorator.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IWorker.cs" />
     <Compile Include="Bus\MessageExtensions.cs" />
     <Compile Include="Bus\RebusBus.cs" />
-    <Compile Include="Workers\ThreadBased\BackoffHelper.cs" />
+    <Compile Include="Backoff\SimpleConstantPollingBackoffStrategy.cs" />
+    <Compile Include="Workers\IBackoffStrategy.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorker.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerSynchronizationContext.cs" />
     <Compile Include="Config\Configure.cs" />
@@ -183,9 +199,7 @@
     <Compile Include="Logging\IRebusLoggerFactory.cs" />
     <Compile Include="Logging\LoggingColors.cs" />
     <Compile Include="Logging\LogLevel.cs" />
-    <Compile Include="Logging\MessageLogger.cs" />
     <Compile Include="Logging\NullLoggerFactory.cs" />
-    <Compile Include="Logging\RebusLoggerFactory.cs" />
     <Compile Include="Logging\TraceLoggerFactory.cs" />
     <Compile Include="Messages\Control\SubscribeRequest.cs" />
     <Compile Include="Messages\Control\UnsubscribeRequest.cs" />
@@ -201,7 +215,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerTimeoutManager.cs" />
     <Compile Include="Pipeline\Receive\ActivateHandlersStep.cs" />
     <Compile Include="Pipeline\Receive\HandleDeferredMessagesStep.cs" />
-    <Compile Include="Pipeline\Receive\LoadSagaDataStep.cs" />
+    <Compile Include="Sagas\LoadSagaDataStep.cs" />
     <Compile Include="Pipeline\Send\FlowCorrelationIdStep.cs" />
     <Compile Include="Pipeline\Send\SendOutgoingMessageStep.cs" />
     <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />

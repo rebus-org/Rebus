@@ -16,13 +16,6 @@ namespace Rebus.Legacy
     /// </summary>
     public static class LegacyCompatibilityConfigurationExtensions
     {
-        static ILog _log;
-
-        static LegacyCompatibilityConfigurationExtensions()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         /// <summary>
         /// Makes Rebus "legacy compatible", i.e. enables wire-level compatibility with older Rebus versions. WHen this is enabled,
         /// all endpoints need to be old Rebus endpoints or new Rebus endpoints with this feature enabled
@@ -68,7 +61,10 @@ namespace Rebus.Legacy
 
                 if (transport is MsmqTransport)
                 {
-                    _log.Info("MSMQ transport detected - changing to UTF7 for serialized message header encoding");
+                    c.Get<IRebusLoggerFactory>()
+                        .GetCurrentClassLogger()
+                        .Info("MSMQ transport detected - changing to UTF7 for serialized message header encoding");
+
                     ((MsmqTransport) transport).UseLegacyHeaderSerialization();
                 }
 

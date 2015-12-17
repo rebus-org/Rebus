@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Linq;
 using Rebus.Activation;
+using Rebus.Backoff;
 using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Injection;
@@ -18,6 +19,8 @@ using Rebus.Routing.TypeBased;
 using Rebus.Sagas;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
+using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
@@ -33,6 +36,8 @@ namespace Rebus.Config
         readonly Injectionist _injectionist = new Injectionist();
         readonly Options _options = new Options();
 
+        bool _hasBeenStarted;
+
         internal RebusConfigurer(IHandlerActivator handlerActivator)
         {
             _injectionist.Register(c => handlerActivator);
@@ -44,12 +49,11 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Configures how Rebus logs things that happen by installing a <see cref="RebusLoggerFactory"/> instance
-        /// on <see cref="RebusLoggerFactory.Current"/>
+        /// Configures how Rebus logs stuff that happens
         /// </summary>
         public RebusConfigurer Logging(Action<RebusLoggingConfigurer> configurer)
         {
-            configurer(new RebusLoggingConfigurer());
+            configurer(new RebusLoggingConfigurer(_injectionist));
             return this;
         }
 
@@ -127,7 +131,15 @@ namespace Rebus.Config
         {
             VerifyRequirements();
 
-            PossiblyRegisterDefault<IRouter>(c => new TypeBasedRouter());
+            PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
+
+            PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TplAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+
+            PossiblyRegisterDefault<IRouter>(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new TypeBasedRouter(rebusLoggerFactory);
+            });
 
             PossiblyRegisterDefault<ISubscriptionStorage>(c => new InMemorySubscriptionStorage());
 
@@ -136,19 +148,25 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
+            
+            PossiblyRegisterDefault<IBackoffStrategy>(c => new SimpleConstantPollingBackoffStrategy());
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
             {
                 var transport = c.Get<ITransport>();
                 var pipeline = c.Get<IPipeline>();
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism);
+                var backoffStrategy = c.Get<IBackoffStrategy>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
             {
                 var settings = c.Get<SimpleRetryStrategySettings>();
-                return new InMemErrorTracker(settings.MaxDeliveryAttempts);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory, asyncTaskFactory);
             });
 
             PossiblyRegisterDefault<IRetryStrategy>(c =>
@@ -156,7 +174,8 @@ namespace Rebus.Config
                 var transport = c.Get<ITransport>();
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
                 var errorTracker = c.Get<IErrorTracker>();
-                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker, rebusLoggerFactory);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());
@@ -167,30 +186,41 @@ namespace Rebus.Config
             {
                 var transport = c.Get<ITransport>();
                 var timeoutManager = c.Get<ITimeoutManager>();
-                return new HandleDeferredMessagesStep(timeoutManager, transport, _options);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                return new HandleDeferredMessagesStep(timeoutManager, transport, _options, rebusLoggerFactory, asyncTaskFactory);
             });
 
             PossiblyRegisterDefault(c => c.Get<IRetryStrategy>().GetRetryStep());
 
-            PossiblyRegisterDefault<IPipeline>(c => new DefaultPipeline()
+            PossiblyRegisterDefault<IPipeline>(c =>
+            {
+                var serializer = c.Get<ISerializer>();
+                var transport = c.Get<ITransport>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
-                .OnReceive(c.Get<IRetryStrategyStep>())
-                .OnReceive(c.Get<HandleDeferredMessagesStep>())
-                .OnReceive(new DeserializeIncomingMessageStep(c.Get<ISerializer>()))
-                .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
-                .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>()))
-                .OnReceive(new DispatchIncomingMessageStep())
+                return new DefaultPipeline()
+                    .OnReceive(c.Get<IRetryStrategyStep>())
+                    .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                    .OnReceive(new DeserializeIncomingMessageStep(serializer))
+                    .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
+                    .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
+                    .OnReceive(new DispatchIncomingMessageStep())
 
-                .OnSend(new AssignGuidMessageIdStep())
-                .OnSend(new AssignReturnAddressStep(c.Get<ITransport>()))
-                .OnSend(new AssignDateTimeOffsetHeader())
-                .OnSend(new FlowCorrelationIdStep())
-                .OnSend(new AutoHeadersOutgoingStep())
-                .OnSend(new SerializeOutgoingMessageStep(c.Get<ISerializer>()))
-                .OnSend(new SendOutgoingMessageStep(c.Get<ITransport>()))
-                );
+                    .OnSend(new AssignGuidMessageIdStep())
+                    .OnSend(new AssignReturnAddressStep(transport))
+                    .OnSend(new AssignDateTimeOffsetHeader())
+                    .OnSend(new FlowCorrelationIdStep())
+                    .OnSend(new AutoHeadersOutgoingStep())
+                    .OnSend(new SerializeOutgoingMessageStep(serializer))
+                    .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
+            });
 
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
+
+            // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
+            IContainerAdapter containerAdapter = null;
+            Action startAction = null;
 
             PossiblyRegisterDefault<IBus>(c =>
             {
@@ -201,7 +231,8 @@ namespace Rebus.Config
                     c.Get<IPipeline>(),
                     c.Get<IPipelineInvoker>(),
                     c.Get<ISubscriptionStorage>(),
-                    _options);
+                    _options,
+                    c.Get<IRebusLoggerFactory>());
 
                 bus.Disposed += () =>
                 {
@@ -222,10 +253,10 @@ namespace Rebus.Config
 
                 if (_injectionist.Has<IContainerAdapter>())
                 {
-                    c.Get<IContainerAdapter>().SetBus(bus);
+                    containerAdapter = c.Get<IContainerAdapter>();
                 }
 
-                bus.Start(_options.NumberOfWorkers);
+                startAction = () => bus.Start(_options.NumberOfWorkers);
 
                 return bus;
             });
@@ -240,11 +271,22 @@ namespace Rebus.Config
 
             var busInstance = _injectionist.Get<IBus>();
 
+            containerAdapter?.SetBus(busInstance);
+
+            startAction?.Invoke();
+
+            _hasBeenStarted = true;
+
             return busInstance;
         }
 
         void VerifyRequirements()
         {
+            if (_hasBeenStarted)
+            {
+                throw new InvalidOperationException("This configurer has already had .Start() called on it - this is not allowed, because it cannot be guaranteed that configuration extensions make their registrations in a way that allows for being called more than once. If you need to create multiple bus instances, please wrap the configuration from Configure.With(...) and on in a function that you can call multiple times.");
+            }
+
             if (!_injectionist.Has<ITransport>())
             {
                 throw new ConfigurationErrorsException(

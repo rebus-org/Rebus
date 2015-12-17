@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Ninject;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
 
@@ -32,6 +33,11 @@ namespace Rebus.Ninject.Tests
         public void CleanUp()
         {
             _kernel.Dispose();
+        }
+
+        public IBus GetBus()
+        {
+            return _kernel.Get<IBus>();
         }
     }
 }

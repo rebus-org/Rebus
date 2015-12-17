@@ -5,15 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.Backoff;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Tests.Extensions;
 using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Workers;
-using Rebus.Workers.ThreadBased;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
@@ -37,7 +39,14 @@ namespace Rebus.Tests.Integration
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
                     .Options(o =>
                     {
-                        o.Register<IWorkerFactory>(c => new AsyncTaskWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>()));
+                        o.Register<IWorkerFactory>(c =>
+                        {
+                            var transport = c.Get<ITransport>();
+                            var pipeline = c.Get<IPipeline>();
+                            var pipelineInvoker = c.Get<IPipelineInvoker>();
+                            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                            return new AsyncTaskWorkerFactory(transport, pipeline, pipelineInvoker, rebusLoggerFactory);
+                        });
                     })
                     .Start();
 
@@ -61,7 +70,14 @@ namespace Rebus.Tests.Integration
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
                     .Options(o =>
                     {
-                        o.Register<IWorkerFactory>(c => new AsyncTaskWorkerFactory(c.Get<ITransport>(), c.Get<IPipeline>(), c.Get<IPipelineInvoker>()));
+                        o.Register<IWorkerFactory>(c =>
+                        {
+                            var transport = c.Get<ITransport>();
+                            var pipeline = c.Get<IPipeline>();
+                            var pipelineInvoker = c.Get<IPipelineInvoker>();
+                            var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                            return new AsyncTaskWorkerFactory(transport, pipeline, pipelineInvoker, rebusLoggerFactory);
+                        });
                         o.SetNumberOfWorkers(100);
                     })
                     .Start();
@@ -82,48 +98,45 @@ namespace Rebus.Tests.Integration
             readonly ITransport _transport;
             readonly IPipeline _pipeline;
             readonly IPipelineInvoker _pipelineInvoker;
+            readonly IRebusLoggerFactory _rebusLoggerFactory;
 
-            public AsyncTaskWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker)
+            public AsyncTaskWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, IRebusLoggerFactory rebusLoggerFactory)
             {
                 _transport = transport;
                 _pipeline = pipeline;
                 _pipelineInvoker = pipelineInvoker;
+                _rebusLoggerFactory = rebusLoggerFactory;
             }
 
             public IWorker CreateWorker(string workerName)
             {
-                return new AsyncTaskWorker(workerName, _transport, _pipeline, _pipelineInvoker, 10);
+                return new AsyncTaskWorker(workerName, _transport, _pipeline, _pipelineInvoker, 10, _rebusLoggerFactory);
             }
         }
 
         class AsyncTaskWorker : IWorker
         {
-            static ILog _log;
-
-            static AsyncTaskWorker()
-            {
-                RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-            }
-
-            readonly BackoffHelper _backoffHelper = new BackoffHelper();
+            readonly SimpleConstantPollingBackoffStrategy _backoffHelper = new SimpleConstantPollingBackoffStrategy();
             readonly ParallelOperationsManager _parallelOperationsManager;
             readonly ITransport _transport;
             readonly IPipeline _pipeline;
             readonly IPipelineInvoker _pipelineInvoker;
-            readonly AsyncTask _workerTask;
+            readonly TplAsyncTask _workerTask;
+            readonly ILog _log;
 
             bool _workerStopped;
 
-            public AsyncTaskWorker(string name, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelismPerWorker)
+            public AsyncTaskWorker(string name, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelismPerWorker, IRebusLoggerFactory rebusLoggerFactory)
             {
                 _transport = transport;
                 _pipeline = pipeline;
                 _pipelineInvoker = pipelineInvoker;
                 _parallelOperationsManager = new ParallelOperationsManager(maxParallelismPerWorker);
+                _log = rebusLoggerFactory.GetCurrentClassLogger();
 
                 Name = name;
 
-                _workerTask = new AsyncTask(name, DoWork, prettyInsignificant: true)
+                _workerTask = new TplAsyncTask(name, DoWork, new ConsoleLoggerFactory(false), prettyInsignificant: true)
                 {
                     Interval = TimeSpan.FromMilliseconds(1)
                 };

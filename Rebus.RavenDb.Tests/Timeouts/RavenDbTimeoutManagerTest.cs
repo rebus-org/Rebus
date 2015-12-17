@@ -1,12 +1,13 @@
 ﻿using NUnit.Framework;
 using Raven.Client.Embedded;
+using Rebus.Logging;
 using Rebus.RavenDb.Timouts;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Timeouts;
 
 namespace Rebus.RavenDb.Tests.Timeouts
 {
-    [TestFixture]
+    [TestFixture, Category(TestCategory.RavenDb)]
     public class RavenDbTimeoutManagerTest : BasicStoreAndRetrieveOperations<RavenDbTimoutManagerFactory>
     {
     }
@@ -28,13 +29,18 @@ namespace Rebus.RavenDb.Tests.Timeouts
             _documentStore.Initialize();
             _documentStore.ExecuteIndex(new TimeoutIndex());
 
-            return new RavenDbTimeoutManager(_documentStore);
+            return new RavenDbTimeoutManager(_documentStore, new ConsoleLoggerFactory(false));
         }
 
         public void Cleanup()
         {
             _documentStore.Dispose();
             _documentStore = null;
+        }
+
+        public string GetDebugInfo()
+        {
+            return "could not provide debug info for this particular timeout manager.... implement if needed :)";
         }
     }
 }

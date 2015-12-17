@@ -62,7 +62,7 @@ namespace Rebus.Tests.Integration.Sql
             Console.WriteLine("Message was delayed {0}", delay);
 
             Assert.That(delay, Is.GreaterThan(TimeSpan.FromSeconds(4)), "The message not delayed ~5 seconds as expected!");
-            Assert.That(delay, Is.LessThan(TimeSpan.FromSeconds(7)), "The message not delayed ~5 seconds as expected!");
+            Assert.That(delay, Is.LessThan(TimeSpan.FromSeconds(8)), "The message not delayed ~5 seconds as expected!");
 
             Assert.That(hadDeferredUntilHeader, Is.False, "Received message still had the '{0}' header - we must remove that", Headers.DeferredUntil);
         }

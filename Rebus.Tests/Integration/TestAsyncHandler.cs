@@ -23,6 +23,7 @@ namespace Rebus.Tests.Integration
         protected override void SetUp()
         {
             _handlerActivator = new BuiltinHandlerActivator();
+
             _bus = Configure.With(_handlerActivator)
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), InputQueueName))

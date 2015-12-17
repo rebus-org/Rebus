@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
@@ -21,7 +22,9 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         public ISagaStorage GetSagaStorage()
         {
-            var storage = new SqlServerSagaStorage(new DbConnectionProvider(SqlTestHelper.ConnectionString), DataTableName, IndexTableName);
+            var consoleLoggerFactory = new ConsoleLoggerFactory(true);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            var storage = new SqlServerSagaStorage(connectionProvider, DataTableName, IndexTableName, consoleLoggerFactory);
 
             storage.EnsureTablesAreCreated();
 

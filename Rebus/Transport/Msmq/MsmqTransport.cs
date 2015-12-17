@@ -21,17 +21,11 @@ namespace Rebus.Transport.Msmq
     /// </summary>
     public class MsmqTransport : ITransport, IInitializable, IDisposable
     {
-        static ILog _log;
-
-        static MsmqTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         const string CurrentOutgoingQueuesKey = "msmqtransport-outgoing-messagequeues";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
+        readonly ILog _log;
 
         volatile MessageQueue _inputQueue;
         bool _disposed;
@@ -39,8 +33,12 @@ namespace Rebus.Transport.Msmq
         /// <summary>
         /// Constructs the transport with the specified input queue address
         /// </summary>
-        public MsmqTransport(string inputQueueAddress)
+        public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
+
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+
             if (inputQueueAddress != null)
             {
                 _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
@@ -89,7 +87,7 @@ namespace Rebus.Transport.Msmq
 
             var inputQueuePath = MsmqUtil.GetPath(address);
 
-            MsmqUtil.EnsureQueueExists(inputQueuePath);
+            MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
         }
 
         /// <summary>
@@ -145,9 +143,11 @@ namespace Rebus.Transport.Msmq
                 return messageQueues;
             });
 
-            var sendQueue = sendQueues.GetOrAdd(MsmqUtil.GetPath(destinationAddress), _ =>
+            var path = MsmqUtil.GetFullPath(destinationAddress);
+
+            var sendQueue = sendQueues.GetOrAdd(path, _ =>
             {
-                var messageQueue = new MessageQueue(MsmqUtil.GetPath(destinationAddress), QueueAccessMode.Send);
+                var messageQueue = new MessageQueue(path, QueueAccessMode.Send);
 
                 return messageQueue;
             });
@@ -308,7 +308,7 @@ namespace Rebus.Transport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath);
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
 
                 MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
 

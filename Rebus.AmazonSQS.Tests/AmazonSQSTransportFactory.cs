@@ -5,14 +5,17 @@ using System.IO;
 using System.Linq;
 using Amazon;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
+using Rebus.Threading;
+using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 
 namespace Rebus.AmazonSQS.Tests
 {
-    public class AmazonSQSTransportFactory : ITransportFactory
+    public class AmazonSqsTransportFactory : ITransportFactory
     {
-        private static ConnectionInfo _connectionInfo;
+        static ConnectionInfo _connectionInfo;
 
         internal static ConnectionInfo ConnectionInfo
         {
@@ -37,8 +40,13 @@ namespace Rebus.AmazonSQS.Tests
 
         static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
         {
+            var region = RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint);
+
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
             var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
-                RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint));
+                region,
+                consoleLoggerFactory,
+                new TplAsyncTaskFactory(consoleLoggerFactory));
 
             transport.Initialize(peeklockDuration);
             transport.Purge();
@@ -140,7 +148,7 @@ AccessKeyId=blabla; SecretAccessKey=blablalba; RegionEndpoint=something
             try
             {
                 var keysAndValues = keyValuePairs.ToDictionary((kv) => kv.Split('=')[0], (kv) => kv.Split('=')[1]);
-                return new ConnectionInfo()
+                return new ConnectionInfo
                 {
                     AccessKeyId = keysAndValues["AccessKeyId"],
                     SecretAccessKey = keysAndValues["SecretAccessKey"],

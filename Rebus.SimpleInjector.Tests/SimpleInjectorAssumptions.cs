@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Handlers;
 using Rebus.Transport;
-using SimpleInjector;
 
 namespace Rebus.SimpleInjector.Tests
 {

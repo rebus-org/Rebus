@@ -24,26 +24,21 @@ namespace Rebus.AzureStorageQueues
     /// </summary>
     public class AzureStorageQueuesTransport : ITransport, IInitializable
     {
-        static ILog _log;
-
-        static AzureStorageQueuesTransport()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly ConcurrentDictionary<string, CloudQueue> _queues = new ConcurrentDictionary<string, CloudQueue>();
         readonly TimeSpan _initialVisibilityDelay = TimeSpan.FromMinutes(5);
         readonly CloudQueueClient _queueClient;
         readonly string _inputQueueName;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the transport
         /// </summary>
-        public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName)
+        public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (storageAccount == null) throw new ArgumentNullException("storageAccount");
 
             _queueClient = storageAccount.CreateCloudQueueClient();
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueName != null)
             {

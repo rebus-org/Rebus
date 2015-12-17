@@ -6,5 +6,6 @@ namespace Rebus.Tests.Contracts.Timeouts
     {
         ITimeoutManager Create();
         void Cleanup();
+        string GetDebugInfo();
     }
 }

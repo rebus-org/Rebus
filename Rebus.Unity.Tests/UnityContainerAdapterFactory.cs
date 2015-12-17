@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Practices.Unity;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
 
@@ -30,6 +31,11 @@ namespace Rebus.Unity.Tests
         public void CleanUp()
         {
             _unityContainer.Dispose();
+        }
+
+        public IBus GetBus()
+        {
+            return _unityContainer.Resolve<IBus>();
         }
 
         static IEnumerable<Type> GetHandlerInterfaces<THandler>() where THandler : class, IHandleMessages

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Reflection;
 using Rebus.Sagas;
 #pragma warning disable 1998
@@ -61,6 +63,8 @@ namespace Rebus.Persistence.InMem
                     throw new ConcurrencyException("Saga data with ID {0} already exists!", id);
                 }
 
+                VerifyCorrelationPropertyUniqueness(sagaData, correlationProperties);
+
                 if (sagaData.Revision != 0)
                 {
                     throw new InvalidOperationException(string.Format("Attempted to insert saga data with ID {0} and revision {1}, but revision must be 0 on first insert!",
@@ -85,6 +89,8 @@ namespace Rebus.Persistence.InMem
                     throw new ConcurrencyException("Saga data with ID {0} no longer exists and cannot be updated", id);
                 }
 
+                VerifyCorrelationPropertyUniqueness(sagaData, correlationProperties);
+
                 var existingCopy = _data[id];
 
                 if (existingCopy.Revision != sagaData.Revision)
@@ -97,6 +103,27 @@ namespace Rebus.Persistence.InMem
                 clone.Revision++;
                 _data[id] = clone;
                 sagaData.Revision++;
+            }
+        }
+
+        void VerifyCorrelationPropertyUniqueness(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
+        {
+            foreach (var property in correlationProperties)
+            {
+                var valueFromSagaData = Reflect.Value(sagaData, property.PropertyName);
+
+                foreach (var existingSagaData in _data.Values)
+                {
+                    if (existingSagaData.Id == sagaData.Id) continue;
+
+                    var valueFromExistingInstance = Reflect.Value(existingSagaData, property.PropertyName);
+
+                    if (Equals(valueFromSagaData, valueFromExistingInstance))
+                    {
+                        throw new ConcurrencyException("Correlation property '{0}' has value '{1}' in existing saga data with ID {2}",
+                            property.PropertyName, valueFromExistingInstance, existingSagaData.Id);
+                    }
+                }
             }
         }
 
@@ -122,7 +149,7 @@ namespace Rebus.Persistence.InMem
         static Guid GetId(ISagaData sagaData)
         {
             var id = sagaData.Id;
-            
+
             if (id != Guid.Empty) return id;
 
             throw new InvalidOperationException("Saga data must be provided with an ID in order to do this!");

@@ -21,7 +21,7 @@
         <dependency id="Microsoft.Data.Services.Client" version="5.6.4" />
         <dependency id="Newtonsoft.Json" version="7.0.1" />
         <dependency id="System.Spatial" version="5.6.4" />
-        <dependency id="WindowsAzure.Storage" version="5.0.0" />
+        <dependency id="WindowsAzure.Storage" version="6.0.0" />
     </dependencies>
   </metadata>
   <files>

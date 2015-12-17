@@ -20,21 +20,16 @@ namespace Rebus.Sagas.Idempotent
 If that is the case, message dispatch is skipped, but any messages stored as outgoing messages from previously handling the incoming message will be sent.")]
     public class IdempotentSagaIncomingStep : IIncomingStep
     {
-        static ILog _log;
-
-        static IdempotentSagaIncomingStep()
-        {
-            RebusLoggerFactory.Changed += f => _log = f.GetCurrentClassLogger();
-        }
-
         readonly ITransport _transport;
+        readonly ILog _log;
 
         /// <summary>
         /// Constructs the step
         /// </summary>
-        public IdempotentSagaIncomingStep(ITransport transport)
+        public IdempotentSagaIncomingStep(ITransport transport, IRebusLoggerFactory rebusLoggerFactory)
         {
             _transport = transport;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>

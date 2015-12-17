@@ -3,20 +3,53 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Threading;
+using Rebus.Tests.Timers.Factories;
+
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Timers
 {
-    [TestFixture]
-    public class TestAsyncTask : FixtureBase
+    [TestFixture(typeof(TplTaskFactory))]
+    [TestFixture(typeof(TimerTaskFactory))]
+    [TestFixture(typeof(ThreadingTimerTaskFactory))]
+    public class TestAsyncTask<TFactory> : FixtureBase where TFactory : IAsyncTaskFactory, new()
     {
+        TFactory _factory;
+
+        protected override void SetUp()
+        {
+            _factory = new TFactory();
+        }
+
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        [TestCase(5)]
+        public async Task CanActuallyStopTaskWithLongInterval(int secondsToLetTheTaskRun)
+        {
+            var task = _factory.CreateTask(TimeSpan.FromMinutes(4.5), async () => { Console.WriteLine("INVOKED!!!"); });
+
+            using (task)
+            {
+                task.Start();
+
+                Console.WriteLine($"Letting the task run for {secondsToLetTheTaskRun} seconds...");
+
+                await Task.Delay(TimeSpan.FromSeconds(secondsToLetTheTaskRun));
+
+                Console.WriteLine("Quitting....");
+            }
+
+            Console.WriteLine("Done!");
+        }
+
         [Test]
         public async Task DoesNotDieOnTransientErrors()
         {
             var throwException = true;
             var taskWasCompleted = false;
-            
-            using (var task = new AsyncTask("bimse", async () =>
+
+            var task = _factory.CreateTask(TimeSpan.FromMilliseconds(400), async () =>
             {
                 if (throwException)
                 {
@@ -24,10 +57,9 @@ namespace Rebus.Tests.Timers
                 }
 
                 taskWasCompleted = true;
-            })
-            {
-                Interval = TimeSpan.FromMilliseconds(400)
-            })
+            });
+
+            using (task)
             {
                 Console.WriteLine("Starting the task...");
                 task.Start();
@@ -46,18 +78,15 @@ namespace Rebus.Tests.Timers
         }
 
         [Test]
-        public async Task ItWorks()
+        public async Task WorksWithSomeKindOfAccuracy()
         {
             var stopwatch = Stopwatch.StartNew();
             var events = new ConcurrentQueue<TimeSpan>();
-            var task = new AsyncTask("test task",
+            var task = _factory.CreateTask(TimeSpan.FromSeconds(0.2),
                 async () =>
                 {
                     events.Enqueue(stopwatch.Elapsed);
-                })
-            {
-                Interval = TimeSpan.FromSeconds(0.2)
-            };
+                });
 
             using (task)
             {
@@ -66,11 +95,9 @@ namespace Rebus.Tests.Timers
                 await Task.Delay(1199);
             }
 
-            await Task.Delay(TimeSpan.FromSeconds(0.7));
-
             Console.WriteLine(string.Join(Environment.NewLine, events));
 
-            Assert.That(events.Count, Is.GreaterThanOrEqualTo(5));
+            Assert.That(events.Count, Is.GreaterThanOrEqualTo(4), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
             Assert.That(events.Count, Is.LessThanOrEqualTo(7));
         }
     }

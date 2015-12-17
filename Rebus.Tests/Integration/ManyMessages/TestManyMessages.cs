@@ -6,7 +6,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Logging;
 using Rebus.Tests.Extensions;
 using Timer = System.Timers.Timer;
 
@@ -28,11 +27,6 @@ namespace Rebus.Tests.Integration.ManyMessages
         protected override void SetUp()
         {
             _busFactory = new TBusFactory();
-
-            RebusLoggerFactory.Current = new ConsoleLoggerFactory(false)
-            {
-                MinLevel = LogLevel.Info
-            };
         }
 
         protected override void TearDown()

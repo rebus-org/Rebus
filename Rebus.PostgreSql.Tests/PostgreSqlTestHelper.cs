@@ -9,20 +9,11 @@ namespace Rebus.PostgreSql.Tests
         const string TableDoesNotExist = "42P01";
         static readonly PostgresConnectionHelper PostgresConnectionHelper = new PostgresConnectionHelper(ConnectionString);
 
-        public static string DatabaseName
-        {
-            get { return string.Format("rebus2_test_{0}", TestConfig.Suffix).TrimEnd('_'); }
-        }
+        public static string DatabaseName => $"rebus2_test_{TestConfig.Suffix}".TrimEnd('_');
 
-        public static string ConnectionString
-        {
-            get { return GetConnectionStringForDatabase(DatabaseName); }
-        }
+        public static string ConnectionString => GetConnectionStringForDatabase(DatabaseName);
 
-        public static PostgresConnectionHelper ConnectionHelper
-        {
-            get { return PostgresConnectionHelper; }
-        }
+        public static PostgresConnectionHelper ConnectionHelper => PostgresConnectionHelper;
 
         public static void DropTable(string tableName)
         {
@@ -30,7 +21,7 @@ namespace Rebus.PostgreSql.Tests
             {
                 using (var comand = connection.CreateCommand())
                 {
-                    comand.CommandText = string.Format(@"drop table ""{0}"";", tableName);
+                    comand.CommandText = $@"drop table ""{tableName}"";";
 
                     try
                     {
@@ -50,7 +41,7 @@ namespace Rebus.PostgreSql.Tests
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
-            return string.Format("Server=localhost;Database={0};User=postgres;Password=postgres;", databaseName);
+            return $"Server=localhost;Database={databaseName};User=postgres;Password=postgres;";
         }
     }
 }

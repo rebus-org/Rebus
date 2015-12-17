@@ -1,5 +1,6 @@
 ﻿using Rebus.Auditing.Sagas;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.PostgreSql.Sagas;
 using Rebus.PostgreSql.Subscriptions;
 using Rebus.PostgreSql.Timeouts;
@@ -42,7 +43,8 @@ namespace Rebus.PostgreSql
         {
             configurer.Register(c =>
             {
-                var sagaStorage = new PostgreSqlSagaStorage(new PostgresConnectionHelper(connectionString), dataTableName, indexTableName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var sagaStorage = new PostgreSqlSagaStorage(new PostgresConnectionHelper(connectionString), dataTableName, indexTableName, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {
@@ -60,7 +62,8 @@ namespace Rebus.PostgreSql
         {
             configurer.Register(c =>
             {
-                var subscriptionStorage = new PostgreSqlTimeoutManager(new PostgresConnectionHelper(connectionString), tableName);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var subscriptionStorage = new PostgreSqlTimeoutManager(new PostgresConnectionHelper(connectionString), tableName, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {
@@ -81,8 +84,10 @@ namespace Rebus.PostgreSql
         {
             configurer.Register(c =>
             {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionHelper = new PostgresConnectionHelper(connectionString);
                 var subscriptionStorage = new PostgreSqlSubscriptionStorage(
-                    new PostgresConnectionHelper(connectionString), tableName, isCentralized);
+                    connectionHelper, tableName, isCentralized, rebusLoggerFactory);
 
                 if (automaticallyCreateTables)
                 {

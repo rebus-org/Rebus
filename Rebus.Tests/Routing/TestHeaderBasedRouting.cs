@@ -14,6 +14,7 @@ using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Rebus.Transport.Msmq;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
 {
@@ -98,7 +99,7 @@ namespace Rebus.Tests.Routing
                     .Select(work => distributor.SendLocal(work, _forwardHeaders))
                 );
 
-            await _doneWork.WaitUntil(w => w.Count == numberOfMessages);
+            await _doneWork.WaitUntil(w => w.Count == numberOfMessages, timeoutSeconds: 20);
 
             var workByWorker = _doneWork.GroupBy(w => w.Worker).ToList();
 

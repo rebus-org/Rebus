@@ -4,6 +4,7 @@ using GoCommando;
 using GoCommando.Attributes;
 using Rebus.AzureServiceBus;
 using Rebus.Forklift.Common;
+using Rebus.Threading.TaskParallelLibrary;
 
 namespace Rebus.Forklift.AzureServiceBus
 {
@@ -23,7 +24,7 @@ namespace Rebus.Forklift.AzureServiceBus
 
         protected override void DoRun()
         {
-            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue))
+            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory, new TplAsyncTaskFactory(LoggerFactory)))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {
@@ -55,7 +56,7 @@ namespace Rebus.Forklift.AzureServiceBus
                 return environmentVariable;
             }
 
-            throw new ArgumentException(string.Format("Could not find '{0}' among the available connection strings in app.config or as an ENV variable", connectionStringName));
+            throw new ArgumentException($"Could not find '{connectionStringName}' among the available connection strings in app.config or as an ENV variable");
         }
     }
 }

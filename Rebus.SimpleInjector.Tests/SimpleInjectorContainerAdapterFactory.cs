@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Tests.Contracts.Activation;
@@ -53,6 +54,11 @@ namespace Rebus.SimpleInjector.Tests
         {
             _disposables.ForEach(d => d.Dispose());
             _disposables.Clear();
+        }
+
+        public IBus GetBus()
+        {
+            return _container.GetInstance<IBus>();
         }
 
         static IEnumerable<Type> GetHandlerInterfaces(Type handlerType)

@@ -5,6 +5,7 @@ using Rebus.RavenDb.Timouts;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
 using System;
+using Rebus.Logging;
 
 namespace Rebus.RavenDb
 {
@@ -43,7 +44,8 @@ namespace Rebus.RavenDb
 
             configurer.Register(c =>
             {
-                var timeoutManager = new RavenDbTimeoutManager(documentStore);
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                var timeoutManager = new RavenDbTimeoutManager(documentStore, rebusLoggerFactory);
                 return timeoutManager;
             });
         }

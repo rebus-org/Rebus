@@ -83,7 +83,7 @@ namespace Rebus.Injection
         public bool Has<TService>()
         {
             var key = typeof(TService);
-            return _resolvers.ContainsKey(key) 
+            return _resolvers.ContainsKey(key)
                 && _resolvers[key].Count(r => !r.IsDecorator) == 1;
         }
 
@@ -123,7 +123,7 @@ namespace Rebus.Injection
             {
                 var text = string.Format("({0} {1})",
                     IsDecorator ? "decorator ->" : "primary ->",
-                    typeof (TService));
+                    typeof(TService));
 
                 if (!string.IsNullOrWhiteSpace(_description))
                 {
@@ -154,7 +154,7 @@ namespace Rebus.Injection
 
                 if (_instances.ContainsKey(serviceType))
                 {
-                    return (TService) _instances[serviceType].Item1;
+                    return (TService)_instances[serviceType].Item1;
                 }
 
                 if (!_resolvers.ContainsKey(serviceType))
@@ -183,10 +183,14 @@ namespace Rebus.Injection
 
                     return instance;
                 }
+                catch (ResolutionException)
+                {
+                    throw;
+                }
                 catch (Exception exception)
                 {
                     throw new ResolutionException(exception, "Could not resolve {0} with decorator depth {1} - registrations: {2}",
-                        serviceType, depth, string.Join("; ", resolversForThisType));
+                        serviceType, depth, string.Join(", ", resolversForThisType));
                 }
                 finally
                 {
