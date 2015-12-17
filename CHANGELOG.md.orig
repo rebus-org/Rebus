@@ -648,6 +648,7 @@
 
 * Added one-way client mode for Amazon SQS transport
 
+<<<<<<< Updated upstream
 ## 0.98.6
 
 * Added "per Rebus message" lifestyle to Windsor container configuration extensions
@@ -773,10 +774,9 @@
 # 0.99.21
 
 * Small changes to Rebus' `TransactionScope` enlistment support
-
-# 0.99.22
-
-* Added RavenDB saga persister - thanks [bjomi]
+=======
+# vnext
+>>>>>>> Stashed changes
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
