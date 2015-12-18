@@ -778,6 +778,10 @@
 
 * Added RavenDB saga persister - thanks [bjomi]
 
+# 0.99.23
+
+* Fixed it so that SQL Server transport does not start the background "expired messages cleanup" task when it is a one-way client
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

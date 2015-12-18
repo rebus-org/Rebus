@@ -67,6 +67,8 @@ namespace Rebus.Transport.SqlServer
         /// </summary>
         public void Initialize()
         {
+            if (_inputQueueName == null) return;
+
             _expiredMessagesCleanupTask.Start();
         }
 
@@ -313,9 +315,7 @@ VALUES
                             $@"
 DELETE FROM [{_tableName}] 
     WHERE [id] IN (
-        SELECT TOP 1 [id] FROM [{
-                                _tableName
-                                }] WITH (ROWLOCK, READPAST)
+        SELECT TOP 1 [id] FROM [{_tableName}] WITH (ROWLOCK, READPAST)
             WHERE [recipient] = @recipient 
                 AND [expiration] < getdate()
     )
