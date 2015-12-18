@@ -4,7 +4,7 @@
     <id>Rebus.RavenDb</id>
     <version>$version$</version>
     <title>Rebus.RavenDb</title>
-    <authors>mclausen</authors>
+    <authors>bjomi,mclausen</authors>
     <owners>mookid8000</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
