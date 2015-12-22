@@ -134,12 +134,7 @@ namespace Rebus.Config
         {
             var connectionStringSettings = ConfigurationManager.ConnectionStrings[connectionStringNameOrConnectionString];
 
-            if (connectionStringSettings == null)
-            {
-                return connectionStringNameOrConnectionString;
-            }
-
-            return connectionStringNameOrConnectionString;
+            return connectionStringSettings?.ConnectionString ?? connectionStringNameOrConnectionString;
         }
     }
 }
