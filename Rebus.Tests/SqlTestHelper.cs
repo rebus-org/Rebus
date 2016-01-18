@@ -159,6 +159,8 @@ namespace Rebus.Tests
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
+            return $"server=.; database={databaseName}; trusted_connection=true;";
+
             return string.Equals(Environment.MachineName, "mhg-pc", StringComparison.InvariantCultureIgnoreCase)
                 ? $"server=.\\SQLEXPRESS; database={databaseName}; trusted_connection=true;"
                 : $"server=.; database={databaseName}; trusted_connection=true;";

@@ -63,6 +63,11 @@ namespace Rebus.RavenDb.Sagas
                 throw new InvalidOperationException($"Saga data {sagaData.GetType()} has an uninitialized Id property!");
             }
 
+            if (sagaData.Revision != 0)
+            {
+                throw new InvalidOperationException($"Attempted to insert saga data with ID {sagaData.Id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
+            }
+
             using (var session = _documentStore.OpenAsyncSession())
             {
                 var sagaDataDocumentId = SagaDataDocument.GetIdFromGuid(sagaData.Id);

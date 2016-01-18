@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Exceptions;
-using Rebus.Extensions;
 using Rebus.Reflection;
 using Rebus.Sagas;
 #pragma warning disable 1998
@@ -67,8 +65,7 @@ namespace Rebus.Persistence.InMem
 
                 if (sagaData.Revision != 0)
                 {
-                    throw new InvalidOperationException(string.Format("Attempted to insert saga data with ID {0} and revision {1}, but revision must be 0 on first insert!",
-                        id, sagaData.Revision));
+                    throw new InvalidOperationException($"Attempted to insert saga data with ID {id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
                 }
 
                 _data[id] = Clone(sagaData);
@@ -115,6 +112,7 @@ namespace Rebus.Persistence.InMem
                 foreach (var existingSagaData in _data.Values)
                 {
                     if (existingSagaData.Id == sagaData.Id) continue;
+                    if (existingSagaData.GetType() != sagaData.GetType()) continue;
 
                     var valueFromExistingInstance = Reflect.Value(existingSagaData, property.PropertyName);
 

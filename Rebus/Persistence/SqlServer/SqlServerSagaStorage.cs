@@ -211,7 +211,12 @@ WHERE [index].[saga_type] = @saga_type
         {
             if (sagaData.Id == Guid.Empty)
             {
-                throw new InvalidOperationException(string.Format("Saga data {0} has an uninitialized Id property!", sagaData.GetType()));
+                throw new InvalidOperationException($"Saga data {sagaData.GetType()} has an uninitialized Id property!");
+            }
+
+            if (sagaData.Revision != 0)
+            {
+                throw new InvalidOperationException($"Attempted to insert saga data with ID {sagaData.Id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
             }
 
             using (var connection = await _connectionProvider.GetConnection())
@@ -224,7 +229,7 @@ WHERE [index].[saga_type] = @saga_type
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
                     command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
 
-                    command.CommandText = string.Format(@"INSERT INTO [{0}] ([id], [revision], [data]) VALUES (@id, @revision, @data)", _dataTableName);
+                    command.CommandText = $@"INSERT INTO [{_dataTableName}] ([id], [revision], [data]) VALUES (@id, @revision, @data)";
                     try
                     {
                         await command.ExecuteNonQueryAsync();

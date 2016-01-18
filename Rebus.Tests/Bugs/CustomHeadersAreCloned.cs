@@ -8,6 +8,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Bugs
 {

@@ -50,7 +50,12 @@ namespace Rebus.MongoDb.Sagas
         {
             if (sagaData.Id == Guid.Empty)
             {
-                throw new InvalidOperationException(string.Format("Attempted to insert saga data {0} without an ID", sagaData.GetType()));
+                throw new InvalidOperationException($"Attempted to insert saga data {sagaData.GetType()} without an ID");
+            }
+
+            if (sagaData.Revision != 0)
+            {
+                throw new InvalidOperationException($"Attempted to insert saga data with ID {sagaData.Id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
             }
 
             var collection = GetCollection(sagaData.GetType());
@@ -99,7 +104,7 @@ namespace Rebus.MongoDb.Sagas
             }
             catch (Exception exception)
             {
-                throw new ApplicationException(string.Format("Could not get MongoCollection for saga data of type {0}", sagaDataType), exception);
+                throw new ApplicationException($"Could not get MongoCollection for saga data of type {sagaDataType}", exception);
             }
         }
     }

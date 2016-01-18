@@ -782,6 +782,10 @@
 
 * Fixed it so that SQL Server transport does not start the background "expired messages cleanup" task when it is a one-way client
 
+# 0.99.24
+
+* Fixed bug in in-mem saga storage that would accidentally enforce uniqueness of correlation properties across saga data types
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

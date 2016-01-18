@@ -12,7 +12,7 @@ namespace Rebus.Tests.Contracts.Sagas
     public abstract class BasicLoadAndSaveAndFindOperations<TFactory> : FixtureBase where TFactory : ISagaStorageFactory, new()
     {
         readonly IEnumerable<ISagaCorrelationProperty> _noCorrelationProperties = Enumerable.Empty<ISagaCorrelationProperty>();
-        
+
         ISagaStorage _sagaStorage;
         TFactory _factory;
 
@@ -27,6 +27,68 @@ namespace Rebus.Tests.Contracts.Sagas
             CleanUpDisposables();
 
             _factory.CleanUp();
+        }
+
+        [Test]
+        public void ChecksRevisionOnFirstInsert()
+        {
+            var ex = Assert.Throws<AggregateException>(() =>
+            {
+                _sagaStorage
+                    .Insert(new JustSomeSagaData
+                    {
+                        Id = Guid.NewGuid(),
+                        Revision = 1
+                    }, _noCorrelationProperties)
+                    .Wait();
+            });
+
+            var invalidOperationException = ex.InnerExceptions.OfType<InvalidOperationException>().Single();
+            Console.WriteLine(ex);
+
+            Assert.That(invalidOperationException.Message, Is.StringContaining("revision must be 0 on first insert"));
+        }
+
+        public class JustSomeSagaData : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+        }
+
+        [Test]
+        public async Task DoesNotEnforceUniquenessOfCorrelationPropertyAcrossTypes()
+        {
+            var type1Property = new TestCorrelationProperty("CorrelationProperty", typeof(SagaDataType1));
+            var type1Instance = new SagaDataType1
+            {
+                Id = Guid.NewGuid(),
+                Revision = 0,
+                CorrelationProperty = "hej"
+            };
+            var type2Property = new TestCorrelationProperty("CorrelationProperty", typeof(SagaDataType2));
+            var type2Instance = new SagaDataType2
+            {
+                Id = Guid.NewGuid(),
+                Revision = 0,
+                CorrelationProperty = "hej"
+            };
+
+            await _sagaStorage.Insert(type1Instance, new[] { type1Property });
+            await _sagaStorage.Insert(type2Instance, new[] { type2Property });
+        }
+
+        class SagaDataType1 : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string CorrelationProperty { get; set; }
+        }
+
+        class SagaDataType2 : ISagaData
+        {
+            public Guid Id { get; set; }
+            public int Revision { get; set; }
+            public string CorrelationProperty { get; set; }
         }
 
         [Test]
@@ -68,7 +130,7 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             var sagaId = Guid.NewGuid();
 
-            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" }, 
+            await _sagaStorage.Insert(new TestSagaData { Id = sagaId, CorrelationId = "existing" },
                 CorrelationPropertiesFor<TestSagaData>(d => d.CorrelationId));
 
             var data = await _sagaStorage.Find(typeof(TestSagaData), "CorrelationId", "existing");
@@ -131,19 +193,19 @@ namespace Rebus.Tests.Contracts.Sagas
 
             await _sagaStorage.Insert(initialTransientInstance, _noCorrelationProperties);
             var loadedSagaData0 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
-            
+
             Assert.That(loadedSagaData0.Revision, Is.EqualTo(0));
             Assert.That(initialTransientInstance.Revision, Is.EqualTo(0));
 
             await _sagaStorage.Update(loadedSagaData0, _noCorrelationProperties);
             var loadedSagaData1 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
-            
+
             Assert.That(loadedSagaData0.Revision, Is.EqualTo(1));
             Assert.That(loadedSagaData1.Revision, Is.EqualTo(1));
 
             await _sagaStorage.Update(loadedSagaData1, _noCorrelationProperties);
             var loadedSagaData2 = await _sagaStorage.Find(typeof(TestSagaData), "Id", sagaId);
-            
+
             Assert.That(loadedSagaData1.Revision, Is.EqualTo(2));
             Assert.That(loadedSagaData2.Revision, Is.EqualTo(2));
         }
@@ -174,7 +236,7 @@ namespace Rebus.Tests.Contracts.Sagas
         public async Task NizzleName()
         {
             var id = Guid.NewGuid();
-            
+
             var guidCorrelationValue = Guid.NewGuid();
             var stringCorrelationValue = "hej";
             var dateTimeCorrelationValue = new DateTime(1979, 3, 19);
@@ -195,15 +257,15 @@ namespace Rebus.Tests.Contracts.Sagas
 
             var correlationProperties = new[]
             {
-                GetCorrelationProperty(d => d.CorrelateByString), 
+                GetCorrelationProperty(d => d.CorrelateByString),
                 GetCorrelationProperty(d => d.CorrelateByInt), 
                 //GetCorrelationProperty(d => d.CorrelateByDecimal), 
                 //GetCorrelationProperty(d => d.CorrelateByDateTime), 
                 //GetCorrelationProperty(d => d.CorrelateByDateTimeOffset), 
-                GetCorrelationProperty(d => d.CorrelateByGuid), 
+                GetCorrelationProperty(d => d.CorrelateByGuid),
             };
 
-            await _sagaStorage.Insert(data,correlationProperties);
+            await _sagaStorage.Insert(data, correlationProperties);
 
             var dataByString = await Find(stringCorrelationValue, d => d.CorrelateByString);
             var dataByInt = await Find(intCorrelationValue, d => d.CorrelateByInt);
@@ -216,12 +278,12 @@ namespace Rebus.Tests.Contracts.Sagas
 
         async Task<ISagaData> Find(object value, Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
         {
-            return await _sagaStorage.Find(typeof (SagaDataWithVariousCorrelationProperties), Reflect.Path(expression), value);
+            return await _sagaStorage.Find(typeof(SagaDataWithVariousCorrelationProperties), Reflect.Path(expression), value);
         }
 
-        CorrelationProperty GetCorrelationProperty(Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
+        TestCorrelationProperty GetCorrelationProperty(Expression<Func<SagaDataWithVariousCorrelationProperties, object>> expression)
         {
-            return new CorrelationProperty(Reflect.Path(expression), typeof (SagaDataWithVariousCorrelationProperties));
+            return new TestCorrelationProperty(Reflect.Path(expression), typeof(SagaDataWithVariousCorrelationProperties));
         }
 
         class SagaDataWithVariousCorrelationProperties : ISagaData
@@ -255,37 +317,7 @@ namespace Rebus.Tests.Contracts.Sagas
         {
             return properties
                 .Select(Reflect.Path)
-                .Select(propertyName => new CorrelationProperty(propertyName, typeof (TSagaData)));
-        }
-
-        class CorrelationProperty : ISagaCorrelationProperty
-        {
-            static readonly Type[] AllowedCorrelationPropertyTypes = {
-                typeof (string),
-                typeof (int),
-                typeof (Guid)
-            };
-
-            public CorrelationProperty(string propertyName, Type sagaDataType)
-            {
-                PropertyName = propertyName;
-                SagaDataType = sagaDataType;
-
-                Validate();
-            }
-
-            void Validate()
-            {
-                var propertyType = SagaDataType.GetProperty(PropertyName).PropertyType;
-
-                if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
-
-                throw new ArgumentException(string.Format("Cannot correlate with the '{0}' property on the '{1}' saga data type - only allowed types are: {2}",
-                    PropertyName, SagaDataType.Name, string.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))));
-            }
-
-            public string PropertyName { get; private set; }
-            public Type SagaDataType { get; private set; }
+                .Select(propertyName => new TestCorrelationProperty(propertyName, typeof(TSagaData)));
         }
     }
 }
