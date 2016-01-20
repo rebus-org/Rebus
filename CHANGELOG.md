@@ -786,6 +786,10 @@
 
 * Fixed bug in in-mem saga storage that would accidentally enforce uniqueness of correlation properties across saga data types
 
+# 0.99.25
+
+* Fixed options configuration API to be more consistent and thus less prone to confusion - thanks [xenoputtss]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -816,4 +820,4 @@
 [seankearon]: https://github.com/seankearon
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
-
+[xenoputtss]: https://github.com/xenoputtss
