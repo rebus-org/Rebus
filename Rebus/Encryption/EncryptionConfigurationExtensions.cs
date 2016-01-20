@@ -14,7 +14,7 @@ namespace Rebus.Encryption
         /// Configures Rebus to encrypt outgoing messages and be able to decrypt incoming messages. Please note that it's only the message bodies that are
         /// encrypted, thus everything included in the message headers will be visible to eavesdroppers.
         /// </summary>
-        public static OptionsConfigurer EnableEncryption(this OptionsConfigurer configurer, string key)
+        public static void EnableEncryption(this OptionsConfigurer configurer, string key)
         {
             configurer.Register(c => new Encryptor(key));
 
@@ -24,8 +24,6 @@ namespace Rebus.Encryption
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
                 .OnReceive(c.Get<DecryptMessagesIncomingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep))
                 .OnSend(c.Get<EncryptMessagesOutgoingStep>(), PipelineRelativePosition.After, typeof(SerializeOutgoingMessageStep)));
-
-            return configurer;
         }
 
     }

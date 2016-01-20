@@ -16,9 +16,9 @@ namespace Rebus.Backoff
         /// must be a sequence of timespans, which indicates the time to wait for each second elapsed being idle. When the idle time
         /// exceeds the number of timespans, the last timespan will be used.
         /// </summary>
-        public static OptionsConfigurer SetBackoffTimes(this OptionsConfigurer configurer, params TimeSpan[] backoffTimes)
+        public static void SetBackoffTimes(this OptionsConfigurer configurer, params TimeSpan[] backoffTimes)
         {
-            return SetBackoffTimes(configurer, (IEnumerable<TimeSpan>) backoffTimes);
+            SetBackoffTimes(configurer, (IEnumerable<TimeSpan>)backoffTimes);
         }
 
         /// <summary>
@@ -26,7 +26,7 @@ namespace Rebus.Backoff
         /// must be a sequence of timespans, which indicates the time to wait for each second elapsed being idle. When the idle time
         /// exceeds the number of timespans, the last timespan will be used.
         /// </summary>
-        public static OptionsConfigurer SetBackoffTimes(this OptionsConfigurer configurer, IEnumerable<TimeSpan> backoffTimes)
+        public static void SetBackoffTimes(this OptionsConfigurer configurer, IEnumerable<TimeSpan> backoffTimes)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (backoffTimes == null) throw new ArgumentNullException(nameof(backoffTimes));
@@ -39,8 +39,6 @@ namespace Rebus.Backoff
             }
 
             configurer.Register<IBackoffStrategy>(c => new SimpleCustomizedBackoffStrategy(list));
-            
-            return configurer;
         }
     }
 }
