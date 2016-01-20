@@ -147,7 +147,11 @@ namespace Rebus.Tests.Routing
                 {
                     transportConfigurer(t, queueName);
                 })
-                .Options(o => o.SetNumberOfWorkers(1).SetMaxParallelism(1))
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(1);
+                })
                 .Start();
         }
 

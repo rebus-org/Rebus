@@ -19,8 +19,7 @@ namespace Rebus.Compression
         /// Enables compression of outgoing messages if the size exceeds the specified number of bytes
         /// (defaults to <see cref="DefaultBodyThresholdBytes"/>)
         /// </summary>
-        public static OptionsConfigurer EnableCompression(this OptionsConfigurer configurer,
-            int bodySizeThresholdBytes = DefaultBodyThresholdBytes)
+        public static void EnableCompression(this OptionsConfigurer configurer, int bodySizeThresholdBytes = DefaultBodyThresholdBytes)
         {
             configurer.Register(c => new Zipper());
             configurer.Register(c => new UnzipMessagesIncomingStep(c.Get<Zipper>()));
@@ -29,8 +28,6 @@ namespace Rebus.Compression
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
                 .OnReceive(c.Get<UnzipMessagesIncomingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep))
                 .OnSend(c.Get<ZipMessagesOutgoingStep>(), PipelineRelativePosition.After, typeof(SerializeOutgoingMessageStep)));
-
-            return configurer;
         }
     }
 }

@@ -38,7 +38,11 @@ namespace Rebus.Tests.Contracts.Sagas
 
             var bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "sagastuff"))
-                .Options(o => o.SetNumberOfWorkers(1).SetMaxParallelism(1))
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(1);
+                })
                 .Sagas(s => s.Register(c => _factory.GetSagaStorage()))
                 .Start();
 

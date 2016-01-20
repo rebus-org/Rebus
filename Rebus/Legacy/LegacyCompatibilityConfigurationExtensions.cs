@@ -20,7 +20,7 @@ namespace Rebus.Legacy
         /// Makes Rebus "legacy compatible", i.e. enables wire-level compatibility with older Rebus versions. WHen this is enabled,
         /// all endpoints need to be old Rebus endpoints or new Rebus endpoints with this feature enabled
         /// </summary>
-        public static OptionsConfigurer EnableLegacyCompatibility(this OptionsConfigurer configurer)
+        public static void EnableLegacyCompatibility(this OptionsConfigurer configurer)
         {
             configurer.Register<ISerializer>(c =>
             {
@@ -70,7 +70,6 @@ namespace Rebus.Legacy
 
                 return transport;
             });
-            return configurer;
         }
     }
 }

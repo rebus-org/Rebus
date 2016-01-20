@@ -21,7 +21,7 @@ namespace Rebus.Retry.Simple
         /// <summary>
         /// Configures the simple retry strategy, using the specified error queue address and number of delivery attempts
         /// </summary>
-        public static OptionsConfigurer SimpleRetryStrategy(this OptionsConfigurer optionsConfigurer,
+        public static void SimpleRetryStrategy(this OptionsConfigurer optionsConfigurer,
             string errorQueueAddress = SimpleRetryStrategySettings.DefaultErrorQueueName,
             int maxDeliveryAttempts = SimpleRetryStrategySettings.DefaultNumberOfDeliveryAttempts,
             bool secondLevelRetriesEnabled = false)
@@ -40,7 +40,6 @@ namespace Rebus.Retry.Simple
                         .OnReceive(step, PipelineRelativePosition.After, typeof(DeserializeIncomingMessageStep));
                 });
             }
-            return optionsConfigurer;
         }
 
         class FailedMessageWrapperStep : IIncomingStep

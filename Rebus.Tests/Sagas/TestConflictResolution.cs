@@ -32,7 +32,11 @@ namespace Rebus.Tests.Sagas
             _bus = Configure.With(_builtinHandlerActivator)
                 .Logging(l => l.Use(_loggerFactory))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "will_experience_conflicts"))
-                .Options(o => o.SetNumberOfWorkers(10).SetMaxParallelism(10))
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(10);
+                    o.SetMaxParallelism(10);
+                })
                 .Start();
         }
 

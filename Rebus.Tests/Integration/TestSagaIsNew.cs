@@ -24,7 +24,11 @@ namespace Rebus.Tests.Integration
 
             _bus = Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_is_new"))
-                .Options(o => o.SetNumberOfWorkers(1).SetMaxParallelism(1))
+                .Options(o =>
+                {
+                    o.SetNumberOfWorkers(1);
+                    o.SetMaxParallelism(1);
+                })
                 .Start();
         }
 

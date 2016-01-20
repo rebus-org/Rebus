@@ -16,7 +16,7 @@ namespace Rebus.Auditing.Messages
         /// Enables message auditing whereby Rebus will forward to the audit queue a copy of each properly handled message and
         /// each published message
         /// </summary>
-        public static OptionsConfigurer EnableMessageAuditing(this OptionsConfigurer configurer, string auditQueue)
+        public static void EnableMessageAuditing(this OptionsConfigurer configurer, string auditQueue)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (string.IsNullOrWhiteSpace(auditQueue)) throw new ArgumentNullException(nameof(auditQueue));
@@ -32,7 +32,6 @@ namespace Rebus.Auditing.Messages
 
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
                 .OnReceive(c.Get<IncomingAuditingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep)));
-            return configurer;
         }
     }
 }

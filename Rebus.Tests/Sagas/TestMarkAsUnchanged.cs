@@ -21,7 +21,11 @@ namespace Rebus.Tests.Sagas
 
             Configure.With(_activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "test saga things"))
-                .Options(o => o.SetMaxParallelism(1).SetNumberOfWorkers(1))
+                .Options(o =>
+                {
+                    o.SetMaxParallelism(1);
+                    o.SetNumberOfWorkers(1);
+                })
                 .Start();
         }
 

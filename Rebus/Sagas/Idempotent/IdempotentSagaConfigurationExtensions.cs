@@ -19,7 +19,7 @@ namespace Rebus.Sagas.Idempotent
         /// each incoming message - this way, the saga instance can guard itself against handling the same message twice, while still
         /// preserving externally visible behavior even when a message gets handled more than once.
         /// </summary>
-        public static OptionsConfigurer EnableIdempotentSagas(this OptionsConfigurer configurer)
+        public static void EnableIdempotentSagas(this OptionsConfigurer configurer)
         {
             configurer.Decorate<IPipeline>(c =>
             {
@@ -37,7 +37,6 @@ namespace Rebus.Sagas.Idempotent
 
                 return injector;
             });
-            return configurer;
         }
     }
 }
