@@ -33,26 +33,24 @@ namespace Rebus.Config
         /// <summary>
         /// Configures the number of workers to start competing over the input queue
         /// </summary>
-        public OptionsConfigurer SetNumberOfWorkers(int numberOfWorkers)
+        public void SetNumberOfWorkers(int numberOfWorkers)
         {
             _options.NumberOfWorkers = numberOfWorkers;
-            return this;
         }
 
         /// <summary>
         /// Configures the total degree of parallelism allowed. This will be the maximum number of parallel potentially asynchrounous operations that can be active,
         /// regardless of the number of workers
         /// </summary>
-        public OptionsConfigurer SetMaxParallelism(int maxParallelism)
+        public void SetMaxParallelism(int maxParallelism)
         {
             _options.MaxParallelism = maxParallelism;
-            return this;
         }
 
         /// <summary>
         /// Configures Rebus to use another endpoint as the timeout manager
         /// </summary>
-        public OptionsConfigurer UseExternalTimeoutManager(string timeoutManagerAddress)
+        public void UseExternalTimeoutManager(string timeoutManagerAddress)
         {
             if (string.IsNullOrWhiteSpace(timeoutManagerAddress))
             {
@@ -67,8 +65,6 @@ namespace Rebus.Config
 
             _injectionist.Register<ITimeoutManager>(c => new ThrowingTimeoutManager());
             _options.ExternalTimeoutManagerAddressOrNull = timeoutManagerAddress;
-            
-            return this;
         }
 
         /// <summary>
@@ -91,7 +87,7 @@ namespace Rebus.Config
         /// Outputs the layout of the send and receive pipelines to the log
         /// </summary>
         [MethodImpl(MethodImplOptions.NoInlining)]
-        public OptionsConfigurer LogPipeline(bool verbose = false)
+        public void LogPipeline(bool verbose = false)
         {
             // when the pipeline is resolved, we hook ourselves in and log it!
             _injectionist.ResolveRequested += serviceType =>
@@ -122,8 +118,6 @@ Receive pipeline:
                     return pipeline;
                 });
             };
-            
-            return this;
         }
 
         static string Format(IEnumerable<IStep> pipeline, bool verbose)

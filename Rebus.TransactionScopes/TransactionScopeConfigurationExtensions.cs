@@ -13,7 +13,7 @@ namespace Rebus.TransactionScopes
         /// <summary>
         /// Configures Rebus to execute handlers inside a <see cref="TransactionScope"/>
         /// </summary>
-        public static OptionsConfigurer HandleMessagesInsideTransactionScope(this OptionsConfigurer configurer)
+        public static void HandleMessagesInsideTransactionScope(this OptionsConfigurer configurer)
         {
             configurer.Decorate<IPipeline>(c =>
             {
@@ -23,8 +23,6 @@ namespace Rebus.TransactionScopes
                 return new PipelineStepInjector(pipeline)
                     .OnReceive(stepToInject, PipelineRelativePosition.Before, typeof (DispatchIncomingMessageStep));
             });
-
-            return configurer;
         }
     }
 }

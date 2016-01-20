@@ -18,9 +18,9 @@ namespace Rebus.Tests.Integration
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
                 .Options(o =>
                 {
-                    o.SetMaxParallelism(1)
-                        .SetNumberOfWorkers(1)
-                        .EnableCompression();
+                    o.SetMaxParallelism(1);
+                    o.SetNumberOfWorkers(1);
+                    o.EnableCompression();
                 });
 
             rebusConfigurer.Start();
