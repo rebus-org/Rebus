@@ -14,7 +14,7 @@ namespace Rebus.Async
     {
         static readonly ConcurrentDictionary<string, Message> Messages = new ConcurrentDictionary<string, Message>();
 
-        public static void EnableSynchronousRequestReply(this OptionsConfigurer configurer)
+        public static OptionsConfigurer EnableSynchronousRequestReply(this OptionsConfigurer configurer)
         {
             configurer.Decorate<IPipeline>(c =>
             {
@@ -24,6 +24,7 @@ namespace Rebus.Async
                 return new PipelineStepInjector(pipeline)
                     .OnReceive(step, PipelineRelativePosition.Before, typeof (ActivateHandlersStep));
             });
+            return configurer;
         }
 
         public static async Task<TReply> SendRequest<TReply>(this IBus bus, object request)
