@@ -36,7 +36,7 @@ namespace Rebus.Tests.Integration
             {
                 await bus.SendLocal("hej");
 
-                gotMessage.WaitOrDie(TimeSpan.FromSeconds(1));
+                gotMessage.WaitOrDie(TimeSpan.FromSeconds(2));
 
                 // make bus shut down here
             }
