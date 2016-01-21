@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.SQS;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.AmazonSQS.Config;
@@ -25,12 +26,15 @@ namespace Rebus.AmazonSQS.Tests
 
             var accessKeyId = connectionInfo.AccessKeyId;
             var secretAccessKey = connectionInfo.SecretAccessKey;
-            var region = RegionEndpoint.GetBySystemName(connectionInfo.RegionEndpoint);
+            var amazonSqsConfig = new AmazonSQSConfig
+            {
+                RegionEndpoint = RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
+            };
 
             _activator = Using(new BuiltinHandlerActivator());
 
             Configure.With(_activator)
-                .Transport(t => t.UseAmazonSqs(accessKeyId, secretAccessKey, region, TestConfig.QueueName("defertest")))
+                .Transport(t => t.UseAmazonSqs(accessKeyId, secretAccessKey, amazonSqsConfig, TestConfig.QueueName("defertest")))
                 .Options(o => o.LogPipeline())
                 .Start();
         }

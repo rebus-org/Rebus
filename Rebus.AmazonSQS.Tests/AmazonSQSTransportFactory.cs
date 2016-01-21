@@ -4,6 +4,7 @@ using System.Configuration;
 using System.IO;
 using System.Linq;
 using Amazon;
+using Amazon.SQS;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
@@ -40,11 +41,14 @@ namespace Rebus.AmazonSQS.Tests
 
         static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
         {
-            var region = RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint);
+            var amazonSqsConfig = new AmazonSQSConfig
+            {
+                RegionEndpoint = RegionEndpoint.GetBySystemName(ConnectionInfo.RegionEndpoint)
+            };
 
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
             var transport = new AmazonSqsTransport(inputQueueAddress, ConnectionInfo.AccessKeyId, ConnectionInfo.SecretAccessKey,
-                region,
+                amazonSqsConfig,
                 consoleLoggerFactory,
                 new TplAsyncTaskFactory(consoleLoggerFactory));
 
@@ -70,8 +74,6 @@ namespace Rebus.AmazonSQS.Tests
         public void CleanUp()
         {
             CleanUp(false);
-
-
         }
 
         public void CleanUp(bool deleteQueues)
@@ -80,11 +82,9 @@ namespace Rebus.AmazonSQS.Tests
             {
                 foreach (var queueAndTransport in _queuesToDelete)
                 {
-
                     var transport = queueAndTransport.Value;
 
                     transport.DeleteQueue();
-
                 }
             }
         }
