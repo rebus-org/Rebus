@@ -59,11 +59,11 @@ namespace Rebus.AzureServiceBus.Tests
         [TestCase(10, 1000)]
         [TestCase(50, 1000)]
         [TestCase(100, 1000)]
-        [TestCase(10, 10000, Ignore = true)]
-        [TestCase(20, 10000, Ignore = true)]
-        [TestCase(30, 10000, Ignore = true)]
-        [TestCase(50, 10000, Ignore = true)]
-        [TestCase(100, 10000, Ignore = true)]
+        [TestCase(10, 10000, Ignore = "takes too long")]
+        [TestCase(20, 10000, Ignore = "takes too long")]
+        [TestCase(30, 10000, Ignore = "takes too long")]
+        [TestCase(50, 10000, Ignore = "takes too long")]
+        [TestCase(100, 10000, Ignore = "takes too long")]
         public void WorksWithPrefetch(int prefetch, int numberOfMessages)
         {
             var activator = Using(new BuiltinHandlerActivator());

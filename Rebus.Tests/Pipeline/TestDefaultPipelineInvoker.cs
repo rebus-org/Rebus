@@ -25,7 +25,7 @@ namespace Rebus.Tests.Pipeline
         /// With recursive invocation:
         ///     Execution took 21,6 s
         /// </summary>
-        [Test, Ignore]
+        [Test, Ignore("takes a long time")]
         public void CheckTiming()
         {
             var invoker = new DefaultPipelineInvoker();

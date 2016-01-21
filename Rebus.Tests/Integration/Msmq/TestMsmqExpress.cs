@@ -35,8 +35,8 @@ namespace Rebus.Tests.Integration.Msmq
                 .Start();
         }
 
-        [TestCase(10000, true, Ignore = true, IgnoreReason = "too slow on the build server")]
-        [TestCase(10000, false, Ignore = true, IgnoreReason = "too slow on the build server")]
+        [TestCase(10000, true, Ignore = "too slow on the build server")]
+        [TestCase(10000, false, Ignore = "too slow on the build server")]
         [TestCase(100, true)]
         [TestCase(100, false)]
         public async Task TestPerformance(int messageCount, bool express)
