@@ -7,12 +7,12 @@ namespace Rebus.UnitOfWork
     [StepDocumentation("Wraps the invocation of the rest of the pipeline in a unit of work, which will get committed/rolled back depending on the outcome of calling the rest of the pipeline.")]
     class UnitOfWorkStep<TUnitOfWork> : IIncomingStep
     {
-        readonly Func<Task<TUnitOfWork>> _unitOfWorkFactoryMethod;
-        readonly Func<TUnitOfWork, Task> _commitAction;
-        readonly Func<TUnitOfWork, Task> _rollbackAction;
-        readonly Func<TUnitOfWork, Task> _cleanupAction;
+        readonly Func<IMessageContext, Task<TUnitOfWork>> _unitOfWorkFactoryMethod;
+        readonly Func<IMessageContext, TUnitOfWork, Task> _commitAction;
+        readonly Func<IMessageContext, TUnitOfWork, Task> _rollbackAction;
+        readonly Func<IMessageContext, TUnitOfWork, Task> _cleanupAction;
 
-        public UnitOfWorkStep(Func<Task<TUnitOfWork>> unitOfWorkFactoryMethod, Func<TUnitOfWork,Task> commitAction, Func<TUnitOfWork, Task> rollbackAction, Func<TUnitOfWork, Task> cleanupAction)
+        public UnitOfWorkStep(Func<IMessageContext, Task<TUnitOfWork>> unitOfWorkFactoryMethod, Func<IMessageContext, TUnitOfWork, Task> commitAction, Func<IMessageContext, TUnitOfWork, Task> rollbackAction, Func<IMessageContext, TUnitOfWork, Task> cleanupAction)
         {
             _unitOfWorkFactoryMethod = unitOfWorkFactoryMethod;
             _commitAction = commitAction;
@@ -22,22 +22,28 @@ namespace Rebus.UnitOfWork
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var unitOfWork = await _unitOfWorkFactoryMethod();
+            var messageContext = MessageContext.Current;
+
+            if (messageContext == null)
+            {
+                throw new ApplicationException("Could not find a message context! Something is clearly wrong...");
+            }
+
+            var unitOfWork = await _unitOfWorkFactoryMethod(messageContext);
 
             try
             {
                 await next();
-
-                await _commitAction(unitOfWork);
+                await _commitAction(messageContext, unitOfWork);
             }
             catch (Exception)
             {
-                await _rollbackAction(unitOfWork);
+                await _rollbackAction(messageContext, unitOfWork);
                 throw;
             }
             finally
             {
-                await _cleanupAction(unitOfWork);
+                await _cleanupAction(messageContext, unitOfWork);
             }
         }
     }

@@ -40,10 +40,10 @@ namespace Rebus.UnitOfWork.Tests
                 .Transport(t => t.UseInMemoryTransport(network, UowQueueName))
                 .Options(o =>
                 {
-                    o.EnableUnitOfWork(() => _events,
-                        commitAction: e => RegisterEvent("uow committed"),
-                        rollbackAction: e => RegisterEvent("uow rolled back"),
-                        cleanupAction: e => RegisterEvent("uow cleaned up"));
+                    o.EnableUnitOfWork(c => _events,
+                        commitAction: (c, e) => RegisterEvent("uow committed"),
+                        rollbackAction: (c, e) => RegisterEvent("uow rolled back"),
+                        cleanupAction: (c, e) => RegisterEvent("uow cleaned up"));
 
                     o.SimpleRetryStrategy(maxDeliveryAttempts: 1);
 

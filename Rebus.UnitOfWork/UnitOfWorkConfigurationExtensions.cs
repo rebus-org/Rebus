@@ -15,20 +15,28 @@ namespace Rebus.UnitOfWork
         /// <summary>
         /// Wraps the invocation of the incoming pipeline in a step that creates a unit of work, committing/rolling back depending on how the invocation of the pipeline went. The cleanup action is always called.
         /// </summary>
-        public static void EnableUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer, Func<TUnitOfWork> unitOfWorkFactoryMethod, Action<TUnitOfWork> commitAction, Action<TUnitOfWork> rollbackAction = null, Action<TUnitOfWork> cleanupAction = null)
+        public static void EnableUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer,
+            Func<IMessageContext, TUnitOfWork> unitOfWorkFactoryMethod,
+            Action<IMessageContext, TUnitOfWork> commitAction,
+            Action<IMessageContext, TUnitOfWork> rollbackAction = null,
+            Action<IMessageContext, TUnitOfWork> cleanupAction = null)
         {
             configurer.EnableUnitOfWork(
-                unitOfWorkFactoryMethod: async () => unitOfWorkFactoryMethod(),
-                commitAction: async unitOfWork => commitAction(unitOfWork),
-                rollbackAction: async unitOfWork => rollbackAction?.Invoke(unitOfWork),
-                cleanupAction: async unitOfWork => cleanupAction?.Invoke(unitOfWork)
+                unitOfWorkFactoryMethod: async context => unitOfWorkFactoryMethod(context),
+                commitAction: async (context, unitOfWork) => commitAction(context, unitOfWork),
+                rollbackAction: async (context, unitOfWork) => rollbackAction?.Invoke(context, unitOfWork),
+                cleanupAction: async (context, unitOfWork) => cleanupAction?.Invoke(context, unitOfWork)
                 );
         }
 
         /// <summary>
         /// Wraps the invocation of the incoming pipeline in a step that creates a unit of work, committing/rolling back depending on how the invocation of the pipeline went. The cleanup action is always called.
         /// </summary>
-        public static void EnableUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer, Func<Task<TUnitOfWork>> unitOfWorkFactoryMethod, Func<TUnitOfWork, Task> commitAction, Func<TUnitOfWork, Task> rollbackAction = null, Func<TUnitOfWork, Task> cleanupAction = null)
+        public static void EnableUnitOfWork<TUnitOfWork>(this OptionsConfigurer configurer,
+            Func<IMessageContext, Task<TUnitOfWork>> unitOfWorkFactoryMethod,
+            Func<IMessageContext, TUnitOfWork, Task> commitAction,
+            Func<IMessageContext, TUnitOfWork, Task> rollbackAction = null,
+            Func<IMessageContext, TUnitOfWork, Task> cleanupAction = null)
         {
             configurer.Decorate<IPipeline>(context =>
             {
@@ -36,7 +44,7 @@ namespace Rebus.UnitOfWork
                 var unitOfWorkStep = new UnitOfWorkStep<TUnitOfWork>(unitOfWorkFactoryMethod, commitAction, rollbackAction, cleanupAction);
 
                 return new PipelineStepInjector(pipeline)
-                    .OnReceive(unitOfWorkStep, PipelineRelativePosition.Before, typeof (ActivateHandlersStep));
+                    .OnReceive(unitOfWorkStep, PipelineRelativePosition.Before, typeof(ActivateHandlersStep));
             });
         }
     }
