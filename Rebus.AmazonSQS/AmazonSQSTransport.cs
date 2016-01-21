@@ -29,7 +29,7 @@ namespace Rebus.AmazonSQS
 
         readonly string _accessKeyId;
         readonly string _secretAccessKey;
-        readonly RegionEndpoint _regionEndpoint;
+        readonly AmazonSQSConfig _amazonSqsConfig;
         readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly ILog _log;
 
@@ -40,11 +40,11 @@ namespace Rebus.AmazonSQS
         /// <summary>
         /// Constructs the transport with the specified settings
         /// </summary>
-        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
+        public AmazonSqsTransport(string inputQueueAddress, string accessKeyId, string secretAccessKey, AmazonSQSConfig amazonSqsConfig, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (accessKeyId == null) throw new ArgumentNullException(nameof(accessKeyId));
             if (secretAccessKey == null) throw new ArgumentNullException(nameof(secretAccessKey));
-            if (regionEndpoint == null) throw new ArgumentNullException(nameof(regionEndpoint));
+            if (amazonSqsConfig == null) throw new ArgumentNullException(nameof(amazonSqsConfig));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
             Address = inputQueueAddress;
@@ -62,7 +62,7 @@ namespace Rebus.AmazonSQS
 
             _accessKeyId = accessKeyId;
             _secretAccessKey = secretAccessKey;
-            _regionEndpoint = regionEndpoint;
+            _amazonSqsConfig = amazonSqsConfig;
             _asyncTaskFactory = asyncTaskFactory;
         }
 
@@ -87,9 +87,9 @@ namespace Rebus.AmazonSQS
         {
             if (Address == null) return;
 
-            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _regionEndpoint);
+            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _amazonSqsConfig);
 
-            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _regionEndpoint))
+            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig))
             {
                 var queueName = GetQueueNameFromAddress(address);
                 var response = client.CreateQueue(new CreateQueueRequest(queueName));
@@ -370,10 +370,7 @@ namespace Rebus.AmazonSQS
         {
             return context.GetOrAdd(ClientContextKey, () =>
             {
-                var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, new AmazonSQSConfig()
-                {
-                    RegionEndpoint = _regionEndpoint
-                });
+                var amazonSqsClient = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig);
                 context.OnDisposed(amazonSqsClient.Dispose);
                 return amazonSqsClient;
             });
@@ -444,7 +441,7 @@ namespace Rebus.AmazonSQS
 
         public void DeleteQueue()
         {
-            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _regionEndpoint))
+            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig))
             {
                 client.DeleteQueue(_queueUrl);
             }

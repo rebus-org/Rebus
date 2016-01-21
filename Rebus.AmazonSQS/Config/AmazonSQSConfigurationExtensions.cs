@@ -1,4 +1,5 @@
 ﻿using Amazon;
+using Amazon.SQS;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Pipeline;
@@ -19,14 +20,22 @@ namespace Rebus.AmazonSQS.Config
         /// <summary>
         /// Configures Rebus to use Amazon Simple Queue Service as the message transport
         /// </summary>
-        public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint, string inputQueueAddress)
+        public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint reguEndpoint, string inputQueueAddress)
+        {
+            UseAmazonSqs(configurer, accessKeyId, secretAccessKey, new AmazonSQSConfig { RegionEndpoint = reguEndpoint }, inputQueueAddress );
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Amazon Simple Queue Service as the message transport
+        /// </summary>
+        public static void UseAmazonSqs(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, AmazonSQSConfig config, string inputQueueAddress)
         {
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
 
-                return new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory, asyncTaskFactory);
+                return new AmazonSqsTransport(inputQueueAddress, accessKeyId, secretAccessKey, config, rebusLoggerFactory, asyncTaskFactory);
             });
 
             configurer
@@ -47,12 +56,20 @@ namespace Rebus.AmazonSQS.Config
         /// </summary>
         public static void UseAmazonSqsAsOneWayClient(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, RegionEndpoint regionEndpoint)
         {
+            UseAmazonSqsAsOneWayClient(configurer, accessKeyId, secretAccessKey, new AmazonSQSConfig { RegionEndpoint = regionEndpoint });
+        }
+
+        /// <summary>
+        /// Configures Rebus to use Amazon Simple Queue Service as the message transport
+        /// </summary>
+        public static void UseAmazonSqsAsOneWayClient(this StandardConfigurer<ITransport> configurer, string accessKeyId, string secretAccessKey, AmazonSQSConfig amazonSqsConfig)
+        {
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
 
-                return new AmazonSqsTransport(null, accessKeyId, secretAccessKey, regionEndpoint, rebusLoggerFactory, asyncTaskFactory);
+                return new AmazonSqsTransport(null, accessKeyId, secretAccessKey, amazonSqsConfig, rebusLoggerFactory, asyncTaskFactory);
             });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
