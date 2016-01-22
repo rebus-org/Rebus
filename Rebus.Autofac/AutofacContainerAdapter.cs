@@ -19,13 +19,25 @@ namespace Rebus.Autofac
     public class AutofacContainerAdapter : IContainerAdapter
     {
         readonly IContainer _container;
+        private readonly ILifetimeScope _scope;
+        private readonly object _key;
 
         /// <summary>
         /// Constructs the adapter, using the specified container
         /// </summary>
-        public AutofacContainerAdapter(IContainer container)
+        public AutofacContainerAdapter(IContainer container, object key = null)
         {
             _container = container;
+            _key = key;
+        }
+
+        /// <summary>
+        /// Constructs the adapter, using the specified lifetime scope
+        /// </summary>
+        public AutofacContainerAdapter(ILifetimeScope scope, object key = null)
+        {
+            _scope = scope;
+            _key = key;
         }
 
         /// <summary>
@@ -36,7 +48,7 @@ namespace Rebus.Autofac
             var lifetimeScope = transactionContext
                 .GetOrAdd("current-autofac-lifetime-scope", () =>
                 {
-                    var scope = _container.BeginLifetimeScope();
+                    var scope = (_container ?? _scope).BeginLifetimeScope();
 
                     transactionContext.OnDisposed(() => scope.Dispose());
 
@@ -52,7 +64,19 @@ namespace Rebus.Autofac
                     var implementedInterface = typeof(IHandleMessages<>).MakeGenericType(handledMessageType);
                     var implementedInterfaceSequence = typeof(IEnumerable<>).MakeGenericType(implementedInterface);
 
-                    return (IEnumerable<IHandleMessages>)lifetimeScope.Resolve(implementedInterfaceSequence);
+                    object instances;
+                    if (_key == null)
+                    {
+                        if (lifetimeScope.TryResolve(implementedInterfaceSequence, out instances))
+                        return (IEnumerable<IHandleMessages>)instances;
+                    }
+                    else
+                    {
+                        if (lifetimeScope.TryResolveKeyed(_key, implementedInterfaceSequence, out instances))
+                        return (IEnumerable<IHandleMessages>) instances;
+                    }
+
+                    throw new Exception($"Could not resolve any implementations of IHandlerMessages<{_key ?? typeof (TMessage).Name}>.");
                 })
                 .Cast<IHandleMessages<TMessage>>();
         }
@@ -62,25 +86,27 @@ namespace Rebus.Autofac
         /// </summary>
         public void SetBus(IBus bus)
         {
+            if (_container == null)
+                return;
+
             var containerBuilder = new ContainerBuilder();
-            
-            containerBuilder
-                .RegisterInstance(bus)
-                .SingleInstance();
-            
-            containerBuilder
-                .Register(c =>
-                {
-                    var currentMessageContext = MessageContext.Current;
-                    if (currentMessageContext == null)
-                    {
-                        throw new InvalidOperationException("Attempted to inject the current message context from MessageContext.Current, but it was null! Did you attempt to resolve IMessageContext from outside of a Rebus message handler?");
-                    }
-                    return currentMessageContext;
-                })
-                .InstancePerDependency()
-                .ExternallyOwned();
-            
+
+            if (_key == null)
+            {
+                containerBuilder
+                    .RegisterInstance(bus)
+                    .SingleInstance();
+            }
+            else
+            {
+                containerBuilder
+                    .RegisterInstance(bus)
+                    .SingleInstance()
+                    .Keyed<IBus>(_key);
+            }
+
+            containerBuilder.RegisterRebus();
+
             containerBuilder.Update(_container);
         }
     }
