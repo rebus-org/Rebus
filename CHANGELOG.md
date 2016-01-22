@@ -789,7 +789,7 @@
 # 0.99.25
 
 * Fixed options configuration API to be more consistent and thus less prone to confusion - thanks [xenoputtss]
-* Added experiment unit of work API
+* Added experimental unit of work API
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
