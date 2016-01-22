@@ -30,29 +30,41 @@ namespace Rebus.RabbitMq
 
         readonly ConnectionManager _connectionManager;
         readonly ILog _log;
+        private readonly bool _exclusive;
+        private readonly bool _durable;
+        private readonly bool _autoDelete;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, bool exclusive = false, bool durable = true, bool autoDelete = false)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             Address = inputQueueAddress;
+            _durable = durable;
+            _exclusive = exclusive;
+            _autoDelete = autoDelete;
         }
 
         public void Initialize()
         {
             if (Address == null) return;
 
-            CreateQueue(Address);
+            CreateQueue(Address, _exclusive, _durable, _autoDelete);
         }
 
         public void CreateQueue(string address)
         {
+            
+            CreateQueue(address, false, true, false);
+        }
+
+        private void CreateQueue(string address, bool exclusive, bool durable, bool autoDelete)
+        {
             var connection = _connectionManager.GetConnection();
-         
+
             using (var model = connection.CreateModel())
             {
                 model.ExchangeDeclare(DirectExchangeName, ExchangeType.Direct, true);
@@ -63,7 +75,7 @@ namespace Rebus.RabbitMq
                     {"x-ha-policy", "all"}
                 };
 
-                model.QueueDeclare(address, exclusive: false, durable: true, autoDelete: false, arguments: arguments);
+                model.QueueDeclare(address, exclusive: exclusive, durable: durable, autoDelete: autoDelete, arguments: arguments);
 
                 model.QueueBind(address, DirectExchangeName, address);
             }
