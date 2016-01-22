@@ -22,7 +22,7 @@ namespace Rebus.RabbitMq
                 .Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory, false, true, false);
+                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory);
                 });
 
             configurer
