@@ -17,6 +17,8 @@ namespace Rebus.Pipeline
             Save(logicalMessage);
             Save(destinationAddresses);
             Save(transactionContext);
+
+            transactionContext.Items["outgoingStepContext"] = this;
         }
     }
 }

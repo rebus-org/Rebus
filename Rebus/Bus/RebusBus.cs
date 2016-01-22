@@ -372,11 +372,13 @@ namespace Rebus.Bus
             }
             else
             {
-                using (var context = new DefaultTransactionContext())
+                using (var transactionContext = new DefaultTransactionContext())
                 {
-                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
+                    AmbientTransactionContext.Current = transactionContext;
 
-                    await context.Complete();
+                    await SendUsingTransactionContext(destinationAddresses, logicalMessage, transactionContext);
+
+                    await transactionContext.Complete();
                 }
             }
         }

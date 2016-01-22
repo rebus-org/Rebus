@@ -188,6 +188,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.UnitOfWork", "Rebus.U
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.UnitOfWork.Tests", "Rebus.UnitOfWork.Tests\Rebus.UnitOfWork.Tests.csproj", "{A3EDE74E-E9E2-431C-830C-3FFE7EF5B1FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.Serilog.Tests", "Rebus.Serilog.Tests\Rebus.Serilog.Tests.csproj", "{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -402,6 +404,10 @@ Global
 		{A3EDE74E-E9E2-431C-830C-3FFE7EF5B1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3EDE74E-E9E2-431C-830C-3FFE7EF5B1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3EDE74E-E9E2-431C-830C-3FFE7EF5B1FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -490,5 +496,6 @@ Global
 		{0C2E55EA-8A27-44B5-8BC4-F7B73E1950A7} = {A54FE4CB-BB06-4198-8B4D-3EBD7152045B}
 		{E77B5611-DA49-4977-BD69-C413A5D4221B} = {0C2E55EA-8A27-44B5-8BC4-F7B73E1950A7}
 		{A3EDE74E-E9E2-431C-830C-3FFE7EF5B1FF} = {0C2E55EA-8A27-44B5-8BC4-F7B73E1950A7}
+		{48FA32D8-BDF1-492D-A9F8-16C3CBAE39E3} = {0CC2D01C-9007-45A0-8B35-0CB40C171E25}
 	EndGlobalSection
 EndGlobal
