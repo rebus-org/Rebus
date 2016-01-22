@@ -1,6 +1,7 @@
 ﻿using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
+using Rebus.Transport;
 using Serilog.Core;
 using Serilog.Events;
 
@@ -21,12 +22,17 @@ namespace Rebus.Serilog
 
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory factory)
         {
-            var messageContext = MessageContext.Current;
-            if (messageContext == null) return;
+            var transactionContext = AmbientTransactionContext.Current;
+            var outgoingStepContext = transactionContext?.GetOrNull<OutgoingStepContext>("outgoingStepContext");
+            var transportMessage = outgoingStepContext?.Load<TransportMessage>();
 
-            var correlationid = messageContext
-                .TransportMessage.Headers
-                .GetValueOrNull(Headers.CorrelationId);
+            if (transportMessage == null)
+            {
+                var messageContext = MessageContext.Current;
+                transportMessage = messageContext?.TransportMessage;
+            }
+
+            var correlationid = transportMessage?.Headers.GetValueOrNull(Headers.CorrelationId);
 
             if (correlationid == null) return;
 
