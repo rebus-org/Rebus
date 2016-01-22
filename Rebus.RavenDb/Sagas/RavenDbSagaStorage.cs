@@ -88,7 +88,7 @@ namespace Rebus.RavenDb.Sagas
                 await DeleteCorrelationPropertyDataForSaga(existingSagaData, session);
 
                 //add the new saga correlation documents
-                var correlationPropertyDocumentIds = await SaveCorrelationProperties(session, sagaData, correlationProperties, existingSagaData.Id);
+                var correlationPropertyDocumentIds = await SaveCorrelationProperties(session, sagaData, correlationProperties, existingSagaData.Id, true);
                 existingSagaData.SagaCorrelationPropertyDocumentIds = correlationPropertyDocumentIds;
 
                 await session.SaveChangesAsync();
@@ -124,7 +124,7 @@ namespace Rebus.RavenDb.Sagas
         }
 
         private async Task<IEnumerable<string>> SaveCorrelationProperties(IAsyncDocumentSession session,
-            ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties, string sagaDataDocumentId)
+            ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties, string sagaDataDocumentId, bool isUpdate = false)
         {
             var documentIds = new List<string>();
 
@@ -139,16 +139,19 @@ namespace Rebus.RavenDb.Sagas
                 var existingSagaCorrelationPropertyDocument =
                     await session.LoadAsync<SagaCorrelationPropertyDocument>(documentId);
 
-                if (existingSagaCorrelationPropertyDocument != null)
+                if (existingSagaCorrelationPropertyDocument != null && !isUpdate)
                     throw new ConcurrencyException(
                         $"Could not save correlation properties. The following correlation property already exists with the same value for another saga: {propertyName} - {value}");
 
+                if (existingSagaCorrelationPropertyDocument == null)
+                {
+                    var sagaCorrelationPropertyDocument = new SagaCorrelationPropertyDocument(correlationProperty.SagaDataType, propertyName,
+                        value, sagaDataDocumentId);
+
+                    await session.StoreAsync(sagaCorrelationPropertyDocument, documentId);
+                }
+
                 documentIds.Add(documentId);
-
-                var sagaCorrelationPropertyDocument = new SagaCorrelationPropertyDocument(correlationProperty.SagaDataType, propertyName,
-                    value, sagaDataDocumentId);
-
-                await session.StoreAsync(sagaCorrelationPropertyDocument, documentId);
             }
 
             return documentIds;
