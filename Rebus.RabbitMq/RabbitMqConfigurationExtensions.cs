@@ -22,7 +22,7 @@ namespace Rebus.RabbitMq
                 .Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory);
+                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory, false, true, false);
                 });
 
             configurer
@@ -37,7 +37,7 @@ namespace Rebus.RabbitMq
         /// <summary>
         /// Configures Rebus to use RabbitMQ to move messages around
         /// </summary>
-        public static RabbitMqOptionsBuilder UseRabbitMq(this StandardConfigurer<ITransport> configurer,  string connectionString, string inputQueueName)
+        public static RabbitMqOptionsBuilder UseRabbitMq(this StandardConfigurer<ITransport> configurer,  string connectionString, string inputQueueName, bool exclusive = false, bool durable = true, bool autoDelete = false)
         {
             var options = new RabbitMqOptionsBuilder();
 
@@ -46,7 +46,7 @@ namespace Rebus.RabbitMq
                 .Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                    var transport = new RabbitMqTransport(connectionString, inputQueueName, rebusLoggerFactory);
+                    var transport = new RabbitMqTransport(connectionString, inputQueueName, rebusLoggerFactory, exclusive, durable, autoDelete);
 
                     if (options.NumberOfMessagesToprefetch.HasValue)
                     {
