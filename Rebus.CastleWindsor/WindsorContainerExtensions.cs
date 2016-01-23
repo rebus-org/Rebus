@@ -37,7 +37,7 @@ namespace Rebus.CastleWindsor
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static IWindsorContainer AutoRegisterHandlersFromThisAssembly(this IWindsorContainer container)
         {
-            if (container == null) throw new ArgumentNullException("container");
+            if (container == null) throw new ArgumentNullException(nameof(container));
 
             var callingAssembly = Assembly.GetCallingAssembly();
 
@@ -49,7 +49,7 @@ namespace Rebus.CastleWindsor
         /// </summary>
         public static IWindsorContainer AutoRegisterHandlersFromAssemblyOf<THandler>(this IWindsorContainer container) where THandler : IHandleMessages
         {
-            if (container == null) throw new ArgumentNullException("container");
+            if (container == null) throw new ArgumentNullException(nameof(container));
 
             var assemblyToRegister = typeof(THandler).Assembly;
             
@@ -61,8 +61,8 @@ namespace Rebus.CastleWindsor
         /// </summary>
         public static IWindsorContainer AutoRegisterHandlersFromAssembly(this IWindsorContainer container, Assembly assemblyToRegister)
         {
-            if (container == null) throw new ArgumentNullException("container");
-            if (assemblyToRegister == null) throw new ArgumentNullException("assemblyToRegister");
+            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (assemblyToRegister == null) throw new ArgumentNullException(nameof(assemblyToRegister));
 
             return RegisterAssembly(container, assemblyToRegister);
         }
@@ -105,7 +105,7 @@ namespace Rebus.CastleWindsor
                 Component.For(implementedHandlerInterfaces)
                     .ImplementedBy(typeToRegister)
                     .LifestyleTransient()
-                    .Named(string.Format("{0} ({1})", typeToRegister.FullName, auto ? "auto-registered" : "manually registered"))
+                    .Named($"{typeToRegister.FullName} ({(auto ? "auto-registered" : "manually registered")})")
                 );
         }
 

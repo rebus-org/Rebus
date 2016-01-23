@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
 using NUnit.Framework;
@@ -18,7 +17,7 @@ namespace Rebus.CastleWindsor.Tests
 
             var stringHandlers = container.ResolveAll<IHandleMessages<string>>();
             
-            Assert.That(stringHandlers.Count(), Is.EqualTo(1));
+            Assert.That(stringHandlers.Length, Is.EqualTo(1));
         }
 
         class Handler : IHandleMessages<object>

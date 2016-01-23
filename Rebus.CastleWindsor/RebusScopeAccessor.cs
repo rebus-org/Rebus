@@ -18,7 +18,7 @@ namespace Rebus.CastleWindsor
 
             if (messageContext == null)
             {
-                throw new InvalidOperationException(string.Format("Attempted to resolve {0} outside of Rebus message context!", context.RequestedType));
+                throw new InvalidOperationException($"Attempted to resolve {context.RequestedType} outside of Rebus message context!");
             }
 
             var items = messageContext.TransactionContext.Items;

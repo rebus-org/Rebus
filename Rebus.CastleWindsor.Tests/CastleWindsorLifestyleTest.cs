@@ -12,6 +12,7 @@ using Rebus.Handlers;
 using Rebus.Tests;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.CastleWindsor.Tests
 {
@@ -117,7 +118,7 @@ namespace Rebus.CastleWindsor.Tests
 
             public async Task Handle(string message)
             {
-                _registeredThings.Enqueue(string.Format("1 SomeHandler used dependency {0}", _someDependency.InstanceNumber));
+                _registeredThings.Enqueue($"1 SomeHandler used dependency {_someDependency.InstanceNumber}");
                 _sharedCounter.Decrement();
             }
 
@@ -142,7 +143,7 @@ namespace Rebus.CastleWindsor.Tests
 
             public async Task Handle(string message)
             {
-                _registeredThings.Enqueue(string.Format("2 AnotherHandler used dependency {0}", _someDependency.InstanceNumber));
+                _registeredThings.Enqueue($"2 AnotherHandler used dependency {_someDependency.InstanceNumber}");
                 _sharedCounter.Decrement();
             }
 
@@ -163,17 +164,12 @@ namespace Rebus.CastleWindsor.Tests
 
             readonly ConcurrentQueue<string> _thingsThatHappened;
 
-            readonly int _instanceNumber = Interlocked.Increment(ref _instanceCounter);
-
             public SomeDependency(ConcurrentQueue<string> thingsThatHappened)
             {
                 _thingsThatHappened = thingsThatHappened;
             }
 
-            public int InstanceNumber
-            {
-                get { return _instanceNumber; }
-            }
+            public int InstanceNumber { get; } = Interlocked.Increment(ref _instanceCounter);
 
             public void Dispose()
             {
