@@ -380,17 +380,32 @@ namespace Rebus.AmazonSQS
         {
             var headers = message.MessageAttributes.ToDictionary(kv => kv.Key, kv => kv.Value.StringValue);
 
+            if (!headers.ContainsKey(Headers.ContentType))
+                headers[Headers.ContentType] = "application/json;charset=utf-8";
+
+            if (!headers.ContainsKey(Headers.ReturnAddress))
+                headers[Headers.ReturnAddress] = Address;
+
+            if (!headers.ContainsKey(Headers.MessageId))
+                headers[Headers.MessageId] = message.MessageId;
+
+            if (!headers.ContainsKey(Headers.CorrelationId))
+                headers[Headers.CorrelationId] = message.MessageId;
+
+            if (!headers.ContainsKey(Headers.Intent))
+                headers[Headers.Intent] = Headers.IntentOptions.PublishSubscribe;
+
             return new TransportMessage(headers, GetBodyBytes(message.Body));
 
         }
         private string GetBody(byte[] bodyBytes)
         {
-            return Convert.ToBase64String(bodyBytes);
+            return System.Text.Encoding.UTF8.GetString(bodyBytes);
         }
 
         private byte[] GetBodyBytes(string bodyText)
         {
-            return Convert.FromBase64String(bodyText);
+            return System.Text.Encoding.UTF8.GetBytes(bodyText);
         }
         private Dictionary<string, MessageAttributeValue> CreateAttributesFromHeaders(Dictionary<string, string> headers)
         {
