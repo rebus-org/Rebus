@@ -794,6 +794,7 @@
 # 0.99.26
 
 * Fixed bug in RavenDB saga persister - thanks [bjomi] and [jsvahn]
+* Fixed bug in Injectionist that could lead to resolve instances sometimes now being properly initialized/disposed
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
