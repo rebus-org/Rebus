@@ -791,6 +791,10 @@
 * Fixed options configuration API to be more consistent and thus less prone to confusion - thanks [xenoputtss]
 * Added experimental unit of work API
 
+# 0.99.26
+
+* Fixed bug in RavenDB saga persister - thanks [bjomi] and [jsvahn]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -805,6 +809,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
+[jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar
