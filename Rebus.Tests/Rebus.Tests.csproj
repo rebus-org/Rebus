@@ -110,6 +110,8 @@
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
+    <Compile Include="Serialization\ISerializerFactory.cs" />
+    <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
