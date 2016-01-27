@@ -88,6 +88,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
+    <Compile Include="Pipeline\Send\AssignTypeHeaderStep.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />

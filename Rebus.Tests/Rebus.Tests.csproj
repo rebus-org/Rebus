@@ -98,6 +98,7 @@
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
+    <Compile Include="Integration\TestTypeHeader.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSnapshotStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
