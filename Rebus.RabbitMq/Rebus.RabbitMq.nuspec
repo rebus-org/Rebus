@@ -12,7 +12,7 @@
     <description>RabbitMQ transport for Rebus</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus rabbitmq amqp</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="RabbitMQ.Client" version="3.5.4" /><!-- must depend on explicitly specified version here NUGET YUSOCRAZY LOL!!1-->

@@ -12,7 +12,7 @@
     <description>NLog logging integration for Rebus</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus nlog logging</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="NLog" version="[4.1.2, 5)" />
