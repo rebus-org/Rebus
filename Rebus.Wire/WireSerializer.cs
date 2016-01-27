@@ -17,7 +17,7 @@ namespace Rebus.Wire
         /// <summary>
         /// Mime type for Wire
         /// </summary>
-        public const string WireContentType = "application/wire";
+        public const string WireContentType = "application/x-wire";
         readonly Serializer _serializer = new Serializer();
 
         /// <summary>
