@@ -92,14 +92,12 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
             var foundExistingSagaData = false;
 
             var correlationProperties = _sagaHelper.GetCorrelationProperties(body, sagaInvoker.Saga);
-            var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body);
+            var correlationPropertiesRelevantForMessage = correlationProperties.ForMessage(body).ToArray();
 
             foreach (var correlationProperty in correlationPropertiesRelevantForMessage)
             {
                 var valueFromMessage = correlationProperty.ValueFromMessage(body);
-                var sagaData =
-                    await
-                        _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
+                var sagaData = await _sagaStorage.Find(sagaInvoker.Saga.GetSagaDataType(), correlationProperty.PropertyName, valueFromMessage);
 
                 if (sagaData == null) continue;
 
@@ -122,12 +120,36 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                     sagaInvoker.SetSagaData(newSagaData);
                     _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
                     newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
+
+                    // if there's exacly one correlation property that points to a property on the saga data, we can set it
+                    if (correlationPropertiesRelevantForMessage.Length == 1)
+                    {
+                        TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], body);
+                    }
                 }
                 else
                 {
                     _log.Debug("Could not find existing saga data for message {0}", label);
                     sagaInvoker.SkipInvocation();
                 }
+            }
+        }
+
+        static void TrySetCorrelationPropertyValue(ISagaData newSagaData, CorrelationProperty correlationProperty, object body)
+        {
+            try
+            {
+                var correlationPropertyInfo = newSagaData.GetType().GetProperty(correlationProperty.PropertyName);
+
+                if (correlationPropertyInfo == null) return;
+
+                var valueFromMessage = correlationProperty.ValueFromMessage(body);
+
+                correlationPropertyInfo.SetValue(newSagaData, valueFromMessage);
+            }
+            catch(Exception)
+            {
+                // if this fails it might be because the property is not settable.... just leave it to the programmer in the other end to set it
             }
         }
 
