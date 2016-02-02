@@ -804,6 +804,9 @@
 
 * Automatically set correlation property on newly initiated saga data when possible (we try to do it when there's one single correlation property for the message, and ignore failure to do so)
 
+# 0.99.29
+
+* Fixed Rebus.MongoDb package (nuspec was lying about its MongoDB driver dependency)
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
