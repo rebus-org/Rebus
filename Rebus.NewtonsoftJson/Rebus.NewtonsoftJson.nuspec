@@ -6,7 +6,7 @@
     <title>Rebus.NewtonsoftJson</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
-    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>JSON serializer for Rebus that is honest about its dependency on Newtonsoft JSON.NET and thus allows for customizing almost every aspect of how serialization/deserialization is performed</description>
