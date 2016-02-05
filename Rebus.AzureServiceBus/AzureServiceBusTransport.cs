@@ -242,7 +242,8 @@ namespace Rebus.AzureServiceBus
                     .ToDictionary(kvp => kvp.Key, kvp => (string)kvp.Value);
 
                 var messageId = headers.GetValueOrNull(Headers.MessageId);
-                var leaseDuration = (brokeredMessage.LockedUntilUtc - DateTime.UtcNow);
+                var now = DateTime.UtcNow;
+                var leaseDuration = brokeredMessage.LockedUntilUtc - now;
                 var lockRenewalInterval = TimeSpan.FromMinutes(0.8 * leaseDuration.TotalMinutes);
 
                 var renewalTask = GetRenewalTaskOrFakeDisposable(messageId, brokeredMessage, lockRenewalInterval);
@@ -269,7 +270,16 @@ namespace Rebus.AzureServiceBus
 
                 context.OnCompleted(async () =>
                 {
-                    await brokeredMessage.CompleteAsync();
+                    try
+                    {
+                        await brokeredMessage.CompleteAsync();
+                    }
+                    catch (MessageLockLostException exception)
+                    {
+                        var elapsed = now - DateTime.UtcNow;
+
+                        throw new RebusApplicationException(exception, $"The message lock for message with ID {messageId} was lost - tried to complete after {elapsed.TotalSeconds:0.0} s");
+                    }
                 });
 
                 context.OnDisposed(() =>
