@@ -110,7 +110,7 @@ namespace Rebus.AmazonSQS
         {
             if (Address == null) return;
 
-            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
+            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig))
             {
                 try
                 {
