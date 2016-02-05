@@ -73,7 +73,6 @@ namespace Rebus.AmazonSQS.Tests
                 amazonSqsConfig, consoleLoggerFactory, 
                 new TplAsyncTaskFactory(consoleLoggerFactory));
 
-
             transport.Purge();
         }
 

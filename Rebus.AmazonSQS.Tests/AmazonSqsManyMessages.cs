@@ -6,6 +6,5 @@ namespace Rebus.AmazonSQS.Tests
     [TestFixture, Category(Category.AmazonSqs)]
     public class AmazonSqsManyMessages : TestManyMessages<AmazonSqsManyMessagesTransportFactory>
     {
-
     }
 }

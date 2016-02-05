@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using Amazon;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -48,6 +49,7 @@ namespace Rebus.AmazonSQS
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
             Address = inputQueueAddress;
+
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (Address != null)
@@ -110,48 +112,51 @@ namespace Rebus.AmazonSQS
         {
             if (Address == null) return;
 
-            using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, RegionEndpoint.EUCentral1))
+            _log.Info("Purging {0} (by receiving all messages from the queue)", Address);
+
+            try
             {
-                try
+                using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig))
                 {
-                    var response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
-                    {
-                        MaxNumberOfMessages = 10
-                    });
+                    var stopwatch = Stopwatch.StartNew();
 
-                    while (response.Messages.Any())
+                    while (true)
                     {
+                        var response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
+                        {
+                            MaxNumberOfMessages = 10
+                        });
+
+                        if (!response.Messages.Any()) break;
+
                         var deleteResponse = client.DeleteMessageBatch(_queueUrl, response.Messages
-                        .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
-                        .ToList());
+                            .Select(m => new DeleteMessageBatchRequestEntry(m.MessageId, m.ReceiptHandle))
+                            .ToList());
 
-                        if (!deleteResponse.Failed.Any())
+                        if (deleteResponse.Failed.Any())
                         {
-                            response = client.ReceiveMessage(new ReceiveMessageRequest(_queueUrl)
-                            {
-                                MaxNumberOfMessages = 10
-                            });
-                        }
-                        else
-                        {
-                            throw new Exception(deleteResponse.HttpStatusCode.ToString());
+                            var errors = string.Join(Environment.NewLine,
+                                deleteResponse.Failed.Select(f => $"{f.Message} ({f.Id})"));
+
+                            throw new RebusApplicationException(
+                                $@"Error {deleteResponse.HttpStatusCode} while purging: 
+{errors}");
                         }
                     }
 
-
+                    _log.Info($"Purging {Address} took {stopwatch.Elapsed.TotalSeconds:0.0} s");
                 }
-                catch (Exception ex)
-                {
-
-                    Console.WriteLine("error in purge: " + ex.Message);
-                }
-
             }
+            catch (AmazonSQSException exception) when (exception.StatusCode == HttpStatusCode.BadRequest)
+            {
+                if (exception.Message.Contains("queue does not exist")) return;
 
-
-
-
-
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Error while purging {Address}");
+            }
         }
 
         class OutgoingMessage
@@ -183,7 +188,7 @@ namespace Rebus.AmazonSQS
 
                 return sendMessageBatchRequestEntries;
             });
-            
+
             outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
         }
 
@@ -306,9 +311,9 @@ namespace Rebus.AmazonSQS
 
                     await
                         client.ChangeMessageVisibilityAsync(new ChangeMessageVisibilityRequest(_queueUrl,
-                            message.ReceiptHandle, (int) _peekLockDuration.TotalSeconds));
+                            message.ReceiptHandle, (int)_peekLockDuration.TotalSeconds));
                 },
-                intervalSeconds: (int) _peekLockRenewalInterval.TotalSeconds,
+                intervalSeconds: (int)_peekLockRenewalInterval.TotalSeconds,
                 prettyInsignificant: true);
         }
 
