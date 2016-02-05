@@ -808,6 +808,11 @@
 
 * Fixed Rebus.MongoDb package (nuspec was lying about its MongoDB driver dependency)
 
+# 0.99.30
+
+* Removed hardcoded region settings in purge operation with SQS transport - thanks [gertjvr]
+* Better error message when attempting to complete a message whose lock has been lost with ASB
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
