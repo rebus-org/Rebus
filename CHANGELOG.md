@@ -813,6 +813,10 @@
 * Removed hardcoded region settings in purge operation with SQS transport - thanks [gertjvr]
 * Better error message when attempting to complete a message whose lock has been lost with ASB
 
+# 0.99.31
+
+* Added unit of work guards and fixed bug that would result in exceptions when providing no rollback/cleanup action when using the async version
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

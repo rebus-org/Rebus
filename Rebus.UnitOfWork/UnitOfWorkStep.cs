@@ -7,6 +7,7 @@ namespace Rebus.UnitOfWork
     [StepDocumentation("Wraps the invocation of the rest of the pipeline in a unit of work, which will get committed/rolled back depending on the outcome of calling the rest of the pipeline.")]
     class UnitOfWorkStep<TUnitOfWork> : IIncomingStep
     {
+        readonly Func<IMessageContext, TUnitOfWork, Task> _noop = (context, uow) => Task.FromResult(0);
         readonly Func<IMessageContext, Task<TUnitOfWork>> _unitOfWorkFactoryMethod;
         readonly Func<IMessageContext, TUnitOfWork, Task> _commitAction;
         readonly Func<IMessageContext, TUnitOfWork, Task> _rollbackAction;
@@ -14,10 +15,14 @@ namespace Rebus.UnitOfWork
 
         public UnitOfWorkStep(Func<IMessageContext, Task<TUnitOfWork>> unitOfWorkFactoryMethod, Func<IMessageContext, TUnitOfWork, Task> commitAction, Func<IMessageContext, TUnitOfWork, Task> rollbackAction, Func<IMessageContext, TUnitOfWork, Task> cleanupAction)
         {
+            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod));
+            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction));
+
             _unitOfWorkFactoryMethod = unitOfWorkFactoryMethod;
             _commitAction = commitAction;
-            _rollbackAction = rollbackAction;
-            _cleanupAction = cleanupAction;
+
+            _rollbackAction = rollbackAction ?? _noop;
+            _cleanupAction = cleanupAction ?? _noop;
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
