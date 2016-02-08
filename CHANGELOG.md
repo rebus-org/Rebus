@@ -817,6 +817,10 @@
 
 * Added unit of work guards and fixed bug that would result in exceptions when providing no rollback/cleanup action when using the async version
 
+# 0.99.32
+
+* Fixed logging of the configured region with Amazon SQS transport - thanks [gertjvr]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
