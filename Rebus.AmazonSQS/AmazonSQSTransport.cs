@@ -89,7 +89,7 @@ namespace Rebus.AmazonSQS
         {
             if (Address == null) return;
 
-            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _amazonSqsConfig);
+            _log.Info("Creating a new sqs queue:  with name: {0} on region: {1}", address, _amazonSqsConfig.RegionEndpoint);
 
             using (var client = new AmazonSQSClient(_accessKeyId, _secretAccessKey, _amazonSqsConfig))
             {
