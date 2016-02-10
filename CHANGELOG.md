@@ -820,6 +820,8 @@
 # 0.99.32
 
 * Fixed logging of the configured region with Amazon SQS transport - thanks [gertjvr]
+* Added experiment in-process hosting of OWIN endpoints via the Rebus.Owin package
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
