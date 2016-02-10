@@ -76,6 +76,14 @@ namespace Rebus.Config
         }
 
         /// <summary>
+        /// Gets whether a primary implementation resolver has been registered for the <typeparamref name="TService"/> service
+        /// </summary>
+        public bool Has<TService>()
+        {
+            return _injectionist.Has<TService>();
+        }
+
+        /// <summary>
         /// Registers the given factory function as a resolve of the given decorator of the <typeparamref name="TService"/> service
         /// </summary>
         public void Decorate<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)

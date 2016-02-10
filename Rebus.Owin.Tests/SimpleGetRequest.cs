@@ -12,7 +12,7 @@ namespace Rebus.Owin.Tests
     [TestFixture]
     public class SimpleGetRequest : FixtureBase
     {
-        const string ListenUrl = "http://localhost:9090";
+        const string ListenUrl = "http://localhost";
         const string GreetingText = "hello there my friend!!";
         BuiltinHandlerActivator _activator;
 
@@ -26,16 +26,8 @@ namespace Rebus.Owin.Tests
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
                 .Options(o =>
                 {
-                    o.AddWebHost(ListenUrl, app =>
-                    {
-                        app.Map("/api/greeting", a =>
-                        {
-                            a.Use(async (context, next) =>
-                            {
-                                await context.Response.WriteAsync(GreetingText);
-                            });
-                        });
-                    });
+                    o.AddWebHost($"{ListenUrl}:9090", GreetingStartup);
+                    o.AddWebHost($"{ListenUrl}:9091", GreetingStartup);
                 })
                 .Start();
         }
@@ -45,9 +37,19 @@ namespace Rebus.Owin.Tests
         {
             var client = new HttpClient();
 
-            var greeting = await client.GetStringAsync($"{ListenUrl}/api/greeting");
+            var greeting = await client.GetStringAsync($"{ListenUrl}:9090/api/greeting")
+                + " AND "
+                + await client.GetStringAsync($"{ListenUrl}:9091/api/greeting");
 
-            Assert.That(greeting, Is.EqualTo(GreetingText));
+            Assert.That(greeting, Is.EqualTo($"{GreetingText} AND {GreetingText}"));
+        }
+
+        static void GreetingStartup(IAppBuilder app)
+        {
+            app.Map("/api/greeting", a =>
+            {
+                a.Use(async (context, next) => { await context.Response.WriteAsync(GreetingText); });
+            });
         }
     }
 }

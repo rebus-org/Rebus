@@ -201,7 +201,7 @@ namespace Rebus.Injection
 
             public IEnumerable<T> GetTrackedInstancesOf<T>()
             {
-                return _resolvedInstances.OfType<T>().ToList();
+                return _resolvedInstances.OfType<T>().Distinct().ToList();
             }
         }
     }

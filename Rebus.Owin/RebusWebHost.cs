@@ -1,5 +1,6 @@
 ﻿using System;
-using Microsoft.Owin.Hosting;
+using System.Collections.Generic;
+using System.Linq;
 using Owin;
 using Rebus.Bus;
 using Rebus.Logging;
@@ -8,33 +9,35 @@ namespace Rebus.Owin
 {
     class RebusWebHost: IInitializable, IDisposable
     {
-        readonly Action<IAppBuilder> _startup;
-        readonly string _listenUrl;
+        readonly List<Endpoint> _endpoints = new List<Endpoint>();
         readonly ILog _logger;
 
-        IDisposable _host;
-
-        public RebusWebHost(IRebusLoggerFactory rebusLoggerFactory, string listenUrl, Action<IAppBuilder> startup)
+        public RebusWebHost(IRebusLoggerFactory rebusLoggerFactory)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-            if (listenUrl == null) throw new ArgumentNullException(nameof(listenUrl));
-            if (startup == null) throw new ArgumentNullException(nameof(startup));
-            _listenUrl = listenUrl;
-            _startup = startup;
+
             _logger = rebusLoggerFactory.GetCurrentClassLogger();
+        }
+
+        public void AddEndpoint(string listenUrl, Action<IAppBuilder> startup)
+        {
+            _endpoints.Add(new Endpoint(_logger, listenUrl, startup));
         }
 
         public void Initialize()
         {
-            _logger.Info($"Starting web host listening on {_listenUrl}");
-            _host = WebApp.Start(_listenUrl, _startup);
+            foreach (var endpoint in _endpoints)
+            {
+                endpoint.Start();
+            }
         }
 
         public void Dispose()
         {
-            _logger.Info($"Stopping web host listening on {_listenUrl}");
-            _host?.Dispose();
-            _host = null;
+            foreach (var endpoint in Enumerable.Reverse(_endpoints))
+            {
+                endpoint.Dispose();
+            }
         }
     }
 }
