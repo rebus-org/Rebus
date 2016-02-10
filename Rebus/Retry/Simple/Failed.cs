@@ -11,12 +11,12 @@ namespace Rebus.Retry.Simple
         /// <summary>
         /// Gets the message that failed
         /// </summary>
-        public TMessage Message { get; private set; }
+        public TMessage Message { get; }
 
         /// <summary>
         /// Gets a (sometimes pretty long) description of the encountered error(s)
         /// </summary>
-        public string ErrorDescription { get; private set; }
+        public string ErrorDescription { get; }
 
         /// <summary>
         /// Gets the headers of the message that failed
@@ -28,9 +28,9 @@ namespace Rebus.Retry.Simple
         /// </summary>
         public Failed(Dictionary<string, string> headers, TMessage message, string errorDescription)
         {
-            if (headers == null) throw new ArgumentNullException("headers");
-            if (message == null) throw new ArgumentNullException("message");
-            if (errorDescription == null) throw new ArgumentNullException("errorDescription");
+            if (headers == null) throw new ArgumentNullException(nameof(headers));
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (errorDescription == null) throw new ArgumentNullException(nameof(errorDescription));
             Headers = headers;
             Message = message;
             ErrorDescription = errorDescription;
@@ -41,7 +41,7 @@ namespace Rebus.Retry.Simple
         /// </summary>
         public override string ToString()
         {
-            return string.Format("FAILED: {0}", Message);
+            return $"FAILED: {Message}";
         }
     }
 }

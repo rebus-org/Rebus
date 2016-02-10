@@ -21,6 +21,9 @@ namespace Rebus.UnitOfWork
             Action<IMessageContext, TUnitOfWork> rollbackAction = null,
             Action<IMessageContext, TUnitOfWork> cleanupAction = null)
         {
+            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod), "You need to provide a factory method that is capable of creating new units of work");
+            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction), "You need to provide a commit action that commits the current unit of work");
+
             configurer.EnableUnitOfWork(
                 unitOfWorkFactoryMethod: async context => unitOfWorkFactoryMethod(context),
                 commitAction: async (context, unitOfWork) => commitAction(context, unitOfWork),
@@ -38,6 +41,9 @@ namespace Rebus.UnitOfWork
             Func<IMessageContext, TUnitOfWork, Task> rollbackAction = null,
             Func<IMessageContext, TUnitOfWork, Task> cleanupAction = null)
         {
+            if (unitOfWorkFactoryMethod == null) throw new ArgumentNullException(nameof(unitOfWorkFactoryMethod), "You need to provide a factory method that is capable of creating new units of work");
+            if (commitAction == null) throw new ArgumentNullException(nameof(commitAction), "You need to provide a commit action that commits the current unit of work");
+
             configurer.Decorate<IPipeline>(context =>
             {
                 var pipeline = context.Get<IPipeline>();

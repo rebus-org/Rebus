@@ -88,6 +88,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
+    <Compile Include="Pipeline\Send\AssignTypeHeaderStep.cs" />
     <Compile Include="Pipeline\Send\AutoHeadersOutgoingStep.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessage.cs" />
     <Compile Include="Legacy\LegacySubscriptionMessagesBinder.cs" />
@@ -221,7 +222,7 @@
     <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />
     <Compile Include="Reflection\Ponder.cs" />
     <Compile Include="Retry\IRetryStrategy.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrageConfigurationExtensions.cs" />
+    <Compile Include="Retry\Simple\SimpleRetryStrategyConfigurationExtensions.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
     <Compile Include="Subscriptions\ISubscriptionStorage.cs" />

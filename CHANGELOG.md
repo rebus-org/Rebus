@@ -791,6 +791,36 @@
 * Fixed options configuration API to be more consistent and thus less prone to confusion - thanks [xenoputtss]
 * Added experimental unit of work API
 
+# 0.99.26
+
+* Fixed bug in RavenDB saga persister - thanks [bjomi] and [jsvahn]
+* Fixed bug in Injectionist that could lead to resolve instances sometimes now being properly initialized/disposed
+
+# 0.99.27
+
+* Added Wire serializer
+
+# 0.99.28
+
+* Automatically set correlation property on newly initiated saga data when possible (we try to do it when there's one single correlation property for the message, and ignore failure to do so)
+
+# 0.99.29
+
+* Fixed Rebus.MongoDb package (nuspec was lying about its MongoDB driver dependency)
+
+# 0.99.30
+
+* Removed hardcoded region settings in purge operation with SQS transport - thanks [gertjvr]
+* Better error message when attempting to complete a message whose lock has been lost with ASB
+
+# 0.99.31
+
+* Added unit of work guards and fixed bug that would result in exceptions when providing no rollback/cleanup action when using the async version
+
+# 0.99.32
+
+* Fixed logging of the configured region with Amazon SQS transport - thanks [gertjvr]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -805,6 +835,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
+[jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
 [krivin]: https://github.com/krivin
 [maeserichar]: https://github.com/maeserichar

@@ -93,11 +93,13 @@
     <Compile Include="Integration\Legacy\TestLegacyCompatibility.cs" />
     <Compile Include="Integration\TestMessageDeferralAndRequestReply.cs" />
     <Compile Include="Integration\TestRetryExceptionCustomization.cs" />
+    <Compile Include="Integration\TestSagaAutomaticCorrelationIdOnInit.cs" />
     <Compile Include="Integration\TestSagaIsNew.cs" />
     <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
+    <Compile Include="Integration\TestTypeHeader.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSnapshotStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
@@ -110,6 +112,8 @@
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
+    <Compile Include="Serialization\ISerializerFactory.cs" />
+    <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />

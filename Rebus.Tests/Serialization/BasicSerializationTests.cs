@@ -59,9 +59,4 @@ namespace Rebus.Tests.Serialization
     {
         public string Text { get; set; }
     }
-
-    public interface ISerializerFactory
-    {
-        ISerializer GetSerializer();
-    }
 }

@@ -6,16 +6,18 @@
     <title>Rebus.MongoDb</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
-    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>MongoDb persisters for Rebus</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus mongodb</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="mongocsharpdriver" version="[1.10, 2)" />
+        <dependency id="MongoDB.Bson" version="2.0.1" />
+        <dependency id="MongoDB.Driver" version="2.0.1" />
+        <dependency id="MongoDB.Driver.Core" version="2.0.1" />
     </dependencies>
   </metadata>
   <files>

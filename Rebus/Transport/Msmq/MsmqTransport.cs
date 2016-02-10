@@ -102,7 +102,6 @@ namespace Rebus.Transport.Msmq
             }
 
             _log.Info("Purging {0}", _inputQueueName);
-
             MsmqUtil.PurgeQueue(_inputQueueName);
         }
 

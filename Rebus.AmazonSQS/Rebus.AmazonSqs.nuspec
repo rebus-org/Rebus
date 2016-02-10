@@ -6,13 +6,13 @@
     <title>Rebus.AmazonSqs</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
-    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Amazon SQS transport for Rebus</description>
     <copyright>Copyright 2015</copyright>
     <tags>rebus amazon amazonwebservices amazon-sqs-messages</tags>
-    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/rebus2-logo-200x200-transparent.png</iconUrl>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="AWSSDK" version="[2.3, 2.4)" />

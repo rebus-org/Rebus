@@ -31,7 +31,7 @@ namespace Rebus.Extensions
         /// </summary>
         public static string GetSimpleAssemblyQualifiedName(this Type type)
         {
-            return string.Format("{0}, {1}", type.FullName, type.Assembly.GetName().Name);
+            return $"{type.FullName}, {type.Assembly.GetName().Name}";
         }
     }
 }

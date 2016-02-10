@@ -65,9 +65,7 @@ namespace Rebus.Serialization
             var jsonText = JsonConvert.SerializeObject(message.Body, _settings);
             var bytes = _encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
-            var messageType = message.Body.GetType();
-            headers[Headers.Type] = messageType.GetSimpleAssemblyQualifiedName();
-            headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonContentType, _encoding.HeaderName);
+            headers[Headers.ContentType] = $"{JsonContentType};charset={_encoding.HeaderName}";
             return new TransportMessage(headers, bytes);
         }
 
@@ -89,7 +87,7 @@ namespace Rebus.Serialization
                 return GetMessage(transportMessage, encoding);
             }
 
-            throw new FormatException(string.Format("Unknown content type: '{0}' - must be '{1}' for the JSON serialier to work", contentType, JsonUtf8ContentType));
+            throw new FormatException($"Unknown content type: '{contentType}' - must be '{JsonUtf8ContentType}' for the JSON serialier to work");
         }
 
         Encoding GetEncoding(string contentType)

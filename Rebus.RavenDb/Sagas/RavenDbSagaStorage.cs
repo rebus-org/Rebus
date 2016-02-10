@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,7 +29,7 @@ namespace Rebus.RavenDb.Sagas
 
                 if (propertyName == _sagaDataIdPropertyName)
                 {
-                    sagaDataDocumentId = SagaDataDocument.GetIdFromGuid((Guid)propertyValue);
+                    sagaDataDocumentId = SagaDataDocument.GetIdFromGuid((Guid) propertyValue);
                 }
                 else
                 {
@@ -53,7 +54,6 @@ namespace Rebus.RavenDb.Sagas
                 return existingSagaDataDocument?.SagaData;
             }
 
-
         }
 
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
@@ -71,6 +71,14 @@ namespace Rebus.RavenDb.Sagas
             using (var session = _documentStore.OpenAsyncSession())
             {
                 var sagaDataDocumentId = SagaDataDocument.GetIdFromGuid(sagaData.Id);
+
+                var existingSagaDataDocument = await session.LoadAsync<SagaDataDocument>(sagaDataDocumentId);
+
+                if (existingSagaDataDocument != null)
+                {
+                    throw new ConcurrencyException("Cannot insert document with an id that already exists");
+                }
+
                 var sagaDataDocument = new SagaDataDocument(sagaData);
                 await session.StoreAsync(sagaDataDocument, sagaDataDocumentId);
 
@@ -87,13 +95,24 @@ namespace Rebus.RavenDb.Sagas
             {
                 var documentId = SagaDataDocument.GetIdFromGuid(sagaData.Id);
                 var existingSagaData = await session.LoadAsync<SagaDataDocument>(documentId);
+
+                if (existingSagaData == null)
+                {
+                    throw new ConcurrencyException("Cannot update saga that does not exist");
+                }
+
                 sagaData.Revision++;
                 existingSagaData.SagaData = sagaData;
-                
-                await DeleteCorrelationPropertyDataForSaga(existingSagaData, session);
-
+            
                 //add the new saga correlation documents
                 var correlationPropertyDocumentIds = await SaveCorrelationProperties(session, sagaData, correlationProperties, existingSagaData.Id);
+
+                var oldCorrelationPropertyDocumentIdsNotPresentInNew =
+                    existingSagaData.SagaCorrelationPropertyDocumentIds.Where(
+                        sc => !correlationPropertyDocumentIds.Contains(sc));
+
+                await DeleteCorrelationProperties(oldCorrelationPropertyDocumentIdsNotPresentInNew, session);
+
                 existingSagaData.SagaCorrelationPropertyDocumentIds = correlationPropertyDocumentIds;
 
                 await session.SaveChangesAsync();
@@ -106,6 +125,12 @@ namespace Rebus.RavenDb.Sagas
             {
                 var documentId = SagaDataDocument.GetIdFromGuid(sagaData.Id);
                 var existingSagaData = await session.LoadAsync<SagaDataDocument>(documentId);
+
+                if (existingSagaData == null)
+                {
+                    throw new ConcurrencyException("Cannot delete saga that does not exist");
+                }
+
                 await DeleteCorrelationPropertyDataForSaga(existingSagaData, session);
 
                 session.Delete(existingSagaData);
@@ -113,13 +138,19 @@ namespace Rebus.RavenDb.Sagas
                 await session.SaveChangesAsync();
             }
         }
-
+        
         private async Task DeleteCorrelationPropertyDataForSaga(SagaDataDocument sagaDataDocument,
+            IAsyncDocumentSession session)
+        {
+            await DeleteCorrelationProperties(sagaDataDocument.SagaCorrelationPropertyDocumentIds, session);
+        }
+
+        private async Task DeleteCorrelationProperties(IEnumerable<string> correlationPropertyIds,
             IAsyncDocumentSession session)
         {
             var existingSagaCorrelationPropertyDocuments =
                 await session.LoadAsync<SagaCorrelationPropertyDocument>(
-                    sagaDataDocument.SagaCorrelationPropertyDocumentIds);
+                    correlationPropertyIds);
 
             //delete the existing saga correlation documents
             foreach (var existingSagaCorrelationPropertyDocument in existingSagaCorrelationPropertyDocuments)
@@ -145,15 +176,22 @@ namespace Rebus.RavenDb.Sagas
                     await session.LoadAsync<SagaCorrelationPropertyDocument>(documentId);
 
                 if (existingSagaCorrelationPropertyDocument != null)
-                    throw new ConcurrencyException(
-                        $"Could not save correlation properties. The following correlation property already exists with the same value for another saga: {propertyName} - {value}");
+                {
+                    if (existingSagaCorrelationPropertyDocument.SagaDataDocumentId != sagaDataDocumentId)
+                    {
+                        throw new ConcurrencyException(
+                            $"Could not save correlation properties. The following correlation property already exists with the same value for another saga: {propertyName} - {value}");
+                    }
+                }
+                else
+                {
+                    var sagaCorrelationPropertyDocument = new SagaCorrelationPropertyDocument(correlationProperty.SagaDataType, propertyName,
+                        value, sagaDataDocumentId);
 
+                    await session.StoreAsync(sagaCorrelationPropertyDocument, documentId);
+                }
+                
                 documentIds.Add(documentId);
-
-                var sagaCorrelationPropertyDocument = new SagaCorrelationPropertyDocument(correlationProperty.SagaDataType, propertyName,
-                    value, sagaDataDocumentId);
-
-                await session.StoreAsync(sagaCorrelationPropertyDocument, documentId);
             }
 
             return documentIds;
@@ -164,7 +202,7 @@ namespace Rebus.RavenDb.Sagas
             [JsonConstructor]
             private SagaDataDocument()
             {
-                
+
             }
 
             public SagaDataDocument(ISagaData sagaData)
@@ -174,7 +212,7 @@ namespace Rebus.RavenDb.Sagas
 
             public string Id { get; private set; }
             public ISagaData SagaData { get; set; }
-            public IEnumerable<string> SagaCorrelationPropertyDocumentIds { get; set; } 
+            public IEnumerable<string> SagaCorrelationPropertyDocumentIds { get; set; }
 
             public static string GetIdFromGuid(Guid guid)
             {
@@ -188,7 +226,7 @@ namespace Rebus.RavenDb.Sagas
             [JsonConstructor]
             private SagaCorrelationPropertyDocument()
             {
-                
+
             }
 
             public SagaCorrelationPropertyDocument(Type sagaType, string propertyName, object value, string sagaDataDocumentId)

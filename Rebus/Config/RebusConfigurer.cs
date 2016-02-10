@@ -212,6 +212,7 @@ namespace Rebus.Config
                     .OnSend(new AssignDateTimeOffsetHeader())
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
+                    .OnSend(new AssignTypeHeaderStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
                     .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
             });
