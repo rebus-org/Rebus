@@ -26,8 +26,8 @@ namespace Rebus.Owin.Tests
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "doesn't matter"))
                 .Options(o =>
                 {
-                    o.AddWebHost($"{ListenUrl}:9090", GreetingStartup);
-                    o.AddWebHost($"{ListenUrl}:9091", GreetingStartup);
+                    o.AddWebHost($"{ListenUrl}:5001", GreetingStartup);
+                    o.AddWebHost($"{ListenUrl}:5002", GreetingStartup);
                 })
                 .Start();
         }
@@ -37,9 +37,9 @@ namespace Rebus.Owin.Tests
         {
             var client = new HttpClient();
 
-            var greeting = await client.GetStringAsync($"{ListenUrl}:9090/api/greeting")
+            var greeting = await client.GetStringAsync($"{ListenUrl}:5001/api/greeting")
                 + " AND "
-                + await client.GetStringAsync($"{ListenUrl}:9091/api/greeting");
+                + await client.GetStringAsync($"{ListenUrl}:5002/api/greeting");
 
             Assert.That(greeting, Is.EqualTo($"{GreetingText} AND {GreetingText}"));
         }
