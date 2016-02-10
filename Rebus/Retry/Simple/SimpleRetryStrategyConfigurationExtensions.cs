@@ -14,9 +14,9 @@ using Rebus.Pipeline.Receive;
 namespace Rebus.Retry.Simple
 {
     /// <summary>
-    /// 
+    /// Configuration extensions for the simple retry strategy
     /// </summary>
-    public static class SimpleRetryStrageConfigurationExtensions
+    public static class SimpleRetryStrategyConfigurationExtensions
     {
         /// <summary>
         /// Configures the simple retry strategy, using the specified error queue address and number of delivery attempts

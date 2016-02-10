@@ -222,7 +222,7 @@
     <Compile Include="Pipeline\Send\SerializeOutgoingMessageStep.cs" />
     <Compile Include="Reflection\Ponder.cs" />
     <Compile Include="Retry\IRetryStrategy.cs" />
-    <Compile Include="Retry\Simple\SimpleRetryStrageConfigurationExtensions.cs" />
+    <Compile Include="Retry\Simple\SimpleRetryStrategyConfigurationExtensions.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategySettings.cs" />
     <Compile Include="Retry\Simple\SimpleRetryStrategy.cs" />
     <Compile Include="Subscriptions\ISubscriptionStorage.cs" />
