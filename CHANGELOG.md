@@ -822,6 +822,9 @@
 * Fixed logging of the configured region with Amazon SQS transport - thanks [gertjvr]
 * Added experiment in-process hosting of OWIN endpoints via the Rebus.Owin package
 
+# 0.99.33
+
+* Fixed bug where an exception thrown while correlating an incoming message with a saga would not be included as inner exception - thanks [mortenherman]
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
@@ -846,6 +849,7 @@
 [meyce]: https://github.com/Meyce
 [mgayeski]: https://github.com/mgayeski
 [mgibas]: https://github.com/mgibas
+[mortenherman]: https://github.com/mortenherman
 [MrMDavidson]: https://github.com/MrMDavidson
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
