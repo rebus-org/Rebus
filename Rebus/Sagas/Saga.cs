@@ -151,7 +151,7 @@ namespace Rebus.Sagas
                     }
                     catch (Exception exception)
                     {
-                        throw new RebusApplicationException(exception, string.Format("Could not extract correlation value from message {0}", typeof(TMessage)));
+                        throw new RebusApplicationException(exception, $"Could not extract correlation value from message {typeof (TMessage)}");
                     }
                 };
 
