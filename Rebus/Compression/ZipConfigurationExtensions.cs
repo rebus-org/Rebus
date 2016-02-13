@@ -1,7 +1,5 @@
 ﻿using Rebus.Config;
-using Rebus.Pipeline;
-using Rebus.Pipeline.Receive;
-using Rebus.Pipeline.Send;
+using Rebus.Serialization;
 
 namespace Rebus.Compression
 {
@@ -21,13 +19,7 @@ namespace Rebus.Compression
         /// </summary>
         public static void EnableCompression(this OptionsConfigurer configurer, int bodySizeThresholdBytes = DefaultBodyThresholdBytes)
         {
-            configurer.Register(c => new Zipper());
-            configurer.Register(c => new UnzipMessagesIncomingStep(c.Get<Zipper>()));
-            configurer.Register(c => new ZipMessagesOutgoingStep(c.Get<Zipper>(), bodySizeThresholdBytes));
-
-            configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                .OnReceive(c.Get<UnzipMessagesIncomingStep>(), PipelineRelativePosition.Before, typeof(DeserializeIncomingMessageStep))
-                .OnSend(c.Get<ZipMessagesOutgoingStep>(), PipelineRelativePosition.After, typeof(SerializeOutgoingMessageStep)));
+            configurer.Decorate<ISerializer>(c => new ZippingSerializerDecorator(c.Get<ISerializer>(), new Zipper(), bodySizeThresholdBytes));
         }
     }
 }

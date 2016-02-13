@@ -28,16 +28,16 @@ namespace Rebus.Encryption
             }
             catch (Exception exception)
             {
-                throw new ArgumentException(string.Format(@"Could not initialize the encryption algorithm with the specified key (not shown here for security reasons) - if you're unsure how to get a valid key, here's a newly generated key that you can use:
+                throw new ArgumentException(
+                    $@"Could not initialize the encryption algorithm with the specified key (not shown here for security reasons) - if you're unsure how to get a valid key, here's a newly generated key that you can use:
 
-    {0}
+    {GenerateNewKey()}
 
-I promise that the suggested key has been generated this instant - if you don't believe me, feel free to run the program again ;)",
-                    GenerateNewKey()), exception);
+I promise that the suggested key has been generated this instant - if you don't believe me, feel free to run the program again ;)", exception);
             }
         }
 
-        string GenerateNewKey()
+        static string GenerateNewKey()
         {
             using (var rijndael = new RijndaelManaged())
             {
@@ -94,32 +94,5 @@ I promise that the suggested key has been generated this instant - if you don't 
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Represents a chunk of encrypted data along with the salt (a.k.a. "Initialization Vector"/"IV") that was used to encrypt it.
-    /// </summary>
-    public class EncryptedData
-    {
-        /// <summary>
-        /// Constructs an instance from the given bytes and iv.
-        /// </summary>
-        public EncryptedData(byte[] bytes, byte[] iv)
-        {
-            if (bytes == null) throw new ArgumentNullException("bytes");
-            if (iv == null) throw new ArgumentNullException("iv");
-            Bytes = bytes;
-            Iv = iv;
-        }
-
-        /// <summary>
-        /// Gets the raw data from this encrypted data instance
-        /// </summary>
-        public byte[] Bytes { get; private set; }
-        
-        /// <summary>
-        /// Gets the salt (a.k.a. "Initialization Vector"/"IV") from this encrypted data instance
-        /// </summary>
-        public byte[] Iv { get; private set; }
     }
 }

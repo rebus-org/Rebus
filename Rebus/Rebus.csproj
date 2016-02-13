@@ -70,8 +70,10 @@
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Compression\ZippingSerializerDecorator.cs" />
     <Compile Include="Config\OneWayClientBackdoor.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
+    <Compile Include="Encryption\EncryptedData.cs" />
     <Compile Include="Encryption\EncryptionConfigurationExtensions.cs" />
     <Compile Include="Encryption\EncryptionHeaders.cs" />
     <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
@@ -104,9 +106,7 @@
     <Compile Include="Pipeline\PipelineStepConcatenator.cs" />
     <Compile Include="Pipeline\PipelineStepInjector.cs" />
     <Compile Include="Pipeline\PipelineRelativePosition.cs" />
-    <Compile Include="Compression\UnzipMessagesIncomingStep.cs" />
     <Compile Include="Compression\ZipConfigurationExtensions.cs" />
-    <Compile Include="Compression\ZipMessagesOutgoingStep.cs" />
     <Compile Include="Compression\Zipper.cs" />
     <Compile Include="Config\RebusLoggingConfigurer.cs" />
     <Compile Include="Extensions\TypeExtensions.cs" />
