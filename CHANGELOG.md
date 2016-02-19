@@ -826,6 +826,10 @@
 
 * Fixed bug where an exception thrown while correlating an incoming message with a saga would not be included as inner exception - thanks [mortenherman]
 
+# 0.99.34
+
+* Made small improvements to Rebus.Async (added timeout option + added ability to remove abandoned replied when their age exceeds a configurable threshold)
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

@@ -13,8 +13,8 @@ namespace Rebus.Messages
         /// </summary>
         public Message(Dictionary<string, string> headers, object body)
         {
-            if (headers == null) throw new ArgumentNullException("headers");
-            if (body == null) throw new ArgumentNullException("body");
+            if (headers == null) throw new ArgumentNullException(nameof(headers));
+            if (body == null) throw new ArgumentNullException(nameof(body));
             Headers = headers;
             Body = body;
         }

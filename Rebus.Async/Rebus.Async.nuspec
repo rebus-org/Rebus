@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Async</id>
+    <version>$version$</version>
+    <title>Rebus.Async</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Experimental async/await-based request/reply API for Rebus</description>
+    <copyright>Copyright 2012-2016</copyright>
+    <tags>rebus async async-await request-reply request reply asynchronous</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
+    <dependencies>
+        <dependency id="Rebus" version="[$version$, 1)" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\Rebus.Async.dll" target="lib\NET45" />
+    <file src="bin\Release\Rebus.Async.xml" target="lib\NET45" />
+  </files>
+</package>
