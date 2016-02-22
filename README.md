@@ -82,7 +82,7 @@ Rebus is licensed under [The MIT License (MIT)][1]. Basically, this license gran
 
 [1]: https://opensource.org/licenses/MIT
 [2]: https://twitter.com/#!/mookid8000
-[3]: http://particular.net
+[3]: http://particular.net/nservicebus
 [4]: http://masstransit-project.com/
 [5]: https://github.com/rebus-org/Rebus/wiki
 [6]: http://mookid.dk/oncode/rebus
