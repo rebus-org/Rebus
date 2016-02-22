@@ -830,6 +830,10 @@
 
 * Made small improvements to Rebus.Async (added timeout option + added ability to remove abandoned replied when their age exceeds a configurable threshold)
 
+# 0.99.35
+
+* Fixed bug that caused the Azure Service Bus transport to not be properly initialized when using the "Basic" tier - thanks [torangel]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -862,4 +866,5 @@
 [seankearon]: https://github.com/seankearon
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
+[torangel]: https://github.com/torangel
 [xenoputtss]: https://github.com/xenoputtss
