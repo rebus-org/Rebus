@@ -42,12 +42,12 @@ namespace Rebus.AzureServiceBus
         readonly string _connectionString;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
         readonly IAsyncTaskFactory _asyncTaskFactory;
-        readonly string _inputQueueAddress;
+        protected readonly string InputQueueAddress;
 
         readonly TimeSpan _peekLockDuration = TimeSpan.FromMinutes(5);
         readonly AsyncBottleneck _bottleneck = new AsyncBottleneck(10);
         readonly Ignorant _ignorant = new Ignorant();
-        readonly ILog _log;
+        protected readonly ILog Log;
 
         readonly ConcurrentQueue<BrokeredMessage> _prefetchQueue = new ConcurrentQueue<BrokeredMessage>();
 
@@ -65,21 +65,21 @@ namespace Rebus.AzureServiceBus
             _connectionString = connectionString;
             _rebusLoggerFactory = rebusLoggerFactory;
             _asyncTaskFactory = asyncTaskFactory;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            Log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueAddress != null)
             {
-                _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
+                InputQueueAddress = inputQueueAddress.ToLowerInvariant();
             }
         }
 
-        public void Initialize()
+        public virtual void Initialize()
         {
-            _log.Info("Initializing Azure Service Bus transport with queue '{0}'", _inputQueueAddress);
+            Log.Info("Initializing Azure Service Bus transport with queue '{0}'", InputQueueAddress);
 
-            if (_inputQueueAddress != null)
+            if (InputQueueAddress != null)
             {
-                CreateQueue(_inputQueueAddress);
+                CreateQueue(InputQueueAddress);
             }
         }
 
@@ -88,12 +88,12 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public void PurgeInputQueue()
         {
-            if (_inputQueueAddress == null) return;
+            if (InputQueueAddress == null) return;
 
-            _log.Info("Purging queue '{0}'", _inputQueueAddress);
-            _namespaceManager.DeleteQueue(_inputQueueAddress);
+            Log.Info("Purging queue '{0}'", InputQueueAddress);
+            _namespaceManager.DeleteQueue(InputQueueAddress);
 
-            CreateQueue(_inputQueueAddress);
+            CreateQueue(InputQueueAddress);
         }
 
         /// <summary>
@@ -124,18 +124,18 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                _log.Info("Input queue '{0}' does not exist - will create it now", _inputQueueAddress);
+                Log.Info("Input queue '{0}' does not exist - will create it now", InputQueueAddress);
                 _namespaceManager.CreateQueue(queueDescription);
-                _log.Info("Created!");
+                Log.Info("Created!");
             }
             catch (MessagingEntityAlreadyExistsException)
             {
                 // fair enough...
-                _log.Info("MessagingEntityAlreadyExistsException - carrying on");
+                Log.Info("MessagingEntityAlreadyExistsException - carrying on");
             }
         }
 
-        public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
+        public virtual async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             GetOutgoingMessages(context)
                 .GetOrAdd(destinationAddress, _ => new ConcurrentQueue<TransportMessage>())
@@ -201,7 +201,7 @@ namespace Rebus.AzureServiceBus
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (_inputQueueAddress == null)
+            if (InputQueueAddress == null)
             {
                 throw new InvalidOperationException("This Azure Service Bus transport does not have an input queue, hence it is not possible to reveive anything");
             }
@@ -233,7 +233,7 @@ namespace Rebus.AzureServiceBus
                     catch (Exception exception)
                     {
                         // if it fails, it'll be back on the queue anyway....
-                        _log.Warn("Could not abandon message: {0}", exception);
+                        Log.Warn("Could not abandon message: {0}", exception);
                     }
                 });
 
@@ -300,7 +300,7 @@ namespace Rebus.AzureServiceBus
                 var renewalTask = _asyncTaskFactory.Create($"RenewPeekLock-{messageId}",
                     async () =>
                     {
-                        _log.Info("Renewing peek lock for message with ID {0}", messageId);
+                        Log.Info("Renewing peek lock for message with ID {0}", messageId);
 
                         await brokeredMessage.RenewLockAsync();
                     },
@@ -324,7 +324,7 @@ namespace Rebus.AzureServiceBus
 
         async Task<BrokeredMessage> ReceiveBrokeredMessage()
         {
-            var queueAddress = _inputQueueAddress;
+            var queueAddress = InputQueueAddress;
 
             if (_prefetchingEnabled)
             {
@@ -392,7 +392,7 @@ namespace Rebus.AzureServiceBus
         {
             var queueClient = _queueClients.GetOrAdd(queueAddress, address =>
             {
-                _log.Debug("Initializing new queue client for {0}", address);
+                Log.Debug("Initializing new queue client for {0}", address);
 
                 var newQueueClient = QueueClient.CreateFromConnectionString(_connectionString, address, ReceiveMode.PeekLock);
 
@@ -404,7 +404,7 @@ namespace Rebus.AzureServiceBus
 
         public string Address
         {
-            get { return _inputQueueAddress; }
+            get { return InputQueueAddress; }
         }
 
         public bool PartitioningEnabled { get; set; }
@@ -429,10 +429,11 @@ namespace Rebus.AzureServiceBus
                     }
                     catch (Exception exception)
                     {
-                        _log.Warn("Could not abandon brokered message with ID {0}: {1}", brokeredMessage.MessageId, exception);
+                        Log.Warn("Could not abandon brokered message with ID {0}: {1}", brokeredMessage.MessageId, exception);
                     }
                 }
             }
         }         
     }
+
 }

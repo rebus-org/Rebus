@@ -32,7 +32,7 @@ namespace Rebus.Config
                 configurer.Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
                     return new BasicAzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory);
                 });
                 OneWayClientBackdoor.ConfigureOneWayClient(configurer);
@@ -58,6 +58,36 @@ namespace Rebus.Config
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
+
+        public static AzureServiceBusTransportSettings UseAzureServiceBusAsReadOnly(
+            this StandardConfigurer<ITransport> configurer, string connectionStringNameOrConnectionString,
+            string inputQueueAddress)
+        {
+            var connectionString = GetConnectionString(connectionStringNameOrConnectionString);
+            var settingsBuilder = new AzureServiceBusTransportSettings();
+
+            configurer.Register(c =>
+                  {
+                      var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                      var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                      var transport = new BasicReadOnlyAzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory);
+
+                      if (settingsBuilder.PrefetchingEnabled)
+                      {
+                          transport.PrefetchMessages(settingsBuilder.NumberOfMessagesToPrefetch);
+                      }
+
+                      transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
+
+                      transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
+
+                      return transport;
+                  });
+
+            return settingsBuilder;
+
+        }
+
 
         /// <summary>
         /// Configures Rebus to use Azure Service Bus queues to transport messages, connecting to the service bus instance pointed to by the connection string
