@@ -16,7 +16,7 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus
 {
-    public class BasicAzureServiceBusTransport : ITransport
+    public class BasicAzureServiceBusTransport : ITransport, IInitializable
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
 
