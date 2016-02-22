@@ -58,7 +58,10 @@ namespace Rebus.Config
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
-
+        /// <summary>
+        /// Configures Rebus to use Azure Service Bus to transport messages as a one-way receiving client (i.e. will not be able to send any messages)
+        /// (This enables the option to use a SAS key which only has read rights on the queue and no rights on the namespace itself)
+        /// </summary>
         public static AzureServiceBusTransportSettings UseAzureServiceBusAsReadOnly(
             this StandardConfigurer<ITransport> configurer, string connectionStringNameOrConnectionString,
             string inputQueueAddress)
