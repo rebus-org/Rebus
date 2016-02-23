@@ -276,7 +276,7 @@ namespace Rebus.AzureServiceBus
                     }
                     catch (MessageLockLostException exception)
                     {
-                        var elapsed = now - DateTime.UtcNow;
+                        var elapsed = DateTime.UtcNow - now;
 
                         throw new RebusApplicationException(exception, $"The message lock for message with ID {messageId} was lost - tried to complete after {elapsed.TotalSeconds:0.0} s");
                     }
@@ -386,7 +386,7 @@ namespace Rebus.AzureServiceBus
                     {
                         await RenewPeekLock(messageId, brokeredMessage);
                     },
-                    intervalSeconds: (int) lockRenewalInterval.TotalSeconds,
+                    intervalSeconds: (int)lockRenewalInterval.TotalSeconds,
                     prettyInsignificant: true);
 
             renewalTask.Start();
