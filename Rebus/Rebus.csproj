@@ -83,6 +83,7 @@
     <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Handlers\Reordering\AdditionalReorderingConfiguration.cs" />
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
+    <Compile Include="Injection\Injectionist.cs" />
     <Compile Include="Messages\HeaderAttribute.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
@@ -189,9 +190,6 @@
     <Compile Include="Activation\IHandlerActivator.cs" />
     <Compile Include="Handlers\IHandleMessages.cs" />
     <Compile Include="Handlers\InternalHandlersContributor.cs" />
-    <Compile Include="Injection\Injectionist.cs" />
-    <Compile Include="Injection\IResolutionContext.cs" />
-    <Compile Include="Injection\ResolutionException.cs" />
     <Compile Include="Logging\AbstractRebusLoggerFactory.cs" />
     <Compile Include="Logging\ColorSetting.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />

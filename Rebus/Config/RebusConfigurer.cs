@@ -238,7 +238,7 @@ namespace Rebus.Config
 
                 bus.Disposed += () =>
                 {
-                    var disposableInstances = c.GetTrackedInstancesOf<IDisposable>().Reverse();
+                    var disposableInstances = c.TrackedInstances.OfType<IDisposable>().Reverse();
 
                     foreach (var disposableInstance in disposableInstances)
                     {
@@ -246,7 +246,7 @@ namespace Rebus.Config
                     }
                 };
 
-                var initializableInstances = c.GetTrackedInstancesOf<IInitializable>();
+                var initializableInstances = c.TrackedInstances.OfType<IInitializable>();
 
                 foreach (var initializableInstance in initializableInstances)
                 {
@@ -273,13 +273,13 @@ namespace Rebus.Config
 
             var busInstance = _injectionist.Get<IBus>();
 
-            containerAdapter?.SetBus(busInstance);
+            containerAdapter?.SetBus(busInstance.Instance);
 
             startAction?.Invoke();
 
             _hasBeenStarted = true;
 
-            return busInstance;
+            return busInstance.Instance;
         }
 
         void VerifyRequirements()

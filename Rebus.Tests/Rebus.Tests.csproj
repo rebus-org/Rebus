@@ -134,7 +134,6 @@
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
-    <Compile Include="Injection\TestInjectionist_InstanceDisposal.cs" />
     <Compile Include="Integration\ManyMessages\InMemoryBusFactory.cs" />
     <Compile Include="Integration\ManyMessages\SqlServerBusFactory.cs" />
     <Compile Include="Integration\ManyMessages\MsmqBusFactory.cs" />
@@ -184,10 +183,6 @@
     <Compile Include="Pipeline\TestDefaultPipelineInvoker.cs" />
     <Compile Include="TransportMessageHelpers.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Injection\TestInjectionist_BasicRegistrations.cs" />
-    <Compile Include="Injection\TestInjectionist_Decorators.cs" />
-    <Compile Include="Injection\TestInjectionist_Dependencies.cs" />
-    <Compile Include="Injection\TestInjectionist_ServiceAndImplementation.cs" />
     <Compile Include="Transport\SqlServer\SqlTransportTests.cs" />
     <Compile Include="Transport\SqlServer\TestDbConnectionProvider.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransport.cs" />

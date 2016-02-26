@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 
-namespace Rebus.Injection
+namespace Injection
 {
     /// <summary>
     /// Dependency injectionist that can be used for configuring a system of injected service implementations, possibly with decorators,
