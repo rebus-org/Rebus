@@ -20,7 +20,6 @@ using Rebus.Sagas;
 using Rebus.Serialization;
 using Rebus.Subscriptions;
 using Rebus.Threading;
-using Rebus.Threading.SystemTimersTimer;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Timeouts;
 using Rebus.Transport;
@@ -134,8 +133,8 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
 
-            PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
-            //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TplAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+            //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+            PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TplAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
 
             PossiblyRegisterDefault<IRouter>(c =>
             {
