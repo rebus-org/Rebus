@@ -55,7 +55,7 @@ namespace Rebus.Jil
             return new Message(headers, bodyObject);
         }
 
-        Type GetMessageType(Dictionary<string, string> headers)
+        static Type GetMessageType(Dictionary<string, string> headers)
         {
             string messageTypeString;
             if (!headers.TryGetValue(Headers.Type, out messageTypeString))

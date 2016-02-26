@@ -834,6 +834,10 @@
 
 * Fixed bug that caused the Azure Service Bus transport to not be properly initialized when using the "Basic" tier - thanks [torangel]
 
+# 0.99.36
+
+* Added Protobuf serializer
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
