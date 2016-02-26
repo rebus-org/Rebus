@@ -837,6 +837,7 @@
 # 0.99.36
 
 * Added Protobuf serializer
+* Much improved error message when sending to non-existent queue with Azure Service Bus
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

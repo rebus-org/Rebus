@@ -324,7 +324,8 @@ namespace Rebus.AzureServiceBus
                                         }
                                         catch (MessagingEntityNotFoundException exception)
                                         {
-                                            throw new MessagingEntityNotFoundException($"Could not send to '{destinationAddress}'!", exception);
+                                            // do NOT rethrow as MessagingEntityNotFoundException because it has its own ToString that swallows most of the info!!
+                                            throw new MessagingException($"Could not send to '{destinationAddress}'!", false, exception);
                                         }
                                     }
                                 });

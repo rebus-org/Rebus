@@ -68,6 +68,7 @@
     <Compile Include="Factories\BasicAzureServiceBusTransportFactory.cs" />
     <Compile Include="Factories\StandardAzureServiceBusBusFactory.cs" />
     <Compile Include="Factories\StandardAzureServiceBusTransportFactory.cs" />
+    <Compile Include="FailsWhenSendingToNonExistentQueue.cs" />
     <Compile Include="NativeDeferTest.cs" />
     <Compile Include="TestAsbTopicsPubSub.cs" />
     <Compile Include="TestCategory.cs" />

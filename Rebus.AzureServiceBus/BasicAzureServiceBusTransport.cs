@@ -279,7 +279,15 @@ namespace Rebus.AzureServiceBus
                                 {
                                     using (var brokeredMessageToSend = CreateBrokeredMessage(message))
                                     {
-                                        await GetQueueClient(destinationAddress).SendAsync(brokeredMessageToSend);
+                                        try
+                                        {
+                                            await GetQueueClient(destinationAddress).SendAsync(brokeredMessageToSend);
+                                        }
+                                        catch (MessagingEntityNotFoundException exception)
+                                        {
+                                            // do NOT rethrow as MessagingEntityNotFoundException because it has its own ToString that swallows most of the info!!
+                                            throw new MessagingException($"Could not send to '{destinationAddress}'!", false, exception);
+                                        }
                                     }
                                 });
                             })

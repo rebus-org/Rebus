@@ -13,7 +13,6 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 
