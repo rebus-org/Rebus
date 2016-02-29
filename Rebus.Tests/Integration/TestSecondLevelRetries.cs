@@ -41,7 +41,7 @@ namespace Rebus.Tests.Integration
 
             Using(counter);
 
-            _activator.Handle<string>(async str =>
+            _activator.Handle<BaseMessage>(async baseMessage =>
             {
                 throw new ApplicationException("1st level!!");
             });
