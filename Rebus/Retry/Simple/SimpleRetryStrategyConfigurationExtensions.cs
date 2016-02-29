@@ -73,8 +73,8 @@ namespace Rebus.Retry.Simple
 
             object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription)
             {
-                if (headers == null) throw new ArgumentNullException("headers");
-                if (body == null) throw new ArgumentNullException("body");
+                if (headers == null) throw new ArgumentNullException(nameof(headers));
+                if (body == null) throw new ArgumentNullException(nameof(body));
 
                 try
                 {
@@ -91,13 +91,13 @@ namespace Rebus.Retry.Simple
                 }
                 catch (Exception exception)
                 {
-                    throw new RebusApplicationException(exception, "Could not wrap {0} in Failed<>", body);
+                    throw new RebusApplicationException(exception, "Could not wrap {0} in FailedMessageWrapper<>", body);
                 }
             }
 
-            Failed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription)
+            IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription)
             {
-                return new Failed<TMessage>(headers, body, errorDescription);
+                return new FailedMessageWrapper<TMessage>(headers, body, errorDescription);
             }
         }
     }

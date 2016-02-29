@@ -6,7 +6,7 @@ namespace Rebus.Retry.Simple
     /// <summary>
     /// Wraps a failed message that is to be retried
     /// </summary>
-    public class Failed<TMessage>
+    class FailedMessageWrapper<TMessage> : IFailed<TMessage>
     {
         /// <summary>
         /// Gets the message that failed
@@ -21,12 +21,12 @@ namespace Rebus.Retry.Simple
         /// <summary>
         /// Gets the headers of the message that failed
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; }
+        public Dictionary<string, string> Headers { get; }
 
         /// <summary>
         /// Constructs the wrapper with the given message
         /// </summary>
-        public Failed(Dictionary<string, string> headers, TMessage message, string errorDescription)
+        public FailedMessageWrapper(Dictionary<string, string> headers, TMessage message, string errorDescription)
         {
             if (headers == null) throw new ArgumentNullException(nameof(headers));
             if (message == null) throw new ArgumentNullException(nameof(message));

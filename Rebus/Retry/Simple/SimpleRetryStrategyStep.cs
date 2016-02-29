@@ -19,7 +19,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
     public class SimpleRetryStrategyStep : IRetryStrategyStep
     {
         /// <summary>
-        /// Key of a step context item that indicates that the message must be wrapped in a <see cref="Failed{TMessage}"/> after being deserialized
+        /// Key of a step context item that indicates that the message must be wrapped in a <see cref="FailedMessageWrapper{TMessage}"/> after being deserialized
         /// </summary>
         public const string DispatchAsFailedMessageKey = "dispatch-as-failed-message";
         

@@ -838,6 +838,7 @@
 
 * Added Protobuf serializer
 * Much improved error message when sending to non-existent queue with Azure Service Bus
+* Changed `Failed<TMessage>` to be `IFailed<TMessage>` (and thus an interface) in order to make it covariant
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

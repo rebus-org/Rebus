@@ -35,6 +35,38 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        public async Task ItWorks_Contravariance()
+        {
+            var counter = new SharedCounter(1);
+
+            Using(counter);
+
+            _activator.Handle<string>(async str =>
+            {
+                throw new ApplicationException("1st level!!");
+            });
+
+            _activator.Handle<IFailed<BaseMessage>>(async failed =>
+            {
+                if (failed.Message is ConcreteMessage)
+                {
+                    counter.Decrement();
+                    return;
+                }
+
+                counter.Fail("Did not receive the expected message!");
+            });
+
+            await _bus.SendLocal(new ConcreteMessage());
+
+            counter.WaitForResetEvent();
+        }
+
+        abstract class BaseMessage { }
+
+        class ConcreteMessage : BaseMessage { }
+
+        [Test]
         public async Task ItWorks()
         {
             var counter = new SharedCounter(1);
@@ -46,7 +78,7 @@ namespace Rebus.Tests.Integration
                 throw new ApplicationException("1st level!!");
             });
 
-            _activator.Handle<Failed<string>>(async failed =>
+            _activator.Handle<IFailed<string>>(async failed =>
             {
                 if (failed.Message != "hej med dig!")
                 {
@@ -100,7 +132,7 @@ namespace Rebus.Tests.Integration
 
             var headersOfFailedMessage = new Dictionary<string,string>();
 
-            _activator.Handle<Failed<string>>(async failed =>
+            _activator.Handle<IFailed<string>>(async failed =>
             {
                 if (failed.Message != "hej med dig!")
                 {

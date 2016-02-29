@@ -37,7 +37,7 @@
         public int MaxDeliveryAttempts { get; private set; }
 
         /// <summary>
-        /// Configures whether an additional round of delivery attempts should be made with a <see cref="Failed{TMessage}"/> wrapping the originally failed messageS
+        /// Configures whether an additional round of delivery attempts should be made with a <see cref="FailedMessageWrapper{TMessage}"/> wrapping the originally failed messageS
         /// </summary>
         public bool SecondLevelRetriesEnabled { get; private set; }
     }
