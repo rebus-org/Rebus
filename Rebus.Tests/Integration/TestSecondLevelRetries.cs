@@ -35,7 +35,7 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
-        public async Task ItWorks_Contravariance()
+        public async Task ItWorksWithCovarianceToo()
         {
             var counter = new SharedCounter(1);
 
