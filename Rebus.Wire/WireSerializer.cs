@@ -12,12 +12,13 @@ namespace Rebus.Wire
     /// <summary>
     /// Rebus serializer that uses the binary Wire serializer to provide a robust POCO serialization that supports everything that you would expect from a modern serializer
     /// </summary>
-    public class WireSerializer : ISerializer
+    class WireSerializer : ISerializer
     {
         /// <summary>
         /// Mime type for Wire
         /// </summary>
         public const string WireContentType = "application/x-wire";
+
         readonly Serializer _serializer = new Serializer();
 
         /// <summary>
