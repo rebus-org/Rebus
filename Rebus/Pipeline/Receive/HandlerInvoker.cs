@@ -28,7 +28,7 @@ namespace Rebus.Pipeline.Receive
                 {
                     var implementedInterfaces = Saga.GetType().GetInterfaces();
 
-                    var handlerTypesToLookFor = messageType.GetBaseTypes()
+                    var handlerTypesToLookFor = new[] { messageType }.Concat(messageType.GetBaseTypes())
                         .Select(baseType => typeof(IAmInitiatedBy<>).MakeGenericType(baseType));
 
                     return implementedInterfaces.Intersect(handlerTypesToLookFor).Any();
