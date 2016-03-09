@@ -14,7 +14,7 @@ namespace Rebus.Pipeline.Receive
     /// </summary>
     public abstract class HandlerInvoker
     {
-        protected static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>> CanBeInitiatedByCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>>();
+        static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>> CanBeInitiatedByCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>>();
 
         /// <summary>
         /// Gets whether a message of the given type is allowed to cause a new saga data instance to be created
