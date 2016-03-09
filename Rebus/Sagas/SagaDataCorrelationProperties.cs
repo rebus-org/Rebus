@@ -18,8 +18,8 @@ namespace Rebus.Sagas
         /// </summary>
         public SagaDataCorrelationProperties(Dictionary<Type, CorrelationProperty[]> correlationProperties, Type sagaDataType)
         {
-            if (correlationProperties == null) throw new ArgumentNullException("correlationProperties");
-            if (sagaDataType == null) throw new ArgumentNullException("sagaDataType");
+            if (correlationProperties == null) throw new ArgumentNullException(nameof(correlationProperties));
+            if (sagaDataType == null) throw new ArgumentNullException(nameof(sagaDataType));
             
             _correlationProperties = correlationProperties;
             _sagaDataType = sagaDataType;
@@ -30,18 +30,32 @@ namespace Rebus.Sagas
         /// </summary>
         public IEnumerable<CorrelationProperty> ForMessage(object body)
         {
-            if (body == null) throw new ArgumentNullException("body");
+            if (body == null) throw new ArgumentNullException(nameof(body));
 
-            CorrelationProperty[] potentialCorrelationproperties;
             var messageType = body.GetType();
 
-            if (!_correlationProperties.TryGetValue(messageType, out potentialCorrelationproperties))
+            var potentialCorrelationProperties = new List<CorrelationProperty>();
+
+            var messageTypeToCheck = messageType;
+            while (messageTypeToCheck != null)
             {
-                throw new ArgumentException(string.Format("Could not find any correlation properties for message {0} and saga data {1}", 
-                    messageType, _sagaDataType));
+                CorrelationProperty[] potentialCorrelationproperties;
+
+                if (_correlationProperties.TryGetValue(messageTypeToCheck, out potentialCorrelationproperties))
+                {
+                    potentialCorrelationProperties.AddRange(potentialCorrelationproperties);
+                }
+
+                messageTypeToCheck = messageTypeToCheck.BaseType;
             }
 
-            return potentialCorrelationproperties;
+            if (!potentialCorrelationProperties.Any())
+            {
+                throw new ArgumentException(
+                    $"Could not find any correlation properties for message {messageType} and saga data {_sagaDataType}");
+            }
+
+            return potentialCorrelationProperties;
         }
 
         /// <summary>

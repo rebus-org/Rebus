@@ -841,6 +841,11 @@
 * Changed `Failed<TMessage>` to be `IFailed<TMessage>` (and thus an interface) in order to make it covariant
 * Added Wire serializer configuration extensions
 
+# 0.99.37
+
+* Fixed subtle unintented behavior so that messages inherited from an initiating type can initiate sagas too
+* Enabled true polymorphic correlation
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
