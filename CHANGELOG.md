@@ -846,6 +846,10 @@
 * Fixed subtle unintented behavior so that messages inherited from an initiating type can initiate sagas too
 * Enabled true polymorphic correlation
 
+# 0.99.38
+
+* Fixed saga correlation bus introduced in 0.99.37
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
