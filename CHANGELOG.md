@@ -850,6 +850,10 @@
 
 * Fixed saga correlation bus introduced in 0.99.37
 
+# 0.99.39
+
+* Brough back `FakeBus` - an implementation of `IBus` that records everything that happens to it as events which you may query during the assert-phase of your tests
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

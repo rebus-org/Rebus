@@ -8,7 +8,9 @@ namespace Rebus.Time
     public class RebusTime
     {
         internal static readonly Func<DateTimeOffset> DefaultTimeFactory = () => DateTimeOffset.Now;
+
         internal static Func<DateTimeOffset> CurrentTimeFactory = DefaultTimeFactory;
+
         internal static void Reset()
         {
             CurrentTimeFactory = DefaultTimeFactory;
@@ -17,9 +19,6 @@ namespace Rebus.Time
         /// <summary>
         /// Gets the current time
         /// </summary>
-        public static DateTimeOffset Now
-        {
-            get { return CurrentTimeFactory(); }
-        }
+        public static DateTimeOffset Now => CurrentTimeFactory();
     }
 }
