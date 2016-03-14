@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading.Tasks;
 using Rebus.Extensions;
 using Rebus.Messages;
@@ -32,28 +33,59 @@ namespace Rebus.Pipeline.Send
 
             if (!outgoingMessage.Headers.ContainsKey(Headers.CorrelationId))
             {
-                var correlationId = GetCorrelationIdToAssign(incomingStepContext, outgoingMessage);
+                var correlationInfo = GetCorrelationIdToAssign(incomingStepContext, outgoingMessage);
 
-                outgoingMessage.Headers[Headers.CorrelationId] = correlationId;
+                outgoingMessage.Headers[Headers.CorrelationId] = correlationInfo.CorrelationId;
+                outgoingMessage.Headers[Headers.CorrelationSequence] = correlationInfo.CorrelationSequence.ToString(CultureInfo.InvariantCulture);
             }
 
             await next();
         }
 
-        static string GetCorrelationIdToAssign(IncomingStepContext incomingStepContext, Message outgoingMessage)
+        static CorrelationInfo GetCorrelationIdToAssign(IncomingStepContext incomingStepContext, Message outgoingMessage)
         {
             // if we're handling an incoming message right now, let either current correlation ID or the message ID flow
             if (incomingStepContext == null)
             {
-                return outgoingMessage.Headers.GetValue(Headers.MessageId);
+                var messageId = outgoingMessage.Headers.GetValue(Headers.MessageId);
+
+                return new CorrelationInfo(messageId, 0);
             }
-            
+
             var incomingMessage = incomingStepContext.Load<Message>();
 
             var correlationId = incomingMessage.Headers.GetValueOrNull(Headers.CorrelationId)
                                 ?? incomingMessage.Headers.GetValue(Headers.MessageId);
 
-            return correlationId;
+            var correlationSequenceHeader = incomingMessage.Headers.GetValueOrNull(Headers.CorrelationSequence) ?? "0";
+            var currentCorrelationSequence = ParseOrZero(correlationSequenceHeader);
+            var nextCorrelationSequence = currentCorrelationSequence + 1;
+
+            return new CorrelationInfo(correlationId, nextCorrelationSequence);
+        }
+
+        static int ParseOrZero(string correlationSequenceHeader)
+        {
+            try
+            {
+                return int.Parse(correlationSequenceHeader);
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        class CorrelationInfo
+        {
+            public CorrelationInfo(string correlationId, int correlationSequence)
+            {
+                CorrelationId = correlationId;
+                CorrelationSequence = correlationSequence;
+            }
+
+            public string CorrelationId { get; }
+            public int CorrelationSequence { get; }
         }
     }
 }

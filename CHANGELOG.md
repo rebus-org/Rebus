@@ -855,6 +855,11 @@
 * Brough back `FakeBus` - an implementation of `IBus` that records everything that happens to it as events which you may query during the assert-phase of your tests
 * Added `SagaFixture` to ease saga testing
 
+# 0.99.40
+
+* Added correlation sequence number as an auto-flowing header too - can be used to deduce causation
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

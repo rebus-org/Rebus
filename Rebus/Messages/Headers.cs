@@ -25,6 +25,13 @@ namespace Rebus.Messages
         public const string CorrelationId = "rbs2-corr-id";
 
         /// <summary>
+        /// Any messages sent/forwarded/replied/published while handling a message will get a correlation sequence number of the handled message 
+        /// incremented by 1 copied to it. When a message is initially sent, its correlation sequence number is 0. The sequence number
+        /// can be used to deduce a strict ordering of correlated messages, even in the face of clock skew among servers
+        /// </summary>
+        public const string CorrelationSequence = "rbs2-corr-seq";
+
+        /// <summary>
         /// The return address of the message, i.e. the address that repliers must reply to.
         /// </summary>
         public const string ReturnAddress = "rbs2-return-address";
