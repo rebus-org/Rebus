@@ -9,6 +9,8 @@ using Rebus.Bus.Advanced;
 using Rebus.Messages;
 using Rebus.Routing;
 using Rebus.Testing.Events;
+using Rebus.Testing.Internals;
+
 #pragma warning disable 1998
 
 namespace Rebus.Testing
@@ -22,6 +24,13 @@ namespace Rebus.Testing
     {
         readonly ConcurrentQueue<FakeBusEvent> _events = new ConcurrentQueue<FakeBusEvent>();
         readonly List<Delegate> _callbacks = new List<Delegate>();
+
+        ///// <summary>
+        ///// Creates a new instance of the fake bus
+        ///// </summary>
+        //public FakeBus()
+        //{
+        //}
 
         /// <summary>
         /// Gets all events recorded at this point. Query this in order to check what happened to the fake bus while

@@ -5,12 +5,14 @@ using Rebus.Time;
 namespace Rebus.Testing
 {
     /// <summary>
-    /// Represents a log event emitted from Rebus' internals
+    /// Represents a log event emitted from Rebus' internals during saga testing with <see cref="SagaFixture{TSagaHandler}"/>
     /// </summary>
     public class LogEvent
     {
         internal LogEvent(LogLevel level, string text, Exception exceptionOrNull, Type sourceType)
         {
+            if (text == null) throw new ArgumentNullException(nameof(text));
+            if (sourceType == null) throw new ArgumentNullException(nameof(sourceType));
             Time = RebusTime.Now;
             Level = level;
             Text = text;

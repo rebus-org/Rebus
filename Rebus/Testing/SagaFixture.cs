@@ -64,7 +64,7 @@ namespace Rebus.Testing
         readonly BuiltinHandlerActivator _activator;
         readonly InMemNetwork _network;
         readonly InMemorySagaStorage _inMemorySagaStorage;
-        readonly LockStepper<TSagaHandler> _lockStepper;
+        readonly LockStepper _lockStepper;
         readonly TestLoggerFactory _loggerFactory;
 
         /// <summary>
@@ -110,7 +110,7 @@ namespace Rebus.Testing
             _inMemorySagaStorage.Updated += sagaData => Updated?.Invoke(sagaData);
             _inMemorySagaStorage.Deleted += sagaData => Deleted?.Invoke(sagaData);
 
-            _lockStepper = new LockStepper<TSagaHandler>();
+            _lockStepper = new LockStepper();
 
             _loggerFactory = new TestLoggerFactory();
 
