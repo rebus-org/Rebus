@@ -8,12 +8,14 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration
 {
     [TestFixture]
     public class TestPolymorphicDispatch : FixtureBase
     {
+        static readonly TimeSpan BlockingWaitTimeout = TimeSpan.FromSeconds(5);
         BuiltinHandlerActivator _handlerActivator;
         IBus _bus;
 
@@ -41,7 +43,7 @@ namespace Rebus.Tests.Integration
 
             _handlerActivator.Handle<BaseMessage>(async msg =>
             {
-                events.Enqueue(string.Format("Got {0} with {1}", msg.GetType().Name, msg.Payload));
+                events.Enqueue($"Got {msg.GetType().Name} with {msg.Payload}");
 
                 gotMessage.Set();
             });
@@ -49,8 +51,8 @@ namespace Rebus.Tests.Integration
             await _bus.SendLocal(new SpecializationA { Payload = "a" });
             await _bus.SendLocal(new SpecializationB { Payload = "b" });
 
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(1), "Did not get the first message");
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(1), "Did not get the second message");
+            gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the first message");
+            gotMessage.WaitOrDie(BlockingWaitTimeout, "Did not get the second message");
 
             Assert.That(events.ToArray(), Is.EqualTo(new[]
             {
@@ -67,13 +69,13 @@ namespace Rebus.Tests.Integration
 
             _handlerActivator.Handle<object>(async msg =>
             {
-                events.Enqueue(string.Format("Got {0}", msg.GetType().Name));
+                events.Enqueue($"Got {msg.GetType().Name}");
                 gotMessage.Set();
             });
 
             await _bus.SendLocal("hej med dig");
 
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(1));
+            gotMessage.WaitOrDie(BlockingWaitTimeout);
 
             Assert.That(events.ToArray(), Is.EqualTo(new[]
             {
@@ -89,13 +91,13 @@ namespace Rebus.Tests.Integration
 
             _handlerActivator.Handle<IMessage>(async msg =>
             {
-                events.Enqueue(string.Format("Got {0}", msg.GetType().Name));
+                events.Enqueue($"Got {msg.GetType().Name}");
                 gotMessage.Set();
             });
 
             await _bus.SendLocal(new ImplementorOfInterface());
 
-            gotMessage.WaitOrDie(TimeSpan.FromSeconds(1));
+            gotMessage.WaitOrDie(BlockingWaitTimeout);
 
             Assert.That(events.ToArray(), Is.EqualTo(new[]
             {
