@@ -165,6 +165,10 @@
     <Compile Include="Testing\Events\Subscribed.cs" />
     <Compile Include="Testing\Events\Unsubscribed.cs" />
     <Compile Include="Testing\FakeBus.cs" />
+    <Compile Include="Testing\Internals\LockStepper.cs" />
+    <Compile Include="Testing\LogEvent.cs" />
+    <Compile Include="Testing\SagaFixture.cs" />
+    <Compile Include="Testing\Internals\TestLoggerFactory.cs" />
     <Compile Include="Threading\AsyncBottleneck.cs" />
     <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTask.cs" />
     <Compile Include="Threading\SystemThreadingTimer\SystemThreadingTimerAsyncTaskFactory.cs" />

@@ -853,6 +853,7 @@
 # 0.99.39
 
 * Brough back `FakeBus` - an implementation of `IBus` that records everything that happens to it as events which you may query during the assert-phase of your tests
+* Added `SagaFixture` to ease saga testing
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

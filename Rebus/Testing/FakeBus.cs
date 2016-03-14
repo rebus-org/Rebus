@@ -93,7 +93,7 @@ namespace Rebus.Testing
         /// </summary>
         public IAdvancedApi Advanced
         {
-            get { throw new InvalidOperationException($"Sorry, but FakeBus does not support recording any advanced operations yet."); }
+            get { throw new InvalidOperationException("Sorry, but FakeBus does not support recording any advanced operations yet."); }
         }
 
         /// <summary>

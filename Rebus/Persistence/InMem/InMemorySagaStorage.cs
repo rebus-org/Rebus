@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Exceptions;
@@ -24,6 +25,14 @@ namespace Rebus.Persistence.InMem
             TypeNameHandling = TypeNameHandling.All
         };
 
+        internal IEnumerable<ISagaData> Instances => _data.Values.ToList();
+
+        internal event Action<ISagaData> Created;
+        internal event Action<ISagaData> Updated;
+        internal event Action<ISagaData> Deleted;
+        internal event Action<ISagaData> Correlated;
+        internal event Action CouldNotCorrelate;
+
         /// <summary>
         /// Looks up an existing saga data of the given type with a property of the specified name and the specified value
         /// </summary>
@@ -40,9 +49,15 @@ namespace Rebus.Persistence.InMem
                     var sagaValue = Reflect.Value(data, propertyName);
                     var valueFromSaga = (sagaValue ?? "").ToString();
 
-                    if (valueFromMessage.Equals(valueFromSaga)) return Clone(data);
+                    if (valueFromMessage.Equals(valueFromSaga))
+                    {
+                        var clone = Clone(data);
+                        Correlated?.Invoke(clone);
+                        return clone;
+                    }
                 }
 
+                CouldNotCorrelate?.Invoke();
                 return null;
             }
         }
@@ -68,7 +83,9 @@ namespace Rebus.Persistence.InMem
                     throw new InvalidOperationException($"Attempted to insert saga data with ID {id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
                 }
 
-                _data[id] = Clone(sagaData);
+                var clone = Clone(sagaData);
+                _data[id] = clone;
+                Created?.Invoke(clone);
             }
         }
 
@@ -99,6 +116,7 @@ namespace Rebus.Persistence.InMem
                 var clone = Clone(sagaData);
                 clone.Revision++;
                 _data[id] = clone;
+                Updated?.Invoke(clone);
                 sagaData.Revision++;
             }
         }
@@ -140,7 +158,10 @@ namespace Rebus.Persistence.InMem
                 }
 
                 ISagaData temp;
-                _data.TryRemove(id, out temp);
+                if (_data.TryRemove(id, out temp))
+                {
+                    Deleted?.Invoke(temp);
+                }
             }
         }
 
