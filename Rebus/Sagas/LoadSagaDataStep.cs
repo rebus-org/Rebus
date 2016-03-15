@@ -8,6 +8,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Reflection;
 
 namespace Rebus.Sagas
 {
@@ -21,6 +22,14 @@ If that's the case, relevant saga data is loaded/created, and the rest of the pi
 Afterwards, all the created/loaded saga data is updated appropriately.")]
     public class LoadSagaDataStep : IIncomingStep
     {
+        static readonly string IdPropertyName = Reflect.Path<ISagaData>(d => d.Id);
+        static readonly string RevisionPropertyName = Reflect.Path<ISagaData>(d => d.Revision);
+
+        /// <summary>
+        /// properties ignored by auto-setter (the one that automatically sets the correlation ID on a new saga data instance)
+        /// </summary>
+        static readonly string[] IgnoredProperties = { IdPropertyName, RevisionPropertyName };
+
         readonly SagaHelper _sagaHelper = new SagaHelper();
         readonly ISagaStorage _sagaStorage;
         readonly ILog _log;
@@ -30,6 +39,8 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         /// </summary>
         public LoadSagaDataStep(ISagaStorage sagaStorage, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (sagaStorage == null) throw new ArgumentNullException(nameof(sagaStorage));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _sagaStorage = sagaStorage;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
@@ -139,6 +150,8 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         {
             try
             {
+                if (IgnoredProperties.Contains(correlationProperty.PropertyName)) return;
+
                 var correlationPropertyInfo = newSagaData.GetType().GetProperty(correlationProperty.PropertyName);
 
                 if (correlationPropertyInfo == null) return;

@@ -858,7 +858,7 @@
 # 0.99.40
 
 * Added correlation sequence number as an auto-flowing header too - can be used to deduce causation
-
+* Fixed bug that could accidentally overwrite the ID of a saga because of the nice auto-setter behavior
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

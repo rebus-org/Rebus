@@ -18,6 +18,8 @@ namespace Rebus.Testing
     /// </summary>
     public static class SagaFixture
     {
+        internal static bool LoggingInfoHasBeenShown;
+
         /// <summary>
         /// Creates a saga fixture for the specified saga handler, which must have a default constructor. If the saga handler
         /// requires any parameters to be created, use the <see cref="For{TSagaHandler}(Func{TSagaHandler})"/> overload that
@@ -50,6 +52,12 @@ namespace Rebus.Testing
 
             var activator = new BuiltinHandlerActivator();
             activator.Register(sagaHandlerFactory);
+
+            if (!LoggingInfoHasBeenShown)
+            {
+                Console.WriteLine("Remember that the saga fixture collects all internal logs which you can access with fixture.LogEvents");
+                LoggingInfoHasBeenShown = true;
+            }
 
             return new SagaFixture<TSagaHandler>(activator);
         }
