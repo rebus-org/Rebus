@@ -92,6 +92,7 @@
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageTests.cs" />
     <Compile Include="TestCategory.cs" />
     <Compile Include="Timeouts\RavenDbTimeoutManagerTest.cs" />
+    <Compile Include="Timeouts\RavenDbTimoutManagerFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.RavenDb\Rebus.RavenDb.csproj">

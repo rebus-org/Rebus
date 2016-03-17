@@ -3,11 +3,11 @@ using System.Linq;
 
 namespace Rebus.RavenDb.Timouts
 {
-    /// <summary>
-    /// RavenDb Index to query due timouts
-    /// </summary>
-    public class TimeoutIndex : AbstractIndexCreationTask<Timeout>
+    class TimeoutIndex : AbstractIndexCreationTask<Timeout>
     {
+        /// <summary>
+        /// Defines the index
+        /// </summary>
         public TimeoutIndex()
         {
             Map = timeouts => from timeout in timeouts

@@ -54,7 +54,7 @@
     <Compile Include="RavenDbConfigurationExtensions.cs" />
     <Compile Include="Sagas\RavenDbSagaStorage.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorage.cs" />
-    <Compile Include="Subscriptions\Subscription.cs" />
+    <Compile Include="Subscriptions\Topic.cs" />
     <Compile Include="Timouts\RavenDbTimeoutManager.cs" />
     <Compile Include="Timouts\Timeout.cs" />
     <Compile Include="Timouts\TimeoutIndex.cs" />

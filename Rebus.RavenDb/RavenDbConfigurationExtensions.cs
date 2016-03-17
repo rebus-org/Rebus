@@ -15,14 +15,14 @@ namespace Rebus.RavenDb
     public static class RavenDbConfigurationExtensions
     {
         /// <summary>
-        /// Configures Rebus to use RavenDb to store subscriptions. Use <see cref="isCentralized"/> = true to indicate whether it's OK to short-circuit
+        /// Configures Rebus to use RavenDb to store subscriptions. Use <paramref name="isCentralized"/> = true to indicate whether it's OK to short-circuit
         /// subscribing and unsubscribing by manipulating the subscription directly from the subscriber or just let it default to false to preserve the
         /// default behavior.
         /// </summary>
         public static void StoreInRavenDb(this StandardConfigurer<ISubscriptionStorage> configurer, IDocumentStore documentStore, bool isCentralized = false)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (documentStore == null) throw new ArgumentNullException("documentStore");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (documentStore == null) throw new ArgumentNullException(nameof(documentStore));
 
             configurer.Register(c =>
             {
@@ -34,11 +34,10 @@ namespace Rebus.RavenDb
         /// <summary>
         /// Configures Rebus to use RavenDb to store timeouts.
         /// </summary>
-        public static void StoreInRavenDb(this StandardConfigurer<ITimeoutManager> configurer,
-            IDocumentStore documentStore)
+        public static void StoreInRavenDb(this StandardConfigurer<ITimeoutManager> configurer, IDocumentStore documentStore)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (documentStore == null) throw new ArgumentNullException("documentStore");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (documentStore == null) throw new ArgumentNullException(nameof(documentStore));
 
             documentStore.ExecuteIndex(new TimeoutIndex());
 

@@ -7,7 +7,7 @@ namespace Rebus.RavenDb.Tests.Subscriptions
 {
     public class RavenDbSubscriptionStorageFactory : ISubscriptionStorageFactory
     {
-        private EmbeddableDocumentStore _documentStore;
+        EmbeddableDocumentStore _documentStore;
 
         public ISubscriptionStorage Create()
         {
@@ -20,7 +20,7 @@ namespace Rebus.RavenDb.Tests.Subscriptions
 
             _documentStore.Initialize();
          
-            return new RavenDbSubscriptionStorage(_documentStore);
+            return new RavenDbSubscriptionStorage(_documentStore, true);
         }
 
         public void Cleanup()
