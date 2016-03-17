@@ -10,8 +10,6 @@ Moreover - since the wiki actually contains quite a bit of content - please be p
 
 [![install from nuget](https://img.shields.io/nuget/v/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
 
-[//]: # [![downloads](http://img.shields.io/nuget/dt/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
-
 
 What?
 ====
@@ -88,3 +86,5 @@ Rebus is licensed under [The MIT License (MIT)][1]. Basically, this license gran
 [4]: http://masstransit-project.com/
 [5]: https://github.com/rebus-org/Rebus/wiki
 [6]: http://mookid.dk/oncode/rebus
+
+[//]: [![downloads](http://img.shields.io/nuget/dt/Rebus.svg?style=flat-square)](https://www.nuget.org/packages/Rebus)
