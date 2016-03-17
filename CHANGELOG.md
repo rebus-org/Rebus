@@ -860,6 +860,10 @@
 * Added correlation sequence number as an auto-flowing header too - can be used to deduce causation
 * Fixed bug that could accidentally overwrite the ID of a saga because of the nice auto-setter behavior
 
+# 0.99.41
+
+* Fixed RavenDB subscription and timeout storage
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
