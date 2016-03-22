@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Messages.Control;
 using Rebus.Serialization;
 
 namespace Rebus.Tests.Serialization
@@ -16,6 +17,32 @@ namespace Rebus.Tests.Serialization
         {
             _factory = new TSerializerFactory();
             _serializer = _factory.GetSerializer();
+        }
+
+        [Test]
+        public async Task CanRoundtripInternalMessages_SubscribeRequest()
+        {
+            var message = new SubscribeRequest { Topic = "topic", SubscriberAddress = "address" };
+
+            Console.WriteLine("Roundtripping {0}", message.GetType());
+
+            var roundtrippedMessage = (SubscribeRequest)await Roundtrip(message);
+
+            Assert.That(roundtrippedMessage.SubscriberAddress, Is.EqualTo(message.SubscriberAddress));
+            Assert.That(roundtrippedMessage.Topic, Is.EqualTo(message.Topic));
+        }
+
+        [Test]
+        public async Task CanRoundtripInternalMessages_UnsubscribeRequest()
+        {
+            var message = new UnsubscribeRequest { Topic = "topic", SubscriberAddress = "address" };
+
+            Console.WriteLine("Roundtripping {0}", message.GetType());
+
+            var roundtrippedMessage = (UnsubscribeRequest)await Roundtrip(message);
+
+            Assert.That(roundtrippedMessage.SubscriberAddress, Is.EqualTo(message.SubscriberAddress));
+            Assert.That(roundtrippedMessage.Topic, Is.EqualTo(message.Topic));
         }
 
         [TestCase(5)]
@@ -35,7 +62,7 @@ namespace Rebus.Tests.Serialization
         {
             const string text = "hej med dig min ven";
 
-            var someMessage = new SomeMessage{Text = text};
+            var someMessage = new SomeMessage { Text = text };
 
             var someMessageRoundtripped = await Roundtrip(someMessage);
 

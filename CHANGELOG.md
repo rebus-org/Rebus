@@ -864,6 +864,10 @@
 
 * Fixed RavenDB subscription and timeout storage
 
+# 0.99.42
+
+* Fixed bug in Rebus' protobuf serializer that caused it to be unable to serialize Rebus' control bus messages
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
