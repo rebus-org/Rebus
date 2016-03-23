@@ -35,7 +35,7 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (rebusLoggerFactory == null) throw new ArgumentNullException("rebusLoggerFactory");
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
 
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
@@ -57,7 +57,7 @@ namespace Rebus.Transport.Msmq
         {
             return inputQueueName.Contains("@")
                 ? inputQueueName
-                : string.Format("{0}@{1}", inputQueueName, Environment.MachineName);
+                : $"{inputQueueName}@{Environment.MachineName}";
         }
 
         /// <summary>
@@ -88,6 +88,7 @@ namespace Rebus.Transport.Msmq
             var inputQueuePath = MsmqUtil.GetPath(address);
 
             MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+            MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
         }
 
         /// <summary>
@@ -111,9 +112,9 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
-            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (message == null) throw new ArgumentNullException("message");
-            if (context == null) throw new ArgumentNullException("context");
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
             var logicalMessage = CreateMsmqMessage(message);
 
@@ -161,7 +162,7 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (context == null) throw new ArgumentNullException("context");
+            if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueName == null)
             {
                 throw new InvalidOperationException("This MSMQ transport does not have an input queue, hence it is not possible to reveive anything");
@@ -217,9 +218,7 @@ namespace Rebus.Transport.Msmq
                     return null;
                 }
 
-                throw new IOException(
-                    string.Format("Could not receive next message from MSMQ queue '{0}'", _inputQueueName),
-                    exception);
+                throw new IOException($"Could not receive next message from MSMQ queue '{_inputQueueName}'", exception);
             }
         }
 
@@ -268,10 +267,7 @@ namespace Rebus.Transport.Msmq
         /// <summary>
         /// Gets the input queue address of this MSMQ queue
         /// </summary>
-        public string Address
-        {
-            get { return _inputQueueName; }
-        }
+        public string Address => _inputQueueName;
 
         void ReinitializeInputQueue()
         {
@@ -308,7 +304,6 @@ namespace Rebus.Transport.Msmq
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
                 MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
-
                 MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
@@ -353,8 +348,7 @@ namespace Rebus.Transport.Msmq
                 }
                 catch (Exception exception)
                 {
-                    throw new SerializationException(string.Format("Could not deserialize MSMQ extension for message with physical message ID {0} - expected valid JSON text, got '{1}'",
-                        msmqMessageId, jsonString), exception);
+                    throw new SerializationException($"Could not deserialize MSMQ extension for message with physical message ID {msmqMessageId} - expected valid JSON text, got '{jsonString}'", exception);
                 }
             }
 
@@ -362,8 +356,9 @@ namespace Rebus.Transport.Msmq
             {
                 // auto-detect UTF7-encoded headers
                 // 43, 65, 72, 115, 45 == an UTF7-encoded '{'
+                if (bytes.Length < 5) return false;
 
-                return bytes.Length > 5 && bytes[0] == 43 && bytes[1] == 65 && bytes[2] == 72 && bytes[3] == 115 && bytes[4] == 45;
+                return bytes[0] == 43 && bytes[1] == 65 && bytes[2] == 72 && bytes[3] == 115 && bytes[4] == 45;
             }
         }
 
