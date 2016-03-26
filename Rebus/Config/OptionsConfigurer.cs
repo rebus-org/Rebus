@@ -48,6 +48,15 @@ namespace Rebus.Config
         }
 
         /// <summary>
+        /// Configures the interval between polling the endpoint's configured <see cref="ITimeoutManager"/> for due timeouts.
+        /// Defaults to <see cref="Options.DefaultDueTimeoutsPollInterval"/>
+        /// </summary>
+        public void SetDueTimeoutsPollInteval(TimeSpan dueTimeoutsPollInterval)
+        {
+            _options.DueTimeoutsPollInterval = dueTimeoutsPollInterval;
+        }
+
+        /// <summary>
         /// Configures Rebus to use another endpoint as the timeout manager
         /// </summary>
         public void UseExternalTimeoutManager(string timeoutManagerAddress)

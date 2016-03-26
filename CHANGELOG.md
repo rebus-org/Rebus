@@ -873,6 +873,11 @@
 * Updated StructureMap dependency to 4.1.2.386 - thanks [dougkwilson]
 * Made isolation level and timeout configurable when using the `TransactionScope` support extension
 
+# 0.99.44
+
+* Added option for Azure Service Bus transport to skip queue creation to make it possible to use a read-only SAS key instead of a connection string with manage rights - thanks [torangel]
+* Made due timeouts poll interval configurable
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

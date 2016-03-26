@@ -31,7 +31,7 @@ namespace Rebus.Config
         {
             if (numberOfMessagesToPrefetch < 1)
             {
-                throw new ArgumentOutOfRangeException(string.Format("Cannot set prefetching to {0} messages - must be at least 1", numberOfMessagesToPrefetch));
+                throw new ArgumentOutOfRangeException($"Cannot set prefetching to {numberOfMessagesToPrefetch} messages - must be at least 1");
             }
 
             PrefetchingEnabled = true;
@@ -55,6 +55,12 @@ namespace Rebus.Config
             return this;
         }
 
+        /// <summary>
+        /// Skips queue creation. Can be used when the connection string does not have manage rights to the queue object, e.g.
+        /// when a read-only shared-access signature is used to access an input queue. Please note that the signature MUST
+        /// have write access to the configured error queue, unless Azure Service Bus' own deadlettering is activated on the 
+        /// input queue (which is probably the preferred approach with this option)
+        /// </summary>
         public AzureServiceBusTransportSettings DoNotCreateQueues()
         {
             DoNotCreateQueuesEnabled = true;

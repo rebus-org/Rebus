@@ -1,4 +1,6 @@
-﻿namespace Rebus.Config
+﻿using System;
+
+namespace Rebus.Config
 {
     /// <summary>
     /// Contains additional options for configuring Rebus internals
@@ -16,12 +18,18 @@
         public const int DefaultMaxParallelism = 5;
 
         /// <summary>
+        /// This is the default due timeouts poll interval which will be used unless overridde by <see cref="DueTimeoutsPollInterval"/>
+        /// </summary>
+        public static readonly TimeSpan DefaultDueTimeoutsPollInterval = TimeSpan.FromSeconds(1);
+
+        /// <summary>
         /// Constructs the options with the default settings
         /// </summary>
         public Options()
         {
             NumberOfWorkers = DefaultNumberOfWorkers;
             MaxParallelism = DefaultMaxParallelism;
+            DueTimeoutsPollInterval = DefaultDueTimeoutsPollInterval;
         }
 
         /// <summary>
@@ -40,5 +48,10 @@
         /// Gets/sets the address to use if an external timeout manager is to be used
         /// </summary>
         public string ExternalTimeoutManagerAddressOrNull { get; set; }
+
+        /// <summary>
+        /// Gets/sets the poll interval when checking for due timeouts
+        /// </summary>
+        public TimeSpan DueTimeoutsPollInterval { get; set; }
     }
 }
