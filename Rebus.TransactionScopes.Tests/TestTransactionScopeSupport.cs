@@ -7,6 +7,7 @@ using Rebus.Config;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.TransactionScopes.Tests
 {

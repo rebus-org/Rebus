@@ -871,6 +871,7 @@
 # 0.99.43
 
 * Updated StructureMap dependency to 4.1.2.386 - thanks [dougkwilson]
+* Made isolation level and timeout configurable when using the `TransactionScope` support extension
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
