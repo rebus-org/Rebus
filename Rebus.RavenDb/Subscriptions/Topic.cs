@@ -41,5 +41,13 @@ namespace Rebus.RavenDb.Subscriptions
         {
             SubscriberAddresses.Remove(endpoint);
         }
+
+        /// <summary>
+        /// Gets whether the given subscriber is already registered
+        /// </summary>
+        public bool HasSubscriber(string subscriberAddress)
+        {
+            return SubscriberAddresses.Contains(subscriberAddress);
+        }
     }
 }

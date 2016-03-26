@@ -26,8 +26,9 @@ namespace Rebus.RavenDb
 
             configurer.Register(c =>
             {
-                var subscriptionStorage = new RavenDbSubscriptionStorage(documentStore, isCentralized);
-                return subscriptionStorage;
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+
+                return new RavenDbSubscriptionStorage(documentStore, isCentralized, rebusLoggerFactory);
             });
         }
 

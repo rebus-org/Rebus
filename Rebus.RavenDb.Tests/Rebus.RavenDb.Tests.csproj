@@ -90,6 +90,7 @@
     <Compile Include="Sagas\RavenDbSagaStorageFactory.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageFactory.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageTests.cs" />
+    <Compile Include="Subscriptions\TestRavenDbSubscriptionStorageConcurrency.cs" />
     <Compile Include="TestCategory.cs" />
     <Compile Include="Timeouts\RavenDbTimeoutManagerTest.cs" />
     <Compile Include="Timeouts\RavenDbTimoutManagerFactory.cs" />

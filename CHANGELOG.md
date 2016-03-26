@@ -877,6 +877,7 @@
 
 * Added option for Azure Service Bus transport to skip queue creation to make it possible to use a read-only SAS key instead of a connection string with manage rights - thanks [torangel]
 * Made due timeouts poll interval configurable
+* Made RavenDB subscription storage much more tolerant towards concurrency exceptions when topic documents are experiencing contention
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
