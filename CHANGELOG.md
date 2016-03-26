@@ -868,6 +868,10 @@
 
 * Fixed bug in Rebus' protobuf serializer that caused it to be unable to serialize Rebus' control bus messages
 
+# 0.99.43
+
+* Updated StructureMap dependency to 4.1.2.386 - thanks [dougkwilson]
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -877,6 +881,7 @@
 [dev4ce]: https://github.com/dev4ce
 [dimajanzen]: https://github.com/dimajanzen
 [DixonD-git]: https://github.com/DixonD-git
+[dougkwilson]: https://github.com/dougkwilson
 [fritsduus]: https://github.com/fritsduus
 [gertjvr]: https://github.com/gertjvr
 [hagbarddenstore]: https://github.com/hagbarddenstore
