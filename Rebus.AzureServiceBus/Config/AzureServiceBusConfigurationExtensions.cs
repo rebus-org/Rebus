@@ -84,7 +84,7 @@ namespace Rebus.Config
                     transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
 
                     transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
-
+                    transport.DoNotCreateQueuesEnabled = settingsBuilder.DoNotCreateQueuesEnabled;
                     return transport;
                 });
 
@@ -107,7 +107,7 @@ namespace Rebus.Config
                     transport.AutomaticallyRenewPeekLock = settingsBuilder.AutomaticPeekLockRenewalEnabled;
 
                     transport.PartitioningEnabled = settingsBuilder.PartitioningEnabled;
-
+                    transport.DoNotCreateQueuesEnabled = settingsBuilder.DoNotCreateQueuesEnabled;
                     return transport;
                 });
 
