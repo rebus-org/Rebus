@@ -27,6 +27,19 @@ namespace Rebus.Persistence.InMem
 
         internal IEnumerable<ISagaData> Instances => _data.Values.ToList();
 
+        internal void AddInstance(ISagaData sagaData)
+        {
+            lock (_lock)
+            {
+                var instance = Clone(sagaData);
+                if (instance.Id == Guid.Empty)
+                {
+                    instance.Id = Guid.NewGuid();
+                }
+                _data[instance.Id] = instance;
+            }
+        }
+
         internal event Action<ISagaData> Created;
         internal event Action<ISagaData> Updated;
         internal event Action<ISagaData> Deleted;

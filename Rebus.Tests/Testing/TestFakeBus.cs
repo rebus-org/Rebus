@@ -12,6 +12,18 @@ namespace Rebus.Tests.Testing
     public class TestFakeBus : FixtureBase
     {
         [Test]
+        public void CanClearEventsFromFakeBus()
+        {
+            var bus = new FakeBus();
+            var commandMessage = new { Text = "hej med dig min ven!!!!" };
+            bus.Send(commandMessage).Wait();
+
+            bus.Clear();
+
+            Assert.That(bus.Events.Count(), Is.EqualTo(0));
+        }
+
+        [Test]
         public async Task CheckThatEventsAreProperlyRecorded()
         {
             var bus = new FakeBus();

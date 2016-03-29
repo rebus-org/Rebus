@@ -11,6 +11,20 @@ namespace Rebus.Tests.Testing
     public class TestSagaFixture : FixtureBase
     {
         [Test]
+        public void CanSetUpFakeSagaData()
+        {
+            using (var fixture = SagaFixture.For<MySaga>())
+            {
+                fixture.Add(new MySagaState {Text = "I know you!"});
+                fixture.AddRange(new[] { new MySagaState { Text = "I know you too!" } });
+
+                Assert.That(fixture.Data.Count(), Is.EqualTo(2));
+                Assert.That(fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you!"), Is.EqualTo(1));
+                Assert.That(fixture.Data.OfType<MySagaState>().Count(d => d.Text == "I know you too!"), Is.EqualTo(1));
+            }
+        }
+
+        [Test]
         public void CanRetrieveSagaData()
         {
             using (var fixture = SagaFixture.For<MySaga>())

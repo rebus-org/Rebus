@@ -9,7 +9,6 @@ using Rebus.Bus.Advanced;
 using Rebus.Messages;
 using Rebus.Routing;
 using Rebus.Testing.Events;
-using Rebus.Testing.Internals;
 
 #pragma warning disable 1998
 
@@ -24,13 +23,6 @@ namespace Rebus.Testing
     {
         readonly ConcurrentQueue<FakeBusEvent> _events = new ConcurrentQueue<FakeBusEvent>();
         readonly List<Delegate> _callbacks = new List<Delegate>();
-
-        ///// <summary>
-        ///// Creates a new instance of the fake bus
-        ///// </summary>
-        //public FakeBus()
-        //{
-        //}
 
         /// <summary>
         /// Gets all events recorded at this point. Query this in order to check what happened to the fake bus while
@@ -53,6 +45,15 @@ namespace Rebus.Testing
         public void On<TEvent>(Action<TEvent> callback) where TEvent : FakeBusEvent
         {
             _callbacks.Add(callback);
+        }
+
+        /// <summary>
+        /// Clears all events recorded by the fake bus. Registered callbacks will NOT be cleared
+        /// </summary>
+        public void Clear()
+        {
+            FakeBusEvent instance;
+            while (_events.TryDequeue(out instance)) { }
         }
 
         /// <summary>

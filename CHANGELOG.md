@@ -879,6 +879,11 @@
 * Made due timeouts poll interval configurable
 * Made RavenDB subscription storage much more tolerant towards concurrency exceptions when topic documents are experiencing contention
 
+# 0.99.45
+
+* Added ability to set up fake saga data in `SagaFixture`
+* Added method to clear recorded events of `FakeBus`
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
