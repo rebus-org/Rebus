@@ -884,6 +884,10 @@
 * Added ability to set up fake saga data in `SagaFixture`
 * Added method to clear recorded events of `FakeBus`
 
+# 0.99.46
+
+* Better error behavior when deferring a message from a one-way client without setting the defer-recipient
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

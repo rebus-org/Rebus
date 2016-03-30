@@ -1,4 +1,5 @@
-﻿using Rebus.Auditing.Sagas;
+﻿using System;
+using Rebus.Auditing.Sagas;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Sagas;
@@ -15,9 +16,13 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Configures Rebus to store saga snapshots in SQL Server
         /// </summary>
-        public static void StoreInSqlServer(this StandardConfigurer<ISagaSnapshotStorage> configurer,
+        public static void StoreInSqlServer(this StandardConfigurer<ISagaSnapshotStorage> configurer, 
             string connectionStringOrConnectionStringName, string tableName, bool automaticallyCreateTables = true)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionStringOrConnectionStringName == null) throw new ArgumentNullException(nameof(connectionStringOrConnectionStringName));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
@@ -40,6 +45,11 @@ namespace Rebus.Persistence.SqlServer
             string connectionStringOrConnectionStringName, string dataTableName, string indexTableName,
             bool automaticallyCreateTables = true)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionStringOrConnectionStringName == null) throw new ArgumentNullException(nameof(connectionStringOrConnectionStringName));
+            if (dataTableName == null) throw new ArgumentNullException(nameof(dataTableName));
+            if (indexTableName == null) throw new ArgumentNullException(nameof(indexTableName));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
@@ -63,6 +73,10 @@ namespace Rebus.Persistence.SqlServer
         public static void StoreInSqlServer(this StandardConfigurer<ISubscriptionStorage> configurer,
             string connectionStringOrConnectionStringName, string tableName, bool isCentralized = false, bool automaticallyCreateTables = true)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionStringOrConnectionStringName == null) throw new ArgumentNullException(nameof(connectionStringOrConnectionStringName));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
@@ -81,8 +95,13 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Configures Rebus to use SQL Server to store timeouts.
         /// </summary>
-        public static void StoreInSqlServer(this StandardConfigurer<ITimeoutManager> configurer, string connectionStringOrConnectionStringName, string tableName, bool automaticallyCreateTables = true)
+        public static void StoreInSqlServer(this StandardConfigurer<ITimeoutManager> configurer, 
+            string connectionStringOrConnectionStringName, string tableName, bool automaticallyCreateTables = true)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionStringOrConnectionStringName == null) throw new ArgumentNullException(nameof(connectionStringOrConnectionStringName));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();

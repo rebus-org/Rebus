@@ -58,6 +58,11 @@ namespace Rebus.Bus
             // do not overwrite the recipient if it has been set
             if (!headers.ContainsKey(Headers.DeferredRecipient))
             {
+                if (destinationAddress == null)
+                {
+                    throw new InvalidOperationException($"When you defer a message from a one-way client, you need to explicitly set the '{Headers.DeferredRecipient}' header in order to specify a recipient for the message when it is time to be delivered");
+                }
+
                 headers[Headers.DeferredRecipient] = destinationAddress;
             }
         }
