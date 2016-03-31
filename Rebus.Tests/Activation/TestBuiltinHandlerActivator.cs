@@ -20,6 +20,7 @@ namespace Rebus.Tests.Activation
         protected override void TearDown()
         {
             AmbientTransactionContext.Current = null;
+            _activator.Dispose();
         }
 
         [Test]

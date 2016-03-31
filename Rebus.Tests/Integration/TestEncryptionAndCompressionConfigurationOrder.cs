@@ -46,7 +46,9 @@ namespace Rebus.Tests.Integration
 
         void SetUpBus(Action<OptionsConfigurer> configurer)
         {
-            var bus = Configure.With(Using(new BuiltinHandlerActivator()))
+            var handlerActivator = Using(new BuiltinHandlerActivator());
+
+            var bus = Configure.With(handlerActivator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(_network, InputQueueName))
                 .Options(configurer)

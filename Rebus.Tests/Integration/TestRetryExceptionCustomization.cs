@@ -22,10 +22,10 @@ namespace Rebus.Tests.Integration
 
         protected override void SetUp()
         {
-            _activator = new BuiltinHandlerActivator();
+            _activator = Using(new BuiltinHandlerActivator());
             _listLoggerFactory = new ListLoggerFactory();
 
-            Configure.With(Using(_activator))
+            Configure.With(_activator)
                 .Logging(l => l.Use(_listLoggerFactory))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "customize exceptions"))
                 .Routing(r =>

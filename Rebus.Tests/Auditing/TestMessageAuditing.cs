@@ -24,6 +24,9 @@ namespace Rebus.Tests.Auditing
         protected override void SetUp()
         {
             _adapter = new BuiltinHandlerActivator();
+
+            Using(_adapter);
+
             _network = new InMemNetwork();
             
             _bus = Configure.With(_adapter)
@@ -88,12 +91,6 @@ namespace Rebus.Tests.Auditing
             Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PointToPoint));
         }
 
-        static void PrintHeaders(InMemTransportMessage message)
-        {
-            Console.WriteLine(@"Headers:
-{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
-        }
-
         [Test]
         public async Task CopiesPublishedMessageToAuditQueue()
         {
@@ -117,6 +114,12 @@ namespace Rebus.Tests.Auditing
             Assert.That(message.Headers.ContainsKey(AuditHeaders.AuditTime));
             Assert.That(message.Headers.ContainsKey(Headers.Intent));
             Assert.That(message.Headers[Headers.Intent], Is.EqualTo(Headers.IntentOptions.PublishSubscribe));
+        }
+
+        static void PrintHeaders(InMemTransportMessage message)
+        {
+            Console.WriteLine(@"Headers:
+{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
         }
     }
 }

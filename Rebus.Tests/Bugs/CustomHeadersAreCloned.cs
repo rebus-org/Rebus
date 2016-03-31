@@ -21,14 +21,14 @@ namespace Rebus.Tests.Bugs
         {
             var activator = new BuiltinHandlerActivator();
 
+            Using(activator);
+
             var receivedMessageIds = new ConcurrentBag<string>();
 
             activator.Handle<string>(async (_, context, message) =>
             {
                 receivedMessageIds.Add(context.TransportMessage.Headers[Headers.MessageId]);
             });
-
-            Using(activator);
 
             var bus = Configure.With(activator)
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "buggerino"))
@@ -38,7 +38,6 @@ namespace Rebus.Tests.Bugs
             {
                 {"custom-header", "woohoo"}
             };
-
 
             const string repeatedMessage = "hej med dig";
 

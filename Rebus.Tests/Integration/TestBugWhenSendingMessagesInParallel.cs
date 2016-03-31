@@ -43,7 +43,7 @@ namespace Rebus.Tests.Integration
 
         IBus CreateBus(string inputQueueName, Func<string, Task> stringHandler)
         {
-            var activator = new BuiltinHandlerActivator();
+            var activator = Using(new BuiltinHandlerActivator());
 
             activator.Handle(stringHandler);
 
@@ -53,7 +53,7 @@ namespace Rebus.Tests.Integration
                 .Subscriptions(s => s.StoreInSqlServer(SqlTestHelper.ConnectionString, _subscriptionsTableName, isCentralized: true))
                 .Start();
 
-            return Using(bus);
+            return bus;
         }
 
         [Test]

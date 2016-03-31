@@ -22,20 +22,16 @@ namespace Rebus.Tests.Integration.Msmq
         {
             _serverInputQueueName = TestConfig.QueueName("server");
             
-            _server = new BuiltinHandlerActivator();
-            
+            _server = Using(new BuiltinHandlerActivator());
+
             Configure.With(_server)
                 .Transport(t => t.UseMsmq(_serverInputQueueName))
                 .Start();
 
-            Using(_server);
-
-            _client = Configure.With(new BuiltinHandlerActivator())
+            _client = Configure.With(Using(new BuiltinHandlerActivator()))
                 .Transport(t => t.UseMsmqAsOneWayClient())
                 .Routing(r => r.TypeBased().Map<string>(_serverInputQueueName))
                 .Start();
-
-            Using(_client);
         }
 
         [Test]
