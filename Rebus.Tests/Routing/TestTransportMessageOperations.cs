@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Routing
 {
@@ -89,7 +90,7 @@ namespace Rebus.Tests.Routing
                 {
                     Console.WriteLine("Got the message for the first time - deferring it!");
 
-                    await bus.Advanced.TransportMessage.Defer(TimeSpan.FromSeconds(3), customHeaders);
+                    await bus.Advanced.TransportMessage.Defer(TimeSpan.FromSeconds(2), customHeaders);
 
                     didDeferTheMessage = true;
 
