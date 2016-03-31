@@ -127,6 +127,7 @@
     <Compile Include="Pipeline\Receive\HandlerInvokers.cs" />
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
     <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
+    <Compile Include="Pipeline\Send\ValidateOutgoingMessageStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />

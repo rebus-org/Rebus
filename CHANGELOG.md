@@ -888,6 +888,10 @@
 
 * Better error behavior when deferring a message from a one-way client without setting the defer-recipient
 
+# 0.99.47
+
+* Moved defer-recipient header check to the pipeline, giving other pipeline steps a chance to set it
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
