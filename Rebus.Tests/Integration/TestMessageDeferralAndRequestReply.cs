@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -8,7 +8,6 @@ using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Routing.TypeBased;
-using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -19,10 +18,13 @@ namespace Rebus.Tests.Integration
     {
         BuiltinHandlerActivator _service;
         BuiltinHandlerActivator _client;
+        Stopwatch _stopwatch;
 
         protected override void SetUp()
         {
             var inMemNetwork = new InMemNetwork();
+
+            _stopwatch = Stopwatch.StartNew();
 
             _service = CreateEndpoint(inMemNetwork, "service");
             _client = CreateEndpoint(inMemNetwork, "client");
@@ -57,13 +59,13 @@ namespace Rebus.Tests.Integration
                         {Headers.ReturnAddress, context.Headers[Headers.ReturnAddress]}
                     };
 
-                    Console.WriteLine($"SERVICE deferring '{str}' 1 second");
+                    Console.WriteLine($"SERVICE deferring '{str}' 1 second (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
                     await bus.Defer(TimeSpan.FromSeconds(1), str, extraHeaders);
                     return;
                 }
 
                 const string reply = "yeehaa!";
-                Console.WriteLine($"SERVICE replying '{reply}'");
+                Console.WriteLine($"SERVICE replying '{reply}'  (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
                 await bus.Reply(reply);
             });
 
@@ -85,13 +87,13 @@ namespace Rebus.Tests.Integration
                         {deferredMessageHeader, ""},
                     };
 
-                    Console.WriteLine($"SERVICE deferring '{str}' 1 second");
+                    Console.WriteLine($"SERVICE deferring '{str}' 1 second  (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
                     await bus.Advanced.TransportMessage.Defer(TimeSpan.FromSeconds(1), extraHeaders);
                     return;
                 }
 
                 const string reply = "yeehaa!";
-                Console.WriteLine($"SERVICE replying '{reply}'");
+                Console.WriteLine($"SERVICE replying '{reply}'  (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
                 await bus.Reply(reply);
             });
 
@@ -100,17 +102,17 @@ namespace Rebus.Tests.Integration
 
         async Task RunDeferTest()
         {
-            var gotReply = new ManualResetEvent(false);
+            var replyCounter = new SharedCounter(1);
 
             _client.Handle<string>(async reply =>
             {
-                Console.WriteLine($"CLIENT got reply '{reply}'");
-                gotReply.Set();
+                Console.WriteLine($"CLIENT got reply '{reply}'  (elapsed: {_stopwatch.Elapsed.TotalSeconds:0.# s})");
+                replyCounter.Decrement();
             });
 
             await _client.Bus.Send("request");
 
-            gotReply.WaitOrDie(TimeSpan.FromSeconds(4));
+            replyCounter.WaitForResetEvent();
         }
     }
 }
