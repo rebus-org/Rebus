@@ -213,7 +213,7 @@ namespace Rebus.Injection
                         .Cast<Resolver<TService>>()
                         .Skip(depth)
                         .FirstOrDefault()
-                        ?? (Resolver<TService>)handlerForThisType.PrimaryResolver;
+                                   ?? (Resolver<TService>) handlerForThisType.PrimaryResolver;
 
                     var instance = resolver.InvokeResolver(this);
 
@@ -225,6 +225,10 @@ namespace Rebus.Injection
                     }
 
                     return instance;
+                }
+                catch (ResolutionException)
+                {
+                    throw; //< let this one through
                 }
                 catch (Exception exception)
                 {

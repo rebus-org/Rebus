@@ -892,6 +892,12 @@
 
 * Moved defer-recipient header check to the pipeline, giving other pipeline steps a chance to set it
 
+# 0.99.48
+
+* Don't rethrow `ResolutionException` inside another `ResolutionException` in case of configuration errors - the stack trace reveals the call stack so nicely, there's no need to have 10 layers of exceptions too
+
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
