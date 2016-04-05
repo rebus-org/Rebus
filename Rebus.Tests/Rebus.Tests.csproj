@@ -116,6 +116,7 @@
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
+    <Compile Include="Routing\TestTypeBasedRouter.cs" />
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
