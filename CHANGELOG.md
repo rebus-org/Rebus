@@ -897,6 +897,9 @@
 * Don't rethrow `ResolutionException` inside another `ResolutionException` in case of configuration errors - the stack trace reveals the call stack so nicely, there's no need to have 10 layers of exceptions too
 * Marked topic-based routing configuration API as obsolete (type-based routing is perfectly capable of using raw topics if you like)
 * Added fallback capability to the router (i.e. the ability to configure an endpoint that is used when none of the mappings match)
+* Fixed bug in retry strategy step that could accidentally keep tracked message IDs for too long
+* Prohibit sending `IFailed<TMessage>` anywhere (because it is most likely an error)
+
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

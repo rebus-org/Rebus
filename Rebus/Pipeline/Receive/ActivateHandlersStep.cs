@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Transport;
+// ReSharper disable UnusedMethodReturnValue.Local
 
 namespace Rebus.Pipeline.Receive
 {
@@ -47,7 +48,6 @@ namespace Rebus.Pipeline.Receive
             await next();
         }
 
-        // ReSharper disable once UnusedMember.Local
         async Task<HandlerInvokers> GetHandlerInvokers<TMessage>(string messageId, TMessage message, ITransactionContext transactionContext)
         {
             var handlers = await _handlerActivator.GetHandlers(message, transactionContext);
@@ -63,7 +63,7 @@ namespace Rebus.Pipeline.Receive
         MethodInfo GetDispatchMethod(Type messageType)
         {
             return GetType()
-                .GetMethod("GetHandlerInvokers", BindingFlags.NonPublic | BindingFlags.Instance)
+                .GetMethod(nameof(GetHandlerInvokers), BindingFlags.NonPublic | BindingFlags.Instance)
                 .MakeGenericMethod(messageType);
         }
     }

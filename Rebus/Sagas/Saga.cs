@@ -78,10 +78,7 @@ namespace Rebus.Sagas
         /// <summary>
         /// Gets whether the saga data instance is new
         /// </summary>
-        protected bool IsNew
-        {
-            get { return HoldsNewSagaDataInstance; }
-        }
+        protected bool IsNew => HoldsNewSagaDataInstance;
 
         internal abstract Task InvokeConflictResolution(ISagaData otherSagaData);
     }
