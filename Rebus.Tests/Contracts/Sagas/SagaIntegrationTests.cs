@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -11,6 +12,7 @@ using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Sagas
 {
@@ -109,10 +111,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 }
             }
 
-            public bool Complete
-            {
-                get { return Data.GotTheFirst && Data.GotTheSecond; }
-            }
+            bool Complete => Data.GotTheFirst && Data.GotTheSecond;
 
             public async Task Handle(Message3 message)
             {
@@ -156,24 +155,33 @@ namespace Rebus.Tests.Contracts.Sagas
                 })
                 .Start();
 
-            await bus.SendLocal(new SagaMessage { Id = 70 });
-
             const int millisecondsDelay = 300;
 
-            await Task.Delay(millisecondsDelay);
+            var stopwatch = Stopwatch.StartNew();
+
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
             await bus.SendLocal(new SagaMessage { Id = 70 });
-
             await Task.Delay(millisecondsDelay);
-            await bus.SendLocal(new SagaMessage { Id = 70 });
 
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
+            await bus.SendLocal(new SagaMessage { Id = 70 });
             await Task.Delay(millisecondsDelay);
-            await bus.SendLocal(new SagaMessage { Id = 70 });
 
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
+            await bus.SendLocal(new SagaMessage { Id = 70 });
             await Task.Delay(millisecondsDelay);
+
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
             await bus.SendLocal(new SagaMessage { Id = 70 });
+            await Task.Delay(millisecondsDelay);
 
-            await Task.Delay(1000);
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
+            await bus.SendLocal(new SagaMessage { Id = 70 });
+            await Task.Delay(millisecondsDelay);
+            await Task.Delay(millisecondsDelay);
+            await Task.Delay(millisecondsDelay);
 
+            Console.WriteLine($"t: {stopwatch.Elapsed.TotalMilliseconds:0.#} ms");
             Assert.That(events.ToArray(), Is.EqualTo(new[]
             {
                 "70:1",
@@ -205,7 +213,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 Data.CorrelationId = message.Id;
                 Data.NumberOfProcessedMessages++;
 
-                _stuff.Enqueue(string.Format("{0}:{1}", Data.CorrelationId, Data.NumberOfProcessedMessages));
+                _stuff.Enqueue($"{Data.CorrelationId}:{Data.NumberOfProcessedMessages}");
 
                 if (Data.NumberOfProcessedMessages >= _maxNumberOfProcessedMessages)
                 {
@@ -227,5 +235,4 @@ namespace Rebus.Tests.Contracts.Sagas
             public int Id { get; set; }
         }
     }
-
 }
