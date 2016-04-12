@@ -900,6 +900,9 @@
 * Fixed bug in retry strategy step that could accidentally keep tracked message IDs for too long
 * Prohibit sending `IFailed<TMessage>` anywhere (because it is most likely an error)
 
+# 0.99.50
+
+* Fixed concurrency issues in RavenDB saga storage - remember to use optimistic concurrency regardless of the configuration of the document store
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
