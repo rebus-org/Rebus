@@ -11,13 +11,17 @@ using Rebus.Sagas;
 
 namespace Rebus.RavenDb.Sagas
 {
+    /// <summary>
+    /// Implementation of <see cref="ISagaStorage"/> that uses RavenDB to store sagas
+    /// </summary>
     public class RavenDbSagaStorage : ISagaStorage
     {
-        private readonly IDocumentStore _documentStore;
-        private readonly string _sagaDataIdPropertyName = nameof(ISagaData.Id);
+        readonly IDocumentStore _documentStore;
+        readonly string _sagaDataIdPropertyName = nameof(ISagaData.Id);
 
         public RavenDbSagaStorage(IDocumentStore documentStore)
         {
+            if (documentStore == null) throw new ArgumentNullException(nameof(documentStore));
             _documentStore = documentStore;
         }
 

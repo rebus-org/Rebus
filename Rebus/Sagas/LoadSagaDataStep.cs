@@ -8,7 +8,6 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
-using Rebus.Reflection;
 
 namespace Rebus.Sagas
 {
@@ -22,8 +21,8 @@ If that's the case, relevant saga data is loaded/created, and the rest of the pi
 Afterwards, all the created/loaded saga data is updated appropriately.")]
     public class LoadSagaDataStep : IIncomingStep
     {
-        static readonly string IdPropertyName = Reflect.Path<ISagaData>(d => d.Id);
-        static readonly string RevisionPropertyName = Reflect.Path<ISagaData>(d => d.Revision);
+        const string IdPropertyName = nameof(ISagaData.Id);
+        const string RevisionPropertyName = nameof(ISagaData.Revision);
 
         /// <summary>
         /// properties ignored by auto-setter (the one that automatically sets the correlation ID on a new saga data instance)
