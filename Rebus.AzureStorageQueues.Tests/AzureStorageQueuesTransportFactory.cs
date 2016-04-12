@@ -43,15 +43,9 @@ namespace Rebus.AzureStorageQueues.Tests
             });
         }
 
-        public static string ConnectionString
-        {
-            get
-            {
-                return ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "azure_storage_connection_string.txt"))
-                       ?? ConnectionStringFromEnvironmentVariable("rebus2_storage_connection_string")
-                       ?? Throw("Could not find Azure Storage connection string!");
-            }
-        }
+        public static string ConnectionString => ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "azure_storage_connection_string.txt"))
+                                                 ?? ConnectionStringFromEnvironmentVariable("rebus2_storage_connection_string")
+                                                 ?? Throw("Could not find Azure Storage connection string!");
 
         static string ConnectionStringFromFileOrNull(string filePath)
         {
