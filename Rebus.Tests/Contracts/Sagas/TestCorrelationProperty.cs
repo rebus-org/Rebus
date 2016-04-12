@@ -4,7 +4,7 @@ using Rebus.Sagas;
 
 namespace Rebus.Tests.Contracts.Sagas
 {
-    class TestCorrelationProperty : ISagaCorrelationProperty
+    public class TestCorrelationProperty : ISagaCorrelationProperty
     {
         static readonly Type[] AllowedCorrelationPropertyTypes = {
             typeof (string),
@@ -30,7 +30,7 @@ namespace Rebus.Tests.Contracts.Sagas
                 PropertyName, SagaDataType.Name, String.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))));
         }
 
-        public string PropertyName { get; private set; }
-        public Type SagaDataType { get; private set; }
+        public string PropertyName { get; }
+        public Type SagaDataType { get; }
     }
 }

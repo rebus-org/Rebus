@@ -21,6 +21,8 @@ namespace Rebus.RavenDb.Tests.Sagas
             _documentStore.Initialize();
         }
 
+        public EmbeddableDocumentStore DocumentStore => _documentStore;
+
         public ISagaStorage GetSagaStorage()
         {
             return new RavenDbSagaStorage(_documentStore);
