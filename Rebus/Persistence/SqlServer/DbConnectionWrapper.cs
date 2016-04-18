@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
+using Rebus.Exceptions;
 
 #pragma warning disable 1998
 
@@ -53,7 +54,14 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public IEnumerable<string> GetTableNames()
         {
-            return _connection.GetTableNames(_currentTransaction);
+            try
+            {
+                return _connection.GetTableNames(_currentTransaction);
+            }
+            catch (SqlException exception)
+            {
+                throw new RebusApplicationException("Could not get table names", exception);
+            }
         }
 
         /// <summary>
