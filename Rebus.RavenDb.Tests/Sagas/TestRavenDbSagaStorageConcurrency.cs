@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Raven.Client.Embedded;
 using Raven.Imports.Newtonsoft.Json;
 using Rebus.Activation;
 using Rebus.Config;
@@ -28,16 +29,15 @@ namespace Rebus.RavenDb.Tests.Sagas
 
             _activator = Using(new BuiltinHandlerActivator());
 
-            var documentStore = _factory.DocumentStore;
-
             Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Info))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "stresstest"))
-                .Sagas(s => s.StoreInRavenDb(documentStore))
+                .Sagas(s => s.StoreInRavenDb(_factory.DocumentStore))
                 .Options(o =>
                 {
-                    // pretty parallel!!
                     o.SetNumberOfWorkers(0);
+                    
+                    // pretty parallel!!
                     o.SetMaxParallelism(100);
                 })
                 .Start();

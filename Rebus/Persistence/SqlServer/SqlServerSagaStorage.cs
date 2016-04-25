@@ -70,17 +70,13 @@ namespace Rebus.Persistence.SqlServer
                 if (hasDataTable)
                 {
                     throw new ApplicationException(
-                        string.Format(
-                            "The saga index table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the data table",
-                            _indexTableName, _dataTableName));
+                        $"The saga index table '{_indexTableName}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{_dataTableName}', which was supposed to be created as the data table");
                 }
 
                 if (hasIndexTable)
                 {
                     throw new ApplicationException(
-                        string.Format(
-                            "The saga data table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the index table",
-                            _dataTableName, _indexTableName));
+                        $"The saga data table '{_dataTableName}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{_indexTableName}', which was supposed to be created as the index table");
                 }
 
                 _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName, _indexTableName);
