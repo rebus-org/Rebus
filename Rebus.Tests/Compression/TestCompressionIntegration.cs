@@ -7,20 +7,29 @@ using Rebus.Compression;
 using Rebus.Config;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Compression
 {
     [TestFixture]
     public class TestCompressionIntegration : FixtureBase
     {
+        BuiltinHandlerActivator _activator;
+
+        protected override void SetUp()
+        {
+            _activator = new BuiltinHandlerActivator();
+
+            Using(_activator);
+        }
+
         [TestCase(true)]
         [TestCase(false)]
         public void ItWorksWithString(bool withCompressionEnabled)
         {
-            var activator = new BuiltinHandlerActivator();
             var gotIt = new ManualResetEvent(false);
 
-            activator.Handle<string>(async str =>
+            _activator.Handle<string>(async str =>
             {
                 if (string.Equals(str, LongText))
                 {
@@ -33,9 +42,7 @@ namespace Rebus.Tests.Compression
                 }
             });
 
-            Using(activator);
-
-            var bus = CreateBus(withCompressionEnabled, activator);
+            var bus = CreateBus(withCompressionEnabled, _activator);
 
             bus.SendLocal(LongText).Wait();
 
@@ -46,10 +53,9 @@ namespace Rebus.Tests.Compression
         [TestCase(false)]
         public void ItWorksWithComplexMessage(bool withCompressionEnabled)
         {
-            var activator = new BuiltinHandlerActivator();
             var gotIt = new ManualResetEvent(false);
 
-            activator.Handle<TextMessage>(async str =>
+            _activator.Handle<TextMessage>(async str =>
             {
                 if (string.Equals(str.Text, LongText))
                 {
@@ -62,9 +68,7 @@ namespace Rebus.Tests.Compression
                 }
             });
 
-            Using(activator);
-
-            var bus = CreateBus(withCompressionEnabled, activator);
+            var bus = CreateBus(withCompressionEnabled, _activator);
 
             bus.SendLocal(new TextMessage {Text = LongText}).Wait();
 

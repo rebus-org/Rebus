@@ -15,10 +15,13 @@ namespace Rebus.XmlConfig.Tests
         {
             using (AppConfig.Change("Examples/App-01.config"))
             {
-                Configure.With(new BuiltinHandlerActivator())
-                    .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
-                    .Routing(r => r.TypeBasedRoutingFromAppConfig())
-                    .Start();
+                using (var activator = new BuiltinHandlerActivator())
+                {
+                    Configure.With(activator)
+                        .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
+                        .Routing(r => r.TypeBasedRoutingFromAppConfig())
+                        .Start();
+                }
             }
         }
 
@@ -27,10 +30,13 @@ namespace Rebus.XmlConfig.Tests
         {
             using (AppConfig.Change("Examples/App-01.config"))
             {
-                Configure.With(new BuiltinHandlerActivator())
-                    .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
-                    .Routing(r => r.TypeBased().AddEndpointMappingsFromAppConfig())
-                    .Start();
+                using (var activator = new BuiltinHandlerActivator())
+                {
+                    Configure.With(activator)
+                        .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
+                        .Routing(r => r.TypeBased().AddEndpointMappingsFromAppConfig())
+                        .Start();
+                }
             }
         }
     }

@@ -24,6 +24,8 @@ namespace Rebus.Tests.Integration.Sql
 
             _activator = new BuiltinHandlerActivator();
 
+            Using(_activator);
+
             _bus = Configure.With(_activator)
                 .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, "Messages", QueueName))
                 .Options(o =>
@@ -31,8 +33,6 @@ namespace Rebus.Tests.Integration.Sql
                     o.LogPipeline();
                 })
                 .Start();
-
-            Using(_bus);
         }
 
         [Test]

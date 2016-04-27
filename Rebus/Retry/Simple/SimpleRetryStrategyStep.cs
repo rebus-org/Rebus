@@ -22,7 +22,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
         /// Key of a step context item that indicates that the message must be wrapped in a <see cref="FailedMessageWrapper{TMessage}"/> after being deserialized
         /// </summary>
         public const string DispatchAsFailedMessageKey = "dispatch-as-failed-message";
-        
+
         static readonly TimeSpan MoveToErrorQueueFailedPause = TimeSpan.FromSeconds(5);
 
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
@@ -53,7 +53,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
             if (string.IsNullOrWhiteSpace(messageId))
             {
-                await MoveMessageToErrorQueue("<no message ID>", 
+                await MoveMessageToErrorQueue("<no message ID>",
                     transportMessage,
                     transactionContext,
 
@@ -68,7 +68,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             if (_errorTracker.HasFailedTooManyTimes(messageId))
             {
                 var errorDescriptionFor = GetErrorDescriptionFor(messageId);
-                
+
                 // if we don't have 2nd level retries, just get the message out of the way
                 if (!_simpleRetryStrategySettings.SecondLevelRetriesEnabled)
                 {
@@ -90,21 +90,26 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
                 context.Save(DispatchAsFailedMessageKey, true);
 
-                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext);
+                await DispatchWithTrackerIdentifier(next, secondLevelMessageId, transactionContext, new[] { messageId, secondLevelMessageId });
 
                 return;
             }
 
-            await DispatchWithTrackerIdentifier(next, messageId, transactionContext);
+            await DispatchWithTrackerIdentifier(next, messageId, transactionContext, new[] { messageId });
         }
 
-        async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext)
+        async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext, string[] identifiersToClearOnSuccess)
         {
             try
             {
                 await next();
 
                 await transactionContext.Commit();
+
+                foreach (var id in identifiersToClearOnSuccess)
+                {
+                    _errorTracker.CleanUp(id);
+                }
             }
             catch (Exception exception)
             {
@@ -116,12 +121,9 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
         string GetErrorDescriptionFor(string messageId, bool brief = false)
         {
-            if (brief)
-            {
-                return _errorTracker.GetShortErrorDescription(messageId);
-            }
-
-            return _errorTracker.GetFullErrorDescription(messageId);
+            return brief
+                ? _errorTracker.GetShortErrorDescription(messageId)
+                : _errorTracker.GetFullErrorDescription(messageId);
         }
 
         async Task MoveMessageToErrorQueue(string messageId, TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription)
@@ -131,7 +133,6 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             headers[Headers.ErrorDetails] = errorDescription;
             headers[Headers.SourceQueue] = _transport.Address;
 
-            var moveToErrorQueueFailed = false;
             var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
 
             try
@@ -145,12 +146,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 _log.Error(exception, "Could not move message with ID {0} to error queue '{1}' - will pause {2} to avoid thrashing",
                     messageId, errorQueueAddress, MoveToErrorQueueFailedPause);
 
-                moveToErrorQueueFailed = true;
-            }
-
-            // if we can't move to error queue, we need to avoid thrashing over and over
-            if (moveToErrorQueueFailed)
-            {
+                // if we can't move to error queue, we need to avoid thrashing over and over
                 await Task.Delay(MoveToErrorQueueFailedPause);
             }
         }

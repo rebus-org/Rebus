@@ -215,6 +215,7 @@ namespace Rebus.Config
                     .OnSend(new AutoHeadersOutgoingStep())
                     .OnSend(new AssignTypeHeaderStep())
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
+                    .OnSend(new ValidateOutgoingMessageStep())
                     .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
             });
 

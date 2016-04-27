@@ -125,6 +125,12 @@ namespace Rebus.AzureServiceBus
 
         public void CreateQueue(string address)
         {
+            if (DoNotCreateQueuesEnabled)
+            {
+                _log.Info("Transport configured to not create queue - skipping existencecheck and potential creation");
+                return;
+            }
+
             if (_namespaceManager.QueueExists(address)) return;
 
             var queueDescription = new QueueDescription(address)
@@ -631,5 +637,7 @@ namespace Rebus.AzureServiceBus
         /// Always returns true because Azure Service Bus topics and subscriptions are global
         /// </summary>
         public bool IsCentralized => true;
+
+        public bool DoNotCreateQueuesEnabled { get; set; }
     }
 }

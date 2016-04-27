@@ -28,6 +28,8 @@ namespace Rebus.Tests.Contracts.Sagas
 
             _activator = new BuiltinHandlerActivator();
 
+            Using(_activator);
+
             _logger = new ListLoggerFactory(true);
 
             _bus = Configure.With(_activator)
@@ -35,8 +37,6 @@ namespace Rebus.Tests.Contracts.Sagas
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga_snapshots_integration_testerino"))
                 .Options(o => o.EnableSagaAuditing().Register(c => _factory.Create()))
                 .Start();
-
-            Using(_bus);
         }
 
         [Test]

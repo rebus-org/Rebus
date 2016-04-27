@@ -22,9 +22,9 @@ namespace Rebus.MongoDb
         /// </summary>
         public static void StoreInMongoDb(this StandardConfigurer<ISagaSnapshotStorage> configurer, IMongoDatabase mongoDatabase, string collectionName)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
-            if (collectionName == null) throw new ArgumentNullException("collectionName");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (mongoDatabase == null) throw new ArgumentNullException(nameof(mongoDatabase));
+            if (collectionName == null) throw new ArgumentNullException(nameof(collectionName));
 
             configurer.Register(c => new MongoDbSagaSnapshotStorage(mongoDatabase, collectionName));
         }
@@ -35,8 +35,8 @@ namespace Rebus.MongoDb
         /// </summary>
         public static void StoreInMongoDb(this StandardConfigurer<ISagaStorage> configurer, IMongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (mongoDatabase == null) throw new ArgumentNullException(nameof(mongoDatabase));
 
             configurer.Register(c =>
             {
@@ -47,15 +47,15 @@ namespace Rebus.MongoDb
         }
 
         /// <summary>
-        /// Configures Rebus to use MongoDB to store subscriptions. Use <see cref="isCentralized"/> = true to indicate whether it's OK to short-circuit
+        /// Configures Rebus to use MongoDB to store subscriptions. Use <paramref name="isCentralized"/> = true to indicate whether it's OK to short-circuit
         /// subscribing and unsubscribing by manipulating the subscription directly from the subscriber or just let it default to false to preserve the
         /// default behavior.
         /// </summary>
         public static void StoreInMongoDb(this StandardConfigurer<ISubscriptionStorage> configurer, IMongoDatabase mongoDatabase, string collectionName, bool isCentralized = false)
         {
-            if (configurer == null) throw new ArgumentNullException("configurer");
-            if (mongoDatabase == null) throw new ArgumentNullException("mongoDatabase");
-            if (collectionName == null) throw new ArgumentNullException("collectionName");
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (mongoDatabase == null) throw new ArgumentNullException(nameof(mongoDatabase));
+            if (collectionName == null) throw new ArgumentNullException(nameof(collectionName));
 
             configurer.Register(c =>
             {

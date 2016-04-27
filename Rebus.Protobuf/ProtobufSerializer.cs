@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ProtoBuf.Meta;
 using Rebus.Extensions;
 using Rebus.Messages;
+using Rebus.Messages.Control;
 using Rebus.Serialization;
 
 namespace Rebus.Protobuf
@@ -16,7 +17,17 @@ namespace Rebus.Protobuf
 
         public ProtobufSerializer(RuntimeTypeModel runtimeTypeModel)
         {
+            if (runtimeTypeModel == null) throw new ArgumentNullException(nameof(runtimeTypeModel));
+
             _runtimeTypeModel = runtimeTypeModel;
+
+            var subscribeRequestType = _runtimeTypeModel.Add(typeof (SubscribeRequest), true);
+            subscribeRequestType.AddField(1, Reflect.Path<SubscribeRequest>(r => r.Topic));
+            subscribeRequestType.AddField(2, Reflect.Path<SubscribeRequest>(r => r.SubscriberAddress));
+
+            var unsubscribeRequestType = _runtimeTypeModel.Add(typeof (UnsubscribeRequest), true);
+            unsubscribeRequestType.AddField(1, Reflect.Path<UnsubscribeRequest>(r => r.Topic));
+            unsubscribeRequestType.AddField(2, Reflect.Path<UnsubscribeRequest>(r => r.SubscriberAddress));
         }
 
         public ProtobufSerializer()

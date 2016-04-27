@@ -59,9 +59,13 @@
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Auditing\TestMessageAuditing.cs" />
     <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
+    <Compile Include="Bugs\DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler.cs" />
     <Compile Include="Bugs\DoesNotOverwriteSagaIdWhenInitiatingNewSaga.cs" />
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
+    <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
+    <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
+    <Compile Include="Integration\TestImprovedInjectionistExceptions.cs" />
     <Compile Include="Integration\TestSagasAndPolymorphicCorrelation.cs" />
     <Compile Include="Categories.cs" />
     <Compile Include="Compression\TestCompressionIntegration.cs" />
@@ -114,6 +118,7 @@
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
+    <Compile Include="Routing\TestTypeBasedRouter.cs" />
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />

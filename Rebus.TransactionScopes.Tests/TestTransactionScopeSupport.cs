@@ -7,6 +7,7 @@ using Rebus.Config;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.TransactionScopes.Tests
 {
@@ -15,7 +16,7 @@ namespace Rebus.TransactionScopes.Tests
     {
         [TestCase(true)]
         [TestCase(false)]
-        public void CanHandleMessagesInsideTranasctionScope(bool useTransactionScope)
+        public void CanHandleMessagesInsideTransactionScope(bool useTransactionScope)
         {
             var done = new ManualResetEvent(false);
             var detectedAmbientTransaction = false;

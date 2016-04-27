@@ -6,7 +6,7 @@ namespace Rebus.RavenDb.Timouts
     /// <summary>
     /// RavenDb document to contain Timout information
     /// </summary>
-    public class Timeout
+    class Timeout
     {
         public Timeout(Dictionary<string, string> headers, byte[] body, DateTime dueTimeUtc)
         {

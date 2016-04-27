@@ -62,6 +62,15 @@ namespace Rebus.Routing.TypeBased
                 return this;
             }
 
+            /// <summary>
+            /// Maps <paramref name="destinationAddress"/> as a fallback destination to use when none of the configured mappings match
+            /// </summary>
+            public TypeBasedRouterConfigurationBuilder MapFallback(string destinationAddress)
+            {
+                _configurationActions.Add(r => r.MapFallback(destinationAddress));
+                return this;
+            }
+
             internal TypeBasedRouter Build(IRebusLoggerFactory rebusLoggerFactory)
             {
                 var router = new TypeBasedRouter(rebusLoggerFactory);

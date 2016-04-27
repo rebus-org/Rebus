@@ -112,6 +112,12 @@ namespace Rebus.AzureServiceBus
 
         public void CreateQueue(string address)
         {
+            if (DoNotCreateQueuesEnabled)
+            {
+                _log.Info("Transport configured to not create queue - skipping existencecheck and potential creation");
+                return;
+            }
+            
             if (_namespaceManager.QueueExists(address)) return;
 
             var queueDescription = new QueueDescription(address)
@@ -416,6 +422,7 @@ namespace Rebus.AzureServiceBus
         }
 
         public bool PartitioningEnabled { get; set; }
+        public bool DoNotCreateQueuesEnabled { get; set; }
 
         public void Dispose()
         {

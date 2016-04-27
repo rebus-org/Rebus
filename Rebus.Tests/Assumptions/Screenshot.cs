@@ -14,11 +14,9 @@ namespace Rebus.Tests.Assumptions
         [Test, Ignore("to be run manually")]
         public void NizzleName()
         {
-            var bus = Configure.With(new BuiltinHandlerActivator())
+            var bus = Configure.With(Using(new BuiltinHandlerActivator()))
                 .Transport(t => t.UseMsmq(_inputQueueName))
                 .Start();
-
-            Using(bus);
 
             bus.Advanced.Workers.SetNumberOfWorkers(0);
 

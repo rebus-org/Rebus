@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using System;
+using Rebus.Config;
 
 namespace Rebus.Routing.TopicBased
 {
@@ -8,8 +9,9 @@ namespace Rebus.Routing.TopicBased
     public static class TopicBasedRouterConfigurationExtensions
     {
         /// <summary>
-        /// Selectes topic-based routing
+        /// Selects topic-based routing. This simple type of routing can ONLY be used for PUB/SUB and it will go away soon
         /// </summary>
+        [Obsolete("This way of configuring topic-based routing will go away soon - please use .Routing(r => r.Default().Map(...)) instead (the default routing is perfectly capable of doing topic-based routing too)")]
         public static TopicBasedRouterConfigurationBuilder TopicBased(this StandardConfigurer<IRouter> configurer)
         {
             var router = new TopicBasedRouter();

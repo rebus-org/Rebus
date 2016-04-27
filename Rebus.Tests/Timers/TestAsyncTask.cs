@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Tests.Timers.Factories;
@@ -95,7 +96,7 @@ namespace Rebus.Tests.Timers
                 await Task.Delay(1199);
             }
 
-            Console.WriteLine(string.Join(Environment.NewLine, events));
+            Console.WriteLine(string.Join(Environment.NewLine, events.Select(t => $"{t.TotalMilliseconds:0.0} ms")));
 
             Assert.That(events.Count, Is.GreaterThanOrEqualTo(4), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
             Assert.That(events.Count, Is.LessThanOrEqualTo(7));

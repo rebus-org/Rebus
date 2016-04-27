@@ -7,7 +7,6 @@ using Microsoft.ServiceBus.Messaging;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 
@@ -15,15 +14,9 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 {
     public class StandardAzureServiceBusTransportFactory : ITransportFactory
     {
-        public static string ConnectionString
-        {
-            get
-            {
-                return ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
-                       ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
-                       ?? Throw("Could not find Azure Service Bus connection string!");
-            }
-        }
+        public static string ConnectionString => ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
+                                                 ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
+                                                 ?? Throw("Could not find Azure Service Bus connection string!");
 
         static string Throw(string message)
         {

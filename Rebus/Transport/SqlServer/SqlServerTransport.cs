@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -94,6 +96,18 @@ namespace Rebus.Transport.SqlServer
         /// </summary>
         public void EnsureTableIsCreated()
         {
+            try
+            {
+                CreateSchema();
+            }
+            catch (SqlException exception)
+            {
+                throw new RebusApplicationException($"Error attempting to initialize SQL transport schema with mesages table [dbo].[{_tableName}]", exception);
+            }
+        }
+
+        void CreateSchema()
+        {
             using (var connection = _connectionProvider.GetConnection().Result)
             {
                 var tableNames = connection.GetTableNames();
@@ -127,7 +141,7 @@ CREATE TABLE [dbo].[{0}]
 )
 ", _tableName);
 
-                    command.ExecuteNonQuery();
+                    Execute(command);
                 }
 
                 using (var command = connection.CreateCommand())
@@ -145,7 +159,7 @@ CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
 
 ", _tableName);
 
-                    command.ExecuteNonQuery();
+                    Execute(command);
                 }
 
                 using (var command = connection.CreateCommand())
@@ -159,10 +173,24 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
 ", _tableName);
 
-                    command.ExecuteNonQuery();
+                    Execute(command);
                 }
 
                 connection.Complete().Wait();
+            }
+        }
+
+        static void Execute(IDbCommand command)
+        {
+            try
+            {
+                command.ExecuteNonQuery();
+            }
+            catch (SqlException exception)
+            {
+                throw new RebusApplicationException($@"Error executing SQL command
+{command.CommandText}
+", exception);
             }
         }
 

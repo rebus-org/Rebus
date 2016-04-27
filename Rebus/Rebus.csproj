@@ -127,13 +127,16 @@
     <Compile Include="Pipeline\Receive\HandlerInvokers.cs" />
     <Compile Include="Pipeline\Send\AssignDateTimeOffsetHeader.cs" />
     <Compile Include="Pipeline\Send\DestinationAddresses.cs" />
+    <Compile Include="Pipeline\Send\ValidateOutgoingMessageStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
     <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
     <Compile Include="Retry\Simple\FailedMessageWrapper.cs" />
+    <Compile Include="Retry\Simple\FailedMessageWrapperStep.cs" />
     <Compile Include="Retry\Simple\IFailed.cs" />
+    <Compile Include="Retry\Simple\VerifyCannotSendFailedMessageWrapperStep.cs" />
     <Compile Include="Routing\Exceptions\AutoForwardOnExceptionConfigurationExtensions.cs" />
     <Compile Include="Routing\TransportMessages\ActionType.cs" />
     <Compile Include="Routing\TransportMessages\ForwardAction.cs" />

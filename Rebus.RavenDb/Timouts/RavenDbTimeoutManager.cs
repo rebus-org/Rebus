@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+#pragma warning disable 1998
 
 namespace Rebus.RavenDb.Timouts
 {
@@ -41,39 +42,37 @@ namespace Rebus.RavenDb.Timouts
             }
         }
 
+        /// <summary>
+        /// Gets due messages as of now, given the approximate due time that they were stored with when <see cref="ITimeoutManager.Defer"/> was called
+        /// </summary>
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var now = RebusTime.Now.UtcDateTime;
 
-            DueMessagesResult dueMessagesResult;
-            using (var session = _documentStore.OpenAsyncSession())
-            {
-                var timeouts = await session.Query<Timeout, TimeoutIndex>()
-                                            .Customize(x => x.WaitForNonStaleResults(TimeSpan.FromSeconds(10)))
-                                            .Where(x => x.DueTimeUtc <= now)
-                                            .ToListAsync();
+            var session = _documentStore.OpenSession();
 
-                var dueMessages = timeouts.Select(x => new DueMessage(x.Headers, x.Body, CreateCleanUpProcedure(x.Id)));
+            var timeouts = session.Query<Timeout, TimeoutIndex>()
+                .Customize(x => x.WaitForNonStaleResults(TimeSpan.FromSeconds(10)))
+                .Where(x => x.DueTimeUtc <= now)
+                .ToList();
 
-                dueMessagesResult = new DueMessagesResult(dueMessages);
-            }
-
-            return dueMessagesResult;
-        }
-
-        Action CreateCleanUpProcedure(string id)
-        {
-            if (string.IsNullOrEmpty(id)) return () => { };
-
-            return () =>
-            {
-                using (var session = _documentStore.OpenSession())
+            var dueMessages = timeouts
+                .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, () =>
                 {
-                    var deleteCommands = new DeleteCommandData { Key = id };
-                    session.Advanced.Defer(deleteCommands);
+                    session.Advanced.Defer(new DeleteCommandData {Key = timeout.Id});
+                }));
+
+            return new DueMessagesResult(dueMessages, () =>
+            {
+                try
+                {
                     session.SaveChanges();
                 }
-            };
+                finally
+                {
+                    session.Dispose();
+                }
+            });
         }
     }
 }

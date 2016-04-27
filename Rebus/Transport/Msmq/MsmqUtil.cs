@@ -59,15 +59,15 @@ namespace Rebus.Transport.Msmq
         {
             if (IsIpAddress(machineName))
             {
-                return string.Format(@"FormatName:DIRECT=TCP:{0}\private$\{1}", machineName.ToLower(), queueName);
+                return $@"FormatName:DIRECT=TCP:{machineName.ToLower()}\private$\{queueName}";
             }
 
-            return string.Format(@"FormatName:DIRECT=OS:{0}\private$\{1}", machineName.ToLower(), queueName);
+            return $@"FormatName:DIRECT=OS:{machineName.ToLower()}\private$\{queueName}";
         }
 
         static string GenerateSimplePath(string machineName, string queueName)
         {
-            return string.Format(@"{0}\private$\{1}", machineName, queueName);
+            return $@"{machineName}\private$\{queueName}";
         }
 
         static bool IsIpAddress(string machineName)
@@ -116,19 +116,19 @@ namespace Rebus.Transport.Msmq
 
                 if (tokens.Length != 2)
                 {
-                    throw new ArgumentException(string.Format(@"The specified MSMQ queue name is invalid!: {0} - please format queue names according to one of the following examples:
+                    throw new ArgumentException($@"The specified MSMQ queue name is invalid!: {queueName} - please format queue names according to one of the following examples:
 
     someQueue
 
-        in order to specify a private queue named 'someQueue' on the local machine, or
+in order to specify a private queue named 'someQueue' on the local machine, or
 
     someQueue@anotherMachine
 
-        in order to specify a private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
+in order to specify a private queue named 'someQueue' on the machine with hostname 'anotherMachine', or
 
     someQueue@10.0.1.45
 
-        in order to specify a private queue named 'someQueue' on the machine with IP 10.0.1.45", queueName));
+in order to specify a private queue named 'someQueue' on the machine with IP 10.0.1.45");
                 }
                 return new QueueInfo { QueueName = tokens[0], MachineName = tokens[1] };
             }
@@ -146,10 +146,7 @@ namespace Rebus.Transport.Msmq
 
             try
             {
-                if (log != null)
-                {
-                    log.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
-                }
+                log?.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
 
                 var newQueue = MessageQueue.Create(inputQueuePath, true);
 
@@ -164,6 +161,7 @@ namespace Rebus.Transport.Msmq
             {
                 if (exception.MessageQueueErrorCode == MessageQueueErrorCode.QueueExists)
                 {
+                    // all is good ;)
                     return;
                 }
 
@@ -179,9 +177,9 @@ namespace Rebus.Transport.Msmq
                     .Translate(typeof(NTAccount))
                     .ToString();
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                throw new RebusApplicationException("An error occurred while attempting to figure out the name of the local administrators group!", e);
+                throw new RebusApplicationException("An error occurred while attempting to figure out the name of the local administrators group!", exception);
             }
         }
 
@@ -195,16 +193,13 @@ namespace Rebus.Transport.Msmq
             {
                 if (queue.Transactional) return;
 
-                var message =
-                    string.Format(
-                        @"The queue {0} is NOT transactional!
+                var message = $@"The queue {path} is NOT transactional!
 
 Everything around Rebus is built with the assumption that queues are transactional, so Rebus will malfunction if queues aren't transactional. 
 
 To remedy this, ensure that any existing queues are transactional, or let Rebus create its queues automatically.
 
-If Rebus allowed you to work with non-transactional queues, it would not be able to e.g. safely move a received message into an error queue. Also, MSMQ does not behave well when moving messages in/out of transactional/non-transactional queue.",
-                        path);
+If Rebus allowed you to work with non-transactional queues, it would not be able to e.g. safely move a received message into an error queue. Also, MSMQ does not behave well when moving messages in/out of transactional/non-transactional queues - the messages will end up in the dead-letter queue.";
 
                 throw new RebusApplicationException(message);
             }

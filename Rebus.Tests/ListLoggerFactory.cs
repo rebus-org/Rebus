@@ -18,6 +18,14 @@ namespace Rebus.Tests
             _detailed = detailed;
         }
 
+        public void Clear()
+        {
+            LogLine temp;
+            while (_loggedLines.TryDequeue(out temp)) { }
+
+            Console.WriteLine("Cleared the logs");
+        }
+
         protected override ILog GetLogger(Type type)
         {
             return new ListLogger(_loggedLines, type, _outputToConsole, _detailed);

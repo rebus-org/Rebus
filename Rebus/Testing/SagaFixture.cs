@@ -169,6 +169,30 @@ namespace Rebus.Testing
         }
 
         /// <summary>
+        /// Adds the given saga data to the available saga data in the saga fixture. If the saga data is not provided
+        /// with an ID, a new guid will automatically be assigned internally.
+        /// </summary>
+        public void Add(ISagaData sagaDataInstance)
+        {
+            if (sagaDataInstance.Id == Guid.Empty)
+            {
+                _inMemorySagaStorage.AddInstance(sagaDataInstance);
+            }
+        }
+
+        /// <summary>
+        /// Adds the given saga data instances to the available saga data in the fixture. If the saga data instances have not been provided
+        /// with an ID, a new guid will automatically be assigned internally.
+        /// </summary>
+        public void AddRange(IEnumerable<ISagaData> sagaDataInstances)
+        {
+            foreach (var sagaDataInstance in sagaDataInstances)
+            {
+                Add(sagaDataInstance);
+            }
+        }
+
+        /// <summary>
         /// Shuts down the in-mem bus that holds the saga handler
         /// </summary>
         public void Dispose()

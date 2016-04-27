@@ -860,6 +860,51 @@
 * Added correlation sequence number as an auto-flowing header too - can be used to deduce causation
 * Fixed bug that could accidentally overwrite the ID of a saga because of the nice auto-setter behavior
 
+# 0.99.41
+
+* Fixed RavenDB subscription and timeout storage
+
+# 0.99.42
+
+* Fixed bug in Rebus' protobuf serializer that caused it to be unable to serialize Rebus' control bus messages
+
+# 0.99.43
+
+* Updated StructureMap dependency to 4.1.2.386 - thanks [dougkwilson]
+* Made isolation level and timeout configurable when using the `TransactionScope` support extension
+
+# 0.99.44
+
+* Added option for Azure Service Bus transport to skip queue creation to make it possible to use a read-only SAS key instead of a connection string with manage rights - thanks [torangel]
+* Made due timeouts poll interval configurable
+* Made RavenDB subscription storage much more tolerant towards concurrency exceptions when topic documents are experiencing contention
+
+# 0.99.45
+
+* Added ability to set up fake saga data in `SagaFixture`
+* Added method to clear recorded events of `FakeBus`
+
+# 0.99.46
+
+* Better error behavior when deferring a message from a one-way client without setting the defer-recipient
+
+# 0.99.47
+
+* Moved defer-recipient header check to the pipeline, giving other pipeline steps a chance to set it
+
+# 0.99.48
+
+* Don't rethrow `ResolutionException` inside another `ResolutionException` in case of configuration errors - the stack trace reveals the call stack so nicely, there's no need to have 10 layers of exceptions too
+* Marked topic-based routing configuration API as obsolete (type-based routing is perfectly capable of using raw topics if you like)
+* Added fallback capability to the router (i.e. the ability to configure an endpoint that is used when none of the mappings match)
+* Fixed bug in retry strategy step that could accidentally keep tracked message IDs for too long
+* Prohibit sending `IFailed<TMessage>` anywhere (because it is most likely an error)
+
+# 0.99.50
+
+* Fixed concurrency issues in RavenDB saga storage - remember to use optimistic concurrency regardless of the configuration of the document store
+
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -869,6 +914,7 @@
 [dev4ce]: https://github.com/dev4ce
 [dimajanzen]: https://github.com/dimajanzen
 [DixonD-git]: https://github.com/DixonD-git
+[dougkwilson]: https://github.com/dougkwilson
 [fritsduus]: https://github.com/fritsduus
 [gertjvr]: https://github.com/gertjvr
 [hagbarddenstore]: https://github.com/hagbarddenstore

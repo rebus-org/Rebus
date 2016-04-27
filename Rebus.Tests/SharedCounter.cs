@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Tests.Extensions;
@@ -15,6 +16,7 @@ namespace Rebus.Tests
         readonly ManualResetEvent _resetEvent = new ManualResetEvent(false);
         readonly string _name;
         readonly int _initialValue;
+        readonly Stopwatch _stopwatch;
         int _counter;
         bool _failure;
         string _failureText;
@@ -27,7 +29,11 @@ namespace Rebus.Tests
 
             Console.WriteLine("Counter '{0}' initialized to {1}", _name, initialValue);
 
-            _statusTimer.Elapsed += (o, ea) => Console.WriteLine("Counter '{0}': {1} ({2})", _name, _counter, _initialValue);
+            _stopwatch = Stopwatch.StartNew();
+
+            _statusTimer.Elapsed += (o, ea) => Console.WriteLine("Counter '{0}' - value: {1} (initial: {2}, waited: {3:0.#} s)", 
+                _name, _counter, _initialValue, _stopwatch.Elapsed.TotalSeconds);
+
             _statusTimer.Start();
         }
 
@@ -50,7 +56,7 @@ namespace Rebus.Tests
                 if (Delay <= TimeSpan.FromSeconds(0))
                 {
                     Console.WriteLine("Counter '{0}' reached 0!", _name);
-                    _resetEvent.Set();
+                    Complete();
                 }
                 else
                 {
@@ -59,16 +65,22 @@ namespace Rebus.Tests
                     ThreadPool.QueueUserWorkItem(_ =>
                     {
                         Thread.Sleep(Delay);
-                        _resetEvent.Set();
+                        Complete();
                     });
                 }
             }
         }
 
-        public ManualResetEvent ResetEvent
+        void Complete()
         {
-            get { return _resetEvent; }
+            _statusTimer.Stop();
+
+            Console.WriteLine("Counter '{0}' completed in {1:0.#} s", _name, _stopwatch.Elapsed.TotalSeconds);
+
+            _resetEvent.Set();
         }
+
+        public ManualResetEvent ResetEvent => _resetEvent;
 
         public void Dispose()
         {
@@ -77,8 +89,7 @@ namespace Rebus.Tests
 
         public void WaitForResetEvent(int timeoutSeconds = 5)
         {
-            var errorMessage = string.Format("Reset event for shared counter '{0}' was not set within {1} second timeout!",
-                _name, timeoutSeconds);
+            var errorMessage = $"Reset event for shared counter '{_name}' was not set within {timeoutSeconds} second timeout!";
 
             ResetEvent.WaitOrDie(TimeSpan.FromSeconds(timeoutSeconds), errorMessage);
 
