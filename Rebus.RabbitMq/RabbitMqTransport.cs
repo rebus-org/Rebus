@@ -22,8 +22,6 @@ namespace Rebus.RabbitMq
     /// </summary>
     public class RabbitMqTransport : ITransport, IDisposable, IInitializable, ISubscriptionStorage
     {
-        const string DirectExchangeName = "RebusDirect";
-        const string TopicExchangeName = "RebusTopics";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
 
@@ -40,6 +38,38 @@ namespace Rebus.RabbitMq
             Address = inputQueueAddress;
         }
 
+        bool _declareExchanges = true;
+        bool _declareInputQueue = true;
+        bool _bindInputQueue = true;
+
+        string _directExchangeName = RabbitMqOptionsBuilder.DefaultDirectExchangeName;
+        string _topicExchangeName = RabbitMqOptionsBuilder.DefaultTopicExchangeName;
+
+        public void SetDeclareExchanges(bool value)
+        {
+            _declareExchanges = value;
+        }
+
+        public void SetDeclareInputQueue(bool value)
+        {
+            _declareInputQueue = value;
+        }
+
+        public void SetBindInputQueue(bool value)
+        {
+            _bindInputQueue = value;
+        }
+
+        public void SetDirectExchangeName(string directExchangeName)
+        {
+            _directExchangeName = directExchangeName;
+        }
+
+        public void SetTopicExchangeName(string topicExchangeName)
+        {
+            _topicExchangeName = topicExchangeName;
+        }
+
         public void Initialize()
         {
             if (Address == null) return;
@@ -53,17 +83,32 @@ namespace Rebus.RabbitMq
          
             using (var model = connection.CreateModel())
             {
-                model.ExchangeDeclare(DirectExchangeName, ExchangeType.Direct, true);
-                model.ExchangeDeclare(TopicExchangeName, ExchangeType.Topic, true);
+                const bool durable = true;
 
-                var arguments = new Dictionary<string, object>
+                if (_declareExchanges)
                 {
-                    {"x-ha-policy", "all"}
-                };
+                    model.ExchangeDeclare(_directExchangeName, ExchangeType.Direct, durable);
+                    model.ExchangeDeclare(_topicExchangeName, ExchangeType.Topic, durable);
+                }
 
-                model.QueueDeclare(address, exclusive: false, durable: true, autoDelete: false, arguments: arguments);
+                if (_declareInputQueue)
+                {
+                    var arguments = new Dictionary<string, object>
+                    {
+                        {"x-ha-policy", "all"}
+                    };
 
-                model.QueueBind(address, DirectExchangeName, address);
+                    model.QueueDeclare(address,
+                        exclusive: false,
+                        durable: durable,
+                        autoDelete: false,
+                        arguments: arguments);
+                }
+
+                if (_bindInputQueue)
+                {
+                    model.QueueBind(address, _directExchangeName, address);
+                }
             }
         }
 
@@ -111,13 +156,6 @@ namespace Rebus.RabbitMq
                     throw;
                 }
             }
-        }
-
-        /// <summary>
-        /// Sets max for how many messages the RabbitMQ driver should download in the background
-        /// </summary>
-        public void SetPrefetching(int value)
-        {
         }
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
@@ -185,7 +223,7 @@ namespace Rebus.RabbitMq
 
                 var routingKey = new FullyQualifiedRoutingKey(destinationAddress);
 
-                model.BasicPublish(routingKey.ExchangeName, routingKey.RoutingKey, props, message.Body);
+                model.BasicPublish(routingKey.ExchangeName ?? _directExchangeName, routingKey.RoutingKey, props, message.Body);
             }
         }
 
@@ -204,7 +242,7 @@ namespace Rebus.RabbitMq
                 }
                 else
                 {
-                    ExchangeName = DirectExchangeName;
+                    ExchangeName = null;
                     RoutingKey = destinationAddress;
                 }
             }
@@ -259,7 +297,7 @@ namespace Rebus.RabbitMq
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            return new[] {$"{topic}@{TopicExchangeName}"};
+            return new[] {$"{topic}@{_topicExchangeName}"};
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
@@ -268,7 +306,7 @@ namespace Rebus.RabbitMq
 
             using (var model = connection.CreateModel())
             {
-                model.QueueBind(Address, TopicExchangeName, topic);
+                model.QueueBind(Address, _topicExchangeName, topic);
             }
         }
 
@@ -278,7 +316,7 @@ namespace Rebus.RabbitMq
 
             using (var model = connection.CreateModel())
             {
-                model.QueueUnbind(Address, TopicExchangeName, topic, new Dictionary<string, object>());
+                model.QueueUnbind(Address, _topicExchangeName, topic, new Dictionary<string, object>());
             }
         }
 

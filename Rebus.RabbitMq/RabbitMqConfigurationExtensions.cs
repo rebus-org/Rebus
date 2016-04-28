@@ -15,14 +15,18 @@ namespace Rebus.RabbitMq
         /// <summary>
         /// Configures Rebus to use RabbitMQ to transport messages as a one-way client (i.e. will not be able to receive any messages)
         /// </summary>
-        public static void UseRabbitMqAsOneWayClient(this StandardConfigurer<ITransport> configurer, string connectionString)
+        public static RabbitMqOptionsBuilder UseRabbitMqAsOneWayClient(this StandardConfigurer<ITransport> configurer, string connectionString)
         {
+            var options = new RabbitMqOptionsBuilder();
+
             configurer
                 .OtherService<RabbitMqTransport>()
                 .Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                    return new RabbitMqTransport(connectionString, null, rebusLoggerFactory);
+                    var transport = new RabbitMqTransport(connectionString, null, rebusLoggerFactory);
+                    options.Configure(transport);
+                    return transport;
                 });
 
             configurer
@@ -32,6 +36,8 @@ namespace Rebus.RabbitMq
             configurer.Register(c => c.Get<RabbitMqTransport>());
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+
+            return options;
         }
 
         /// <summary>
@@ -47,12 +53,7 @@ namespace Rebus.RabbitMq
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                     var transport = new RabbitMqTransport(connectionString, inputQueueName, rebusLoggerFactory);
-
-                    if (options.NumberOfMessagesToprefetch.HasValue)
-                    {
-                        transport.SetPrefetching(options.NumberOfMessagesToprefetch.Value);
-                    }
-
+                    options.Configure(transport);
                     return transport;
                 });
 

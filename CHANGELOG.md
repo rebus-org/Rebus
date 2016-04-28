@@ -908,6 +908,8 @@
 
 * Updated RabbitMQ dependency to 3.6.1
 * Updated Newtonsoft JSON.NET dependency to 8.0.3 across the board
+* Implemented ability for RabbitMQ transport to skip exchange and queue declarations as well as input queue bindings
+
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

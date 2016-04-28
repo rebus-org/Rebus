@@ -69,7 +69,10 @@ namespace Rebus.RabbitMq.Tests
             }
 
             Configure.With(activator)
-                .Transport(t => t.UseRabbitMq(RabbitMqTransportFactory.ConnectionString, queueName))
+                .Transport(t =>
+                {
+                    t.UseRabbitMq(RabbitMqTransportFactory.ConnectionString, queueName);
+                })
                 .Start();
 
             return activator;
