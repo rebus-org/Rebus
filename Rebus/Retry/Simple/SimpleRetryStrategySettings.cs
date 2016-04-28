@@ -29,16 +29,16 @@
         /// <summary>
         /// Name of the error queue
         /// </summary>
-        public string ErrorQueueAddress { get; private set; }
+        public string ErrorQueueAddress { get; }
 
         /// <summary>
         /// Number of attempted deliveries to make before moving the poisonous message to the error queue
         /// </summary>
-        public int MaxDeliveryAttempts { get; private set; }
+        public int MaxDeliveryAttempts { get; }
 
         /// <summary>
         /// Configures whether an additional round of delivery attempts should be made with a <see cref="FailedMessageWrapper{TMessage}"/> wrapping the originally failed messageS
         /// </summary>
-        public bool SecondLevelRetriesEnabled { get; private set; }
+        public bool SecondLevelRetriesEnabled { get; }
     }
 }

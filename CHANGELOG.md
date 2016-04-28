@@ -907,6 +907,7 @@
 # 0.99.51
 
 * Updated RabbitMQ dependency to 3.6.1
+* Updated Newtonsoft JSON.NET dependency to 8.0.3 across the board
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
