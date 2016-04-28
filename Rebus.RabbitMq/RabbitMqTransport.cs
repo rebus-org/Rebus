@@ -11,6 +11,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Transport;
+using Headers = Rebus.Messages.Headers;
 
 #pragma warning disable 1998
 
@@ -29,7 +30,6 @@ namespace Rebus.RabbitMq
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
 
         readonly ConnectionManager _connectionManager;
-        readonly ILog _log;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
@@ -37,8 +37,6 @@ namespace Rebus.RabbitMq
         public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
-
             Address = inputQueueAddress;
         }
 
@@ -83,7 +81,7 @@ namespace Rebus.RabbitMq
             outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
         }
 
-        public string Address { get; private set; }
+        public string Address { get; }
 
         /// <summary>
         /// Deletes all messages from the queue
@@ -131,7 +129,6 @@ namespace Rebus.RabbitMq
 
             var model = GetModel(context);
             var result = model.BasicGet(Address, false);
-
             if (result == null) return null;
 
             var deliveryTag = result.DeliveryTag;
@@ -151,20 +148,18 @@ namespace Rebus.RabbitMq
                 {
                     var headerValue = kvp.Value;
 
-                    if (headerValue is byte[])
-                    {
-                        var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+                    var bytes = headerValue as byte[];
+                    if (bytes == null) return headerValue.ToString();
 
-                        return stringHeaderValue;
-                    }
+                    var stringHeaderValue = HeaderValueEncoding.GetString(bytes);
 
-                    return headerValue.ToString();
+                    return stringHeaderValue;
                 });
 
             return new TransportMessage(headers, result.Body);
         }
 
-        async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
+        async Task SendOutgoingMessages(ITransactionContext context, IEnumerable<OutgoingMessage> outgoingMessages)
         {
             var model = GetModel(context);
 
@@ -198,7 +193,7 @@ namespace Rebus.RabbitMq
         {
             public FullyQualifiedRoutingKey(string destinationAddress)
             {
-                if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
+                if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
 
                 var tokens = destinationAddress.Split('@');
 
@@ -214,8 +209,8 @@ namespace Rebus.RabbitMq
                 }
             }
 
-            public string ExchangeName { get; private set; }
-            public string RoutingKey { get; private set; }
+            public string ExchangeName { get; }
+            public string RoutingKey { get; }
         }
 
         static TimeSpan? GetTimeToBeReceivedOrNull(TransportMessage message)
@@ -232,7 +227,7 @@ namespace Rebus.RabbitMq
 
         IModel GetModel(ITransactionContext context)
         {
-            return context.GetOrAdd(CurrentModelItemsKey, () =>
+            var model = context.GetOrAdd(CurrentModelItemsKey, () =>
             {
                 var connection = _connectionManager.GetConnection();
                 var newModel = connection.CreateModel();
@@ -241,6 +236,8 @@ namespace Rebus.RabbitMq
 
                 return newModel;
             });
+
+            return model;
         }
 
         class OutgoingMessage
@@ -251,9 +248,8 @@ namespace Rebus.RabbitMq
                 TransportMessage = transportMessage;
             }
 
-            public string DestinationAddress { get; private set; }
-
-            public TransportMessage TransportMessage { get; private set; }
+            public string DestinationAddress { get; }
+            public TransportMessage TransportMessage { get; }
         }
 
         public void Dispose()
@@ -263,7 +259,7 @@ namespace Rebus.RabbitMq
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            return new[] { string.Format("{0}@{1}", topic, TopicExchangeName) };
+            return new[] {$"{topic}@{TopicExchangeName}"};
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
@@ -286,9 +282,6 @@ namespace Rebus.RabbitMq
             }
         }
 
-        public bool IsCentralized
-        {
-            get { return true; }
-        }
+        public bool IsCentralized => true;
     }
 }

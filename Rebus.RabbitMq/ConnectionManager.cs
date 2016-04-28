@@ -41,14 +41,15 @@ namespace Rebus.RabbitMq
             Dispose(false);
         }
 
-        IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
+        static IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
         {
             return new Dictionary<string, object>
             {
+                {"Type", "Rebus/.NET"},
                 {"Machine", Environment.MachineName},
                 {"InputQueue", inputQueueAddress ?? "<one-way client>"},
                 {"Domain", Environment.UserDomainName},
-                {"User", Environment.UserName},
+                {"User", Environment.UserName}
             };
         }
 
@@ -66,7 +67,7 @@ namespace Rebus.RabbitMq
 
                 _log.Info("Creating new RabbitMQ connection");
                 _activeConnection = _connectionFactory.CreateConnection();
-
+                
                 return _activeConnection;
             }
         }

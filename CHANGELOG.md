@@ -904,6 +904,10 @@
 
 * Fixed concurrency issues in RavenDB saga storage - remember to use optimistic concurrency regardless of the configuration of the document store
 
+# 0.99.51
+
+* Updated RabbitMQ dependency to 3.6.1
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

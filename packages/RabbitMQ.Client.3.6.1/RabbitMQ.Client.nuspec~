@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>RabbitMQ.Client</id>
+    <version>3.6.0</version>
+    <title>RabbitMQ.Client</title>
+    <authors>The RabbitMQ Team</authors>
+    <owners>Pivotal</owners>
+    <projectUrl>http://www.rabbitmq.com/dotnet.html</projectUrl>
+	<licenseUrl>http://www.rabbitmq.com/dotnet.html</licenseUrl>
+	<iconUrl>https://en.gravatar.com/userimage/10048884/0ea8846e080980f705da081be53599ce.png?size=100</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>The RabbitMQ .NET client is the official client library for C# (and, implicitly, other .NET languages)</description>
+    <summary />
+    <language>en-US</language>
+    <tags>RabbitMQ</tags>
+  </metadata>
+</package>
