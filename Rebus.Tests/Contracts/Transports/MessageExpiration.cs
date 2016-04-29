@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -74,7 +75,11 @@ namespace Rebus.Tests.Contracts.Transports
                 await transactionContext.Complete();
             }
 
-            await Task.Delay(7000);
+            const int millisecondsDelay = 7000;
+
+            var stopwatch = Stopwatch.StartNew();
+            await Task.Delay(millisecondsDelay);
+            Console.WriteLine($"Delay of {millisecondsDelay} ms actually lasted {stopwatch.ElapsedMilliseconds:0} ms");
 
             using (var transactionContext = new DefaultTransactionContext())
             {
