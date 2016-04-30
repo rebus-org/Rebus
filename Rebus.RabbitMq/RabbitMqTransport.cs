@@ -11,6 +11,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Transport;
+using System.Threading;
+using RabbitMQ.Client.Events;
 
 #pragma warning disable 1998
 
@@ -25,7 +27,10 @@ namespace Rebus.RabbitMq
         const string TopicExchangeName = "RebusTopics";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
-
+        
+        // this lazy task factory captures the current worker's TaskScheduler via TaskFactory, used in ReceivedMessage to make sure all work is done on the worker thread instead of the rabbitmq connection thread. 
+        private readonly Lazy<TaskFactory> _lazyTaskFactory = new Lazy<TaskFactory>(() => new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext()));
+        private static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
 
         readonly ConnectionManager _connectionManager;
@@ -52,7 +57,7 @@ namespace Rebus.RabbitMq
         public void CreateQueue(string address)
         {
             var connection = _connectionManager.GetConnection();
-         
+
             using (var model = connection.CreateModel())
             {
                 model.ExchangeDeclare(DirectExchangeName, ExchangeType.Direct, true);
@@ -128,40 +133,66 @@ namespace Rebus.RabbitMq
             {
                 throw new InvalidOperationException("This RabbitMQ transport does not have an input queue, hence it is not possible to reveive anything");
             }
-
+           
+            var taskFactory = _lazyTaskFactory.Value; 
+            TaskCompletionSource<TransportMessage> tcs = new TaskCompletionSource<TransportMessage>();
             var model = GetModel(context);
-            var result = model.BasicGet(Address, false);
+            var consumer = new EventingBasicConsumer(model);
 
-            if (result == null) return null;
+            consumer.Received += (ch, ea) => ReceivedMessage(ch, ea, context, taskFactory, tcs);
 
-            var deliveryTag = result.DeliveryTag;
+            //if the consumer is either shutdown or cancelled before we have gotten an Received event then null is returned.
+            consumer.Shutdown += (sender, e)  => tcs.TrySetResult(null);
+            consumer.ConsumerCancelled += (sender, e) => tcs.TrySetResult(null);
 
-            context.OnCompleted(async () =>
+            //signal the rabbitmq server that we are ready to receive messages on this consumer and Address 
+            model.BasicConsume(Address, false, consumer);
+
+            //In order to shutdown when requested we use CancellationToken.Register to get the TaskCompletionSource to return null
+            var cancellationToken = context.GetOrAdd("CancellationToken", () => CancellationToken.None);
+            using (cancellationToken.Register(() => tcs.TrySetResult(null)))
             {
-                model.BasicAck(deliveryTag, false);
-            });
+                return await tcs.Task;
+            }
+        }
 
-            context.OnAborted(() =>
+        private static void ReceivedMessage(object sender, BasicDeliverEventArgs args, ITransactionContext context, TaskFactory taskFactory, TaskCompletionSource<TransportMessage> tcs)
+        {
+            //we use this taskFactory to make sure that all the work is done on the worker's thread instead of the rabbitmq connection thread. 
+            taskFactory.StartNew(() =>
             {
-                model.BasicNack(deliveryTag, false, true);
-            });
+                var result = args;
+                var eventingConsumer = (EventingBasicConsumer)sender;
+                var deliveryTag = result.DeliveryTag;
 
-            var headers = result.BasicProperties.Headers
-                .ToDictionary(kvp => kvp.Key, kvp =>
+                context.OnCompleted(() =>
                 {
-                    var headerValue = kvp.Value;
-
-                    if (headerValue is byte[])
-                    {
-                        var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
-
-                        return stringHeaderValue;
-                    }
-
-                    return headerValue.ToString();
+                    eventingConsumer.Model.BasicAck(deliveryTag, false);
+                    return CompletedTask;
                 });
 
-            return new TransportMessage(headers, result.Body);
+                context.OnAborted(() =>
+                {
+                    eventingConsumer.Model.BasicNack(deliveryTag, false, true);
+                });
+
+                var headers = result.BasicProperties.Headers
+                    .ToDictionary(kvp => kvp.Key, kvp =>
+                    {
+                        var headerValue = kvp.Value;
+
+                        if (headerValue is byte[])
+                        {
+                            var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+
+                            return stringHeaderValue;
+                        }
+
+                        return headerValue.ToString();
+                    });
+
+                tcs.TrySetResult(new TransportMessage(headers, result.Body));
+            });
         }
 
         async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
@@ -236,7 +267,7 @@ namespace Rebus.RabbitMq
             {
                 var connection = _connectionManager.GetConnection();
                 var newModel = connection.CreateModel();
-
+                newModel.BasicQos(0, 1, false); // setting the prefetch count to 1 message per consumer using this model
                 context.OnDisposed(() => newModel.Dispose());
 
                 return newModel;
