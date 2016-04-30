@@ -119,6 +119,7 @@ namespace Rebus.Workers.ThreadBased
 
                 using (var transactionContext = new DefaultTransactionContext())
                 {
+                    transactionContext.GetOrAdd("CancellationToken", () => _cancellationTokenSource.Token);
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
