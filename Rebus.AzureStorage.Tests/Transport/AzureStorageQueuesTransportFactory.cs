@@ -3,11 +3,12 @@ using System.Collections.Concurrent;
 using System.Configuration;
 using System.IO;
 using Microsoft.WindowsAzure.Storage;
+using Rebus.AzureStorage.Transport;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
-namespace Rebus.AzureStorage.Tests
+namespace Rebus.AzureStorage.Tests.Transport
 {
     public class AzureStorageQueuesTransportFactory : ITransportFactory
     {

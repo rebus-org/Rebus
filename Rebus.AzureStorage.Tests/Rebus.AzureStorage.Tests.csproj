@@ -69,10 +69,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AzureStorageQueuesTransportFactory.cs" />
-    <Compile Include="AzureStorageQueuesTransportMessageExpiration.cs" />
-    <Compile Include="AzureStorageQueuesTransportBasicSendReceive.cs" />
-    <Compile Include="NativeDeferTest.cs" />
+    <Compile Include="Transport\AzureStorageQueuesTransportFactory.cs" />
+    <Compile Include="Transport\AzureStorageQueuesTransportMessageExpiration.cs" />
+    <Compile Include="Transport\AzureStorageQueuesTransportBasicSendReceive.cs" />
+    <Compile Include="Transport\NativeDeferTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestCategory.cs" />
   </ItemGroup>

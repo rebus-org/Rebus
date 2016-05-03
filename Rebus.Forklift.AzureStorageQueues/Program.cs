@@ -4,6 +4,7 @@ using GoCommando;
 using GoCommando.Attributes;
 using Microsoft.WindowsAzure.Storage;
 using Rebus.AzureStorage;
+using Rebus.AzureStorage.Transport;
 using Rebus.Forklift.Common;
 
 namespace Rebus.Forklift.AzureStorageQueues

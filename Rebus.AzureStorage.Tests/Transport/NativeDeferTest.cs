@@ -3,13 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
+using Rebus.AzureStorage.Config;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 
-namespace Rebus.AzureStorage.Tests
+namespace Rebus.AzureStorage.Tests.Transport
 {
     [TestFixture, Category(TestCategory.Azure)]
     public class NativeDeferTest : FixtureBase
