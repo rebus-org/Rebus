@@ -7,7 +7,7 @@ using Rebus.Pipeline.Receive;
 using Rebus.Timeouts;
 using Rebus.Transport;
 
-namespace Rebus.AzureStorageQueues
+namespace Rebus.AzureStorage
 {
     /// <summary>
     /// Configuration extensions for the Aure Storage Queue transport

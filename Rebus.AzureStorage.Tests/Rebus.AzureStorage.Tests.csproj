@@ -7,8 +7,8 @@
     <ProjectGuid>{7E79A4E0-2DD2-4200-AD03-C6E8379C34CB}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Rebus.AzureStorageQueues.Tests</RootNamespace>
-    <AssemblyName>Rebus.AzureStorageQueues.Tests</AssemblyName>
+    <RootNamespace>Rebus.AzureStorage.Tests</RootNamespace>
+    <AssemblyName>Rebus.AzureStorage.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -81,9 +81,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rebus.AzureStorageQueues\Rebus.AzureStorageQueues.csproj">
+    <ProjectReference Include="..\Rebus.AzureStorage\Rebus.AzureStorage.csproj">
       <Project>{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}</Project>
-      <Name>Rebus.AzureStorageQueues</Name>
+      <Name>Rebus.AzureStorage</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Tests\Rebus.Tests.csproj">
       <Project>{959C65AB-D21A-4582-BC4F-06D1425FF274}</Project>

@@ -78,9 +78,9 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Rebus.AzureStorageQueues\Rebus.AzureStorageQueues.csproj">
+    <ProjectReference Include="..\Rebus.AzureStorage\Rebus.AzureStorage.csproj">
       <Project>{F3C81A1A-E167-4277-8CE4-5BB6E52DD237}</Project>
-      <Name>Rebus.AzureStorageQueues</Name>
+      <Name>Rebus.AzureStorage</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.Forklift.Common\Rebus.Forklift.Common.csproj">
       <Project>{EE1EF14E-78B6-4F9C-B3C2-FAFF43A7DF1B}</Project>

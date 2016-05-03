@@ -9,7 +9,7 @@ using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
 
-namespace Rebus.AzureStorageQueues.Tests
+namespace Rebus.AzureStorage.Tests
 {
     [TestFixture, Category(TestCategory.Azure)]
     public class NativeDeferTest : FixtureBase

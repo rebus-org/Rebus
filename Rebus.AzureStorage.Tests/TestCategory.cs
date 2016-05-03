@@ -1,4 +1,4 @@
-﻿namespace Rebus.AzureStorageQueues.Tests
+﻿namespace Rebus.AzureStorage.Tests
 {
     public static class TestCategory
     {

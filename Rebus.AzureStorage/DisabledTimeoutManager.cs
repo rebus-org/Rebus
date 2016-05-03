@@ -7,7 +7,7 @@ using Rebus.Timeouts;
 
 #pragma warning disable 1998
 
-namespace Rebus.AzureStorageQueues
+namespace Rebus.AzureStorage
 {
     class DisabledTimeoutManager : ITimeoutManager
     {

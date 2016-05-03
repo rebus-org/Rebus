@@ -17,7 +17,7 @@ using Rebus.Transport;
 
 #pragma warning disable 1998
 
-namespace Rebus.AzureStorageQueues
+namespace Rebus.AzureStorage
 {
     /// <summary>
     /// Implementation of <see cref="ITransport"/> that uses Azure Storage Queues to do its thing
