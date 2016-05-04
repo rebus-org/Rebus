@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,11 +28,14 @@ namespace Rebus.RabbitMq
         const string TopicExchangeName = "RebusTopics";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
-        
+
         // this lazy task factory captures the current worker's TaskScheduler via TaskFactory, used in ReceivedMessage to make sure all work is done on the worker thread instead of the rabbitmq connection thread. 
         private readonly Lazy<TaskFactory> _lazyTaskFactory = new Lazy<TaskFactory>(() => new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext()));
         private static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
+        private readonly int _queueTimeOutInMilliSeconds;
+        private QueueingBasicConsumer _consumer;
+        private readonly object _lockObject = new object();
 
         readonly ConnectionManager _connectionManager;
         readonly ILog _log;
@@ -39,11 +43,11 @@ namespace Rebus.RabbitMq
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, int queueTimeOutInMilliSeconds = 100)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
             _log = rebusLoggerFactory.GetCurrentClassLogger();
-
+            _queueTimeOutInMilliSeconds = queueTimeOutInMilliSeconds;
             Address = inputQueueAddress;
         }
 
@@ -133,27 +137,85 @@ namespace Rebus.RabbitMq
             {
                 throw new InvalidOperationException("This RabbitMQ transport does not have an input queue, hence it is not possible to reveive anything");
             }
-           
-            var taskFactory = _lazyTaskFactory.Value; 
-            TaskCompletionSource<TransportMessage> tcs = new TaskCompletionSource<TransportMessage>();
-            var model = GetModel(context);
-            var consumer = new EventingBasicConsumer(model);
-
-            consumer.Received += (ch, ea) => ReceivedMessage(ch, ea, context, taskFactory, tcs);
-
-            //if the consumer is either shutdown or cancelled before we have gotten an Received event then null is returned.
-            consumer.Shutdown += (sender, e)  => tcs.TrySetResult(null);
-            consumer.ConsumerCancelled += (sender, e) => tcs.TrySetResult(null);
-
-            //signal the rabbitmq server that we are ready to receive messages on this consumer and Address 
-            model.BasicConsume(Address, false, consumer);
-
-            //In order to shutdown when requested we use CancellationToken.Register to get the TaskCompletionSource to return null
-            var cancellationToken = context.GetOrAdd("CancellationToken", () => CancellationToken.None);
-            using (cancellationToken.Register(() => tcs.TrySetResult(null)))
+            try
             {
-                return await tcs.Task;
+                var consumer = GetConsumer();
+                BasicDeliverEventArgs result;
+                if (consumer.Queue.Dequeue(_queueTimeOutInMilliSeconds, out result))
+                {
+                    var deliveryTag = result.DeliveryTag;
+
+                    context.OnCompleted(() =>
+                    {
+                        consumer.Model.BasicAck(deliveryTag, false);
+                        return CompletedTask;
+                    });
+
+                    context.OnAborted(() =>
+                    {
+                        consumer.Model.BasicNack(deliveryTag, false, true);
+                    });
+
+                    return CreateTransportMessage(result);
+                }
             }
+            catch (EndOfStreamException)
+            {
+                _log.Info("Queue throw EndOfStreamException(meaning it was canceled by rabbitmq)");
+            }
+            catch (Exception exception)
+            {
+                _log.Error(exception, "unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {0}", Address);
+            }
+
+            return null;
+        }
+
+        private static TransportMessage CreateTransportMessage(BasicDeliverEventArgs result)
+        {
+            var headers = result.BasicProperties.Headers
+                   .ToDictionary(kvp => kvp.Key, kvp =>
+                   {
+                       var headerValue = kvp.Value;
+
+                       if (headerValue is byte[])
+                       {
+                           var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+
+                           return stringHeaderValue;
+                       }
+
+                       return headerValue.ToString();
+                   });
+
+            return new TransportMessage(headers, result.Body);
+        }
+        private void CreateConsumer()
+        {
+            var connection = _connectionManager.GetConnection();
+            var model = connection.CreateModel();
+            model.BasicQos(0, 50, false);
+
+            var consumer = new QueueingBasicConsumer(model);
+            model.BasicConsume(Address, false, consumer);
+            _consumer = consumer;
+        }
+
+        private QueueingBasicConsumer GetConsumer()
+        {
+            if (_consumer == null)
+            {
+                lock (_lockObject)
+                {
+                    if (_consumer == null)
+                    {
+                        CreateConsumer();
+                    }
+                }
+            }
+
+            return _consumer;
+
         }
 
         private static void ReceivedMessage(object sender, BasicDeliverEventArgs args, ITransactionContext context, TaskFactory taskFactory, TaskCompletionSource<TransportMessage> tcs)
