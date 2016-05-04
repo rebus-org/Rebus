@@ -28,26 +28,24 @@ namespace Rebus.RabbitMq
         const string TopicExchangeName = "RebusTopics";
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
-
-        // this lazy task factory captures the current worker's TaskScheduler via TaskFactory, used in ReceivedMessage to make sure all work is done on the worker thread instead of the rabbitmq connection thread. 
-        private readonly Lazy<TaskFactory> _lazyTaskFactory = new Lazy<TaskFactory>(() => new TaskFactory(TaskScheduler.FromCurrentSynchronizationContext()));
         private static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
         private readonly int _queueTimeOutInMilliSeconds;
+        private readonly ushort _maxMessagesToPrefetch;
         private QueueingBasicConsumer _consumer;
         private readonly object _lockObject = new object();
-
         readonly ConnectionManager _connectionManager;
         readonly ILog _log;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, int queueTimeOutInMilliSeconds = 100)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, int queueTimeOutInMilliSeconds = 50, ushort maxMessagesToPrefetch = 50)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
             _log = rebusLoggerFactory.GetCurrentClassLogger();
             _queueTimeOutInMilliSeconds = queueTimeOutInMilliSeconds;
+            _maxMessagesToPrefetch = maxMessagesToPrefetch;
             Address = inputQueueAddress;
         }
 
@@ -56,6 +54,7 @@ namespace Rebus.RabbitMq
             if (Address == null) return;
 
             CreateQueue(Address);
+            CreateConsumer();
         }
 
         public void CreateQueue(string address)
@@ -158,17 +157,20 @@ namespace Rebus.RabbitMq
 
                     return CreateTransportMessage(result);
                 }
+                return null;
             }
             catch (EndOfStreamException)
             {
                 _log.Info("Queue throw EndOfStreamException(meaning it was canceled by rabbitmq)");
+                throw;
             }
             catch (Exception exception)
             {
                 _log.Error(exception, "unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {0}", Address);
+                throw;
             }
 
-            return null;
+           
         }
 
         private static TransportMessage CreateTransportMessage(BasicDeliverEventArgs result)
@@ -190,11 +192,12 @@ namespace Rebus.RabbitMq
 
             return new TransportMessage(headers, result.Body);
         }
+
         private void CreateConsumer()
         {
             var connection = _connectionManager.GetConnection();
             var model = connection.CreateModel();
-            model.BasicQos(0, 50, false);
+            model.BasicQos(0, _maxMessagesToPrefetch, false);
 
             var consumer = new QueueingBasicConsumer(model);
             model.BasicConsume(Address, false, consumer);
@@ -215,46 +218,6 @@ namespace Rebus.RabbitMq
             }
 
             return _consumer;
-
-        }
-
-        private static void ReceivedMessage(object sender, BasicDeliverEventArgs args, ITransactionContext context, TaskFactory taskFactory, TaskCompletionSource<TransportMessage> tcs)
-        {
-            //we use this taskFactory to make sure that all the work is done on the worker's thread instead of the rabbitmq connection thread. 
-            taskFactory.StartNew(() =>
-            {
-                var result = args;
-                var eventingConsumer = (EventingBasicConsumer)sender;
-                var deliveryTag = result.DeliveryTag;
-
-                context.OnCompleted(() =>
-                {
-                    eventingConsumer.Model.BasicAck(deliveryTag, false);
-                    return CompletedTask;
-                });
-
-                context.OnAborted(() =>
-                {
-                    eventingConsumer.Model.BasicNack(deliveryTag, false, true);
-                });
-
-                var headers = result.BasicProperties.Headers
-                    .ToDictionary(kvp => kvp.Key, kvp =>
-                    {
-                        var headerValue = kvp.Value;
-
-                        if (headerValue is byte[])
-                        {
-                            var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
-
-                            return stringHeaderValue;
-                        }
-
-                        return headerValue.ToString();
-                    });
-
-                tcs.TrySetResult(new TransportMessage(headers, result.Body));
-            });
         }
 
         async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
@@ -351,6 +314,10 @@ namespace Rebus.RabbitMq
 
         public void Dispose()
         {
+            if(_consumer != null && _consumer.Model != null && _consumer.Model.IsOpen)
+            {
+                _consumer.Model.Dispose();
+            }
             _connectionManager.Dispose();
         }
 
