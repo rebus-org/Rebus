@@ -173,6 +173,11 @@ namespace Rebus.RabbitMq
            
         }
 
+        /// <summary>
+        /// Creates the transport message.
+        /// </summary>
+        /// <param name="result">The <see cref="BasicDeliverEventArgs"/> instance containing the event data.</param>
+        /// <returns>the TransportMessage</returns>
         private static TransportMessage CreateTransportMessage(BasicDeliverEventArgs result)
         {
             var headers = result.BasicProperties.Headers
@@ -193,6 +198,9 @@ namespace Rebus.RabbitMq
             return new TransportMessage(headers, result.Body);
         }
 
+        /// <summary>
+        /// Creates the consumer.
+        /// </summary>
         private void CreateConsumer()
         {
             var connection = _connectionManager.GetConnection();
@@ -204,6 +212,10 @@ namespace Rebus.RabbitMq
             _consumer = consumer;
         }
 
+        /// <summary>
+        /// Gets the consumer.
+        /// </summary>
+        /// <returns>the QueueingBasicConsumer</returns>
         private QueueingBasicConsumer GetConsumer()
         {
             if (_consumer == null)
@@ -292,7 +304,6 @@ namespace Rebus.RabbitMq
             {
                 var connection = _connectionManager.GetConnection();
                 var newModel = connection.CreateModel();
-                newModel.BasicQos(0, 1, false); // setting the prefetch count to 1 message per consumer using this model
                 context.OnDisposed(() => newModel.Dispose());
 
                 return newModel;
