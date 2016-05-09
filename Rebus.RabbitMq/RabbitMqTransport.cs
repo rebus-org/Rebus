@@ -93,23 +93,33 @@ namespace Rebus.RabbitMq
 
                 if (_declareInputQueue)
                 {
-                    var arguments = new Dictionary<string, object>
-                    {
-                        {"x-ha-policy", "all"}
-                    };
-
-                    model.QueueDeclare(address,
-                        exclusive: false,
-                        durable: durable,
-                        autoDelete: false,
-                        arguments: arguments);
+                    DeclareQueue(address, model, durable);
                 }
 
                 if (_bindInputQueue)
                 {
-                    model.QueueBind(address, _directExchangeName, address);
+                    BindInputQueue(address, model);
                 }
             }
+        }
+
+        void BindInputQueue(string address, IModel model)
+        {
+            model.QueueBind(address, _directExchangeName, address);
+        }
+
+        static void DeclareQueue(string address, IModel model, bool durable)
+        {
+            var arguments = new Dictionary<string, object>
+            {
+                {"x-ha-policy", "all"}
+            };
+
+            model.QueueDeclare(address,
+                exclusive: false,
+                durable: durable,
+                autoDelete: false,
+                arguments: arguments);
         }
 
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
@@ -197,6 +207,8 @@ namespace Rebus.RabbitMq
             return new TransportMessage(headers, result.Body);
         }
 
+        readonly ConcurrentDictionary<string, bool> _initializedQueues = new ConcurrentDictionary<string, bool>();
+
         async Task SendOutgoingMessages(ITransactionContext context, IEnumerable<OutgoingMessage> outgoingMessages)
         {
             var model = GetModel(context);
@@ -222,9 +234,34 @@ namespace Rebus.RabbitMq
                 props.Persistent = !express;
 
                 var routingKey = new FullyQualifiedRoutingKey(destinationAddress);
+                var exchange = routingKey.ExchangeName ?? _directExchangeName;
 
-                model.BasicPublish(routingKey.ExchangeName ?? _directExchangeName, routingKey.RoutingKey, props, message.Body);
+                // when we're sending point-to-point, we want to be sure that we are never sending the message out into nowhere
+                if (exchange == _directExchangeName)
+                {
+                    EnsureQueueIsInitialized(destinationAddress, model);
+                }
+
+                model.BasicPublish(exchange, routingKey.RoutingKey, props, message.Body);
             }
+        }
+
+        void EnsureQueueIsInitialized(string destinationAddress, IModel model)
+        {
+            _initializedQueues
+                .GetOrAdd(destinationAddress, _ =>
+                {
+                    if (_declareInputQueue)
+                    {
+                        DeclareQueue(destinationAddress, model, true);
+                    }
+
+                    if (_bindInputQueue)
+                    {
+                        BindInputQueue(destinationAddress, model);
+                    }
+                    return true;
+                });
         }
 
         class FullyQualifiedRoutingKey

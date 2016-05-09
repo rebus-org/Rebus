@@ -18,20 +18,10 @@ namespace Rebus.RabbitMq.Tests
     {
         const string ConnectionString = RabbitMqTransportFactory.ConnectionString;
 
-        readonly string _queueName = TestConfig.QueueName("manual_routing");
-
-        BuiltinHandlerActivator _activator;
         IBus _bus;
 
         protected override void SetUp()
         {
-            _activator = Using(new BuiltinHandlerActivator());
-
-            Configure.With(_activator)
-                .Logging(l => l.Console(minLevel:LogLevel.Warn))
-                .Transport(t => t.UseRabbitMq(ConnectionString, _queueName))
-                .Start();
-
             var client = Using(new BuiltinHandlerActivator());
 
             _bus = Configure.With(client)
@@ -43,22 +33,57 @@ namespace Rebus.RabbitMq.Tests
         [Test]
         public async Task ReceivesManuallyRoutedMessage()
         {
+            var queueName = TestConfig.QueueName("manual_routing");
             var gotTheMessage = new ManualResetEvent(false);
 
-            _activator.Handle<string>(async str =>
+            StartServer(queueName).Handle<string>(async str =>
             {
                 gotTheMessage.Set();
             });
 
-            Console.WriteLine($"Sending 'hej med dig min ven!' message to '{_queueName}'");
+            Console.WriteLine($"Sending 'hej med dig min ven!' message to '{queueName}'");
 
-            await _bus.Advanced.Routing.Send(_queueName, "hej med dig min ven!");
+            await _bus.Advanced.Routing.Send(queueName, "hej med dig min ven!");
 
             Console.WriteLine("Waiting for message to arrive");
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
 
             Console.WriteLine("Got it :)");
+        }
+
+        [Test]
+        public async Task AutomaticallyCreatesDestinationQueue()
+        {
+            var queueName = TestConfig.QueueName("does_not_exist_yet");
+            RabbitMqTransportFactory.DeleteQueue(queueName);
+
+            // first we send a message to a queue that does not exist at this time
+            Console.WriteLine($"Sending 'hej med dig min ven!' message to '{queueName}'");
+            await _bus.Advanced.Routing.Send(queueName, "hej med dig min ven!");
+
+            // then we start a server listening on the queue
+            var gotTheMessage = new ManualResetEvent(false);
+            StartServer(queueName).Handle<string>(async str =>
+            {
+                gotTheMessage.Set();
+            });
+
+            Console.WriteLine("Waiting for message to arrive");
+            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
+            Console.WriteLine("Got it :)");
+        }
+
+        BuiltinHandlerActivator StartServer(string queueName)
+        {
+            var activator = Using(new BuiltinHandlerActivator());
+
+            Configure.With(activator)
+                .Logging(l => l.Console(minLevel: LogLevel.Warn))
+                .Transport(t => t.UseRabbitMq(ConnectionString, queueName))
+                .Start();
+
+            return activator;
         }
     }
 }

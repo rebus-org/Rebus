@@ -910,7 +910,7 @@
 * Updated Newtonsoft JSON.NET dependency to 8.0.3 across the board
 * Implemented ability for RabbitMQ transport to skip exchange and queue declarations as well as input queue bindings
 * Renamed `Rebus.AzureStorageQueues` NuGet package to `Rebus.AzureStorage` because it has integration things for Azure storage
-
+* Made RabbitMQ transport automatically declare & bind destination queues when they're used the first time (to avoid sending a message into nowhere)
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
