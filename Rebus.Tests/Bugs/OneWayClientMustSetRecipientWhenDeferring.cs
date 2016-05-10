@@ -8,6 +8,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Tests.Extensions;
+using Rebus.Timeouts;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -38,7 +39,7 @@ namespace Rebus.Tests.Bugs
 
             _oneWayClient = Configure.With(Using(new BuiltinHandlerActivator()))
                 .Transport(t => t.UseInMemoryTransportAsOneWayClient(_network))
-                .Options(o => o.UseExternalTimeoutManager(TimeoutsQueueName))
+                .Timeouts(t => t.UseExternalTimeoutManager(TimeoutsQueueName))
                 .Start();
         }
 

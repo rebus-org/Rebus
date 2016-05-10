@@ -10,6 +10,7 @@ using Rebus.Config;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Tests.Extensions;
+using Rebus.Timeouts;
 using Rebus.Transport.Msmq;
 #pragma warning disable 1998
 
@@ -44,7 +45,7 @@ namespace Rebus.Tests.Timeouts
             Configure.With(client)
                 .Logging(l => l.Use(logger))
                 .Transport(t => t.UseMsmq(_queueName))
-                .Options(o => o.UseExternalTimeoutManager(_queueNameTimeoutManager))
+                .Timeouts(t => t.UseExternalTimeoutManager(_queueNameTimeoutManager))
                 .Start();
 
             _bus = client.Bus;

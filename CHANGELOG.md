@@ -912,6 +912,10 @@
 * Renamed `Rebus.AzureStorageQueues` NuGet package to `Rebus.AzureStorage` because it has integration things for Azure storage
 * Made RabbitMQ transport automatically declare & bind destination queues when they're used the first time (to avoid sending a message into nowhere)
 
+# 0.99.52
+
+* Moved `.UseExternalTimeoutManager(...)` configuration method to the `.Timeouts(t => ...)` configurer because it more natural
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez

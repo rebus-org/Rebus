@@ -36,11 +36,6 @@ namespace Rebus.RabbitMq
             };
         }
 
-        ~ConnectionManager()
-        {
-            Dispose(false);
-        }
-
         static IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
         {
             return new Dictionary<string, object>
@@ -67,36 +62,27 @@ namespace Rebus.RabbitMq
 
                 _log.Info("Creating new RabbitMQ connection");
                 _activeConnection = _connectionFactory.CreateConnection();
-                
+
                 return _activeConnection;
             }
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
+                lock (_activeConnectionLock)
                 {
-                    lock (_activeConnectionLock)
+                    var connection = _activeConnection;
+
+                    if (connection != null)
                     {
-                        var connection = _activeConnection;
+                        _log.Info("Disposing RabbitMQ connection");
 
-                        if (connection != null)
-                        {
-                            _log.Info("Disposing RabbitMQ connection");
-
-                            connection.Dispose();
-                            _activeConnection = null;
-                        }
+                        connection.Dispose();
+                        _activeConnection = null;
                     }
                 }
             }

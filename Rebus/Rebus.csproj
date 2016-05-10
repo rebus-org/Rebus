@@ -185,6 +185,7 @@
     <Compile Include="Timeouts\DueMessage.cs" />
     <Compile Include="Timeouts\DueMessagesResult.cs" />
     <Compile Include="Timeouts\ThrowingTimeoutManager.cs" />
+    <Compile Include="Timeouts\TimeoutsConfigurationExtensions.cs" />
     <Compile Include="Time\RebusTimeMachine.cs" />
     <Compile Include="Transport\AmbientTransactionContext.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />

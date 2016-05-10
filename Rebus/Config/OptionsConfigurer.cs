@@ -57,26 +57,6 @@ namespace Rebus.Config
         }
 
         /// <summary>
-        /// Configures Rebus to use another endpoint as the timeout manager
-        /// </summary>
-        public void UseExternalTimeoutManager(string timeoutManagerAddress)
-        {
-            if (string.IsNullOrWhiteSpace(timeoutManagerAddress))
-            {
-                throw new ArgumentException($"Cannot use '{timeoutManagerAddress}' as an external timeout manager address!", nameof(timeoutManagerAddress));
-            }
-
-            if (!string.IsNullOrWhiteSpace(_options.ExternalTimeoutManagerAddressOrNull))
-            {
-                throw new InvalidOperationException(
-                    $"Cannot set external timeout manager address to '{timeoutManagerAddress}' because it has already been set to '{_options.ExternalTimeoutManagerAddressOrNull}' - please set it only once!  (this operation COULD have been accepted, but it is probably an indication of an error in your configuration code that this value is configured twice, so we figured it was best to let you know)");
-            }
-
-            _injectionist.Register<ITimeoutManager>(c => new ThrowingTimeoutManager());
-            _options.ExternalTimeoutManagerAddressOrNull = timeoutManagerAddress;
-        }
-
-        /// <summary>
         /// Registers the given factory function as a resolver of the given primary implementation of the <typeparamref name="TService"/> service
         /// </summary>
         public void Register<TService>(Func<IResolutionContext, TService> resolverMethod, string description = null)
