@@ -27,17 +27,11 @@ namespace Rebus.Persistence.FileSystem
         /// <summary>
         /// Constructs the subscription storage
         /// </summary>
-        public JsonFileSubscriptionStorage(string jsonFilePath)
+        public JsonFileSubscriptionStorage(string jsonFilePath, bool isCentralized = false)
         {
+            if (jsonFilePath == null) throw new ArgumentNullException(nameof(jsonFilePath));
             _jsonFilePath = jsonFilePath;
-        }
-
-        /// <summary>
-        /// Last-resort disposal of the <see cref="ReaderWriterLockSlim"/>
-        /// </summary>
-        ~JsonFileSubscriptionStorage()
-        {
-            Dispose(false);
+            IsCentralized = isCentralized;
         }
 
         /// <summary>
@@ -102,14 +96,14 @@ namespace Rebus.Persistence.FileSystem
             File.WriteAllText(_jsonFilePath, jsonText, FileEncoding);
         }
 
-        Dictionary<string, HashSet<String>> GetSubscriptions()
+        Dictionary<string, HashSet<string>> GetSubscriptions()
         {
             // !!! DONT USE ASYNC/AWAIT IN HERE BECAUSE OF THE READERWRITERLOCKSLIM
             try
             {
                 var jsonText = File.ReadAllText(_jsonFilePath, FileEncoding);
 
-                var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<String>>>(jsonText);
+                var subscriptions = JsonConvert.DeserializeObject<Dictionary<string, HashSet<string>>>(jsonText);
 
                 return subscriptions;
             }
@@ -122,37 +116,23 @@ namespace Rebus.Persistence.FileSystem
         /// <summary>
         /// Gets whether this subscription storage is centralized (which it shouldn't be - that would probably cause some pretty nasty locking exceptions!)
         /// </summary>
-        public bool IsCentralized
-        {
-            get { return false; }
-        }
-
-        /// <summary>
-        /// Releases the reader/writer lock held by the subscription storage
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return;
-
-            try
-            {
-                if (disposing)
-                {
-                    _readerWriterLockSlim.Dispose();
-                }
-            }
-            finally
-            {
-                _disposed = true;
-            }
-        }
+        public bool IsCentralized { get; }
 
         /// <summary>
         /// Disposes the <see cref="ReaderWriterLockSlim"/> that guards access to the file
         /// </summary>
         public void Dispose()
         {
-            Dispose(false);
+            if (_disposed) return;
+
+            try
+            {
+                _readerWriterLockSlim.Dispose();
+            }
+            finally
+            {
+                _disposed = true;
+            }
         }
     }
 }

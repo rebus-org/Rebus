@@ -915,6 +915,8 @@
 # 0.99.52
 
 * Moved `.UseExternalTimeoutManager(...)` configuration method to the `.Timeouts(t => ...)` configurer because it more natural
+* Added ability for JSON file-based subscription storage to be centralized
+
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
