@@ -916,6 +916,7 @@
 
 * Moved `.UseExternalTimeoutManager(...)` configuration method to the `.Timeouts(t => ...)` configurer because it more natural
 * Added ability for JSON file-based subscription storage to be centralized
+* Updated Azure Service Bus dependency to 3.2.0
 
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
