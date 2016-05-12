@@ -159,7 +159,7 @@ namespace Rebus.Config
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
                 var backoffStrategy = c.Get<IBackoffStrategy>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy, rebusLoggerFactory);
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy, rebusLoggerFactory, _options.WorkerShutdownTimeout);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>

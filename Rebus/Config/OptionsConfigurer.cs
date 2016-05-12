@@ -48,6 +48,14 @@ namespace Rebus.Config
         }
 
         /// <summary>
+        /// Configures the maximum timeout for workers to finish running active handlers after being signaled to stop.
+        /// </summary>
+        public void SetWorkerShutdownTimeout(TimeSpan timeout)
+        {
+            _options.WorkerShutdownTimeout = timeout;
+        }
+
+        /// <summary>
         /// Configures the interval between polling the endpoint's configured <see cref="ITimeoutManager"/> for due timeouts.
         /// Defaults to <see cref="Options.DefaultDueTimeoutsPollInterval"/>
         /// </summary>
