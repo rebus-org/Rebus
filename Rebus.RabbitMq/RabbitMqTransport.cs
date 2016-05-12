@@ -30,29 +30,25 @@ namespace Rebus.RabbitMq
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
         private static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
-        private readonly int _queueTimeOutInMilliSeconds;
         private readonly ushort _maxMessagesToPrefetch;
         private QueueingBasicConsumer _consumer;
-        private readonly object _lockObject = new object();
         readonly ConnectionManager _connectionManager;
         readonly ILog _log;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, int queueTimeOutInMilliSeconds = 50, ushort maxMessagesToPrefetch = 50)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, ushort maxMessagesToPrefetch = 50)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
             _log = rebusLoggerFactory.GetCurrentClassLogger();
-            _queueTimeOutInMilliSeconds = queueTimeOutInMilliSeconds;
             _maxMessagesToPrefetch = maxMessagesToPrefetch;
             Address = inputQueueAddress;
         }
 
         public void Initialize()
         {
-            if (Address == null) return;
-
+            if (Address == null) { return; }
             CreateQueue(Address);
             CreateConsumer();
         }
@@ -138,21 +134,20 @@ namespace Rebus.RabbitMq
             }
             try
             {
-                var consumer = GetConsumer();
-                BasicDeliverEventArgs result;
-                if (consumer.Queue.Dequeue(_queueTimeOutInMilliSeconds, out result))
+                BasicDeliverEventArgs result = _consumer.Queue.DequeueNoWait(null);
+                if (result != null)
                 {
                     var deliveryTag = result.DeliveryTag;
 
                     context.OnCompleted(() =>
                     {
-                        consumer.Model.BasicAck(deliveryTag, false);
+                        _consumer.Model.BasicAck(deliveryTag, false);
                         return CompletedTask;
                     });
 
                     context.OnAborted(() =>
                     {
-                        consumer.Model.BasicNack(deliveryTag, false, true);
+                        _consumer.Model.BasicNack(deliveryTag, false, true);
                     });
 
                     return CreateTransportMessage(result);
@@ -212,25 +207,6 @@ namespace Rebus.RabbitMq
             _consumer = consumer;
         }
 
-        /// <summary>
-        /// Gets the consumer.
-        /// </summary>
-        /// <returns>the QueueingBasicConsumer</returns>
-        private QueueingBasicConsumer GetConsumer()
-        {
-            if (_consumer == null)
-            {
-                lock (_lockObject)
-                {
-                    if (_consumer == null)
-                    {
-                        CreateConsumer();
-                    }
-                }
-            }
-
-            return _consumer;
-        }
 
         async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
         {
