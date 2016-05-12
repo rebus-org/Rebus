@@ -918,6 +918,9 @@
 * Added ability for JSON file-based subscription storage to be centralized
 * Updated Azure Service Bus dependency to 3.2.0
 
+# 0.99.53
+
+* Extended polymorphic saga correlation to make proper use of implemented interfaces too
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri

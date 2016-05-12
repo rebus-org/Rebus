@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Rebus.Extensions;
 
 namespace Rebus.Sagas
 {
@@ -34,20 +35,30 @@ namespace Rebus.Sagas
 
             var messageType = body.GetType();
 
-            var potentialCorrelationProperties = new List<CorrelationProperty>();
+            //var potentialCorrelationProperties = new List<CorrelationProperty>();
 
-            var messageTypeToCheck = messageType;
-            while (messageTypeToCheck != null)
-            {
-                CorrelationProperty[] potentialCorrelationproperties;
-
-                if (_correlationProperties.TryGetValue(messageTypeToCheck, out potentialCorrelationproperties))
+            var potentialCorrelationProperties = new [] {messageType}.Concat(messageType.GetBaseTypes())
+                .SelectMany(type =>
                 {
-                    potentialCorrelationProperties.AddRange(potentialCorrelationproperties);
-                }
+                    CorrelationProperty[] potentialCorrelationproperties;
 
-                messageTypeToCheck = messageTypeToCheck.BaseType;
-            }
+                    return _correlationProperties.TryGetValue(type, out potentialCorrelationproperties)
+                        ? potentialCorrelationproperties
+                        : new CorrelationProperty[0];
+                })
+                .ToList();
+            //var messageTypeToCheck = messageType;
+            //while (messageTypeToCheck != null)
+            //{
+            //    CorrelationProperty[] potentialCorrelationproperties;
+
+            //    if (_correlationProperties.TryGetValue(messageTypeToCheck, out potentialCorrelationproperties))
+            //    {
+            //        potentialCorrelationProperties.AddRange(potentialCorrelationproperties);
+            //    }
+
+            //    messageTypeToCheck = messageTypeToCheck.BaseType;
+            //}
 
             if (!potentialCorrelationProperties.Any())
             {
