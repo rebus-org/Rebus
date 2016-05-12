@@ -37,12 +37,6 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
-        public void JustShowTheLog()
-        {
-            Console.WriteLine("");
-        }
-
-        [Test]
         public async Task WorksWithFailedAndInterfacesToo()
         {
             var counter = new SharedCounter(3);
