@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Ploeh.AutoFixture.NUnit2.Addins</name>
+    </assembly>
+    <members>
+        <member name="T:Ploeh.AutoFixture.NUnit2.Addins.Addin">
+            <summary>
+            The Addin class holds information about an addin.
+            </summary>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.Addin.Install(NUnit.Core.Extensibility.IExtensionHost)">
+            <summary>
+            When called, the add-in installs itself into
+            the host, if possible. Because NUnit uses separate
+            hosts for the client and test domain environments,
+            an add-in may be invited to istall itself more than
+            once. The add-in is responsible for checking which
+            extension points are supported by the host that is
+            passed to it and taking the appropriate action.
+            </summary>
+            <param name="host">The host in which to install the add-in</param>
+            <returns>True if the add-in was installed, otehrwise false</returns>
+        </member>
+        <member name="T:Ploeh.AutoFixture.NUnit2.Addins.Builders.AutoDataProvider">
+            <summary>
+            AutoTestCaseProvider provides data for methods
+            annotated with the AutoTestCaseAttribute.
+            </summary>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.Builders.AutoDataProvider.HasTestCasesFor(System.Reflection.MethodInfo)">
+            <summary>
+            Determine whether any test cases are available for a parameterized method.
+            </summary>
+            <param name="method">A MethodInfo representing a parameterized test</param>
+            <returns>True if any cases are available, otherwise false.</returns>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.Builders.AutoDataProvider.GetTestCasesFor(System.Reflection.MethodInfo)">
+            <summary>
+            Return an IEnumerable providing test cases for use in
+            running a parameterized test.
+            </summary>
+            <param name="method"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.Builders.AutoDataProvider.HasTestCasesFor(System.Reflection.MethodInfo,NUnit.Core.Test)">
+            <summary>
+            Determine whether any test cases are available for a parameterized method.
+            </summary>
+            <param name="method">A MethodInfo representing a parameterized test</param>
+            <param name="suite">A Suite representing a NUnit TestSuite</param>
+            <returns>True if any cases are available, otherwise false.</returns>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.Builders.AutoDataProvider.GetTestCasesFor(System.Reflection.MethodInfo,NUnit.Core.Test)">
+            <summary>
+            Return an IEnumerable providing test cases for use in
+            running a parameterized test.
+            </summary>
+            <param name="method"></param>
+            <param name="parentSuite"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Ploeh.AutoFixture.NUnit2.Addins.Constants">
+            <summary>
+            Class to contains all static string constants
+            </summary>
+        </member>
+        <member name="F:Ploeh.AutoFixture.NUnit2.Addins.Constants.AutoDataExtension">
+            <summary>
+            The name by which the AutoFixture NUnit2 extension is identified.
+            </summary>
+        </member>
+        <member name="F:Ploeh.AutoFixture.NUnit2.Addins.Constants.AutoDataAttribute">
+            <summary>
+            The name by which the AutoFixture NUnit2 AutoDataAttribute is identified by.
+            </summary>
+        </member>
+        <member name="T:Ploeh.AutoFixture.NUnit2.Addins.DataAttribute">
+            <summary>
+            Abstract attribute which represents a testcase provider for a testcase.
+                        TestCase providers derive from this attribute and implement GetArguments
+                        to return the arguments for the testcase.
+            
+            </summary>
+        </member>
+        <member name="M:Ploeh.AutoFixture.NUnit2.Addins.DataAttribute.GetData(System.Reflection.MethodInfo)">
+            <summary>
+            Returns the composition of arguments to be used to test the testcase. Favors the arguments returned
+            by TestCaseDataAttributes in ascending order.
+            </summary>
+            <param name="method">The method that is being tested.</param>
+            <returns>
+            Returns the composition of the testcase arguments.
+            </returns>
+        </member>
+    </members>
+</doc>

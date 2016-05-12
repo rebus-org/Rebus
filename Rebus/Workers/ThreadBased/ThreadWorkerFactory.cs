@@ -20,11 +20,12 @@ namespace Rebus.Workers.ThreadBased
         readonly IPipelineInvoker _pipelineInvoker;
         readonly IBackoffStrategy _backoffStrategy;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly TimeSpan _workerShutdownTimeout;
 
         /// <summary>
         /// Constructs the worker factory
         /// </summary>
-        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelism, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory)
+        public ThreadWorkerFactory(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelism, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory, TimeSpan workerShutdownTimeout)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (pipeline == null) throw new ArgumentNullException(nameof(pipeline));
@@ -32,12 +33,15 @@ namespace Rebus.Workers.ThreadBased
             if (backoffStrategy == null) throw new ArgumentNullException(nameof(backoffStrategy));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             if (maxParallelism <= 0) throw new ArgumentOutOfRangeException($"Cannot use value '{maxParallelism}' as max parallelism!");
+            if (workerShutdownTimeout == null) throw new ArgumentNullException(nameof(workerShutdownTimeout));
+
             _transport = transport;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _backoffStrategy = backoffStrategy;
             _rebusLoggerFactory = rebusLoggerFactory;
             _parallelOperationsManager = new ParallelOperationsManager(maxParallelism);
+            _workerShutdownTimeout = workerShutdownTimeout;
         }
 
         /// <summary>
@@ -53,7 +57,8 @@ namespace Rebus.Workers.ThreadBased
                 _threadWorkerSynchronizationContext,
                 _parallelOperationsManager,
                 _backoffStrategy,
-                _rebusLoggerFactory);
+                _rebusLoggerFactory,
+                _workerShutdownTimeout);
         }
     }
 }

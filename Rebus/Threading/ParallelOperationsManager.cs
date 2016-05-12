@@ -23,7 +23,7 @@ namespace Rebus.Threading
         /// <summary>
         /// Gets whether any async tasks are currently waiting to be completed
         /// </summary>
-        public bool HasPendingTasks
+        public virtual bool HasPendingTasks
         {
             get { return Interlocked.Read(ref _currentParallelism) > 0; }
         }

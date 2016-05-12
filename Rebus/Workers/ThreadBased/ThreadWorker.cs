@@ -26,11 +26,12 @@ namespace Rebus.Workers.ThreadBased
         readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
+        readonly TimeSpan _workerShutdownTimeout;
 
         volatile bool _keepWorking = true;
         bool _disposed;
 
-        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory)
+        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory, TimeSpan workerShutdownTimeout)
         {
             Name = workerName;
 
@@ -41,6 +42,7 @@ namespace Rebus.Workers.ThreadBased
             _threadWorkerSynchronizationContext = threadWorkerSynchronizationContext;
             _parallelOperationsManager = parallelOperationsManager;
             _backoffStrategy = backoffStrategy;
+            _workerShutdownTimeout = workerShutdownTimeout;
             _workerThread = new Thread(ThreadStart)
             {
                 Name = workerName,
@@ -62,13 +64,15 @@ namespace Rebus.Workers.ThreadBased
 
             var stopTime = RebusTime.Now;
 
+            _log.Debug("Stopping (thread-based) worker {0} and waiting for it to finish pending tasks. (max {1} seconds)", Name, _workerShutdownTimeout.TotalSeconds);
+
             while (_parallelOperationsManager.HasPendingTasks)
             {
                 DoWork(onlyRunContinuations: true);
 
-                if (stopTime.ElapsedUntilNow() < TimeSpan.FromMinutes(1)) continue;
+                if (stopTime.ElapsedUntilNow() < _workerShutdownTimeout) continue;
 
-                _log.Warn("Not all async tasks were able to finish within 1 minute!!!");
+                _log.Warn("Not all async tasks were able to finish within given timeout of {0} seconds!",  _workerShutdownTimeout.TotalSeconds);
                 break;
             }
 
@@ -207,9 +211,9 @@ namespace Rebus.Workers.ThreadBased
             {
                 Stop();
 
-                if (!_workerThread.Join(TimeSpan.FromSeconds(5)))
+                if (!_workerThread.Join(this._workerShutdownTimeout))
                 {
-                    _log.Warn("Worker {0} did not stop withing 5 second timeout!", Name);
+                    _log.Warn("Worker {0} did not stop withing {1} seconds timeout!", Name, this._workerShutdownTimeout.TotalSeconds);
                 }
             }
             finally
