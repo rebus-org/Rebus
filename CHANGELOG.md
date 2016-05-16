@@ -922,7 +922,7 @@
 
 * Extended polymorphic saga correlation to make proper use of implemented interfaces too
 
-# 0.99.54
+# 0.99.55
 
 * Real pause (5 s) when the next transport message cannot be received
 
