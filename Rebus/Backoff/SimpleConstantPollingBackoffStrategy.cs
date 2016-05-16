@@ -11,9 +11,17 @@ namespace Rebus.Backoff
         /// <summary>
         /// Asynchronously executes the next wait operation, possibly advancing the wait cursor to a different wait time for the next time
         /// </summary>
-        public async Task Wait()
+        public Task Wait()
         {
-            await Task.Delay(200);
+            return Task.Delay(200);
+        }
+
+        /// <summary>
+        /// Asynchronously waits a while when an error has occurred
+        /// </summary>
+        public Task WaitError()
+        {
+            return Task.Delay(5000);
         }
 
         /// <summary>
@@ -21,7 +29,6 @@ namespace Rebus.Backoff
         /// </summary>
         public void Reset()
         {
-            // no logic in here yet ;)
         }
     }
 }

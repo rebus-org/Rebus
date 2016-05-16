@@ -72,7 +72,7 @@ namespace Rebus.Workers.ThreadBased
 
                 if (stopTime.ElapsedUntilNow() < _workerShutdownTimeout) continue;
 
-                _log.Warn("Not all async tasks were able to finish within given timeout of {0} seconds!",  _workerShutdownTimeout.TotalSeconds);
+                _log.Warn("Not all async tasks were able to finish within given timeout of {0} seconds!", _workerShutdownTimeout.TotalSeconds);
                 break;
             }
 
@@ -126,8 +126,18 @@ namespace Rebus.Workers.ThreadBased
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
-                        var message = await TryReceiveTransportMessage(transactionContext);
+                        var result = await TryReceiveTransportMessage(transactionContext);
 
+                        if (result.Exception != null)
+                        {
+                            _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
+                            // error: finish the tx and wait....
+                            await transactionContext.Complete();
+                            await _backoffStrategy.WaitError();
+                            return;
+                        }
+
+                        var message = result.TransportMessage;
                         if (message == null)
                         {
                             // no message: finish the tx and wait....
@@ -168,19 +178,33 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        async Task<TransportMessage> TryReceiveTransportMessage(DefaultTransactionContext transactionContext)
+        async Task<ReceiveResult> TryReceiveTransportMessage(DefaultTransactionContext transactionContext)
         {
             try
             {
                 var message = await _transport.Receive(transactionContext);
 
-                return message;
+                return new ReceiveResult(message);
             }
             catch (Exception exception)
             {
-                _log.Warn("An error occurred when attempting to receive transport message: {0}", exception);
+                return new ReceiveResult(exception);
+            }
+        }
 
-                return null;
+        class ReceiveResult
+        {
+            public TransportMessage TransportMessage { get; }
+            public Exception Exception { get; }
+
+            public ReceiveResult(Exception exception)
+            {
+                Exception = exception;
+            }
+
+            public ReceiveResult(TransportMessage transportMessage)
+            {
+                TransportMessage = transportMessage;
             }
         }
 

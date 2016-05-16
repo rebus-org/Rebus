@@ -15,6 +15,11 @@ namespace Rebus.Workers
         Task Wait();
 
         /// <summary>
+        /// Asynchronously waits a while when an error has occurred
+        /// </summary>
+        Task WaitError();
+
+        /// <summary>
         /// Resets the strategy. Is called whenever a message was received.
         /// </summary>
         void Reset();
