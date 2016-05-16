@@ -21,6 +21,7 @@ namespace Rebus.Transport
         bool _completed;
         bool _aborted;
         bool _cleanedUp;
+        bool _disposed;
 
         /// <summary>
         /// Constructs the transaction context
@@ -95,6 +96,8 @@ namespace Rebus.Transport
         /// </summary>
         public void Dispose()
         {
+            if (_disposed) return;
+
             try
             {
                 if (!_completed)
@@ -104,6 +107,8 @@ namespace Rebus.Transport
             }
             finally
             {
+                _disposed = true;
+
                 if (!_cleanedUp)
                 {
                     try

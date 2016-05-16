@@ -133,6 +133,8 @@ namespace Rebus.Workers.ThreadBased
                             _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
                             // error: finish the tx and wait....
                             await transactionContext.Complete();
+                            transactionContext.Dispose();
+
                             await _backoffStrategy.WaitError();
                             return;
                         }
@@ -142,6 +144,8 @@ namespace Rebus.Workers.ThreadBased
                         {
                             // no message: finish the tx and wait....
                             await transactionContext.Complete();
+                            transactionContext.Dispose();
+
                             await _backoffStrategy.Wait();
                             return;
                         }
