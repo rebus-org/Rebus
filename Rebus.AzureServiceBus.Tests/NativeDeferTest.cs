@@ -10,7 +10,6 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 
 #pragma warning disable 1998

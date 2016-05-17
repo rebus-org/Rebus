@@ -28,8 +28,8 @@ namespace Rebus.Handlers.Reordering
 
             if (_orderedHandlerTypes.ContainsKey(type))
             {
-                throw new InvalidOperationException(string.Format("Attempted to add an ordering constraint for {0}, but it has already been added at position {1} - each handler type can only be added once, because otherwise the position would be ambiguous",
-                    type, _orderedHandlerTypes[type]));
+                throw new InvalidOperationException(
+                    $"Attempted to add an ordering constraint for {type}, but it has already been added at position {_orderedHandlerTypes[type]} - each handler type can only be added once, because otherwise the position would be ambiguous");
             }
 
             _orderedHandlerTypes.Add(type, _index);

@@ -35,7 +35,7 @@ namespace Rebus.Tests.Assumptions
 
         string FormatMethod(MethodInfo methodInfo)
         {
-            return string.Format("{0}: {1}", methodInfo.Name, methodInfo.IsVirtual);
+            return $"{methodInfo.Name}: {methodInfo.IsVirtual}";
         }
 
         abstract class BaseClass

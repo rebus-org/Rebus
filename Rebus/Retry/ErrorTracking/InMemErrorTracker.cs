@@ -85,7 +85,7 @@ namespace Rebus.Retry.ErrorTracking
                 return "Could not get error details for the message";
             }
 
-            return string.Format("{0} unhandled exceptions", errorTracking.Errors.Count());
+            return $"{errorTracking.Errors.Count()} unhandled exceptions";
         }
 
         /// <summary>
@@ -101,9 +101,10 @@ namespace Rebus.Retry.ErrorTracking
                 return "Could not get error details for the message";
             }
 
-            var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e => string.Format("{0}: {1}", e.Time, e.Exception)));
+            var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e =>
+                $"{e.Time}: {e.Exception}"));
 
-            return string.Format("{0} unhandled exceptions: {1}", errorTracking.Errors.Count(), fullExceptionInfo);
+            return $"{errorTracking.Errors.Count()} unhandled exceptions: {fullExceptionInfo}";
         }
 
         /// <summary>

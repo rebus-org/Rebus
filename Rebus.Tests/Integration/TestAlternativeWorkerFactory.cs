@@ -85,7 +85,7 @@ namespace Rebus.Tests.Integration
                 var bus = activator.Bus;
 
                 await Task.WhenAll(Enumerable.Range(0, 100)
-                    .Select(i => bus.SendLocal(string.Format("msg-{0}", i))));
+                    .Select(i => bus.SendLocal($"msg-{i}")));
 
                 await Task.Delay(1000);
 

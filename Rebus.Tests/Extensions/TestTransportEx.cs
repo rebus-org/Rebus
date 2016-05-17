@@ -28,8 +28,7 @@ namespace Rebus.Tests.Extensions
                 if (receivedTransportMessage != null) return receivedTransportMessage;
             }
 
-            throw new AssertionException(string.Format("Did not receive transport message from {0} within {1} timeout",
-                transport, timeout));
+            throw new AssertionException($"Did not receive transport message from {transport} within {timeout} timeout");
         }
     }
 }

@@ -40,14 +40,14 @@ namespace Rebus.MongoDb.Tests.Sagas
 
                 if (metadataDocument == null)
                 {
-                    throw new ArgumentException(string.Format("Could not find 'Metadata' document in: {0}", doc));
+                    throw new ArgumentException($"Could not find 'Metadata' document in: {doc}");
                 }
 
                 var sagaDataDocument = doc["Data"].AsBsonDocument;
 
                 if (sagaDataDocument == null)
                 {
-                    throw new ArgumentException(string.Format("Could not find 'Data' document in: {0}", doc));
+                    throw new ArgumentException($"Could not find 'Data' document in: {doc}");
                 }
 
                 var metadata = BsonSerializer.Deserialize<Dictionary<string,string>>(metadataDocument);
@@ -57,9 +57,7 @@ namespace Rebus.MongoDb.Tests.Sagas
                 if (type == null)
                 {
                     throw new ArgumentException(
-                        string.Format(
-                            "Cannot deserialize saga data snapshot of type '{0}' because the corresponding .NET type could not be found!",
-                            sagaDataTypeName));
+                        $"Cannot deserialize saga data snapshot of type '{sagaDataTypeName}' because the corresponding .NET type could not be found!");
                 }
 
                 var sagaData = BsonSerializer.Deserialize(sagaDataDocument, type);

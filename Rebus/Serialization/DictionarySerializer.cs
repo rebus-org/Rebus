@@ -31,7 +31,7 @@ namespace Rebus.Serialization
             }
             catch (Exception exception)
             {
-                throw new JsonSerializationException(string.Format("Could not deserialize JSON text as headers: '{0}'", headers), exception);
+                throw new JsonSerializationException($"Could not deserialize JSON text as headers: '{headers}'", exception);
             }
         } 
     }

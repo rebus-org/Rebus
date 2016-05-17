@@ -119,7 +119,7 @@ namespace Rebus.Tests.Auditing
         static void PrintHeaders(InMemTransportMessage message)
         {
             Console.WriteLine(@"Headers:
-{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+{0}", string.Join(Environment.NewLine, message.Headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}")));
         }
     }
 }

@@ -56,8 +56,7 @@ namespace Rebus.Legacy
                     headers.Remove("rebus-content-type");
                     headers.Remove("rebus-encoding");
 
-                    headers[Headers.ContentType] = string.Format("{0};charset={1}", JsonSerializer.JsonContentType,
-                        contentEncoding);
+                    headers[Headers.ContentType] = $"{JsonSerializer.JsonContentType};charset={contentEncoding}";
                 }
                 else
                 {
@@ -68,9 +67,7 @@ namespace Rebus.Legacy
             else
             {
                 throw new FormatException(
-                    string.Format(
-                        "Sorry, but the '{0}' content type is currently not supported by the legacy header mapper",
-                        contentType));
+                    $"Sorry, but the '{contentType}' content type is currently not supported by the legacy header mapper");
             }
         }
 

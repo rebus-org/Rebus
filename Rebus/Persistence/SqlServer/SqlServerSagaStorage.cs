@@ -137,9 +137,10 @@ REFERENCES [dbo].[{1}] ([id]) ON DELETE CASCADE
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
-", _indexTableName, _dataTableName);
+                    command.CommandText =
+                        $@"
+ALTER TABLE [dbo].[{_indexTableName}] CHECK CONSTRAINT [FK_{_dataTableName}_id]
+";
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -164,16 +165,19 @@ ALTER TABLE [dbo].[{0}] CHECK CONSTRAINT [FK_{1}_id]
                 {
                     if (propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        command.CommandText = string.Format(@"SELECT TOP 1 [data] FROM [{0}] WHERE [id] = @value", _dataTableName);
+                        command.CommandText = $@"SELECT TOP 1 [data] FROM [{_dataTableName}] WHERE [id] = @value";
                     }
                     else
                     {
-                        command.CommandText = string.Format(@"
-SELECT TOP 1 [saga].[data] as 'data' FROM [{0}] [saga] 
-    JOIN [{1}] [index] ON [saga].[id] = [index].[saga_id] 
+                        command.CommandText =
+                            $@"
+SELECT TOP 1 [saga].[data] as 'data' FROM [{_dataTableName}] [saga] 
+    JOIN [{
+                                _indexTableName
+                                }] [index] ON [saga].[id] = [index].[saga_id] 
 WHERE [index].[saga_type] = @saga_type
     AND [index].[key] = @key 
-    AND [index].[value] = @value", _dataTableName, _indexTableName);
+    AND [index].[value] = @value";
 
                         var sagaTypeName = GetSagaTypeName(sagaDataType);
 
@@ -196,8 +200,7 @@ WHERE [index].[saga_type] = @saga_type
                     catch (Exception exception)
                     {
                         throw new ApplicationException(
-                            string.Format("An error occurred while attempting to deserialize '{0}' into a {1}",
-                                value, sagaDataType), exception);
+                            $"An error occurred while attempting to deserialize '{value}' into a {sagaDataType}", exception);
                     }
                 }
             }
@@ -270,7 +273,7 @@ WHERE [index].[saga_type] = @saga_type
                     // first, delete existing index
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
+                        command.CommandText = $@"DELETE FROM [{_indexTableName}] WHERE [saga_id] = @id";
                         command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
 
                         await command.ExecuteNonQueryAsync();
@@ -286,10 +289,12 @@ WHERE [index].[saga_type] = @saga_type
                         command.Parameters.Add("next_revision", SqlDbType.Int).Value = sagaData.Revision;
                         command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
 
-                        command.CommandText = string.Format(@"
-UPDATE [{0}] 
+                        command.CommandText =
+                            $@"
+UPDATE [{_dataTableName
+                                }] 
     SET [data] = @data, [revision] = @next_revision 
-    WHERE [id] = @id AND [revision] = @current_revision", _dataTableName);
+    WHERE [id] = @id AND [revision] = @current_revision";
 
                         var rows = await command.ExecuteNonQueryAsync();
 
@@ -325,7 +330,8 @@ UPDATE [{0}]
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [id] = @id AND [revision] = @current_revision;", _dataTableName);
+                    command.CommandText =
+                        $@"DELETE FROM [{_dataTableName}] WHERE [id] = @id AND [revision] = @current_revision;";
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("current_revision", SqlDbType.Int).Value = sagaData.Revision;
                     var rows = await command.ExecuteNonQueryAsync();
@@ -337,7 +343,7 @@ UPDATE [{0}]
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"DELETE FROM [{0}] WHERE [saga_id] = @id", _indexTableName);
+                    command.CommandText = $@"DELETE FROM [{_indexTableName}] WHERE [saga_id] = @id";
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -361,8 +367,8 @@ UPDATE [{0}]
                 {
                     PropertyName = p.Key,
                     PropertyValue = GetCorrelationPropertyValue(p.Value),
-                    PropertyNameParameter = string.Format("n{0}", i),
-                    PropertyValueParameter = string.Format("v{0}", i)
+                    PropertyNameParameter = $"n{i}",
+                    PropertyValueParameter = $"v{i}"
                 })
                 .ToList();
 
@@ -371,14 +377,15 @@ UPDATE [{0}]
             {
                 // generate batch insert with SQL for each entry in the index
                 var inserts = parameters
-                    .Select(a => string.Format(
-                        @"
-INSERT INTO [{0}]
+                    .Select(a =>
+                        $@"
+INSERT INTO [{_indexTableName
+                            }]
     ([saga_type], [key], [value], [saga_id]) 
 VALUES
-    (@saga_type, @{1}, @{2}, @saga_id)
-",
-                        _indexTableName, a.PropertyNameParameter, a.PropertyValueParameter))
+    (@saga_type, @{
+                            a.PropertyNameParameter}, @{a.PropertyValueParameter}, @saga_id)
+")
                     .ToList();
 
                 var sql = string.Join(";" + Environment.NewLine, inserts);
@@ -403,7 +410,7 @@ VALUES
                     if (sqlException.Number == SqlServerMagic.PrimaryKeyViolationNumber)
                     {
                         throw new ConcurrencyException("Could not update index for saga with ID {0} because of a PK violation - there must already exist a saga instance that uses one of the following correlation properties: {1}", sagaData.Id,
-                            string.Join(", ", propertiesToIndexList.Select(p => string.Format("{0}='{1}'", p.Key, p.Value))));
+                            string.Join(", ", propertiesToIndexList.Select(p => $"{p.Key}='{p.Value}'")));
                     }
 
                     throw;
@@ -419,13 +426,13 @@ VALUES
             if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
             {
                 throw new InvalidOperationException(
-                    string.Format(
-                        @"Sorry, but the maximum length of the name of a saga data class is currently limited to {0} characters!
+                    $@"Sorry, but the maximum length of the name of a saga data class is currently limited to {
+                        MaximumSagaDataTypeNameLength
+                        } characters!
 This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
 since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
 there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the
-saga type name.",
-                        MaximumSagaDataTypeNameLength));
+saga type name.");
             }
 
             return sagaTypeName;

@@ -62,7 +62,8 @@ namespace Rebus.Tests.Integration
 
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
-            Assert.That(errorLogLine.Text, Contains.Substring(string.Format("Received message with empty or absent '{0}' header", Headers.MessageId)));
+            Assert.That(errorLogLine.Text, Contains.Substring(
+                $"Received message with empty or absent '{Headers.MessageId}' header"));
         }
 
         [Test]
@@ -95,7 +96,8 @@ namespace Rebus.Tests.Integration
 
             var errorLogLine = loggedErrors.Single(e => e.Level == LogLevel.Error);
 
-            Assert.That(errorLogLine.Text, Contains.Substring(string.Format("Moving message with ID {0} to error queue 'error'", messageId)));
+            Assert.That(errorLogLine.Text, Contains.Substring(
+                $"Moving message with ID {messageId} to error queue 'error'"));
         }
 
         void PrintLogs()

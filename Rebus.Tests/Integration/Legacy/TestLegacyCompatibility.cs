@@ -101,7 +101,7 @@ namespace Rebus.Tests.Integration.Legacy
                 var headers = message.DeserializeHeaders();
 
                 Console.WriteLine(@"Headers:
-{0}", string.Join(Environment.NewLine, headers.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+{0}", string.Join(Environment.NewLine, headers.Select(kvp => $"    {kvp.Key}: {kvp.Value}")));
 
                 Assert.That(headers["rebus-msg-id"], Is.Not.Empty);
                 Assert.That(headers["rebus-content-type"], Is.EqualTo("text/json"));
@@ -179,7 +179,8 @@ namespace Rebus.Tests.Integration.Legacy
                 queue.SendLegacyRebusMessage(jsonBody, headers);
             }
 
-            gotWhat.ForEach(kvp => kvp.Value.WaitOrDie(TimeSpan.FromSeconds(5), string.Format("Did not get message with KeyChar = '{0}'", kvp.Key)));
+            gotWhat.ForEach(kvp => kvp.Value.WaitOrDie(TimeSpan.FromSeconds(5),
+                $"Did not get message with KeyChar = '{kvp.Key}'"));
         }
     }
 }

@@ -346,7 +346,7 @@ namespace Rebus.Tests.Contracts.Activation
             {
                 WasCalledAllright = true;
 
-                Events.Enqueue(string.Format("handled {0}", message));
+                Events.Enqueue($"handled {message}");
             }
 
             public void Dispose()

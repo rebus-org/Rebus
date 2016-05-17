@@ -26,8 +26,8 @@ namespace Rebus.Tests.Contracts.Sagas
 
             if (AllowedCorrelationPropertyTypes.Contains(propertyType)) return;
 
-            throw new ArgumentException(String.Format("Cannot correlate with the '{0}' property on the '{1}' saga data type - only allowed types are: {2}",
-                PropertyName, SagaDataType.Name, String.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))));
+            throw new ArgumentException(
+                $"Cannot correlate with the '{PropertyName}' property on the '{SagaDataType.Name}' saga data type - only allowed types are: {String.Join(", ", AllowedCorrelationPropertyTypes.Select(t => t.Name))}");
         }
 
         public string PropertyName { get; }

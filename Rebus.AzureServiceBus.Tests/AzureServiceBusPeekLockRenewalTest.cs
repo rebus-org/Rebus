@@ -12,7 +12,6 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 
@@ -93,7 +92,8 @@ namespace Rebus.AzureServiceBus.Tests
 
                 if (message != null)
                 {
-                    throw new AssertionException(string.Format("Did not expect to receive a message - got one with ID {0}", message.Headers.GetValue(Headers.MessageId)));    
+                    throw new AssertionException(
+                        $"Did not expect to receive a message - got one with ID {message.Headers.GetValue(Headers.MessageId)}");    
                 }
 
                 await transactionContext.Complete();

@@ -31,7 +31,7 @@ namespace Rebus.PostgreSql.Tests.Sagas
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"SELECT ""data"", ""metadata"" FROM ""{0}""", TableName);
+                    command.CommandText = $@"SELECT ""data"", ""metadata"" FROM ""{TableName}""";
 
                     using (var reader = command.ExecuteReader())
                     {

@@ -37,8 +37,8 @@ namespace Rebus.Tests.Compression
                 }
                 else
                 {
-                    throw new Exception(string.Format("Received text with {0} chars did not match expected text with {1} chars!",
-                        str.Length, LongText.Length));
+                    throw new Exception(
+                        $"Received text with {str.Length} chars did not match expected text with {LongText.Length} chars!");
                 }
             });
 
@@ -63,8 +63,8 @@ namespace Rebus.Tests.Compression
                 }
                 else
                 {
-                    throw new Exception(string.Format("Received text with {0} chars did not match expected text with {1} chars!",
-                        str.Text.Length, LongText.Length));
+                    throw new Exception(
+                        $"Received text with {str.Text.Length} chars did not match expected text with {LongText.Length} chars!");
                 }
             });
 

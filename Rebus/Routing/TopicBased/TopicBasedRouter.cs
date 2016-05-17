@@ -43,7 +43,7 @@ namespace Rebus.Routing.TopicBased
 
             if (!_topicAddresses.TryGetValue(topic, out ownerAddress))
             {
-                throw new ArgumentException(string.Format("Cannot get owner of topic '{0}' because it has not been mapped!", topic));
+                throw new ArgumentException($"Cannot get owner of topic '{topic}' because it has not been mapped!");
             }
 
             return ownerAddress;

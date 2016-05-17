@@ -111,7 +111,7 @@ namespace Rebus.Serialization
             }
             catch (Exception exception)
             {
-                throw new FormatException(string.Format("Could not turn charset '{0}' into proper encoding!", encodingName), exception);
+                throw new FormatException($"Could not turn charset '{encodingName}' into proper encoding!", exception);
             }
         }
 
@@ -131,7 +131,7 @@ namespace Rebus.Serialization
             }
             catch (Exception exception)
             {
-                throw new FormatException(string.Format("Could not deserialize JSON text: '{0}'", bodyString), exception);
+                throw new FormatException($"Could not deserialize JSON text: '{bodyString}'", exception);
             }
         }
     }

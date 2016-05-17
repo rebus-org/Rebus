@@ -9,7 +9,6 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 using Rebus.Transport.SqlServer;
@@ -135,7 +134,7 @@ namespace Rebus.Tests.Transport.SqlServer
                 Assert.Fail(@"Oh no! the following IDs were not received exactly once:
 
 {0}",
-    string.Join(Environment.NewLine, kvpsDifferentThanOne.Select(kvp => string.Format("   {0}: {1}", kvp.Key, kvp.Value))));
+    string.Join(Environment.NewLine, kvpsDifferentThanOne.Select(kvp => $"   {kvp.Key}: {kvp.Value}")));
             }
         }
 

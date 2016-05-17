@@ -79,7 +79,7 @@ namespace Rebus.AzureServiceBus.Tests
 
             var transport = GetTransport();
             var tasks = Enumerable.Range(0, numberOfMessages)
-                .Select(i => string.Format("THIS IS MESSAGE # {0}", i))
+                .Select(i => $"THIS IS MESSAGE # {i}")
                 .Select(async msg =>
                 {
                     using (var context = new DefaultTransactionContext())

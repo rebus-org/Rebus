@@ -5,7 +5,6 @@ using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 using Rebus.Transport.SqlServer;

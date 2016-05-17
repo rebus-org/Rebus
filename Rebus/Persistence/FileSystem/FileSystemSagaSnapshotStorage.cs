@@ -51,8 +51,8 @@ namespace Rebus.Persistence.FileSystem
             }
             catch (Exception exception)
             {
-                var message = string.Format("Could not write dummy file to saga snapshot directory '{0}' - is it writable for the {1} / {2} account?",
-                    _snapshotDirectory, Environment.UserDomainName, Environment.UserName);
+                var message =
+                    $"Could not write dummy file to saga snapshot directory '{_snapshotDirectory}' - is it writable for the {Environment.UserDomainName} / {Environment.UserName} account?";
 
                 throw new IOException(message, exception);
             }
@@ -80,7 +80,7 @@ namespace Rebus.Persistence.FileSystem
                 Metadata = sagaAuditMetadata
             }, Formatting.Indented);
 
-            var snapshotFilePath = Path.Combine(_snapshotDirectory, string.Format("{0:N}-{1}.json", sagaData.Id, sagaData.Revision));
+            var snapshotFilePath = Path.Combine(_snapshotDirectory, $"{sagaData.Id:N}-{sagaData.Revision}.json");
 
             using (var file = File.OpenWrite(snapshotFilePath))
             {

@@ -33,13 +33,15 @@ namespace Rebus.PostgreSql.Sagas
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
 INSERT
-    INTO ""{0}"" (""id"", ""revision"", ""data"", ""metadata"")
+    INTO ""{_tableName
+                            }"" (""id"", ""revision"", ""data"", ""metadata"")
     VALUES (@id, @revision, @data, @metadata);
 
-", _tableName);
+";
                     command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = sagaData.Id;
                     command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = sagaData.Revision;
                     command.Parameters.Add("data", NpgsqlDbType.Bytea).Value = _objectSerializer.Serialize(sagaData);
@@ -66,15 +68,17 @@ INSERT
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE ""{0}"" (
+                    command.CommandText =
+                        $@"
+CREATE TABLE ""{_tableName
+                            }"" (
 	""id"" UUID NOT NULL,
 	""revision"" INTEGER NOT NULL,
 	""metadata"" JSONB NOT NULL,
 	""data"" BYTEA NOT NULL,
 	PRIMARY KEY (""id"", ""revision"")
 );
-", _tableName);
+";
 
                     command.ExecuteNonQuery();
                 }

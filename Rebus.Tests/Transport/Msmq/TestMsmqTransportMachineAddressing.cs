@@ -48,7 +48,7 @@ namespace Rebus.Tests.Transport.Msmq
         [Test]
         public void CanDoSendToOwnMachineName()
         {
-            var destinationAddress = string.Format("{0}@{1}", _queueName, Environment.MachineName);
+            var destinationAddress = $"{_queueName}@{Environment.MachineName}";
 
             Send(destinationAddress, "hej");
 
@@ -60,7 +60,7 @@ namespace Rebus.Tests.Transport.Msmq
         [Test]
         public void CanDoSendToLocalhost()
         {
-            var destinationAddress = string.Format("{0}@localhost", _queueName);
+            var destinationAddress = $"{_queueName}@localhost";
 
             Send(destinationAddress, "hej");
 
@@ -72,7 +72,7 @@ namespace Rebus.Tests.Transport.Msmq
         [Test]
         public void CanDoSendToDot()
         {
-            var destinationAddress = string.Format("{0}@.", _queueName);
+            var destinationAddress = $"{_queueName}@.";
 
             Send(destinationAddress, "hej");
 
@@ -87,7 +87,7 @@ namespace Rebus.Tests.Transport.Msmq
             var ownFirstIpv4Address = Dns.GetHostAddresses(Environment.MachineName)
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork);
 
-            var destinationAddress = string.Format("{0}@{1}", _queueName, ownFirstIpv4Address.MapToIPv4());
+            var destinationAddress = $"{_queueName}@{ownFirstIpv4Address.MapToIPv4()}";
 
             Send(destinationAddress, "hej");
 

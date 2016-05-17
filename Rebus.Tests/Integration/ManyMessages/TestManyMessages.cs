@@ -90,11 +90,8 @@ namespace Rebus.Tests.Integration.ManyMessages
 
         static string GenerateErrorText(ConcurrentDictionary<int, int> idCounts)
         {
-            var errorText = string.Format("The following IDs were received != 1 times: {0}",
-                string.Join(", ",
-                    idCounts.Where(kvp => kvp.Value != 1)
-                        .OrderBy(kvp => kvp.Value)
-                        .Select(kvp => string.Format("{0} (x {1})", kvp.Key, kvp.Value))));
+            var errorText =
+                $"The following IDs were received != 1 times: {string.Join(", ", idCounts.Where(kvp => kvp.Value != 1).OrderBy(kvp => kvp.Value).Select(kvp => $"{kvp.Key} (x {kvp.Value})"))}";
             return errorText;
         }
 
@@ -109,7 +106,7 @@ namespace Rebus.Tests.Integration.ManyMessages
 
             public override string ToString()
             {
-                return string.Format("<msg {0}>", Id);
+                return $"<msg {Id}>";
             }
         }
     }

@@ -87,7 +87,7 @@ namespace Rebus.Routing.Exceptions
                     }
 
                     caughtException = true;
-                    errorDetails = string.Format("Caught exception: {0}", exception);
+                    errorDetails = $"Caught exception: {exception}";
                 }
 
                 if (!caughtException) return;
@@ -113,7 +113,7 @@ namespace Rebus.Routing.Exceptions
                         _logger.Error("Forwarding message {0} to queue '{1}' because of: {2}", clone.GetMessageLabel(), _destinationQueue, errorDetails);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(string.Format("Unknown log level: {0}", _logLevel));
+                        throw new ArgumentOutOfRangeException($"Unknown log level: {_logLevel}");
                 }
 
                 await _transport.Send(_destinationQueue, clone, transactionContext);

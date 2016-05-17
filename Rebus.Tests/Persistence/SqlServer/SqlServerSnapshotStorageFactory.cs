@@ -45,7 +45,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"SELECT * FROM [{0}]", tableName);
+                    command.CommandText = $@"SELECT * FROM [{tableName}]";
 
                     using (var reader = command.ExecuteReader())
                     {

@@ -40,9 +40,9 @@ namespace Rebus.Tests
             {
                 var tokens = nameBase.Split('@');
 
-                return string.Format("{0}{1}@{2}", tokens[0], Suffix, tokens[1]);
+                return $"{tokens[0]}{Suffix}@{tokens[1]}";
             }
-            return string.Format("{0}{1}", nameBase, Suffix);
+            return $"{nameBase}{Suffix}";
         }
     }
 }
