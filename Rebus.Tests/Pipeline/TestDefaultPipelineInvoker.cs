@@ -37,7 +37,7 @@ namespace Rebus.Tests.Pipeline
                 var stepContext = new IncomingStepContext(new TransportMessage(new Dictionary<string, string>(), new byte[0]), GetFakeTransactionContext());
 
                 var pipeline = Enumerable.Range(0, 15)
-                    .Select(stepNumber => new NamedStep(string.Format("step {0}", stepNumber)))
+                    .Select(stepNumber => new NamedStep($"step {stepNumber}"))
                     .ToArray();
 
                 invoker.Invoke(stepContext, pipeline).Wait();
@@ -123,11 +123,11 @@ namespace Rebus.Tests.Pipeline
 
             public async Task Process(IncomingStepContext context, Func<Task> next)
             {
-                GetActionList(context).Add(string.Format("enter {0}", _name));
+                GetActionList(context).Add($"enter {_name}");
 
                 await next();
 
-                GetActionList(context).Add(string.Format("leave {0}", _name));
+                GetActionList(context).Add($"leave {_name}");
             }
 
             List<string> GetActionList(StepContext context)

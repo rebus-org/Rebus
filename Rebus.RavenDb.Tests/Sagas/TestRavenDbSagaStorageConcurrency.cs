@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Raven.Client.Embedded;
 using Raven.Imports.Newtonsoft.Json;
 using Rebus.Activation;
 using Rebus.Config;

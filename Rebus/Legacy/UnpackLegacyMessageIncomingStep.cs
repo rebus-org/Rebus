@@ -23,8 +23,8 @@ namespace Rebus.Legacy
 
                 if (array == null)
                 {
-                    throw new FormatException(string.Format("Incoming message has the '{0}' header, but the message body {1} is not an object[] as expected",
-                        MapLegacyHeadersIncomingStep.LegacyMessageHeader, body));
+                    throw new FormatException(
+                        $"Incoming message has the '{MapLegacyHeadersIncomingStep.LegacyMessageHeader}' header, but the message body {body} is not an object[] as expected");
                 }
 
                 foreach (var bodyToDispatch in array)

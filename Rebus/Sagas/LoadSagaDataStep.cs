@@ -8,7 +8,6 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
-using Rebus.Retry.Simple;
 
 namespace Rebus.Sagas
 {

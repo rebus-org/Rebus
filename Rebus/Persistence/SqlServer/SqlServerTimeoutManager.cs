@@ -91,7 +91,9 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"INSERT INTO [{0}] ([due_time], [headers], [body]) VALUES (@due_time, @headers, @body)", _tableName);
+                    command.CommandText =
+                        $@"INSERT INTO [{_tableName
+                            }] ([due_time], [headers], [body]) VALUES (@due_time, @headers, @body)";
 
                     command.Parameters.Add("due_time", SqlDbType.DateTime2).Value = approximateDueTime.UtcDateTime;
                     command.Parameters.Add("headers", SqlDbType.NVarChar).Value = headersString;
@@ -119,17 +121,16 @@ CREATE CLUSTERED INDEX [IX_{0}_DueTime] ON [dbo].[{0}]
                 using (var command = connection.CreateCommand())
                 {
                     command.CommandText =
-                        string.Format(
-                            @"
+                        $@"
 SELECT 
     [id],
     [headers],
     [body]
-FROM [{0}] WITH (UPDLOCK, READPAST, ROWLOCK)
+FROM [{_tableName
+                            }] WITH (UPDLOCK, READPAST, ROWLOCK)
 WHERE [due_time] <= @current_time 
 ORDER BY [due_time] ASC
-",
-                            _tableName);
+";
 
                     command.Parameters.Add("current_time", SqlDbType.DateTime2).Value = RebusTime.Now.UtcDateTime;
 
@@ -146,7 +147,7 @@ ORDER BY [due_time] ASC
                             {
                                 using (var deleteCommand = connection.CreateCommand())
                                 {
-                                    deleteCommand.CommandText = string.Format("DELETE FROM [{0}] WHERE [id] = @id", _tableName);
+                                    deleteCommand.CommandText = $"DELETE FROM [{_tableName}] WHERE [id] = @id";
                                     deleteCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
                                     deleteCommand.ExecuteNonQuery();
                                 }

@@ -13,9 +13,9 @@ namespace Rebus.MongoDb.Tests
         {
             var suffix = TestConfig.Suffix;
 
-            var databaseName = string.Format("rebus2_test_{0}", suffix).TrimEnd('_');
+            var databaseName = $"rebus2_test_{suffix}".TrimEnd('_');
 
-            var mongoUrl = new MongoUrl(string.Format("mongodb://localhost/{0}", databaseName));
+            var mongoUrl = new MongoUrl($"mongodb://localhost/{databaseName}");
 
             Console.WriteLine("Using MongoDB {0}", mongoUrl);
 

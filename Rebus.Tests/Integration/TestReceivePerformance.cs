@@ -91,7 +91,7 @@ namespace Rebus.Tests.Integration
             if (receivedMoreThanOnce.Any())
             {
                 Assert.Fail("The following IDs were received more than once: {0}",
-                    string.Join(", ", receivedMoreThanOnce.Select(kvp => string.Format("{0} ({1})", kvp.Key, kvp.Value))));
+                    string.Join(", ", receivedMoreThanOnce.Select(kvp => $"{kvp.Key} ({kvp.Value})")));
             }
         }
 

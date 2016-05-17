@@ -34,7 +34,7 @@ namespace Rebus.Extensions
 
             if (!DateTimeOffset.TryParseExact(iso8601String, "O", CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out result))
             {
-                throw new FormatException(string.Format("Could not parse '{0}' as a proper ISO8601-formatted DateTimeOffset!", iso8601String));
+                throw new FormatException($"Could not parse '{iso8601String}' as a proper ISO8601-formatted DateTimeOffset!");
             }
 
             return result;

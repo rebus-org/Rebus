@@ -63,11 +63,8 @@ namespace Rebus.Tests.Integration
 
         async Task AppendEvent(List<string> events, string eventNumber)
         {
-            var text = string.Format("event={0};thread={1};time={2};context={3}", 
-                eventNumber,
-                Thread.CurrentThread.ManagedThreadId, 
-                DateTime.UtcNow.ToString("mm:ss"), 
-                AmbientTransactionContext.Current);
+            var text =
+                $"event={eventNumber};thread={Thread.CurrentThread.ManagedThreadId};time={DateTime.UtcNow.ToString("mm:ss")};context={AmbientTransactionContext.Current}";
 
             Console.WriteLine(text);
 

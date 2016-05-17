@@ -22,7 +22,7 @@ namespace Rebus.LightInject.Tests
         {
             foreach (var handlerInterfaceType in GetHandlerInterfaces<THandler>())
             {
-                var componentName = string.Format("{0}:{1}", typeof(THandler).FullName, handlerInterfaceType.FullName);
+                var componentName = $"{typeof (THandler).FullName}:{handlerInterfaceType.FullName}";
 
                 _serviceContainer.Register(handlerInterfaceType, typeof(THandler), componentName);
             }

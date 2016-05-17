@@ -13,7 +13,7 @@ namespace Rebus.Transport.InMem
     {
         static int _networkIdCounter;
 
-        readonly string _networkId = string.Format("In-mem network {0}", Interlocked.Increment(ref _networkIdCounter));
+        readonly string _networkId = $"In-mem network {Interlocked.Increment(ref _networkIdCounter)}";
 
         readonly ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>> _queues =
             new ConcurrentDictionary<string, ConcurrentQueue<InMemTransportMessage>>(StringComparer.InvariantCultureIgnoreCase);

@@ -132,7 +132,8 @@ namespace Rebus.Tests
 
         public override string ToString()
         {
-            return string.Format("{0} / {1} / {2}", Level, Type, string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)));
+            return
+                $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
         }
     }
 }

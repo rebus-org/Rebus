@@ -149,7 +149,7 @@ namespace Rebus.Tests.Integration
 
                 Data.ProcessedMessages[type]++;
 
-                _recordedCalls.Add(string.Format("{0}:{1}", correlationId, type.Name));
+                _recordedCalls.Add($"{correlationId}:{type.Name}");
             }
         }
 

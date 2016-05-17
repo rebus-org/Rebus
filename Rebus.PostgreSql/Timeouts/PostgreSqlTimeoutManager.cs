@@ -39,8 +39,10 @@ namespace Rebus.PostgreSql.Timeouts
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-INSERT INTO ""{0}"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @headers, @body)", _tableName);
+                    command.CommandText =
+                        $@"
+INSERT INTO ""{_tableName
+                            }"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @headers, @body)";
 
                     command.Parameters.Add("due_time", NpgsqlDbType.Timestamp).Value = approximateDueTime.ToUniversalTime().DateTime;
                     command.Parameters.Add("headers", NpgsqlDbType.Text).Value = _dictionarySerializer.SerializeToString(headers);
@@ -61,14 +63,16 @@ INSERT INTO ""{0}"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @he
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
 SELECT
     ""id"",
     ""headers"", 
     ""body"" 
 
-FROM ""{0}"" 
+FROM ""{_tableName
+                            }"" 
 
 WHERE ""due_time"" <= @current_time 
 
@@ -76,7 +80,7 @@ ORDER BY ""due_time""
 
 FOR UPDATE;
 
-", _tableName);
+";
                     command.Parameters.Add("current_time", NpgsqlDbType.Timestamp).Value = RebusTime.Now.ToUniversalTime().DateTime;
 
                     using (var reader = await command.ExecuteReaderAsync())
@@ -93,7 +97,7 @@ FOR UPDATE;
                             {
                                 using (var deleteCommand = connection.CreateCommand())
                                 {
-                                    deleteCommand.CommandText = string.Format(@"DELETE FROM ""{0}"" WHERE ""id"" = @id", _tableName);
+                                    deleteCommand.CommandText = $@"DELETE FROM ""{_tableName}"" WHERE ""id"" = @id";
                                     deleteCommand.Parameters.Add("id", NpgsqlDbType.Bigint).Value = id;
                                     deleteCommand.ExecuteNonQuery();
                                 }
@@ -133,24 +137,26 @@ FOR UPDATE;
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE ""{0}"" (
+                    command.CommandText =
+                        $@"
+CREATE TABLE ""{_tableName
+                            }"" (
     ""id"" BIGSERIAL NOT NULL,
     ""due_time"" TIMESTAMP WITH TIME ZONE NOT NULL,
     ""headers"" TEXT NULL,
     ""body"" BYTEA NULL,
     PRIMARY KEY (""id"")
 );
-", _tableName);
+";
 
                     command.ExecuteNonQuery();
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE INDEX ON ""{0}"" (""due_time"");
-", _tableName);
+                    command.CommandText = $@"
+CREATE INDEX ON ""{_tableName}"" (""due_time"");
+";
 
                     command.ExecuteNonQuery();
                 }

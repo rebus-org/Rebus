@@ -33,8 +33,8 @@ namespace Rebus.Tests.Extensions
         {
             if (!resetEvent.WaitOne(timeout))
             {
-                throw new AssertionException(string.Format("Reset event was not set within {0} timeout - {1}", 
-                    timeout, errorMessage ?? (errorMessageFactory != null ? errorMessageFactory() : null) ?? "..."));
+                throw new AssertionException(
+                    $"Reset event was not set within {timeout} timeout - {errorMessage ?? (errorMessageFactory != null ? errorMessageFactory() : null) ?? "..."}");
             }
         }
 
@@ -59,7 +59,7 @@ namespace Rebus.Tests.Extensions
 
                 if ((DateTime.UtcNow - start) < timeout) continue;
 
-                throw new TimeoutException(string.Format("Criteria {0} not satisfied within {1} s timeout", criteria, timeoutSeconds));
+                throw new TimeoutException($"Criteria {criteria} not satisfied within {timeoutSeconds} s timeout");
             }
         }
 

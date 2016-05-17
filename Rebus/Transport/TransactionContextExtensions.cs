@@ -25,8 +25,8 @@ namespace Rebus.Transport
 
             if (!(item is T))
             {
-                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
-                    key, item.GetType(), typeof(T)));
+                throw new ArgumentException(
+                    $"Found item with key '{key}' but it was a {item.GetType()} and not of type {typeof (T)} as expected");
             }
 
             return (T)item;
@@ -42,13 +42,13 @@ namespace Rebus.Transport
 
             if (!context.Items.TryGetValue(key, out item))
             {
-                throw new KeyNotFoundException(string.Format("Could not find an item with the key '{0}'", key));
+                throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
             }
 
             if (!(item is T))
             {
-                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
-                    key, item.GetType(), typeof(T)));
+                throw new ArgumentException(
+                    $"Found item with key '{key}' but it was a {item.GetType()} and not of type {typeof (T)} as expected");
             }
 
             return (T)item;
@@ -66,8 +66,8 @@ namespace Rebus.Transport
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException(string.Format("Could not 'GetOrAdd' item with key '{0}' as type {1}",
-                    key, typeof(TItem)), exception);
+                throw new RebusApplicationException(
+                    $"Could not 'GetOrAdd' item with key '{key}' as type {typeof (TItem)}", exception);
             }
         }
     }

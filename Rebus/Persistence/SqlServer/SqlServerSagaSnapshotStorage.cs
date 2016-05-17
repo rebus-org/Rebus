@@ -82,9 +82,11 @@ CREATE TABLE [dbo].[{0}] (
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
-INSERT INTO [{0}] (
+INSERT INTO [{_tableName
+                            }] (
     [id],
     [revision],
     [data],
@@ -96,7 +98,7 @@ INSERT INTO [{0}] (
     @metadata
 )
 
-", _tableName);
+";
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
                     command.Parameters.Add("data", SqlDbType.NVarChar).Value = JsonConvert.SerializeObject(sagaData, DataSettings);

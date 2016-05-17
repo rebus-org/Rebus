@@ -186,8 +186,8 @@ namespace Rebus.Transport.FileSystem
 
         string GetNextFileName()
         {
-            return string.Format("{0:yyyy_MM_dd_HH_mm_ss}_{1:0000000}_{2}.rebusmessage.json",
-                DateTime.UtcNow, Interlocked.Increment(ref _incrementingCounter), Guid.NewGuid());
+            return
+                $"{DateTime.UtcNow:yyyy_MM_dd_HH_mm_ss}_{Interlocked.Increment(ref _incrementingCounter):0000000}_{Guid.NewGuid()}.rebusmessage.json";
         }
 
         string Serialize(TransportMessage message)
@@ -210,8 +210,8 @@ namespace Rebus.Transport.FileSystem
             if (!invalidPathCharactersPresentsInQueueName.Any())
                 return;
 
-            throw new InvalidOperationException(string.Format("Cannot use '{0}' as an input queue name because it contains the following invalid characters: {1}",
-                _inputQueue, string.Join(", ", invalidPathCharactersPresentsInQueueName.Select(c => string.Format("'{0}'", c)))));
+            throw new InvalidOperationException(
+                $"Cannot use '{_inputQueue}' as an input queue name because it contains the following invalid characters: {string.Join(", ", invalidPathCharactersPresentsInQueueName.Select(c => $"'{c}'"))}");
         }
 
         void EnsureQueueInitialized(string queueName)
@@ -234,7 +234,8 @@ namespace Rebus.Transport.FileSystem
 
             if (caughtException != null && !Directory.Exists(directory))
             {
-                throw new ApplicationException(string.Format("Could not initialize directory '{0}' for queue named '{1}'", directory, queueName), caughtException);
+                throw new ApplicationException(
+                    $"Could not initialize directory '{directory}' for queue named '{queueName}'", caughtException);
             }
 
             // if an exception occurred but the directory exists now, it must have been a race... we're good

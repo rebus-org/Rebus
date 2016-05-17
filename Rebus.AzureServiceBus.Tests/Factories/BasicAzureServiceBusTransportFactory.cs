@@ -7,7 +7,6 @@ using Microsoft.ServiceBus.Messaging;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
-using Rebus.Threading;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
 

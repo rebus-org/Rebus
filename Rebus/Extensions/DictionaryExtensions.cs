@@ -48,8 +48,7 @@ namespace Rebus.Extensions
             if (dictionary.TryGetValue(key, out value))
                 return value;
 
-            throw new KeyNotFoundException(string.Format("Could not find the key '{0}' - have the following keys only: {1}",
-                key, string.Join(", ", dictionary.Keys.Select(k => string.Format("'{0}'", k)))));
+            throw new KeyNotFoundException($"Could not find the key '{key}' - have the following keys only: {string.Join(", ", dictionary.Keys.Select(k => $"'{k}'"))}");
         }
 
         /// <summary>
@@ -109,13 +108,12 @@ namespace Rebus.Extensions
 
             if (!dictionary.TryGetValue(key, out item))
             {
-                throw new KeyNotFoundException(string.Format("Could not find an item with the key '{0}'", key));
+                throw new KeyNotFoundException($"Could not find an item with the key '{key}'");
             }
 
             if (!(item is T))
             {
-                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
-                    key, item.GetType(), typeof(T)));
+                throw new ArgumentException($"Found item with key '{key}' but it was a {item.GetType()} and not of type {typeof (T)} as expected");
             }
 
             return (T)item;
@@ -136,8 +134,8 @@ namespace Rebus.Extensions
 
             if (!(item is T))
             {
-                throw new ArgumentException(string.Format("Found item with key '{0}' but it was a {1} and not of type {2} as expected",
-                    key, item.GetType(), typeof(T)));
+                throw new ArgumentException(
+                    $"Found item with key '{key}' but it was a {item.GetType()} and not of type {typeof (T)} as expected");
             }
 
             return (T)item;

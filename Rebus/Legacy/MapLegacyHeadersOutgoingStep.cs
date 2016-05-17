@@ -38,7 +38,7 @@ namespace Rebus.Legacy
 
             if (!contentType.StartsWith(JsonSerializer.JsonContentType))
             {
-                throw new FormatException(string.Format("Unknown content type: '{0}'", contentType));
+                throw new FormatException($"Unknown content type: '{contentType}'");
             }
 
             var encoding = contentType
@@ -49,7 +49,7 @@ namespace Rebus.Legacy
 
             if (encoding == null)
             {
-                throw new FormatException(string.Format("Could not find 'charset' property in the content type: '{0}'", contentType));
+                throw new FormatException($"Could not find 'charset' property in the content type: '{contentType}'");
             }
 
             headers["rebus-content-type"] = "text/json";

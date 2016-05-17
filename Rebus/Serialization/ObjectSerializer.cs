@@ -35,7 +35,7 @@ namespace Rebus.Serialization
             }
             catch (Exception exception)
             {
-                throw new JsonSerializationException(string.Format("Could not deserialize '{0}'", jsonString), exception);
+                throw new JsonSerializationException($"Could not deserialize '{jsonString}'", exception);
             }
         }
     }

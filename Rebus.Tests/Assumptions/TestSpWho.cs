@@ -19,7 +19,7 @@ namespace Rebus.Tests.Assumptions
             var who = SqlTestHelper.ExecSpWho();
 
             Console.WriteLine(string.Join(Environment.NewLine,
-                who.Select(d => string.Join(", ", d.Select(kvp => string.Format("{0} = {1}", kvp.Key, kvp.Value))))));
+                who.Select(d => string.Join(", ", d.Select(kvp => $"{kvp.Key} = {kvp.Value}")))));
 
         }
     }

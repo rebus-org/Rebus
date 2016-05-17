@@ -188,10 +188,8 @@ namespace Rebus.AzureServiceBus
 
             if (str.Length < maxLengthPrettySafe) return str;
 
-            return string.Format("{0} (... cut out because length exceeded {1} characters ...) {2}",
-                str.Substring(0, 8000),
-                maxLengthPrettySafe,
-                str.Substring(str.Length - 8000));
+            return
+                $"{str.Substring(0, 8000)} (... cut out because length exceeded {maxLengthPrettySafe} characters ...) {str.Substring(str.Length - 8000)}";
         }
 
         /// <summary>

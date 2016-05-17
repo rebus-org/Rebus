@@ -75,7 +75,7 @@ CREATE TABLE [dbo].[{0}] (
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format("SELECT [address] FROM [{0}] WHERE [topic] = @topic", _tableName);
+                    command.CommandText = $"SELECT [address] FROM [{_tableName}] WHERE [topic] = @topic";
                     command.Parameters.Add("topic", SqlDbType.NVarChar, 200).Value = topic;
 
                     var subscriberAddresses = new List<string>();
@@ -130,9 +130,10 @@ END
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-DELETE FROM [{0}] WHERE [topic] = @topic AND [address] = @address
-", _tableName);
+                    command.CommandText =
+                        $@"
+DELETE FROM [{_tableName}] WHERE [topic] = @topic AND [address] = @address
+";
                     command.Parameters.Add("topic", SqlDbType.NVarChar, 200).Value = topic;
                     command.Parameters.Add("address", SqlDbType.NVarChar, 200).Value = subscriberAddress;
 

@@ -107,7 +107,7 @@ namespace Rebus.Tests.Routing
 
 {0}
 
-", string.Join(Environment.NewLine, workByWorker.Select(g => string.Format("    {0}: {1}", g.Key, g.Count()))));
+", string.Join(Environment.NewLine, workByWorker.Select(g => $"    {g.Key}: {g.Count()}")));
 
             Assert.That(workByWorker.Count, Is.EqualTo(workers.Length), "Expected that all workers got to do some work!");
         }
@@ -129,7 +129,7 @@ namespace Rebus.Tests.Routing
                     };
 
                 default:
-                    throw new ArgumentOutOfRangeException(string.Format("Unknown transport type: {0}", transportType));
+                    throw new ArgumentOutOfRangeException($"Unknown transport type: {transportType}");
             }
         }
 

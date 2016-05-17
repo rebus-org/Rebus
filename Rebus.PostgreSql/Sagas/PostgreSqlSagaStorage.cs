@@ -60,31 +60,29 @@ namespace Rebus.PostgreSql.Sagas
                 if (hasDataTable)
                 {
                     throw new ApplicationException(
-                        string.Format(
-                            "The saga index table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the data table",
-                            _indexTableName, _dataTableName));
+                        $"The saga index table '{_indexTableName}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{_dataTableName}', which was supposed to be created as the data table");
                 }
 
                 if (hasIndexTable)
                 {
                     throw new ApplicationException(
-                        string.Format(
-                            "The saga data table '{0}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{1}', which was supposed to be created as the index table",
-                            _dataTableName, _indexTableName));
+                        $"The saga data table '{_dataTableName}' does not exist, so the automatic saga schema generation tried to run - but there was already a table named '{_indexTableName}', which was supposed to be created as the index table");
                 }
 
                 _log.Info("Saga tables '{0}' (data) and '{1}' (index) do not exist - they will be created now", _dataTableName, _indexTableName);
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE ""{0}"" (
+                    command.CommandText =
+                        $@"
+CREATE TABLE ""{_dataTableName
+                            }"" (
 	""id"" UUID NOT NULL,
 	""revision"" INTEGER NOT NULL,
 	""data"" BYTEA NOT NULL,
 	PRIMARY KEY (""id"")
 );
-", _dataTableName);
+";
 
                     command.ExecuteNonQuery();
                 }
@@ -150,9 +148,8 @@ SELECT s.data
                     }
                     catch (Exception exception)
                     {
-                        var message = string.Format(
-                            "An error occurred while attempting to deserialize '{0}' into a {1}", data,
-                            sagaDataType);
+                        var message =
+                            $"An error occurred while attempting to deserialize '{data}' into a {sagaDataType}";
 
                         throw new ApplicationException(message, exception);
                     }
@@ -189,13 +186,15 @@ SELECT s.data
                     command.Parameters.Add("revision", NpgsqlDbType.Integer).Value = sagaData.Revision;
                     command.Parameters.Add("data", NpgsqlDbType.Bytea).Value = _objectSerializer.Serialize(sagaData);
 
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
 INSERT 
-    INTO ""{0}"" (""id"", ""revision"", ""data"") 
+    INTO ""{_dataTableName
+                            }"" (""id"", ""revision"", ""data"") 
     VALUES (@id, @revision, @data);
 
-", _dataTableName);
+";
 
                     try
                     {
@@ -232,11 +231,11 @@ INSERT
                 // first, delete existing index
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText = $@"
 
-DELETE FROM ""{0}"" WHERE ""saga_id"" = @id;
+DELETE FROM ""{_indexTableName}"" WHERE ""saga_id"" = @id;
 
-", _indexTableName);
+";
                     command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = sagaData.Id;
                     await command.ExecuteNonQueryAsync();
                 }
@@ -249,13 +248,15 @@ DELETE FROM ""{0}"" WHERE ""saga_id"" = @id;
                     command.Parameters.Add("next_revision", NpgsqlDbType.Integer).Value = nextRevision;
                     command.Parameters.Add("data", NpgsqlDbType.Bytea).Value = _objectSerializer.Serialize(sagaData);
 
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
-UPDATE ""{0}"" 
+UPDATE ""{_dataTableName
+                            }"" 
     SET ""data"" = @data, ""revision"" = @next_revision 
     WHERE ""id"" = @id AND ""revision"" = @current_revision;
 
-", _dataTableName);
+";
                     
                     var rows = await command.ExecuteNonQueryAsync();
                     
@@ -282,13 +283,15 @@ UPDATE ""{0}""
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
 DELETE 
-    FROM ""{0}"" 
+    FROM ""{_dataTableName
+                            }"" 
     WHERE ""id"" = @id AND ""revision"" = @current_revision;
 
-", _dataTableName);
+";
                     
                     command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = sagaData.Id;
                     command.Parameters.Add("current_revision", NpgsqlDbType.Integer).Value = sagaData.Revision;
@@ -303,13 +306,14 @@ DELETE
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText =
+                        $@"
 
 DELETE 
-    FROM ""{0}"" 
+    FROM ""{_indexTableName}"" 
     WHERE ""saga_id"" = @id
 
-", _indexTableName);
+";
                     command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = sagaData.Id;
                     
                     await command.ExecuteNonQueryAsync();
@@ -327,8 +331,8 @@ DELETE
                 {
                     PropertyName = p.Key,
                     PropertyValue = p.Value ?? "",
-                    PropertyNameParameter = string.Format("@n{0}", i),
-                    PropertyValueParameter = string.Format("@v{0}", i)
+                    PropertyNameParameter = $"@n{i}",
+                    PropertyValueParameter = $"@v{i}"
                 })
                 .ToList();
 
@@ -337,14 +341,16 @@ DELETE
             {
                 // generate batch insert with SQL for each entry in the index
                 var inserts = parameters
-                    .Select(a => string.Format(@"
+                    .Select(a =>
+                        $@"
 
 INSERT
-    INTO ""{0}"" (""saga_type"", ""key"", ""value"", ""saga_id"") 
-    VALUES (@saga_type, {1}, {2}, @saga_id)
+    INTO ""{_indexTableName
+                            }"" (""saga_type"", ""key"", ""value"", ""saga_id"") 
+    VALUES (@saga_type, {
+                            a.PropertyNameParameter}, {a.PropertyValueParameter}, @saga_id)
 
-",
-                        _indexTableName, a.PropertyNameParameter, a.PropertyValueParameter));
+");
 
                 var sql = string.Join(";" + Environment.NewLine, inserts);
 

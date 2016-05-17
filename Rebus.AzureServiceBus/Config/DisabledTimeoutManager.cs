@@ -14,11 +14,11 @@ namespace Rebus.AzureServiceBus.Config
         {
             var messageIdToPrint = headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
-            var message = string.Format("Received message with ID {0} which is supposed to be deferred until {1} -" +
-                                        " this is a problem, because the internal handling of deferred messages is" +
-                                        " disabled when using Azure Service Bus as the transport layer in, which" +
-                                        " case the native support for a specific future enqueueing time is used...",
-                messageIdToPrint, approximateDueTime);
+            var message =
+                $"Received message with ID {messageIdToPrint} which is supposed to be deferred until {approximateDueTime} -" +
+                " this is a problem, because the internal handling of deferred messages is" +
+                " disabled when using Azure Service Bus as the transport layer in, which" +
+                " case the native support for a specific future enqueueing time is used...";
 
             throw new InvalidOperationException(message);
         }

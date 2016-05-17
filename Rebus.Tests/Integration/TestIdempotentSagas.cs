@@ -107,7 +107,7 @@ namespace Rebus.Tests.Integration
 
             Assert.That(instance.CountPerId.All(c => c.Value == 1), Is.True,
                 "Not all counts were exactly one: {0} - this is a sign that the saga was not truly idempotent, as the redelivery should have been caught!",
-                string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => string.Format("{0}: {1}", c.Key, c.Value))));
+                string.Join(", ", instance.CountPerId.Where(c => c.Value > 1).Select(c => $"{c.Key}: {c.Value}")));
 
             var outgoingMessagesById = receivedMessages.GroupBy(m => m.Id).ToList();
 

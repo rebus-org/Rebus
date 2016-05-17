@@ -242,7 +242,7 @@ namespace Rebus.Logging
                 var threadName = Thread.CurrentThread.Name;
 
                 return string.IsNullOrWhiteSpace(threadName)
-                    ? string.Format("Thread #{0}", Thread.CurrentThread.ManagedThreadId)
+                    ? $"Thread #{Thread.CurrentThread.ManagedThreadId}"
                     : threadName;
             }
         }

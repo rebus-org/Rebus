@@ -55,7 +55,7 @@ namespace Rebus.Tests.Transport.Msmq
         public void ReceivePerformanceWithThreadsOnMultipleInstances(int messageCount, int concurrencyLevel)
         {
             var allMessagesReceived = new ManualResetEvent(false);
-            var fileName = Path.Combine(@"C:\temp", string.Format("msmqtest-threaded-multi-{0}-{1}.txt", messageCount, concurrencyLevel));
+            var fileName = Path.Combine(@"C:\temp", $"msmqtest-threaded-multi-{messageCount}-{concurrencyLevel}.txt");
 
             File.WriteAllText(fileName, "Go!" + Environment.NewLine);
 
@@ -158,7 +158,7 @@ namespace Rebus.Tests.Transport.Msmq
         public void ReceivePerformanceWithThreadsOnSingleInstance(int messageCount, int concurrencyLevel)
         {
             var allMessagesReceived = new ManualResetEvent(false);
-            var fileName = Path.Combine(@"C:\temp", string.Format("msmqtest-threaded-single-{0}-{1}.txt", messageCount, concurrencyLevel));
+            var fileName = Path.Combine(@"C:\temp", $"msmqtest-threaded-single-{messageCount}-{concurrencyLevel}.txt");
 
             File.WriteAllText(fileName, "Go!" + Environment.NewLine);
 
@@ -257,7 +257,7 @@ namespace Rebus.Tests.Transport.Msmq
         public void ReceivePerformanceWithEventOnMultipleInstances(int messageCount, int concurrencyLevel)
         {
             var allMessagesReceived = new ManualResetEvent(false);
-            var fileName = Path.Combine(@"C:\temp", string.Format("msmqtest-multi-{0}-{1}.txt", messageCount, concurrencyLevel));
+            var fileName = Path.Combine(@"C:\temp", $"msmqtest-multi-{messageCount}-{concurrencyLevel}.txt");
 
             File.WriteAllText(fileName, "Go!" + Environment.NewLine);
 
@@ -328,7 +328,7 @@ namespace Rebus.Tests.Transport.Msmq
         public void ReceivePerformanceWithEventOnSingleInstance(int messageCount, int concurrencyLevel)
         {
             var allMessagesReceived = new ManualResetEvent(false);
-            var fileName = Path.Combine(@"C:\temp", string.Format("msmqtest-single-{0}-{1}.txt", messageCount, concurrencyLevel));
+            var fileName = Path.Combine(@"C:\temp", $"msmqtest-single-{messageCount}-{concurrencyLevel}.txt");
 
             File.WriteAllText(fileName, "Go!" + Environment.NewLine);
 
@@ -390,7 +390,7 @@ namespace Rebus.Tests.Transport.Msmq
         public void ReceivePerformanceWithEventAndPeeking(int messageCount, int concurrencyLevel)
         {
             var allMessagesReceived = new ManualResetEvent(false);
-            var fileName = Path.Combine(@"C:\temp", string.Format("msmqtest-peek-single-{0}-{1}.txt", messageCount, concurrencyLevel));
+            var fileName = Path.Combine(@"C:\temp", $"msmqtest-peek-single-{messageCount}-{concurrencyLevel}.txt");
 
             File.WriteAllText(fileName, "Go!" + Environment.NewLine);
 
@@ -470,7 +470,7 @@ namespace Rebus.Tests.Transport.Msmq
 
         static void AppendStatus(int counter, Stopwatch stopwatch, string fileName)
         {
-            var text = string.Format("{0} msgs received ({1:0.0} msg/s)", counter, counter / stopwatch.Elapsed.TotalSeconds);
+            var text = $"{counter} msgs received ({counter/stopwatch.Elapsed.TotalSeconds:0.0} msg/s)";
 
             File.AppendAllText(fileName, text + Environment.NewLine);
         }
@@ -508,7 +508,7 @@ namespace Rebus.Tests.Transport.Msmq
 
             public override string ToString()
             {
-                return string.Format("msg {0}", Id);
+                return $"msg {Id}";
             }
         }
     }

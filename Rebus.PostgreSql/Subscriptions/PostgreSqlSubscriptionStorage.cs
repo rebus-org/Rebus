@@ -48,13 +48,15 @@ namespace Rebus.PostgreSql.Subscriptions
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE ""{0}"" (
+                    command.CommandText =
+                        $@"
+CREATE TABLE ""{_tableName
+                            }"" (
 	""topic"" VARCHAR(200) NOT NULL,
 	""address"" VARCHAR(200) NOT NULL,
 	PRIMARY KEY (""topic"", ""address"")
 );
-", _tableName);
+";
                     command.ExecuteNonQuery();
                 }
 
@@ -67,7 +69,7 @@ CREATE TABLE ""{0}"" (
             using (var connection = await _connectionHelper.GetConnection())
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = string.Format(@"select ""address"" from ""{0}"" where ""topic"" = @topic", _tableName);
+                command.CommandText = $@"select ""address"" from ""{_tableName}"" where ""topic"" = @topic";
 
                 command.Parameters.AddWithValue("topic", NpgsqlDbType.Text, topic);
 
@@ -90,7 +92,8 @@ CREATE TABLE ""{0}"" (
             using(var connection = await _connectionHelper.GetConnection())
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = string.Format(@"insert into ""{0}"" (""topic"", ""address"") values (@topic, @address)", _tableName);
+                command.CommandText =
+                    $@"insert into ""{_tableName}"" (""topic"", ""address"") values (@topic, @address)";
 
                 command.Parameters.AddWithValue("topic", NpgsqlDbType.Text, topic);
                 command.Parameters.AddWithValue("address", NpgsqlDbType.Text, subscriberAddress);
@@ -113,7 +116,8 @@ CREATE TABLE ""{0}"" (
             using (var connection = await _connectionHelper.GetConnection())
             using (var command = connection.CreateCommand())
             {
-                command.CommandText = string.Format(@"delete from ""{0}"" where ""topic"" = @topic and ""address"" = @address;", _tableName);
+                command.CommandText =
+                    $@"delete from ""{_tableName}"" where ""topic"" = @topic and ""address"" = @address;";
 
                 command.Parameters.AddWithValue("topic", NpgsqlDbType.Text, topic);
                 command.Parameters.AddWithValue("address", NpgsqlDbType.Text, subscriberAddress);

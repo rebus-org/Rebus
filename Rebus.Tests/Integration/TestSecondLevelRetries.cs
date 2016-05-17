@@ -163,7 +163,8 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Console.WriteLine(string.Join(Environment.NewLine , headersOfFailedMessage.Select(kvp => string.Format("    {0}: {1}", kvp.Key, kvp.Value))));
+            Console.WriteLine(string.Join(Environment.NewLine , headersOfFailedMessage.Select(kvp =>
+                $"    {kvp.Key}: {kvp.Value}")));
 
             Assert.That(headersOfFailedMessage["custom-header"], Is.EqualTo("with-a-custom-value"));
         }

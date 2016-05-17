@@ -80,7 +80,8 @@ namespace Rebus.AzureStorage.Transport
                 }
                 catch (Exception exception)
                 {
-                    throw new RebusApplicationException(string.Format("Could not send message with ID {0} to '{1}'", cloudQueueMessage.Id, destinationAddress), exception);
+                    throw new RebusApplicationException(
+                        $"Could not send message with ID {cloudQueueMessage.Id} to '{destinationAddress}'", exception);
                 }
             });
         }
