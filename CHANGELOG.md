@@ -927,6 +927,8 @@
 * Real pause (5 s) when the next transport message cannot be received
 
 
+---
+
 [AndreaCuneo]: https://github.com/AndreaCuneo
 [arneeiri]: https://github.com/arneeiri
 [bchavez]: https://github.com/bchavez
@@ -958,6 +960,7 @@
 [pruiz]: https://github.com/pruiz
 [puzsol]: https://github.com/puzsol
 [seankearon]: https://github.com/seankearon
+[SvenVandenbrande]: https://github.com/SvenVandenbrande
 [tiipe]: https://github.com/tiipe
 [tobiaxor]: https://github.com/tobiaxor
 [torangel]: https://github.com/torangel
