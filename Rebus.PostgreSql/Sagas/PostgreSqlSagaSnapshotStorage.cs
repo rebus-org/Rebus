@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using NpgsqlTypes;
 using Rebus.Auditing.Sagas;
@@ -23,6 +24,8 @@ namespace Rebus.PostgreSql.Sagas
         /// </summary>
         public PostgreSqlSagaSnapshotStorage(PostgresConnectionHelper connectionHelper, string tableName)
         {
+            if (connectionHelper == null) throw new ArgumentNullException(nameof(connectionHelper));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
             _connectionHelper = connectionHelper;
             _tableName = tableName;
         }
@@ -37,8 +40,7 @@ namespace Rebus.PostgreSql.Sagas
                         $@"
 
 INSERT
-    INTO ""{_tableName
-                            }"" (""id"", ""revision"", ""data"", ""metadata"")
+    INTO ""{_tableName}"" (""id"", ""revision"", ""data"", ""metadata"")
     VALUES (@id, @revision, @data, @metadata);
 
 ";
@@ -70,8 +72,7 @@ INSERT
                 {
                     command.CommandText =
                         $@"
-CREATE TABLE ""{_tableName
-                            }"" (
+CREATE TABLE ""{_tableName}"" (
 	""id"" UUID NOT NULL,
 	""revision"" INTEGER NOT NULL,
 	""metadata"" JSONB NOT NULL,

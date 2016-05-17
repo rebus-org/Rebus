@@ -18,8 +18,6 @@ namespace Rebus.PostgreSql.Sagas
     /// </summary>
     public class PostgreSqlSagaStorage : ISagaStorage
     {
-        const bool IndexNullProperties = false;
-
         static readonly string IdPropertyName = Reflect.Path<ISagaData>(d => d.Id);
 
         readonly ObjectSerializer _objectSerializer = new ObjectSerializer();
@@ -33,6 +31,10 @@ namespace Rebus.PostgreSql.Sagas
         /// </summary>
         public PostgreSqlSagaStorage(PostgresConnectionHelper connectionHelper, string dataTableName, string indexTableName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (connectionHelper == null) throw new ArgumentNullException(nameof(connectionHelper));
+            if (dataTableName == null) throw new ArgumentNullException(nameof(dataTableName));
+            if (indexTableName == null) throw new ArgumentNullException(nameof(indexTableName));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _connectionHelper = connectionHelper;
             _dataTableName = dataTableName;
             _indexTableName = indexTableName;
@@ -75,8 +77,7 @@ namespace Rebus.PostgreSql.Sagas
                 {
                     command.CommandText =
                         $@"
-CREATE TABLE ""{_dataTableName
-                            }"" (
+CREATE TABLE ""{_dataTableName}"" (
 	""id"" UUID NOT NULL,
 	""revision"" INTEGER NOT NULL,
 	""data"" BYTEA NOT NULL,
@@ -89,8 +90,8 @@ CREATE TABLE ""{_dataTableName
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE ""{0}"" (
+                    command.CommandText = $@"
+CREATE TABLE ""{_indexTableName}"" (
 	""saga_type"" TEXT NOT NULL,
 	""key"" TEXT NOT NULL,
 	""value"" TEXT NOT NULL,
@@ -98,9 +99,8 @@ CREATE TABLE ""{0}"" (
 	PRIMARY KEY (""key"", ""value"", ""saga_type"")
 );
 
-CREATE INDEX ON ""{0}"" (""saga_id"");
-
-", _indexTableName);
+CREATE INDEX ON ""{_indexTableName}"" (""saga_id"");
+";
 
                     command.ExecuteNonQuery();
                 }
@@ -117,21 +117,18 @@ CREATE INDEX ON ""{0}"" (""saga_id"");
                 {
                     if (propertyName == IdPropertyName)
                     {
-                        const string sql = @"SELECT s.data FROM ""{0}"" s WHERE s.id = @id";
-
-                        command.CommandText = string.Format(sql, _dataTableName);
+                        command.CommandText = $@"SELECT s.""data"" FROM ""{_dataTableName}"" s WHERE s.""id"" = @id";
                         command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = ToGuid(propertyValue);
                     }
                     else
                     {
-                        const string sql = @"
-SELECT s.data 
-    FROM ""{0}"" s
-    JOIN ""{1}"" i on s.id = i.saga_id 
-    WHERE i.""saga_type"" = @saga_type AND i.""key"" = @key AND i.value = @value
+                        command.CommandText =
+                            $@"
+SELECT s.""data"" 
+    FROM ""{_dataTableName}"" s
+    JOIN ""{_indexTableName}"" i on s.id = i.saga_id 
+    WHERE i.""saga_type"" = @saga_type AND i.""key"" = @key AND i.value = @value;
 ";
-
-                        command.CommandText = string.Format(sql, _dataTableName, _indexTableName);
 
                         command.Parameters.Add("key", NpgsqlDbType.Text).Value = propertyName;
                         command.Parameters.Add("saga_type", NpgsqlDbType.Text).Value = GetSagaTypeName(sagaDataType);
@@ -190,8 +187,7 @@ SELECT s.data
                         $@"
 
 INSERT 
-    INTO ""{_dataTableName
-                            }"" (""id"", ""revision"", ""data"") 
+    INTO ""{_dataTableName}"" (""id"", ""revision"", ""data"") 
     VALUES (@id, @revision, @data);
 
 ";
@@ -251,8 +247,7 @@ DELETE FROM ""{_indexTableName}"" WHERE ""saga_id"" = @id;
                     command.CommandText =
                         $@"
 
-UPDATE ""{_dataTableName
-                            }"" 
+UPDATE ""{_dataTableName}"" 
     SET ""data"" = @data, ""revision"" = @next_revision 
     WHERE ""id"" = @id AND ""revision"" = @current_revision;
 
@@ -287,8 +282,7 @@ UPDATE ""{_dataTableName
                         $@"
 
 DELETE 
-    FROM ""{_dataTableName
-                            }"" 
+    FROM ""{_dataTableName}"" 
     WHERE ""id"" = @id AND ""revision"" = @current_revision;
 
 ";
@@ -345,10 +339,8 @@ DELETE
                         $@"
 
 INSERT
-    INTO ""{_indexTableName
-                            }"" (""saga_type"", ""key"", ""value"", ""saga_id"") 
-    VALUES (@saga_type, {
-                            a.PropertyNameParameter}, {a.PropertyValueParameter}, @saga_id)
+    INTO ""{_indexTableName}"" (""saga_type"", ""key"", ""value"", ""saga_id"") 
+    VALUES (@saga_type, {a.PropertyNameParameter}, {a.PropertyValueParameter}, @saga_id)
 
 ");
 
@@ -382,9 +374,9 @@ INSERT
                 {
                     var value = Reflect.Value(sagaData, path);
 
-                    return new KeyValuePair<string, string>(path, value != null ? value.ToString() : null);
+                    return new KeyValuePair<string, string>(path, value?.ToString());
                 })
-                .Where(kvp => IndexNullProperties || kvp.Value != null)
+                .Where(kvp => kvp.Value != null)
                 .ToList();
         }
     }

@@ -28,6 +28,9 @@ namespace Rebus.PostgreSql.Timeouts
         /// </summary>
         public PostgreSqlTimeoutManager(PostgresConnectionHelper connectionHelper, string tableName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (connectionHelper == null) throw new ArgumentNullException(nameof(connectionHelper));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _connectionHelper = connectionHelper;
             _tableName = tableName;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
@@ -41,8 +44,7 @@ namespace Rebus.PostgreSql.Timeouts
                 {
                     command.CommandText =
                         $@"
-INSERT INTO ""{_tableName
-                            }"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @headers, @body)";
+INSERT INTO ""{_tableName}"" (""due_time"", ""headers"", ""body"") VALUES (@due_time, @headers, @body)";
 
                     command.Parameters.Add("due_time", NpgsqlDbType.Timestamp).Value = approximateDueTime.ToUniversalTime().DateTime;
                     command.Parameters.Add("headers", NpgsqlDbType.Text).Value = _dictionarySerializer.SerializeToString(headers);
@@ -71,8 +73,7 @@ SELECT
     ""headers"", 
     ""body"" 
 
-FROM ""{_tableName
-                            }"" 
+FROM ""{_tableName}"" 
 
 WHERE ""due_time"" <= @current_time 
 
@@ -139,8 +140,7 @@ FOR UPDATE;
                 {
                     command.CommandText =
                         $@"
-CREATE TABLE ""{_tableName
-                            }"" (
+CREATE TABLE ""{_tableName}"" (
     ""id"" BIGSERIAL NOT NULL,
     ""due_time"" TIMESTAMP WITH TIME ZONE NOT NULL,
     ""headers"" TEXT NULL,
