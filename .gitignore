@@ -24,3 +24,5 @@ azure_storage_connection_string.txt
 _NCrunch_*
 *.user
 *.backup
+!packages
+!packages/*
