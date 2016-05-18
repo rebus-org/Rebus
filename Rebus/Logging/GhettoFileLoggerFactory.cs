@@ -121,22 +121,22 @@ namespace Rebus.Logging
             /// <summary>
             /// Indicates the type from which the logger that created the log message was created
             /// </summary>
-            public Type LoggerType { get; private set; }
+            public Type LoggerType { get; }
 
             /// <summary>
             /// The time when this log message was emitted
             /// </summary>
-            public DateTime Time { get; private set; }
+            public DateTime Time { get; }
 
             /// <summary>
             /// The log message
             /// </summary>
-            public string Message { get; private set; }
+            public string Message { get; }
 
             /// <summary>
             /// The log level
             /// </summary>
-            public LogLevel Level { get; private set; }
+            public LogLevel Level { get; }
         }
 
         class CrudeFileLogger : ILog

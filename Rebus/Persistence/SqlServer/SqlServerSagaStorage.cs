@@ -155,9 +155,9 @@ ALTER TABLE [dbo].[{_indexTableName}] CHECK CONSTRAINT [FK_{_dataTableName}_id]
         /// </summary>
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            if (sagaDataType == null) throw new ArgumentNullException("sagaDataType");
-            if (propertyName == null) throw new ArgumentNullException("propertyName");
-            if (propertyValue == null) throw new ArgumentNullException("propertyValue");
+            if (sagaDataType == null) throw new ArgumentNullException(nameof(sagaDataType));
+            if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
+            if (propertyValue == null) throw new ArgumentNullException(nameof(propertyValue));
 
             using (var connection = await _connectionProvider.GetConnection())
             {

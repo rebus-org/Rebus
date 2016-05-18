@@ -27,7 +27,7 @@ namespace Rebus.Routing.TopicBased
         /// </summary>
         public async Task<string> GetDestinationAddress(Message message)
         {
-            if (message == null) throw new ArgumentNullException("message");
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
             throw new NotImplementedException("don't know what to do here yet");
         }
@@ -37,7 +37,7 @@ namespace Rebus.Routing.TopicBased
         /// </summary>
         public async Task<string> GetOwnerAddress(string topic)
         {
-            if (topic == null) throw new ArgumentNullException("topic");
+            if (topic == null) throw new ArgumentNullException(nameof(topic));
 
             string ownerAddress;
 

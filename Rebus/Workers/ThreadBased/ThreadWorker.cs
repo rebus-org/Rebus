@@ -239,9 +239,9 @@ namespace Rebus.Workers.ThreadBased
             {
                 Stop();
 
-                if (!_workerThread.Join(this._workerShutdownTimeout))
+                if (!_workerThread.Join(_workerShutdownTimeout))
                 {
-                    _log.Warn("Worker {0} did not stop withing {1} seconds timeout!", Name, this._workerShutdownTimeout.TotalSeconds);
+                    _log.Warn("Worker {0} did not stop withing {1} seconds timeout!", Name, _workerShutdownTimeout.TotalSeconds);
                 }
             }
             finally

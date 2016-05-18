@@ -172,8 +172,8 @@ namespace Rebus.Retry.ErrorTracking
                 Time = RebusTime.Now;
             }
 
-            public Exception Exception { get; private set; }
-            public DateTimeOffset Time { get; private set; }
+            public Exception Exception { get; }
+            public DateTimeOffset Time { get; }
         }
 
         /// <summary>

@@ -31,12 +31,12 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Gets the headers of this in-mem transport message
         /// </summary>
-        public Dictionary<string,string> Headers { get; private set; }
+        public Dictionary<string,string> Headers { get; }
 
         /// <summary>
         /// Gets the body data of this in-mem transport message
         /// </summary>
-        public byte[] Body { get; private set; }
+        public byte[] Body { get; }
 
         /// <summary>
         /// Returns this in-mem transport message's headers and body in a <see cref="TransportMessage"/>

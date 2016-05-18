@@ -147,6 +147,6 @@ DELETE FROM [{_tableName}] WHERE [topic] = @topic AND [address] = @address
         /// <summary>
         /// Gets whether this subscription storage is centralized
         /// </summary>
-        public bool IsCentralized { get; private set; }
+        public bool IsCentralized { get; }
     }
 }

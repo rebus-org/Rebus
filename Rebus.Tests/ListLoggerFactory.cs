@@ -118,9 +118,9 @@ namespace Rebus.Tests
     public class LogLine
     {
         public DateTime Time { get; private set; }
-        public LogLevel Level { get; private set; }
-        public Type Type { get; private set; }
-        public string Text { get; private set; }
+        public LogLevel Level { get; }
+        public Type Type { get; }
+        public string Text { get; }
 
         public LogLine(LogLevel level, string text, Type type)
         {

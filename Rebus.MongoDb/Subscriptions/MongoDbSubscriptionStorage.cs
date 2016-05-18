@@ -43,6 +43,6 @@ namespace Rebus.MongoDb.Subscriptions
                 new UpdateOptions() { IsUpsert = true }).ConfigureAwait(false);
         }
 
-        public bool IsCentralized { get; private set; }
+        public bool IsCentralized { get; }
     }
 }

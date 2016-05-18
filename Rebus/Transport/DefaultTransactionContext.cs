@@ -36,8 +36,7 @@ namespace Rebus.Transport
         /// </summary>
         public ConcurrentDictionary<string, object> Items
         {
-            get; private set;
-        }
+            get; }
 
         /// <summary>
         /// Registers a listener to be called when the queue transaction is committed. This hook is reserved for the queue transaction

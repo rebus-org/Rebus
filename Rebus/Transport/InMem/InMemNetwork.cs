@@ -50,8 +50,8 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public void Deliver(string destinationAddress, InMemTransportMessage msg, bool alwaysQuiet = false)
         {
-            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress");
-            if (msg == null) throw new ArgumentNullException("msg");
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress));
+            if (msg == null) throw new ArgumentNullException(nameof(msg));
 
             if (_outputEventsToConsole && !alwaysQuiet)
             {
@@ -69,7 +69,7 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public InMemTransportMessage GetNextOrNull(string inputQueueName)
         {
-            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
+            if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
 
             InMemTransportMessage message;
 

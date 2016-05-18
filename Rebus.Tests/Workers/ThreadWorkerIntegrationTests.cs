@@ -56,7 +56,7 @@ namespace Rebus.Tests.Workers
            
             var timer = Stopwatch.StartNew();
             
-            this._bus.Dispose();
+            _bus.Dispose();
 
             timer.Stop();
 
@@ -86,7 +86,7 @@ namespace Rebus.Tests.Workers
 
             var timer = Stopwatch.StartNew();
 
-            this._bus.Dispose();
+            _bus.Dispose();
 
             timer.Stop();
 
@@ -119,7 +119,7 @@ namespace Rebus.Tests.Workers
 
             var timer = Stopwatch.StartNew();
 
-            this._bus.Dispose();
+            _bus.Dispose();
 
             timer.Stop();
 

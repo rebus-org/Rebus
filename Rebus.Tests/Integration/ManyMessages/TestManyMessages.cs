@@ -102,7 +102,7 @@ namespace Rebus.Tests.Integration.ManyMessages
                 Id = id;
             }
 
-            public int Id { get; private set; }
+            public int Id { get; }
 
             public override string ToString()
             {

@@ -97,11 +97,11 @@ namespace Rebus.MongoDb.Timeouts
                 OriginalDueTimeUtc = dueTimeUtc;
             }
 
-            public ObjectId Id { get; protected set; }
-            public Dictionary<string, string> Headers { get; protected set; }
-            public byte[] Body { get; protected set; }
+            public ObjectId Id { get; }
+            public Dictionary<string, string> Headers { get; }
+            public byte[] Body { get; }
             public DateTime DueTimeUtc { get; protected set; }
-            public DateTime OriginalDueTimeUtc { get; protected set; }
+            public DateTime OriginalDueTimeUtc { get; }
         }
     }
 }

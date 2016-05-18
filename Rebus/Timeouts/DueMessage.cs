@@ -27,12 +27,12 @@ namespace Rebus.Timeouts
         /// <summary>
         /// Gets the headers of this due message
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; }
+        public Dictionary<string, string> Headers { get; }
 
         /// <summary>
         /// Gets the body data of this due message
         /// </summary>
-        public byte[] Body { get; private set; }
+        public byte[] Body { get; }
 
         /// <summary>
         /// Marks the due message as successfully handled, which should probably be done when the message has been safely sent to the proper recipient
