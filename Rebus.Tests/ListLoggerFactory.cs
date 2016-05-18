@@ -8,9 +8,9 @@ namespace Rebus.Tests
 {
     public class ListLoggerFactory : AbstractRebusLoggerFactory, IEnumerable<LogLine>
     {
+        readonly ConcurrentQueue<LogLine> _loggedLines = new ConcurrentQueue<LogLine>();
         readonly bool _outputToConsole;
         readonly bool _detailed;
-        readonly ConcurrentQueue<LogLine> _loggedLines = new ConcurrentQueue<LogLine>();
 
         public ListLoggerFactory(bool outputToConsole = false, bool detailed = false)
         {
@@ -22,7 +22,6 @@ namespace Rebus.Tests
         {
             LogLine temp;
             while (_loggedLines.TryDequeue(out temp)) { }
-
             Console.WriteLine("Cleared the logs");
         }
 
@@ -112,28 +111,6 @@ namespace Rebus.Tests
                     return message;
                 }
             }
-        }
-    }
-
-    public class LogLine
-    {
-        public DateTime Time { get; private set; }
-        public LogLevel Level { get; }
-        public Type Type { get; }
-        public string Text { get; }
-
-        public LogLine(LogLevel level, string text, Type type)
-        {
-            Time = DateTime.Now;
-            Level = level;
-            Text = text;
-            Type = type;
-        }
-
-        public override string ToString()
-        {
-            return
-                $"{Level} / {Type} / {string.Join(" | ", Text.Split("\r\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))}";
         }
     }
 }

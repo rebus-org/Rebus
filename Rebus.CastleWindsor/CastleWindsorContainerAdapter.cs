@@ -78,7 +78,7 @@ namespace Rebus.CastleWindsor
         }
 
         /// <summary>
-        /// Hack to makes sure we dispose the bus instance when the container is disposed
+        /// containehack to makes sure we dispose the bus instance when the container is disposed
         /// </summary>
         class InstanceDisposer : IDisposable
         {

@@ -5,6 +5,7 @@ using Npgsql;
 using NpgsqlTypes;
 using Rebus.Extensions;
 using Rebus.Logging;
+using Rebus.Messages.Control;
 using Rebus.Subscriptions;
 
 namespace Rebus.PostgreSql.Subscriptions
@@ -19,7 +20,7 @@ namespace Rebus.PostgreSql.Subscriptions
         readonly PostgresConnectionHelper _connectionHelper;
         readonly string _tableName;
         readonly ILog _log;
-        
+
         /// <summary>
         /// Constructs the subscription storage, storing subscriptions in the specified <paramref name="tableName"/>.
         /// If <paramref name="isCentralized"/> is true, subscribing/unsubscribing will be short-circuited by manipulating
@@ -89,7 +90,7 @@ CREATE TABLE ""{_tableName
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            using(var connection = await _connectionHelper.GetConnection())
+            using (var connection = await _connectionHelper.GetConnection())
             using (var command = connection.CreateCommand())
             {
                 command.CommandText =
@@ -135,8 +136,9 @@ CREATE TABLE ""{_tableName
             }
         }
 
-        public bool IsCentralized
-        {
-            get; }
+        /// <summary>
+        /// Gets whether the subscription storage is centralized and thus supports bypassing the usual subscription request
+        /// </summary>
+        public bool IsCentralized { get; }
     }
 }

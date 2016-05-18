@@ -34,9 +34,7 @@ namespace Rebus.Transport
         /// <summary>
         /// Stash of items that can carry stuff for later use in the transaction
         /// </summary>
-        public ConcurrentDictionary<string, object> Items
-        {
-            get; }
+        public ConcurrentDictionary<string, object> Items { get; }
 
         /// <summary>
         /// Registers a listener to be called when the queue transaction is committed. This hook is reserved for the queue transaction
@@ -164,7 +162,7 @@ namespace Rebus.Transport
             while (actions.TryDequeue(out action))
             {
                 action();
-            }    
+            }
         }
 
         static async Task Invoke(ConcurrentQueue<Func<Task>> actions)
