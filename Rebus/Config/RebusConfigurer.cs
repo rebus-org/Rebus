@@ -149,7 +149,7 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
-            
+
             PossiblyRegisterDefault<IBackoffStrategy>(c => new SimpleConstantPollingBackoffStrategy());
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
@@ -222,7 +222,6 @@ namespace Rebus.Config
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
-            IContainerAdapter containerAdapter = null;
             Action startAction = null;
 
             PossiblyRegisterDefault<IBus>(c =>
@@ -254,11 +253,7 @@ namespace Rebus.Config
                     initializableInstance.Initialize();
                 }
 
-                if (_injectionist.Has<IContainerAdapter>())
-                {
-                    containerAdapter = c.Get<IContainerAdapter>();
-                }
-
+                // and then we set the startAction
                 startAction = () => bus.Start(_options.NumberOfWorkers);
 
                 return bus;
@@ -272,15 +267,22 @@ namespace Rebus.Config
                 return internalHandlersContributor;
             });
 
-            var busInstance = _injectionist.Get<IBus>();
+            var butResolutionResult = _injectionist.Get<IBus>();
+            var busInstance = butResolutionResult.Instance;
 
-            containerAdapter?.SetBus(busInstance.Instance);
+            // if there is a container adapter among the tracked instances, hand it the bus instance
+            var containerAdapter = butResolutionResult.TrackedInstances
+                .OfType<IContainerAdapter>()
+                .FirstOrDefault();
 
+            containerAdapter?.SetBus(busInstance);
+
+            // and NOW we are ready to start the bus if there is a startAction
             startAction?.Invoke();
 
             _hasBeenStarted = true;
 
-            return busInstance.Instance;
+            return busInstance;
         }
 
         void VerifyRequirements()
