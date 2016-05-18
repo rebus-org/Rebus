@@ -926,6 +926,9 @@
 
 * Real pause (5 s) when the next transport message cannot be received
 
+# 0.99.56
+
+* Changed timeout settings on Azure Service Bus transport to respect the setting from the connection string - thanks [Rzpeg]
 
 ---
 
@@ -959,6 +962,7 @@
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pruiz]: https://github.com/pruiz
 [puzsol]: https://github.com/puzsol
+[Rzpeg]: https://github.com/Rzpeg
 [seankearon]: https://github.com/seankearon
 [SvenVandenbrande]: https://github.com/SvenVandenbrande
 [tiipe]: https://github.com/tiipe
