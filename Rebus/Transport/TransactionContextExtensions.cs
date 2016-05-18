@@ -66,8 +66,7 @@ namespace Rebus.Transport
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException(
-                    $"Could not 'GetOrAdd' item with key '{key}' as type {typeof (TItem)}", exception);
+                throw new RebusApplicationException(exception, $"Could not 'GetOrAdd' item with key '{key}' as type {typeof (TItem)}");
             }
         }
     }

@@ -179,7 +179,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException("An error occurred while attempting to figure out the name of the local administrators group!", exception);
+                throw new RebusApplicationException(exception, "An error occurred while attempting to figure out the name of the local administrators group!");
             }
         }
 

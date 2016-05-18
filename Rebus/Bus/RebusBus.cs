@@ -345,7 +345,8 @@ namespace Rebus.Bus
             {
                 var message = $"Could not get the return address from the '{Headers.ReturnAddress}' header of the incoming" +
                               $" message with ID {transportMessage.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>"}";
-                throw new RebusApplicationException(message, exception);
+
+                throw new RebusApplicationException(exception, message);
             }
         }
 
@@ -490,7 +491,7 @@ namespace Rebus.Bus
                 }
                 catch (Exception exception)
                 {
-                    throw new RebusApplicationException($"Could not create {workerName}", exception);
+                    throw new RebusApplicationException(exception, $"Could not create {workerName}");
                 }
             }
         }

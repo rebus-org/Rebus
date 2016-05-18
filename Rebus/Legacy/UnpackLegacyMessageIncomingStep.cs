@@ -56,8 +56,7 @@ namespace Rebus.Legacy
 
             if (!headers.TryGetValue(Headers.ReturnAddress, out returnAddress))
             {
-                throw new RebusApplicationException(
-                    "Got legacy subscription message but the '{0}' header was not present on it!", Headers.ReturnAddress);
+                throw new RebusApplicationException($"Got legacy subscription message but the '{Headers.ReturnAddress}' header was not present on it!");
             }
 
             var subscribe = legacySubscriptionMessage.Action == 0;

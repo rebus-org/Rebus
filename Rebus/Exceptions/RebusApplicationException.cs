@@ -12,16 +12,16 @@ namespace Rebus.Exceptions
         /// <summary>
         /// Constructs the exception with the given message
         /// </summary>
-        public RebusApplicationException(string message, params object[] objs)
-            :base(SafeStringFormat(message, objs))
+        public RebusApplicationException(string message)
+            :base(message)
         {
         }
 
         /// <summary>
         /// Constructs the exception with the given message and inner exception
         /// </summary>
-        public RebusApplicationException(Exception innerException, string message, params object[] objs)
-            :base(SafeStringFormat(message, objs), innerException)
+        public RebusApplicationException(Exception innerException, string message)
+            :base(message, innerException)
         {
         }
 

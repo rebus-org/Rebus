@@ -80,8 +80,7 @@ namespace Rebus.AzureStorage.Transport
                 }
                 catch (Exception exception)
                 {
-                    throw new RebusApplicationException(
-                        $"Could not send message with ID {cloudQueueMessage.Id} to '{destinationAddress}'", exception);
+                    throw new RebusApplicationException(exception, $"Could not send message with ID {cloudQueueMessage.Id} to '{destinationAddress}'");
                 }
             });
         }
@@ -221,7 +220,7 @@ namespace Rebus.AzureStorage.Transport
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException("Could not purge queue", exception);
+                throw new RebusApplicationException(exception, "Could not purge queue");
             }
         }
     }

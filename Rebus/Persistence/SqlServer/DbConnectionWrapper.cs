@@ -60,7 +60,7 @@ namespace Rebus.Persistence.SqlServer
             }
             catch (SqlException exception)
             {
-                throw new RebusApplicationException("Could not get table names", exception);
+                throw new RebusApplicationException(exception, "Could not get table names");
             }
         }
 

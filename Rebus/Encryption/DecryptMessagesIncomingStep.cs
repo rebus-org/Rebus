@@ -51,7 +51,7 @@ namespace Rebus.Encryption
 
             if (!headers.TryGetValue(EncryptionHeaders.ContentInitializationVector, out ivString))
             {
-                throw new RebusApplicationException("Message has the '{0}' header, but there was not '{1}' header with the IV!", EncryptionHeaders.ContentEncryption, EncryptionHeaders.ContentInitializationVector);
+                throw new RebusApplicationException($"Message has the '{EncryptionHeaders.ContentEncryption}' header, but there was no '{EncryptionHeaders.ContentInitializationVector}' header with the IV!");
             }
 
             return Convert.FromBase64String(ivString);

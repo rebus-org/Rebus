@@ -66,7 +66,7 @@ which is then detected by this wrapper step.")]
             }
             catch (Exception exception)
             {
-                throw new RebusApplicationException(exception, "Could not wrap {0} in FailedMessageWrapper<>", body);
+                throw new RebusApplicationException(exception, $"Could not wrap {body} in FailedMessageWrapper<>");
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,8 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Subscriptions;
 using Rebus.Transport;
+using RabbitMQ.Client.Events;
+using Rebus.Exceptions;
 using Headers = Rebus.Messages.Headers;
 
 #pragma warning disable 1998
@@ -25,17 +28,26 @@ namespace Rebus.RabbitMq
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
 
+        static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
 
+        readonly ConcurrentDictionary<string, bool> _initializedQueues = new ConcurrentDictionary<string, bool>();
+        readonly ushort _maxMessagesToPrefetch;
         readonly ConnectionManager _connectionManager;
+        readonly ILog _log;
+
+        readonly object _consumerInitializationLock = new object();
+        QueueingBasicConsumer _consumer;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, ushort maxMessagesToPrefetch = 50)
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
+            _maxMessagesToPrefetch = maxMessagesToPrefetch;
             Address = inputQueueAddress;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
         bool _declareExchanges = true;
@@ -64,7 +76,6 @@ namespace Rebus.RabbitMq
         {
             _directExchangeName = directExchangeName;
         }
-
         public void SetTopicExchangeName(string topicExchangeName)
         {
             _topicExchangeName = topicExchangeName;
@@ -72,15 +83,17 @@ namespace Rebus.RabbitMq
 
         public void Initialize()
         {
-            if (Address == null) return;
+            if (Address == null) { return; }
 
             CreateQueue(Address);
+
+            InitializeConsumer();
         }
 
         public void CreateQueue(string address)
         {
             var connection = _connectionManager.GetConnection();
-         
+
             using (var model = connection.CreateModel())
             {
                 const bool durable = true;
@@ -175,41 +188,121 @@ namespace Rebus.RabbitMq
                 throw new InvalidOperationException("This RabbitMQ transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
-            var model = GetModel(context);
-            var result = model.BasicGet(Address, false);
-            if (result == null) return null;
-
-            var deliveryTag = result.DeliveryTag;
-
-            context.OnCompleted(async () =>
+            try
             {
-                model.BasicAck(deliveryTag, false);
-            });
+                BasicDeliverEventArgs result;
 
-            context.OnAborted(() =>
-            {
-                model.BasicNack(deliveryTag, false, true);
-            });
+                const int twoSeconds = 2000;
 
-            var headers = result.BasicProperties.Headers
-                .ToDictionary(kvp => kvp.Key, kvp =>
+                if (!_consumer.Queue.Dequeue(twoSeconds, out result)) return null;
+
+                var deliveryTag = result.DeliveryTag;
+
+                context.OnCompleted(() =>
                 {
-                    var headerValue = kvp.Value;
-
-                    var bytes = headerValue as byte[];
-                    if (bytes == null) return headerValue.ToString();
-
-                    var stringHeaderValue = HeaderValueEncoding.GetString(bytes);
-
-                    return stringHeaderValue;
+                    _consumer.Model.BasicAck(deliveryTag, false);
+                    return CompletedTask;
                 });
+
+                context.OnAborted(() =>
+                {
+                    _consumer.Model.BasicNack(deliveryTag, false, true);
+                });
+
+                return CreateTransportMessage(result);
+            }
+            catch (EndOfStreamException exception)
+            {
+                _consumer = null;
+                throw new RebusApplicationException(exception,
+                    "Queue throw EndOfStreamException(meaning it was canceled by rabbitmq)");
+            }
+            catch (Exception exception)
+            {
+                _consumer = null;
+                throw new RebusApplicationException(exception,
+                    $"unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {Address}");
+            }
+            finally
+            {
+                // if the consumer is null at this point, we see if we can initialize it...
+                if (_consumer == null)
+                {
+                    lock (_consumerInitializationLock)
+                    {
+                        // if there is a consumer instance at this point, someone else went and initialized it...
+                        if (_consumer == null)
+                        {
+                            try
+                            {
+                                InitializeConsumer();
+                            }
+                            catch { }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Creates the transport message.
+        /// </summary>
+        /// <param name="result">The <see cref="BasicDeliverEventArgs"/> instance containing the event data.</param>
+        /// <returns>the TransportMessage</returns>
+        static TransportMessage CreateTransportMessage(BasicDeliverEventArgs result)
+        {
+            var headers = result.BasicProperties.Headers
+                   .ToDictionary(kvp => kvp.Key, kvp =>
+                   {
+                       var headerValue = kvp.Value;
+
+                       if (headerValue is byte[])
+                       {
+                           var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+
+                           return stringHeaderValue;
+                       }
+
+                       return headerValue.ToString();
+                   });
 
             return new TransportMessage(headers, result.Body);
         }
 
-        readonly ConcurrentDictionary<string, bool> _initializedQueues = new ConcurrentDictionary<string, bool>();
+        /// <summary>
+        /// Creates the consumer.
+        /// </summary>
+        void InitializeConsumer()
+        {
+            var currentConsumer = _consumer;
 
-        async Task SendOutgoingMessages(ITransactionContext context, IEnumerable<OutgoingMessage> outgoingMessages)
+            if (currentConsumer != null)
+            {
+                try
+                {
+                    currentConsumer.Model.Dispose();
+                }
+                catch { }
+            }
+
+            var connection = _connectionManager.GetConnection();
+            var model = connection.CreateModel();
+            try
+            {
+                model.BasicQos(0, _maxMessagesToPrefetch, false);
+                _consumer = new QueueingBasicConsumer(model);
+
+                model.BasicConsume(Address, false, _consumer);
+            }
+            catch (Exception)
+            {
+                model.Dispose();
+                throw;
+            }
+        }
+
+
+        async Task SendOutgoingMessages(ITransactionContext context, ConcurrentQueue<OutgoingMessage> outgoingMessages)
         {
             var model = GetModel(context);
 
@@ -306,7 +399,6 @@ namespace Rebus.RabbitMq
             {
                 var connection = _connectionManager.GetConnection();
                 var newModel = connection.CreateModel();
-
                 context.OnDisposed(() => newModel.Dispose());
 
                 return newModel;
@@ -329,12 +421,17 @@ namespace Rebus.RabbitMq
 
         public void Dispose()
         {
+            if (_consumer?.Model != null && _consumer.Model.IsOpen)
+            {
+                _consumer.Model.Dispose();
+            }
+
             _connectionManager.Dispose();
         }
 
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            return new[] {$"{topic}@{_topicExchangeName}"};
+            return new[] { $"{topic}@{_topicExchangeName}" };
         }
 
         public async Task RegisterSubscriber(string topic, string subscriberAddress)

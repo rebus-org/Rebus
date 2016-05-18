@@ -102,7 +102,7 @@ namespace Rebus.Transport.SqlServer
             }
             catch (SqlException exception)
             {
-                throw new RebusApplicationException($"Error attempting to initialize SQL transport schema with mesages table [dbo].[{_tableName}]", exception);
+                throw new RebusApplicationException(exception, $"Error attempting to initialize SQL transport schema with mesages table [dbo].[{_tableName}]");
             }
         }
 
@@ -188,9 +188,9 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
             }
             catch (SqlException exception)
             {
-                throw new RebusApplicationException($@"Error executing SQL command
+                throw new RebusApplicationException(exception, $@"Error executing SQL command
 {command.CommandText}
-", exception);
+");
             }
         }
 
