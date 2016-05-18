@@ -70,7 +70,7 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
+        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, BusLifetimeEvents busLifetimeEvents)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
@@ -83,6 +83,20 @@ namespace Rebus.AzureServiceBus
             if (inputQueueAddress != null)
             {
                 _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
+
+                busLifetimeEvents.BusDisposing += () =>
+                {
+                    _log.Info("Closing input queue client");
+
+                    try
+                    {
+                        GetQueueClient(_inputQueueAddress).Close();
+                    }
+                    catch (Exception exception)
+                    {
+                        _log.Warn("Input queue client Close failed with the following exception: {0}", exception);
+                    }
+                };
             }
         }
 

@@ -68,6 +68,7 @@
     <Compile Include="Bus\Advanced\ITopicsApi.cs" />
     <Compile Include="Bus\Advanced\ITransportMessageApi.cs" />
     <Compile Include="Bus\Advanced\IWorkersApi.cs" />
+    <Compile Include="Bus\BusLifetimeEvents.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Compression\ZippingSerializerDecorator.cs" />

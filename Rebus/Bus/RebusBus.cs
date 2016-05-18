@@ -31,6 +31,7 @@ namespace Rebus.Bus
 
         readonly List<IWorker> _workers = new List<IWorker>();
 
+        readonly BusLifetimeEvents _busLifetimeEvents;
         readonly IWorkerFactory _workerFactory;
         readonly IRouter _router;
         readonly ITransport _transport;
@@ -43,7 +44,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -52,6 +53,7 @@ namespace Rebus.Bus
             _pipelineInvoker = pipelineInvoker;
             _subscriptionStorage = subscriptionStorage;
             _options = options;
+            _busLifetimeEvents = busLifetimeEvents;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
@@ -415,6 +417,8 @@ namespace Rebus.Bus
             {
                 _disposing = true;
 
+                _busLifetimeEvents.RaiseBusDisposing();
+
                 // signal to all the workers that they must stop
                 lock (_workers)
                 {
@@ -428,6 +432,8 @@ namespace Rebus.Bus
             finally
             {
                 _disposing = false;
+
+                _busLifetimeEvents.RaiseBusDisposed();
             }
         }
 

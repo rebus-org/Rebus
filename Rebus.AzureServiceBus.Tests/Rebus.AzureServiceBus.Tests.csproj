@@ -81,6 +81,7 @@
     <Compile Include="NativeDeferTest.cs" />
     <Compile Include="TestAsbTopicsPubSub.cs" />
     <Compile Include="TestCategory.cs" />
+    <Compile Include="TestShutdownTime.cs" />
     <Compile Include="WorksWhenEnablingPartitioning.cs" />
     <Content Include="asb_connection_string.txt" />
     <Compile Include="Properties\AssemblyInfo.cs" />

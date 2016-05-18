@@ -3,6 +3,7 @@ using System.Configuration;
 using GoCommando;
 using GoCommando.Attributes;
 using Rebus.AzureServiceBus;
+using Rebus.Bus;
 using Rebus.Forklift.Common;
 using Rebus.Threading.TaskParallelLibrary;
 
@@ -24,7 +25,8 @@ namespace Rebus.Forklift.AzureServiceBus
 
         protected override void DoRun()
         {
-            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory, new TplAsyncTaskFactory(LoggerFactory)))
+            var busLifetimeEvents = new BusLifetimeEvents();
+            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory, new TplAsyncTaskFactory(LoggerFactory), busLifetimeEvents))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {

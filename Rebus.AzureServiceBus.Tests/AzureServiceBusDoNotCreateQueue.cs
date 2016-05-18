@@ -7,6 +7,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.AzureServiceBus.Config;
 using Rebus.AzureServiceBus.Tests.Factories;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Tests;
@@ -20,9 +21,7 @@ namespace Rebus.AzureServiceBus.Tests
     [TestFixture, Category(TestCategory.Azure)]
     public class BasicAzureServiceBusBasicReceiveOnly : FixtureBase
     {
-        
         static readonly string QueueName = TestConfig.QueueName("input");
-
 
         [Test]
         [TestCase(AzureServiceBusMode.Basic, 5)]
@@ -41,7 +40,10 @@ namespace Rebus.AzureServiceBus.Tests
             var newConnString = builder.ToString();
 
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
-            var transport = new AzureServiceBusTransport(newConnString, QueueName, consoleLoggerFactory, new TplAsyncTaskFactory(consoleLoggerFactory));
+            var transport = new AzureServiceBusTransport(newConnString, QueueName, consoleLoggerFactory, new TplAsyncTaskFactory(consoleLoggerFactory), new BusLifetimeEvents());
+
+            Using(transport);
+
             transport.PurgeInputQueue();
             //Create the queue for the receiver since it cannot create it self beacuse of lacking rights on the namespace
             transport.CreateQueue(QueueName);
@@ -145,7 +147,7 @@ namespace Rebus.AzureServiceBus.Tests
         public async void ShouldBeAbleToRecieveEvenWhenNotCreatingQueue(AzureServiceBusMode mode)
         {
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
-            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, consoleLoggerFactory, new TplAsyncTaskFactory(consoleLoggerFactory));
+            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, consoleLoggerFactory, new TplAsyncTaskFactory(consoleLoggerFactory), new BusLifetimeEvents());
             transport.PurgeInputQueue();
             //Create the queue for the receiver since it cannot create it self beacuse of lacking rights on the namespace
             transport.CreateQueue(QueueName);

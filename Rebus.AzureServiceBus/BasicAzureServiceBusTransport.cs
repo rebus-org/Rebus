@@ -16,7 +16,7 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus
 {
-    public class BasicAzureServiceBusTransport : ITransport, IInitializable
+    public class BasicAzureServiceBusTransport : ITransport, IInitializable, IDisposable
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
 
@@ -57,9 +57,9 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
+        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, BusLifetimeEvents busLifetimeEvents)
         {
-            if (connectionString == null) throw new ArgumentNullException("connectionString");
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
             
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
@@ -70,6 +70,20 @@ namespace Rebus.AzureServiceBus
             if (inputQueueAddress != null)
             {
                 _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
+
+                busLifetimeEvents.BusDisposing += () =>
+                {
+                    _log.Info("Closing input queue client");
+
+                    try
+                    {
+                        GetQueueClient(_inputQueueAddress).Close();
+                    }
+                    catch (Exception exception)
+                    {
+                        _log.Warn("Input queue client Close failed with the following exception: {0}", exception);
+                    }
+                };
             }
         }
 
@@ -349,7 +363,7 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, TimeSpan.FromSeconds(1))).ToList();
+                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
 
                 _ignorant.Reset();
 
@@ -367,7 +381,7 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var brokeredMessage = await GetQueueClient(queueAddress).ReceiveAsync(TimeSpan.FromSeconds(1));
+                var brokeredMessage = await GetQueueClient(queueAddress).ReceiveAsync();
 
                 _ignorant.Reset();
 
