@@ -929,6 +929,7 @@
 # 0.99.56
 
 * Changed timeout settings on Azure Service Bus transport to respect the setting from the connection string - thanks [Rzpeg]
+* Changed RabbitMQ transport to use `QueueingBasicConsumer` instead of polling - thanks [Hangsolow]
 
 
 ---
@@ -946,6 +947,7 @@
 [fritsduus]: https://github.com/fritsduus
 [gertjvr]: https://github.com/gertjvr
 [hagbarddenstore]: https://github.com/hagbarddenstore
+[Hangsolow]: https://github.com/Hangsolow
 [jasperdk]: https://github.com/jasperdk
 [joshua5822]: https://github.com/joshua5822
 [jsvahn]: https://github.com/jsvahn
