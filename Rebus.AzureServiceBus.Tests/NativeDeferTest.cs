@@ -25,14 +25,16 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
+            var connectionString = StandardAzureServiceBusTransportFactory.ConnectionString;
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
             var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
-            new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName, consoleLoggerFactory, asyncTaskFactory).PurgeInputQueue();
+            var busLifetimeEvents = new BusLifetimeEvents();
+            new AzureServiceBusTransport(connectionString, QueueName, consoleLoggerFactory, asyncTaskFactory, busLifetimeEvents).PurgeInputQueue();
 
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
-                .Transport(t => t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, QueueName))
+                .Transport(t => t.UseAzureServiceBus(connectionString, QueueName))
                 .Options(o =>
                 {
                     o.LogPipeline();

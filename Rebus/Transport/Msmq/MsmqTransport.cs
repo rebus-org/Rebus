@@ -185,7 +185,7 @@ namespace Rebus.Transport.Msmq
 
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(1), messageQueueTransaction);
+                var message = queue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
                 if (message == null)
                 {
                     messageQueueTransaction.Abort();
@@ -368,6 +368,7 @@ namespace Rebus.Transport.Msmq
         public void Dispose()
         {
             Dispose(true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -381,11 +382,8 @@ namespace Rebus.Transport.Msmq
             {
                 if (disposing)
                 {
-                    if (_inputQueue != null)
-                    {
-                        _inputQueue.Dispose();
-                        _inputQueue = null;
-                    }
+                    _inputQueue?.Dispose();
+                    _inputQueue = null;
                 }
             }
             finally

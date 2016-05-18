@@ -221,6 +221,8 @@ namespace Rebus.Config
 
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));
 
+            PossiblyRegisterDefault(c => new BusLifetimeEvents());
+
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;
 
@@ -234,7 +236,8 @@ namespace Rebus.Config
                     c.Get<IPipelineInvoker>(),
                     c.Get<ISubscriptionStorage>(),
                     _options,
-                    c.Get<IRebusLoggerFactory>());
+                    c.Get<IRebusLoggerFactory>(),
+                    c.Get<BusLifetimeEvents>());
 
                 bus.Disposed += () =>
                 {

@@ -168,6 +168,7 @@
     <Compile Include="Transport\FileSystem\FileSystemTransportFactory.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportBasicSendReceive.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportMessageExpiration.cs" />
+    <Compile Include="Transport\Msmq\MsmqShutdownTime.cs" />
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />

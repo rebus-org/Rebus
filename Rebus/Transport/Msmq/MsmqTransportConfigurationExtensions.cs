@@ -16,7 +16,6 @@ namespace Rebus.Transport.Msmq
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-
                 return new MsmqTransport(inputQueueName, rebusLoggerFactory);
             });
         }

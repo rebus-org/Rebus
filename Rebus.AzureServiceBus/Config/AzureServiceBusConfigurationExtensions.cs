@@ -1,6 +1,7 @@
 ﻿using System.Configuration;
 using Rebus.AzureServiceBus;
 using Rebus.AzureServiceBus.Config;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
@@ -32,8 +33,9 @@ namespace Rebus.Config
                 configurer.Register(c =>
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                    return new BasicAzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory);
+                    var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
+                    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+                    return new BasicAzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory, busLifetimeEvents);
                 });
                 OneWayClientBackdoor.ConfigureOneWayClient(configurer);
                 return;
@@ -45,7 +47,8 @@ namespace Rebus.Config
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                     var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                    return new AzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory);
+                    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+                    return new AzureServiceBusTransport(connectionString, null, rebusLoggerFactory, asyncTaskFactory, busLifetimeEvents);
                 });
 
             configurer
@@ -74,7 +77,8 @@ namespace Rebus.Config
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                     var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                    var transport = new BasicAzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory);
+                    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+                    var transport = new BasicAzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory, busLifetimeEvents);
 
                     if (settingsBuilder.PrefetchingEnabled)
                     {
@@ -97,7 +101,8 @@ namespace Rebus.Config
                 {
                     var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                     var asyncTaskFactory = c.Get<IAsyncTaskFactory>();
-                    var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory);
+                    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+                    var transport = new AzureServiceBusTransport(connectionString, inputQueueAddress, rebusLoggerFactory, asyncTaskFactory, busLifetimeEvents);
 
                     if (settingsBuilder.PrefetchingEnabled)
                     {

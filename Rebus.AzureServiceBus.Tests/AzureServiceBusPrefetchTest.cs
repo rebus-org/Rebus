@@ -9,6 +9,7 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.AzureServiceBus.Config;
 using Rebus.AzureServiceBus.Tests.Factories;
+using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -140,14 +141,18 @@ namespace Rebus.AzureServiceBus.Tests
         {
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
             var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
+            var connectionString = StandardAzureServiceBusTransportFactory.ConnectionString;
+            var busLifetimeEvents = new BusLifetimeEvents();
+
             if (_mode == AzureServiceBusMode.Basic)
             {
-                var basicTransport = new BasicAzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
+                var basicTransport = new BasicAzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory, busLifetimeEvents);
+                Using(basicTransport);
                 basicTransport.Initialize();
                 basicTransport.PurgeInputQueue();
                 return basicTransport;
             }
-            var transport = new AzureServiceBusTransport(StandardAzureServiceBusTransportFactory.ConnectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
+            var transport = new AzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory, busLifetimeEvents);
             Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();
