@@ -429,7 +429,8 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, TimeSpan.FromSeconds(1))).ToList();
+                // Timeout should be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
 
                 _ignorant.Reset();
 
@@ -447,7 +448,8 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var brokeredMessage = await GetQueueClient(queueAddress).ReceiveAsync(TimeSpan.FromSeconds(1));
+                // Timeout should be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessage = await GetQueueClient(queueAddress).ReceiveAsync();
 
                 _ignorant.Reset();
 
