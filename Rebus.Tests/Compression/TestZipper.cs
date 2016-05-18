@@ -98,7 +98,7 @@ Hej med dig min ven, det her er en lang tekst med en del gentagelser.";
                 QuerySteps = new List<QueryStep>();
             }
 
-            public List<QueryStep> QuerySteps { get; private set; }
+            public List<QueryStep> QuerySteps { get; }
         }
 
         class QueryStep

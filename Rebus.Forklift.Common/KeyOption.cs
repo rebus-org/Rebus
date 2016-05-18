@@ -4,13 +4,13 @@ namespace Rebus.Forklift.Common
 {
     class KeyOption
     {
-        public char KeyChar { get; private set; }
+        public char KeyChar { get; }
         public Action Action { get; private set; }
-        public string Description { get; private set; }
+        public string Description { get; }
 
         KeyOption(char keyChar, Action action, string description)
         {
-            if (action == null) throw new ArgumentNullException("action");
+            if (action == null) throw new ArgumentNullException(nameof(action));
             KeyChar = keyChar;
             Action = action;
             Description = description;

@@ -28,7 +28,7 @@ namespace Rebus.Routing.TransportMessages
         /// </summary>
         public static ForwardAction ForwardTo(string destinationAddress)
         {
-            if (destinationAddress == null) throw new ArgumentNullException("destinationAddress", "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
+            if (destinationAddress == null) throw new ArgumentNullException(nameof(destinationAddress), "Cannot forward message to (NULL) - use ForwardAction.None if you don't intend to forward the message");
 
             return new ForwardAction(ActionType.Forward, destinationAddress);
         }

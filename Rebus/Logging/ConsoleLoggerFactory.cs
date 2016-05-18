@@ -197,7 +197,7 @@ namespace Rebus.Logging
                     case LogLevel.Error:
                         return "ERROR";
                     default:
-                        throw new ArgumentOutOfRangeException("level");
+                        throw new ArgumentOutOfRangeException(nameof(level));
                 }
             }
 

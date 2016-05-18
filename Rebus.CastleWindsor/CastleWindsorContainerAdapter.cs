@@ -27,7 +27,7 @@ namespace Rebus.CastleWindsor
         /// </summary>
         public CastleWindsorContainerAdapter(IWindsorContainer windsorContainer)
         {
-            if (windsorContainer == null) throw new ArgumentNullException("windsorContainer");
+            if (windsorContainer == null) throw new ArgumentNullException(nameof(windsorContainer));
             _windsorContainer = windsorContainer;
         }
 
@@ -54,7 +54,7 @@ namespace Rebus.CastleWindsor
         /// </summary>
         public void SetBus(IBus bus)
         {
-            if (bus == null) throw new ArgumentNullException("bus", "You need to provide a bus instance in order to call this method!");
+            if (bus == null) throw new ArgumentNullException(nameof(bus), "You need to provide a bus instance in order to call this method!");
 
             _windsorContainer
                 .Register(

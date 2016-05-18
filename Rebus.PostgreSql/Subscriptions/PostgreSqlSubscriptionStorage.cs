@@ -137,7 +137,6 @@ CREATE TABLE ""{_tableName
 
         public bool IsCentralized
         {
-            get; private set;
-        }
+            get; }
     }
 }

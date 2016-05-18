@@ -165,7 +165,7 @@ namespace Rebus.Tests.Integration
 
             public string CorrelationId { get; set; }
 
-            public Dictionary<Type, int> ProcessedMessages { get; set; }
+            public Dictionary<Type, int> ProcessedMessages { get; }
         }
     }
 }

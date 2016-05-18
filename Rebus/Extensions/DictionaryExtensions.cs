@@ -16,8 +16,8 @@ namespace Rebus.Extensions
         /// </summary>
         public static Dictionary<TKey, TValue> MergedWith<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IDictionary<TKey, TValue> otherDictionary)
         {
-            if (dictionary == null) throw new ArgumentNullException("dictionary");
-            if (otherDictionary == null) throw new ArgumentNullException("otherDictionary");
+            if (dictionary == null) throw new ArgumentNullException(nameof(dictionary));
+            if (otherDictionary == null) throw new ArgumentNullException(nameof(otherDictionary));
 
             var result = new Dictionary<TKey, TValue>(dictionary);
 

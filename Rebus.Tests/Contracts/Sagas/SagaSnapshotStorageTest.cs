@@ -178,7 +178,7 @@ as part of this:
             public Guid Id { get; set; }
             public int Revision { get; set; }
             public string CorrelationId { get; set; }
-            public HashSet<string> HandledStrings { get; private set; }
+            public HashSet<string> HandledStrings { get; }
         }
     }
 

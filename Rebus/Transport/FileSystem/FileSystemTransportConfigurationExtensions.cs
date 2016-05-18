@@ -14,8 +14,8 @@ namespace Rebus.Transport.FileSystem
         /// </summary>
         public static void UseFileSystem(this StandardConfigurer<ITransport> configurer, string baseDirectory, string inputQueueName)
         {
-            if (baseDirectory == null) throw new ArgumentNullException("baseDirectory");
-            if (inputQueueName == null) throw new ArgumentNullException("inputQueueName");
+            if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
+            if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
             configurer.Register(c => new FileSystemTransport(baseDirectory, inputQueueName));
         }
 
@@ -25,7 +25,7 @@ namespace Rebus.Transport.FileSystem
         /// </summary>
         public static void UseFileSystemAsOneWayClient(this StandardConfigurer<ITransport> configurer, string baseDirectory)
         {
-            if (baseDirectory == null) throw new ArgumentNullException("baseDirectory");
+            if (baseDirectory == null) throw new ArgumentNullException(nameof(baseDirectory));
             configurer.Register(c => new FileSystemTransport(baseDirectory, null));
         }
     }

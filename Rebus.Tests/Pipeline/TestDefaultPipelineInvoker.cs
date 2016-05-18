@@ -61,7 +61,7 @@ namespace Rebus.Tests.Pipeline
                 throw new NotImplementedException();
             }
 
-            public ConcurrentDictionary<string, object> Items { get; private set; }
+            public ConcurrentDictionary<string, object> Items { get; }
             public void OnCommitted(Func<Task> commitAction)
             {
                 throw new NotImplementedException();

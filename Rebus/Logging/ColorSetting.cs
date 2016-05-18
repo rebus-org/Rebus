@@ -15,7 +15,7 @@ namespace Rebus.Logging
         /// <summary>
         /// Gets the foreground color
         /// </summary>
-        public ConsoleColor ForegroundColor { get; private set; }
+        public ConsoleColor ForegroundColor { get; }
         
         /// <summary>
         /// Gets the background color

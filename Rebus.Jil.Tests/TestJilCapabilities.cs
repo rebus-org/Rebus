@@ -29,8 +29,8 @@ namespace Rebus.Jil.Tests
                 RealValueType = realValueType;
             }
 
-            public string Value { get; private set; }
-            public RealValueType RealValueType { get; private set; }
+            public string Value { get; }
+            public RealValueType RealValueType { get; }
         }
 
         class RealValueType
@@ -45,8 +45,8 @@ namespace Rebus.Jil.Tests
                 SomeUnit = someUnit;
             }
 
-            public int SomeValue { get; private set; }
-            public string SomeUnit { get; private set; }
+            public int SomeValue { get; }
+            public string SomeUnit { get; }
         }
 
         [Test]

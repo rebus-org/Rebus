@@ -188,7 +188,7 @@ namespace Rebus.Tests.Integration
                 }
             }
 
-            public string Name { get; private set; }
+            public string Name { get; }
 
             public void Stop()
             {

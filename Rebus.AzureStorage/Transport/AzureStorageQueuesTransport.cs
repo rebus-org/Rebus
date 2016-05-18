@@ -35,7 +35,7 @@ namespace Rebus.AzureStorage.Transport
         /// </summary>
         public AzureStorageQueuesTransport(CloudStorageAccount storageAccount, string inputQueueName, IRebusLoggerFactory rebusLoggerFactory)
         {
-            if (storageAccount == null) throw new ArgumentNullException("storageAccount");
+            if (storageAccount == null) throw new ArgumentNullException(nameof(storageAccount));
 
             _queueClient = storageAccount.CreateCloudQueueClient();
             _log = rebusLoggerFactory.GetCurrentClassLogger();
