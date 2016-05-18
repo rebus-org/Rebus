@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Exceptions;
@@ -86,8 +87,6 @@ namespace Rebus.RabbitMq
             if (Address == null) { return; }
 
             CreateQueue(Address);
-
-            InitializeConsumer();
         }
 
         public void CreateQueue(string address)
@@ -190,41 +189,6 @@ namespace Rebus.RabbitMq
 
             try
             {
-                BasicDeliverEventArgs result;
-
-                const int twoSeconds = 2000;
-
-                if (!_consumer.Queue.Dequeue(twoSeconds, out result)) return null;
-
-                var deliveryTag = result.DeliveryTag;
-
-                context.OnCompleted(() =>
-                {
-                    _consumer.Model.BasicAck(deliveryTag, false);
-                    return CompletedTask;
-                });
-
-                context.OnAborted(() =>
-                {
-                    _consumer.Model.BasicNack(deliveryTag, false, true);
-                });
-
-                return CreateTransportMessage(result);
-            }
-            catch (EndOfStreamException exception)
-            {
-                _consumer = null;
-                throw new RebusApplicationException(exception,
-                    "Queue throw EndOfStreamException(meaning it was canceled by rabbitmq)");
-            }
-            catch (Exception exception)
-            {
-                _consumer = null;
-                throw new RebusApplicationException(exception,
-                    $"unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {Address}");
-            }
-            finally
-            {
                 // if the consumer is null at this point, we see if we can initialize it...
                 if (_consumer == null)
                 {
@@ -237,11 +201,69 @@ namespace Rebus.RabbitMq
                             {
                                 InitializeConsumer();
                             }
-                            catch { }
+                            catch
+                            {
+                                Thread.Sleep(1000);
+                                return null;
+                            }
                         }
                     }
                 }
+
+                const int twoSeconds = 2000;
+                BasicDeliverEventArgs result;
+                if (!_consumer.Queue.Dequeue(twoSeconds, out result)) return null;
+
+                var deliveryTag = result.DeliveryTag;
+
+                context.OnCommitted(async () =>
+                {
+                    _consumer.Model.BasicAck(deliveryTag, false);
+                });
+
+                context.OnAborted(() =>
+                {
+                    // we might not be able to do this, but it doesn't matter that much if it succeeds
+                    try
+                    {
+                        _consumer.Model.BasicNack(deliveryTag, false, true);
+                    }
+                    catch { }
+                });
+
+                return CreateTransportMessage(result);
             }
+            catch (EndOfStreamException exception)
+            {
+                ClearConsumer();
+
+                throw new RebusApplicationException(exception,
+                    "Queue throw EndOfStreamException(meaning it was canceled by rabbitmq)");
+            }
+            catch (Exception exception)
+            {
+                ClearConsumer();
+
+                Thread.Sleep(1000);
+
+                throw new RebusApplicationException(exception,
+                    $"unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {Address}");
+            }
+        }
+
+        void ClearConsumer()
+        {
+            var currentConsumer = _consumer;
+
+            _consumer = null;
+
+            if (currentConsumer == null) return;
+
+            try
+            {
+                currentConsumer.Model.Dispose();
+            }
+            catch { }
         }
 
         /// <summary>
@@ -274,17 +296,6 @@ namespace Rebus.RabbitMq
         /// </summary>
         void InitializeConsumer()
         {
-            var currentConsumer = _consumer;
-
-            if (currentConsumer != null)
-            {
-                try
-                {
-                    currentConsumer.Model.Dispose();
-                }
-                catch { }
-            }
-
             var connection = _connectionManager.GetConnection();
             var model = connection.CreateModel();
             try
@@ -293,10 +304,17 @@ namespace Rebus.RabbitMq
                 _consumer = new QueueingBasicConsumer(model);
 
                 model.BasicConsume(Address, false, _consumer);
+
+                _log.Info("Successfully initialized consumer for {0}", Address);
             }
             catch (Exception)
             {
-                model.Dispose();
+                try
+                {
+                    model.Dispose();
+                }
+                catch { }
+
                 throw;
             }
         }

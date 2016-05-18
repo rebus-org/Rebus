@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="RabbitMqPubSubTest.cs" />
+    <Compile Include="RabbitMqRecovery.cs" />
     <Compile Include="RabbitMqTransportBasicSendReceive.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RabbitMqTransportFactory.cs" />

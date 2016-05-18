@@ -930,6 +930,7 @@
 
 * Changed timeout settings on Azure Service Bus transport to respect the setting from the connection string - thanks [Rzpeg]
 
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

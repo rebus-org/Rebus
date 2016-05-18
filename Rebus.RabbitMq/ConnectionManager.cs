@@ -36,29 +36,37 @@ namespace Rebus.RabbitMq
             };
         }
 
-        static IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
-        {
-            return new Dictionary<string, object>
-            {
-                {"Type", "Rebus/.NET"},
-                {"Machine", Environment.MachineName},
-                {"InputQueue", inputQueueAddress ?? "<one-way client>"},
-                {"Domain", Environment.UserDomainName},
-                {"User", Environment.UserName}
-            };
-        }
-
         public IConnection GetConnection()
         {
             var connection = _activeConnection;
 
-            if (connection != null) return connection;
+            if (connection != null)
+            {
+                if (connection.IsOpen)
+                {
+                    return connection;
+                }
+            }
 
             lock (_activeConnectionLock)
             {
                 connection = _activeConnection;
 
-                if (connection != null) return connection;
+                if (connection != null)
+                {
+                    if (connection.IsOpen)
+                    {
+                        return connection;
+                    }
+
+                    _log.Info("Existing connection found to be CLOSED");
+
+                    try
+                    {
+                        connection.Dispose();
+                    }
+                    catch { }
+                }
 
                 _log.Info("Creating new RabbitMQ connection");
                 _activeConnection = _connectionFactory.CreateConnection();
@@ -90,6 +98,18 @@ namespace Rebus.RabbitMq
             {
                 _disposed = true;
             }
+        }
+
+        static IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
+        {
+            return new Dictionary<string, object>
+            {
+                {"Type", "Rebus/.NET"},
+                {"Machine", Environment.MachineName},
+                {"InputQueue", inputQueueAddress ?? "<one-way client>"},
+                {"Domain", Environment.UserDomainName},
+                {"User", Environment.UserName}
+            };
         }
     }
 }
