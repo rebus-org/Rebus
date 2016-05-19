@@ -38,21 +38,6 @@
             The operations of the decompiled delegate can be inspected, and it can be replayed to a new Emit.
             </summary>
         </member>
-        <member name="M:Sigil.DisassembledOperations`1.EmitAll(System.String,System.Reflection.Emit.ModuleBuilder)">
-            <summary>
-            Emits the disassembled instructions into a new Emit.
-            </summary>
-        </member>
-        <member name="M:Sigil.DisassembledOperations`1.GetEnumerator">
-            <summary>
-            Returns an enumerator which steps over the Operations that are in this DisassembledOperations.
-            </summary>
-        </member>
-        <member name="M:Sigil.DisassembledOperations`1.System#Collections#IEnumerable#GetEnumerator">
-            <summary>
-            Returns an enumerator which steps over the Operations that are in this DisassembledOperations.
-            </summary>
-        </member>
         <member name="P:Sigil.DisassembledOperations`1.Count">
             <summary>
             The total number of operations that were decompiled.
@@ -92,6 +77,21 @@
         <member name="P:Sigil.DisassembledOperations`1.Item(System.Int32)">
             <summary>
             Returns the operation that would be emitted at the given index.
+            </summary>
+        </member>
+        <member name="M:Sigil.DisassembledOperations`1.EmitAll(System.String,System.Reflection.Emit.ModuleBuilder)">
+            <summary>
+            Emits the disassembled instructions into a new Emit.
+            </summary>
+        </member>
+        <member name="M:Sigil.DisassembledOperations`1.GetEnumerator">
+            <summary>
+            Returns an enumerator which steps over the Operations that are in this DisassembledOperations.
+            </summary>
+        </member>
+        <member name="M:Sigil.DisassembledOperations`1.System#Collections#IEnumerable#GetEnumerator">
+            <summary>
+            Returns an enumerator which steps over the Operations that are in this DisassembledOperations.
             </summary>
         </member>
         <member name="T:Sigil.Disassembler`1">
@@ -407,6 +407,8 @@
             Call does not respect overrides, the implementation defined by the given MethodInfo is what will be called at runtime.
             
             To call overrides of instance methods, use CallVirtual.
+            
+            Recursive calls can only be performed with DynamicMethods, other passed in Emits must already have their methods created.
             
             When calling VarArgs methods, arglist should be set to the types of the extra parameters to be passed.
             </summary>
@@ -730,6 +732,31 @@
             Copies the given value type from the source to the destination.
             </summary>
         </member>
+        <member name="P:Sigil.Emit`1.AllowsUnverifiableCIL">
+            <summary>
+            Returns true if this Emit can make use of unverifiable instructions.
+            </summary>
+        </member>
+        <member name="P:Sigil.Emit`1.MaxStackSize">
+            <summary>
+            Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
+            
+            This is not the maximum that *can be placed*, but the maximum that actually are.
+            </summary>
+        </member>
+        <member name="P:Sigil.Emit`1.Locals">
+            <summary>
+            Lookup for the locals currently in scope by name.
+            
+            Locals go out of scope when released (by calling Dispose() directly, or via using) and go into scope
+            immediately after a DeclareLocal()
+            </summary>
+        </member>
+        <member name="P:Sigil.Emit`1.Labels">
+            <summary>
+            Lookup for declared labels by name.
+            </summary>
+        </member>
         <member name="M:Sigil.Emit`1.AsShorthand">
             <summary>
             Returns a proxy for this Emit that exposes method names that more closely
@@ -859,6 +886,36 @@
             Returns a ConstructorBuilder, which can be used to define overrides or for further inspection.
             </summary>
         </member>
+        <member name="M:Sigil.Emit`1.CreateTypeInitializer(System.String@,Sigil.OptimizationOptions)">
+            <summary>
+            Writes the CIL stream out to the ConstructorBuilder used to create this Emit.
+            
+            Validation that cannot be run until a method is finished is run, and various instructions
+            are re-written to choose "optimal" forms (Br may become Br_S, for example).
+            
+            Once this method is called the Emit may no longer be modified.
+            
+            Returns a ConstructorBuilder, which can be used to define overrides or for further inspection.
+            
+            `instructions` will be set to a representation of the instructions making up the returned constructor.
+            Note that this string is typically *not* enough to regenerate the constructor, it is available for
+            debugging purposes only.  Consumers may find it useful to log the instruction stream in case
+            the returned constructor fails validation (indicative of a bug in Sigil) or
+            behaves unexpectedly (indicative of a logic bug in the consumer code).
+            </summary>
+        </member>
+        <member name="M:Sigil.Emit`1.CreateTypeInitializer(Sigil.OptimizationOptions)">
+            <summary>
+            Writes the CIL stream out to the ConstructorBuilder used to create this Emit.
+            
+            Validation that cannot be run until a method is finished is run, and various instructions
+            are re-written to choose "optimal" forms (Br may become Br_S, for example).
+            
+            Once this method is called the Emit may no longer be modified.
+            
+            Returns a ConstructorBuilder, which can be used to define overrides or for further inspection.
+            </summary>
+        </member>
         <member name="M:Sigil.Emit`1.NewDynamicMethod(System.String,System.Reflection.Emit.ModuleBuilder,System.Boolean,System.Boolean)">
             <summary>
             Creates a new Emit, optionally using the provided name and module for the inner DynamicMethod.
@@ -920,7 +977,22 @@
         </member>
         <member name="M:Sigil.Emit`1.BuildConstructor(System.Reflection.Emit.TypeBuilder,System.Reflection.MethodAttributes,System.Reflection.CallingConventions,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
-            Creates a new Emit, suitable for building a constructo on the given TypeBuilder.
+            Creates a new Emit, suitable for building a constructor on the given TypeBuilder.
+            
+            The DelegateType and TypeBuilder must agree on parameter types and parameter counts.
+            
+            If you intend to use unveriable code, you must set allowUnverifiableCode to true.
+            
+            If doVerify is false (default is true) Sigil will *not* throw an exception on invalid IL.  This is faster, but the benefits
+            of Sigil are reduced to "a nicer ILGenerator interface".
+            
+            If strictBranchValidation is true (default is false) Sigil will enforce "Backward branch constraints" which are *technically* required
+            for valid CIL, but in practice often ignored.  The most common case to set this option is if you are generating types to write to disk.
+            </summary>
+        </member>
+        <member name="M:Sigil.Emit`1.BuildTypeInitializer(System.Reflection.Emit.TypeBuilder,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Creates a new Emit, suitable for building a type initializer on the given TypeBuilder.
             
             The DelegateType and TypeBuilder must agree on parameter types and parameter counts.
             
@@ -1160,6 +1232,16 @@
             To resolve a method at runtime using an object, use LoadVirtualFunctionPointer instead.
             </summary>
         </member>
+        <member name="M:Sigil.Emit`1.LoadFunctionPointer(System.Reflection.Emit.MethodBuilder,System.Type[])">
+            <summary>
+            Pushes a pointer to the given function onto the stack, as a native int.
+            
+            To resolve a method at runtime using an object, use LoadVirtualFunctionPointer instead.
+            
+            This method is provided as MethodBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given method, the produced code will be invalid.
+            </summary>
+        </member>
         <member name="M:Sigil.Emit`1.LoadIndirect``1(System.Boolean,System.Nullable{System.Int32})">
             <summary>
             Pops a pointer from the stack and pushes the value (of the given type) at that address onto the stack.
@@ -1223,6 +1305,16 @@
             Pops an object reference off the stack, and pushes a pointer to the given method's implementation on that object.
             
             For static or non-virtual functions, use LoadFunctionPointer
+            </summary>
+        </member>
+        <member name="M:Sigil.Emit`1.LoadVirtualFunctionPointer(System.Reflection.Emit.MethodBuilder,System.Type[])">
+            <summary>
+            Pops an object reference off the stack, and pushes a pointer to the given method's implementation on that object.
+            
+            For static or non-virtual functions, use LoadFunctionPointer
+            
+            This method is provided as MethodBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given method, the produced code will be invalid.
             </summary>
         </member>
         <member name="M:Sigil.Emit`1.LocalAllocate">
@@ -1411,6 +1503,14 @@
         <member name="M:Sigil.Emit`1.NewObject(System.Reflection.ConstructorInfo)">
             <summary>
             Pops # of parameters to the given constructor arguments from the stack, invokes the constructor, and pushes a reference to the new object onto the stack.
+            </summary>
+        </member>
+        <member name="M:Sigil.Emit`1.NewObject(System.Reflection.Emit.ConstructorBuilder,System.Type[])">
+            <summary>
+            Pops # of parameters from the stack, invokes the constructor, and pushes a reference to the new object onto the stack.
+            
+            This method is provided as ConstructorBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given constructor, the produced code will be invalid.
             </summary>
         </member>
         <member name="M:Sigil.Emit`1.Nop">
@@ -1681,19 +1781,26 @@
             to Console.WriteLine(string, object[]).
             </summary>
         </member>
-        <member name="P:Sigil.Emit`1.AllowsUnverifiableCIL">
+        <member name="T:Sigil.EmitShorthand`1">
+            <summary>
+            A version of Emit with shorter named versions of it's methods.
+            
+            Method names map more or less to OpCodes fields.
+            </summary>
+        </member>
+        <member name="P:Sigil.EmitShorthand`1.AllowsUnverifiableCIL">
             <summary>
             Returns true if this Emit can make use of unverifiable instructions.
             </summary>
         </member>
-        <member name="P:Sigil.Emit`1.MaxStackSize">
+        <member name="P:Sigil.EmitShorthand`1.MaxStackSize">
             <summary>
             Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
             
             This is not the maximum that *can be placed*, but the maximum that actually are.
             </summary>
         </member>
-        <member name="P:Sigil.Emit`1.Locals">
+        <member name="P:Sigil.EmitShorthand`1.Locals">
             <summary>
             Lookup for the locals currently in scope by name.
             
@@ -1701,16 +1808,9 @@
             immediately after a DeclareLocal()
             </summary>
         </member>
-        <member name="P:Sigil.Emit`1.Labels">
+        <member name="P:Sigil.EmitShorthand`1.Labels">
             <summary>
             Lookup for declared labels by name.
-            </summary>
-        </member>
-        <member name="T:Sigil.EmitShorthand`1">
-            <summary>
-            A version of Emit with shorter named versions of it's methods.
-            
-            Method names map more or less to OpCodes fields.
             </summary>
         </member>
         <member name="M:Sigil.EmitShorthand`1.AsLonghand">
@@ -2217,31 +2317,6 @@
         <member name="M:Sigil.EmitShorthand`1.TraceOperationResultUsage">
             <summary cref="M:Sigil.Emit`1.TraceOperationResultUsage" />
         </member>
-        <member name="P:Sigil.EmitShorthand`1.AllowsUnverifiableCIL">
-            <summary>
-            Returns true if this Emit can make use of unverifiable instructions.
-            </summary>
-        </member>
-        <member name="P:Sigil.EmitShorthand`1.MaxStackSize">
-            <summary>
-            Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
-            
-            This is not the maximum that *can be placed*, but the maximum that actually are.
-            </summary>
-        </member>
-        <member name="P:Sigil.EmitShorthand`1.Locals">
-            <summary>
-            Lookup for the locals currently in scope by name.
-            
-            Locals go out of scope when released (by calling Dispose() directly, or via using) and go into scope
-            immediately after a DeclareLocal()
-            </summary>
-        </member>
-        <member name="P:Sigil.EmitShorthand`1.Labels">
-            <summary>
-            Lookup for declared labels by name.
-            </summary>
-        </member>
         <member name="T:Sigil.ExceptionBlock">
             <summary>
             Represents an ExceptionBlock, which is roughly analogous to a try + catch + finally block in C#.
@@ -2280,11 +2355,6 @@
             Before creating a delegate, all Labels must be marked.  To mark a label, call MarkLabel().
             </summary>
         </member>
-        <member name="M:Sigil.Label.ToString">
-            <summary>
-            Equivalent to Name.
-            </summary>
-        </member>
         <member name="P:Sigil.Label.Name">
             <summary>
             The name of this Label.
@@ -2292,6 +2362,11 @@
             If one is omitted during creation a random one is created instead.
             
             Names are purely for debugging aid, and will not appear in the generated delegate.
+            </summary>
+        </member>
+        <member name="M:Sigil.Label.ToString">
+            <summary>
+            Equivalent to Name.
             </summary>
         </member>
         <member name="T:Sigil.LabelLookup">
@@ -2323,20 +2398,6 @@
             To create a Local, call DeclareLocal().
             </summary>
         </member>
-        <member name="M:Sigil.Local.ToString">
-            <summary>
-            Returns the type and name of this Local, in string form.
-            </summary>
-        </member>
-        <member name="M:Sigil.Local.Dispose">
-            <summary>
-            Frees this local.
-            
-            While not strictly required, freeing a local allows it's index to be reused.
-            
-            Locals are only eligible for reuse when the new local is exactly the same type.
-            </summary>
-        </member>
         <member name="P:Sigil.Local.Name">
             <summary>
             The name of this local.
@@ -2349,6 +2410,20 @@
         <member name="P:Sigil.Local.LocalType">
             <summary>
             The type stored in this local.
+            </summary>
+        </member>
+        <member name="M:Sigil.Local.ToString">
+            <summary>
+            Returns the type and name of this Local, in string form.
+            </summary>
+        </member>
+        <member name="M:Sigil.Local.Dispose">
+            <summary>
+            Frees this local.
+            
+            While not strictly required, freeing a local allows it's index to be reused.
+            
+            Locals are only eligible for reuse when the new local is exactly the same type.
             </summary>
         </member>
         <member name="T:Sigil.LocalLookup">
@@ -2376,11 +2451,6 @@
         <member name="T:Sigil.Operation`1">
             <summary>
             Represents a call to an Emit, used when providing introspection details about the generated IL stream.
-            </summary>
-        </member>
-        <member name="M:Sigil.Operation`1.ToString">
-            <summary>
-            A string representation of this Operation.
             </summary>
         </member>
         <member name="P:Sigil.Operation`1.OpCode">
@@ -2446,14 +2516,14 @@
             Returns true if this operation is emitted a CIL opcode.
             </summary>
         </member>
+        <member name="M:Sigil.Operation`1.ToString">
+            <summary>
+            A string representation of this Operation.
+            </summary>
+        </member>
         <member name="T:Sigil.OperationResultUsage`1">
             <summary>
             Represents an IL operation, and the subsequent operations that may use it's result.
-            </summary>
-        </member>
-        <member name="M:Sigil.OperationResultUsage`1.ToString">
-            <summary>
-            Returns a string representation of this OperationResultUsage.
             </summary>
         </member>
         <member name="P:Sigil.OperationResultUsage`1.ProducesResult">
@@ -2464,6 +2534,11 @@
         <member name="P:Sigil.OperationResultUsage`1.ResultUsedBy">
             <summary>
             The operations that may use the result produced by the ProducesResult operation.
+            </summary>
+        </member>
+        <member name="M:Sigil.OperationResultUsage`1.ToString">
+            <summary>
+            Returns a string representation of this OperationResultUsage.
             </summary>
         </member>
         <member name="T:Sigil.OptimizationOptions">
@@ -2496,11 +2571,6 @@
             Represents a parameter to a decompiled delegate.
             </summary>
         </member>
-        <member name="M:Sigil.Parameter.ToString">
-            <summary>
-            Returns a string representation of this Parameter.
-            </summary>
-        </member>
         <member name="P:Sigil.Parameter.Position">
             <summary>
             The index of the parameter.
@@ -2509,6 +2579,11 @@
         <member name="P:Sigil.Parameter.ParameterType">
             <summary>
             The type of the parameter.
+            </summary>
+        </member>
+        <member name="M:Sigil.Parameter.ToString">
+            <summary>
+            Returns a string representation of this Parameter.
             </summary>
         </member>
         <member name="T:Sigil.SigilVerificationException">
@@ -2576,6 +2651,12 @@
             Raw pointers are often of type native int.
             
             This type is exposed to allow for stack assertions containing native int via Emit.MarkLabel.
+            </summary>
+        </member>
+        <member name="T:Sigil.Impl.TypeHelpers">
+            <summary>
+            Contains helper methods to shim over the difference between different Type APIs in
+            different frameworks
             </summary>
         </member>
         <member name="M:Sigil.Impl.TypeOnStack.Mark(Sigil.Impl.InstructionAndTransitions,System.Int32)">
@@ -2905,6 +2986,21 @@
             The `this` reference should appear before any parameters.
             </summary>
         </member>
+        <member name="M:Sigil.NonGeneric.Emit.Call(Sigil.NonGeneric.Emit,System.Type[])">
+            <summary>
+            Calls the method being constructed by the given emit.  Emits so used must have been constructed with BuildMethod or related methods.
+            
+            Pops its arguments in reverse order (left-most deepest in the stack), and pushes the return value if it is non-void.
+            
+            If the given method is an instance method, the `this` reference should appear before any parameters.
+            
+            Call does not respect overrides, the implementation defined by the given MethodInfo is what will be called at runtime.
+            
+            To call overrides of instance methods, use CallVirtual.
+            Recursive calls can only be performed with DynamicMethods, other passed in Emits must already have their methods created.
+            When calling VarArgs methods, arglist should be set to the types of the extra parameters to be passed.
+            </summary>
+        </member>
         <member name="M:Sigil.NonGeneric.Emit.CallIndirect(System.Reflection.CallingConventions)">
             <summary>
             Pops a pointer to a method, and then all it's arguments (in reverse order, left-most parameter is deepest on the stack) and calls
@@ -3204,6 +3300,31 @@
             Copies the given value type from the source to the destination.
             </summary>
         </member>
+        <member name="P:Sigil.NonGeneric.Emit.Labels">
+            <summary>
+            Lookup for declared labels by name.
+            </summary>
+        </member>
+        <member name="P:Sigil.NonGeneric.Emit.MaxStackSize">
+            <summary>
+            Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
+            
+            This is not the maximum that *can be placed*, but the maximum that actually are.
+            </summary>
+        </member>
+        <member name="P:Sigil.NonGeneric.Emit.Locals">
+            <summary>
+            Lookup for the locals currently in scope by name.
+            
+            Locals go out of scope when released (by calling Dispose() directly, or via using) and go into scope
+            immediately after a DeclareLocal()
+            </summary>
+        </member>
+        <member name="P:Sigil.NonGeneric.Emit.AllowsUnverifiableCIL">
+            <summary>
+            Returns true if this Emit can make use of unverifiable instructions.
+            </summary>
+        </member>
         <member name="M:Sigil.NonGeneric.Emit.NewDynamicMethod(System.Type,System.Type[],System.String,System.Reflection.Emit.ModuleBuilder,System.Boolean,System.Boolean)">
             <summary>
             Creates a new EmitNonGeneric, optionally using the provided name and module for the inner DynamicMethod.
@@ -3332,9 +3453,22 @@
         </member>
         <member name="M:Sigil.NonGeneric.Emit.BuildConstructor(System.Type[],System.Reflection.Emit.TypeBuilder,System.Reflection.MethodAttributes,System.Reflection.CallingConventions,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
-            Creates a new Emit, suitable for building a constructo on the given TypeBuilder.
+            Creates a new Emit, suitable for building a constructor on the given TypeBuilder.
             
             The DelegateType and TypeBuilder must agree on parameter types and parameter counts.
+            
+            If you intend to use unveriable code, you must set allowUnverifiableCode to true.
+            
+            If doVerify is false (default is true) Sigil will *not* throw an exception on invalid IL.  This is faster, but the benefits
+            of Sigil are reduced to "a nicer ILGenerator interface".
+            
+            If strictBranchValidation is true (default is false) Sigil will enforce "Backward branch constraints" which are *technically* required
+            for valid CIL, but in practice often ignored.  The most common case to set this option is if you are generating types to write to disk.
+            </summary>
+        </member>
+        <member name="M:Sigil.NonGeneric.Emit.BuildTypeInitializer(System.Reflection.Emit.TypeBuilder,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Creates a new Emit, suitable for building a type initializer on the given TypeBuilder.
             
             If you intend to use unveriable code, you must set allowUnverifiableCode to true.
             
@@ -3364,6 +3498,36 @@
             </summary>
         </member>
         <member name="M:Sigil.NonGeneric.Emit.CreateConstructor(Sigil.OptimizationOptions)">
+            <summary>
+            Writes the CIL stream out to the ConstructorBuilder used to create this Emit.
+            
+            Validation that cannot be run until a method is finished is run, and various instructions
+            are re-written to choose "optimal" forms (Br may become Br_S, for example).
+            
+            Once this method is called the Emit may no longer be modified.
+            
+            Returns a ConstructorBuilder, which can be used to define overrides or for further inspection.
+            </summary>
+        </member>
+        <member name="M:Sigil.NonGeneric.Emit.CreateTypeInitializer(System.String@,Sigil.OptimizationOptions)">
+            <summary>
+            Writes the CIL stream out to the ConstructorBuilder used to create this Emit.
+            
+            Validation that cannot be run until a method is finished is run, and various instructions
+            are re-written to choose "optimal" forms (Br may become Br_S, for example).
+            
+            Once this method is called the Emit may no longer be modified.
+            
+            Returns a ConstructorBuilder, which can be used to define overrides or for further inspection.
+            
+            `instructions` will be set to a representation of the instructions making up the returned constructor.
+            Note that this string is typically *not* enough to regenerate the constructor, it is available for
+            debugging purposes only.  Consumers may find it useful to log the instruction stream in case
+            the returned constructor fails validation (indicative of a bug in Sigil) or
+            behaves unexpectedly (indicative of a logic bug in the consumer code).
+            </summary>
+        </member>
+        <member name="M:Sigil.NonGeneric.Emit.CreateTypeInitializer(Sigil.OptimizationOptions)">
             <summary>
             Writes the CIL stream out to the ConstructorBuilder used to create this Emit.
             
@@ -3624,6 +3788,16 @@
             To resolve a method at runtime using an object, use LoadVirtualFunctionPointer instead.
             </summary>
         </member>
+        <member name="M:Sigil.NonGeneric.Emit.LoadFunctionPointer(System.Reflection.Emit.MethodBuilder,System.Type[])">
+            <summary>
+            Pushes a pointer to the given function onto the stack, as a native int.
+            
+            To resolve a method at runtime using an object, use LoadVirtualFunctionPointer instead.
+            
+            This method is provided as MethodBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given method, the produced code will be invalid.
+            </summary>
+        </member>
         <member name="M:Sigil.NonGeneric.Emit.LoadIndirect``1(System.Boolean,System.Nullable{System.Int32})">
             <summary>
             Pops a pointer from the stack and pushes the value (of the given type) at that address onto the stack.
@@ -3687,6 +3861,16 @@
             Pops an object reference off the stack, and pushes a pointer to the given method's implementation on that object.
             
             For static or non-virtual functions, use LoadFunctionPointer
+            </summary>
+        </member>
+        <member name="M:Sigil.NonGeneric.Emit.LoadVirtualFunctionPointer(System.Reflection.Emit.MethodBuilder,System.Type[])">
+            <summary>
+            Pops an object reference off the stack, and pushes a pointer to the given method's implementation on that object.
+            
+            For static or non-virtual functions, use LoadFunctionPointer.
+            
+            This method is provided as MethodBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given method, the produced code will be invalid.
             </summary>
         </member>
         <member name="M:Sigil.NonGeneric.Emit.LocalAllocate">
@@ -3859,6 +4043,14 @@
         <member name="M:Sigil.NonGeneric.Emit.NewObject(System.Reflection.ConstructorInfo)">
             <summary>
             Pops # of parameters to the given constructor arguments from the stack, invokes the constructor, and pushes a reference to the new object onto the stack.
+            </summary>
+        </member>
+        <member name="M:Sigil.NonGeneric.Emit.NewObject(System.Reflection.Emit.ConstructorBuilder,System.Type[])">
+            <summary>
+            Pops # of parameters from the stack, invokes the constructor, and pushes a reference to the new object onto the stack.
+            
+            This method is provided as ConstructorBuilder cannot be inspected for parameter information at runtime.  If the passed parameterTypes
+            do not match the given constructor, the produced code will be invalid.
             </summary>
         </member>
         <member name="M:Sigil.NonGeneric.Emit.Nop">
@@ -4122,19 +4314,26 @@
             to Console.WriteLine(string, object[]).
             </summary>
         </member>
-        <member name="P:Sigil.NonGeneric.Emit.Labels">
+        <member name="T:Sigil.NonGeneric.EmitShorthand">
             <summary>
-            Lookup for declared labels by name.
+            A version of Emit with shorter named versions of it's methods.
+            
+            Method names map more or less to OpCodes fields.
             </summary>
         </member>
-        <member name="P:Sigil.NonGeneric.Emit.MaxStackSize">
+        <member name="P:Sigil.NonGeneric.EmitShorthand.AllowsUnverifiableCIL">
+            <summary>
+            Returns true if this Emit can make use of unverifiable instructions.
+            </summary>
+        </member>
+        <member name="P:Sigil.NonGeneric.EmitShorthand.MaxStackSize">
             <summary>
             Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
             
             This is not the maximum that *can be placed*, but the maximum that actually are.
             </summary>
         </member>
-        <member name="P:Sigil.NonGeneric.Emit.Locals">
+        <member name="P:Sigil.NonGeneric.EmitShorthand.Locals">
             <summary>
             Lookup for the locals currently in scope by name.
             
@@ -4142,16 +4341,9 @@
             immediately after a DeclareLocal()
             </summary>
         </member>
-        <member name="P:Sigil.NonGeneric.Emit.AllowsUnverifiableCIL">
+        <member name="P:Sigil.NonGeneric.EmitShorthand.Labels">
             <summary>
-            Returns true if this Emit can make use of unverifiable instructions.
-            </summary>
-        </member>
-        <member name="T:Sigil.NonGeneric.EmitShorthand">
-            <summary>
-            A version of Emit with shorter named versions of it's methods.
-            
-            Method names map more or less to OpCodes fields.
+            Lookup for declared labels by name.
             </summary>
         </member>
         <member name="M:Sigil.NonGeneric.EmitShorthand.AsLonghand">
@@ -4657,31 +4849,6 @@
         </member>
         <member name="M:Sigil.NonGeneric.EmitShorthand.Xor">
             <summary cref="M:Sigil.Emit.NonGeneric.Emit`1.Xor" />
-        </member>
-        <member name="P:Sigil.NonGeneric.EmitShorthand.AllowsUnverifiableCIL">
-            <summary>
-            Returns true if this Emit can make use of unverifiable instructions.
-            </summary>
-        </member>
-        <member name="P:Sigil.NonGeneric.EmitShorthand.MaxStackSize">
-            <summary>
-            Returns the maxmimum number of items on the stack for the IL stream created with the current emit.
-            
-            This is not the maximum that *can be placed*, but the maximum that actually are.
-            </summary>
-        </member>
-        <member name="P:Sigil.NonGeneric.EmitShorthand.Locals">
-            <summary>
-            Lookup for the locals currently in scope by name.
-            
-            Locals go out of scope when released (by calling Dispose() directly, or via using) and go into scope
-            immediately after a DeclareLocal()
-            </summary>
-        </member>
-        <member name="P:Sigil.NonGeneric.EmitShorthand.Labels">
-            <summary>
-            Lookup for declared labels by name.
-            </summary>
         </member>
     </members>
 </doc>

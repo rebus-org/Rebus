@@ -15,8 +15,8 @@
         <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
         <dependencies>
             <dependency id="Rebus" version="[$version$, 1)" />
-            <dependency id="Jil" version="[2.10, 3)" />
-            <dependency id="Sigil" version="[4.4, 5)" />
+            <dependency id="Jil" version="2.14.3" />
+            <dependency id="Sigil" version="4.6.1" />
         </dependencies>
     </metadata>
     <files>
