@@ -600,6 +600,103 @@
             </summary>
       <returns>The hash code.</returns>
     </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonBoolean.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
+    </member>
     <member name="M:MongoDB.Bson.BsonBoolean.op_Equality(MongoDB.Bson.BsonBoolean,MongoDB.Bson.BsonBoolean)">
       <summary>
             Compares two BsonBoolean values.
@@ -732,6 +829,19 @@
             Gets the hash code.
             </summary>
       <returns>The hash code.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDateTime.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDateTime.IConvertibleToDateTimeImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDateTime method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A DateTime.</returns>
     </member>
     <member name="P:MongoDB.Bson.BsonDateTime.IsValidDateTime">
       <summary>
@@ -1482,6 +1592,103 @@
             </summary>
       <returns>The hash code.</returns>
     </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonDouble.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
+    </member>
     <member name="M:MongoDB.Bson.BsonDouble.op_Equality(MongoDB.Bson.BsonDouble,MongoDB.Bson.BsonDouble)">
       <summary>
             Compares two BsonDouble values.
@@ -1814,6 +2021,110 @@
             </summary>
       <returns>The hash code.</returns>
     </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToCharImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToChar method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A char.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt32.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
+    </member>
     <member name="P:MongoDB.Bson.BsonInt32.MinusOne">
       <summary>
             Gets an instance of BsonInt32 that represents -1.
@@ -1965,6 +2276,110 @@
             Gets the hash code.
             </summary>
       <returns>The hash code.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToCharImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToChar method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A char.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonInt64.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
     </member>
     <member name="M:MongoDB.Bson.BsonInt64.op_Equality(MongoDB.Bson.BsonInt64,MongoDB.Bson.BsonInt64)">
       <summary>
@@ -2602,6 +3017,13 @@
             </summary>
       <returns>The hash code.</returns>
     </member>
+    <member name="M:MongoDB.Bson.BsonObjectId.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
     <member name="P:MongoDB.Bson.BsonObjectId.Increment">
       <summary>
             Gets the increment.
@@ -2895,6 +3317,117 @@
             Gets the hash code.
             </summary>
       <returns>The hash code.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToCharImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToChar method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A char.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToDateTimeImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDateTime method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A DateTime.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonString.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
     </member>
     <member name="M:MongoDB.Bson.BsonString.op_Equality(MongoDB.Bson.BsonString,MongoDB.Bson.BsonString)">
       <summary>
@@ -3739,6 +4272,117 @@
             Gets the hash code.
             </summary>
       <returns>The hash code.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleGetTypeCodeImplementation">
+      <summary>
+            Implementation of the IConvertible GetTypeCode method.
+            </summary>
+      <returns>The TypeCode.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToBooleanImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToBoolean method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A bool.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A byte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToCharImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToChar method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A char.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToDateTimeImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDateTime method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A DateTime.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToDecimalImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDecimal method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A decimal.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToDoubleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToDouble method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A double.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A short.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An int.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A long.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToSByteImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSByte method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>An sbyte.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToSingleImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToSingle method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A float.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToStringImplementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToString method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A string.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToUInt16Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt16 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ushort.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToUInt32Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt32 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A uint.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.BsonValue.IConvertibleToUInt64Implementation(System.IFormatProvider)">
+      <summary>
+            Implementation of the IConvertible ToUInt64 method.
+            </summary>
+      <param name="provider">The format provider.</param>
+      <returns>A ulong.</returns>
     </member>
     <member name="P:MongoDB.Bson.BsonValue.IsBoolean">
       <summary>
@@ -5938,6 +6582,13 @@
       <param name="defaultValue">The default value to return if the element is not found.</param>
       <returns>Teh value of the element or a default value if the element is not found.</returns>
     </member>
+    <member name="M:MongoDB.Bson.RawBsonDocument.Materialize(MongoDB.Bson.IO.BsonBinaryReaderSettings)">
+      <summary>
+            Materializes the RawBsonDocument into a regular BsonDocument.
+            </summary>
+      <param name="binaryReaderSettings">The binary reader settings.</param>
+      <returns>A BsonDocument.</returns>
+    </member>
     <member name="M:MongoDB.Bson.RawBsonDocument.Merge(MongoDB.Bson.BsonDocument)">
       <summary>
             Merges another document into this one. Existing elements are not overwritten.
@@ -7661,7 +8312,7 @@
     <member name="M:MongoDB.Bson.IO.BsonStreamAdapter.CopyToAsync(System.IO.Stream,System.Int32,System.Threading.CancellationToken)">
       <summary>Asynchronously reads the bytes from the current stream and writes them to another stream, using a specified buffer size and cancellation token.</summary>
       <param name="destination">The stream to which the contents of the current stream will be copied.</param>
-      <param name="bufferSize">The size, in bytes, of the buffer. This value must be greater than zero. The default size is 4096.</param>
+      <param name="bufferSize">The size, in bytes, of the buffer. This value must be greater than zero. The default size is 81920.</param>
       <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
       <returns>A task that represents the asynchronous copy operation.</returns>
       <exception cref="T:System.ArgumentNullException">
@@ -7833,6 +8484,15 @@
       <param name="buffer">An array of bytes. This method copies <paramref name="count" /> bytes from <paramref name="buffer" /> to the current stream. </param>
       <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin copying bytes to the current stream. </param>
       <param name="count">The number of bytes to be written to the current stream. </param>
+      <exception cref="T:System.ArgumentException">The sum of <paramref name="offset" /> and <paramref name="count" /> is greater than the buffer length.</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="buffer" />  is null.</exception>
+      <exception cref="T:System.ArgumentOutOfRangeException">
+        <paramref name="offset" /> or <paramref name="count" /> is negative.</exception>
+      <exception cref="T:System.IO.IOException">An I/O error occured, such as the specified file cannot be found.</exception>
+      <exception cref="T:System.NotSupportedException">The stream does not support writing.</exception>
+      <exception cref="T:System.ObjectDisposedException">
+        <see cref="M:System.IO.Stream.Write(System.Byte[],System.Int32,System.Int32)" /> was called after the stream was closed.</exception>
     </member>
     <member name="M:MongoDB.Bson.IO.BsonStreamAdapter.WriteAsync(System.Byte[],System.Int32,System.Int32,System.Threading.CancellationToken)">
       <summary>Asynchronously writes a sequence of bytes to the current stream, advances the current position within this stream by the number of bytes written, and monitors cancellation requests.</summary>
@@ -8543,6 +9203,13 @@
     <member name="M:MongoDB.Bson.IO.ByteArrayChunk.Dispose">
       <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
     </member>
+    <member name="M:MongoDB.Bson.IO.ByteArrayChunk.Dispose(System.Boolean)">
+      <summary>
+            Releases unmanaged and - optionally - managed resources.
+            </summary>
+      <param name="disposing">
+        <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
+    </member>
     <member name="M:MongoDB.Bson.IO.ByteArrayChunk.Fork">
       <summary>
             Returns a new reference to the same chunk that can be independently disposed.
@@ -8605,6 +9272,13 @@
     </member>
     <member name="M:MongoDB.Bson.IO.ByteBufferSlice.Dispose">
       <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    </member>
+    <member name="M:MongoDB.Bson.IO.ByteBufferSlice.Dispose(System.Boolean)">
+      <summary>
+            Releases unmanaged and - optionally - managed resources.
+            </summary>
+      <param name="disposing">
+        <c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
     </member>
     <member name="M:MongoDB.Bson.IO.ByteBufferSlice.EnsureCapacity(System.Int32)">
       <summary>
@@ -8820,6 +9494,15 @@
       <param name="buffer">An array of bytes. This method copies <paramref name="count" /> bytes from <paramref name="buffer" /> to the current stream. </param>
       <param name="offset">The zero-based byte offset in <paramref name="buffer" /> at which to begin copying bytes to the current stream. </param>
       <param name="count">The number of bytes to be written to the current stream. </param>
+      <exception cref="T:System.ArgumentException">The sum of <paramref name="offset" /> and <paramref name="count" /> is greater than the buffer length.</exception>
+      <exception cref="T:System.ArgumentNullException">
+        <paramref name="buffer" />  is null.</exception>
+      <exception cref="T:System.ArgumentOutOfRangeException">
+        <paramref name="offset" /> or <paramref name="count" /> is negative.</exception>
+      <exception cref="T:System.IO.IOException">An I/O error occured, such as the specified file cannot be found.</exception>
+      <exception cref="T:System.NotSupportedException">The stream does not support writing.</exception>
+      <exception cref="T:System.ObjectDisposedException">
+        <see cref="M:System.IO.Stream.Write(System.Byte[],System.Int32,System.Int32)" /> was called after the stream was closed.</exception>
     </member>
     <member name="M:MongoDB.Bson.IO.ByteBufferStream.WriteByte(System.Byte)">
       <summary>Writes a byte to the current position in the stream and advances the position within the stream by one byte.</summary>
@@ -11255,11 +11938,12 @@
         </markup>
       </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.AttributedSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.AttributedSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
-            Gets a serializer for a type that has been annotated with a <see cref="T:MongoDB.Bson.Serialization.Attributes.BsonSerializerAttribute" /> specifying which serializer to use.
+            Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
             A serializer.
             </returns>
@@ -12013,6 +12697,14 @@
             Gets the backing document.
             </summary>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.BsonDocumentBackedClass.GetValue``1(System.String)">
+      <summary>
+            Gets the value from the backing document.
+            </summary>
+      <param name="memberName">The member name.</param>
+      <typeparam name="T">The type of the value.</typeparam>
+      <returns>The value.</returns>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.BsonDocumentBackedClass.GetValue``1(System.String,``0)">
       <summary>
             Gets the value from the backing document.
@@ -12313,11 +13005,12 @@
         </markup>
       </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.BsonObjectModelSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.BsonObjectModelSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
             Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
             A serializer.
             </returns>
@@ -12485,6 +13178,17 @@
       <param name="typeArguments">The type arguments.</param>
       <returns>A serializer.</returns>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.BsonSerializationProviderBase.CreateGenericSerializer(System.Type,System.Type[],MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Creates the serializer from a serializer type definition and type arguments.
+            </summary>
+      <param name="serializerTypeDefinition">The serializer type definition.</param>
+      <param name="typeArguments">The type arguments.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
+      <returns>
+            A serializer.
+            </returns>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.BsonSerializationProviderBase.CreateSerializer(System.Type)">
       <summary>
             Creates the serializer.
@@ -12492,11 +13196,29 @@
       <param name="serializerType">The serializer type.</param>
       <returns>A serializer.</returns>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.BsonSerializationProviderBase.CreateSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Creates the serializer.
+            </summary>
+      <param name="serializerType">The serializer type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
+      <returns>
+            A serializer.
+            </returns>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.BsonSerializationProviderBase.GetSerializer(System.Type)">
       <summary>
             Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <returns>A serializer.</returns>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.BsonSerializationProviderBase.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Gets a serializer for a type.
+            </summary>
+      <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
             A serializer.
             </returns>
@@ -12796,15 +13518,15 @@
         </markup>
       </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.CollectionsSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.CollectionsSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
             Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
             A serializer.
             </returns>
-      <exception cref="T:MongoDB.Bson.BsonSerializationException"></exception>
     </member>
     <member name="T:MongoDB.Bson.Serialization.CreatorMapDelegateCompiler">
       <summary>
@@ -12871,12 +13593,15 @@
         </markup>
       </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.DiscriminatedInterfaceSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.DiscriminatedInterfaceSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
-            Gets the serializer.
+            Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
-      <returns>A serializer.</returns>
+      <param name="serializerRegistry">The serializer registry.</param>
+      <returns>
+            A serializer.
+            </returns>
     </member>
     <member name="T:MongoDB.Bson.Serialization.ExpressionVisitor">
       <summary>
@@ -13358,6 +14083,21 @@
       <param name="id">The Id.</param>
       <returns>True if the Id is empty.</returns>
     </member>
+    <member name="T:MongoDB.Bson.Serialization.IRegistryAwareBsonSerializationProvider">
+      <summary>
+            An interface implemented by serialization providers that are aware of registries.
+            </summary>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.IRegistryAwareBsonSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Gets a serializer for a type.
+            </summary>
+      <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
+      <returns>
+            A serializer.
+            </returns>
+    </member>
     <member name="T:MongoDB.Bson.Serialization.IRepresentationConfigurable">
       <summary>
             Represents a serializer that has a Representation property.
@@ -13432,11 +14172,12 @@
         </markup>
       </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.PrimitiveSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.PrimitiveSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
             Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
             A serializer.
             </returns>
@@ -13451,13 +14192,14 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.TypeMappingSerializationProvider" /> class.
             </summary>
     </member>
-    <member name="M:MongoDB.Bson.Serialization.TypeMappingSerializationProvider.GetSerializer(System.Type)">
+    <member name="M:MongoDB.Bson.Serialization.TypeMappingSerializationProvider.GetSerializer(System.Type,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
       <summary>
-            Gets the serializer for the specified <paramref name="type" />.
+            Gets a serializer for a type.
             </summary>
       <param name="type">The type.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
       <returns>
-            The serializer.
+            A serializer.
             </returns>
     </member>
     <member name="M:MongoDB.Bson.Serialization.TypeMappingSerializationProvider.RegisterMapping(System.Type,System.Type)">
@@ -15604,6 +16346,12 @@
             </summary>
       <param name="itemSerializer">The item serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ArraySerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ArraySerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ArraySerializer`1.AddItem(System.Object,`0)">
       <summary>
             Adds the item.
@@ -17219,6 +17967,15 @@
       <param name="args">The serialization args.</param>
       <param name="value">The object.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`1.TryGetMemberSerializationInfo(System.String,MongoDB.Bson.Serialization.BsonSerializationInfo@)">
+      <summary>
+            Tries to get the serialization info for a member.
+            </summary>
+      <param name="memberName">Name of the member.</param>
+      <param name="serializationInfo">The serialization information.</param>
+      <returns>
+        <c>true</c> if the serialization info exists; otherwise <c>false</c>.</returns>
+    </member>
     <member name="P:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`1.ValueSerializer">
       <summary>
             Gets the value serializer.
@@ -17251,6 +18008,13 @@
       <param name="keySerializer">The key serializer.</param>
       <param name="valueSerializer">The value serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`3.#ctor(MongoDB.Bson.Serialization.Options.DictionaryRepresentation,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`3" /> class.
+            </summary>
+      <param name="dictionaryRepresentation">The dictionary representation.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`3.CreateInstance">
       <summary>
             Creates the instance.
@@ -17282,6 +18046,15 @@
       <param name="context">The serialization context.</param>
       <param name="args">The serialization args.</param>
       <param name="value">The object.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`3.TryGetMemberSerializationInfo(System.String,MongoDB.Bson.Serialization.BsonSerializationInfo@)">
+      <summary>
+            Tries to get the serialization info for a member.
+            </summary>
+      <param name="memberName">Name of the member.</param>
+      <param name="serializationInfo">The serialization information.</param>
+      <returns>
+        <c>true</c> if the serialization info exists; otherwise <c>false</c>.</returns>
     </member>
     <member name="P:MongoDB.Bson.Serialization.Serializers.DictionarySerializerBase`3.ValueSerializer">
       <summary>
@@ -17503,6 +18276,12 @@
             </summary>
       <param name="itemSerializer">The item serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry"></param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`1.CreateAccumulator">
       <summary>
             Creates the accumulator.
@@ -17533,6 +18312,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`2" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializer`2.CreateAccumulator">
       <summary>
@@ -17570,6 +18355,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`1.AddItem(System.Object,System.Object)">
       <summary>
@@ -17610,6 +18401,12 @@
             </summary>
       <param name="itemSerializer">The item serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableInterfaceImplementerSerializerBase`2.AddItem(System.Object,`1)">
       <summary>
             Adds the item.
@@ -17647,6 +18444,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`1.AddItem(System.Object,System.Object)">
       <summary>
@@ -17722,6 +18525,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`2" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.EnumerableSerializerBase`2.AddItem(System.Object,`1)">
       <summary>
@@ -17934,6 +18743,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ImpliedImplementationInterfaceSerializer`2" /> class.
             </summary>
       <param name="implementationSerializer">The implementation serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ImpliedImplementationInterfaceSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ImpliedImplementationInterfaceSerializer`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ImpliedImplementationInterfaceSerializer`2.Deserialize(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -18270,6 +19085,13 @@
       <param name="keySerializer">The key serializer.</param>
       <param name="valueSerializer">The value serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.KeyValuePairSerializer`2.#ctor(MongoDB.Bson.BsonType,MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.KeyValuePairSerializer`2" /> class.
+            </summary>
+      <param name="representation">The representation.</param>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.KeyValuePairSerializer`2.Deserialize(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
             Deserializes a value.
@@ -18369,6 +19191,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.NullableSerializer`1" /> class.
             </summary>
       <param name="serializer">The serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.NullableSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.NullableSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.NullableSerializer`1.Deserialize(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -18477,6 +19305,26 @@
       <param name="args">The serialization args.</param>
       <param name="value">The object.</param>
     </member>
+    <member name="T:MongoDB.Bson.Serialization.Serializers.PartiallyRawBsonDocumentSerializer">
+      <summary>
+            Represents a serializer for a BsonDocument with some parts raw.
+            </summary>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.PartiallyRawBsonDocumentSerializer.#ctor(System.String,MongoDB.Bson.Serialization.IBsonSerializer)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.PartiallyRawBsonDocumentSerializer" /> class.
+            </summary>
+      <param name="name">The name.</param>
+      <param name="rawSerializer">The raw serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.PartiallyRawBsonDocumentSerializer.Deserialize(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
+      <summary>
+            Deserializes a value.
+            </summary>
+      <param name="context">The deserialization context.</param>
+      <param name="args">The deserialization args.</param>
+      <returns>A deserialized value.</returns>
+    </member>
     <member name="T:MongoDB.Bson.Serialization.Serializers.ProjectingDeserializer`2">
       <summary>
             Wraps a serializer and projects using a function.
@@ -18514,6 +19362,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.QueueSerializer" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.QueueSerializer.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.QueueSerializer" /> class.
+            </summary>
+      <param name="serializerRegistry"></param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.QueueSerializer.AddItem(System.Object,System.Object)">
       <summary>
@@ -18565,6 +19419,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.QueueSerializer`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.QueueSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.QueueSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.QueueSerializer`1.AddItem(System.Object,`0)">
       <summary>
@@ -18674,6 +19534,12 @@
             </summary>
       <param name="itemSerializer">The item serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSerializer`1.CreateAccumulator">
       <summary>
             Creates the accumulator.
@@ -18703,12 +19569,20 @@
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2.#ctor">
       <summary>
-        <markup>
-          <include item="SMCAutoDocConstructor">
-            <parameter>MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2</parameter>
-          </include>
-        </markup>
-      </summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2" /> class.
+            </summary>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializer{`1})">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2" /> class.
+            </summary>
+      <param name="itemSerializer"></param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ReadOnlyCollectionSubclassSerializer`2.CreateAccumulator">
       <summary>
@@ -18831,7 +19705,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.SerializeAsNominalTypeSerializer`2" /> class.
             </summary>
       <param name="nominalTypeSerializer">The base class serializer.</param>
-      <exception cref="T:System.ArgumentNullException">baseClassSerializer</exception>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.SerializeAsNominalTypeSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.SerializeAsNominalTypeSerializer`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.SerializeAsNominalTypeSerializer`2.Serialize(MongoDB.Bson.Serialization.BsonSerializationContext,MongoDB.Bson.Serialization.BsonSerializationArgs,`0)">
       <summary>
@@ -19029,6 +19908,12 @@
             </summary>
       <param name="itemSerializer">The item serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.StackSerializer.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.StackSerializer" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.StackSerializer.AddItem(System.Object,System.Object)">
       <summary>
             Adds the item.
@@ -19079,6 +19964,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.StackSerializer`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.StackSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.StackSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.StackSerializer`1.AddItem(System.Object,`0)">
       <summary>
@@ -19189,6 +20080,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ThreeDimensionalArraySerializer`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.ThreeDimensionalArraySerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.ThreeDimensionalArraySerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.ThreeDimensionalArraySerializer`1.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19301,6 +20198,12 @@
             </summary>
       <param name="item1Serializer">The Item1 serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`1.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
             Deserializes the value.
@@ -19340,6 +20243,12 @@
             </summary>
       <param name="item1Serializer">The Item1 serializer.</param>
       <param name="item2Serializer">The Item2 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`2.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`2" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`2.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19387,6 +20296,12 @@
       <param name="item1Serializer">The Item1 serializer.</param>
       <param name="item2Serializer">The Item2 serializer.</param>
       <param name="item3Serializer">The Item3 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`3.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`3" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`3.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19441,6 +20356,12 @@
       <param name="item2Serializer">The Item2 serializer.</param>
       <param name="item3Serializer">The Item3 serializer.</param>
       <param name="item4Serializer">The Item4 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`4.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`4" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`4.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19502,6 +20423,12 @@
       <param name="item3Serializer">The Item3 serializer.</param>
       <param name="item4Serializer">The Item4 serializer.</param>
       <param name="item5Serializer">The Item5 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`5.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`5" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`5.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19570,6 +20497,12 @@
       <param name="item4Serializer">The Item4 serializer.</param>
       <param name="item5Serializer">The Item5 serializer.</param>
       <param name="item6Serializer">The Item6 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`6.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`6" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`6.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19645,6 +20578,12 @@
       <param name="item5Serializer">The Item5 serializer.</param>
       <param name="item6Serializer">The Item6 serializer.</param>
       <param name="item7Serializer">The Item7 serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`7.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`7" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`7.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
@@ -19728,6 +20667,12 @@
       <param name="item7Serializer">The Item7 serializer.</param>
       <param name="restSerializer">The Rest serializer.</param>
     </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`8.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TupleSerializer`8" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
+    </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TupleSerializer`8.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>
             Deserializes the value.
@@ -19800,6 +20745,12 @@
             Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TwoDimensionalArraySerializer`1" /> class.
             </summary>
       <param name="itemSerializer">The item serializer.</param>
+    </member>
+    <member name="M:MongoDB.Bson.Serialization.Serializers.TwoDimensionalArraySerializer`1.#ctor(MongoDB.Bson.Serialization.IBsonSerializerRegistry)">
+      <summary>
+            Initializes a new instance of the <see cref="T:MongoDB.Bson.Serialization.Serializers.TwoDimensionalArraySerializer`1" /> class.
+            </summary>
+      <param name="serializerRegistry">The serializer registry.</param>
     </member>
     <member name="M:MongoDB.Bson.Serialization.Serializers.TwoDimensionalArraySerializer`1.DeserializeValue(MongoDB.Bson.Serialization.BsonDeserializationContext,MongoDB.Bson.Serialization.BsonDeserializationArgs)">
       <summary>

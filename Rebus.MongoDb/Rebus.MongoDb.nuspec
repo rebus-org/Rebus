@@ -15,9 +15,9 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="MongoDB.Bson" version="2.0.1" />
-        <dependency id="MongoDB.Driver" version="2.0.1" />
-        <dependency id="MongoDB.Driver.Core" version="2.0.1" />
+        <dependency id="MongoDB.Bson" version="2.2.4" />
+        <dependency id="MongoDB.Driver" version="2.2.4" />
+        <dependency id="MongoDB.Driver.Core" version="2.2.4" />
     </dependencies>
   </metadata>
   <files>
