@@ -97,11 +97,14 @@ namespace Rebus.MongoDb.Timeouts
                 OriginalDueTimeUtc = dueTimeUtc;
             }
 
-            public ObjectId Id { get; }
-            public Dictionary<string, string> Headers { get; }
-            public byte[] Body { get; }
-            public DateTime DueTimeUtc { get; }
-            public DateTime OriginalDueTimeUtc { get; }
+            // the following properties have public setters because the Mongo driver requires it!
+            // ReSharper disable MemberCanBePrivate.Local
+            public ObjectId Id { get; set; }
+            public Dictionary<string, string> Headers { get; set; }
+            public byte[] Body { get; set; }
+            public DateTime DueTimeUtc { get; set; }
+            public DateTime OriginalDueTimeUtc { get; set; }
+            // ReSharper restore MemberCanBePrivate.Local
         }
     }
 }
