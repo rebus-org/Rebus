@@ -30,7 +30,7 @@ namespace Rebus.Auditing.Sagas
                     .OnReceive(new SaveSagaDataSnapshotStep(sagaSnapshotStorage, transport), PipelineRelativePosition.Before, typeof(LoadSagaDataStep));
             });
 
-            return configurer.GetConfigurer<ISagaSnapshotStorage>();
+            return StandardConfigurer<ISagaSnapshotStorage>.GetConfigurerFrom(configurer);
         }
 
         /// <summary>

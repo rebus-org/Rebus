@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using NUnit.Framework;
 using Rebus.Time;
 
@@ -39,6 +40,38 @@ namespace Rebus.Tests
         {
             _disposables.Push(disposable);
             return disposable;
+        }
+
+        protected string GetTempFilePath()
+        {
+            var tempFile = Path.GetTempFileName();
+            Using(new FileDeleter(tempFile));
+            return tempFile;
+        }
+
+        class FileDeleter : IDisposable
+        {
+            readonly string _filePath;
+
+            public FileDeleter(string filePath)
+            {
+                _filePath = filePath;
+            }
+
+            public void Dispose()
+            {
+                try
+                {
+                    File.Delete(_filePath);
+                }
+                catch (FileNotFoundException)
+                {
+                }
+                catch (Exception exception)
+                {
+                    Console.WriteLine($"Could not delete file {_filePath}: {exception}");
+                }
+            }
         }
 
         protected void CleanUpDisposables()

@@ -11,6 +11,16 @@ namespace Rebus.Config
     /// </summary>
     public class StandardConfigurer<TService>
     {
+        /// <summary>
+        /// Gets a standard configurer from the given options configurer. Can be used to provide
+        /// extensions to <see cref="OptionsConfigurer"/> that return a standard configurer that can then
+        /// be used to build further
+        /// </summary>
+        public static StandardConfigurer<TService> GetConfigurerFrom(OptionsConfigurer configurer)
+        {
+            return configurer.GetConfigurer<TService>();
+        }
+
         readonly Injectionist _injectionist;
         readonly Options _options;
 
