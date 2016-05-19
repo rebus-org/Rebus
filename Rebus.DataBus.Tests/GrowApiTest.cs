@@ -71,9 +71,7 @@ namespace Rebus.DataBus.Tests
 
             using (var source = File.OpenRead(sourceFilePath))
             {
-                var attachment = _senderBus.Advanced.DataBus().CreateAttachment(source)
-
-                var attachment = await DataBusAttachment.FromStream(source, _senderBus);
+                var attachment = await _senderBus.Advanced.DataBus().CreateAttachment(source);
 
                 await _senderBus.Send(new MessageWithAttachment
                 {

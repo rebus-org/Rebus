@@ -66,7 +66,7 @@ namespace Rebus.Bus
                 if (transactionContext == null)
                 {
                     throw new InvalidOperationException(
-                        "Attempted to perform operation on the current transport message, but there was no transaction context and therefore no 'current transport message' to anything with! This call must be made from within a message handler... if you're actually doing that, you're probably experiencing this error because you're executing this operation on an independent thread somehow...");
+                        "Attempted to perform operation on the current transport message, but there was no transaction context and therefore no 'current transport message' to do anything with! This call must be made from within a message handler... if you're actually doing that, you're probably experiencing this error because you're executing this operation on an independent thread somehow...");
                 }
 
                 var currentTransportMessage = transactionContext
