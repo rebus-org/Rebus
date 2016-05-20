@@ -81,6 +81,7 @@
     <Compile Include="DataBus\FakeDataBusTestExtensions.cs" />
     <Compile Include="DataBus\IDataBus.cs" />
     <Compile Include="DataBus\IDataBusStorage.cs" />
+    <Compile Include="DataBus\InMemDataBusStorage.cs" />
     <Compile Include="DataBus\InMemDataStore.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
     <Compile Include="Encryption\EncryptedData.cs" />

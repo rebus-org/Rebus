@@ -14,7 +14,7 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.DataBus
 {
     [TestFixture]
-    public class GrowApiTest : FixtureBase
+    public class SimpleTest : FixtureBase
     {
         InMemNetwork _inMemNetwork;
         IBus _senderBus;
