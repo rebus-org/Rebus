@@ -12,7 +12,7 @@ namespace Rebus.Tests.Encryption
         {
             var argumentException = Assert.Throws<ArgumentException>(() =>
             {
-                new Encryptor("not a valid key");
+                new RijndaelEncryptor("not a valid key");
             });
 
             Console.WriteLine(argumentException);

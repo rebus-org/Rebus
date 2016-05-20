@@ -19,13 +19,13 @@ namespace Rebus.Encryption
         }
 
         /// <summary>
-        /// Gets the raw data from this encrypted data instance
-        /// </summary>
-        public byte[] Bytes { get; }
-        
-        /// <summary>
         /// Gets the salt (a.k.a. "Initialization Vector"/"IV") from this encrypted data instance
         /// </summary>
         public byte[] Iv { get; }
+
+        /// <summary>
+        /// Gets the raw data from this encrypted data instance
+        /// </summary>
+        public byte[] Bytes { get; }
     }
 }

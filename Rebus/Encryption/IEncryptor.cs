@@ -9,17 +9,15 @@
         /// Header name that will be added to an encrypted message
         /// </summary>
         string ContentEncryptionValue { get; }
+        
         /// <summary>
-        /// Decryption method
+        /// Decrypts the encrypted data
         /// </summary>
-        /// <param name="encryptedData"></param>
-        /// <returns>Decrypted content</returns>
         byte[] Decrypt(EncryptedData encryptedData);
+        
         /// <summary>
-        /// Encryption method
+        /// Encrypts the given bytes and returns the encrypted data alond with the salt in the returned <see cref="EncryptedData"/>
         /// </summary>
-        /// <param name="bytes"></param>
-        /// <returns>Encrypted data and IV used for encryption. See <see cref="EncryptedData"/> for details</returns>
         EncryptedData Encrypt(byte[] bytes);
     }
 }

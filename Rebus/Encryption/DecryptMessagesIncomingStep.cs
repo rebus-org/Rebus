@@ -38,7 +38,7 @@ namespace Rebus.Encryption
                 var headers = transportMessage.Headers.Clone();
                 var encryptedBodyBytes = transportMessage.Body;
 
-                var iv = GetIV(headers);
+                var iv = GetIv(headers);
                 var bodyBytes = _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv));
 
                 context.Save(new TransportMessage(headers, bodyBytes));
@@ -47,7 +47,7 @@ namespace Rebus.Encryption
             await next();
         }
 
-        byte[] GetIV(Dictionary<string, string> headers)
+        static byte[] GetIv(IDictionary<string, string> headers)
         {
             string ivString;
 

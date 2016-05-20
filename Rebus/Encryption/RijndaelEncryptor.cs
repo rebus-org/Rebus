@@ -7,7 +7,7 @@ namespace Rebus.Encryption
     /// <summary>
     /// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
     /// </summary>
-    public class Encryptor : IEncryptor
+    class RijndaelEncryptor : IEncryptor
     {
         readonly byte[] _key;
 
@@ -20,7 +20,7 @@ namespace Rebus.Encryption
         /// Creates the encrptor with the specified key - the key must be a valid, base64-encoded key
         /// </summary>
         /// <param name="key"></param>
-        public Encryptor(string key)
+        public RijndaelEncryptor(string key)
         {
             _key = Convert.FromBase64String(key);
 

@@ -97,6 +97,7 @@
     <Compile Include="Contracts\DataBus\Factories\InMemDataBusStorageFactory.cs" />
     <Compile Include="Contracts\DataBus\InMemDataStorageTest.cs" />
     <Compile Include="DataBus\SimpleTest.cs" />
+    <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
     <Compile Include="Integration\TestErrorOnReceive.cs" />
