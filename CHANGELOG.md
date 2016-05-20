@@ -930,7 +930,7 @@
 
 * Changed timeout settings on Azure Service Bus transport to respect the setting from the connection string - thanks [Rzpeg]
 * Changed RabbitMQ transport to use `QueueingBasicConsumer` instead of polling - thanks [Hangsolow]
-
+* Separated encryption algorithm out into injectable and thus configurable `IEncryptor` service - thanks [zabulus]
 
 ---
 
@@ -972,3 +972,4 @@
 [tobiaxor]: https://github.com/tobiaxor
 [torangel]: https://github.com/torangel
 [xenoputtss]: https://github.com/xenoputtss
+[zabulus]: https://github.com/zabulus
