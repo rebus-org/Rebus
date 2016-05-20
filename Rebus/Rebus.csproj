@@ -79,6 +79,7 @@
     <Compile Include="Encryption\EncryptionHeaders.cs" />
     <Compile Include="Encryption\EncryptMessagesOutgoingStep.cs" />
     <Compile Include="Encryption\Encryptor.cs" />
+    <Compile Include="Encryption\IEncryptor.cs" />
     <Compile Include="Exceptions\RebusApplicationException.cs" />
     <Compile Include="Extensions\DateTimeExtensions.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />

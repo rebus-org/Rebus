@@ -7,9 +7,14 @@ namespace Rebus.Encryption
     /// <summary>
     /// Helps with encrypting/decripting byte arrays, using the <see cref="RijndaelManaged"/> algorithm
     /// </summary>
-    public class Encryptor
+    public class Encryptor : IEncryptor
     {
         readonly byte[] _key;
+
+        /// <summary>
+        /// Returns "rijndael" string
+        /// </summary>
+        public string ContentEncryptionValue => "rijndael";
 
         /// <summary>
         /// Creates the encrptor with the specified key - the key must be a valid, base64-encoded key
