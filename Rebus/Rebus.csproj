@@ -78,6 +78,7 @@
     <Compile Include="DataBus\DataBusOptionsExtensions.cs" />
     <Compile Include="DataBus\DefaultDataBus.cs" />
     <Compile Include="DataBus\DisabledDataBus.cs" />
+    <Compile Include="DataBus\FileSystem\FileSystemDataBusExtensions.cs" />
     <Compile Include="DataBus\FileSystem\FileSystemDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataBusExtensions.cs" />
     <Compile Include="DataBus\IDataBus.cs" />

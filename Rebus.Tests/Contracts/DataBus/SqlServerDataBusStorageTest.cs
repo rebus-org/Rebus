@@ -4,5 +4,5 @@ using Rebus.Tests.Contracts.DataBus.Factories;
 namespace Rebus.Tests.Contracts.DataBus
 {
     [TestFixture]
-    public class InMemDataBusStorageTest : GeneralDataBusStorageTests<InMemDataBusStorageFactory> { }
+    public class SqlServerDataBusStorageTest : GeneralDataBusStorageTests<SqlServerDataBusStorageFactory> { }
 }

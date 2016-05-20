@@ -41,7 +41,10 @@ namespace Rebus.Tests.Contracts.DataBus
 
             using (var destination = new MemoryStream())
             {
-                await _storage.Read(knownId).CopyToAsync(destination);
+                using (var source = _storage.Read(knownId))
+                {
+                    await source.CopyToAsync(destination);
+                }
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 
@@ -50,7 +53,7 @@ namespace Rebus.Tests.Contracts.DataBus
         }
 
         [Test]
-        public async Task CanLoadSavedDataMultipleTimes()
+        public async Task CanLoadSaveDataMultipleTimes()
         {
             const string knownId = "known id";
             const string originalData = "this is some data";
@@ -70,7 +73,10 @@ namespace Rebus.Tests.Contracts.DataBus
         {
             using (var destination = new MemoryStream())
             {
-                await _storage.Read(knownId).CopyToAsync(destination);
+                using (var source = _storage.Read(knownId))
+                {
+                    await source.CopyToAsync(destination);
+                }
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 
