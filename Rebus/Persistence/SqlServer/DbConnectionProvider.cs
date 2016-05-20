@@ -62,7 +62,7 @@ namespace Rebus.Persistence.SqlServer
             return connectionString;
         }
 
-        string GetConnectionString(string connectionStringOrConnectionStringName)
+        static string GetConnectionString(string connectionStringOrConnectionStringName)
         {
             var connectionStringSettings = ConfigurationManager.ConnectionStrings[connectionStringOrConnectionStringName];
 
@@ -84,7 +84,8 @@ namespace Rebus.Persistence.SqlServer
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
                     connection = new SqlConnection(_connectionString);
-
+                    
+                    // do not use Async here! it would cause the tx scope to be disposed on another thread than the one that created it
                     connection.Open();
                 }
 

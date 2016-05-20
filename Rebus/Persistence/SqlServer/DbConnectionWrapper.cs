@@ -110,7 +110,11 @@ namespace Rebus.Persistence.SqlServer
                         {
                             using (_currentTransaction)
                             {
-                                _currentTransaction.Rollback();
+                                try
+                                {
+                                    _currentTransaction.Rollback();
+                                }
+                                catch { }
                                 _currentTransaction = null;
                             }
                         }

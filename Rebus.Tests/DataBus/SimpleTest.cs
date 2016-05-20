@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.DataBus;
+using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;

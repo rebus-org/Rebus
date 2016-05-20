@@ -1,7 +1,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace Rebus.DataBus
+namespace Rebus.DataBus.InMem
 {
     class InMemDataBusStorage : IDataBusStorage
     {

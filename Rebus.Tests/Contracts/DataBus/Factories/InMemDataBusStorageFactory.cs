@@ -1,8 +1,9 @@
 using Rebus.DataBus;
+using Rebus.DataBus.InMem;
 
-namespace Rebus.Tests.Contracts.Data
+namespace Rebus.Tests.Contracts.DataBus.Factories
 {
-    public class InMemDataBusStorageFactory : IDataStorageFactory
+    public class InMemDataBusStorageFactory : IDataBusStorageFactory
     {
         readonly InMemDataStore _inMemDataStore = new InMemDataStore();
 

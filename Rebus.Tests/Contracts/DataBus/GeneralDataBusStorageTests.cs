@@ -6,9 +6,9 @@ using NUnit.Framework;
 using Rebus.DataBus;
 using Rebus.Tests.Extensions;
 
-namespace Rebus.Tests.Contracts.Data
+namespace Rebus.Tests.Contracts.DataBus
 {
-    public abstract class GeneralDataStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory: IDataStorageFactory, new()
+    public abstract class GeneralDataBusStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory: IDataBusStorageFactory, new()
     {
         IDataBusStorage _storage;
 

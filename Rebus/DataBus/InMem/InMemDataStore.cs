@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace Rebus.DataBus
+namespace Rebus.DataBus.InMem
 {
     /// <summary>
     /// In-mem implementation of a data store that can be shared among buses that use the in-mem data bus.
+    /// A shared instance of this class should be passed to all endpoints when calling <see cref="InMemDataBusExtensions.StoreInMemory"/>
     /// </summary>
     public class InMemDataStore
     {
