@@ -11,20 +11,30 @@ namespace Rebus.Messages
         /// <summary>
         /// Gets the key of the header
         /// </summary>
-        public string Key { get; private set; }
-        
+        public string Key { get; }
+
         /// <summary>
         /// Gets the value of the header
         /// </summary>
-        public string Value { get; private set; }
+        public string Value { get; }
 
         /// <summary>
         /// Creates the header attribute with the given key and value
         /// </summary>
         public HeaderAttribute(string key, string value)
         {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
             Key = key;
             Value = value;
+        }
+
+        /// <summary>
+        /// Creates the header attribute with the given key and an empty value
+        /// </summary>
+        public HeaderAttribute(string key)
+            : this(key, "")
+        {
         }
     }
 }
