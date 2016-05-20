@@ -11,6 +11,9 @@ namespace Rebus.DataBus
     [Serializable]
     public class DataBusAttachment
     {
+        /// <summary>
+        /// Creates a data bus attachment with the given ID
+        /// </summary>
         public DataBusAttachment(string id)
         {
             Id = id;

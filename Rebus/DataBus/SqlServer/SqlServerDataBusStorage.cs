@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
@@ -10,10 +9,12 @@ using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
-using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.DataBus.SqlServer
 {
+    /// <summary>
+    /// Implementation of <see cref="IDataBusStorage"/> that uses SQL Server to store data
+    /// </summary>
     public class SqlServerDataBusStorage : IDataBusStorage, IInitializable
     {
         readonly IDbConnectionProvider _connectionProvider;
@@ -21,6 +22,9 @@ namespace Rebus.DataBus.SqlServer
         readonly bool _ensureTableIsCreated;
         readonly ILog _log;
 
+        /// <summary>
+        /// Creates the data storage
+        /// </summary>
         public SqlServerDataBusStorage(IDbConnectionProvider connectionProvider, string tableName, bool ensureTableIsCreated, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (connectionProvider == null) throw new ArgumentNullException(nameof(connectionProvider));
@@ -32,6 +36,10 @@ namespace Rebus.DataBus.SqlServer
             _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
+        /// <summary>
+        /// Initializes the SQL Server data storage.
+        /// Will create the data table, unless this has been explicitly turned off when configuring the data storage
+        /// </summary>
         public void Initialize()
         {
             if (!_ensureTableIsCreated) return;
@@ -45,8 +53,8 @@ namespace Rebus.DataBus.SqlServer
         {
             using (var connection = await _connectionProvider.GetConnection())
             {
-                //if (connection.GetTableNames().Contains(_tableName, StringComparer.CurrentCultureIgnoreCase))
-                //    return;
+                if (connection.GetTableNames().Contains(_tableName, StringComparer.CurrentCultureIgnoreCase))
+                    return;
 
                 using (var command = connection.CreateCommand())
                 {
@@ -76,6 +84,9 @@ CREATE TABLE [{_tableName}] (
             }
         }
 
+        /// <summary>
+        /// Saves the data from the given source stream under the given ID
+        /// </summary>
         public async Task Save(string id, Stream source)
         {
             try
@@ -100,6 +111,9 @@ CREATE TABLE [{_tableName}] (
             }
         }
 
+        /// <summary>
+        /// Opens the data stored under the given ID for reading
+        /// </summary>
         public Stream Read(string id)
         {
             try
@@ -135,22 +149,6 @@ CREATE TABLE [{_tableName}] (
             }
         }
 
-        //static void Dispatch(Func<Task> action)
-        //{
-        //    var done = new ManualResetEvent(false);
-        //    ThreadPool.QueueUserWorkItem(_ =>
-        //    {
-        //        action().ContinueWith(task =>
-        //        {
-        //            done.Set();
-        //        });
-        //    });
-        //    if (!done.WaitOne(TimeSpan.FromSeconds(5)))
-        //    {
-        //        throw new RebusApplicationException($"Did not get result from background thread within 5 s timeout");
-        //    }
-        //}
-
         static TResult DispatchResult<TResult>(Func<Task<TResult>> function)
         {
             var result = default(TResult);
@@ -165,7 +163,7 @@ CREATE TABLE [{_tableName}] (
             });
             if (!done.WaitOne(TimeSpan.FromSeconds(5)))
             {
-                throw new RebusApplicationException($"Did not get result from background thread within 5 s timeout");
+                throw new RebusApplicationException("Did not get result from background thread within 5 s timeout");
             }
             return result;
         }
