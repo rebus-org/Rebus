@@ -932,6 +932,8 @@
 * Changed RabbitMQ transport to use `QueueingBasicConsumer` instead of polling - thanks [Hangsolow]
 * Separated encryption algorithm out into injectable and thus configurable `IEncryptor` service - thanks [zabulus]
 * Added data bus feature with data storages for SQL Server, the file system, and in-mem (for testing)
+* Fixed issue with high disk activity when using MSMQ
+
 
 ---
 

@@ -5,6 +5,7 @@ using System.IO;
 using System.Messaging;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -178,9 +179,7 @@ namespace Rebus.Transport.Msmq
             var messageQueueTransaction = new MessageQueueTransaction();
             messageQueueTransaction.Begin();
 
-            context.OnCommitted(async () => messageQueueTransaction.Commit());
             context.OnDisposed(() => messageQueueTransaction.Dispose());
-
             context.Items[CurrentTransactionKey] = messageQueueTransaction;
 
             try
@@ -191,6 +190,8 @@ namespace Rebus.Transport.Msmq
                     messageQueueTransaction.Abort();
                     return null;
                 }
+
+                context.OnCommitted(async () => messageQueueTransaction.Commit());
 
                 var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
