@@ -4,6 +4,7 @@ using System.Linq;
 using Rebus.Activation;
 using Rebus.Backoff;
 using Rebus.Bus;
+using Rebus.DataBus;
 using Rebus.Handlers;
 using Rebus.Injection;
 using Rebus.Logging;
@@ -223,6 +224,8 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault(c => new BusLifetimeEvents());
 
+            PossiblyRegisterDefault<IDataBus>(c => new DisabledDataBus());
+
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;
 
@@ -237,7 +240,8 @@ namespace Rebus.Config
                     c.Get<ISubscriptionStorage>(),
                     _options,
                     c.Get<IRebusLoggerFactory>(),
-                    c.Get<BusLifetimeEvents>());
+                    c.Get<BusLifetimeEvents>(),
+                    c.Get<IDataBus>());
 
                 bus.Disposed += () =>
                 {

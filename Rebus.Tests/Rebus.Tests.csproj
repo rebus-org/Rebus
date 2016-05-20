@@ -91,6 +91,8 @@
     <Compile Include="Bugs\DoesNotOverwriteSagaIdWhenInitiatingNewSaga.cs" />
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
     <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
+    <Compile Include="DataBus\GrowApiTest.cs" />
+    <Compile Include="DataBus\TestInMemDataBusStorage.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
     <Compile Include="Integration\TestErrorOnReceive.cs" />

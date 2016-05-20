@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Bus.Advanced;
+using Rebus.DataBus;
 using Rebus.Logging;
 
 namespace Rebus.Config
@@ -88,6 +89,8 @@ namespace Rebus.Config
             public IRoutingApi Routing => _innerAdvancedApi.Routing;
 
             public ITransportMessageApi TransportMessage => _innerAdvancedApi.TransportMessage;
+
+            public IDataBus DataBus => _innerAdvancedApi.DataBus;
         }
 
         class OneWayClientWorkersApi : IWorkersApi

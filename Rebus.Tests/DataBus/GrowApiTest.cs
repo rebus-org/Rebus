@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Auditing.Sagas;
 using Rebus.Bus;
 using Rebus.Config;
+using Rebus.DataBus;
 using Rebus.Routing.TypeBased;
-using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
-namespace Rebus.DataBus.Tests
+namespace Rebus.Tests.DataBus
 {
     [TestFixture]
     public class GrowApiTest : FixtureBase
@@ -22,10 +19,12 @@ namespace Rebus.DataBus.Tests
         InMemNetwork _inMemNetwork;
         IBus _senderBus;
         BuiltinHandlerActivator _receiverActivator;
+        InMemDataStore _inMemDataStore;
 
         protected override void SetUp()
         {
             _inMemNetwork = new InMemNetwork();
+            _inMemDataStore = new InMemDataStore();
 
             _senderBus = StartBus("sender").Bus;
             _receiverActivator = StartBus("receiver");
@@ -40,7 +39,7 @@ namespace Rebus.DataBus.Tests
                 .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
                 .Options(o =>
                 {
-                    o.EnableDataBus().StoreInMemory();
+                    o.EnableDataBus().StoreInMemory(_inMemDataStore);
                 })
                 .Start();
 
@@ -53,10 +52,13 @@ namespace Rebus.DataBus.Tests
             var sourceFilePath = GetTempFilePath();
             var destinationFilePath = GetTempFilePath();
 
-            File.WriteAllText(sourceFilePath, "THIS IS A BIG FILE!!");
+            const string originalFileContents = "THIS IS A BIG FILE!!";
+
+            File.WriteAllText(sourceFilePath, originalFileContents);
 
             var dataSuccessfullyCopied = new ManualResetEvent(false);
 
+            // set up handler that writes the contents of the received attachment to a file
             _receiverActivator.Handle<MessageWithAttachment>(async message =>
             {
                 var attachment = message.Attachment;
@@ -69,9 +71,10 @@ namespace Rebus.DataBus.Tests
                 dataSuccessfullyCopied.Set();
             });
 
+            // send a message that sends the contents of a file as an attachment
             using (var source = File.OpenRead(sourceFilePath))
             {
-                var attachment = await _senderBus.Advanced.DataBus().CreateAttachment(source);
+                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source);
 
                 await _senderBus.Send(new MessageWithAttachment
                 {
@@ -80,6 +83,8 @@ namespace Rebus.DataBus.Tests
             }
 
             dataSuccessfullyCopied.WaitOrDie(TimeSpan.FromSeconds(5), "Data was not successfully copied within 5 second timeout");
+
+            Assert.That(File.ReadAllText(destinationFilePath), Is.EqualTo(originalFileContents));
         }
 
         class MessageWithAttachment

@@ -2,9 +2,9 @@
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Tests;
+using Rebus.DataBus;
 
-namespace Rebus.DataBus.Tests
+namespace Rebus.Tests.DataBus
 {
     [TestFixture]
     public class TestInMemDataBusStorage : FixtureBase
@@ -12,7 +12,7 @@ namespace Rebus.DataBus.Tests
         [Test]
         public async Task CanSaveAndLoadData()
         {
-            var dataStorage = new FakeDataBusTestExtensions.InMemDataBusStorage();
+            var dataStorage = new FakeDataBusTestExtensions.InMemDataBusStorage(new InMemDataStore());
 
             const string knownId = "known id";
             const string originalData = "this is some data";
@@ -24,7 +24,7 @@ namespace Rebus.DataBus.Tests
 
             using (var destination = new MemoryStream())
             {
-                await dataStorage.Load(knownId, destination);
+                await dataStorage.Read(knownId).CopyToAsync(destination);
 
                 var readData = Encoding.UTF8.GetString(destination.ToArray());
 

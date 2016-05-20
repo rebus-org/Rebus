@@ -73,6 +73,15 @@
     <Compile Include="Bus\IInitializable.cs" />
     <Compile Include="Compression\ZippingSerializerDecorator.cs" />
     <Compile Include="Config\OneWayClientBackdoor.cs" />
+    <Compile Include="DataBus\DataBusAttachment.cs" />
+    <Compile Include="DataBus\DataBusIncomingStep.cs" />
+    <Compile Include="DataBus\DataBusOptionsExtensions.cs" />
+    <Compile Include="DataBus\DefaultDataBus.cs" />
+    <Compile Include="DataBus\DisabledDataBus.cs" />
+    <Compile Include="DataBus\FakeDataBusTestExtensions.cs" />
+    <Compile Include="DataBus\IDataBus.cs" />
+    <Compile Include="DataBus\IDataBusStorage.cs" />
+    <Compile Include="DataBus\InMemDataStore.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
     <Compile Include="Encryption\EncryptedData.cs" />
     <Compile Include="Encryption\EncryptionConfigurationExtensions.cs" />

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus.Advanced;
 using Rebus.Config;
+using Rebus.DataBus;
 using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
@@ -32,6 +33,7 @@ namespace Rebus.Bus
         readonly List<IWorker> _workers = new List<IWorker>();
 
         readonly BusLifetimeEvents _busLifetimeEvents;
+        readonly IDataBus _dataBus;
         readonly IWorkerFactory _workerFactory;
         readonly IRouter _router;
         readonly ITransport _transport;
@@ -44,7 +46,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Constructs the bus.
         /// </summary>
-        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents)
+        public RebusBus(IWorkerFactory workerFactory, IRouter router, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ISubscriptionStorage subscriptionStorage, Options options, IRebusLoggerFactory rebusLoggerFactory, BusLifetimeEvents busLifetimeEvents, IDataBus dataBus)
         {
             _workerFactory = workerFactory;
             _router = router;
@@ -54,6 +56,7 @@ namespace Rebus.Bus
             _subscriptionStorage = subscriptionStorage;
             _options = options;
             _busLifetimeEvents = busLifetimeEvents;
+            _dataBus = dataBus;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
         }
 
