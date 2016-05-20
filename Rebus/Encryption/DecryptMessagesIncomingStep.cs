@@ -14,12 +14,12 @@ namespace Rebus.Encryption
     /// </summary>
     public class DecryptMessagesIncomingStep : IIncomingStep
     {
-        readonly Encryptor _encryptor;
+        readonly IEncryptor _encryptor;
 
         /// <summary>
         /// Constructs the step with the given encryptor
         /// </summary>
-        public DecryptMessagesIncomingStep(Encryptor encryptor)
+        public DecryptMessagesIncomingStep(IEncryptor encryptor)
         {
             _encryptor = encryptor;
         }
@@ -31,12 +31,14 @@ namespace Rebus.Encryption
         {
             var transportMessage = context.Load<TransportMessage>();
 
-            if (transportMessage.Headers.ContainsKey(EncryptionHeaders.ContentEncryption))
+            string contentEncryptionValue;
+            if (transportMessage.Headers.TryGetValue(EncryptionHeaders.ContentEncryption, out contentEncryptionValue)
+                && contentEncryptionValue == _encryptor.ContentEncryptionValue)
             {
                 var headers = transportMessage.Headers.Clone();
                 var encryptedBodyBytes = transportMessage.Body;
 
-                var iv = GetIv(headers);
+                var iv = GetIV(headers);
                 var bodyBytes = _encryptor.Decrypt(new EncryptedData(encryptedBodyBytes, iv));
 
                 context.Save(new TransportMessage(headers, bodyBytes));
@@ -45,7 +47,7 @@ namespace Rebus.Encryption
             await next();
         }
 
-        byte[] GetIv(Dictionary<string, string> headers)
+        byte[] GetIV(Dictionary<string, string> headers)
         {
             string ivString;
 

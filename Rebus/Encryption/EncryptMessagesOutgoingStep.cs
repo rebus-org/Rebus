@@ -11,12 +11,12 @@ namespace Rebus.Encryption
     /// </summary>
     public class EncryptMessagesOutgoingStep : IOutgoingStep
     {
-        readonly Encryptor _encryptor;
+        readonly IEncryptor _encryptor;
 
         /// <summary>
         /// Constructs the step with the given encryptor
         /// </summary>
-        public EncryptMessagesOutgoingStep(Encryptor encryptor)
+        public EncryptMessagesOutgoingStep(IEncryptor encryptor)
         {
             _encryptor = encryptor;
         }
@@ -32,7 +32,7 @@ namespace Rebus.Encryption
             var bodyBytes = transportMessage.Body;
             var encryptedData = _encryptor.Encrypt(bodyBytes);
             
-            headers[EncryptionHeaders.ContentEncryption] = "rijndael";
+            headers[EncryptionHeaders.ContentEncryption] = _encryptor.ContentEncryptionValue;
             headers[EncryptionHeaders.ContentInitializationVector] = Convert.ToBase64String(encryptedData.Iv);
             context.Save(new TransportMessage(headers, encryptedData.Bytes));
 
