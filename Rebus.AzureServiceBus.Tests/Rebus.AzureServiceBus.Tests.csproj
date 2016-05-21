@@ -39,7 +39,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.ServiceBus, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\WindowsAzure.ServiceBus.3.2.0\lib\net45-full\Microsoft.ServiceBus.dll</HintPath>
+      <HintPath>..\packages\WindowsAzure.ServiceBus.3.2.1\lib\net45-full\Microsoft.ServiceBus.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.WindowsAzure.Configuration">
@@ -68,6 +68,7 @@
     <Compile Include="AzureServiceBusBasicSendReceive.cs" />
     <Compile Include="AzureServiceBusContentTypeTest.cs" />
     <Compile Include="AzureServiceBusDoNotCreateQueue.cs" />
+    <Compile Include="BasicAzureServiceBusBasicSendReceive.cs" />
     <Compile Include="Factories\AzureServiceBusBusFactory.cs" />
     <Compile Include="AzureServiceBusManyMessages.cs" />
     <Compile Include="AzureServiceBusMessageExpiration.cs" />
