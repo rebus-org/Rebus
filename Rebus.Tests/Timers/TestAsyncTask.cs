@@ -98,8 +98,8 @@ namespace Rebus.Tests.Timers
 
             Console.WriteLine(string.Join(Environment.NewLine, events.Select(t => $"{t.TotalMilliseconds:0.0} ms")));
 
-            Assert.That(events.Count, Is.GreaterThanOrEqualTo(4), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
-            Assert.That(events.Count, Is.LessThanOrEqualTo(7));
+            Assert.That(events.Count, Is.GreaterThanOrEqualTo(3), "TPL-based tasks are wildly inaccurate and can sometimes add 2-300 ms per Task.Delay");
+            Assert.That(events.Count, Is.LessThanOrEqualTo(8));
         }
     }
 }
