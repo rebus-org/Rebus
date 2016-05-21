@@ -53,7 +53,7 @@ namespace Rebus.MongoDb.Tests
 
             await Task.WhenAll(sendTasks);
 
-            sharedCounter.ResetEvent.WaitOrDie(TimeSpan.FromSeconds(20));
+            sharedCounter.ResetEvent.WaitOrDie(TimeSpan.FromSeconds(10 + messageCount/20));
 
             Console.WriteLine("Thread names:");
             Console.WriteLine(string.Join(Environment.NewLine, threadNames.Select(kvp => $"   {kvp.Key}: {kvp.Value}")));
