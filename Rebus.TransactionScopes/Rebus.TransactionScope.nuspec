@@ -18,7 +18,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Rebus.TransactionScopes.dll" target="lib\NET45" />
-    <file src="bin\Release\Rebus.TransactionScopes.xml" target="lib\NET45" />
+    <file src="bin\Release\Rebus.TransactionScopes.dll" target="lib\NET451" />
+    <file src="bin\Release\Rebus.TransactionScopes.xml" target="lib\NET451" />
   </files>
 </package>
