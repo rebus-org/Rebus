@@ -50,6 +50,7 @@ namespace Rebus.AzureServiceBus
         readonly ILog _log;
 
         readonly ConcurrentQueue<BrokeredMessage> _prefetchQueue = new ConcurrentQueue<BrokeredMessage>();
+        readonly TimeSpan? _receiveTimeout;
 
         bool _prefetchingEnabled;
         int _numberOfMessagesToPrefetch;
@@ -70,21 +71,12 @@ namespace Rebus.AzureServiceBus
             if (inputQueueAddress != null)
             {
                 _inputQueueAddress = inputQueueAddress.ToLowerInvariant();
-
-                busLifetimeEvents.BusDisposing += () =>
-                {
-                    _log.Info("Closing input queue client");
-
-                    try
-                    {
-                        GetQueueClient(_inputQueueAddress).Close();
-                    }
-                    catch (Exception exception)
-                    {
-                        _log.Warn("Input queue client Close failed with the following exception: {0}", exception);
-                    }
-                };
             }
+
+            // if a timeout has been specified, we respect that - otherwise, we pick a sensible default:
+            _receiveTimeout = _connectionString.Contains("OperationTimeout")
+                ? default(TimeSpan?)
+                : TimeSpan.FromSeconds(5);
         }
 
         public void Initialize()
@@ -381,7 +373,10 @@ namespace Rebus.AzureServiceBus
 
             try
             {
-                var brokeredMessage = await GetQueueClient(queueAddress).ReceiveAsync();
+                // Timeout can be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessage = _receiveTimeout.HasValue
+                    ? await GetQueueClient(queueAddress).ReceiveAsync(_receiveTimeout.Value)
+                    : await GetQueueClient(queueAddress).ReceiveAsync();
 
                 _ignorant.Reset();
 
