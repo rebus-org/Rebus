@@ -52,7 +52,6 @@ namespace Rebus.AzureServiceBus
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
-        readonly IRebusLoggerFactory _rebusLoggerFactory;
         readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly string _inputQueueAddress;
         readonly ILog _log;
@@ -76,7 +75,6 @@ namespace Rebus.AzureServiceBus
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
-            _rebusLoggerFactory = rebusLoggerFactory;
             _asyncTaskFactory = asyncTaskFactory;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
@@ -570,28 +568,20 @@ namespace Rebus.AzureServiceBus
             var topicPath = topicDescription.Path;
             var subscriptionName = GetSubscriptionName();
 
-            var subscriptionAlreadyExisted = false;
+            var subscription = await GetOrCreateSubscription(topicPath, subscriptionName);
+            subscription.ForwardTo = inputQueuePath;
+            await _namespaceManager.UpdateSubscriptionAsync(subscription);
+        }
 
+        async Task<SubscriptionDescription> GetOrCreateSubscription(string topicPath, string subscriptionName)
+        {
             try
             {
-                var subscription = await _namespaceManager.CreateSubscriptionAsync(topicPath, subscriptionName);
-
-                subscription.ForwardTo = inputQueuePath;
-
-                await _namespaceManager.UpdateSubscriptionAsync(subscription);
+                return await _namespaceManager.CreateSubscriptionAsync(topicPath, subscriptionName);
             }
             catch (MessagingEntityAlreadyExistsException)
             {
-                subscriptionAlreadyExisted = true;
-            }
-
-            if (subscriptionAlreadyExisted)
-            {
-                var subscription = await _namespaceManager.GetSubscriptionAsync(topicPath, subscriptionName);
-
-                subscription.ForwardTo = inputQueuePath;
-
-                await _namespaceManager.UpdateSubscriptionAsync(subscription);
+                return await _namespaceManager.GetSubscriptionAsync(topicPath, subscriptionName);
             }
         }
 
