@@ -12,7 +12,6 @@ namespace Rebus.AmazonSQS.Tests
     {
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
-
         protected async Task WithContext(Func<ITransactionContext, Task> contextAction, bool completeTransaction = true)
         {
             using (var context = new DefaultTransactionContext())

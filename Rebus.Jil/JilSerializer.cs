@@ -43,7 +43,8 @@ namespace Rebus.Jil
 
             if (contentType != JsonUtf8ContentType)
             {
-                throw new FormatException(string.Format("Unknown content type: '{0}' - must be '{1}' for the JSON serialier to work", contentType, JsonUtf8ContentType));
+                throw new FormatException(
+                    $"Unknown content type: '{contentType}' - must be '{JsonUtf8ContentType}' for the JSON serialier to work");
             }
 
             var headers = transportMessage.Headers.Clone();
@@ -55,7 +56,7 @@ namespace Rebus.Jil
             return new Message(headers, bodyObject);
         }
 
-        static Type GetMessageType(Dictionary<string, string> headers)
+        static Type GetMessageType(IDictionary<string, string> headers)
         {
             string messageTypeString;
             if (!headers.TryGetValue(Headers.Type, out messageTypeString))
@@ -67,9 +68,9 @@ namespace Rebus.Jil
 
             if (type == null)
             {
-                var message = string.Format(
-                    "Could not find .NET type matching '{0}' - please be sure that the correct message" +
-                    " assembly is available when handling messages", messageTypeString);
+                var message =
+                    $"Could not find .NET type matching '{messageTypeString}' - please be sure that the correct message" +
+                    " assembly is available when handling messages";
 
                 throw new SerializationException(message);
             }
