@@ -103,9 +103,9 @@ CREATE TABLE ""{_tableName
                 {
                     command.ExecuteNonQuery();
                 }
-                catch (NpgsqlException exception)
+                catch (PostgresException exception) when (exception.SqlState == UniqueKeyViolation)
                 {
-                    if (exception.Code != UniqueKeyViolation) throw;
+                    // it's already there
                 }
 
                 connection.Complete();

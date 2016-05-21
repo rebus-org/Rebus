@@ -29,9 +29,8 @@ namespace Rebus.PostgreSql.Tests
 
                         Console.WriteLine("Dropped postgres table '{0}'", tableName);
                     }
-                    catch (NpgsqlException exception)
+                    catch (PostgresException exception) when (exception.SqlState == TableDoesNotExist)
                     {
-                        if (exception.Code != TableDoesNotExist) throw;
                     }
                 }
 
@@ -42,7 +41,7 @@ namespace Rebus.PostgreSql.Tests
         static string GetConnectionStringForDatabase(string databaseName)
         {
             return Environment.GetEnvironmentVariable("REBUS_POSTGRES")
-                   ?? $"Server=localhost;Database={databaseName};User=postgres;Password=postgres;";
+                   ?? $"server=localhost; database={databaseName}; user id=postgres; password=postgres;";
         }
     }
 }
