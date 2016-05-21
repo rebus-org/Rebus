@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -114,6 +115,8 @@ as part of this:
                 );
 
             sharedCounter.WaitForResetEvent();
+
+            Thread.Sleep(500); //< be sure that the snapshot has made it to the database
 
             var allSnapshots = _factory.GetAllSnapshots().ToList();
 
