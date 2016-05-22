@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Reflection;
 using RabbitMQ.Client;
 using Rebus.Logging;
 
@@ -99,6 +98,14 @@ namespace Rebus.RabbitMq
             finally
             {
                 _disposed = true;
+            }
+        }
+
+        public void AddClientProperties(Dictionary<string, string> additionalClientProperties)
+        {
+            foreach (var kvp in additionalClientProperties)
+            {
+                _connectionFactory.ClientProperties[kvp.Key] = kvp.Value;
             }
         }
 

@@ -934,6 +934,9 @@
 * Added data bus feature with data storages for SQL Server, the file system, and in-mem (for testing)
 * Fixed issue with high disk activity when using MSMQ
 
+# 0.99.57
+
+* Added ability to specify custom client properties with RabbitMQ
 
 ---
 

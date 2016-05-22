@@ -58,6 +58,11 @@ namespace Rebus.RabbitMq
         string _directExchangeName = RabbitMqOptionsBuilder.DefaultDirectExchangeName;
         string _topicExchangeName = RabbitMqOptionsBuilder.DefaultTopicExchangeName;
 
+        public void AddClientProperties(Dictionary<string, string> additionalClientProperties)
+        {
+            _connectionManager.AddClientProperties(additionalClientProperties);
+        }
+
         public void SetDeclareExchanges(bool value)
         {
             _declareExchanges = value;

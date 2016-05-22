@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Rebus.RabbitMq
 {
@@ -7,6 +8,8 @@ namespace Rebus.RabbitMq
     /// </summary>
     public class RabbitMqOptionsBuilder
     {
+        readonly Dictionary<string, string> _additionalClientProperties = new Dictionary<string, string>();
+
         /// <summary>
         /// Default name of the exchange of type DIRECT (used for point-to-point messaging)
         /// </summary>
@@ -54,6 +57,15 @@ namespace Rebus.RabbitMq
             return this;
         }
 
+        public RabbitMqOptionsBuilder AddClientProperties(IDictionary<string, string> additionalProperties)
+        {
+            foreach (var kvp in additionalProperties)
+            {
+                _additionalClientProperties[kvp.Key] = kvp.Value;
+            }
+            return this;
+        }
+
         internal bool? DeclareExchanges { get; private set; }
         internal bool? DeclareInputQueue { get; private set; }
         internal bool? BindInputQueue { get; private set; }
@@ -63,22 +75,28 @@ namespace Rebus.RabbitMq
 
         internal void Configure(RabbitMqTransport transport)
         {
+            transport.AddClientProperties(_additionalClientProperties);
+
             if (DeclareExchanges.HasValue)
             {
                 transport.SetDeclareExchanges(DeclareExchanges.Value);
             }
+
             if (DeclareInputQueue.HasValue)
             {
                 transport.SetDeclareInputQueue(DeclareInputQueue.Value);
             }
+
             if (BindInputQueue.HasValue)
             {
                 transport.SetBindInputQueue(BindInputQueue.Value);
             }
+
             if (DirectExchangeName != null)
             {
                 transport.SetDirectExchangeName(DirectExchangeName);
             }
+
             if (TopicExchangeName != null)
             {
                 transport.SetTopicExchangeName(TopicExchangeName);

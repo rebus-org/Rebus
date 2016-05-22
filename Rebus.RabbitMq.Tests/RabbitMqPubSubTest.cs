@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -6,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests;
 using Rebus.Tests.Extensions;
+#pragma warning disable 1998
 
 namespace Rebus.RabbitMq.Tests
 {
@@ -71,7 +73,11 @@ namespace Rebus.RabbitMq.Tests
             Configure.With(activator)
                 .Transport(t =>
                 {
-                    t.UseRabbitMq(RabbitMqTransportFactory.ConnectionString, queueName);
+                    t.UseRabbitMq(RabbitMqTransportFactory.ConnectionString, queueName)
+                        .AddClientProperties(new Dictionary<string, string>
+                        {
+                            {"description", "pub-sub test in RabbitMqPubSubTest.cs"}
+                        });
                 })
                 .Start();
 
