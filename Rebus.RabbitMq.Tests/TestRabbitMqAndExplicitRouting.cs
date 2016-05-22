@@ -48,7 +48,7 @@ namespace Rebus.RabbitMq.Tests
             Console.WriteLine("Waiting for message to arrive");
 
             gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(5));
-
+            
             Console.WriteLine("Got it :)");
         }
 

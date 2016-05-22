@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Reflection;
 using RabbitMQ.Client;
 using Rebus.Logging;
 
@@ -102,7 +104,7 @@ namespace Rebus.RabbitMq
 
         static IDictionary<string, object> CreateClientProperties(string inputQueueAddress)
         {
-            return new Dictionary<string, object>
+            var properties = new Dictionary<string, object>
             {
                 {"Type", "Rebus/.NET"},
                 {"Machine", Environment.MachineName},
@@ -110,6 +112,13 @@ namespace Rebus.RabbitMq
                 {"Domain", Environment.UserDomainName},
                 {"User", Environment.UserName}
             };
+
+            var currentProcess = Process.GetCurrentProcess();
+
+            properties.Add("ProcessName", currentProcess.ProcessName);
+            properties.Add("FileName", currentProcess.MainModule.FileName);
+
+            return properties;
         }
     }
 }
