@@ -102,6 +102,7 @@
     <Compile Include="DataBus\SimpleTest.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
+    <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
     <Compile Include="Integration\TestErrorOnReceive.cs" />
     <Compile Include="Integration\TestImprovedInjectionistExceptions.cs" />
