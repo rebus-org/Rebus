@@ -939,6 +939,11 @@
 
 * Added ability to specify custom client properties with RabbitMQ
 
+# 0.99.58
+
+* Updated LightInject to 4.0.9
+* 
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
