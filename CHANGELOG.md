@@ -944,8 +944,9 @@
 * Updated LightInject to 4.0.9
 * Updated StructureMap to 4.2.0.402
 * Updated DryIoC to 2.5.0
-
-
+* Updated Serilog to 1.5.14
+* Updated NLog to 4.3.4
+* Updated Log4net to 2.0.5
 
 ---
 

@@ -15,7 +15,7 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="log4net" version="2.0.3" />
+        <dependency id="log4net" version="2.0.5" />
     </dependencies>
   </metadata>
   <files>
