@@ -943,6 +943,9 @@
 
 * Updated LightInject to 4.0.9
 * Updated StructureMap to 4.2.0.402
+* Updated DryIoC to 2.5.0
+
+
 
 ---
 

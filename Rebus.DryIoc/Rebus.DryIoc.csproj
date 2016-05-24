@@ -31,8 +31,8 @@
     <DocumentationFile>bin\Release\Rebus.DryIoc.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DryIoc, Version=2.0.0.356, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\DryIoc.dll.2.0.0\lib\net45\DryIoc.dll</HintPath>
+    <Reference Include="DryIoc, Version=2.5.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\DryIoc.dll.2.5.0\lib\net45\DryIoc.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
