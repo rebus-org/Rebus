@@ -925,6 +925,7 @@
 # 0.99.55
 
 * Real pause (5 s) when the next transport message cannot be received
+* Added ability to configure worker shutdown timeout to allow for longer-running tasks to finish - thanks [Rzpeg]
 
 # 0.99.56
 
