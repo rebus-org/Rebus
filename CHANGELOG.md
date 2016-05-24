@@ -947,6 +947,11 @@
 * Updated Serilog to 1.5.14
 * Updated NLog to 4.3.4
 * Updated Log4net to 2.0.5
+* Updated RavenDB client to 3.0.30115
+
+
+
+
 
 ---
 
