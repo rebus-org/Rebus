@@ -2438,6 +2438,27 @@
             </summary>
             <param name="object">The object to dispose.</param>
         </member>
+        <member name="P:StructureMap.IContainer.DisposalLock">
+            <summary>
+            Govern the behavior on Dispose() to prevent applications from 
+            being prematurely disposed
+            </summary>
+        </member>
+        <member name="F:StructureMap.DisposalLock.Ignore">
+            <summary>
+            If a user calls IContainer.Dispose(), ignore the request
+            </summary>
+        </member>
+        <member name="F:StructureMap.DisposalLock.Unlocked">
+            <summary>
+            Default "just dispose the container" behavior
+            </summary>
+        </member>
+        <member name="F:StructureMap.DisposalLock.ThrowOnDispose">
+            <summary>
+            Throws an InvalidOperationException when Dispose() is called
+            </summary>
+        </member>
         <member name="T:StructureMap.IContext">
             <summary>
             Access to the state and type resolution of the current "build session"
