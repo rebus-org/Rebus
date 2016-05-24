@@ -64,7 +64,7 @@ namespace Rebus.Ninject
                 return currentMessageContext;
             });
 
-            _kernel.Get<IBus>();
+            ResolutionExtensions.Get<IBus>(_kernel);
         }
 
         List<IHandleMessages<TMessage>> GetAllHandlerInstances<TMessage>()

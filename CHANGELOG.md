@@ -948,7 +948,8 @@
 * Updated NLog to 4.3.4
 * Updated Log4net to 2.0.5
 * Updated RavenDB client to 3.0.30115
-
+* Added ability to explicitly configure in-mem subscription storage
+* Added ability for in-mem subscription storage to share a subscriber store and become "centralized" (can be used in conjunction with in-mem transport to emulate in memory everything that can be achieved with a real multicast-enabled transport like RabbitMQ, Azure Service Bus, etc.)
 
 
 

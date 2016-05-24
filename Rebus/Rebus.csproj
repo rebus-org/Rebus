@@ -104,6 +104,8 @@
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
+    <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
+    <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />

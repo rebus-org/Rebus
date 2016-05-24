@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Messages.Control;
 using Rebus.Subscriptions;
@@ -13,23 +11,35 @@ namespace Rebus.Persistence.InMem
     /// </summary>
     public class InMemorySubscriptionStorage : ISubscriptionStorage
     {
-        static readonly StringComparer StringComparer = StringComparer.InvariantCultureIgnoreCase;
+        readonly InMemorySubscriberStore _subscriberStore;
 
-        static readonly string[] NoSubscribers = new string[0];
+        /// <summary>
+        /// Creates the in-mem subscription storage as a decentralized subscription storage with its
+        /// own private subscriber store
+        /// </summary>
+        public InMemorySubscriptionStorage()
+        {
+            _subscriberStore = new InMemorySubscriberStore();
+            IsCentralized = false;
+        }
 
-        readonly ConcurrentDictionary<string, ConcurrentDictionary<string, object>> _subscribers
-            = new ConcurrentDictionary<string, ConcurrentDictionary<string, object>>(StringComparer);
+        /// <summary>
+        /// Creates the in-mem subscription storage as a centralized subscription storage, using the given
+        /// <see cref="InMemorySubscriberStore"/> to share subscriptions
+        /// </summary>
+        public InMemorySubscriptionStorage(InMemorySubscriberStore subscriberStore)
+        {
+            if (subscriberStore == null) throw new ArgumentNullException(nameof(subscriberStore));
+            _subscriberStore = subscriberStore;
+            IsCentralized = true;
+        }
 
         /// <summary>
         /// Gets all destination addresses for the given topic
         /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
-            ConcurrentDictionary<string, object> subscriberAddresses;
-
-            return _subscribers.TryGetValue(topic, out subscriberAddresses)
-                ? subscriberAddresses.Keys.ToArray()
-                : NoSubscribers;
+            return _subscriberStore.GetSubscribers(topic);
         }
 
         /// <summary>
@@ -37,8 +47,7 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
-            _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
-                .TryAdd(subscriberAddress, new object());
+            _subscriberStore.AddSubscriber(topic, subscriberAddress);
         }
 
         /// <summary>
@@ -46,10 +55,7 @@ namespace Rebus.Persistence.InMem
         /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
-            object dummy;
-
-            _subscribers.GetOrAdd(topic, _ => new ConcurrentDictionary<string, object>(StringComparer))
-                .TryRemove(subscriberAddress, out dummy);
+            _subscriberStore.RemoveSubscriber(topic, subscriberAddress);
         }
 
         /// <summary>
@@ -59,13 +65,6 @@ namespace Rebus.Persistence.InMem
         /// centralized, the message exchange can be bypassed, and the subscription can be established directly by
         /// having the subscriber register itself)
         /// </summary>
-        public bool IsCentralized
-        {
-            get
-            {
-                // in-mem subscription storage is always decentralized
-                return false;
-            }
-        }
+        public bool IsCentralized { get; }
     }
 }

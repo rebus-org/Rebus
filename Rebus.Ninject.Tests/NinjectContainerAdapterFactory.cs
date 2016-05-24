@@ -37,7 +37,7 @@ namespace Rebus.Ninject.Tests
 
         public IBus GetBus()
         {
-            return _kernel.Get<IBus>();
+            return ResolutionExtensions.Get<IBus>(_kernel);
         }
     }
 }
