@@ -127,11 +127,15 @@ namespace Rebus.Workers.ThreadBased
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
-                        var result = await TryReceiveTransportMessage(transactionContext);
+                        var result = await TryReceiveTransportMessage(transactionContext, _cancellationTokenSource.Token);
 
                         if (result.Exception != null)
                         {
-                            _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
+                            if (result.Exception is TaskCanceledException || result.Exception is OperationCanceledException)
+                                _log.Warn("Execution cancelled.");
+                            else
+                                _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
+                            
                             // error: finish the tx and wait....
                             await transactionContext.Complete();
                             transactionContext.Dispose();
@@ -183,14 +187,18 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        async Task<ReceiveResult> TryReceiveTransportMessage(DefaultTransactionContext transactionContext)
+        async Task<ReceiveResult> TryReceiveTransportMessage(DefaultTransactionContext transactionContext, CancellationToken cToken)
         {
             try
             {
-                var message = await _transport.Receive(transactionContext);
+                var message = await _transport.Receive(transactionContext, cToken);
 
                 return new ReceiveResult(message);
             }
+            //catch (TaskCanceledException tex)
+            //{
+            //    return new ReceiveResult(tex, true);
+            //}
             catch (Exception exception)
             {
                 return new ReceiveResult(exception);

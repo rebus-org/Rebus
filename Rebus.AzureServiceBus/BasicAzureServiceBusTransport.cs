@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -209,7 +210,7 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
             {

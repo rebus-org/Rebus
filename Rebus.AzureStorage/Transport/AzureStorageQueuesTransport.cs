@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Queue;
@@ -88,7 +89,7 @@ namespace Rebus.AzureStorage.Transport
         /// <summary>
         /// Receives the next message (if any) from the transport's input queue <see cref="ITransport.Address"/>
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             if (_inputQueueName == null)
             {
