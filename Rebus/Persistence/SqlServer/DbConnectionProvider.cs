@@ -17,9 +17,8 @@ namespace Rebus.Persistence.SqlServer
     /// </summary>
     public class DbConnectionProvider : IDbConnectionProvider
     {
-        readonly Func<SqlConnection> _connectionFactory;
+        readonly string _connectionString;
         readonly ILog _log;
-        bool _loggedAboutMars = false;
 
         /// <summary>
         /// Wraps the connection string with the given name from app.config (if it is found), or interprets the given string as
@@ -34,26 +33,9 @@ namespace Rebus.Persistence.SqlServer
 
             var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
 
-            connectionString = EnsureMarsIsEnabled(connectionString);
-
-            _connectionFactory = () => new SqlConnection(connectionString);
+            _connectionString = EnsureMarsIsEnabled(connectionString);
 
             IsolationLevel = IsolationLevel.ReadCommitted;
-        }
-
-        /// <summary>
-        /// Uses provided SqlConnection factory as constructor for SqlConnection used. Will use <see cref="System.Data.IsolationLevel.ReadCommitted"/> by default on transactions,
-        /// unless another isolation level is set with the <see cref="IsolationLevel"/> property
-        /// </summary>
-        public DbConnectionProvider(Func<SqlConnection> connectionFactory, IRebusLoggerFactory rebusLoggerFactory)
-        {
-            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
-
-            IsolationLevel = IsolationLevel.ReadCommitted;
-
-            _connectionFactory = connectionFactory;
         }
 
         string EnsureMarsIsEnabled(string connectionString)
@@ -73,12 +55,7 @@ namespace Rebus.Persistence.SqlServer
 
             if (!connectionStringParameters.ContainsKey("MultipleActiveResultSets"))
             {
-                if (!_loggedAboutMars)
-                {
-                    _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
-                    _loggedAboutMars = true;
-                }
-
+                _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
                 return connectionString + ";MultipleActiveResultSets=true";
             }
 
@@ -106,9 +83,8 @@ namespace Rebus.Persistence.SqlServer
             {
                 using (new TransactionScope(TransactionScopeOption.Suppress))
                 {
-                    connection = _connectionFactory();
-                    EnsureMarsIsEnabled(connection);
-
+                    connection = new SqlConnection(_connectionString);
+                    
                     // do not use Async here! it would cause the tx scope to be disposed on another thread than the one that created it
                     connection.Open();
                 }
@@ -123,11 +99,6 @@ namespace Rebus.Persistence.SqlServer
                 connection?.Dispose();
                 throw;
             }
-        }
-
-        private void EnsureMarsIsEnabled(SqlConnection connection)
-        {
-            connection.ConnectionString = EnsureMarsIsEnabled(connection.ConnectionString);
         }
 
         /// <summary>
