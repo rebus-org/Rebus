@@ -431,6 +431,5 @@ DELETE FROM [{_tableName}]
                 _disposed = true;
             }
         }
-
     }
 }

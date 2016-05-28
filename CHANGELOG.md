@@ -952,6 +952,11 @@
 * Added ability for in-mem subscription storage to share a subscriber store and become "centralized" (can be used in conjunction with in-mem transport to emulate in memory everything that can be achieved with a real multicast-enabled transport like RabbitMQ, Azure Service Bus, etc.)
 
 
+# 0.99.59
+
+* Removed MARS auto-enable on supplied SQL connection string because it is no longer required
+
+
 
 
 ---

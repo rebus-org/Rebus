@@ -291,8 +291,7 @@ WHERE [index].[saga_type] = @saga_type
 
                         command.CommandText =
                             $@"
-UPDATE [{_dataTableName
-                                }] 
+UPDATE [{_dataTableName}] 
     SET [data] = @data, [revision] = @next_revision 
     WHERE [id] = @id AND [revision] = @current_revision";
 
@@ -330,11 +329,12 @@ UPDATE [{_dataTableName
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText =
-                        $@"DELETE FROM [{_dataTableName}] WHERE [id] = @id AND [revision] = @current_revision;";
+                    command.CommandText = $@"DELETE FROM [{_dataTableName}] WHERE [id] = @id AND [revision] = @current_revision;";
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("current_revision", SqlDbType.Int).Value = sagaData.Revision;
+
                     var rows = await command.ExecuteNonQueryAsync();
+
                     if (rows == 0)
                     {
                         throw new ConcurrencyException("Delete of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
@@ -379,8 +379,7 @@ UPDATE [{_dataTableName
                 var inserts = parameters
                     .Select(a =>
                         $@"
-INSERT INTO [{_indexTableName
-                            }]
+INSERT INTO [{_indexTableName}]
     ([saga_type], [key], [value], [saga_id]) 
 VALUES
     (@saga_type, @{
@@ -426,9 +425,7 @@ VALUES
             if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
             {
                 throw new InvalidOperationException(
-                    $@"Sorry, but the maximum length of the name of a saga data class is currently limited to {
-                        MaximumSagaDataTypeNameLength
-                        } characters!
+                    $@"Sorry, but the maximum length of the name of a saga data class is currently limited to {MaximumSagaDataTypeNameLength} characters!
 This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
 since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
 there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the

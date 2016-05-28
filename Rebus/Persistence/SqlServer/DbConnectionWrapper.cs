@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
@@ -29,14 +28,6 @@ namespace Rebus.Persistence.SqlServer
             _connection = connection;
             _currentTransaction = currentTransaction;
             _managedExternally = managedExternally;
-        }
-
-        /// <summary>
-        /// Ensures that the wrapper is always disposed
-        /// </summary>
-        ~DbConnectionWrapper()
-        {
-            Dispose(false);
         }
 
         /// <summary>
@@ -87,42 +78,29 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
-            Dispose(true);
-        }
-
-        /// <summary>
-        /// If the transaction is handled externally, nothing is done when the wrapper is disposed. Otherwise, the connection
-        /// is closed and disposed, and the current transaction is rolled back if <see cref="Complete"/> was not called
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_managedExternally) return;
             if (_disposed) return;
 
             try
             {
-                if (disposing)
+                try
                 {
-                    try
+                    if (_currentTransaction != null)
                     {
-                        if (_currentTransaction != null)
+                        using (_currentTransaction)
                         {
-                            using (_currentTransaction)
+                            try
                             {
-                                try
-                                {
-                                    _currentTransaction.Rollback();
-                                }
-                                catch { }
-                                _currentTransaction = null;
+                                _currentTransaction.Rollback();
                             }
+                            catch { }
+                            _currentTransaction = null;
                         }
                     }
-                    finally
-                    {
-                        _connection.Dispose();
-                    }
+                }
+                finally
+                {
+                    _connection.Dispose();
                 }
             }
             finally

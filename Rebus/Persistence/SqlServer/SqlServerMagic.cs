@@ -6,7 +6,7 @@ namespace Rebus.Persistence.SqlServer
     /// <summary>
     /// Wraps some nice extension methods for <see cref="SqlConnection"/> that makes it easy e.g. to query the schema
     /// </summary>
-    public static class SqlServerMagic
+    static class SqlServerMagic
     {
         /// <summary>
         /// Error code that is emitted on PK violations
