@@ -184,6 +184,7 @@
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqDiskUsage.cs" />
+    <Compile Include="Transport\Msmq\TestMsmqMangledMessage.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransportCleanup.cs" />
     <Compile Include="Transport\TransportTap.cs" />
