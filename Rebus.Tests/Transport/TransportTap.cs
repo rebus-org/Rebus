@@ -42,7 +42,7 @@ namespace Rebus.Tests.Transport
             MessageSent(message);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             var transportMessage = await _innerTransport.Receive(context);
 

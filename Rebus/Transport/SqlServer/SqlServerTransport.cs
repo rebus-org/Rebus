@@ -40,7 +40,6 @@ namespace Rebus.Transport.SqlServer
         const string CurrentConnectionKey = "sql-server-transport-current-connection";
         const int RecipientColumnSize = 200;
 
-        readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueName;
@@ -232,7 +231,7 @@ VALUES
                 var ttlSeconds = GetTtlSeconds(headers);
 
                 // must be last because the other functions on the headers might change them
-                var serializedHeaders = _headerSerializer.Serialize(headers);
+                var serializedHeaders = HeaderSerializer.Serialize(headers);
 
                 command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = destinationAddress;
                 command.Parameters.Add("headers", SqlDbType.VarBinary).Value = serializedHeaders;
@@ -248,9 +247,9 @@ VALUES
         /// <summary>
         /// Receives the next message by querying the messages table for a message with a recipient matching this transport's <see cref="Address"/>
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
-            using (await _bottleneck.Enter())
+            using (await _bottleneck.Enter(cancellationToken))
             {
                 var connection = await GetConnection(context);
 
@@ -283,12 +282,12 @@ VALUES
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
-                    using (var reader = await selectCommand.ExecuteReaderAsync())
+                    using (var reader = await selectCommand.ExecuteReaderAsync(cancellationToken))
                     {
-                        if (!await reader.ReadAsync()) return null;
+                        if (!await reader.ReadAsync(cancellationToken)) return null;
 
                         var headers = reader["headers"];
-                        var headersDictionary = _headerSerializer.Deserialize((byte[])headers);
+                        var headersDictionary = HeaderSerializer.Deserialize((byte[])headers);
                         var body = (byte[])reader["body"];
 
                         receivedTransportMessage = new TransportMessage(headersDictionary, body);
@@ -299,7 +298,7 @@ VALUES
             }
         }
 
-        int GetInitialVisibilityDelay(Dictionary<string, string> headers)
+        static int GetInitialVisibilityDelay(IDictionary<string, string> headers)
         {
             string deferredUntilDateTimeOffsetString;
 
@@ -315,7 +314,7 @@ VALUES
             return (int)(deferredUntilTime - RebusTime.Now).TotalSeconds;
         }
 
-        static int GetTtlSeconds(Dictionary<string, string> headers)
+        static int GetTtlSeconds(IReadOnlyDictionary<string, string> headers)
         {
             const int defaultTtlSecondsAbout60Years = int.MaxValue;
 
@@ -371,22 +370,22 @@ DELETE FROM [{_tableName}]
             }
         }
 
-        class HeaderSerializer
+        static class HeaderSerializer
         {
             static readonly Encoding DefaultEncoding = Encoding.UTF8;
 
-            public byte[] Serialize(Dictionary<string, string> headers)
+            public static byte[] Serialize(Dictionary<string, string> headers)
             {
                 return DefaultEncoding.GetBytes(JsonConvert.SerializeObject(headers));
             }
 
-            public Dictionary<string, string> Deserialize(byte[] bytes)
+            public static Dictionary<string, string> Deserialize(byte[] bytes)
             {
                 return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
             }
         }
 
-        int GetMessagePriority(Dictionary<string, string> headers)
+        static int GetMessagePriority(Dictionary<string, string> headers)
         {
             var valueOrNull = headers.GetValueOrNull(MessagePriorityHeaderKey);
             if (valueOrNull == null) return 0;

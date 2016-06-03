@@ -253,7 +253,7 @@ namespace Rebus.AmazonSQS
             return delay;
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (Address == null)
@@ -271,7 +271,7 @@ namespace Rebus.AmazonSQS
                 MessageAttributeNames = new List<string>(new[] { "All" })
             };
 
-            var response = await client.ReceiveMessageAsync(request);
+            var response = await client.ReceiveMessageAsync(request, cancellationToken);
 
             if (!response.Messages.Any()) return null;
 
@@ -283,6 +283,7 @@ namespace Rebus.AmazonSQS
             {
                 renewalTask.Dispose();
 
+                // if we get this far, we don't want to pass on the cancellation token
                 await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
             });
 
@@ -295,6 +296,7 @@ namespace Rebus.AmazonSQS
 
             if (MessageIsExpired(message))
             {
+                // if the message is expired , we don't want to pass on the cancellation token
                 await client.DeleteMessageAsync(new DeleteMessageRequest(_queueUrl, message.ReceiptHandle));
                 return null;
             }

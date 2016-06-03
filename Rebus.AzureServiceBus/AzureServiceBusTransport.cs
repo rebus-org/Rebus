@@ -86,7 +86,6 @@ namespace Rebus.AzureServiceBus
             }
 
             // if a timeout has been specified, we respect that - otherwise, we pick a sensible default:
-
             _receiveTimeout = _connectionString.Contains("OperationTimeout")
                 ? default(TimeSpan?)
                 : TimeSpan.FromSeconds(5);
@@ -236,14 +235,14 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
             {
                 throw new InvalidOperationException("This Azure Service Bus transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
-            using (await _bottleneck.Enter(cToken))
+            using (await _bottleneck.Enter(cancellationToken))
             {
                 var brokeredMessage = await ReceiveBrokeredMessage();
 
@@ -435,8 +434,10 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                // Timeout should be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
-                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
+                // Timeout can be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessages = _receiveTimeout.HasValue
+                    ? (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, _receiveTimeout.Value)).ToList()
+                    : (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
 
                 _ignorant.Reset();
 

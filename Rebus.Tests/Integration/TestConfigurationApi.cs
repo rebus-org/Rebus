@@ -77,7 +77,7 @@ namespace Rebus.Tests.Integration
             {
             }
 
-            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
             {
                 return null;
             }

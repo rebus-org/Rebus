@@ -86,7 +86,7 @@ namespace Rebus.Tests.Integration
 
             public bool Fail { get; set; }
 
-            public Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+            public Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
             {
                 if (Fail)
                 {

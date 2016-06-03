@@ -210,14 +210,14 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
             {
                 throw new InvalidOperationException("This Azure Service Bus transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
-            using (await _bottleneck.Enter())
+            using (await _bottleneck.Enter(cancellationToken))
             {
                 var brokeredMessage = await ReceiveBrokeredMessage();
 
@@ -356,7 +356,10 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
+                // Timeout can be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessages = _receiveTimeout.HasValue
+                    ? (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, _receiveTimeout.Value)).ToList()
+                    : (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
 
                 _ignorant.Reset();
 
