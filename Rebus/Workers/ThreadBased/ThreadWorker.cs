@@ -132,10 +132,14 @@ namespace Rebus.Workers.ThreadBased
                         if (result.Exception != null)
                         {
                             if (result.Exception is TaskCanceledException || result.Exception is OperationCanceledException)
-                                _log.Warn("Execution cancelled.");
-                            else
-                                _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
-                            
+                            {
+                                // this is normal - we're being shut down so we just return quickly
+                                transactionContext.Dispose();
+                                return;
+                            }
+
+                            _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
+
                             // error: finish the tx and wait....
                             transactionContext.Dispose();
 
