@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.SQS;
 using Amazon.SQS.Model;
@@ -252,7 +253,7 @@ namespace Rebus.AmazonSQS
             return delay;
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (Address == null)

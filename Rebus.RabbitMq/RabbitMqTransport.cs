@@ -185,7 +185,7 @@ namespace Rebus.RabbitMq
             }
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             if (Address == null)
             {

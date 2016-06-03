@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -76,7 +77,7 @@ namespace Rebus.Tests.Integration
             {
             }
 
-            public async Task<TransportMessage> Receive(ITransactionContext context)
+            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
             {
                 return null;
             }

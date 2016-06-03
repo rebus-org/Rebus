@@ -5,6 +5,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
@@ -62,6 +63,7 @@ namespace Rebus.Transport.SqlServer
             ExpiredMessagesCleanupInterval = DefaultExpiredMessagesCleanupInterval;
 
             _expiredMessagesCleanupTask = asyncTaskFactory.Create("ExpiredMessagesCleanup", PerformExpiredMessagesCleanupCycle, intervalSeconds: 60);
+
         }
 
         /// <summary>
@@ -246,7 +248,7 @@ VALUES
         /// <summary>
         /// Receives the next message by querying the messages table for a message with a recipient matching this transport's <see cref="Address"/>
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             using (await _bottleneck.Enter())
             {

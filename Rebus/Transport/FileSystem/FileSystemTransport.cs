@@ -82,7 +82,7 @@ namespace Rebus.Transport.FileSystem
         /// Receives the next message from the logical input queue by loading the next file from the corresponding directory,
         /// deserializing it, deleting it when the transaction is committed.
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cToken = default(CancellationToken))
         {
             string fullPath = null;
             try
