@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="RabbitMqCustomExchangeNamesTest.cs" />
     <Compile Include="RabbitMqPubSubTest.cs" />
     <Compile Include="RabbitMqRecovery.cs" />
     <Compile Include="RabbitMqTransportBasicSendReceive.cs" />
