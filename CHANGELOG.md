@@ -954,7 +954,6 @@
 
 # 0.99.59
 
-* Removed MARS auto-enable on supplied SQL connection string because it is no longer required
 * Fixed MSMQ mangled message receive so that the message is not "lost"
 * Added cancellation support to the `Receive` operation of the transport - thanks [Rzpeg]
 

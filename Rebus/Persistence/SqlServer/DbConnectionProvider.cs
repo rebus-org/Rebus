@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Transactions;
 using Rebus.Logging;
@@ -30,9 +31,27 @@ namespace Rebus.Persistence.SqlServer
 
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
-            _connectionString = GetConnectionString(connectionStringOrConnectionStringName);
+            var connectionString = GetConnectionString(connectionStringOrConnectionStringName);
+
+            _connectionString = EnsureMarsIsEnabled(connectionString);
 
             IsolationLevel = IsolationLevel.ReadCommitted;
+        }
+
+        string EnsureMarsIsEnabled(string connectionString)
+        {
+            var connectionStringSettings = connectionString.Split(new [] {";"}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(kvp => kvp.Split(new [] {"="}, StringSplitOptions.RemoveEmptyEntries))
+                .ToDictionary(kvp => kvp[0], kvp => string.Join("=", kvp.Skip(1)), StringComparer.InvariantCultureIgnoreCase);
+
+            if (!connectionStringSettings.ContainsKey("MultipleActiveResultSets"))
+            {
+                _log.Info("Supplied connection string will be modified to enable MARS");
+
+                connectionStringSettings["MultipleActiveResultSets"] = "True";
+            }
+
+            return string.Join("; ", connectionStringSettings.Select(kvp => $"{kvp.Key}={kvp.Value}"));
         }
 
         static string GetConnectionString(string connectionStringOrConnectionStringName)
