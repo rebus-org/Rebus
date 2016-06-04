@@ -160,6 +160,7 @@
     <Compile Include="Persistence\InMem\InMemoryPessimisticLocksTest.cs" />
     <Compile Include="Persistence\InMem\SagaIntegrationTests.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerPessimisticLocker.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerPessimisticLocksTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSnapshotStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />

@@ -16,6 +16,6 @@ namespace Rebus.Sagas.Locking
         /// <summary>
         /// Releases the lock with the specified ID.
         /// </summary>
-        Task Release(string lockid);
+        Task Release(string lockId);
     }
 }

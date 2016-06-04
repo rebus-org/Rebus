@@ -1,4 +1,6 @@
-﻿using Rebus.Sagas.Locking;
+﻿using Rebus.Logging;
+using Rebus.Persistence.SqlServer;
+using Rebus.Sagas.Locking;
 using Rebus.Tests.Contracts.Locks;
 
 namespace Rebus.Tests.Persistence.SqlServer
@@ -7,7 +9,9 @@ namespace Rebus.Tests.Persistence.SqlServer
     {
         public IPessimisticLocker Create()
         {
-            throw new System.NotImplementedException();
+            var consoleLoggerFactory = new ConsoleLoggerFactory(false);
+            var connectionProvider = new DbConnectionProvider(SqlTestHelper.ConnectionString, consoleLoggerFactory);
+            return new SqlServerPessimisticLocker(connectionProvider);
         }
     }
 }
