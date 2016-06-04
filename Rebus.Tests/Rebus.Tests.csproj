@@ -162,9 +162,15 @@
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
     <Compile Include="Routing\TestTypeBasedRouter.cs" />
+    <Compile Include="Sagas\Locking\InMemoryPessimisticSagaLocker.cs" />
+    <Compile Include="Sagas\Locking\InMemoryPessimisticSagaLockingConfigurationExtensions.cs" />
+    <Compile Include="Sagas\Locking\InMemorySagaLocks.cs" />
+    <Compile Include="Sagas\Locking\PessimisticSagaLockingConfigurationExtensions.cs" />
+    <Compile Include="Sagas\Locking\PessimisticSagaLockingConfigurer.cs" />
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
+    <Compile Include="Sagas\Locking\TestPessimisticLocking.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="SharedCounter.cs" />
