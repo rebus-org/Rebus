@@ -6,7 +6,9 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
+using Rebus.Persistence.InMem;
 using Rebus.Sagas;
+using Rebus.Sagas.Locking;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 
@@ -36,8 +38,8 @@ namespace Rebus.Tests.Sagas.Locking
                     .ToList();
 
                 var counter = new SharedCounter(messages.Count);
-
                 var numbers = new ConcurrentDictionary<string, int>();
+                var inMemorySagaLocks = new InMemorySagaLocks();
 
                 activator.Register(() => new SagaWithContention(counter, numbers));
 
@@ -46,10 +48,11 @@ namespace Rebus.Tests.Sagas.Locking
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "pessimistic-locking-test"))
                     .Options(o =>
                     {
-                        o.SetNumberOfWorkers(10);
-                        o.SetMaxParallelism(10);
+                        o.SetNumberOfWorkers(20);
+                        o.SetMaxParallelism(100);
 
-                        o.EnablePessimisticSagaLocking().UseInMemoryLock(new InMemorySagaLocks());
+                        o.EnablePessimisticSagaLocking(acquireLockMaximumWaitTime: TimeSpan.FromSeconds(5))
+                            .UseInMemoryLock(inMemorySagaLocks);
                     })
                     .Start();
 
@@ -59,9 +62,11 @@ namespace Rebus.Tests.Sagas.Locking
 
                 Task.WaitAll(messages.Select(message => bus.SendLocal(message)).ToArray());
 
-                Console.WriteLine("Waiting for reset event...");
+                var timeoutSeconds = 10 + numberOfMessagesPerSaga * numberOfSagas / 100;
 
-                counter.WaitForResetEvent(30);
+                Console.WriteLine($"Waiting for reset event (max {timeoutSeconds} s)...");
+
+                counter.WaitForResetEvent(timeoutSeconds);
 
                 Console.WriteLine("Checking!");
 
@@ -69,6 +74,8 @@ namespace Rebus.Tests.Sagas.Locking
                 {
                     Assert.That(numbers[correlationId], Is.EqualTo(numberOfMessagesPerSaga));
                 }
+
+                Assert.That(inMemorySagaLocks.Count, Is.EqualTo(0));
             }
         }
 

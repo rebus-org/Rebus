@@ -1,14 +1,14 @@
-using System;
 using System.Collections.Concurrent;
 using System.Threading.Tasks;
+using Rebus.Sagas.Locking;
 
-namespace Rebus.Tests.Sagas.Locking
+namespace Rebus.Persistence.InMem
 {
-    public class InMemorySagaLocks
+    public class InMemorySagaLocks : IPessimisticLock
     {
         readonly ConcurrentDictionary<string, object> _locks = new ConcurrentDictionary<string, object>();
 
-        public async Task<bool> TryGrab(string lockId)
+        public async Task<bool> TryAcquire(string lockId)
         {
             var result = _locks.TryAdd(lockId, new object());
             if (result)
@@ -22,5 +22,7 @@ namespace Rebus.Tests.Sagas.Locking
             object dummy;
             _locks.TryRemove(lockId, out dummy);
         }
+
+        public int Count => _locks.Count;
     }
 }
