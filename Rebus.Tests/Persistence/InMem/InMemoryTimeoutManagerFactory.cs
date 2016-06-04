@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Persistence.InMem;
@@ -9,9 +8,6 @@ using Rebus.Timeouts;
 
 namespace Rebus.Tests.Persistence.InMem
 {
-    [TestFixture]
-    public class BasicStoreAndRetrieveOperations : BasicStoreAndRetrieveOperations<InMemoryTimeoutManagerFactory> { }
-
     public class InMemoryTimeoutManagerFactory : ITimeoutManagerFactory
     {
         readonly InMemoryTimeoutManager _timeoutManager = new InMemoryTimeoutManager();

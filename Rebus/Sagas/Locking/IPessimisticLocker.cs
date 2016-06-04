@@ -5,7 +5,7 @@ namespace Rebus.Sagas.Locking
     /// <summary>
     /// Defines contract of a very simple pessimistic lock
     /// </summary>
-    public interface IPessimisticLock
+    public interface IPessimisticLocker
     {
         /// <summary>
         /// Attempts to grab the lock with the specified ID. Returns true if it was successfully grabbed,

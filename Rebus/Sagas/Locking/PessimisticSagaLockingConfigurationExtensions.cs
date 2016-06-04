@@ -21,7 +21,7 @@ namespace Rebus.Sagas.Locking
         /// wait period can be set by providing a value for <paramref name="acquireLockMaximumWaitTime"/>. If not explicitly set,
         /// <see cref="DefaultAcquireLockMaximumWaitTime"/> will be used.
         /// </summary>
-        public static StandardConfigurer<IPessimisticLock> EnablePessimisticSagaLocking(this OptionsConfigurer configurer, TimeSpan? acquireLockMaximumWaitTime = null)
+        public static StandardConfigurer<IPessimisticLocker> EnablePessimisticSagaLocking(this OptionsConfigurer configurer, TimeSpan? acquireLockMaximumWaitTime = null)
         {
             configurer.Decorate<ISagaStorage>(c =>
             {
@@ -31,14 +31,14 @@ namespace Rebus.Sagas.Locking
                 return new LockingSagaStorageDecorator(sagaStorage, pessimisticLock, acquireLockTimeout);
             });
 
-            return StandardConfigurer<IPessimisticLock>.GetConfigurerFrom(configurer);
+            return StandardConfigurer<IPessimisticLocker>.GetConfigurerFrom(configurer);
         }
 
-        static IPessimisticLock GetPessimisticLock(IResolutionContext c)
+        static IPessimisticLocker GetPessimisticLock(IResolutionContext c)
         {
             try
             {
-                return c.Get<IPessimisticLock>();
+                return c.Get<IPessimisticLocker>();
             }
             catch (Exception exception)
             {

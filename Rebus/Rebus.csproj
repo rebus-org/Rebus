@@ -105,9 +105,10 @@
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\InMem\InMemoryPessimisticSagaLockingConfigurationExtensions.cs" />
-    <Compile Include="Persistence\InMem\InMemorySagaLocks.cs" />
+    <Compile Include="Persistence\InMem\InMemoryPessimisticLocker.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerPessimisticLocker.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorage.cs" />
     <Compile Include="Pipeline\PipelineMessageContextExtensions.cs" />
     <Compile Include="Pipeline\PipelineStepRemover.cs" />
@@ -174,7 +175,7 @@
     <Compile Include="Sagas\Idempotent\OutgoingMessages.cs" />
     <Compile Include="Sagas\ISagaCorrelationProperty.cs" />
     <Compile Include="Sagas\ISagaData.cs" />
-    <Compile Include="Sagas\Locking\IPessimisticLock.cs" />
+    <Compile Include="Sagas\Locking\IPessimisticLocker.cs" />
     <Compile Include="Sagas\Locking\LockingSagaStorageDecorator.cs" />
     <Compile Include="Sagas\Locking\PessimisticSagaLockingConfigurationExtensions.cs" />
     <Compile Include="Sagas\SagaData.cs" />

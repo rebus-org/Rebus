@@ -99,6 +99,8 @@
     <Compile Include="Contracts\DataBus\Factories\InMemDataBusStorageFactory.cs" />
     <Compile Include="Contracts\DataBus\InMemDataStorageTest.cs" />
     <Compile Include="Contracts\DataBus\SqlServerDataBusStorageTest.cs" />
+    <Compile Include="Contracts\Locks\IPessimisticLockerFactory.cs" />
+    <Compile Include="Contracts\Locks\PessimisticLocksTest.cs" />
     <Compile Include="DataBus\SimpleTest.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
@@ -151,6 +153,13 @@
     <Compile Include="Integration\TestTypeHeader.cs" />
     <Compile Include="LocalAddin.cs" />
     <Compile Include="LogLine.cs" />
+    <Compile Include="Persistence\InMem\BasicLoadAndSaveAndFindOperations.cs" />
+    <Compile Include="Persistence\InMem\BasicStoreAndRetrieveOperations.cs" />
+    <Compile Include="Persistence\InMem\ConcurrencyHandling.cs" />
+    <Compile Include="Persistence\InMem\InMemoryPessimisticLockerFactory.cs" />
+    <Compile Include="Persistence\InMem\InMemoryPessimisticLocksTest.cs" />
+    <Compile Include="Persistence\InMem\SagaIntegrationTests.cs" />
+    <Compile Include="Persistence\SqlServer\SqlServerPessimisticLocker.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSagaSnapshotStorageTest.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSnapshotStorageFactory.cs" />
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />

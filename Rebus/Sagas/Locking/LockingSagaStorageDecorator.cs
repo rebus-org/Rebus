@@ -14,10 +14,10 @@ namespace Rebus.Sagas.Locking
     class LockingSagaStorageDecorator : ISagaStorage
     {
         readonly ISagaStorage _sagaStorage;
-        readonly IPessimisticLock _pessimisticLock;
+        readonly IPessimisticLocker _pessimisticLock;
         readonly TimeSpan _acquireLockTimeout;
 
-        public LockingSagaStorageDecorator(ISagaStorage sagaStorage, IPessimisticLock pessimisticLock, TimeSpan acquireLockTimeout)
+        public LockingSagaStorageDecorator(ISagaStorage sagaStorage, IPessimisticLocker pessimisticLock, TimeSpan acquireLockTimeout)
         {
             if (acquireLockTimeout <= TimeSpan.Zero)
             {

@@ -39,7 +39,7 @@ namespace Rebus.Tests.Sagas.Locking
 
                 var counter = new SharedCounter(messages.Count);
                 var numbers = new ConcurrentDictionary<string, int>();
-                var inMemorySagaLocks = new InMemorySagaLocks();
+                var inMemorySagaLocks = new InMemoryPessimisticLocker();
 
                 activator.Register(() => new SagaWithContention(counter, numbers));
 
