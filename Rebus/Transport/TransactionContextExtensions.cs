@@ -56,7 +56,7 @@ namespace Rebus.Transport
 
         /// <summary>
         /// Provides a shortcut to the transaction context's <see cref="ConcurrentDictionary{TKey,TValue}.GetOrAdd(TKey,System.Func{TKey,TValue})"/>,
-        /// only as a typed version that 
+        /// only as a typed version.
         /// </summary>
         public static TItem GetOrAdd<TItem>(this ITransactionContext context, string key, Func<TItem> newItemFactory)
         {
