@@ -6,9 +6,9 @@ using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Transport;
 
-namespace MsmqNonTransactionalTransport.Tests
+namespace MsmqNonTransactionalTransport.Tests.MsmqNonTransactional
 {
-    public class MsmqTransportFactory : ITransportFactory
+    public class MsmqNonTransactionalTransportFactory : ITransportFactory
     {
         readonly List<IDisposable> _disposables = new List<IDisposable>();
         readonly HashSet<string> _queuesToDelete = new HashSet<string>();
@@ -24,14 +24,14 @@ namespace MsmqNonTransactionalTransport.Tests
 
             _disposables.Add(transport);
 
-            if (inputQueueAddress != null)
+            if(inputQueueAddress != null)
             {
                 transport.PurgeInputQueue();
             }
 
             transport.Initialize();
 
-            if (inputQueueAddress != null)
+            if(inputQueueAddress != null)
             {
                 _queuesToDelete.Add(inputQueueAddress);
             }

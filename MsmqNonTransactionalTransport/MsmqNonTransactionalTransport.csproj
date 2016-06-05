@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Msmq\MsmqTransport.cs" />
+    <Compile Include="Msmq\MsmqNonTransactionalTransport.cs" />
     <Compile Include="Msmq\MsmqTransportConfigurationExtensions.cs" />
     <Compile Include="Msmq\MsmqUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -402,5 +402,11 @@ namespace Rebus.Transport.Msmq
         {
             _extensionSerializer.Encoding = Encoding.UTF7;
         }
+
+        /// <summary>
+        /// Indicates whether the queue only accepts transactions
+        /// TODO: move to an interface?
+        /// </summary>
+        public bool? IsTransactional => _inputQueue?.Transactional;
     }
 }

@@ -17,7 +17,7 @@ namespace MsmqNonTransactionalTransport.Msmq
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(inputQueueName, rebusLoggerFactory);
+                return new MsmqNonTransactionalTransport(inputQueueName, rebusLoggerFactory);
             });
         }
 
@@ -29,7 +29,7 @@ namespace MsmqNonTransactionalTransport.Msmq
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(null, rebusLoggerFactory);
+                return new MsmqNonTransactionalTransport(null, rebusLoggerFactory);
             });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
@@ -45,7 +45,7 @@ namespace MsmqNonTransactionalTransport.Msmq
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(inputQueueName, rebusLoggerFactory, false);
+                return new MsmqNonTransactionalTransport(inputQueueName, rebusLoggerFactory);
             });
         }
 
@@ -58,7 +58,7 @@ namespace MsmqNonTransactionalTransport.Msmq
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(null, rebusLoggerFactory, false);
+                return new MsmqNonTransactionalTransport(null, rebusLoggerFactory);
             });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);

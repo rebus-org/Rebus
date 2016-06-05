@@ -102,5 +102,10 @@ namespace Rebus.Messages
             /// </summary>
             public const string PublishSubscribe = "pub";
         }
+
+        /// <summary>
+        /// Header that indicates the priority of the message.
+        /// </summary>
+        public const string Priority = "rbs2-msg-priority";
     }
 }

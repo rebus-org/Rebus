@@ -59,6 +59,10 @@
     <Compile Include="Contracts\Transports\MessageExpiration.cs" />
     <Compile Include="MsmqBasicSendReceive.cs" />
     <Compile Include="MsmqMessageExpiration.cs" />
+    <Compile Include="MsmqNonTransactional\MsmqNonTransactionalBasicSendReceive.cs" />
+    <Compile Include="MsmqNonTransactional\MsmqNonTransactionalMessageExpiration.cs" />
+    <Compile Include="MsmqNonTransactional\MsmqNonTransactionalTests.cs" />
+    <Compile Include="MsmqNonTransactional\MsmqNonTransactionalTransportFactory.cs" />
     <Compile Include="MsmqTransportFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

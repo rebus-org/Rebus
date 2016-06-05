@@ -18,12 +18,10 @@ using Message = System.Messaging.Message;
 namespace MsmqNonTransactionalTransport.Msmq
 {
     /// <summary>
-    /// Implementation of <see cref="ITransport"/> that uses MSMQ to do its thing
+    /// Implementation of <see cref="ITransport"/> that uses non transactional MSMQ to do its thing
     /// </summary>
-    public class MsmqTransport : ITransport, IInitializable, IDisposable
+    public class MsmqNonTransactionalTransport : ITransport, IInitializable, IDisposable
     {
-        readonly bool _isTransactionalQueue;
-        const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         const string CurrentOutgoingQueuesKey = "msmqtransport-outgoing-messagequeues";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
@@ -35,12 +33,11 @@ namespace MsmqNonTransactionalTransport.Msmq
         /// <summary>
         /// Constructs the transport with the specified input queue address
         /// </summary>
-        public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, bool isTransactionalQueue = true)
+        public MsmqNonTransactionalTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             
             _log = rebusLoggerFactory.GetCurrentClassLogger();
-            _isTransactionalQueue = isTransactionalQueue;
 
             if(inputQueueAddress != null)
             {
@@ -51,7 +48,7 @@ namespace MsmqNonTransactionalTransport.Msmq
         /// <summary>
         /// Last-resort disposal of the transport's message queues
         /// </summary>
-        ~MsmqTransport()
+        ~MsmqNonTransactionalTransport()
         {
             Dispose(false);
         }
@@ -90,8 +87,7 @@ namespace MsmqNonTransactionalTransport.Msmq
 
             var inputQueuePath = MsmqUtil.GetPath(address);
 
-            MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
-            MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+            MsmqUtil.EnsureQueueExists(inputQueuePath, _log, false);
         }
 
         /// <summary>
@@ -110,8 +106,7 @@ namespace MsmqNonTransactionalTransport.Msmq
         }
 
         /// <summary>
-        /// Sends the given transport message to the specified destination address using MSMQ. Will use the existing <see cref="MessageQueueTransaction"/> stashed
-        /// under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>, or else it will create one and add it.
+        /// Sends the given transport message to the specified destination address using non transactional MSMQ.
         /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
@@ -120,17 +115,6 @@ namespace MsmqNonTransactionalTransport.Msmq
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             var logicalMessage = CreateMsmqMessage(message);
-
-            var messageQueueTransaction = context.GetOrAdd(CurrentTransactionKey, () =>
-            {
-                var messageQueueTransaction1 = new MessageQueueTransaction();
-                messageQueueTransaction1.Begin();
-
-                context.OnCommitted(async () => messageQueueTransaction1.Commit());
-
-                return messageQueueTransaction1;
-            });
-
             var sendQueues = context.GetOrAdd(CurrentOutgoingQueuesKey, () =>
             {
                 var messageQueues = new ConcurrentDictionary<string, MessageQueue>(StringComparer.InvariantCultureIgnoreCase);
@@ -155,7 +139,7 @@ namespace MsmqNonTransactionalTransport.Msmq
                 return messageQueue;
             });
 
-            sendQueue.Send(logicalMessage, messageQueueTransaction);
+            sendQueue.Send(logicalMessage);
         }
 
         /// <summary>
@@ -172,31 +156,14 @@ namespace MsmqNonTransactionalTransport.Msmq
             }
 
             var queue = GetInputQueue();
-
-            if (context.Items.ContainsKey(CurrentTransactionKey))
-            {
-                throw new InvalidOperationException("Tried to receive with an already existing MSMQ queue transaction - while that is possible, it's an indication that something is wrong!");
-            }
-
-            var messageQueueTransaction = new MessageQueueTransaction();
-            messageQueueTransaction.Begin();
-
-            context.OnDisposed(() => messageQueueTransaction.Dispose());
-            context.Items[CurrentTransactionKey] = messageQueueTransaction;
-
+            
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
+                var message = queue.Receive(TimeSpan.FromSeconds(2));
                 if (message == null)
                 {
-                    messageQueueTransaction.Abort();
                     return null;
                 }
-
-                context.OnCommitted(async () =>
-                {
-                    messageQueueTransaction.Commit();
-                });
 
                 var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
@@ -227,7 +194,7 @@ namespace MsmqNonTransactionalTransport.Msmq
                 throw new IOException($"Could not receive next message from MSMQ queue '{_inputQueueName}'", exception);
             }
         }
-        // TODO: Set Priority
+
         Message CreateMsmqMessage(TransportMessage message)
         {
             var headers = message.Headers;
@@ -236,6 +203,14 @@ namespace MsmqNonTransactionalTransport.Msmq
 
             string timeToBeReceivedStr;
             var hasTimeout = headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr);
+            string priority;
+
+            // set prio to normal as default?
+            var msgPriority = MessagePriority.Normal;
+            if(headers.TryGetValue(Headers.Priority, out priority))
+            {
+                msgPriority = (MessagePriority) Enum.Parse(typeof (MessagePriority), priority);
+            }
 
             var msmqMessage = new Message
             {
@@ -245,6 +220,7 @@ namespace MsmqNonTransactionalTransport.Msmq
                 Recoverable = !expressDelivery, 
                 UseDeadLetterQueue = !(expressDelivery || hasTimeout),
                 Label = GetMessageLabel(message),
+                Priority = msgPriority
             };
 
             if (hasTimeout)
@@ -309,15 +285,11 @@ namespace MsmqNonTransactionalTransport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath, _log, _isTransactionalQueue);
-                if(_isTransactionalQueue)
-                {
-                    MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
-                }
-
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log, false);
+//                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+  
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
-                {
-                    
+                {              
                     MessageReadPropertyFilter = new MessagePropertyFilter
                     {
                         Id = true,
@@ -411,6 +383,9 @@ namespace MsmqNonTransactionalTransport.Msmq
             _extensionSerializer.Encoding = Encoding.UTF7;
         }
 
+        /// <summary>
+        /// Indicates whether the queue is transactional
+        /// </summary>
         public bool? IsTransactional => _inputQueue?.Transactional;
     }
 }
