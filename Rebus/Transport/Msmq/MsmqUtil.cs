@@ -184,7 +184,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
         }
 
         /// <summary>
-        /// Verifies that the queue with the given <paramref name="path"/> is transaction. If that is not the case, a <see cref="RebusApplicationException"/>
+        /// Verifies that the queue with the given <paramref name="path"/> is transactional. If that is not the case, a <see cref="RebusApplicationException"/>
         /// is thrown with an explanation of the problem
         /// </summary>
         public static void EnsureMessageQueueIsTransactional(string path)
