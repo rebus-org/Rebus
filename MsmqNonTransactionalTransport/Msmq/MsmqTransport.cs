@@ -22,6 +22,7 @@ namespace MsmqNonTransactionalTransport.Msmq
     /// </summary>
     public class MsmqTransport : ITransport, IInitializable, IDisposable
     {
+        readonly bool _isTransactionalQueue;
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         const string CurrentOutgoingQueuesKey = "msmqtransport-outgoing-messagequeues";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
@@ -34,13 +35,14 @@ namespace MsmqNonTransactionalTransport.Msmq
         /// <summary>
         /// Constructs the transport with the specified input queue address
         /// </summary>
-        public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, bool isTransactionalQueue = true)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-
+            
             _log = rebusLoggerFactory.GetCurrentClassLogger();
+            _isTransactionalQueue = isTransactionalQueue;
 
-            if (inputQueueAddress != null)
+            if(inputQueueAddress != null)
             {
                 _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
             }
@@ -225,7 +227,7 @@ namespace MsmqNonTransactionalTransport.Msmq
                 throw new IOException($"Could not receive next message from MSMQ queue '{_inputQueueName}'", exception);
             }
         }
-
+        // TODO: Set Priority
         Message CreateMsmqMessage(TransportMessage message)
         {
             var headers = message.Headers;
@@ -307,17 +309,22 @@ namespace MsmqNonTransactionalTransport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
-                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log, _isTransactionalQueue);
+                if(_isTransactionalQueue)
+                {
+                    MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+                }
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {
+                    
                     MessageReadPropertyFilter = new MessagePropertyFilter
                     {
                         Id = true,
                         Extension = true,
                         Body = true,
                     }
+                    
                 };
             }
 
@@ -403,5 +410,7 @@ namespace MsmqNonTransactionalTransport.Msmq
         {
             _extensionSerializer.Encoding = Encoding.UTF7;
         }
+
+        public bool? IsTransactional => _inputQueue?.Transactional;
     }
 }

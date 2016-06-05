@@ -34,5 +34,34 @@ namespace MsmqNonTransactionalTransport.Msmq
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
         }
+
+        /// <summary>
+        /// Configures Rebus to use MSMQ to transport messages using a non transactional queue.
+        /// </summary>
+        /// <param name="configurer"></param>
+        /// <param name="inputQueueName"></param>
+        public static void UseMsmqAsNonTransactional(this StandardConfigurer<ITransport> configurer, string inputQueueName)
+        {
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new MsmqTransport(inputQueueName, rebusLoggerFactory, false);
+            });
+        }
+
+        /// <summary>
+        /// Configures Rebus to use MSMQ to transport messages as a one-way client (i.e. will not be able to receive any messages) using a non transactional queue.
+        /// </summary>
+        /// <param name="configurer"></param>
+        public static void UseMsmqAsOneWayClientAndNonTransactional(this StandardConfigurer<ITransport> configurer)
+        {
+            configurer.Register(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new MsmqTransport(null, rebusLoggerFactory, false);
+            });
+
+            OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+        }
     }
 }

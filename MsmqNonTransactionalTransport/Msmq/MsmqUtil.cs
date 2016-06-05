@@ -140,7 +140,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
         /// of the currently executing process will get <see cref="MessageQueueAccessRights.GenericWrite"/> permissions to it,
         /// and the local administrators group will get <see cref="MessageQueueAccessRights.FullControl"/>.
         /// </summary>
-        public static void EnsureQueueExists(string inputQueuePath, ILog log = null)
+        public static void EnsureQueueExists(string inputQueuePath, ILog log = null, bool isTransactionalQueue = true)
         {
             if (MessageQueue.Exists(inputQueuePath)) return;
 
@@ -148,7 +148,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
             {
                 log?.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
 
-                var newQueue = MessageQueue.Create(inputQueuePath, true);
+                var newQueue = MessageQueue.Create(inputQueuePath, isTransactionalQueue);
 
                 newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
                     MessageQueueAccessRights.GenericWrite);
@@ -193,6 +193,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
             {
                 if (queue.Transactional) return;
 
+                // TODO: Probably the following error message needs updating with explanation now that non transactional queues are supported.
                 var message = $@"The queue {path} is NOT transactional!
 
 Everything around Rebus is built with the assumption that queues are transactional, so Rebus will malfunction if queues aren't transactional. 

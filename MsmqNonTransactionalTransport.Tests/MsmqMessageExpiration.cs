@@ -1,6 +1,6 @@
-﻿using NUnit.Framework;
+﻿using MsmqNonTransactionalTransport.Tests.Contracts.Transports;
+using NUnit.Framework;
 using Rebus.Tests;
-using Rebus.Tests.Contracts.Transports;
 
 namespace MsmqNonTransactionalTransport.Tests
 {
