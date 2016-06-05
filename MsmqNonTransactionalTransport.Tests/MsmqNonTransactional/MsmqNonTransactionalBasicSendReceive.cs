@@ -14,11 +14,10 @@ namespace MsmqNonTransactionalTransport.Tests.MsmqNonTransactional
     public class MsmqNonTransactionalBasicSendReceive : BasicSendReceive<MsmqNonTransactionalTransportFactory>
     {
         /// <summary>
-        /// send 2 messages with one having higher prio and confirm the message with higher prio is processed first
         /// Don't know whether this test should be here or in BasicSendReceive (because of other transports)
         /// </summary>
         [Test]
-        public async Task MsmqMessagePriorityCheck()
+        public async Task QueueShouldUseMessagePriority()
         {
             var input1QueueName = TestConfig.QueueName("input1");
             var input2QueueName = TestConfig.QueueName("input2");
@@ -43,14 +42,13 @@ namespace MsmqNonTransactionalTransport.Tests.MsmqNonTransactional
 
             Assert.AreEqual(MessagePriority.Low.ToString(), messagePriority);
         }
-
+        
         protected TransportMessage MessageWith(string stringBody, MessagePriority priority = MessagePriority.Normal)
         {
             var headers = new Dictionary<string, string>
             {
                 {Headers.MessageId, Guid.NewGuid().ToString()},
                 {Headers.Priority, priority.ToString() }
-
             };
             var body = _defaultEncoding.GetBytes(stringBody);
             return new TransportMessage(headers, body);

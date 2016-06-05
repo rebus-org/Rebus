@@ -31,7 +31,7 @@ namespace MsmqNonTransactionalTransport.Msmq
         bool _disposed;
 
         /// <summary>
-        /// Constructs the transport with the specified input queue address
+        /// Constructs the non transactional transport with the specified input queue address
         /// </summary>
         public MsmqNonTransactionalTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
@@ -135,7 +135,7 @@ namespace MsmqNonTransactionalTransport.Msmq
             var sendQueue = sendQueues.GetOrAdd(path, _ =>
             {
                 var messageQueue = new MessageQueue(path, QueueAccessMode.Send);
-
+                
                 return messageQueue;
             });
 
@@ -143,13 +143,11 @@ namespace MsmqNonTransactionalTransport.Msmq
         }
 
         /// <summary>
-        /// Received the next available transport message from the input queue via MSMQ. Will create a new <see cref="MessageQueueTransaction"/> and stash
-        /// it under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>. If one already exists, an exception will be thrown
-        /// (because we should never have to receive multiple messages in the same transaction)
+        /// Received the next available transport message from the input queue via MSMQ.
+        /// TODO: context is not used here anymore, but still required by the interface.
         /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueName == null)
             {
                 throw new InvalidOperationException("This MSMQ transport does not have an input queue, hence it is not possible to reveive anything");
@@ -286,7 +284,6 @@ namespace MsmqNonTransactionalTransport.Msmq
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
                 MsmqUtil.EnsureQueueExists(inputQueuePath, _log, false);
-//                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
   
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
                 {              
@@ -296,7 +293,6 @@ namespace MsmqNonTransactionalTransport.Msmq
                         Extension = true,
                         Body = true,
                     }
-                    
                 };
             }
 
