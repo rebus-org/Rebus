@@ -69,6 +69,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataBus\AzureBlobsDataBusStorageFactory.cs" />
+    <Compile Include="DataBus\Bim.cs" />
+    <Compile Include="TestConfig.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportFactory.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportMessageExpiration.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportBasicSendReceive.cs" />

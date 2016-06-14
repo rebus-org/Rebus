@@ -24,5 +24,10 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
             fileSystemDataBusStorage.Initialize();
             return fileSystemDataBusStorage;
         }
+
+        public void CleanUp()
+        {
+            Directory.Delete(DirectoryPath, true);
+        }
     }
 }

@@ -11,10 +11,17 @@ namespace Rebus.Tests.Contracts.DataBus
     public abstract class GeneralDataBusStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory: IDataBusStorageFactory, new()
     {
         IDataBusStorage _storage;
+        TDataStorageFactory _factory;
 
         protected override void SetUp()
         {
-            _storage = new TDataStorageFactory().Create();
+            _factory = new TDataStorageFactory();
+            _storage = _factory.Create();
+        }
+
+        protected override void TearDown()
+        {
+            _factory.CleanUp();
         }
 
         [Test]
