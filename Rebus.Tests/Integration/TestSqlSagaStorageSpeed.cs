@@ -28,6 +28,9 @@ namespace Rebus.Tests.Integration
 
             Using(_activator);
 
+            SqlTestHelper.DropTable(_indexTableName);
+            SqlTestHelper.DropTable(_dataTableName);
+
             Configure.With(_activator)
                 .Logging(l => l.Console(LogLevel.Warn))
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "saga-perf"))
