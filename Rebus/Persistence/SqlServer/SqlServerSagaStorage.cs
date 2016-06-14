@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Exceptions;
@@ -29,6 +30,7 @@ namespace Rebus.Persistence.SqlServer
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _dataTableName;
         readonly string _indexTableName;
+        static readonly Encoding JsonTextEncoding = Encoding.UTF8;
 
         /// <summary>
         /// Constructs the saga storage, using the specified connection provider and tables for persistence.
@@ -87,7 +89,7 @@ namespace Rebus.Persistence.SqlServer
 CREATE TABLE [dbo].[{0}] (
 	[id] [uniqueidentifier] NOT NULL,
 	[revision] [int] NOT NULL,
-	[data] [nvarchar](max) NOT NULL,
+	[data] [varbinary](max) NOT NULL,
     CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
     (
 	    [id] ASC
@@ -171,13 +173,12 @@ ALTER TABLE [dbo].[{_indexTableName}] CHECK CONSTRAINT [FK_{_dataTableName}_id]
                     {
                         command.CommandText =
                             $@"
-SELECT TOP 1 [saga].[data] as 'data' FROM [{_dataTableName}] [saga] 
-    JOIN [{
-                                _indexTableName
-                                }] [index] ON [saga].[id] = [index].[saga_id] 
+SELECT TOP 1 [saga].[data] AS 'data' FROM [{_dataTableName}] [saga] 
+    JOIN [{_indexTableName}] [index] ON [saga].[id] = [index].[saga_id] 
 WHERE [index].[saga_type] = @saga_type
     AND [index].[key] = @key 
-    AND [index].[value] = @value";
+    AND [index].[value] = @value
+";
 
                         var sagaTypeName = GetSagaTypeName(sagaDataType);
 
@@ -189,18 +190,21 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.Add("value", SqlDbType.NVarChar, correlationPropertyValue.Length).Value = correlationPropertyValue;
 
-                    var dbValue = await command.ExecuteScalarAsync();
-                    var value = (string)dbValue;
-                    if (value == null) return null;
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync()) return null;
 
-                    try
-                    {
-                        return (ISagaData)JsonConvert.DeserializeObject(value, Settings);
-                    }
-                    catch (Exception exception)
-                    {
-                        throw new ApplicationException(
-                            $"An error occurred while attempting to deserialize '{value}' into a {sagaDataType}", exception);
+                        var bytes = (byte[])reader["data"];
+                        var value = JsonTextEncoding.GetString(bytes);
+
+                        try
+                        {
+                            return (ISagaData)JsonConvert.DeserializeObject(value, Settings);
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new ApplicationException($"An error occurred while attempting to deserialize '{value}' into a {sagaDataType}", exception);
+                        }
                     }
                 }
             }
@@ -229,7 +233,7 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
-                    command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+                    command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
 
                     command.CommandText = $@"INSERT INTO [{_dataTableName}] ([id], [revision], [data]) VALUES (@id, @revision, @data)";
                     try
@@ -287,7 +291,7 @@ WHERE [index].[saga_type] = @saga_type
                         command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                         command.Parameters.Add("current_revision", SqlDbType.Int).Value = revisionToUpdate;
                         command.Parameters.Add("next_revision", SqlDbType.Int).Value = sagaData.Revision;
-                        command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+                        command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
 
                         command.CommandText =
                             $@"

@@ -957,6 +957,9 @@
 * Fixed MSMQ mangled message receive so that the message is not "lost"
 * Added cancellation support to the `Receive` operation of the transport - thanks [Rzpeg]
 
+# 0.99.60
+
+* Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` is extremely slow!
 
 ---
 

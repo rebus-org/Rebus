@@ -146,6 +146,7 @@
     <Compile Include="Bugs\InheritedMessageCanInitiateSagaToo.cs" />
     <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
+    <Compile Include="Integration\TestSqlSagaStorageSpeed.cs" />
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Integration\TestTypeHeader.cs" />
@@ -156,6 +157,7 @@
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\SqlServer\JsonFileSubscriptionStorageFactory.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSagaStoragePerformance.cs" />
     <Compile Include="Pipeline\TestAbortMessagePipeline.cs" />
     <Compile Include="Pipeline\TestOrdinaryLogLevels.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
