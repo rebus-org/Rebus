@@ -97,6 +97,11 @@ namespace Rebus.Tests.Integration
                     await _innerConnection.Complete();
                 }
 
+                public IEnumerable<DbColumn> GetColumns(string dataTableName)
+                {
+                    return _innerConnection.GetColumns(dataTableName);
+                }
+
                 public void Dispose()
                 {
                     _innerConnection.Dispose();

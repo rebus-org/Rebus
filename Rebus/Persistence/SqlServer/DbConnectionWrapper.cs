@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
 
@@ -48,6 +50,24 @@ namespace Rebus.Persistence.SqlServer
             try
             {
                 return _connection.GetTableNames(_currentTransaction);
+            }
+            catch (SqlException exception)
+            {
+                throw new RebusApplicationException(exception, "Could not get table names");
+            }
+        }
+
+        /// <summary>
+        /// Gets information about the columns in the table given by <paramref name="dataTableName"/>
+        /// </summary>
+        public IEnumerable<DbColumn> GetColumns(string dataTableName)
+        {
+            try
+            {
+                return _connection
+                    .GetColumns(dataTableName, _currentTransaction)
+                    .Select(kvp => new DbColumn(kvp.Key, kvp.Value))
+                    .ToList();
             }
             catch (SqlException exception)
             {
