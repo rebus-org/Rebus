@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Reflection;
@@ -18,19 +19,20 @@ namespace Rebus.Persistence.SqlServer
     /// Correlation properties are stored in a separate index table, allowing for looking up saga data instanes based on the configured correlation
     /// properties
     /// </summary>
-    public class SqlServerSagaStorage : ISagaStorage
+    public class SqlServerSagaStorage : ISagaStorage, IInitializable
     {
         const int MaximumSagaDataTypeNameLength = 40;
         const string IdPropertyName = nameof(ISagaData.Id);
         const bool IndexNullProperties = false;
 
         static readonly JsonSerializerSettings Settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+        static readonly Encoding JsonTextEncoding = Encoding.UTF8;
 
         readonly ILog _log;
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _dataTableName;
         readonly string _indexTableName;
-        static readonly Encoding JsonTextEncoding = Encoding.UTF8;
+        bool _oldFormatDataTable;
 
         /// <summary>
         /// Constructs the saga storage, using the specified connection provider and tables for persistence.
@@ -45,6 +47,24 @@ namespace Rebus.Persistence.SqlServer
             _connectionProvider = connectionProvider;
             _dataTableName = dataTableName;
             _indexTableName = indexTableName;
+        }
+
+        /// <summary>
+        /// Initializes the storage by performing a check on the schema to see whether we should use
+        /// </summary>
+        public void Initialize()
+        {
+            using (var connection = _connectionProvider.GetConnection().Result)
+            {
+                var columns = connection.GetColumns(_dataTableName);
+                var datacolumn = columns.FirstOrDefault(c => string.Equals(c.Name, "data", StringComparison.InvariantCultureIgnoreCase));
+
+                // if there is no data column at this point, it has probably just not been created yet
+                if (datacolumn == null) { return; }
+
+                // remember to use "old format" if the data column is NVarChar
+                _oldFormatDataTable = datacolumn.Type == SqlDbType.NVarChar;
+            }
         }
 
         /// <summary>
@@ -63,11 +83,6 @@ namespace Rebus.Persistence.SqlServer
 
                 var hasDataTable = tableNames.Contains(_dataTableName, StringComparer.OrdinalIgnoreCase);
                 var hasIndexTable = tableNames.Contains(_indexTableName, StringComparer.OrdinalIgnoreCase);
-
-                if (hasDataTable)
-                {
-                    VerifyDataTableSchema(_dataTableName, connection);
-                }
 
                 if (hasDataTable && hasIndexTable)
                 {
@@ -237,8 +252,7 @@ WHERE [index].[saga_type] = @saga_type
                     {
                         if (!await reader.ReadAsync()) return null;
 
-                        var bytes = (byte[])reader["data"];
-                        var value = JsonTextEncoding.GetString(bytes);
+                        var value = GetData(reader);
 
                         try
                         {
@@ -276,7 +290,7 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
-                    command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
+                    SetData(command, data);
 
                     command.CommandText = $@"INSERT INTO [{_dataTableName}] ([id], [revision], [data]) VALUES (@id, @revision, @data)";
                     try
@@ -334,7 +348,7 @@ WHERE [index].[saga_type] = @saga_type
                         command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                         command.Parameters.Add("current_revision", SqlDbType.Int).Value = revisionToUpdate;
                         command.Parameters.Add("next_revision", SqlDbType.Int).Value = sagaData.Revision;
-                        command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
+                        SetData(command, data);
 
                         command.CommandText =
                             $@"
@@ -397,6 +411,31 @@ UPDATE [{_dataTableName}]
 
                 await connection.Complete();
             }
+        }
+
+        void SetData(SqlCommand command, string data)
+        {
+            if (_oldFormatDataTable)
+            {
+                command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+            }
+            else
+            {
+                command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
+            }
+        }
+
+        string GetData(SqlDataReader reader)
+        {
+            if (_oldFormatDataTable)
+            {
+                var data = (string)reader["data"];
+                return data;
+            }
+
+            var bytes = (byte[])reader["data"];
+            var value = JsonTextEncoding.GetString(bytes);
+            return value;
         }
 
         static string GetCorrelationPropertyValue(object propertyValue)

@@ -959,7 +959,7 @@
 
 # 0.99.60
 
-* Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow!
+* Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow! (existing tables with `NVARCHAR(MAX)` data should still work fine - a simple schema check is made at startup)
 * Added Azure blobs-based data bus storage
 
 
