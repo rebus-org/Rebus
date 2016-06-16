@@ -56,6 +56,7 @@
     <Compile Include="RabbitMqTransportMessageExpiration.cs" />
     <Compile Include="TestRabbitExpress.cs" />
     <Compile Include="TestRabbitMqAndExplicitRouting.cs" />
+    <Compile Include="TestRabbitMqReconnection.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -962,7 +962,10 @@
 * Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow! (existing tables with `NVARCHAR(MAX)` data should still work fine - a simple schema check is made at startup)
 * Added Azure blobs-based data bus storage
 
+# 0.99.61
 
+* Added ability configure prefetch count with RabbitMQ
+* Added a few additional defensive RabbitMQ reconnection measures, like e.g. throw out prefetched messages if the connection is lost
 
 ---
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using RabbitMQ.Client;
 using Rebus.Logging;
 
@@ -69,10 +70,19 @@ namespace Rebus.RabbitMq
                     catch { }
                 }
 
-                _log.Info("Creating new RabbitMQ connection");
-                _activeConnection = _connectionFactory.CreateConnection();
+                try
+                {
+                    _log.Info("Creating new RabbitMQ connection");
+                    _activeConnection = _connectionFactory.CreateConnection();
 
-                return _activeConnection;
+                    return _activeConnection;
+                }
+                catch (Exception exception)
+                {
+                    _log.Warn("Could not establish connection: {0}", exception.Message);
+                    Thread.Sleep(500);
+                    throw;
+                }
             }
         }
 
@@ -90,8 +100,13 @@ namespace Rebus.RabbitMq
                     {
                         _log.Info("Disposing RabbitMQ connection");
 
-                        connection.Dispose();
-                        _activeConnection = null;
+                        // WTF?!?!? RabbitMQ client disposal can THROW!
+                        try
+                        {
+                            connection.Dispose();
+                            _activeConnection = null;
+                        }
+                        catch { }
                     }
                 }
             }
