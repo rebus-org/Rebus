@@ -26,8 +26,8 @@ namespace Rebus.DataBus
 
             configurer.Decorate<IPipeline>(c =>
             {
+                var dataBusStorage = GetDataBusStorage(c);
                 var pipeline = c.Get<IPipeline>();
-                var dataBusStorage = c.Get<IDataBusStorage>();
 
                 var step = new DataBusIncomingStep(dataBusStorage);
 

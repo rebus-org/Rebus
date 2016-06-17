@@ -99,6 +99,7 @@
     <Compile Include="Contracts\DataBus\Factories\InMemDataBusStorageFactory.cs" />
     <Compile Include="Contracts\DataBus\InMemDataStorageTest.cs" />
     <Compile Include="Contracts\DataBus\SqlServerDataBusStorageTest.cs" />
+    <Compile Include="DataBus\ConfigurationErrorTest.cs" />
     <Compile Include="DataBus\SimpleTest.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />

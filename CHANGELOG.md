@@ -971,7 +971,6 @@
 
 * Added simple metadata API to data bus
 
-
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
