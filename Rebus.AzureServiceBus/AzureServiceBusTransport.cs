@@ -138,13 +138,14 @@ namespace Rebus.AzureServiceBus
 
             if (_namespaceManager.QueueExists(address)) return;
 
+            var now = DateTime.Now;
             var queueDescription = new QueueDescription(address)
             {
                 MaxSizeInMegabytes = 1024,
                 MaxDeliveryCount = 100,
                 LockDuration = _peekLockDuration,
                 EnablePartitioning = PartitioningEnabled,
-                UserMetadata = string.Format("Created by Rebus {0:yyyy-MM-dd} - {0:HH:mm:ss}", DateTime.Now)
+                UserMetadata = $"Created by Rebus {now:yyyy-MM-dd} - {now:HH:mm:ss}",
             };
 
             try
@@ -169,60 +170,6 @@ namespace Rebus.AzureServiceBus
                 .Enqueue(message);
         }
 
-        static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
-        {
-            var headers = message.Headers.Clone();
-            var brokeredMessage = new BrokeredMessage(new MemoryStream(message.Body), true);
-
-            string timeToBeReceivedStr;
-            if (headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr))
-            {
-                timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-                brokeredMessage.TimeToLive = timeToBeReceived;
-            }
-
-            string deferUntilTime;
-            if (headers.TryGetValue(Headers.DeferredUntil, out deferUntilTime))
-            {
-                var deferUntilDateTimeOffset = deferUntilTime.ToDateTimeOffset();
-                brokeredMessage.ScheduledEnqueueTimeUtc = deferUntilDateTimeOffset.UtcDateTime;
-                headers.Remove(Headers.DeferredUntil);
-            }
-
-            string contentType;
-            if (headers.TryGetValue(Headers.ContentType, out contentType))
-            {
-                brokeredMessage.ContentType = contentType;
-            }
-
-            string correlationId;
-            if (headers.TryGetValue(Headers.CorrelationId, out correlationId))
-            {
-                brokeredMessage.CorrelationId = correlationId;
-            }
-
-            brokeredMessage.Label = message.GetMessageLabel();
-
-            foreach (var kvp in headers)
-            {
-                brokeredMessage.Properties[kvp.Key] = PossiblyLimitLength(kvp.Value);
-            }
-
-            return brokeredMessage;
-        }
-
-        static string PossiblyLimitLength(string str)
-        {
-            const int maxLengthPrettySafe = 16300;
-
-            if (str.Length < maxLengthPrettySafe) return str;
-
-            var firstPart = str.Substring(0, 8000);
-            var lastPart = str.Substring(str.Length - 8000);
-
-            return $"{firstPart} (... cut out because length exceeded {maxLengthPrettySafe} characters ...) {lastPart}";
-        }
 
         /// <summary>
         /// Should return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
@@ -327,7 +274,7 @@ namespace Rebus.AzureServiceBus
                             {
                                 await GetRetrier().Execute(async () =>
                                 {
-                                    using (var brokeredMessageToSend = CreateBrokeredMessage(message))
+                                    using (var brokeredMessageToSend = MsgHelpers.CreateBrokeredMessage(message))
                                     {
                                         try
                                         {

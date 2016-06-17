@@ -155,50 +155,6 @@ namespace Rebus.AzureServiceBus
                 .Enqueue(message);
         }
 
-        static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
-        {
-            var headers = message.Headers;
-            var brokeredMessage = new BrokeredMessage(new MemoryStream(message.Body), true);
-
-            foreach (var kvp in headers)
-            {
-                brokeredMessage.Properties[kvp.Key] = PossiblyLimitLength(kvp.Value);
-            }
-
-            if (headers.ContainsKey(Headers.TimeToBeReceived))
-            {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-                brokeredMessage.TimeToLive = timeToBeReceived;
-            }
-
-            string contentType;
-            if (headers.TryGetValue(Headers.ContentType, out contentType))
-            {
-                brokeredMessage.ContentType = contentType;
-            }
-
-            string correlationId;
-            if (headers.TryGetValue(Headers.CorrelationId, out correlationId))
-            {
-                brokeredMessage.CorrelationId = correlationId;
-            }
-
-            brokeredMessage.Label = message.GetMessageLabel();
-
-            return brokeredMessage;
-        }
-
-        static string PossiblyLimitLength(string str)
-        {
-            const int maxLengthPrettySafe = 16300;
-
-            if (str.Length < maxLengthPrettySafe) return str;
-
-            return
-                $"{str.Substring(0, 8000)} (... cut out because length exceeded {maxLengthPrettySafe} characters ...) {str.Substring(str.Length - 8000)}";
-        }
-
         /// <summary>
         /// Should return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
         /// </summary>
@@ -288,7 +244,7 @@ namespace Rebus.AzureServiceBus
                             {
                                 await GetRetrier().Execute(async () =>
                                 {
-                                    using (var brokeredMessageToSend = CreateBrokeredMessage(message))
+                                    using (var brokeredMessageToSend = MsgHelpers.CreateBrokeredMessage(message))
                                     {
                                         try
                                         {
