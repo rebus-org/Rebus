@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using FluentAssertions;
 using NUnit.Framework;
 using Rebus.DataBus;
 using Rebus.Tests.Extensions;
+using Rebus.Time;
 
 namespace Rebus.Tests.Contracts.DataBus
 {
@@ -56,6 +59,27 @@ namespace Rebus.Tests.Contracts.DataBus
 
             Assert.That(readMetadata["key1"], Is.EqualTo("value1"));
             Assert.That(readMetadata["key2"], Is.EqualTo("value2"));
+        }
+
+        [Test]
+        public async Task CanGetStandardMetada()
+        {
+            var fakeTime = new DateTimeOffset(17.June(2016));
+            RebusTimeMachine.FakeIt(fakeTime);
+
+            const string knownId = "known id";
+
+            var data = new byte[] { 1, 2, 3 };
+
+            using (var source = new MemoryStream(data))
+            {
+                await _storage.Save(knownId, source);
+            }
+
+            var readMetadata = await _storage.ReadMetadata(knownId);
+
+            Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("3"));
+            Assert.That(readMetadata[MetadataKeys.SaveTime], Is.EqualTo(fakeTime.ToString("O")));
         }
 
         [Test]

@@ -12,6 +12,7 @@ using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Serialization;
+using Rebus.Time;
 
 namespace Rebus.DataBus.SqlServer
 {
@@ -94,7 +95,10 @@ CREATE TABLE [{_tableName}] (
         /// </summary>
         public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
-            var metadataToWrite = metadata ?? new Dictionary<string, string>();
+            var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+            {
+                [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O")
+            };
 
             try
             {
@@ -168,19 +172,23 @@ CREATE TABLE [{_tableName}] (
                 {
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = $"SELECT TOP 1 [Meta] FROM [{_tableName}] WITH (NOLOCK) WHERE [Id] = @id";
+                        command.CommandText = $"SELECT TOP 1 [Meta], DATALENGTH([Data]) AS 'Length' FROM [{_tableName}] WITH (NOLOCK) WHERE [Id] = @id";
                         command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
 
-                        var result = await command.ExecuteScalarAsync();
-
-                        if (result == null)
+                        using (var reader = await command.ExecuteReaderAsync())
                         {
-                            throw new ArgumentException($"Row with ID {id} not found");
-                        }
+                            if (!await reader.ReadAsync())
+                            {
+                                throw new ArgumentException($"Row with ID {id} not found");
+                            }
 
-                        var bytes = (byte[]) result;
-                        var jsonText = TextEncoding.GetString(bytes);
-                        return _dictionarySerializer.DeserializeFromString(jsonText);
+                            var bytes = (byte[])reader["Meta"];
+                            var length = (long) reader["Length"];
+                            var jsonText = TextEncoding.GetString(bytes);
+                            var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+                            metadata[MetadataKeys.Length] = length.ToString();
+                            return metadata;
+                        }
                     }
                 }
             }

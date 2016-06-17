@@ -7,6 +7,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Rebus.DataBus;
 using Rebus.Extensions;
+using Rebus.Time;
 
 namespace Rebus.AzureStorage.DataBus
 {
@@ -50,7 +51,12 @@ namespace Rebus.AzureStorage.DataBus
             {
                 var blob = container.GetBlockBlobReference(blobName);
 
-                var metadataToWrite = new Dictionary<string,string>()
+                var standardMetadata = new Dictionary<string, string>
+                {
+                    {MetadataKeys.SaveTime, RebusTime.Now.ToString("O")}
+                };
+
+                var metadataToWrite = standardMetadata
                     .MergedWith(metadata ?? new Dictionary<string, string>());
 
                 foreach (var kvp in metadataToWrite)
@@ -94,8 +100,12 @@ namespace Rebus.AzureStorage.DataBus
             try
             {
                 var container = _client.GetContainerReference(_containerName);
-                var blob = container.GetBlobReferenceFromServer(blobName);
-                var metadata = new Dictionary<string,string>(blob.Metadata);
+                var blob = await container.GetBlobReferenceFromServerAsync(blobName);
+
+                var metadata = new Dictionary<string, string>(blob.Metadata)
+                {
+                    [MetadataKeys.Length] = blob.Properties.Length.ToString()
+                };
 
                 return metadata;
             }

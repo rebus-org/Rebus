@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Rebus.Time;
+
 #pragma warning disable 1998
 
 namespace Rebus.DataBus.InMem
@@ -19,10 +21,15 @@ namespace Rebus.DataBus.InMem
             using (var destination = new MemoryStream())
             {
                 await source.CopyToAsync(destination);
+                var bytes = destination.ToArray();
 
-                var metadataToWrite = metadata ?? new Dictionary<string, string>();
+                var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+                {
+                    [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O"),
+                    [MetadataKeys.Length] = bytes.Length.ToString()
+                };
 
-                _dataStore.Save(id, destination.ToArray(), metadataToWrite);
+                _dataStore.Save(id, bytes, metadataToWrite);
             }
         }
 

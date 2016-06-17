@@ -8,6 +8,7 @@ using Rebus.Exceptions;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Serialization;
+using Rebus.Time;
 
 namespace Rebus.DataBus.FileSystem
 {
@@ -60,9 +61,10 @@ namespace Rebus.DataBus.FileSystem
                 await source.CopyToAsync(destination);
             }
 
-            var metadataToSave = GetMetadata(filePath)
-                .MergedWith(metadata ?? new Dictionary<string, string>());
-
+            var metadataToSave = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+            {
+                [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O")
+            };
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
             using (var destination = File.Create(metadataFilePath))
@@ -71,11 +73,6 @@ namespace Rebus.DataBus.FileSystem
                 var text = _dictionarySerializer.SerializeToString(metadataToSave);
                 await writer.WriteAsync(text);
             }
-        }
-
-        static Dictionary<string, string> GetMetadata(string filePath)
-        {
-            return new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -100,6 +97,7 @@ namespace Rebus.DataBus.FileSystem
         /// </summary>
         public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
+            var filePath = GetFilePath(id, DataFileExtension);
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
             try
@@ -108,6 +106,9 @@ namespace Rebus.DataBus.FileSystem
                 {
                     var jsonText = await reader.ReadToEndAsync();
                     var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                    var fileInfo = new FileInfo(filePath);
+                    metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
 
                     return metadata;
                 }
