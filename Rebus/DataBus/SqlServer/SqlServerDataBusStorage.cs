@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
+using Rebus.Serialization;
 
 namespace Rebus.DataBus.SqlServer
 {
@@ -17,6 +20,8 @@ namespace Rebus.DataBus.SqlServer
     /// </summary>
     public class SqlServerDataBusStorage : IDataBusStorage, IInitializable
     {
+        static readonly Encoding TextEncoding = Encoding.UTF8;
+        readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly bool _ensureTableIsCreated;
@@ -62,12 +67,12 @@ namespace Rebus.DataBus.SqlServer
 
 CREATE TABLE [{_tableName}] (
     [Id] VARCHAR(200),
+    [Meta] VARBINARY(MAX),
     [Data] VARBINARY(MAX)
 );
 
 ";
                     const int tableAlreadyExists = 2714;
-
 
                     try
                     {
@@ -87,16 +92,19 @@ CREATE TABLE [{_tableName}] (
         /// <summary>
         /// Saves the data from the given source stream under the given ID
         /// </summary>
-        public async Task Save(string id, Stream source)
+        public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
+            var metadataToWrite = metadata ?? new Dictionary<string, string>();
+
             try
             {
                 using (var connection = await _connectionProvider.GetConnection())
                 {
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = $"INSERT INTO [{_tableName}] ([Id],[Data]) VALUES (@id,@data)";
+                        command.CommandText = $"INSERT INTO [{_tableName}] ([Id], [Meta], [Data]) VALUES (@id, @meta, @data)";
                         command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
+                        command.Parameters.Add("meta", SqlDbType.VarBinary).Value = TextEncoding.GetBytes(_dictionarySerializer.SerializeToString(metadataToWrite));
                         command.Parameters.Add("data", SqlDbType.VarBinary).Value = source;
 
                         await command.ExecuteNonQueryAsync();
@@ -146,6 +154,43 @@ CREATE TABLE [{_tableName}] (
             catch (Exception exception)
             {
                 throw new RebusApplicationException(exception, $"Could not load data with ID {id}");
+            }
+        }
+
+        /// <summary>
+        /// Loads the metadata stored with the given ID
+        /// </summary>
+        public async Task<Dictionary<string, string>> ReadMetadata(string id)
+        {
+            try
+            {
+                using (var connection = await _connectionProvider.GetConnection())
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT TOP 1 [Meta] FROM [{_tableName}] WITH (NOLOCK) WHERE [Id] = @id";
+                        command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
+
+                        var result = await command.ExecuteScalarAsync();
+
+                        if (result == null)
+                        {
+                            throw new ArgumentException($"Row with ID {id} not found");
+                        }
+
+                        var bytes = (byte[]) result;
+                        var jsonText = TextEncoding.GetString(bytes);
+                        return _dictionarySerializer.DeserializeFromString(jsonText);
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not load metadata for data with ID {id}");
             }
         }
 

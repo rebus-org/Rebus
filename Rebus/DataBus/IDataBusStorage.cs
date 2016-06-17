@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Rebus.DataBus
@@ -11,11 +12,16 @@ namespace Rebus.DataBus
         /// <summary>
         /// Saves the data from the given source stream under the given ID
         /// </summary>
-        Task Save(string id, Stream source);
+        Task Save(string id, Stream source, Dictionary<string, string> metadata = null);
 
         /// <summary>
         /// Opens the data stored under the given ID for reading
         /// </summary>
         Stream Read(string id);
+
+        /// <summary>
+        /// Loads the metadata stored with the given ID
+        /// </summary>
+        Task<Dictionary<string, string>> ReadMetadata(string id);
     }
 }

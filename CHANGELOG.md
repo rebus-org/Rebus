@@ -967,6 +967,11 @@
 * Added ability configure prefetch count with RabbitMQ
 * Added a few additional defensive RabbitMQ reconnection measures, like e.g. throw out prefetched messages if the connection is lost
 
+# 0.99.62
+
+* Added simple metadata API to data bus
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

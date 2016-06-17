@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ using Rebus.Tests.Extensions;
 
 namespace Rebus.Tests.Contracts.DataBus
 {
-    public abstract class GeneralDataBusStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory: IDataBusStorageFactory, new()
+    public abstract class GeneralDataBusStorageTests<TDataStorageFactory> : FixtureBase where TDataStorageFactory : IDataBusStorageFactory, new()
     {
         IDataBusStorage _storage;
         TDataStorageFactory _factory;
@@ -33,6 +34,28 @@ namespace Rebus.Tests.Contracts.DataBus
             });
 
             Console.WriteLine(exception);
+        }
+
+        [Test]
+        public async Task CanSaveDataAlongWithCustomMetadata()
+        {
+            const string knownId = "known id";
+
+            var medadada = new Dictionary<string, string>
+            {
+                {"key1", "value1"},
+                {"key2", "value2"},
+            };
+
+            using (var source = new MemoryStream(new byte[0]))
+            {
+                await _storage.Save(knownId, source, medadada);
+            }
+
+            var readMetadata = await _storage.ReadMetadata(knownId);
+
+            Assert.That(readMetadata["key1"], Is.EqualTo("value1"));
+            Assert.That(readMetadata["key2"], Is.EqualTo("value2"));
         }
 
         [Test]

@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Exceptions;
+using Rebus.Extensions;
 using Rebus.Logging;
+using Rebus.Serialization;
 
 namespace Rebus.DataBus.FileSystem
 {
@@ -12,6 +16,9 @@ namespace Rebus.DataBus.FileSystem
     /// </summary>
     public class FileSystemDataBusStorage : IDataBusStorage, IInitializable
     {
+        const string DataFileExtension = "dat";
+        const string MetadataFileExtension = "meta";
+        readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly string _directoryPath;
         readonly ILog _log;
 
@@ -44,14 +51,31 @@ namespace Rebus.DataBus.FileSystem
         /// <summary>
         /// Saves the data from the given strea under the given ID
         /// </summary>
-        public async Task Save(string id, Stream source)
+        public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
-            var filePath = GetFilePath(id);
+            var filePath = GetFilePath(id, DataFileExtension);
 
             using (var destination = File.Create(filePath))
             {
                 await source.CopyToAsync(destination);
             }
+
+            var metadataToSave = GetMetadata(filePath)
+                .MergedWith(metadata ?? new Dictionary<string, string>());
+
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            using (var destination = File.Create(metadataFilePath))
+            using (var writer = new StreamWriter(destination, Encoding.UTF8))
+            {
+                var text = _dictionarySerializer.SerializeToString(metadataToSave);
+                await writer.WriteAsync(text);
+            }
+        }
+
+        static Dictionary<string, string> GetMetadata(string filePath)
+        {
+            return new Dictionary<string, string>();
         }
 
         /// <summary>
@@ -59,7 +83,7 @@ namespace Rebus.DataBus.FileSystem
         /// </summary>
         public Stream Read(string id)
         {
-            var filePath = GetFilePath(id);
+            var filePath = GetFilePath(id, DataFileExtension);
 
             try
             {
@@ -71,9 +95,32 @@ namespace Rebus.DataBus.FileSystem
             }
         }
 
-        string GetFilePath(string id)
+        /// <summary>
+        /// Loads the metadata stored with the given ID
+        /// </summary>
+        public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
-            return Path.Combine(_directoryPath, $"data-{id}.dat");
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            try
+            {
+                using (var reader = new StreamReader(metadataFilePath, Encoding.UTF8))
+                {
+                    var jsonText = await reader.ReadToEndAsync();
+                    var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                    return metadata;
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
+            }
+        }
+
+        string GetFilePath(string id, string extension)
+        {
+            return Path.Combine(_directoryPath, $"data-{id}.{extension}");
         }
 
         void EnsureDirectoryIsWritable()
