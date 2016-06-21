@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,7 +79,11 @@ namespace Rebus.Tests.DataBus
             // send a message that sends the contents of a file as an attachment
             using (var source = File.OpenRead(sourceFilePath))
             {
-                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source);
+                var optionalMetadata = new Dictionary<string, string>
+                {
+                    {"username", Thread.CurrentPrincipal.Identity.Name }
+                };
+                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
 
                 await _senderBus.Send(new MessageWithAttachment
                 {

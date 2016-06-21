@@ -26,7 +26,14 @@ namespace Rebus.DataBus
         /// <summary>
         /// Gets the ID of the attachment
         /// </summary>
-        public string Id { get; }
+        public string Id
+        {
+            get;
+            protected set; // protected setter to make the JIL serializer happy
+        }
+
+        // ctor added to make the JIL serializer happy
+        DataBusAttachment() { }
 
         /// <summary>
         /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.

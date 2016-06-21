@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.DataBus;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Serialization;
@@ -17,6 +18,18 @@ namespace Rebus.Tests.Serialization
         {
             _factory = new TSerializerFactory();
             _serializer = _factory.GetSerializer();
+        }
+
+        [Test]
+        public async Task CanRoundtripInternalMessages_DataBusAttachment()
+        {
+            var message = new DataBusAttachment("bimmelim!!!");
+
+            Console.WriteLine("Roundtripping {0}", message.GetType());
+
+            var roundtrippedMessage = (DataBusAttachment)await Roundtrip(message);
+
+            Assert.That(roundtrippedMessage.Id, Is.EqualTo("bimmelim!!!"));
         }
 
         [Test]

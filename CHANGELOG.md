@@ -974,6 +974,7 @@
 # 0.99.63
 
 * Maintain time of last read access in all data bus storages
+* Made `DataBusAttachment` serializable with all currently supported serializers (JSON.NET, Jil, Wire, and Protobuf)
 
 ---
 
