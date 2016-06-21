@@ -32,11 +32,21 @@ namespace Rebus.DataBus
         /// </summary>
         public Task<Stream> OpenRead()
         {
+            return OpenRead(Id);
+        }
+
+        /// <summary>
+        /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.
+        /// Is only available for calling inside message handlers.
+        /// </summary>
+        public static Task<Stream> OpenRead(string id)
+        {
             var messageContext = MessageContext.Current;
 
             if (messageContext == null)
             {
-                throw new InvalidOperationException("No message context is available - did you try to open a data bus attachment for reading OUTSIDE of a message handler?");
+                throw new InvalidOperationException(
+                    "No message context is available - did you try to open a data bus attachment for reading OUTSIDE of a message handler?");
             }
 
             var storage = messageContext.IncomingStepContext
@@ -44,10 +54,11 @@ namespace Rebus.DataBus
 
             if (storage == null)
             {
-                throw new InvalidOperationException($"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?");
+                throw new InvalidOperationException(
+                    $"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?");
             }
 
-            return storage.Read(Id);
+            return storage.Read(id);
         }
     }
 }
