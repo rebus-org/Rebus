@@ -65,8 +65,9 @@ namespace Rebus.Tests.DataBus
                 var attachment = message.Attachment;
 
                 using (var destination = File.OpenWrite(destinationFilePath))
+                using (var stream = await attachment.OpenRead())
                 {
-                    await attachment.OpenRead().CopyToAsync(destination);
+                    await stream.CopyToAsync(destination);
                 }
 
                 dataSuccessfullyCopied.Set();

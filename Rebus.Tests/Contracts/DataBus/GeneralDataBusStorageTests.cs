@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,14 +28,44 @@ namespace Rebus.Tests.Contracts.DataBus
         }
 
         [Test]
+        public async Task UpdatesTimeOfLastRead()
+        {
+            const string knownId = "known id";
+
+            using (var source = new MemoryStream(new byte[0]))
+            {
+                await _storage.Save(knownId, source);
+            }
+
+            var hadLastReadTime = (await _storage.ReadMetadata(knownId)).ContainsKey(MetadataKeys.ReadTime);
+
+            Assert.That(hadLastReadTime, Is.False, "Did not expect the {0} key to be set", MetadataKeys.ReadTime);
+
+            var justSomeTime = new DateTimeOffset(1.January(2016));
+
+            RebusTimeMachine.FakeIt(justSomeTime);
+
+            _storage.Read(knownId).Result.Dispose();
+
+            var metadata = await _storage.ReadMetadata(knownId);
+
+            Assert.That(metadata.ContainsKey(MetadataKeys.ReadTime), Is.True);
+            Assert.That(metadata[MetadataKeys.ReadTime], Is.EqualTo(justSomeTime.ToString("O")));
+        }
+
+        [Test]
         public void ThrowsWhenLoadingNonExistentId()
         {
-            var exception = Assert.Throws<ArgumentException>(() =>
+            var exception = Assert.Throws<AggregateException>(() =>
             {
-                _storage.Read(Guid.NewGuid().ToString());
+                var result = _storage.Read(Guid.NewGuid().ToString()).Result;
             });
 
-            Console.WriteLine(exception);
+            var baseException = exception.GetBaseException();
+
+            Console.WriteLine(baseException);
+
+            Assert.That(baseException, Is.TypeOf<ArgumentException>());
         }
 
         [Test]
@@ -95,7 +124,7 @@ namespace Rebus.Tests.Contracts.DataBus
 
             using (var destination = new MemoryStream())
             {
-                using (var source = _storage.Read(knownId))
+                using (var source = await _storage.Read(knownId))
                 {
                     await source.CopyToAsync(destination);
                 }
@@ -127,7 +156,7 @@ namespace Rebus.Tests.Contracts.DataBus
         {
             using (var destination = new MemoryStream())
             {
-                using (var source = _storage.Read(knownId))
+                using (var source = await _storage.Read(knownId))
                 {
                     await source.CopyToAsync(destination);
                 }

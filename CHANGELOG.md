@@ -971,6 +971,10 @@
 
 * Added simple metadata API to data bus
 
+# 0.99.63
+
+* Maintain time of last read access in all data bus storages
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

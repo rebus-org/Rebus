@@ -14,5 +14,10 @@
         /// Metadata key of the ISO8601-encoded time of when the data was stored
         /// </summary>
         public const string SaveTime = "Rbs2DataBusSaveTime";
+
+        /// <summary>
+        /// Metadata key of the ISO8601-encoding time of when the data was last read
+        /// </summary>
+        public const string ReadTime = "Rbs2DataBusReadTime";
     }
 }

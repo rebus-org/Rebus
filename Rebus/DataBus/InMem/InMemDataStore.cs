@@ -37,6 +37,18 @@ namespace Rebus.DataBus.InMem
             return blob.Data;
         }
 
+        public void AddMetadata(string id, Dictionary<string, string> metadata)
+        {
+            InMemBlob blob;
+
+            if (!_data.TryGetValue(id, out blob))
+            {
+                throw new ArgumentException($"Could not find data with ID {id}");
+            }
+
+            blob.AddMetadata(metadata);
+        }
+
         /// <summary>
         /// Loads the metadata for the data with the given ID. Throws a <see cref="ArgumentException"/> if no
         /// such ID exists
@@ -64,7 +76,19 @@ namespace Rebus.DataBus.InMem
             }
 
             public byte[] Data { get; }
-            public Dictionary<string, string> Metadata { get; }
+            public Dictionary<string, string> Metadata { get; private set; }
+
+            public void AddMetadata(Dictionary<string, string> metadata)
+            {
+                var newMetadata = Metadata.Clone();
+
+                foreach (var kvp in metadata)
+                {
+                    newMetadata[kvp.Key] = kvp.Value;
+                }
+
+                Metadata = newMetadata;
+            }
         }
     }
 }

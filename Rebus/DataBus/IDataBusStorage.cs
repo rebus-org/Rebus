@@ -17,7 +17,7 @@ namespace Rebus.DataBus
         /// <summary>
         /// Opens the data stored under the given ID for reading
         /// </summary>
-        Stream Read(string id);
+        Task<Stream> Read(string id);
 
         /// <summary>
         /// Loads the metadata stored with the given ID

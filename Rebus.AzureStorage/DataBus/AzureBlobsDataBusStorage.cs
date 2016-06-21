@@ -75,13 +75,16 @@ namespace Rebus.AzureStorage.DataBus
         /// <summary>
         /// Opens the data stored under the given ID for reading
         /// </summary>
-        public Stream Read(string id)
+        public async Task<Stream> Read(string id)
         {
             var blobName = GetBlobName(id);
             try
             {
                 var container = _client.GetContainerReference(_containerName);
-                var blob = container.GetBlobReferenceFromServer(blobName);
+
+                var blob = await container.GetBlobReferenceFromServerAsync(blobName);
+
+                await UpdateLastReadTime(blob);
 
                 return blob.OpenRead();
             }
@@ -89,6 +92,13 @@ namespace Rebus.AzureStorage.DataBus
             {
                 throw new ArgumentException($"Could not find blob named '{blobName}' in the '{_containerName}' container", exception);
             }
+        }
+
+        static async Task UpdateLastReadTime(ICloudBlob blob)
+        {
+            blob.Metadata[MetadataKeys.ReadTime] = RebusTime.Now.ToString("O");
+
+            await blob.SetMetadataAsync();
         }
 
         /// <summary>

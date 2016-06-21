@@ -33,8 +33,17 @@ namespace Rebus.DataBus.InMem
             }
         }
 
-        public Stream Read(string id)
+        public async Task<Stream> Read(string id)
         {
+            var now = RebusTime.Now;
+
+            var metadata = new Dictionary<string, string>
+            {
+                {MetadataKeys.ReadTime, now.ToString("O") }
+            };
+
+            _dataStore.AddMetadata(id, metadata);
+
             var source = new MemoryStream(_dataStore.Load(id));
 
             return source;

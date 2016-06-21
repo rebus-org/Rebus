@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 using Rebus.Pipeline;
 
 namespace Rebus.DataBus
@@ -28,7 +29,7 @@ namespace Rebus.DataBus
         /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.
         /// Is only available for calling inside message handlers.
         /// </summary>
-        public Stream OpenRead()
+        public Task<Stream> OpenRead()
         {
             var messageContext = MessageContext.Current;
 

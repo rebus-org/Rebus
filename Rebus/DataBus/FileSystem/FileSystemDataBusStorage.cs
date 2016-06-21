@@ -78,13 +78,20 @@ namespace Rebus.DataBus.FileSystem
         /// <summary>
         /// Reads the data with the given ID and returns it as a stream
         /// </summary>
-        public Stream Read(string id)
+        public async Task<Stream> Read(string id)
         {
             var filePath = GetFilePath(id, DataFileExtension);
 
             try
             {
-                return File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                await SetMetadata(id, new Dictionary<string, string>
+                {
+                    {MetadataKeys.ReadTime, RebusTime.Now.ToString("O")}
+                });
+
+                return fileStream;
             }
             catch (FileNotFoundException exception)
             {
@@ -116,6 +123,41 @@ namespace Rebus.DataBus.FileSystem
             catch (Exception exception)
             {
                 throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
+            }
+        }
+
+        async Task SetMetadata(string id, Dictionary<string, string> dictionary)
+        {
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            try
+            {
+                using (var file = File.Open(metadataFilePath, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    using (var reader = new StreamReader(file, Encoding.UTF8))
+                    {
+                        var jsonText = await reader.ReadToEndAsync();
+                        var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                        foreach (var kvp in dictionary)
+                        {
+                            metadata[kvp.Key] = kvp.Value;
+                        }
+
+                        var newJsonText = _dictionarySerializer.SerializeToString(metadata);
+
+                        file.Position = 0;
+
+                        using (var writer = new StreamWriter(file, Encoding.UTF8))
+                        {
+                            await writer.WriteAsync(newJsonText);
+                        }
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not update metadata for data with ID {id}");
             }
         }
 
