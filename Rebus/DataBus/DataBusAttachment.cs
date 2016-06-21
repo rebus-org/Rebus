@@ -17,6 +17,7 @@ namespace Rebus.DataBus
         /// </summary>
         public DataBusAttachment(string id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
             Id = id;
         }
 
@@ -40,6 +41,11 @@ namespace Rebus.DataBus
 
             var storage = messageContext.IncomingStepContext
                 .Load<IDataBusStorage>(DataBusIncomingStep.DataBusStorageKey);
+
+            if (storage == null)
+            {
+                throw new InvalidOperationException($"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?");
+            }
 
             return storage.Read(Id);
         }
