@@ -37,6 +37,9 @@ namespace Rebus.DataBus.InMem
             return blob.Data;
         }
 
+        /// <summary>
+        /// Adds the metadata from the <paramref name="metadata"/> dictionary to the blob with the given <paramref name="id"/>
+        /// </summary>
         public void AddMetadata(string id, Dictionary<string, string> metadata)
         {
             InMemBlob blob;
