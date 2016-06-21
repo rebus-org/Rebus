@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Rebus.Pipeline;
@@ -18,6 +19,7 @@ namespace Rebus.DataBus
         public DataBusAttachment(string id)
         {
             if (id == null) throw new ArgumentNullException(nameof(id));
+
             Id = id;
         }
 
@@ -36,10 +38,41 @@ namespace Rebus.DataBus
         }
 
         /// <summary>
+        /// Gets the metadata associated with the attachment, using the data bus of the bus that is handling the current message to read it.
+        /// Is only available for calling inside message handlers.
+        /// </summary>
+        public Task<Dictionary<string, string>> GetMetadata()
+        {
+            return GetMetadata(Id);
+        }
+
+        /// <summary>
         /// Opens the attachment for reading, using the data bus of the bus that is handling the current message to read it.
         /// Is only available for calling inside message handlers.
         /// </summary>
         public static Task<Stream> OpenRead(string id)
+        {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            var storage = GetDataBusStorage();
+
+            return storage.Read(id);
+        }
+
+        /// <summary>
+        /// Gets the metadata associated with the attachment, using the data bus of the bus that is handling the current message to read it.
+        /// Is only available for calling inside message handlers.
+        /// </summary>
+        public static Task<Dictionary<string, string>> GetMetadata(string id)
+        {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
+            var storage = GetDataBusStorage();
+
+            return storage.ReadMetadata(id);
+        }
+
+        static IDataBusStorage GetDataBusStorage()
         {
             var messageContext = MessageContext.Current;
 
@@ -57,8 +90,7 @@ namespace Rebus.DataBus
                 throw new InvalidOperationException(
                     $"Could not find data bus storage under the '{DataBusIncomingStep.DataBusStorageKey}' key in the current message context - did you remember to configure the data bus?");
             }
-
-            return storage.Read(id);
+            return storage;
         }
     }
 }
