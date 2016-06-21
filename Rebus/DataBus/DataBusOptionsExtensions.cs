@@ -17,6 +17,8 @@ namespace Rebus.DataBus
         /// </summary>
         public static StandardConfigurer<IDataBusStorage> EnableDataBus(this OptionsConfigurer configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
             configurer.Register<IDataBus>(c =>
             {
                 var dataBusStorage = GetDataBusStorage(c);

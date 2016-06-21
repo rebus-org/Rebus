@@ -7,6 +7,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.DataBus;
+using Rebus.DataBus.FileSystem;
 using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
@@ -40,7 +41,8 @@ namespace Rebus.Tests.DataBus
                 .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
                 .Options(o =>
                 {
-                    o.EnableDataBus().StoreInMemory(_inMemDataStore);
+                    o.EnableDataBus()
+                        .StoreInMemory(_inMemDataStore);
                 })
                 .Start();
 
