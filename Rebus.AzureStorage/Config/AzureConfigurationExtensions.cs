@@ -1,6 +1,5 @@
 ﻿using Microsoft.WindowsAzure.Storage;
 using Rebus.Auditing.Sagas;
-using Rebus.AzureStorage.Databus;
 using Rebus.Config;
 using Rebus.DataBus;
 
@@ -37,15 +36,6 @@ namespace Rebus.AzureStorage.Config
                         o.EnableSagaAuditing().UseAzureStorage(storageAccount, sagaContainerName);
                     }
                 });
-        }
-    }
-
-    public static class AzureStorageDataBusConfigurationExtensions
-    {
-        public static void UseAzureStorage(this StandardConfigurer<IDataBusStorage> configurer,
-            CloudStorageAccount cloudStorageAccount, string containerName = "RebusDataBusData")
-        {
-            configurer.Register(c=>new AzureStorageDataBusStorage(cloudStorageAccount, containerName));
         }
     }
 }

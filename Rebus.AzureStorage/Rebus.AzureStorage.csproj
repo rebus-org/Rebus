@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config\AzureConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureStorageDataBusConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageQueuesConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageSagaConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageSubscriptionConfigurationExtensions.cs" />
