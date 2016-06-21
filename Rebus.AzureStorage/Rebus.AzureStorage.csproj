@@ -63,7 +63,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config\AzureConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageQueuesConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureStorageSagaConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureStorageSubscriptionConfigurationExtensions.cs" />
+    <Compile Include="Databus\AzureStorageDataBusStorage.cs" />
+    <Compile Include="Entities\Subscription.cs" />
+    <Compile Include="Sagas\AzureStorageSagaSnapshotStorage.cs" />
+    <Compile Include="Sagas\AzureStorageSagaStorage.cs" />
+    <Compile Include="Subscriptions\AzureStorageSubscriptionStorage.cs" />
+    <Compile Include="TableExtensions.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransport.cs" />
     <Compile Include="DisabledTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -79,6 +88,7 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
