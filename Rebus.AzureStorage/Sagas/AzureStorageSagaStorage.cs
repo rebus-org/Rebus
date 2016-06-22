@@ -47,31 +47,46 @@ namespace Rebus.AzureStorage.Sagas
         {
             _cloudStorageAccount = cloudStorageAccount;
             _tableName = tableName;
-            _containerName = containerName;
+            _containerName = containerName.ToLowerInvariant();
+            EnsureCreated();
         }
         
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            if (propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase))
+            try
             {
-                string sagaId = propertyValue is string ? (string) propertyValue : ((Guid) propertyValue).ToString("N");
-                return await ReadSaga(sagaId, sagaDataType);
+                if (propertyName.Equals(IdPropertyName, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    string sagaId = propertyValue is string
+                        ? (string) propertyValue
+                        : ((Guid) propertyValue).ToString("N");
+                    return await ReadSaga(sagaId, sagaDataType);
+                }
+                var q = CreateFindQuery(sagaDataType, propertyName, propertyValue);
+                var table = GetTable();
+                var sagas =
+                    await
+                        table.ExecuteQueryAsync<DynamicTableEntity>(q,
+                            new TableRequestOptions {RetryPolicy = new ExponentialRetry()}, new OperationContext());
+                var id = sagas.Select(x => x.Properties["SagaId"].StringValue).FirstOrDefault();
+                if (String.IsNullOrEmpty(id))
+                {
+                    return null;
+                }
+                return await ReadSaga(id, sagaDataType);
             }
-            var q = CreateFindQuery(sagaDataType, propertyName, propertyValue);
-            var table = GetTable();
-            var sagas = await table.ExecuteQueryAsync<DynamicTableEntity>(q, new TableRequestOptions { RetryPolicy = new ExponentialRetry()}, new OperationContext());
-            var id = sagas.Select(x => x.Properties["SagaId"].StringValue).FirstOrDefault();
-            if (String.IsNullOrEmpty(id))
+            catch (Exception ex)
             {
-                return null;
+                throw;
             }
-            return await ReadSaga(id, sagaDataType);
         }
 
         private async Task<ISagaData> ReadSaga(string sagaId, Type sagaDataType)
         {
             var dataRef = $"{sagaId}/data.json";
+            
             var dataBlob = CloudBlobContainer.GetBlockBlobReference(dataRef);
+            if (!await dataBlob.ExistsAsync()) return null;
             var data = await dataBlob.DownloadTextAsync(Encoding.Unicode, new AccessCondition(),
                 new BlobRequestOptions {RetryPolicy = new ExponentialRetry()}, new OperationContext());
             try
@@ -133,13 +148,23 @@ namespace Rebus.AzureStorage.Sagas
 
         private async Task InsertSagaBlob(ISagaData sagaData)
         {
-            var dataRef = $"{sagaData.Id:N}/data.json";
-            var client = _cloudStorageAccount.CreateCloudBlobClient();
-            var container = client.GetContainerReference(_containerName);
-            var dataBlob = container.GetBlockBlobReference(dataRef);
-            dataBlob.Properties.ContentType = "application/json";
-            await dataBlob.UploadTextAsync(JsonConvert.SerializeObject(sagaData, Settings), Encoding.Unicode, new AccessCondition(), new BlobRequestOptions { RetryPolicy = new ExponentialRetry() }, new OperationContext());
-            await dataBlob.SetPropertiesAsync();
+            try
+            {
+                var dataRef = $"{sagaData.Id:N}/data.json";
+                var client = _cloudStorageAccount.CreateCloudBlobClient();
+                var container = client.GetContainerReference(_containerName);
+                var dataBlob = container.GetBlockBlobReference(dataRef);
+                dataBlob.Properties.ContentType = "application/json";
+                await
+                    dataBlob.UploadTextAsync(JsonConvert.SerializeObject(sagaData, Settings), Encoding.Unicode,
+                        AccessCondition.GenerateEmptyCondition(),
+                        new BlobRequestOptions {RetryPolicy = new ExponentialRetry()}, new OperationContext());
+                await dataBlob.SetPropertiesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
         }
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
@@ -239,21 +264,10 @@ namespace Rebus.AzureStorage.Sagas
 
         public static TableQuery<DynamicTableEntity> CreateFindQuery(Type sagaDataType, string propertyName, object propertyValue)
         {
-            // Azure Tables are indexed on the binary sort order of their keys
 
-            // This effectively builds a "StartsWith" query
-            var beginRowkeyPrefix = $"{propertyName}_{(propertyValue == null ? "" : propertyValue.ToString())}_";
-            var endRowkeyPrefix = $"{propertyName}_{(propertyValue == null ? "" : propertyValue.ToString())}`";// '`' == '_' + 1
-
-            var prefixCondition = TableQuery.CombineFilters(
-                TableQuery.GenerateFilterCondition("RowKey",
-                    QueryComparisons.GreaterThanOrEqual,
-                    beginRowkeyPrefix),
-                TableOperators.And,
-                TableQuery.GenerateFilterCondition("RowKey",
-                    QueryComparisons.LessThan,
-                    endRowkeyPrefix)
-                );
+            var prefixCondition = TableQuery.GenerateFilterCondition("RowKey",
+                QueryComparisons.Equal,
+                $"{propertyName}_{(propertyValue == null ? "" : propertyValue.ToString())}");
 
             var filterString = TableQuery.CombineFilters(
                 TableQuery.GenerateFilterCondition("PartitionKey",

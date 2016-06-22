@@ -26,6 +26,7 @@ namespace Rebus.AzureStorage.Subscriptions
             t.CreateIfNotExists();
         }
 
+
         public CloudTable GetTable()
         {
 
@@ -58,7 +59,7 @@ namespace Rebus.AzureStorage.Subscriptions
                 var items = await t.ExecuteQueryAsync(query, tableRequestOptions, operationContext);
                 return items.Select(i => i.RowKey).ToArray();
             }
-            catch (Exception exception)
+            catch (Microsoft.WindowsAzure.Storage.StorageException exception)
             {
                 throw new RebusApplicationException(exception, $"Could not get subscriber addresses for '{topic}'");
             }
@@ -84,7 +85,7 @@ namespace Rebus.AzureStorage.Subscriptions
         {
             try
             {
-                var entity = new Entities.AzureStorageSubscription(topic, subscriberAddress);
+                var entity = new Entities.AzureStorageSubscription(topic, subscriberAddress) {ETag="*"};
                 var t = GetTable();
                 var operationContext = new OperationContext();
                 var res = await t.ExecuteAsync(TableOperation.Delete(entity), new TableRequestOptions { RetryPolicy = new ExponentialRetry() }, operationContext);
@@ -96,5 +97,13 @@ namespace Rebus.AzureStorage.Subscriptions
         }
 
         public bool IsCentralized { get; }
+
+
+        public void DropTables()
+        {
+            var client = _cloudStorageAccount.CreateCloudTableClient();
+            var t = client.GetTableReference(_tableName);
+            t.DeleteIfExists();
+        }
     }
 }
