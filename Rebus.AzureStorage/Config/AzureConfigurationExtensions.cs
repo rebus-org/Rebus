@@ -7,9 +7,15 @@ namespace Rebus.AzureStorage.Config
 {
     public static class AzureConfigurationExtensions
     {
-        public static RebusConfigurer UseAzure(this RebusConfigurer conf, string storageAccountConnectionString, string inputQueueAddress)
+        public static RebusConfigurer UseAzure(this RebusConfigurer conf, string storageAccountConnectionStringOrName, string inputQueueAddress)
         {
-            var storageAccount = CloudStorageAccount.Parse(storageAccountConnectionString);
+            if (!storageAccountConnectionStringOrName.ToLowerInvariant().Contains("accountkey="))
+            {
+                storageAccountConnectionStringOrName =
+                    System.Configuration.ConfigurationManager.ConnectionStrings[storageAccountConnectionStringOrName]
+                        .ConnectionString;
+            }
+            var storageAccount = CloudStorageAccount.Parse(storageAccountConnectionStringOrName);
             return UseAzure(conf, storageAccount, inputQueueAddress);
         }
 

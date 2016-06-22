@@ -8,6 +8,21 @@ namespace Rebus.AzureStorage.Config
 {
     public static class AzureStorageSagaConfigurationExtensions
     {
+        public static void UseAzureStorage(this StandardConfigurer<ISagaStorage> configurer,
+            string storageAccountConnectionStringOrName,
+            string tableName = "RebusSagaIndex",
+            string containerName = "RebusSagaStorage")
+        {
+            if (!storageAccountConnectionStringOrName.ToLowerInvariant().Contains("accountkey="))
+            {
+                storageAccountConnectionStringOrName =
+                    System.Configuration.ConfigurationManager.ConnectionStrings[storageAccountConnectionStringOrName]
+                        .ConnectionString;
+            }
+            var storageAccount = CloudStorageAccount.Parse(storageAccountConnectionStringOrName);
+            UseAzureStorage(configurer, storageAccount, tableName, containerName);
+        }
+
         public static void UseAzureStorage(this StandardConfigurer<ISagaStorage> configurer, CloudStorageAccount cloudStorageAccount,
             string tableName = "RebusSagaIndex",
             string containerName = "RebusSagaStorage")
