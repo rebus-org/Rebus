@@ -5,24 +5,23 @@ using System.IO;
 using System.Messaging;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
+using Rebus.Transport;
 using Message = System.Messaging.Message;
 #pragma warning disable 1998
 
-namespace Rebus.Transport.Msmq
+namespace MsmqNonTransactionalTransport.Msmq
 {
     /// <summary>
-    /// Implementation of <see cref="ITransport"/> that uses MSMQ to do its thing
+    /// Implementation of <see cref="ITransport"/> that uses non transactional MSMQ to do its thing
     /// </summary>
-    public class MsmqTransport : ITransport, IInitializable, IDisposable
+    public class MsmqNonTransactionalTransport : ITransport, IInitializable, IDisposable
     {
-        const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         const string CurrentOutgoingQueuesKey = "msmqtransport-outgoing-messagequeues";
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
@@ -32,15 +31,15 @@ namespace Rebus.Transport.Msmq
         bool _disposed;
 
         /// <summary>
-        /// Constructs the transport with the specified input queue address
+        /// Constructs the non transactional transport with the specified input queue address
         /// </summary>
-        public MsmqTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
+        public MsmqNonTransactionalTransport(string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
-
+            
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
-            if (inputQueueAddress != null)
+            if(inputQueueAddress != null)
             {
                 _inputQueueName = MakeGloballyAddressable(inputQueueAddress);
             }
@@ -49,7 +48,7 @@ namespace Rebus.Transport.Msmq
         /// <summary>
         /// Last-resort disposal of the transport's message queues
         /// </summary>
-        ~MsmqTransport()
+        ~MsmqNonTransactionalTransport()
         {
             Dispose(false);
         }
@@ -88,8 +87,7 @@ namespace Rebus.Transport.Msmq
 
             var inputQueuePath = MsmqUtil.GetPath(address);
 
-            MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
-            MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
+            MsmqUtil.EnsureQueueExists(inputQueuePath, _log, false);
         }
 
         /// <summary>
@@ -108,8 +106,7 @@ namespace Rebus.Transport.Msmq
         }
 
         /// <summary>
-        /// Sends the given transport message to the specified destination address using MSMQ. Will use the existing <see cref="MessageQueueTransaction"/> stashed
-        /// under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>, or else it will create one and add it.
+        /// Sends the given transport message to the specified destination address using non transactional MSMQ.
         /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
@@ -118,17 +115,6 @@ namespace Rebus.Transport.Msmq
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             var logicalMessage = CreateMsmqMessage(message);
-
-            var messageQueueTransaction = context.GetOrAdd(CurrentTransactionKey, () =>
-            {
-                var messageQueueTransaction1 = new MessageQueueTransaction();
-                messageQueueTransaction1.Begin();
-
-                context.OnCommitted(async () => messageQueueTransaction1.Commit());
-
-                return messageQueueTransaction1;
-            });
-
             var sendQueues = context.GetOrAdd(CurrentOutgoingQueuesKey, () =>
             {
                 var messageQueues = new ConcurrentDictionary<string, MessageQueue>(StringComparer.InvariantCultureIgnoreCase);
@@ -149,57 +135,38 @@ namespace Rebus.Transport.Msmq
             var sendQueue = sendQueues.GetOrAdd(path, _ =>
             {
                 var messageQueue = new MessageQueue(path, QueueAccessMode.Send);
-
+                
                 return messageQueue;
             });
 
-            sendQueue.Send(logicalMessage, messageQueueTransaction);
+            sendQueue.Send(logicalMessage);
         }
 
         /// <summary>
-        /// Received the next available transport message from the input queue via MSMQ. Will create a new <see cref="MessageQueueTransaction"/> and stash
-        /// it under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>. If one already exists, an exception will be thrown
-        /// (because we should never have to receive multiple messages in the same transaction)
+        /// Received the next available transport message from the input queue via MSMQ.
+        /// TODO: context is not used here anymore, but still required by the interface.
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueName == null)
             {
                 throw new InvalidOperationException("This MSMQ transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
             var queue = GetInputQueue();
-
-            if (context.Items.ContainsKey(CurrentTransactionKey))
-            {
-                throw new InvalidOperationException("Tried to receive with an already existing MSMQ queue transaction - while that is possible, it's an indication that something is wrong!");
-            }
-
-            var messageQueueTransaction = new MessageQueueTransaction();
-            messageQueueTransaction.Begin();
-
-            context.OnDisposed(() => messageQueueTransaction.Dispose());
-            context.Items[CurrentTransactionKey] = messageQueueTransaction;
-
+            
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
+                var message = queue.Receive(TimeSpan.FromSeconds(2));
                 if (message == null)
                 {
-                    messageQueueTransaction.Abort();
                     return null;
                 }
-
-                context.OnCommitted(async () =>
-                {
-                    messageQueueTransaction.Commit();
-                });
 
                 var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
 
-                await message.BodyStream.ReadAsync(body, 0, body.Length, cancellationToken);
+                await message.BodyStream.ReadAsync(body, 0, body.Length);
 
                 return new TransportMessage(headers, body);
             }
@@ -234,15 +201,24 @@ namespace Rebus.Transport.Msmq
 
             string timeToBeReceivedStr;
             var hasTimeout = headers.TryGetValue(Headers.TimeToBeReceived, out timeToBeReceivedStr);
+            string priority;
+
+            // set prio to normal as default?
+            var msgPriority = MessagePriority.Normal;
+            if(headers.TryGetValue(Headers.Priority, out priority))
+            {
+                msgPriority = (MessagePriority) Enum.Parse(typeof (MessagePriority), priority);
+            }
 
             var msmqMessage = new Message
             {
                 Extension = _extensionSerializer.Serialize(headers),
                 BodyStream = new MemoryStream(message.Body),
                 UseJournalQueue = false,
-                Recoverable = !expressDelivery,
+                Recoverable = !expressDelivery, 
                 UseDeadLetterQueue = !(expressDelivery || hasTimeout),
                 Label = GetMessageLabel(message),
+                Priority = msgPriority
             };
 
             if (hasTimeout)
@@ -307,11 +283,10 @@ namespace Rebus.Transport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
-                MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
-
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log, false);
+  
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
-                {
+                {              
                     MessageReadPropertyFilter = new MessagePropertyFilter
                     {
                         Id = true,
@@ -405,8 +380,7 @@ namespace Rebus.Transport.Msmq
         }
 
         /// <summary>
-        /// Indicates whether the queue only accepts transactions
-        /// TODO: move to an interface?
+        /// Indicates whether the queue is transactional
         /// </summary>
         public bool? IsTransactional => _inputQueue?.Transactional;
     }
