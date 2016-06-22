@@ -976,6 +976,10 @@
 * Maintain time of last read access in all data bus storages
 * Made `DataBusAttachment` serializable with all currently supported serializers (JSON.NET, Jil, Wire, and Protobuf)
 
+# 0.99.64
+
+* Fixed potential locked-file issue when multiple readers are reading the same data with the data bus
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
-using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Serialization;
 using Rebus.Time;
@@ -86,10 +85,7 @@ namespace Rebus.DataBus.FileSystem
             {
                 var fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-                await SetMetadata(id, new Dictionary<string, string>
-                {
-                    {MetadataKeys.ReadTime, RebusTime.Now.ToString("O")}
-                });
+                await UpdateLastReadTime(id);
 
                 return fileStream;
             }
@@ -126,7 +122,7 @@ namespace Rebus.DataBus.FileSystem
             }
         }
 
-        async Task SetMetadata(string id, Dictionary<string, string> dictionary)
+        async Task UpdateLastReadTime(string id)
         {
             var metadataFilePath = GetFilePath(id, MetadataFileExtension);
 
@@ -139,10 +135,7 @@ namespace Rebus.DataBus.FileSystem
                         var jsonText = await reader.ReadToEndAsync();
                         var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
 
-                        foreach (var kvp in dictionary)
-                        {
-                            metadata[kvp.Key] = kvp.Value;
-                        }
+                        metadata[MetadataKeys.ReadTime] = RebusTime.Now.ToString("O");
 
                         var newJsonText = _dictionarySerializer.SerializeToString(metadata);
 
@@ -154,6 +147,11 @@ namespace Rebus.DataBus.FileSystem
                         }
                     }
                 }
+            }
+            catch (IOException)
+            {
+                // this exception is most likely caused by a locked file because someone else is updating the 
+                // last read time  - that's ok :)
             }
             catch (Exception exception)
             {
