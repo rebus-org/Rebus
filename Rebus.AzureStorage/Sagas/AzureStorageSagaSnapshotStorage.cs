@@ -29,7 +29,7 @@ namespace Rebus.AzureStorage.Sagas
 
             _cloudStorageAccount = account;
             _containerName = containerName.ToLowerInvariant();
-            EnsureContainer();
+
         }
 
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
@@ -90,6 +90,14 @@ namespace Rebus.AzureStorage.Sagas
             var metaDataBlob = container.GetBlockBlobReference(metaDataRef);
             var json = GetBlobData(metaDataBlob);
             return JsonConvert.DeserializeObject<Dictionary<string,string>>(json, MetadataSettings);
+        }
+
+        public void DropAndRecreateContainer()
+        {
+            var client = _cloudStorageAccount.CreateCloudBlobClient();
+            var container = client.GetContainerReference(_containerName);
+            container.DeleteIfExists();
+            container.CreateIfNotExists();
         }
     }
 }

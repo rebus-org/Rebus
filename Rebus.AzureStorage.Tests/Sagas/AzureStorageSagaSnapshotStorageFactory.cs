@@ -11,15 +11,16 @@ namespace Rebus.AzureStorage.Tests.Sagas
 {
     public class AzureStorageSagaSnapshotStorageFactory : AzureStorageFactoryBase, ISagaSnapshotStorageFactory
     {
-        //private static readonly string ContainerName = $"rsss{DateTime.Now:yyyyMMddHHmmss}";
+        //private static readonly string ContainerName = $"rsss";
         private AzureStorageSagaSnapshotStorage _storage;
         public AzureStorageSagaSnapshotStorageFactory()
         {
-            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, $"rsss{DateTime.Now:yyyyMMddHHmmssffff}");
+            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, $"RebusSagaSnapshotStorageTestContainer{DateTime.Now:yyyyMMddHHmmss}");
             
         }
         public ISagaSnapshotStorage Create()
         {
+            _storage.DropAndRecreateContainer();
             _storage.EnsureContainer();
             return _storage;
         }
@@ -34,12 +35,18 @@ namespace Rebus.AzureStorage.Tests.Sagas
                     Parts = b.Name.Split('/')
                 
                 })
-                .Select(b=>new
+                .Where(x=>x.Parts.Length == 3)
+                .Select(b=>
                 {
-                    Id = Guid.ParseExact(b.Parts[0],"N"),
-                    Revision = Int32.Parse(b.Parts[1]),
-                    Part = b.Parts[2],
+                    var guid = Guid.Parse(b.Parts[0]);
+                    var i = Int32.Parse(b.Parts[1]);
+                    return new
+                    {
+                        Id = guid,
+                        Revision = i,
+                        Part = b.Parts[2],
 
+                    };
                 })
                 .GroupBy(b=>new {b.Id, b.Revision})
                 .Select(g=> new SagaDataSnapshot

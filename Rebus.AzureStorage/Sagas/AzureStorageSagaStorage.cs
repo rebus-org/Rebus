@@ -18,6 +18,7 @@ namespace Rebus.AzureStorage.Sagas
     {
         static readonly JsonSerializerSettings Settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
         const string IdPropertyName = nameof(ISagaData.Id);
+        private const string RevisionKey = "revision";
         private readonly CloudStorageAccount _cloudStorageAccount;
         private readonly string _tableName;
         private readonly string _containerName;
@@ -123,7 +124,27 @@ namespace Rebus.AzureStorage.Sagas
             {
                 throw new InvalidOperationException($"Attempted to insert saga data with ID {sagaData.Id} and revision {sagaData.Revision}, but revision must be 0 on first insert!");
             }
-            await InsertSagaBlob(sagaData);
+
+
+            var dataBlob = GetSagaDataBlob(sagaData.Id);
+            //if (await dataBlob.ExistsAsync() && dataBlob.Metadata["revision"] != revisionToUpdate.ToString())
+            //{
+            //    throw new ConcurrencyException("Update of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
+            //}
+
+            dataBlob.Properties.ContentType = "application/json";
+            dataBlob.Metadata[RevisionKey] = sagaData.Revision.ToString();
+            
+            await
+                dataBlob.UploadTextAsync(JsonConvert.SerializeObject(sagaData, Settings), Encoding.Unicode,
+                    AccessCondition.GenerateEmptyCondition(),
+                    new BlobRequestOptions { RetryPolicy = new ExponentialRetry() }, new OperationContext());
+            await dataBlob.SetPropertiesAsync(AccessCondition.GenerateEmptyCondition(),
+                new BlobRequestOptions { RetryPolicy = new ExponentialRetry() }, new OperationContext());
+            await dataBlob.SetMetadataAsync(AccessCondition.GenerateEmptyCondition(),
+                new BlobRequestOptions { RetryPolicy = new ExponentialRetry() }, new OperationContext());
+
+
             await InsertSagaCorrelationProperties(sagaData, correlationProperties);
         }
 
@@ -146,36 +167,89 @@ namespace Rebus.AzureStorage.Sagas
             }
         }
 
-        private async Task InsertSagaBlob(ISagaData sagaData)
+        public async Task Delete(ISagaData sagaData)
         {
-            try
+            var options = new BlobRequestOptions { RetryPolicy = new ExponentialRetry() };
+            var context = new OperationContext();
+
+            var dataBlob = GetSagaDataBlob(sagaData.Id);
+            if (!await dataBlob.ExistsAsync())
             {
-                var dataRef = $"{sagaData.Id:N}/data.json";
-                var client = _cloudStorageAccount.CreateCloudBlobClient();
-                var container = client.GetContainerReference(_containerName);
-                var dataBlob = container.GetBlockBlobReference(dataRef);
-                dataBlob.Properties.ContentType = "application/json";
-                await
-                    dataBlob.UploadTextAsync(JsonConvert.SerializeObject(sagaData, Settings), Encoding.Unicode,
-                        AccessCondition.GenerateEmptyCondition(),
-                        new BlobRequestOptions {RetryPolicy = new ExponentialRetry()}, new OperationContext());
-                await dataBlob.SetPropertiesAsync();
+                return;
             }
-            catch (Exception ex)
+            string leaseId = await TakeOutSagaLease(dataBlob);
+
+            await dataBlob.FetchAttributesAsync();
+            if (dataBlob.Metadata[RevisionKey] != sagaData.Revision.ToString())
             {
-                throw;
+                throw new ConcurrencyException("Update of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
             }
+            sagaData.Revision++;
+            var cloudTable = GetTable();
+            await ClearSagaIndex(sagaData, cloudTable);
+
+            var condition = AccessCondition.GenerateLeaseCondition(leaseId);
+            await dataBlob.DeleteAsync(DeleteSnapshotsOption.None, condition, options, context);
         }
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var revisionToUpdate = sagaData.Revision;
-            var cloudTable = GetTable();
-            await ClearSagaIndex(sagaData, cloudTable);
-            sagaData.Revision ++;
 
-            await InsertSagaBlob(sagaData);
-            await InsertSagaCorrelationProperties(sagaData, correlationProperties);
+
+
+
+            var options = new BlobRequestOptions { RetryPolicy = new ExponentialRetry() };
+            var context = new OperationContext();
+
+            var dataBlob = GetSagaDataBlob(sagaData.Id);
+            string leaseId = null;
+            try
+            {
+                leaseId = await TakeOutSagaLease(dataBlob);
+                await dataBlob.FetchAttributesAsync();
+                if (dataBlob.Metadata[RevisionKey] != revisionToUpdate.ToString())
+                {
+                    throw new ConcurrencyException("Update of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
+                }
+                sagaData.Revision++;
+                var cloudTable = GetTable();
+                await ClearSagaIndex(sagaData, cloudTable);
+                dataBlob.Properties.ContentType = "application/json";
+                dataBlob.Metadata[RevisionKey] = sagaData.Revision.ToString();
+                var condition = AccessCondition.GenerateLeaseCondition(leaseId);
+
+                var data = JsonConvert.SerializeObject(sagaData, Settings);
+                await dataBlob.UploadTextAsync(data, Encoding.Unicode, condition, options, context);
+                await dataBlob.SetPropertiesAsync(condition, options, context);
+                await dataBlob.SetMetadataAsync(condition, options, context);
+
+
+                await InsertSagaCorrelationProperties(sagaData, correlationProperties);
+            }
+            finally
+            {
+                if (!String.IsNullOrEmpty(leaseId))
+                {
+                    var condition = AccessCondition.GenerateLeaseCondition(leaseId);
+                    await dataBlob.ReleaseLeaseAsync(condition, options, context);
+                }
+            }
+        }
+
+
+        private async Task<string> TakeOutSagaLease(CloudBlockBlob dataBlob)
+        {
+            return await dataBlob.AcquireLeaseAsync(null);
+        }
+
+        private CloudBlockBlob GetSagaDataBlob(Guid sagaDataId)
+        {
+            var dataRef = $"{sagaDataId:N}/data.json";
+            var client = _cloudStorageAccount.CreateCloudBlobClient();
+            var container = client.GetContainerReference(_containerName);
+            var dataBlob = container.GetBlockBlobReference(dataRef);
+            return dataBlob;
         }
 
         private async Task ClearSagaIndex(ISagaData sagaData, CloudTable table)
@@ -200,16 +274,7 @@ namespace Rebus.AzureStorage.Sagas
         }
 
 
-        public async Task Delete(ISagaData sagaData)
-        {
-            var cloudTable = GetTable();
-            await ClearSagaIndex(sagaData, cloudTable);
-            var dataRef = $"{sagaData.Id:N}/data.json";
-            var client = _cloudStorageAccount.CreateCloudBlobClient();
-            var container = client.GetContainerReference(_containerName);
-            var dataBlob = container.GetBlockBlobReference(dataRef);
-            await dataBlob.DeleteIfExistsAsync();
-        }
+
 
 
         internal static List<DynamicTableEntity> CreateIndices(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
