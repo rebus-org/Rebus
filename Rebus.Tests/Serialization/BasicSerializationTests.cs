@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.DataBus;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Serialization;
+using Rebus.Tests.Serialization.Default;
 
 namespace Rebus.Tests.Serialization
 {
@@ -18,6 +21,61 @@ namespace Rebus.Tests.Serialization
         {
             _factory = new TSerializerFactory();
             _serializer = _factory.GetSerializer();
+        }
+
+        /*
+Results after informally testing # roundtrips in one second with each serializer:
+
+    Completed 1710 roundtrips in 1 s with Rebus.Serialization
+    That's 1710 roundtrips/s
+
+    Completed 3922 roundtrips in 1 s with Rebus.Jil
+    That's 3922 roundtrips/s
+
+    Completed 7855 roundtrips in 1 s with Rebus.Wire
+    That's 7855 roundtrips/s
+
+    Completed 11224 roundtrips in 1 s with Rebus.Protobuf
+    That's 11224 roundtrips/s
+
+         */
+        [TestCase(1)]
+        public void CountNumberOfObjectRoundtrips(int numberOfSeconds)
+        {
+            var testTime = TimeSpan.FromSeconds(numberOfSeconds);
+
+            var objectContainer = new RootObject
+            {
+                BigObjects = Enumerable
+                .Range(0, 100)
+                    .Select(i => new BigObject
+                    {
+                        Integer = i,
+                        String = $"This is string number {i}"
+                    })
+                    .ToList()
+            };
+
+            var headersDictionary = new Dictionary<string, string>();
+
+            var message = new Message(headersDictionary, objectContainer);
+
+            // warm up
+            var dummy = _serializer.Deserialize(_serializer.Serialize(message).Result).Result;
+
+            var stopwatch = Stopwatch.StartNew();
+            var roundtrips = 0;
+            while (true)
+            {
+                var result = _serializer.Deserialize(_serializer.Serialize(message).Result).Result;
+                roundtrips++;
+
+                if (stopwatch.Elapsed > testTime) break;
+            }
+            stopwatch.Stop();
+
+            Console.WriteLine($@"Completed {roundtrips} roundtrips in {numberOfSeconds} s with {_serializer.GetType().Namespace}
+That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
         }
 
         [Test]
