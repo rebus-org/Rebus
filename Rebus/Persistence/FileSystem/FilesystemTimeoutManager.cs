@@ -32,7 +32,7 @@ namespace Rebus.Persistence.FileSystem
             _basePath = basePath;
             _loggerFactory = loggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
-            FilesystemExclusiveLock.EnsureTargetFile(basePath, loggerFactory);
+            
         }
 
 
@@ -43,7 +43,7 @@ namespace Rebus.Persistence.FileSystem
         }
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            using (new FilesystemExclusiveLock(_lockFile))
+            using (new FilesystemExclusiveLock(_lockFile, _loggerFactory))
             {
                 var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(_tickFormat);
                 var count = Directory.EnumerateFiles(_basePath, prefix + "*.json").Count();
@@ -58,7 +58,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task<DueMessagesResult> GetDueMessages()
         {
-            var lockItem = new FilesystemExclusiveLock(_lockFile) ;
+            var lockItem = new FilesystemExclusiveLock(_lockFile, _loggerFactory);
             var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(_tickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
                 .Where(x => String.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, _tickFormat.Length) >= 0)

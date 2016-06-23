@@ -25,14 +25,14 @@ namespace Rebus.Persistence.FileSystem
             _basePath = basePath;
             _rebusLoggerFactory = rebusLoggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
-            FilesystemExclusiveLock.EnsureTargetFile(basePath, rebusLoggerFactory);
+            
         }
 
 
 
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            using (new FilesystemExclusiveLock(_lockFile))
+            using (new FilesystemExclusiveLock(_lockFile, _rebusLoggerFactory))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 if (propertyName == IdPropertyName)
@@ -52,7 +52,7 @@ namespace Rebus.Persistence.FileSystem
         }
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (new FilesystemExclusiveLock(_lockFile))
+            using (new FilesystemExclusiveLock(_lockFile, _rebusLoggerFactory))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
@@ -73,7 +73,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (new FilesystemExclusiveLock(_lockFile))
+            using (new FilesystemExclusiveLock(_lockFile, _rebusLoggerFactory))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
@@ -94,7 +94,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task Delete(ISagaData sagaData)
         {
-            using (new FilesystemExclusiveLock(_lockFile))
+            using (new FilesystemExclusiveLock(_lockFile, _rebusLoggerFactory))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = sagaData.Id;

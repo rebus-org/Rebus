@@ -11,9 +11,9 @@ namespace Rebus.Persistence.FileSystem
     public class FilesystemExclusiveLock : IDisposable
     {
         private readonly FileStream _fileStream;
-        public FilesystemExclusiveLock(string pathToLock)
+        public FilesystemExclusiveLock(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
         {
-
+            EnsureTargetFile(pathToLock, rebusLoggerFactory);
             bool success = false;
 
             //Unfortunately this is the only filesystem locking api that .net exposes
@@ -38,7 +38,7 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
-        public static void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
+        private void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
         {
             try
             {
