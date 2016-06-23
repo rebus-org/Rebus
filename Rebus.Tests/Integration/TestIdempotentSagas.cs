@@ -262,7 +262,7 @@ namespace Rebus.Tests.Integration
                 await _innerTransport.Send(destinationAddress, message, context);
             }
 
-            public async Task<TransportMessage> Receive(ITransactionContext context)
+            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
             {
                 var transportMessage = await _innerTransport.Receive(context);
                 if (transportMessage == null) return null;

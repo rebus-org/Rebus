@@ -4,7 +4,7 @@ using Rebus.Tests.Serialization;
 namespace Rebus.Wire.Tests
 {
     [TestFixture]
-    public class BasicSerializationTests : BasicSerializationTests<WireSerializerFactory>
+    public class WireSerializerSerializationTests : BasicSerializationTests<WireSerializerFactory>
     {
     }
 }

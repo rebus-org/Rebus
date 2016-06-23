@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Config;
 using Rebus.Messages;
@@ -41,7 +42,7 @@ namespace Rebus.Tests.Transport
             MessageSent(message);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             var transportMessage = await _innerTransport.Receive(context);
 

@@ -12,10 +12,7 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
 
         public FileSystemDataBusStorageFactory()
         {
-            if (Directory.Exists(DirectoryPath))
-            {
-                Directory.Delete(DirectoryPath, true);
-            }
+            CleanUpDirectory();
         }
 
         public IDataBusStorage Create()
@@ -23,6 +20,19 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
             var fileSystemDataBusStorage = new FileSystemDataBusStorage(DirectoryPath, new ConsoleLoggerFactory(false));
             fileSystemDataBusStorage.Initialize();
             return fileSystemDataBusStorage;
+        }
+
+        public void CleanUp()
+        {
+            CleanUpDirectory();
+        }
+
+        static void CleanUpDirectory()
+        {
+            if (!Directory.Exists(DirectoryPath)) return;
+
+            Console.WriteLine($"Removing directory '{DirectoryPath}'");
+            Directory.Delete(DirectoryPath, true);
         }
     }
 }

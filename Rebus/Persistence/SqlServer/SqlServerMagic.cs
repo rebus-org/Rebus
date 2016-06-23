@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace Rebus.Persistence.SqlServer
@@ -6,7 +8,7 @@ namespace Rebus.Persistence.SqlServer
     /// <summary>
     /// Wraps some nice extension methods for <see cref="SqlConnection"/> that makes it easy e.g. to query the schema
     /// </summary>
-    public static class SqlServerMagic
+    static class SqlServerMagic
     {
         /// <summary>
         /// Error code that is emitted on PK violations
@@ -24,6 +26,50 @@ namespace Rebus.Persistence.SqlServer
         public static List<string> GetTableNames(this SqlConnection connection, SqlTransaction transaction = null)
         {
             return GetNamesFrom(connection, transaction, "sys.tables");
+        }
+
+        /// <summary>
+        /// Gets the names of all tables in the current database
+        /// </summary>
+        public static Dictionary<string, SqlDbType> GetColumns(this SqlConnection connection, string tableName, SqlTransaction transaction = null)
+        {
+            var results = new Dictionary<string, SqlDbType>();
+
+            using (var command = connection.CreateCommand())
+            {
+                if (transaction != null)
+                {
+                    command.Transaction = transaction;
+                }
+
+                command.CommandText = $"SELECT [COLUMN_NAME] AS 'name', [DATA_TYPE] AS 'type' FROM [INFORMATION_SCHEMA].[COLUMNS] WHERE [TABLE_NAME] = '{tableName}'";
+
+                using (var reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var name = (string)reader["name"];
+                        var typeString = (string)reader["type"];
+                        var type = GetDbType(typeString);
+
+                        results[name] = type;
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        static SqlDbType GetDbType(string typeString)
+        {
+            try
+            {
+                return (SqlDbType)Enum.Parse(typeof(SqlDbType), typeString, true);
+            }
+            catch (Exception exception)
+            {
+                throw new FormatException($"Could not parse '{typeString}' into {typeof(SqlDbType)}", exception);
+            }
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
-﻿using Rebus.Config;
+﻿using System;
+using Rebus.Config;
 using Rebus.Logging;
 
 namespace Rebus.DataBus.FileSystem
@@ -11,8 +12,11 @@ namespace Rebus.DataBus.FileSystem
         /// <summary>
         /// Configures the data bus to store data in the file system
         /// </summary>
-        public static void UseFileSystem(this StandardConfigurer<IDataBusStorage> configurer, string directoryPath)
+        public static void StoreInFileSystem(this StandardConfigurer<IDataBusStorage> configurer, string directoryPath)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (directoryPath == null) throw new ArgumentNullException(nameof(directoryPath));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();

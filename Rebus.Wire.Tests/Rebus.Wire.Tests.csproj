@@ -44,7 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BasicSerializationTests.cs" />
+    <Compile Include="WireSerializerSerializationTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WireSerializerFactory.cs" />
   </ItemGroup>
