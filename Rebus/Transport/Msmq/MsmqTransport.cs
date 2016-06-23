@@ -161,7 +161,7 @@ namespace Rebus.Transport.Msmq
         /// it under the <see cref="CurrentTransactionKey"/> key in the given <paramref name="context"/>. If one already exists, an exception will be thrown
         /// (because we should never have to receive multiple messages in the same transaction)
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueName == null)
@@ -191,12 +191,15 @@ namespace Rebus.Transport.Msmq
                     return null;
                 }
 
-                context.OnCommitted(async () => messageQueueTransaction.Commit());
+                context.OnCommitted(async () =>
+                {
+                    messageQueueTransaction.Commit();
+                });
 
                 var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
 
-                await message.BodyStream.ReadAsync(body, 0, body.Length);
+                await message.BodyStream.ReadAsync(body, 0, body.Length, cancellationToken);
 
                 return new TransportMessage(headers, body);
             }

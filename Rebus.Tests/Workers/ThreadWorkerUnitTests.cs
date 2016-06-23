@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using FakeItEasy;
 using FluentAssertions;
@@ -172,6 +173,40 @@ namespace Rebus.Tests.Workers
             A.CallTo(() =>
                 log.Warn("Worker {0} did not stop withing {1} seconds timeout!", workerName, timeout.TotalSeconds))
                     .MustNotHaveHappened();
+        }
+
+        [Test, AutoData]
+        public async Task Stop_Logs_WhenOperationCanceledExceptionOccuresInTransport(string workerName)
+        {
+            // arrange
+            var transport = A.Fake<ITransport>();
+            var pipeline = A.Fake<IPipeline>();
+            var pipelineInvoker = A.Fake<IPipelineInvoker>();
+            var context = A.Fake<ThreadWorkerSynchronizationContext>();
+            var manager = A.Fake<ParallelOperationsManager>(fake => fake.WithArgumentsForConstructor(() => new ParallelOperationsManager(1)));
+            var backOff = A.Fake<IBackoffStrategy>();
+            var logFactory = A.Fake<IRebusLoggerFactory>();
+            var log = A.Fake<ILog>();
+            var timeout = TimeSpan.FromSeconds(10);
+
+            A.CallTo(() => logFactory.GetCurrentClassLogger())
+                .Returns(log);
+
+            A.CallTo(() => transport.Receive(A<ITransactionContext>._, A<CancellationToken>._))
+                .Throws(() => new OperationCanceledException("test"));
+
+            // system under test
+            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout);
+
+
+            // act
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            sut.Stop();
+
+            // assert
+            A.CallTo(() => log.Warn("Execution cancelled."))
+                .MustHaveHappened();
         }
     }
 }

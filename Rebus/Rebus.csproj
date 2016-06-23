@@ -85,6 +85,7 @@
     <Compile Include="DataBus\IDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataStore.cs" />
+    <Compile Include="DataBus\MetadataKeys.cs" />
     <Compile Include="DataBus\SqlServer\SqlServerDataBusConfigurationExtensions.cs" />
     <Compile Include="DataBus\SqlServer\SqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />

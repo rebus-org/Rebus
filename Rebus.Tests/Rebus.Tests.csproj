@@ -99,7 +99,10 @@
     <Compile Include="Contracts\DataBus\Factories\InMemDataBusStorageFactory.cs" />
     <Compile Include="Contracts\DataBus\InMemDataStorageTest.cs" />
     <Compile Include="Contracts\DataBus\SqlServerDataBusStorageTest.cs" />
+    <Compile Include="DataBus\ConfigurationErrorTest.cs" />
     <Compile Include="DataBus\SimpleTest.cs" />
+    <Compile Include="DataBus\TestFileSystemDataBusStorage.cs" />
+    <Compile Include="DataBus\TestSqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
@@ -146,6 +149,7 @@
     <Compile Include="Bugs\InheritedMessageCanInitiateSagaToo.cs" />
     <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
+    <Compile Include="Integration\TestSqlSagaStorageSpeed.cs" />
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Integration\TestTypeHeader.cs" />
@@ -161,7 +165,10 @@
     <Compile Include="Persistence\SqlServer\SqlServerSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Persistence\Filesystem\JsonFileSubscriptionStorageFactory.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSagaStorage.cs" />
+    <Compile Include="Persistence\SqlServer\TestSqlServerSagaStoragePerformance.cs" />
     <Compile Include="Pipeline\TestAbortMessagePipeline.cs" />
+    <Compile Include="Pipeline\TestOrdinaryLogLevels.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
@@ -169,6 +176,8 @@
     <Compile Include="Sagas\TestConflictResolution.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
+    <Compile Include="Serialization\Default\BigObject.cs" />
+    <Compile Include="Serialization\Default\RootObject.cs" />
     <Compile Include="Serialization\ISerializerFactory.cs" />
     <Compile Include="Serialization\JsonSerializerTests.cs" />
     <Compile Include="SharedCounter.cs" />
@@ -189,6 +198,7 @@
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqDiskUsage.cs" />
+    <Compile Include="Transport\Msmq\TestMsmqMangledMessage.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransportCleanup.cs" />
     <Compile Include="Transport\TransportTap.cs" />

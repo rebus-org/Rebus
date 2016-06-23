@@ -17,6 +17,8 @@ namespace Rebus.DataBus
         /// </summary>
         public static StandardConfigurer<IDataBusStorage> EnableDataBus(this OptionsConfigurer configurer)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
             configurer.Register<IDataBus>(c =>
             {
                 var dataBusStorage = GetDataBusStorage(c);
@@ -26,8 +28,8 @@ namespace Rebus.DataBus
 
             configurer.Decorate<IPipeline>(c =>
             {
+                var dataBusStorage = GetDataBusStorage(c);
                 var pipeline = c.Get<IPipeline>();
-                var dataBusStorage = c.Get<IDataBusStorage>();
 
                 var step = new DataBusIncomingStep(dataBusStorage);
 

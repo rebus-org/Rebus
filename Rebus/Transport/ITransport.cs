@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Messages;
 
@@ -21,7 +22,7 @@ namespace Rebus.Transport
         /// <summary>
         /// Receives the next message (if any) from the transport's input queue <see cref="Address"/>
         /// </summary>
-        Task<TransportMessage> Receive(ITransactionContext context);
+        Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken));
         
         /// <summary>
         /// Gets the global address of the transport's input queue

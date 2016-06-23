@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
@@ -154,50 +155,6 @@ namespace Rebus.AzureServiceBus
                 .Enqueue(message);
         }
 
-        static BrokeredMessage CreateBrokeredMessage(TransportMessage message)
-        {
-            var headers = message.Headers;
-            var brokeredMessage = new BrokeredMessage(new MemoryStream(message.Body), true);
-
-            foreach (var kvp in headers)
-            {
-                brokeredMessage.Properties[kvp.Key] = PossiblyLimitLength(kvp.Value);
-            }
-
-            if (headers.ContainsKey(Headers.TimeToBeReceived))
-            {
-                var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
-                var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
-                brokeredMessage.TimeToLive = timeToBeReceived;
-            }
-
-            string contentType;
-            if (headers.TryGetValue(Headers.ContentType, out contentType))
-            {
-                brokeredMessage.ContentType = contentType;
-            }
-
-            string correlationId;
-            if (headers.TryGetValue(Headers.CorrelationId, out correlationId))
-            {
-                brokeredMessage.CorrelationId = correlationId;
-            }
-
-            brokeredMessage.Label = message.GetMessageLabel();
-
-            return brokeredMessage;
-        }
-
-        static string PossiblyLimitLength(string str)
-        {
-            const int maxLengthPrettySafe = 16300;
-
-            if (str.Length < maxLengthPrettySafe) return str;
-
-            return
-                $"{str.Substring(0, 8000)} (... cut out because length exceeded {maxLengthPrettySafe} characters ...) {str.Substring(str.Length - 8000)}";
-        }
-
         /// <summary>
         /// Should return a new <see cref="Retrier"/>, fully configured to correctly "accept" the right exceptions
         /// </summary>
@@ -209,14 +166,14 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
             {
                 throw new InvalidOperationException("This Azure Service Bus transport does not have an input queue, hence it is not possible to reveive anything");
             }
 
-            using (await _bottleneck.Enter())
+            using (await _bottleneck.Enter(cancellationToken))
             {
                 var brokeredMessage = await ReceiveBrokeredMessage();
 
@@ -287,7 +244,7 @@ namespace Rebus.AzureServiceBus
                             {
                                 await GetRetrier().Execute(async () =>
                                 {
-                                    using (var brokeredMessageToSend = CreateBrokeredMessage(message))
+                                    using (var brokeredMessageToSend = MsgHelpers.CreateBrokeredMessage(message))
                                     {
                                         try
                                         {
@@ -355,7 +312,10 @@ namespace Rebus.AzureServiceBus
 
                 var client = GetQueueClient(queueAddress);
 
-                var brokeredMessages = (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
+                // Timeout can be specified in ASB ConnectionString Endpoint=sb:://...;OperationTimeout=00:00:10
+                var brokeredMessages = _receiveTimeout.HasValue
+                    ? (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch, _receiveTimeout.Value)).ToList()
+                    : (await client.ReceiveBatchAsync(_numberOfMessagesToPrefetch)).ToList();
 
                 _ignorant.Reset();
 

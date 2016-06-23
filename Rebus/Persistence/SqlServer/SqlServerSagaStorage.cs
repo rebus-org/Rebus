@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Reflection;
@@ -17,18 +19,20 @@ namespace Rebus.Persistence.SqlServer
     /// Correlation properties are stored in a separate index table, allowing for looking up saga data instanes based on the configured correlation
     /// properties
     /// </summary>
-    public class SqlServerSagaStorage : ISagaStorage
+    public class SqlServerSagaStorage : ISagaStorage, IInitializable
     {
         const int MaximumSagaDataTypeNameLength = 40;
         const string IdPropertyName = nameof(ISagaData.Id);
         const bool IndexNullProperties = false;
 
         static readonly JsonSerializerSettings Settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
+        static readonly Encoding JsonTextEncoding = Encoding.UTF8;
 
         readonly ILog _log;
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _dataTableName;
         readonly string _indexTableName;
+        bool _oldFormatDataTable;
 
         /// <summary>
         /// Constructs the saga storage, using the specified connection provider and tables for persistence.
@@ -43,6 +47,24 @@ namespace Rebus.Persistence.SqlServer
             _connectionProvider = connectionProvider;
             _dataTableName = dataTableName;
             _indexTableName = indexTableName;
+        }
+
+        /// <summary>
+        /// Initializes the storage by performing a check on the schema to see whether we should use
+        /// </summary>
+        public void Initialize()
+        {
+            using (var connection = _connectionProvider.GetConnection().Result)
+            {
+                var columns = connection.GetColumns(_dataTableName);
+                var datacolumn = columns.FirstOrDefault(c => string.Equals(c.Name, "data", StringComparison.InvariantCultureIgnoreCase));
+
+                // if there is no data column at this point, it has probably just not been created yet
+                if (datacolumn == null) { return; }
+
+                // remember to use "old format" if the data column is NVarChar
+                _oldFormatDataTable = datacolumn.Type == SqlDbType.NVarChar;
+            }
         }
 
         /// <summary>
@@ -61,7 +83,7 @@ namespace Rebus.Persistence.SqlServer
 
                 var hasDataTable = tableNames.Contains(_dataTableName, StringComparer.OrdinalIgnoreCase);
                 var hasIndexTable = tableNames.Contains(_indexTableName, StringComparer.OrdinalIgnoreCase);
-                
+
                 if (hasDataTable && hasIndexTable)
                 {
                     return;
@@ -83,30 +105,30 @@ namespace Rebus.Persistence.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}] (
+                    command.CommandText = $@"
+CREATE TABLE [dbo].[{_dataTableName}] (
 	[id] [uniqueidentifier] NOT NULL,
 	[revision] [int] NOT NULL,
-	[data] [nvarchar](max) NOT NULL,
-    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+	[data] [varbinary](max) NOT NULL,
+    CONSTRAINT [PK_{_dataTableName}] PRIMARY KEY CLUSTERED 
     (
 	    [id] ASC
     )
 )
-", _dataTableName);
+";
 
                     await command.ExecuteNonQueryAsync();
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}] (
+                    command.CommandText = $@"
+CREATE TABLE [dbo].[{_indexTableName}] (
 	[saga_type] [nvarchar](40) NOT NULL,
 	[key] [nvarchar](200) NOT NULL,
 	[value] [nvarchar](200) NOT NULL,
 	[saga_id] [uniqueidentifier] NOT NULL,
-    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    CONSTRAINT [PK_{_indexTableName}] PRIMARY KEY CLUSTERED 
     (
 	    [key] ASC,
 	    [value] ASC,
@@ -114,23 +136,24 @@ CREATE TABLE [dbo].[{0}] (
     )
 )
 
-CREATE NONCLUSTERED INDEX [IX_{0}_saga_id] ON [dbo].[{0}]
+CREATE NONCLUSTERED INDEX [IX_{_indexTableName}_saga_id] ON [dbo].[{_indexTableName}]
 (
 	[saga_id] ASC
 )
-", _indexTableName);
+";
 
                     await command.ExecuteNonQueryAsync();
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-ALTER TABLE [dbo].[{0}] WITH CHECK 
-    ADD CONSTRAINT [FK_{1}_id] FOREIGN KEY([saga_id])
+                    command.CommandText =
+                        $@"
+ALTER TABLE [dbo].[{_indexTableName}] WITH CHECK 
+    ADD CONSTRAINT [FK_{_dataTableName}_id] FOREIGN KEY([saga_id])
 
-REFERENCES [dbo].[{1}] ([id]) ON DELETE CASCADE
-", _indexTableName, _dataTableName);
+REFERENCES [dbo].[{_dataTableName}] ([id]) ON DELETE CASCADE
+";
 
                     await command.ExecuteNonQueryAsync();
                 }
@@ -146,6 +169,43 @@ ALTER TABLE [dbo].[{_indexTableName}] CHECK CONSTRAINT [FK_{_dataTableName}_id]
                 }
 
                 await connection.Complete();
+            }
+        }
+
+        void VerifyDataTableSchema(string dataTableName, IDbConnection connection)
+        {
+            //  [id] [uniqueidentifier] NOT NULL,
+            //	[revision] [int] NOT NULL,
+            //	[data] [varbinary](max) NOT NULL,
+            var expectedDataTypes = new Dictionary<string, SqlDbType>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                {"id", SqlDbType.UniqueIdentifier },
+                {"revision", SqlDbType.Int },
+                {"data", SqlDbType.VarBinary },
+            };
+
+            var columns = connection.GetColumns(dataTableName);
+
+            foreach (var column in columns)
+            {
+                // we skip columns we don't know about - don't prevent people from adding their own columns
+                if (!expectedDataTypes.ContainsKey(column.Name)) continue;
+
+                var expectedDataType = expectedDataTypes[column.Name];
+
+                if (column.Type == expectedDataType) continue;
+
+                // special case: migrating from Rebus 0.99.59 to 0.99.60
+                if (column.Name == "data" && column.Type == SqlDbType.NVarChar && expectedDataType == SqlDbType.VarBinary)
+                {
+                    throw new RebusApplicationException(@"Sorry, but the [data] column data type was changed from NVarChar(MAX) to VarBinary(MAX) in Rebus 0.99.60.
+
+This was done because it turned out that SQL Server was EXTREMELY SLOW to load a saga's data when it was saved as NVarChar - you can expect a reduction in saga data loading time to about 1/10 of the previous time from Rebus version 0.99.60 and on.
+
+Unfortunately, Rebus cannot help migrating any existing pieces of saga data :( so we suggest you wait for a good time when the saga data table is empty, and then you simply wipe the tables and let Rebus (re-)create them.");
+                }
+
+                throw new RebusApplicationException($"The column [{column.Name}] has the type {column.Type} and not the expected {expectedDataType} data type!");
             }
         }
 
@@ -171,13 +231,12 @@ ALTER TABLE [dbo].[{_indexTableName}] CHECK CONSTRAINT [FK_{_dataTableName}_id]
                     {
                         command.CommandText =
                             $@"
-SELECT TOP 1 [saga].[data] as 'data' FROM [{_dataTableName}] [saga] 
-    JOIN [{
-                                _indexTableName
-                                }] [index] ON [saga].[id] = [index].[saga_id] 
+SELECT TOP 1 [saga].[data] AS 'data' FROM [{_dataTableName}] [saga] 
+    JOIN [{_indexTableName}] [index] ON [saga].[id] = [index].[saga_id] 
 WHERE [index].[saga_type] = @saga_type
     AND [index].[key] = @key 
-    AND [index].[value] = @value";
+    AND [index].[value] = @value
+";
 
                         var sagaTypeName = GetSagaTypeName(sagaDataType);
 
@@ -189,18 +248,20 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.Add("value", SqlDbType.NVarChar, correlationPropertyValue.Length).Value = correlationPropertyValue;
 
-                    var dbValue = await command.ExecuteScalarAsync();
-                    var value = (string)dbValue;
-                    if (value == null) return null;
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        if (!await reader.ReadAsync()) return null;
 
-                    try
-                    {
-                        return (ISagaData)JsonConvert.DeserializeObject(value, Settings);
-                    }
-                    catch (Exception exception)
-                    {
-                        throw new ApplicationException(
-                            $"An error occurred while attempting to deserialize '{value}' into a {sagaDataType}", exception);
+                        var value = GetData(reader);
+
+                        try
+                        {
+                            return (ISagaData)JsonConvert.DeserializeObject(value, Settings);
+                        }
+                        catch (Exception exception)
+                        {
+                            throw new ApplicationException($"An error occurred while attempting to deserialize '{value}' into a {sagaDataType}", exception);
+                        }
                     }
                 }
             }
@@ -229,7 +290,7 @@ WHERE [index].[saga_type] = @saga_type
 
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("revision", SqlDbType.Int).Value = sagaData.Revision;
-                    command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+                    SetData(command, data);
 
                     command.CommandText = $@"INSERT INTO [{_dataTableName}] ([id], [revision], [data]) VALUES (@id, @revision, @data)";
                     try
@@ -287,12 +348,11 @@ WHERE [index].[saga_type] = @saga_type
                         command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                         command.Parameters.Add("current_revision", SqlDbType.Int).Value = revisionToUpdate;
                         command.Parameters.Add("next_revision", SqlDbType.Int).Value = sagaData.Revision;
-                        command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+                        SetData(command, data);
 
                         command.CommandText =
                             $@"
-UPDATE [{_dataTableName
-                                }] 
+UPDATE [{_dataTableName}] 
     SET [data] = @data, [revision] = @next_revision 
     WHERE [id] = @id AND [revision] = @current_revision";
 
@@ -330,11 +390,12 @@ UPDATE [{_dataTableName
             {
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText =
-                        $@"DELETE FROM [{_dataTableName}] WHERE [id] = @id AND [revision] = @current_revision;";
+                    command.CommandText = $@"DELETE FROM [{_dataTableName}] WHERE [id] = @id AND [revision] = @current_revision;";
                     command.Parameters.Add("id", SqlDbType.UniqueIdentifier).Value = sagaData.Id;
                     command.Parameters.Add("current_revision", SqlDbType.Int).Value = sagaData.Revision;
+
                     var rows = await command.ExecuteNonQueryAsync();
+
                     if (rows == 0)
                     {
                         throw new ConcurrencyException("Delete of saga with ID {0} did not succeed because someone else beat us to it", sagaData.Id);
@@ -350,6 +411,31 @@ UPDATE [{_dataTableName
 
                 await connection.Complete();
             }
+        }
+
+        void SetData(SqlCommand command, string data)
+        {
+            if (_oldFormatDataTable)
+            {
+                command.Parameters.Add("data", SqlDbType.NVarChar).Value = data;
+            }
+            else
+            {
+                command.Parameters.Add("data", SqlDbType.VarBinary).Value = JsonTextEncoding.GetBytes(data);
+            }
+        }
+
+        string GetData(SqlDataReader reader)
+        {
+            if (_oldFormatDataTable)
+            {
+                var data = (string)reader["data"];
+                return data;
+            }
+
+            var bytes = (byte[])reader["data"];
+            var value = JsonTextEncoding.GetString(bytes);
+            return value;
         }
 
         static string GetCorrelationPropertyValue(object propertyValue)
@@ -379,8 +465,7 @@ UPDATE [{_dataTableName
                 var inserts = parameters
                     .Select(a =>
                         $@"
-INSERT INTO [{_indexTableName
-                            }]
+INSERT INTO [{_indexTableName}]
     ([saga_type], [key], [value], [saga_id]) 
 VALUES
     (@saga_type, @{
@@ -426,9 +511,7 @@ VALUES
             if (sagaTypeName.Length > MaximumSagaDataTypeNameLength)
             {
                 throw new InvalidOperationException(
-                    $@"Sorry, but the maximum length of the name of a saga data class is currently limited to {
-                        MaximumSagaDataTypeNameLength
-                        } characters!
+                    $@"Sorry, but the maximum length of the name of a saga data class is currently limited to {MaximumSagaDataTypeNameLength} characters!
 This is due to a limitation in SQL Server, where compound indexes have a 900 byte upper size limit - and
 since the saga index needs to be able to efficiently query by saga type, key, and value at the same time,
 there's room for only 200 characters as the key, 200 characters as the value, and 40 characters as the

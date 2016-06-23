@@ -9,7 +9,7 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
     {
         public SqlServerDataBusStorageFactory()
         {
-            //SqlTestHelper.DropTable("databus");
+            SqlTestHelper.DropTable("databus");
         }
 
         public IDataBusStorage Create()
@@ -19,6 +19,11 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
             var sqlServerDataBusStorage = new SqlServerDataBusStorage(connectionProvider, "databus", true, consoleLoggerFactory);
             sqlServerDataBusStorage.Initialize();
             return sqlServerDataBusStorage;
+        }
+
+        public void CleanUp()
+        {
+            SqlTestHelper.DropTable("databus");
         }
     }
 }

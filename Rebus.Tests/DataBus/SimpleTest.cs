@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ using Rebus.Activation;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.DataBus;
+using Rebus.DataBus.FileSystem;
 using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
@@ -40,7 +42,8 @@ namespace Rebus.Tests.DataBus
                 .Routing(r => r.TypeBased().Map<MessageWithAttachment>("receiver"))
                 .Options(o =>
                 {
-                    o.EnableDataBus().StoreInMemory(_inMemDataStore);
+                    o.EnableDataBus()
+                        .StoreInMemory(_inMemDataStore);
                 })
                 .Start();
 
@@ -65,8 +68,9 @@ namespace Rebus.Tests.DataBus
                 var attachment = message.Attachment;
 
                 using (var destination = File.OpenWrite(destinationFilePath))
+                using (var stream = await attachment.OpenRead())
                 {
-                    await attachment.OpenRead().CopyToAsync(destination);
+                    await stream.CopyToAsync(destination);
                 }
 
                 dataSuccessfullyCopied.Set();
@@ -75,7 +79,11 @@ namespace Rebus.Tests.DataBus
             // send a message that sends the contents of a file as an attachment
             using (var source = File.OpenRead(sourceFilePath))
             {
-                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source);
+                var optionalMetadata = new Dictionary<string, string>
+                {
+                    {"username", Thread.CurrentPrincipal.Identity.Name }
+                };
+                var attachment = await _senderBus.Advanced.DataBus.CreateAttachment(source, optionalMetadata);
 
                 await _senderBus.Send(new MessageWithAttachment
                 {

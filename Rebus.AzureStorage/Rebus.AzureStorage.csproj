@@ -63,7 +63,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AzureEx.cs" />
     <Compile Include="Config\AzureStorageQueuesConfigurationExtensions.cs" />
+    <Compile Include="DataBus\AzureBlobsDataBusStorage.cs" />
+    <Compile Include="DataBus\AzureBlobsDataBusStorageConfigurationExtensions.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransport.cs" />
     <Compile Include="DisabledTimeoutManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
