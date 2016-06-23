@@ -11,50 +11,24 @@ using Rebus.Timeouts;
 
 namespace Rebus.Persistence.FileSystem
 {
+    /// <summary>
+    /// Timeouts in the filesystem!
+    /// </summary>
     public class FilesystemTimeoutManager : ITimeoutManager
     { 
         private readonly string _basePath;
-        private readonly string _lockFile;
+        //private readonly string _lockFile;
         private static readonly string _tickFormat;
-
+        private static readonly ReaderWriterLockSlim _lock= new ReaderWriterLockSlim();
         static FilesystemTimeoutManager()
         {
             _tickFormat = new StringBuilder().Append('0', Int32.MaxValue.ToString().Length).ToString();
         }
 
-        private class FilesystemLock : IDisposable
-        {
-            private readonly FileStream _fs;
-            public FilesystemLock(string path)
-            {
-                _fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-                bool success = false;
-                while (!success)
-                {
-                    try
-                    {
-                        _fs.Lock(0,1);
-                        success = true;
-                    }
-                    catch (IOException ex)
-                    {
-                        success = false;
-                        System.Threading.Thread.Sleep(10);
-                    }
-                }
-
-            }
-
-            public void Dispose()
-            {
-                _fs.Unlock(0,1);
-            }
-        }
-
         public FilesystemTimeoutManager(string basePath)
         {
             _basePath = basePath;
-            _lockFile = Path.Combine(basePath, "lock.txt");
+            //_lockFile = Path.Combine(basePath, "lock.txt");
             Ensure(basePath);
         }
 
@@ -64,14 +38,14 @@ namespace Rebus.Persistence.FileSystem
             {
                 Directory.CreateDirectory(basePath);
             }
-            if (!File.Exists(_lockFile))
-            {
-                try
-                {
-                    File.WriteAllText(_lockFile, "A");
-                }
-                catch (IOException) { }
-            }
+            //if (!File.Exists(_lockFile))
+            //{
+            //    try
+            //    {
+            //        File.WriteAllText(_lockFile, "A");
+            //    }
+            //    catch (IOException) { }
+            //}
         }
 
         public class Timeout
@@ -81,7 +55,7 @@ namespace Rebus.Persistence.FileSystem
         }
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            using(new FilesystemLock(_lockFile))
+            using(_lock.WriteLock())
             {
                 var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(_tickFormat);
                 var count = Directory.EnumerateFiles(_basePath, prefix + "*.json").Count();
@@ -96,7 +70,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task<DueMessagesResult> GetDueMessages()
         {
-            var lockItem = new FilesystemLock(_lockFile);
+            var lockItem = _lock.WriteLock();
             var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(_tickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
                 .Where(x => String.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, _tickFormat.Length) >= 0)
