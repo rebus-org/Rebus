@@ -5,6 +5,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Rebus.Auditing.Sagas;
 using Rebus.AzureStorage.Sagas;
 using Rebus.AzureStorage.Tests.Transport;
+using Rebus.Logging;
 using Rebus.Tests.Contracts.Sagas;
 
 namespace Rebus.AzureStorage.Tests.Sagas
@@ -15,7 +16,7 @@ namespace Rebus.AzureStorage.Tests.Sagas
         private AzureStorageSagaSnapshotStorage _storage;
         public AzureStorageSagaSnapshotStorageFactory()
         {
-            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, $"RebusSagaSnapshotStorageTestContainer{DateTime.Now:yyyyMMddHHmmss}");
+            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, new ConsoleLoggerFactory(false),  $"RebusSagaSnapshotStorageTestContainer{DateTime.Now:yyyyMMddHHmmss}");
             
         }
         public ISagaSnapshotStorage Create()

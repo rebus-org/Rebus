@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Rebus.AzureStorage.Subscriptions;
 using Rebus.AzureStorage.Tests.Transport;
+using Rebus.Logging;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts.Subscriptions;
 
@@ -16,7 +17,7 @@ namespace Rebus.AzureStorage.Tests.Subscriptions
         private static readonly string TableName = $"RebusSubscriptionsTest{DateTime.Now:yyyyMMddHHmmss}";
         public ISubscriptionStorage Create()
         {
-            return new AzureStorageSubscriptionStorage(StorageAccount, false,
+            return new AzureStorageSubscriptionStorage(StorageAccount, new ConsoleLoggerFactory(false), false,
                     TableName);
             
         }
@@ -30,13 +31,13 @@ namespace Rebus.AzureStorage.Tests.Subscriptions
 
         public static void CreateTables()
         {
-            var sub = new AzureStorageSubscriptionStorage(StorageAccount, false, TableName);
+            var sub = new AzureStorageSubscriptionStorage(StorageAccount, new ConsoleLoggerFactory(false),  false, TableName);
             sub.EnsureCreated();
         }
 
         public static void DropTables()
         {
-            var sub = new AzureStorageSubscriptionStorage(StorageAccount, false, TableName);
+            var sub = new AzureStorageSubscriptionStorage(StorageAccount, new ConsoleLoggerFactory(false),  false, TableName);
             sub.DropTables();
         }
     }

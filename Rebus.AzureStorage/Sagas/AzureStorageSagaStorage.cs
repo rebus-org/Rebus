@@ -20,11 +20,13 @@ namespace Rebus.AzureStorage.Sagas
         const string IdPropertyName = nameof(ISagaData.Id);
         private const string RevisionKey = "revision";
         private readonly CloudStorageAccount _cloudStorageAccount;
+        private readonly IRebusLoggerFactory _loggerFactory;
         private readonly string _tableName;
         private readonly string _containerName;
 
         public void EnsureCreated()
         {
+            _loggerFactory.GetCurrentClassLogger().Info("Auto creating Container {0}, Table {1}", _containerName, _tableName);
             var cloudTableClient = _cloudStorageAccount.CreateCloudTableClient();
             var cloudBlobClient = _cloudStorageAccount.CreateCloudBlobClient();
             var cont = cloudBlobClient.GetContainerReference(_containerName);
@@ -43,10 +45,12 @@ namespace Rebus.AzureStorage.Sagas
         }
 
         public AzureStorageSagaStorage(CloudStorageAccount cloudStorageAccount,
+            IRebusLoggerFactory loggerFactory,
             string tableName = "RebusSagaIndex", 
             string containerName = "RebusSagaStorage")
         {
             _cloudStorageAccount = cloudStorageAccount;
+            _loggerFactory = loggerFactory;
             _tableName = tableName;
             _containerName = containerName.ToLowerInvariant();
             EnsureCreated();

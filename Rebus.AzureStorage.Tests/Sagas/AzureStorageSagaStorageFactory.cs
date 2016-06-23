@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Rebus.AzureStorage.Sagas;
 using Rebus.AzureStorage.Tests.Transport;
+using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
 
@@ -19,7 +20,7 @@ namespace Rebus.AzureStorage.Tests.Sagas
         {
             lock (ContainerName)
             {
-                var s = new AzureStorageSagaStorage(StorageAccount, TableName, ContainerName);
+                var s = new AzureStorageSagaStorage(StorageAccount, new ConsoleLoggerFactory(false), TableName, ContainerName);
 
                 return s;
             }

@@ -8,6 +8,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Newtonsoft.Json;
 using Rebus.Auditing.Sagas;
+using Rebus.Logging;
 using Rebus.Sagas;
 
 namespace Rebus.AzureStorage.Sagas
@@ -15,6 +16,7 @@ namespace Rebus.AzureStorage.Sagas
     public class AzureStorageSagaSnapshotStorage : ISagaSnapshotStorage
     {
         private readonly CloudStorageAccount _cloudStorageAccount;
+        private readonly IRebusLoggerFactory _loggerFactory;
         private readonly string _containerName;
 
         static readonly JsonSerializerSettings DataSettings =
@@ -24,10 +26,11 @@ namespace Rebus.AzureStorage.Sagas
             new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.None };
 
 
-        public AzureStorageSagaSnapshotStorage(CloudStorageAccount account, string containerName = "RebusSagaStorage")
+        public AzureStorageSagaSnapshotStorage(CloudStorageAccount account, IRebusLoggerFactory loggerFactory, string containerName = "RebusSagaStorage")
         {
 
             _cloudStorageAccount = account;
+            _loggerFactory = loggerFactory;
             _containerName = containerName.ToLowerInvariant();
 
         }
@@ -57,6 +60,7 @@ namespace Rebus.AzureStorage.Sagas
 
         public void EnsureContainer()
         {
+            _loggerFactory.GetCurrentClassLogger().Info("Auto creating container {0}", _containerName);
             var client = _cloudStorageAccount.CreateCloudBlobClient();
             var container = client.GetContainerReference(_containerName);
             container.CreateIfNotExists();

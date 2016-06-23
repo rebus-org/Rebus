@@ -2,6 +2,7 @@
 using Microsoft.WindowsAzure.Storage;
 using Rebus.Config;
 using Rebus.DataBus;
+using Rebus.Logging;
 
 namespace Rebus.AzureStorage.DataBus
 {
@@ -38,7 +39,7 @@ namespace Rebus.AzureStorage.DataBus
 
         static void Configure(StandardConfigurer<IDataBusStorage> configurer, string containerName, CloudStorageAccount cloudStorageAccount)
         {
-            configurer.Register(c => new AzureBlobsDataBusStorage(cloudStorageAccount, containerName));
+            configurer.Register(c => new AzureBlobsDataBusStorage(cloudStorageAccount,containerName, c.Get<IRebusLoggerFactory>()));
         }
     }
 }

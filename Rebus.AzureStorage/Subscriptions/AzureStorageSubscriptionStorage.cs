@@ -17,10 +17,13 @@ namespace Rebus.AzureStorage.Subscriptions
     {
 
         private readonly CloudStorageAccount _cloudStorageAccount;
+        private readonly bool _isCentralized;
+        private readonly IRebusLoggerFactory _loggerFactory;
         private readonly string _tableName;
 
         public void EnsureCreated()
         {
+            _loggerFactory.GetCurrentClassLogger().Info("Auto creating table {0}", _tableName);
             var client = _cloudStorageAccount.CreateCloudTableClient();
             var t = client.GetTableReference(_tableName);
             t.CreateIfNotExists();
@@ -36,10 +39,13 @@ namespace Rebus.AzureStorage.Subscriptions
         }
 
         public AzureStorageSubscriptionStorage(CloudStorageAccount cloudStorageAccount,
+            IRebusLoggerFactory loggerFactory,
             bool isCentralized = false, 
             string tableName = "RebusSubscriptions")
         {
             _cloudStorageAccount = cloudStorageAccount;
+            _isCentralized = isCentralized;
+            _loggerFactory = loggerFactory;
             _tableName = tableName;
         }
 

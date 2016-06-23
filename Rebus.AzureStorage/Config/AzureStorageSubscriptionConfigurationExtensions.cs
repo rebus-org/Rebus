@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAzure.Storage;
 using Rebus.AzureStorage.Subscriptions;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Subscriptions;
 
 namespace Rebus.AzureStorage.Config
@@ -26,10 +27,7 @@ namespace Rebus.AzureStorage.Config
         }
         static void Register(StandardConfigurer<ISubscriptionStorage> configurer, string tableName, CloudStorageAccount storageAccount, bool isCentralized = false)
         {
-            configurer.Register(c =>
-            {
-                return new AzureStorageSubscriptionStorage(storageAccount, isCentralized, tableName);
-            });
+            configurer.Register(c => new AzureStorageSubscriptionStorage(storageAccount, c.Get<IRebusLoggerFactory>(), isCentralized, tableName));
 
  
         }

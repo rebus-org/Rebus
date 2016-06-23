@@ -2,6 +2,7 @@ using Microsoft.WindowsAzure.Storage;
 using Rebus.Auditing.Sagas;
 using Rebus.AzureStorage.Sagas;
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Sagas;
 
 namespace Rebus.AzureStorage.Config
@@ -27,13 +28,13 @@ namespace Rebus.AzureStorage.Config
             string tableName = "RebusSagaIndex",
             string containerName = "RebusSagaStorage")
         {
-            configurer.Register(c=>new AzureStorageSagaStorage(cloudStorageAccount, tableName, containerName));
+            configurer.Register(c=>  new AzureStorageSagaStorage(cloudStorageAccount, c.Get<IRebusLoggerFactory>(), tableName, containerName));
         }
 
         public static void UseAzureStorage(this StandardConfigurer<ISagaSnapshotStorage> configurer,
             CloudStorageAccount cloudStorageAccount, string containerName = "RebusSagaStorage")
         {
-            configurer.Register(c=>new AzureStorageSagaSnapshotStorage(cloudStorageAccount, containerName));
+            configurer.Register(c=>new AzureStorageSagaSnapshotStorage(cloudStorageAccount, c.Get<IRebusLoggerFactory>(), containerName));
         }
     }
 }
