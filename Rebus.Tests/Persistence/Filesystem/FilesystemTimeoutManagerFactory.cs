@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using Rebus.Logging;
 using Rebus.Persistence.FileSystem;
 using Rebus.Tests.Contracts.Timeouts;
 using Rebus.Tests.Persistence.SqlServer;
@@ -21,7 +22,7 @@ namespace Rebus.Tests.Persistence.Filesystem
         private string _basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,$"Timeouts{DateTime.Now:yyyyMMddHHmmssffff}");
         public ITimeoutManager Create()
         {
-            return new FilesystemTimeoutManager(_basePath);
+            return new FilesystemTimeoutManager(_basePath, new ConsoleLoggerFactory(false));
         }
 
         public void Cleanup()

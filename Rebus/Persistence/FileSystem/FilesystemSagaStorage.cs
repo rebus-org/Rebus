@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
+using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
 
@@ -14,14 +15,17 @@ namespace Rebus.Persistence.FileSystem
     public class FilesystemSagaStorage : ISagaStorage
     {
         private readonly string _basePath;
+        private readonly IRebusLoggerFactory _rebusLoggerFactory;
         private readonly string _lockFile;
         const string IdPropertyName = nameof(ISagaData.Id);
         
 
-        public FilesystemSagaStorage(string basePath)
+        public FilesystemSagaStorage(string basePath, IRebusLoggerFactory rebusLoggerFactory)
         {
             _basePath = basePath;
+            _rebusLoggerFactory = rebusLoggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
+            FilesystemExclusiveLock.EnsureTargetFile(basePath, rebusLoggerFactory);
         }
 
 

@@ -1,4 +1,5 @@
 using Rebus.Config;
+using Rebus.Logging;
 using Rebus.Sagas;
 
 namespace Rebus.Persistence.FileSystem
@@ -15,7 +16,7 @@ namespace Rebus.Persistence.FileSystem
         /// <param name="basePath">the path to store sagas under</param>
         public static void UseFilesystem(this StandardConfigurer<ISagaStorage> configurer, string basePath)
         {
-            configurer.Register(c=>new FilesystemSagaStorage(basePath));
+            configurer.Register(c=>new FilesystemSagaStorage(basePath, c.Get<IRebusLoggerFactory>()));
         }
     }
 }

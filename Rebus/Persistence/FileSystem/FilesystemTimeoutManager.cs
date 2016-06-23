@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Rebus.Logging;
 using Rebus.Time;
 using Rebus.Timeouts;
 
@@ -17,6 +18,7 @@ namespace Rebus.Persistence.FileSystem
     public class FilesystemTimeoutManager : ITimeoutManager
     { 
         private readonly string _basePath;
+        private readonly IRebusLoggerFactory _loggerFactory;
         private readonly string _lockFile;
         private static readonly string _tickFormat;
         
@@ -25,21 +27,14 @@ namespace Rebus.Persistence.FileSystem
             _tickFormat = new StringBuilder().Append('0', Int32.MaxValue.ToString().Length).ToString();
         }
 
-        public FilesystemTimeoutManager(string basePath)
+        public FilesystemTimeoutManager(string basePath, IRebusLoggerFactory loggerFactory)
         {
             _basePath = basePath;
+            _loggerFactory = loggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
-            Ensure(basePath);
+            FilesystemExclusiveLock.EnsureTargetFile(basePath, loggerFactory);
         }
 
-        private void Ensure(string basePath)
-        {
-            if (!Directory.Exists(basePath))
-            {
-                Directory.CreateDirectory(basePath);
-            }
-
-        }
 
         public class Timeout
         {

@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem
 {
@@ -12,7 +13,7 @@ namespace Rebus.Persistence.FileSystem
         private readonly FileStream _fileStream;
         public FilesystemExclusiveLock(string pathToLock)
         {
-            EnsureTargetFile(pathToLock);
+
             bool success = false;
 
             //Unfortunately this is the only filesystem locking api that .net exposes
@@ -37,12 +38,13 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
-        private void EnsureTargetFile(string pathToLock)
+        public static void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
         {
             try
             {
                 if (!Directory.Exists(Path.GetDirectoryName(pathToLock)))
                 {
+                    rebusLoggerFactory.GetCurrentClassLogger().Info("Autocreating {0}", pathToLock);
                     Directory.CreateDirectory(Path.GetDirectoryName(pathToLock));
                 }
             }
