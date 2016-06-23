@@ -101,8 +101,13 @@
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Injection\Injectionist.cs" />
     <Compile Include="Messages\HeaderAttribute.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemSagaIndex.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemSagaStorage.cs" />
+    <Compile Include="Persistence\FileSystem\FileSystemSagaStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemTimeoutManager.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemTimeoutStorageConfigurationExtensions.cs" />
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />

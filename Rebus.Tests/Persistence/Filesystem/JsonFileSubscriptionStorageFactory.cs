@@ -4,7 +4,7 @@ using Rebus.Persistence.FileSystem;
 using Rebus.Subscriptions;
 using Rebus.Tests.Contracts.Subscriptions;
 
-namespace Rebus.Tests.Persistence.SqlServer
+namespace Rebus.Tests.Persistence.Filesystem
 {
     public class JsonFileSubscriptionStorageFactory : ISubscriptionStorageFactory
     {
