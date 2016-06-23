@@ -980,6 +980,10 @@
 
 * Fixed potential locked-file issue when multiple readers are reading the same data with the data bus
 
+# 0.99.65
+
+* Added MSMQ transport configuration builder to allow for customizing the `MessageQueue`, e.g. by setting/changing permissions
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

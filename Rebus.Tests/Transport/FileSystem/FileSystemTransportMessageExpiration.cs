@@ -3,6 +3,6 @@ using Rebus.Tests.Contracts.Transports;
 
 namespace Rebus.Tests.Transport.FileSystem
 {
-    [TestFixture, Category(Categories.Msmq)]
+    [TestFixture]
     public class FileSystemTransportMessageExpiration : MessageExpiration<FileSystemTransportFactory> { }
 }

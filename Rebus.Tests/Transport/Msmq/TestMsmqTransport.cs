@@ -31,14 +31,14 @@ namespace Rebus.Tests.Transport.Msmq
 
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
 
-            Console.WriteLine("Sending {0} msgs took {1:0.0} s - that's {2:0.0} msg/s", messageCount, totalSeconds, messageCount / totalSeconds);
+            Console.WriteLine($"Sending {messageCount} msgs took {totalSeconds:0.0} s - that's {messageCount/totalSeconds:0.0} msg/s");
         }
 
-        void PrintConclusion(int messageCount, Stopwatch stopwatch)
+        static void PrintConclusion(int messageCount, Stopwatch stopwatch)
         {
             var totalSeconds = stopwatch.Elapsed.TotalSeconds;
-            Console.WriteLine("{0} messages received in {1:0.0} s - that's {2:0.0} msg/s",
-                messageCount, totalSeconds, messageCount / totalSeconds);
+
+            Console.WriteLine($"{messageCount} messages received in {totalSeconds:0.0} s - that's {messageCount/totalSeconds:0.0} msg/s");
         }
 
         [TestCase(10, 1)]

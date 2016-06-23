@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Messaging;
 using System.Runtime.Serialization;
 using System.Text;
@@ -24,6 +25,7 @@ namespace Rebus.Transport.Msmq
     {
         const string CurrentTransactionKey = "msmqtransport-messagequeuetransaction";
         const string CurrentOutgoingQueuesKey = "msmqtransport-outgoing-messagequeues";
+        readonly List<Action<MessageQueue>> _newQueueCallbacks = new List<Action<MessageQueue>>();
         readonly ExtensionSerializer _extensionSerializer = new ExtensionSerializer();
         readonly string _inputQueueName;
         readonly ILog _log;
@@ -47,11 +49,11 @@ namespace Rebus.Transport.Msmq
         }
 
         /// <summary>
-        /// Last-resort disposal of the transport's message queues
+        /// Adds a callback to be invoked when a new queue is created. Can be used e.g. to customize permissions
         /// </summary>
-        ~MsmqTransport()
+        public void AddQueueCallback(Action<MessageQueue> callback)
         {
-            Dispose(false);
+            _newQueueCallbacks.Add(callback);
         }
 
         static string MakeGloballyAddressable(string inputQueueName)
@@ -88,7 +90,18 @@ namespace Rebus.Transport.Msmq
 
             var inputQueuePath = MsmqUtil.GetPath(address);
 
-            MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+            if (_newQueueCallbacks.Any())
+            {
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log, messageQueue =>
+                {
+                    _newQueueCallbacks.ForEach(callback => callback(messageQueue));
+                });
+            }
+            else
+            {
+                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+            }
+
             MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
         }
 
@@ -307,7 +320,17 @@ namespace Rebus.Transport.Msmq
 
                 var inputQueuePath = MsmqUtil.GetPath(_inputQueueName);
 
-                MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+                if (_newQueueCallbacks.Any())
+                {
+                    MsmqUtil.EnsureQueueExists(inputQueuePath, _log, messageQueue =>
+                    {
+                        _newQueueCallbacks.ForEach(callback => callback(messageQueue));
+                    });
+                }
+                else
+                {
+                    MsmqUtil.EnsureQueueExists(inputQueuePath, _log);
+                }
                 MsmqUtil.EnsureMessageQueueIsTransactional(inputQueuePath);
 
                 _inputQueue = new MessageQueue(inputQueuePath, QueueAccessMode.SendAndReceive)
@@ -371,24 +394,12 @@ namespace Rebus.Transport.Msmq
         /// </summary>
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Disposes the input queue instance
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_disposed) return;
 
             try
             {
-                if (disposing)
-                {
-                    _inputQueue?.Dispose();
-                    _inputQueue = null;
-                }
+                _inputQueue?.Dispose();
+                _inputQueue = null;
             }
             finally
             {
