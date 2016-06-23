@@ -3,6 +3,7 @@ using System.IO;
 using Rebus.Persistence.FileSystem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
+using Rebus.Tests.Transport.FileSystem;
 
 namespace Rebus.Tests.Persistence.Filesystem
 {
@@ -16,7 +17,19 @@ namespace Rebus.Tests.Persistence.Filesystem
 
         public void CleanUp()
         {
-            Directory.Delete(_basePath, true);
+            var success = false;
+            while (!success)
+            {
+                try
+                {
+                    Directory.Delete(_basePath, true);
+                    success = true;
+                }
+                catch (IOException ex)
+                {
+                    System.Threading.Thread.Sleep(TimeSpan.FromTicks(1));
+                }
+            }
         }
     }
 }

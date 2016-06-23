@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,19 +14,21 @@ namespace Rebus.Persistence.FileSystem
     public class FilesystemSagaStorage : ISagaStorage
     {
         private readonly string _basePath;
+        private readonly string _lockFile;
         const string IdPropertyName = nameof(ISagaData.Id);
-        private static readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
+        
 
         public FilesystemSagaStorage(string basePath)
         {
             _basePath = basePath;
+            _lockFile = Path.Combine(basePath, "lock.txt");
         }
 
 
 
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
-            using (_lock.ReadLock())
+            using (new FilesystemExclusiveLock(_lockFile))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 if (propertyName == IdPropertyName)
@@ -45,7 +48,7 @@ namespace Rebus.Persistence.FileSystem
         }
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (_lock.WriteLock())
+            using (new FilesystemExclusiveLock(_lockFile))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
@@ -66,7 +69,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
-            using (_lock.WriteLock())
+            using (new FilesystemExclusiveLock(_lockFile))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = GetId(sagaData);
@@ -87,7 +90,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task Delete(ISagaData sagaData)
         {
-            using (_lock.WriteLock())
+            using (new FilesystemExclusiveLock(_lockFile))
             {
                 var index = new FilesystemSagaIndex(_basePath);
                 var id = sagaData.Id;

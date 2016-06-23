@@ -17,9 +17,9 @@ namespace Rebus.Persistence.FileSystem
     public class FilesystemTimeoutManager : ITimeoutManager
     { 
         private readonly string _basePath;
-        //private readonly string _lockFile;
+        private readonly string _lockFile;
         private static readonly string _tickFormat;
-        private static readonly ReaderWriterLockSlim _lock= new ReaderWriterLockSlim();
+        
         static FilesystemTimeoutManager()
         {
             _tickFormat = new StringBuilder().Append('0', Int32.MaxValue.ToString().Length).ToString();
@@ -28,7 +28,7 @@ namespace Rebus.Persistence.FileSystem
         public FilesystemTimeoutManager(string basePath)
         {
             _basePath = basePath;
-            //_lockFile = Path.Combine(basePath, "lock.txt");
+            _lockFile = Path.Combine(basePath, "lock.txt");
             Ensure(basePath);
         }
 
@@ -38,14 +38,7 @@ namespace Rebus.Persistence.FileSystem
             {
                 Directory.CreateDirectory(basePath);
             }
-            //if (!File.Exists(_lockFile))
-            //{
-            //    try
-            //    {
-            //        File.WriteAllText(_lockFile, "A");
-            //    }
-            //    catch (IOException) { }
-            //}
+
         }
 
         public class Timeout
@@ -55,7 +48,7 @@ namespace Rebus.Persistence.FileSystem
         }
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            using(_lock.WriteLock())
+            using (new FilesystemExclusiveLock(_lockFile))
             {
                 var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(_tickFormat);
                 var count = Directory.EnumerateFiles(_basePath, prefix + "*.json").Count();
@@ -70,7 +63,7 @@ namespace Rebus.Persistence.FileSystem
 
         public async Task<DueMessagesResult> GetDueMessages()
         {
-            var lockItem = _lock.WriteLock();
+            var lockItem = new FilesystemExclusiveLock(_lockFile) ;
             var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(_tickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
                 .Where(x => String.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, _tickFormat.Length) >= 0)
