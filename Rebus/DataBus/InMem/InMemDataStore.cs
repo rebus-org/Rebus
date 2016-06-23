@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using Rebus.Extensions;
 
 namespace Rebus.DataBus.InMem
 {
@@ -9,14 +11,14 @@ namespace Rebus.DataBus.InMem
     /// </summary>
     public class InMemDataStore
     {
-        readonly ConcurrentDictionary<string, byte[]> _data = new ConcurrentDictionary<string, byte[]>();
+        readonly ConcurrentDictionary<string, InMemBlob> _data = new ConcurrentDictionary<string, InMemBlob>();
 
         /// <summary>
         /// Saves the given bytes under the given ID
         /// </summary>
-        public void Save(string id, byte[] bytes)
+        public void Save(string id, byte[] bytes, Dictionary<string, string> metadata)
         {
-            _data[id] = bytes;
+            _data[id] = new InMemBlob(metadata, bytes);
         }
 
         /// <summary>
@@ -25,14 +27,71 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public byte[] Load(string id)
         {
-            byte[] bytes;
+            InMemBlob blob;
 
-            if (!_data.TryGetValue(id, out bytes))
+            if (!_data.TryGetValue(id, out blob))
             {
                 throw new ArgumentException($"Could not find data with ID {id}");
             }
 
-            return bytes;
+            return blob.Data;
+        }
+
+        /// <summary>
+        /// Adds the metadata from the <paramref name="metadata"/> dictionary to the blob with the given <paramref name="id"/>
+        /// </summary>
+        public void AddMetadata(string id, Dictionary<string, string> metadata)
+        {
+            InMemBlob blob;
+
+            if (!_data.TryGetValue(id, out blob))
+            {
+                throw new ArgumentException($"Could not find data with ID {id}");
+            }
+
+            blob.AddMetadata(metadata);
+        }
+
+        /// <summary>
+        /// Loads the metadata for the data with the given ID. Throws a <see cref="ArgumentException"/> if no
+        /// such ID exists
+        /// </summary>
+        public Dictionary<string, string> LoadMetadata(string id)
+        {
+            InMemBlob blob;
+
+            if (!_data.TryGetValue(id, out blob))
+            {
+                throw new ArgumentException($"Could not find data with ID {id}");
+            }
+
+            return blob.Metadata.Clone();
+        }
+
+        class InMemBlob
+        {
+            public InMemBlob(Dictionary<string, string> metadata, byte[] data)
+            {
+                if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+                if (data == null) throw new ArgumentNullException(nameof(data));
+                Metadata = metadata.Clone();
+                Data = data;
+            }
+
+            public byte[] Data { get; }
+            public Dictionary<string, string> Metadata { get; private set; }
+
+            public void AddMetadata(Dictionary<string, string> metadata)
+            {
+                var newMetadata = Metadata.Clone();
+
+                foreach (var kvp in metadata)
+                {
+                    newMetadata[kvp.Key] = kvp.Value;
+                }
+
+                Metadata = newMetadata;
+            }
         }
     }
 }

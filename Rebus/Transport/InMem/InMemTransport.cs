@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Messages;
@@ -56,7 +57,7 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Receives the next message from the queue identified by the configured <see cref="Address"/>, returning null if none was available
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueAddress == null) throw new InvalidOperationException("This in-mem transport is initialized without an input queue, hence it is not possible to receive anything!");

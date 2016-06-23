@@ -24,7 +24,7 @@ namespace Rebus.AzureStorage.Tests.Transport
             _activator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_activator)
-                .Transport(t => t.UseAzureStorageQueues(AzureStorageQueuesTransportFactory.ConnectionString, QueueName))
+                .Transport(t => t.UseAzureStorageQueues(AzureConfig.ConnectionString, QueueName))
                 .Options(o =>
                 {
                     o.LogPipeline();

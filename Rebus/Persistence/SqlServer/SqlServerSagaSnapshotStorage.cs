@@ -85,8 +85,7 @@ CREATE TABLE [dbo].[{0}] (
                     command.CommandText =
                         $@"
 
-INSERT INTO [{_tableName
-                            }] (
+INSERT INTO [{_tableName}] (
     [id],
     [revision],
     [data],

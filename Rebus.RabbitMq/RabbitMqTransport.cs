@@ -28,17 +28,18 @@ namespace Rebus.RabbitMq
     {
         const string CurrentModelItemsKey = "rabbitmq-current-model";
         const string OutgoingMessagesItemsKey = "rabbitmq-outgoing-messages";
+        const int TwoSeconds = 2000;
 
-        static readonly Task CompletedTask = Task.FromResult(new object());
         static readonly Encoding HeaderValueEncoding = Encoding.UTF8;
 
         readonly ConcurrentDictionary<string, bool> _initializedQueues = new ConcurrentDictionary<string, bool>();
-        readonly ushort _maxMessagesToPrefetch;
         readonly ConnectionManager _connectionManager;
         readonly ILog _log;
 
         readonly object _consumerInitializationLock = new object();
+
         QueueingBasicConsumer _consumer;
+        ushort _maxMessagesToPrefetch;
 
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
@@ -47,8 +48,8 @@ namespace Rebus.RabbitMq
         {
             _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
             _maxMessagesToPrefetch = maxMessagesToPrefetch;
-            Address = inputQueueAddress;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
+            Address = inputQueueAddress;
         }
 
         bool _declareExchanges = true;
@@ -58,6 +59,9 @@ namespace Rebus.RabbitMq
         string _directExchangeName = RabbitMqOptionsBuilder.DefaultDirectExchangeName;
         string _topicExchangeName = RabbitMqOptionsBuilder.DefaultTopicExchangeName;
 
+        /// <summary>
+        /// Stores the client properties to be haded to RabbitMQ when the connection is established
+        /// </summary>
         public void AddClientProperties(Dictionary<string, string> additionalClientProperties)
         {
             _connectionManager.AddClientProperties(additionalClientProperties);
@@ -82,9 +86,19 @@ namespace Rebus.RabbitMq
         {
             _directExchangeName = directExchangeName;
         }
+
         public void SetTopicExchangeName(string topicExchangeName)
         {
             _topicExchangeName = topicExchangeName;
+        }
+
+        public void SetMaxMessagesToPrefetch(int maxMessagesToPrefetch)
+        {
+            if (maxMessagesToPrefetch <= 0)
+            {
+                throw new ArgumentException($"Cannot set 'max messages to prefetch' to {maxMessagesToPrefetch} - it must be at least 1!");
+            }
+            _maxMessagesToPrefetch = (ushort)maxMessagesToPrefetch;
         }
 
         public void Initialize()
@@ -185,7 +199,7 @@ namespace Rebus.RabbitMq
             }
         }
 
-        public async Task<TransportMessage> Receive(ITransactionContext context)
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (Address == null)
             {
@@ -194,36 +208,36 @@ namespace Rebus.RabbitMq
 
             try
             {
-                // if the consumer is null at this point, we see if we can initialize it...
-                if (_consumer == null)
+                EnsureConsumerInitialized();
+
+                var consumer = _consumer;
+
+                // initialization must have failed
+                if (consumer == null) return null;
+
+                var model = consumer.Model;
+
+                if (!model.IsOpen)
                 {
-                    lock (_consumerInitializationLock)
+                    // something is wrong - we would not be able to ACK messages - force re-initialization to happen
+                    _consumer = null;
+
+                    // try to get rid of the consumer we have here
+                    try
                     {
-                        // if there is a consumer instance at this point, someone else went and initialized it...
-                        if (_consumer == null)
-                        {
-                            try
-                            {
-                                InitializeConsumer();
-                            }
-                            catch
-                            {
-                                Thread.Sleep(1000);
-                                return null;
-                            }
-                        }
+                        model.Dispose();
                     }
+                    catch { }
                 }
 
-                const int twoSeconds = 2000;
                 BasicDeliverEventArgs result;
-                if (!_consumer.Queue.Dequeue(twoSeconds, out result)) return null;
+                if (!consumer.Queue.Dequeue(TwoSeconds, out result)) return null;
 
                 var deliveryTag = result.DeliveryTag;
 
                 context.OnCommitted(async () =>
                 {
-                    _consumer.Model.BasicAck(deliveryTag, false);
+                    model.BasicAck(deliveryTag, false);
                 });
 
                 context.OnAborted(() =>
@@ -231,7 +245,7 @@ namespace Rebus.RabbitMq
                     // we might not be able to do this, but it doesn't matter that much if it succeeds
                     try
                     {
-                        _consumer.Model.BasicNack(deliveryTag, false, true);
+                        model.BasicNack(deliveryTag, false, true);
                     }
                     catch { }
                 });
@@ -253,6 +267,29 @@ namespace Rebus.RabbitMq
 
                 throw new RebusApplicationException(exception,
                     $"unexpected exception thrown while trying to dequeue a message from rabbitmq, queue address: {Address}");
+            }
+        }
+
+        void EnsureConsumerInitialized()
+        {
+            // if the consumer is null at this point, we see if we can initialize it...
+            if (_consumer == null)
+            {
+                lock (_consumerInitializationLock)
+                {
+                    // if there is a consumer instance at this point, someone else went and initialized it...
+                    if (_consumer == null)
+                    {
+                        try
+                        {
+                            _consumer = InitializeConsumer();
+                        }
+                        catch
+                        {
+                            Thread.Sleep(2000);
+                        }
+                    }
+                }
             }
         }
 
@@ -299,24 +336,35 @@ namespace Rebus.RabbitMq
         /// <summary>
         /// Creates the consumer.
         /// </summary>
-        void InitializeConsumer()
+        QueueingBasicConsumer InitializeConsumer()
         {
-            var connection = _connectionManager.GetConnection();
-            var model = connection.CreateModel();
+            IConnection connection = null;
+            IModel model = null;
             try
             {
+                // receive must be done with separate model
+                connection = _connectionManager.GetConnection();
+                model = connection.CreateModel();
                 model.BasicQos(0, _maxMessagesToPrefetch, false);
-                _consumer = new QueueingBasicConsumer(model);
+                var consumer = new QueueingBasicConsumer(model);
 
-                model.BasicConsume(Address, false, _consumer);
+                model.BasicConsume(Address, false, consumer);
 
                 _log.Info("Successfully initialized consumer for {0}", Address);
+
+                return consumer;
             }
             catch (Exception)
             {
                 try
                 {
-                    model.Dispose();
+                    model?.Dispose();
+                }
+                catch { }
+
+                try
+                {
+                    connection?.Dispose();
                 }
                 catch { }
 

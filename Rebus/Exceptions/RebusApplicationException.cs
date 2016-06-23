@@ -25,18 +25,6 @@ namespace Rebus.Exceptions
         {
         }
 
-        static string SafeStringFormat(string message, object[] objs)
-        {
-            try
-            {
-                return string.Format(message, objs);
-            }
-            catch
-            {
-                return message;
-            }
-        }
-
         /// <summary>
         /// Happy cross-domain serialization!
         /// </summary>

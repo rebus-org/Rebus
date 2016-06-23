@@ -952,7 +952,33 @@
 * Added ability for in-mem subscription storage to share a subscriber store and become "centralized" (can be used in conjunction with in-mem transport to emulate in memory everything that can be achieved with a real multicast-enabled transport like RabbitMQ, Azure Service Bus, etc.)
 
 
+# 0.99.59
 
+* Fixed MSMQ mangled message receive so that the message is not "lost"
+* Added cancellation support to the `Receive` operation of the transport - thanks [Rzpeg]
+
+# 0.99.60
+
+* Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow! (existing tables with `NVARCHAR(MAX)` data should still work fine - a simple schema check is made at startup)
+* Added Azure blobs-based data bus storage
+
+# 0.99.61
+
+* Added ability configure prefetch count with RabbitMQ
+* Added a few additional defensive RabbitMQ reconnection measures, like e.g. throw out prefetched messages if the connection is lost
+
+# 0.99.62
+
+* Added simple metadata API to data bus
+
+# 0.99.63
+
+* Maintain time of last read access in all data bus storages
+* Made `DataBusAttachment` serializable with all currently supported serializers (JSON.NET, Jil, Wire, and Protobuf)
+
+# 0.99.64
+
+* Fixed potential locked-file issue when multiple readers are reading the same data with the data bus
 
 ---
 

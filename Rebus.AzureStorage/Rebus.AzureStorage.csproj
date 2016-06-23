@@ -64,12 +64,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config\AzureConfigurationExtensions.cs" />
-    <Compile Include="Config\AzureStorageDataBusConfigurationExtensions.cs" />
+    <Compile Include="AzureEx.cs" />
     <Compile Include="Config\AzureStorageQueuesConfigurationExtensions.cs" />
+    <Compile Include="DataBus\AzureBlobsDataBusStorage.cs" />
+    <Compile Include="DataBus\AzureBlobsDataBusStorageConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageSagaConfigurationExtensions.cs" />
     <Compile Include="Config\AzureStorageSubscriptionConfigurationExtensions.cs" />
-    <Compile Include="Databus\AzureStorageDataBusStorage.cs" />
     <Compile Include="Entities\Subscription.cs" />
     <Compile Include="Sagas\AzureStorageSagaSnapshotStorage.cs" />
     <Compile Include="Sagas\AzureStorageSagaStorage.cs" />

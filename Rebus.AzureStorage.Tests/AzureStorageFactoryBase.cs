@@ -9,7 +9,7 @@ namespace Rebus.AzureStorage.Tests.Transport
     {
         public static string ConnectionString => ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "azure_storage_connection_string.txt"))
                                                  ?? ConnectionStringFromEnvironmentVariable("rebus2_storage_connection_string")
-                                                 ?? AzureStorageQueuesTransportFactory.Throw("Could not find Azure Storage connection string!");
+                                                 ?? Throw("Could not find Azure Storage connection string!");
 
         private static string ConnectionStringFromFileOrNull(string filePath)
         {

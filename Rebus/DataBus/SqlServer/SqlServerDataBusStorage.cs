@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
 using Rebus.Exceptions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
+using Rebus.Serialization;
+using Rebus.Time;
+using IDbConnection = Rebus.Persistence.SqlServer.IDbConnection;
 
 namespace Rebus.DataBus.SqlServer
 {
@@ -17,6 +22,8 @@ namespace Rebus.DataBus.SqlServer
     /// </summary>
     public class SqlServerDataBusStorage : IDataBusStorage, IInitializable
     {
+        static readonly Encoding TextEncoding = Encoding.UTF8;
+        readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly bool _ensureTableIsCreated;
@@ -62,12 +69,13 @@ namespace Rebus.DataBus.SqlServer
 
 CREATE TABLE [{_tableName}] (
     [Id] VARCHAR(200),
-    [Data] VARBINARY(MAX)
+    [Meta] VARBINARY(MAX),
+    [Data] VARBINARY(MAX),
+    [LastReadTime] DATETIMEOFFSET
 );
 
 ";
                     const int tableAlreadyExists = 2714;
-
 
                     try
                     {
@@ -87,16 +95,22 @@ CREATE TABLE [{_tableName}] (
         /// <summary>
         /// Saves the data from the given source stream under the given ID
         /// </summary>
-        public async Task Save(string id, Stream source)
+        public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
+            var metadataToWrite = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+            {
+                [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O")
+            };
+
             try
             {
                 using (var connection = await _connectionProvider.GetConnection())
                 {
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = $"INSERT INTO [{_tableName}] ([Id],[Data]) VALUES (@id,@data)";
+                        command.CommandText = $"INSERT INTO [{_tableName}] ([Id], [Meta], [Data]) VALUES (@id, @meta, @data)";
                         command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
+                        command.Parameters.Add("meta", SqlDbType.VarBinary).Value = TextEncoding.GetBytes(_dictionarySerializer.SerializeToString(metadataToWrite));
                         command.Parameters.Add("data", SqlDbType.VarBinary).Value = source;
 
                         await command.ExecuteNonQueryAsync();
@@ -114,27 +128,36 @@ CREATE TABLE [{_tableName}] (
         /// <summary>
         /// Opens the data stored under the given ID for reading
         /// </summary>
-        public Stream Read(string id)
+        public async Task<Stream> Read(string id)
         {
             try
             {
-                using (var connection = DispatchResult(() => _connectionProvider.GetConnection()))
+                // update last read time quickly
+                using (var connection = await _connectionProvider.GetConnection())
                 {
+                    await UpdateLastReadTime(id, connection);
+                    await connection.Complete();
+                }
+
+                using (var connection = await _connectionProvider.GetConnection())
+                {
+
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = $"SELECT TOP 1 [Data] FROM [{_tableName}] WITH (NOLOCK) WHERE [Id] = @id";
                         command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
 
-                        using (var reader = command.ExecuteReader())
+                        using (var reader = await command.ExecuteReaderAsync())
                         {
-                            if (reader.Read())
+                            if (!await reader.ReadAsync())
                             {
-                                var stream = reader.GetStream(reader.GetOrdinal("data"));
-
-                                return stream;
+                                throw new ArgumentException($"Row with ID {id} not found");
                             }
 
-                            throw new ArgumentException($"Row with ID {id} not found");
+                            var dataOrdinal = reader.GetOrdinal("data");
+                            var stream = reader.GetStream(dataOrdinal);
+
+                            return stream;
                         }
                     }
                 }
@@ -149,23 +172,67 @@ CREATE TABLE [{_tableName}] (
             }
         }
 
-        static TResult DispatchResult<TResult>(Func<Task<TResult>> function)
+        async Task UpdateLastReadTime(string id, IDbConnection connection)
         {
-            var result = default(TResult);
-            var done = new ManualResetEvent(false);
-            ThreadPool.QueueUserWorkItem(_ =>
+            using (var command = connection.CreateCommand())
             {
-                function().ContinueWith(task =>
-                {
-                    result = task.Result;
-                    done.Set();
-                });
-            });
-            if (!done.WaitOne(TimeSpan.FromSeconds(5)))
-            {
-                throw new RebusApplicationException("Did not get result from background thread within 5 s timeout");
+                command.CommandText = $"UPDATE [{_tableName}] SET [LastReadTime] = @now WHERE [Id] = @id";
+                command.Parameters.Add("now", SqlDbType.DateTimeOffset).Value = RebusTime.Now;
+                command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
+                await command.ExecuteNonQueryAsync();
             }
-            return result;
+        }
+
+        /// <summary>
+        /// Loads the metadata stored with the given ID
+        /// </summary>
+        public async Task<Dictionary<string, string>> ReadMetadata(string id)
+        {
+            try
+            {
+                using (var connection = await _connectionProvider.GetConnection())
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = $"SELECT TOP 1 [Meta], [LastReadTime], DATALENGTH([Data]) AS 'Length' FROM [{_tableName}] WITH (NOLOCK) WHERE [Id] = @id";
+                        command.Parameters.Add("id", SqlDbType.VarChar, 200).Value = id;
+
+                        using (var reader = await command.ExecuteReaderAsync())
+                        {
+                            if (!await reader.ReadAsync())
+                            {
+                                throw new ArgumentException($"Row with ID {id} not found");
+                            }
+
+                            var bytes = (byte[])reader["Meta"];
+                            var length = (long)reader["Length"];
+                            var lastReadTimeDbValue = reader["LastReadTime"];
+
+                            var jsonText = TextEncoding.GetString(bytes);
+                            var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                            metadata[MetadataKeys.Length] = length.ToString();
+
+                            if (lastReadTimeDbValue != DBNull.Value)
+                            {
+                                var lastReadTime = (DateTimeOffset)lastReadTimeDbValue;
+
+                                metadata[MetadataKeys.ReadTime] = lastReadTime.ToString("O");
+                            }
+
+                            return metadata;
+                        }
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not load metadata for data with ID {id}");
+            }
         }
     }
 }

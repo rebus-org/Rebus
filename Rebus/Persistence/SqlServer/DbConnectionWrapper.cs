@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Linq;
 using System.Threading.Tasks;
 using Rebus.Exceptions;
 
@@ -32,14 +33,6 @@ namespace Rebus.Persistence.SqlServer
         }
 
         /// <summary>
-        /// Ensures that the wrapper is always disposed
-        /// </summary>
-        ~DbConnectionWrapper()
-        {
-            Dispose(false);
-        }
-
-        /// <summary>
         /// Creates a ready to used <see cref="SqlCommand"/>
         /// </summary>
         public SqlCommand CreateCommand()
@@ -57,6 +50,24 @@ namespace Rebus.Persistence.SqlServer
             try
             {
                 return _connection.GetTableNames(_currentTransaction);
+            }
+            catch (SqlException exception)
+            {
+                throw new RebusApplicationException(exception, "Could not get table names");
+            }
+        }
+
+        /// <summary>
+        /// Gets information about the columns in the table given by <paramref name="dataTableName"/>
+        /// </summary>
+        public IEnumerable<DbColumn> GetColumns(string dataTableName)
+        {
+            try
+            {
+                return _connection
+                    .GetColumns(dataTableName, _currentTransaction)
+                    .Select(kvp => new DbColumn(kvp.Key, kvp.Value))
+                    .ToList();
             }
             catch (SqlException exception)
             {
@@ -87,42 +98,29 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public void Dispose()
         {
-            GC.SuppressFinalize(this);
-            Dispose(true);
-        }
-
-        /// <summary>
-        /// If the transaction is handled externally, nothing is done when the wrapper is disposed. Otherwise, the connection
-        /// is closed and disposed, and the current transaction is rolled back if <see cref="Complete"/> was not called
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
             if (_managedExternally) return;
             if (_disposed) return;
 
             try
             {
-                if (disposing)
+                try
                 {
-                    try
+                    if (_currentTransaction != null)
                     {
-                        if (_currentTransaction != null)
+                        using (_currentTransaction)
                         {
-                            using (_currentTransaction)
+                            try
                             {
-                                try
-                                {
-                                    _currentTransaction.Rollback();
-                                }
-                                catch { }
-                                _currentTransaction = null;
+                                _currentTransaction.Rollback();
                             }
+                            catch { }
+                            _currentTransaction = null;
                         }
                     }
-                    finally
-                    {
-                        _connection.Dispose();
-                    }
+                }
+                finally
+                {
+                    _connection.Dispose();
                 }
             }
             finally

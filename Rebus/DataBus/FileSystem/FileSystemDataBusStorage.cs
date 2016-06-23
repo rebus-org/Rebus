@@ -1,9 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Exceptions;
 using Rebus.Logging;
+using Rebus.Serialization;
+using Rebus.Time;
 
 namespace Rebus.DataBus.FileSystem
 {
@@ -12,6 +16,9 @@ namespace Rebus.DataBus.FileSystem
     /// </summary>
     public class FileSystemDataBusStorage : IDataBusStorage, IInitializable
     {
+        const string DataFileExtension = "dat";
+        const string MetadataFileExtension = "meta";
+        readonly DictionarySerializer _dictionarySerializer = new DictionarySerializer();
         readonly string _directoryPath;
         readonly ILog _log;
 
@@ -44,26 +51,43 @@ namespace Rebus.DataBus.FileSystem
         /// <summary>
         /// Saves the data from the given strea under the given ID
         /// </summary>
-        public async Task Save(string id, Stream source)
+        public async Task Save(string id, Stream source, Dictionary<string, string> metadata = null)
         {
-            var filePath = GetFilePath(id);
+            var filePath = GetFilePath(id, DataFileExtension);
 
             using (var destination = File.Create(filePath))
             {
                 await source.CopyToAsync(destination);
+            }
+
+            var metadataToSave = new Dictionary<string, string>(metadata ?? new Dictionary<string, string>())
+            {
+                [MetadataKeys.SaveTime] = RebusTime.Now.ToString("O")
+            };
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            using (var destination = File.Create(metadataFilePath))
+            using (var writer = new StreamWriter(destination, Encoding.UTF8))
+            {
+                var text = _dictionarySerializer.SerializeToString(metadataToSave);
+                await writer.WriteAsync(text);
             }
         }
 
         /// <summary>
         /// Reads the data with the given ID and returns it as a stream
         /// </summary>
-        public Stream Read(string id)
+        public async Task<Stream> Read(string id)
         {
-            var filePath = GetFilePath(id);
+            var filePath = GetFilePath(id, DataFileExtension);
 
             try
             {
-                return File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                var fileStream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                await UpdateLastReadTime(id);
+
+                return fileStream;
             }
             catch (FileNotFoundException exception)
             {
@@ -71,9 +95,73 @@ namespace Rebus.DataBus.FileSystem
             }
         }
 
-        string GetFilePath(string id)
+        /// <summary>
+        /// Loads the metadata stored with the given ID
+        /// </summary>
+        public async Task<Dictionary<string, string>> ReadMetadata(string id)
         {
-            return Path.Combine(_directoryPath, $"data-{id}.dat");
+            var filePath = GetFilePath(id, DataFileExtension);
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            try
+            {
+                using (var reader = new StreamReader(metadataFilePath, Encoding.UTF8))
+                {
+                    var jsonText = await reader.ReadToEndAsync();
+                    var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                    var fileInfo = new FileInfo(filePath);
+                    metadata[MetadataKeys.Length] = fileInfo.Length.ToString();
+
+                    return metadata;
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not read metadata for data with ID {id}");
+            }
+        }
+
+        async Task UpdateLastReadTime(string id)
+        {
+            var metadataFilePath = GetFilePath(id, MetadataFileExtension);
+
+            try
+            {
+                using (var file = File.Open(metadataFilePath, FileMode.Open, FileAccess.ReadWrite))
+                {
+                    using (var reader = new StreamReader(file, Encoding.UTF8))
+                    {
+                        var jsonText = await reader.ReadToEndAsync();
+                        var metadata = _dictionarySerializer.DeserializeFromString(jsonText);
+
+                        metadata[MetadataKeys.ReadTime] = RebusTime.Now.ToString("O");
+
+                        var newJsonText = _dictionarySerializer.SerializeToString(metadata);
+
+                        file.Position = 0;
+
+                        using (var writer = new StreamWriter(file, Encoding.UTF8))
+                        {
+                            await writer.WriteAsync(newJsonText);
+                        }
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                // this exception is most likely caused by a locked file because someone else is updating the 
+                // last read time  - that's ok :)
+            }
+            catch (Exception exception)
+            {
+                throw new RebusApplicationException(exception, $"Could not update metadata for data with ID {id}");
+            }
+        }
+
+        string GetFilePath(string id, string extension)
+        {
+            return Path.Combine(_directoryPath, $"data-{id}.{extension}");
         }
 
         void EnsureDirectoryIsWritable()

@@ -1,5 +1,6 @@
 ﻿using Microsoft.WindowsAzure.Storage;
 using Rebus.Auditing.Sagas;
+using Rebus.AzureStorage.DataBus;
 using Rebus.Config;
 using Rebus.DataBus;
 
@@ -35,7 +36,7 @@ namespace Rebus.AzureStorage.Config
                 {
                     if (enableDataBus)
                     {
-                        o.EnableDataBus().UseAzureStorage(storageAccount, dataBusContainerName);
+                        o.EnableDataBus().StoreInBlobStorage(storageAccount, dataBusContainerName);
                     }
                     if (enableSagaSnapshots)
                     {

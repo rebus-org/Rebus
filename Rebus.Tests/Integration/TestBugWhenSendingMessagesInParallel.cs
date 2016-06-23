@@ -48,7 +48,7 @@ namespace Rebus.Tests.Integration
             activator.Handle(stringHandler);
 
             var bus = Configure.With(activator)
-                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Warn))
+                .Logging(l => l.ColoredConsole(minLevel: LogLevel.Info))
                 .Transport(t => t.UseSqlServer(SqlTestHelper.ConnectionString, _messagesTableName, inputQueueName))
                 .Subscriptions(s => s.StoreInSqlServer(SqlTestHelper.ConnectionString, _subscriptionsTableName, isCentralized: true))
                 .Start();
@@ -57,6 +57,7 @@ namespace Rebus.Tests.Integration
         }
 
         [Test]
+        [Description("When using the SQL transport, publishing to two subscribers would hit a requirement from SQL Server to have MARS enabled on the connection")]
         public async Task CheckRealisticScenarioWithSqlAllTheWay()
         {
             await Task.WhenAll(
