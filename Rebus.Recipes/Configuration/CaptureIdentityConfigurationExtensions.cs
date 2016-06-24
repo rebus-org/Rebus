@@ -15,7 +15,7 @@ namespace Rebus.Recipes.Identity
         /// </summary>
         /// <param name="configurer"></param>
         /// <returns></returns>
-        public static void AutomaticallyPropagateCurrentPrincipal(this OptionsConfigurer configurer)
+        public static void AutomaticallyPropagateCurrentClaimsPrincipal(this OptionsConfigurer configurer)
         {
             configurer.AutomaticallyPropagateCurrentClaimsPrincipal(new DefaultClaimsPrinicpalSerializer());
         }
