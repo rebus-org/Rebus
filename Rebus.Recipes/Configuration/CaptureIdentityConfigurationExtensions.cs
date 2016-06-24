@@ -17,23 +17,14 @@ namespace Rebus.Recipes.Identity
         /// <returns></returns>
         public static void AutomaticallyPropagateCurrentClaimsPrincipal(this OptionsConfigurer configurer)
         {
-            configurer.AutomaticallyPropagateCurrentClaimsPrincipal(new DefaultClaimsPrinicpalSerializer());
-        }
-        /// <summary>
-        /// Propagates the ClaimsPrincipal through the message bus so that its there during message evaluation
-        /// </summary>
-        /// <param name="configurer"></param>
-        /// <param name="serializer"></param>
-        /// <returns></returns>
-        public static void AutomaticallyPropagateCurrentClaimsPrincipal(this OptionsConfigurer configurer,
-            IClaimsPrinicpalSerializer serializer)
-        {
+            var serializer = new DefaultClaimsPrinicpalSerializer();
             configurer.Decorate<IPipeline>(c => new PipelineStepInjector(c.Get<IPipeline>())
-                   .OnSend(new CapturePrincipalInOutgoingMessage(serializer), PipelineRelativePosition.After,
-                       typeof(AssignTypeHeaderStep))
-                   .OnReceive(new RestorePrincipalFromIncomingMessage(serializer), PipelineRelativePosition.Before,
-                       typeof(ActivateHandlersStep))
-                   );
+                .OnSend(new CapturePrincipalInOutgoingMessage(serializer), PipelineRelativePosition.After,
+                    typeof (AssignTypeHeaderStep))
+                .OnReceive(new RestorePrincipalFromIncomingMessage(serializer), PipelineRelativePosition.Before,
+                    typeof (ActivateHandlersStep))
+                );
         }
+
     }
 }
