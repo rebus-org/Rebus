@@ -17,9 +17,9 @@ namespace Rebus.AzureStorage.DataBus
     /// </summary>
     public class AzureBlobsDataBusStorage : IDataBusStorage
     {
-        private readonly IRebusLoggerFactory _loggerFactory;
         readonly CloudBlobClient _client;
         readonly string _containerName;
+        readonly ILog _log;
 
         bool _containerInitialized;
 
@@ -28,11 +28,12 @@ namespace Rebus.AzureStorage.DataBus
         /// </summary>
         public AzureBlobsDataBusStorage(CloudStorageAccount storageAccount, string containerName, IRebusLoggerFactory loggerFactory)
         {
-            _loggerFactory = loggerFactory;
             if (storageAccount == null) throw new ArgumentNullException(nameof(storageAccount));
             if (containerName == null) throw new ArgumentNullException(nameof(containerName));
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _containerName = containerName.ToLowerInvariant();
             _client = storageAccount.CreateCloudBlobClient();
+            _log = loggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>
@@ -44,8 +45,11 @@ namespace Rebus.AzureStorage.DataBus
 
             if (!_containerInitialized)
             {
-                _loggerFactory.GetCurrentClassLogger().Info("Autocreating container {0}", _containerName);
-                await container.CreateIfNotExistsAsync();
+                if (!await container.ExistsAsync())
+                {
+                    _log.Info("Container {0} does not exist - will create it now", _containerName);
+                    await container.CreateIfNotExistsAsync();
+                }
                 _containerInitialized = true;
             }
 

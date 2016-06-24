@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="AzureEx.cs" />
     <Compile Include="Config\AzureStorageQueuesConfigurationExtensions.cs" />
+    <Compile Include="Config\AzureConfigurationHelper.cs" />
     <Compile Include="DataBus\AzureBlobsDataBusStorage.cs" />
     <Compile Include="DataBus\AzureBlobsDataBusStorageConfigurationExtensions.cs" />
     <Compile Include="Config\AzureConfigurationExtensions.cs" />

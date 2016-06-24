@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem
@@ -8,9 +9,9 @@ namespace Rebus.Persistence.FileSystem
     {
         readonly FileStream _fileStream;
 
-        public FilesystemExclusiveLock(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
+        public FilesystemExclusiveLock(string pathToLock, ILog log)
         {
-            EnsureTargetFile(pathToLock, rebusLoggerFactory);
+            EnsureTargetFile(pathToLock, log);
 
             var success = false;
 
@@ -31,19 +32,19 @@ namespace Rebus.Persistence.FileSystem
                     //Have I mentioned that I hate this algorithm?
                     //This basically just causes the thread to yield to the scheduler
                     //we'll be back here more than 1 tick from now
-                    System.Threading.Thread.Sleep(TimeSpan.FromTicks(1));
+                    Thread.Sleep(TimeSpan.FromTicks(1));
                 }
             }
         }
 
-        static void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
+        static void EnsureTargetFile(string pathToLock, ILog log)
         {
             try
             {
                 var directoryName = Path.GetDirectoryName(pathToLock);
                 if (!Directory.Exists(directoryName))
                 {
-                    rebusLoggerFactory.GetCurrentClassLogger().Info("Autocreating {0}", pathToLock);
+                    log.Info("Directory {0} does not exist - creating it now", pathToLock);
                     Directory.CreateDirectory(directoryName);
                 }
             }

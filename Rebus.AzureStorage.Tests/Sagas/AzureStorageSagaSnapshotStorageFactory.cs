@@ -12,54 +12,49 @@ namespace Rebus.AzureStorage.Tests.Sagas
 {
     public class AzureStorageSagaSnapshotStorageFactory : AzureStorageFactoryBase, ISagaSnapshotStorageFactory
     {
-        //private static readonly string ContainerName = $"rsss";
-        private AzureStorageSagaSnapshotStorage _storage;
+        readonly AzureStorageSagaSnapshotStorage _storage;
+
         public AzureStorageSagaSnapshotStorageFactory()
         {
-            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, new ConsoleLoggerFactory(false),  $"RebusSagaSnapshotStorageTestContainer{DateTime.Now:yyyyMMddHHmmss}");
-            
+            _storage = new AzureStorageSagaSnapshotStorage(StorageAccount, new ConsoleLoggerFactory(false), $"RebusSagaSnapshotStorageTestContainer{DateTime.Now:yyyyMMddHHmmss}");
         }
+
         public ISagaSnapshotStorage Create()
         {
             _storage.DropAndRecreateContainer();
-            _storage.EnsureContainer();
+            _storage.EnsureContainerExists();
             return _storage;
         }
 
         public IEnumerable<SagaDataSnapshot> GetAllSnapshots()
         {
-
             var allBlobs = _storage.ListAllBlobs().Cast<CloudBlockBlob>()
-                .Select(b=>new
+                .Select(b => new
                 {
-                    
                     Parts = b.Name.Split('/')
-                
                 })
-                .Where(x=>x.Parts.Length == 3)
-                .Select(b=>
+                .Where(x => x.Parts.Length == 3)
+                .Select(b =>
                 {
                     var guid = Guid.Parse(b.Parts[0]);
-                    var i = Int32.Parse(b.Parts[1]);
+                    var revision = int.Parse(b.Parts[1]);
+                    var part = b.Parts[2];
                     return new
                     {
                         Id = guid,
-                        Revision = i,
-                        Part = b.Parts[2],
-
+                        Revision = revision,
+                        Part = part,
                     };
                 })
-                .GroupBy(b=>new {b.Id, b.Revision})
-                .Select(g=> new SagaDataSnapshot
+                .GroupBy(b => new { b.Id, b.Revision })
+                .Select(g => new SagaDataSnapshot
                 {
                     SagaData = _storage.GetSagaData(g.Key.Id, g.Key.Revision),
                     Metadata = _storage.GetSagaMetaData(g.Key.Id, g.Key.Revision)
                 })
                 .ToList();
-                
-            
+
             return allBlobs;
         }
-
     }
 }

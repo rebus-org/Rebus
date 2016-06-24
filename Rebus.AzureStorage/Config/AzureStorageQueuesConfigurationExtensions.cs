@@ -23,13 +23,7 @@ namespace Rebus.AzureStorage.Config
         /// </summary>
         public static void UseAzureStorageQueuesAsOneWayClient(this StandardConfigurer<ITransport> configurer, string storageAccountConnectionStringOrName)
         {
-            if (!storageAccountConnectionStringOrName.ToLowerInvariant().Contains("accountkey="))
-            {
-                storageAccountConnectionStringOrName =
-                    System.Configuration.ConfigurationManager.ConnectionStrings[storageAccountConnectionStringOrName]
-                        .ConnectionString;
-            }
-            var storageAccount = CloudStorageAccount.Parse(storageAccountConnectionStringOrName);
+            var storageAccount = AzureConfigurationHelper.GetStorageAccount(storageAccountConnectionStringOrName);
 
             Register(configurer, null, storageAccount);
 
@@ -41,13 +35,7 @@ namespace Rebus.AzureStorage.Config
         /// </summary>
         public static void UseAzureStorageQueues(this StandardConfigurer<ITransport> configurer, string storageAccountConnectionStringOrName, string inputQueueAddress)
         {
-            if (!storageAccountConnectionStringOrName.ToLowerInvariant().Contains("accountkey="))
-            {
-                storageAccountConnectionStringOrName =
-                    System.Configuration.ConfigurationManager.ConnectionStrings[storageAccountConnectionStringOrName]
-                        .ConnectionString;
-            }
-            var storageAccount = CloudStorageAccount.Parse(storageAccountConnectionStringOrName);
+            var storageAccount = AzureConfigurationHelper.GetStorageAccount(storageAccountConnectionStringOrName);
 
             Register(configurer, inputQueueAddress, storageAccount);
         }
@@ -92,11 +80,12 @@ namespace Rebus.AzureStorage.Config
             Register(configurer, inputQueueAddress, storageAccount);
         }
 
-
-
-
         static void Register(StandardConfigurer<ITransport> configurer, string inputQueueAddress, CloudStorageAccount storageAccount)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (inputQueueAddress == null) throw new ArgumentNullException(nameof(inputQueueAddress));
+            if (storageAccount == null) throw new ArgumentNullException(nameof(storageAccount));
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();

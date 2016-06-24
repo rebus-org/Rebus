@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
@@ -15,11 +13,20 @@ namespace Rebus.AzureStorage.Subscriptions
 {
     public class AzureStorageSubscriptionStorage : ISubscriptionStorage
     {
+        readonly CloudStorageAccount _cloudStorageAccount;
+        readonly IRebusLoggerFactory _loggerFactory;
+        readonly string _tableName;
 
-        private readonly CloudStorageAccount _cloudStorageAccount;
-        private readonly bool _isCentralized;
-        private readonly IRebusLoggerFactory _loggerFactory;
-        private readonly string _tableName;
+        public AzureStorageSubscriptionStorage(CloudStorageAccount cloudStorageAccount,
+            IRebusLoggerFactory loggerFactory,
+            bool isCentralized = false,
+            string tableName = "RebusSubscriptions")
+        {
+            IsCentralized = isCentralized;
+            _cloudStorageAccount = cloudStorageAccount;
+            _loggerFactory = loggerFactory;
+            _tableName = tableName;
+        }
 
         public void EnsureCreated()
         {
@@ -29,29 +36,15 @@ namespace Rebus.AzureStorage.Subscriptions
             t.CreateIfNotExists();
         }
 
-
-        public CloudTable GetTable()
+        CloudTable GetTable()
         {
-
-                var client = _cloudStorageAccount.CreateCloudTableClient();
-                return client.GetTableReference(_tableName);
-
-        }
-
-        public AzureStorageSubscriptionStorage(CloudStorageAccount cloudStorageAccount,
-            IRebusLoggerFactory loggerFactory,
-            bool isCentralized = false, 
-            string tableName = "RebusSubscriptions")
-        {
-            _cloudStorageAccount = cloudStorageAccount;
-            _isCentralized = isCentralized;
-            _loggerFactory = loggerFactory;
-            _tableName = tableName;
+            var client = _cloudStorageAccount.CreateCloudTableClient();
+            return client.GetTableReference(_tableName);
         }
 
         // PartitionKey = Topic
         // RowKey = Address
-        
+
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             try
@@ -91,7 +84,7 @@ namespace Rebus.AzureStorage.Subscriptions
         {
             try
             {
-                var entity = new Entities.AzureStorageSubscription(topic, subscriberAddress) {ETag="*"};
+                var entity = new Entities.AzureStorageSubscription(topic, subscriberAddress) { ETag = "*" };
                 var t = GetTable();
                 var operationContext = new OperationContext();
                 var res = await t.ExecuteAsync(TableOperation.Delete(entity), new TableRequestOptions { RetryPolicy = new ExponentialRetry() }, operationContext);
@@ -102,8 +95,10 @@ namespace Rebus.AzureStorage.Subscriptions
             }
         }
 
+        /// <summary>
+        /// Gets whether this subscription storage is centralized (i.e. whether subscribers can register themselves directly)
+        /// </summary>
         public bool IsCentralized { get; }
-
 
         public void DropTables()
         {

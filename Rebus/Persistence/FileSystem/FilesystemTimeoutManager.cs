@@ -19,8 +19,8 @@ namespace Rebus.Persistence.FileSystem
         static readonly string TickFormat;
 
         readonly string _basePath;
-        readonly IRebusLoggerFactory _loggerFactory;
         readonly string _lockFile;
+        readonly ILog _log;
 
         static FilesystemTimeoutManager()
         {
@@ -37,8 +37,8 @@ namespace Rebus.Persistence.FileSystem
             if (basePath == null) throw new ArgumentNullException(nameof(basePath));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _basePath = basePath;
-            _loggerFactory = loggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
+            _log = loggerFactory.GetCurrentClassLogger();
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
-            using (new FilesystemExclusiveLock(_lockFile, _loggerFactory))
+            using (new FilesystemExclusiveLock(_lockFile, _log))
             {
                 var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(TickFormat);
                 var count = Directory.EnumerateFiles(_basePath, prefix + "*.json").Count();
@@ -65,7 +65,7 @@ namespace Rebus.Persistence.FileSystem
         /// </summary>
         public async Task<DueMessagesResult> GetDueMessages()
         {
-            var lockItem = new FilesystemExclusiveLock(_lockFile, _loggerFactory);
+            var lockItem = new FilesystemExclusiveLock(_lockFile, _log);
             var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(TickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
                 .Where(x => string.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, TickFormat.Length) >= 0)
