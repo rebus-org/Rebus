@@ -990,6 +990,7 @@
 * Added Azure tables-based subscription storage - thanks [jeffreyabecker]
 * Added Azure tables-based timeout storage - thanks [jeffreyabecker]
 * Added experimental Azure blobs- and tables-based saga storage - thanks [jeffreyabecker]
+* Added Rebus message handler convention to the StructureMap integration - thanks [jeffreyabecker]
 
 ---
 
