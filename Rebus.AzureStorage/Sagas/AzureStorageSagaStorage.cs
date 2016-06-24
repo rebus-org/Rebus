@@ -43,8 +43,8 @@ namespace Rebus.AzureStorage.Sagas
             if (tableName == null) throw new ArgumentNullException(nameof(tableName));
             if (containerName == null) throw new ArgumentNullException(nameof(containerName));
 
-            _tableReference = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName);
-            _containerReference = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference(containerName);
+            _tableReference = cloudStorageAccount.CreateCloudTableClient().GetTableReference(tableName.ToLowerInvariant());
+            _containerReference = cloudStorageAccount.CreateCloudBlobClient().GetContainerReference(containerName.ToLowerInvariant());
             _log = loggerFactory.GetCurrentClassLogger();
         }
 
@@ -58,14 +58,21 @@ namespace Rebus.AzureStorage.Sagas
 
         void EnsureCreated()
         {
-            if (_containerReference.CreateIfNotExists())
+            try
             {
-                _log.Info("Container {0} was automatically created", _containerReference.Name);
-            }
+                if (_containerReference.CreateIfNotExists())
+                {
+                    _log.Info("Container '{0}' was automatically created", _containerReference.Name);
+                }
 
-            if (_tableReference.CreateIfNotExists())
+                if (_tableReference.CreateIfNotExists())
+                {
+                    _log.Info("Table '{0}' was automatically created", _tableReference.Name);
+                }
+            }
+            catch (Exception exception)
             {
-                _log.Info("Table {0} was automatically created", _tableReference.Name);
+                throw new RebusApplicationException(exception, $"Could not initialize Azure saga storage with container '{_containerReference.Name}' and table '{_tableReference.Name}'");
             }
         }
 

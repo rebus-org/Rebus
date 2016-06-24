@@ -1,5 +1,4 @@
 using NUnit.Framework;
-using Rebus.Tests;
 using Rebus.Tests.Contracts.Sagas;
 using Rebus.Tests.Persistence.SqlServer;
 
