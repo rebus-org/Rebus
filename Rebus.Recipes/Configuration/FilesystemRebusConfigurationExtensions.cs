@@ -49,7 +49,6 @@ namespace Rebus.Recipes.Configuration
             var subscriptions = Path.Combine(baseDirectory, "subscriptions.json");
             var dataBus = Path.Combine(baseDirectory, "databus");
             return configurer.Transport(t => t.UseFileSystemAsOneWayClient(transport))
-                .Sagas(t => t.Register(c => new FilesystemSagaStorage(sagas, c.Get<IRebusLoggerFactory>()))) // is saga storage valid or one-way clients?
                 .Subscriptions(t => t.UseJsonFile(subscriptions))
                 .Timeouts(t => t.Register(c => new FilesystemTimeoutManager(timeouts, c.Get<IRebusLoggerFactory>())))
                 .Options(o =>

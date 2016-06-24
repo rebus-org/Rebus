@@ -88,7 +88,7 @@ namespace Rebus.Recipes.Configuration
             )
         {
             return config.Transport(t => t.UseSqlServerAsOneWayClient(connectionStringOrName, queueTableName))
-                .Sagas(s => s.StoreInSqlServer(connectionStringOrName, sagaDataTableName, sagaIndexTableName, automaticallyCreateTables))
+
                 .Subscriptions(s => s.StoreInSqlServer(connectionStringOrName, subscriptionsTableName, isCenteralizedSubscriptions, automaticallyCreateTables))
                 .Timeouts(t => t.StoreInSqlServer(connectionStringOrName, timeoutTableName, automaticallyCreateTables))
                 .Options(o =>
