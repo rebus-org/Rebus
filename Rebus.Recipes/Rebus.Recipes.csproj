@@ -47,7 +47,7 @@
     <Compile Include="Configuration\FilesystemRebusConfigurationExtensions.cs" />
     <Compile Include="Configuration\RoutingExtensions.cs" />
     <Compile Include="Configuration\SqlServerRebusConfigurationExtensions.cs" />
-    <Compile Include="Identity\CaptureIdentityConfigurationExtensions.cs" />
+    <Compile Include="Configuration\CaptureIdentityConfigurationExtensions.cs" />
     <Compile Include="Identity\CapturePrincipalInOutgoingMessage.cs" />
     <Compile Include="Identity\DefaultClaimsPrinicpalSerializer.cs" />
     <Compile Include="Identity\IClaimsPrincipalSerializer.cs" />
