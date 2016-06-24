@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Rebus.Logging;
 
 namespace Rebus.Persistence.FileSystem
 {
-    public class FilesystemExclusiveLock : IDisposable
+    class FilesystemExclusiveLock : IDisposable
     {
-        private readonly FileStream _fileStream;
+        readonly FileStream _fileStream;
+
         public FilesystemExclusiveLock(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
         {
             EnsureTargetFile(pathToLock, rebusLoggerFactory);
-            bool success = false;
+
+            var success = false;
 
             //Unfortunately this is the only filesystem locking api that .net exposes
             //You can P/Invoke into better ones but thats not cross-platform
@@ -27,7 +25,7 @@ namespace Rebus.Persistence.FileSystem
                     _fileStream.Lock(0, 1);
                     success = true;
                 }
-                catch (IOException ex)
+                catch (IOException)
                 {
                     success = false;
                     //Have I mentioned that I hate this algorithm?
@@ -38,17 +36,18 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
-        private void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
+        static void EnsureTargetFile(string pathToLock, IRebusLoggerFactory rebusLoggerFactory)
         {
             try
             {
-                if (!Directory.Exists(Path.GetDirectoryName(pathToLock)))
+                var directoryName = Path.GetDirectoryName(pathToLock);
+                if (!Directory.Exists(directoryName))
                 {
                     rebusLoggerFactory.GetCurrentClassLogger().Info("Autocreating {0}", pathToLock);
-                    Directory.CreateDirectory(Path.GetDirectoryName(pathToLock));
+                    Directory.CreateDirectory(directoryName);
                 }
             }
-            catch (IOException ex)
+            catch (IOException)
             {
                 //Someone else did this under us
             }
@@ -59,7 +58,7 @@ namespace Rebus.Persistence.FileSystem
                     File.WriteAllText(pathToLock, "A");
                 }
             }
-            catch (IOException ex)
+            catch (IOException)
             {
                 //Someone else did this under us
             }
