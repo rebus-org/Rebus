@@ -2,53 +2,57 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Rebus.Logging;
 using Rebus.Time;
 using Rebus.Timeouts;
+#pragma warning disable 1998
 
 namespace Rebus.Persistence.FileSystem
 {
     /// <summary>
-    /// Timeouts in the filesystem!
+    /// Implementation of <see cref="ITimeoutManager"/> that stores timeouts in the filesystem
     /// </summary>
     public class FilesystemTimeoutManager : ITimeoutManager
-    { 
-        private readonly string _basePath;
-        private readonly IRebusLoggerFactory _loggerFactory;
-        private readonly string _lockFile;
-        private static readonly string _tickFormat;
-        
+    {
+        static readonly string TickFormat;
+
+        readonly string _basePath;
+        readonly IRebusLoggerFactory _loggerFactory;
+        readonly string _lockFile;
+
         static FilesystemTimeoutManager()
         {
-            _tickFormat = new StringBuilder().Append('0', Int32.MaxValue.ToString().Length).ToString();
+            var digitsInMaxInt = int.MaxValue.ToString().Length;
+
+            TickFormat = new string('0', digitsInMaxInt);
         }
 
+        /// <summary>
+        /// Creates the timeout manager, storing timeouts in the given <paramref name="basePath"/>
+        /// </summary>
         public FilesystemTimeoutManager(string basePath, IRebusLoggerFactory loggerFactory)
         {
+            if (basePath == null) throw new ArgumentNullException(nameof(basePath));
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             _basePath = basePath;
             _loggerFactory = loggerFactory;
             _lockFile = Path.Combine(basePath, "lock.txt");
-            
         }
 
-
-        public class Timeout
-        {
-            public Dictionary<string, string> Headers { get; set; }
-            public byte[] Body { get; set; }
-        }
+        /// <summary>
+        /// Stores the message to be retrieved later
+        /// </summary>
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             using (new FilesystemExclusiveLock(_lockFile, _loggerFactory))
             {
-                var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(_tickFormat);
+                var prefix = approximateDueTime.UtcDateTime.Ticks.ToString(TickFormat);
                 var count = Directory.EnumerateFiles(_basePath, prefix + "*.json").Count();
                 var fileName = Path.Combine(_basePath, $"{prefix}_{count}.json");
-                System.IO.File.WriteAllText(fileName, JsonConvert.SerializeObject(new Timeout
+
+                File.WriteAllText(fileName, JsonConvert.SerializeObject(new Timeout
                 {
                     Headers = headers,
                     Body = body
@@ -56,17 +60,18 @@ namespace Rebus.Persistence.FileSystem
             }
         }
 
+        /// <summary>
+        /// Gets all messages that are due at this instant
+        /// </summary>
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var lockItem = new FilesystemExclusiveLock(_lockFile, _loggerFactory);
-            var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(_tickFormat);
+            var prefix = RebusTime.Now.UtcDateTime.Ticks.ToString(TickFormat);
             var enumerable = Directory.EnumerateFiles(_basePath, "*.json")
-                .Where(x => String.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, _tickFormat.Length) >= 0)
-                .ToList()
-               ;
+                .Where(x => string.CompareOrdinal(prefix, 0, Path.GetFileNameWithoutExtension(x), 0, TickFormat.Length) >= 0)
+                .ToList();
 
             var items = enumerable
-                 
                 .Select(f => new
                 {
                     Timeout = JsonConvert.DeserializeObject<Timeout>(File.ReadAllText(f)),
@@ -78,8 +83,16 @@ namespace Rebus.Persistence.FileSystem
                     {
                         File.Delete(a.File);
                     }
-                })).ToList();
-            return new DueMessagesResult(items, () => {lockItem.Dispose(); });
+                }))
+                .ToList();
+
+            return new DueMessagesResult(items, () => { lockItem.Dispose(); });
+        }
+
+        class Timeout
+        {
+            public Dictionary<string, string> Headers { get; set; }
+            public byte[] Body { get; set; }
         }
     }
 }

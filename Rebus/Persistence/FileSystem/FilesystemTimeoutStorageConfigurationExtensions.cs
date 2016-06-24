@@ -1,3 +1,4 @@
+using System;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Timeouts;
@@ -7,7 +8,7 @@ namespace Rebus.Persistence.FileSystem
     /// <summary>
     /// Configures the bus to use the filesystem to store timeouts
     /// </summary>
-    public static  class FilesystemTimeoutStorageConfigurationExtensions
+    public static class FilesystemTimeoutStorageConfigurationExtensions
     {
         /// <summary>
         /// Configures the bus to use the filesystem to store timeouts
@@ -16,7 +17,10 @@ namespace Rebus.Persistence.FileSystem
         /// <param name="basePath">the path to store timeouts under</param>
         public static void UseFilesystem(this StandardConfigurer<ITimeoutManager> configurer, string basePath)
         {
-            configurer.Register(c=>new FilesystemTimeoutManager(basePath, c.Get<IRebusLoggerFactory>()));
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (basePath == null) throw new ArgumentNullException(nameof(basePath));
+
+            configurer.Register(c => new FilesystemTimeoutManager(basePath, c.Get<IRebusLoggerFactory>()));
         }
     }
 }

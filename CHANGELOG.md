@@ -984,6 +984,11 @@
 
 * Added MSMQ transport configuration builder to allow for customizing the `MessageQueue`, e.g. by setting/changing permissions
 
+# 0.99.66
+
+* Added file system-based saga storage and timeout storage - thanks [jeffreyabecker]
+
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1001,6 +1006,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [Hangsolow]: https://github.com/Hangsolow
 [jasperdk]: https://github.com/jasperdk
+[jeffreyabecker]: https://github.com/jeffreyabecker
 [joshua5822]: https://github.com/joshua5822
 [jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite
