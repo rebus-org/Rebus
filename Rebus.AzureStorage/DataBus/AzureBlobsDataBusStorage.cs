@@ -7,6 +7,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Rebus.DataBus;
 using Rebus.Extensions;
+using Rebus.Logging;
 using Rebus.Time;
 
 namespace Rebus.AzureStorage.DataBus
@@ -16,6 +17,7 @@ namespace Rebus.AzureStorage.DataBus
     /// </summary>
     public class AzureBlobsDataBusStorage : IDataBusStorage
     {
+        private readonly IRebusLoggerFactory _loggerFactory;
         readonly CloudBlobClient _client;
         readonly string _containerName;
 
@@ -24,8 +26,9 @@ namespace Rebus.AzureStorage.DataBus
         /// <summary>
         /// Creates the data bus storage
         /// </summary>
-        public AzureBlobsDataBusStorage(CloudStorageAccount storageAccount, string containerName)
+        public AzureBlobsDataBusStorage(CloudStorageAccount storageAccount, string containerName, IRebusLoggerFactory loggerFactory)
         {
+            _loggerFactory = loggerFactory;
             if (storageAccount == null) throw new ArgumentNullException(nameof(storageAccount));
             if (containerName == null) throw new ArgumentNullException(nameof(containerName));
             _containerName = containerName.ToLowerInvariant();
@@ -41,6 +44,7 @@ namespace Rebus.AzureStorage.DataBus
 
             if (!_containerInitialized)
             {
+                _loggerFactory.GetCurrentClassLogger().Info("Autocreating container {0}", _containerName);
                 await container.CreateIfNotExistsAsync();
                 _containerInitialized = true;
             }

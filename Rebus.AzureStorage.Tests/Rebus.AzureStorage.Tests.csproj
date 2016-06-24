@@ -72,6 +72,14 @@
     <Compile Include="DataBus\AzureBlobsDataBusStorageFactory.cs" />
     <Compile Include="DataBus\AzureBlobsDataBusStorageTest.cs" />
     <Compile Include="TestConfig.cs" />
+    <Compile Include="Sagas\AzureStorageConcurrencyHandling.cs" />
+    <Compile Include="Sagas\AzureStorageSagaSnapshotStorageFactory.cs" />
+    <Compile Include="Sagas\AzureStorageSagaStorageBasicLoadAndSaveAndFindOperations.cs" />
+    <Compile Include="Sagas\AzureStorageSagaStorageFactory.cs" />
+    <Compile Include="Sagas\AzureStorageSnapshotStorageTests.cs" />
+    <Compile Include="Subscriptions\AzureStorageSubscriptionStorageFactory.cs" />
+    <Compile Include="AzureStorageFactoryBase.cs" />
+    <Compile Include="Subscriptions\AzureSubscriptionStorageBasicSubscriptionOperations.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportFactory.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportMessageExpiration.cs" />
     <Compile Include="Transport\AzureStorageQueuesTransportBasicSendReceive.cs" />
@@ -100,6 +108,7 @@
   <ItemGroup>
     <Content Include="azure_storage_connection_string.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
