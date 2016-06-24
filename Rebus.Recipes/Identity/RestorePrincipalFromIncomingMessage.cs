@@ -27,11 +27,34 @@ namespace Rebus.Recipes.Identity
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            var message = context.Load<Message>();
-            var previousPrincipal = ClaimsPrincipal.Current;
-            Thread.CurrentPrincipal = _serializer.Deserialize(message.Headers[CapturePrincipalInOutgoingMessage.PrincipalCaptureKey]);
-            await next();
-            Thread.CurrentPrincipal = previousPrincipal;
+            using (new CurrentPrincipalRewriter(context.Load<Message>(), _serializer))
+            {
+                await next();
+            }
+        }
+
+        private class CurrentPrincipalRewriter : IDisposable
+        {
+            private readonly bool _shouldRewrite;
+            private readonly ClaimsPrincipal _originalClaimsPrincipal;
+            public CurrentPrincipalRewriter(Message message, IClaimsPrinicpalSerializer serializer)
+            {
+                _shouldRewrite = message.Headers.ContainsKey(CapturePrincipalInOutgoingMessage.PrincipalCaptureKey);
+                if (_shouldRewrite)
+                {
+                    _originalClaimsPrincipal = ClaimsPrincipal.Current;
+                    Thread.CurrentPrincipal =
+                        serializer.Deserialize(message.Headers[CapturePrincipalInOutgoingMessage.PrincipalCaptureKey]);
+                }
+            }
+
+            public void Dispose()
+            {
+                if (_shouldRewrite)
+                {
+                    Thread.CurrentPrincipal = _originalClaimsPrincipal;
+                }
+            }
         }
     }
 }
