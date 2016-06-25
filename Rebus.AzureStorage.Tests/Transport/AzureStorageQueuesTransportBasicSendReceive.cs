@@ -16,10 +16,12 @@ namespace Rebus.AzureStorage.Tests.Transport
         [Test]
         public async Task GetQueueVisibilityDelayOrNull_NeverReturnsNegativeTimespans()
         {
-            RebusTimeMachine.FakeIt(DateTimeOffset.Parse("2016-06-25T12:20:52.6038001-04:00"));
+            var sendInstant = DateTimeOffset.Now;
+            var deferDate = sendInstant.AddMilliseconds(-350);
+            RebusTimeMachine.FakeIt(sendInstant);
             var result = AzureStorageQueuesTransport.GetQueueVisibilityDelayOrNull(new Dictionary<string, string>
             {
-                {Headers.DeferredUntil, "2016-06-25T12:00:00.6038001-04:00"}
+                {Headers.DeferredUntil, deferDate.ToString("O")}
             });
             RebusTimeMachine.Reset();
             Assert.Null(result);
@@ -28,13 +30,15 @@ namespace Rebus.AzureStorage.Tests.Transport
         [Test]
         public async Task GetQueueVisibilityDelayOrNull_StillReturnsPositiveTimespans()
         {
-            RebusTimeMachine.FakeIt(DateTimeOffset.Parse("2016-06-25T12:00:00.6038001-04:00"));
+            var sendInstant = DateTimeOffset.Now;
+            var deferDate = sendInstant.AddMilliseconds(350);
+            RebusTimeMachine.FakeIt(sendInstant);
             var result = AzureStorageQueuesTransport.GetQueueVisibilityDelayOrNull(new Dictionary<string, string>
             {
-                {Headers.DeferredUntil, "2016-06-25T12:20:52.6038001-04:00"}
+                {Headers.DeferredUntil, deferDate.ToString("O")}
             });
             RebusTimeMachine.Reset();
-            Assert.Greater(result, TimeSpan.Zero);
+            Assert.AreEqual(result, TimeSpan.FromMilliseconds(350));
 
         }
     }
