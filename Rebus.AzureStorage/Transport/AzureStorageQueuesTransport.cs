@@ -128,7 +128,7 @@ namespace Rebus.AzureStorage.Transport
             return timeToBeReceived;
         }
 
-        static TimeSpan? GetQueueVisibilityDelayOrNull(Dictionary<string, string> headers)
+        public static TimeSpan? GetQueueVisibilityDelayOrNull(Dictionary<string, string> headers)
         {
             string deferredUntilDateTimeOffsetString;
 
@@ -141,7 +141,9 @@ namespace Rebus.AzureStorage.Transport
 
             var enqueueTime = deferredUntilDateTimeOffsetString.ToDateTimeOffset();
 
-            return enqueueTime - RebusTime.Now;
+            var difference = enqueueTime - RebusTime.Now;
+            if (difference <= TimeSpan.Zero) return null;
+            return difference;
         }
 
         static CloudQueueMessage Serialize(string messageId, string popReceipt, Dictionary<string, string> headers, byte[] body)
