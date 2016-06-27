@@ -9,7 +9,9 @@ namespace Rebus.Recipes.Identity
     public class CapturePrincipalInOutgoingMessage : IOutgoingStep
     {
         public const string PrincipalCaptureKey = "claims-principal-from-sender";
-        private readonly IClaimsPrinicpalSerializer _serializer;
+
+        readonly IClaimsPrinicpalSerializer _serializer;
+
         public CapturePrincipalInOutgoingMessage(IClaimsPrinicpalSerializer serializer)
         {
             _serializer = serializer;
@@ -19,11 +21,11 @@ namespace Rebus.Recipes.Identity
         {
             var message = context.Load<Message>();
             var headers = message.Headers;
-            var messageType = message.Body.GetType();
+            var currentClaimsPrincipal = ClaimsPrincipal.Current;
 
-            if (!headers.ContainsKey(PrincipalCaptureKey))
+            if (currentClaimsPrincipal != null && !headers.ContainsKey(PrincipalCaptureKey))
             {
-                headers[PrincipalCaptureKey] = _serializer.Serialize(ClaimsPrincipal.Current);
+                headers[PrincipalCaptureKey] = _serializer.Serialize(currentClaimsPrincipal);
             }
 
             await next();

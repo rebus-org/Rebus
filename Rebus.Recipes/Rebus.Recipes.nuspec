@@ -3,8 +3,8 @@
   <metadata>
     <id>Rebus.Recipes</id>
     <version>$version$</version>
-    <title>Rebus.TransactionScope</title>
-    <authors>mookid8000</authors>
+    <title>Rebus.Recipes</title>
+    <authors>jeffreyabecker</authors>
     <owners>mookid8000</owners>
     <licenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</licenseUrl>
     <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>

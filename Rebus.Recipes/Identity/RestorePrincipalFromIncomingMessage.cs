@@ -1,5 +1,6 @@
 using System;
 using System.Security.Claims;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Messages;
@@ -12,11 +13,11 @@ namespace Rebus.Recipes.Identity
     /// </summary>
     public class RestorePrincipalFromIncomingMessage : IIncomingStep
     {
-        private readonly IClaimsPrinicpalSerializer _serializer;
+        readonly IClaimsPrinicpalSerializer _serializer;
+        
         /// <summary>
-        /// 
+        /// Creates the step
         /// </summary>
-        /// <param name="serializer"></param>
         public RestorePrincipalFromIncomingMessage(IClaimsPrinicpalSerializer serializer)
         {
             _serializer = serializer;
@@ -27,32 +28,45 @@ namespace Rebus.Recipes.Identity
         /// </summary>
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
-            using (new CurrentPrincipalRewriter(context.Load<Message>(), _serializer))
+            var message = context.Load<Message>();
+            var newPrincipal = GetClaimsPrincipalOrNull(message);
+
+            using (new CurrentPrincipalRewriter(newPrincipal))
             {
                 await next();
             }
         }
 
-        private class CurrentPrincipalRewriter : IDisposable
+        ClaimsPrincipal GetClaimsPrincipalOrNull(Message message)
         {
-            private readonly bool _shouldRewrite;
-            private readonly ClaimsPrincipal _originalClaimsPrincipal;
-            public CurrentPrincipalRewriter(Message message, IClaimsPrinicpalSerializer serializer)
+            string serializedPrincipal;
+            if (!message.Headers.TryGetValue(CapturePrincipalInOutgoingMessage.PrincipalCaptureKey, out serializedPrincipal))
             {
-                _shouldRewrite = message.Headers.ContainsKey(CapturePrincipalInOutgoingMessage.PrincipalCaptureKey);
-                if (_shouldRewrite)
-                {
-                    _originalClaimsPrincipal = ClaimsPrincipal.Current;
-                    Thread.CurrentPrincipal =
-                        serializer.Deserialize(message.Headers[CapturePrincipalInOutgoingMessage.PrincipalCaptureKey]);
-                }
+                return null;
+            }
+
+            var newPrincipal = _serializer.Deserialize(serializedPrincipal);
+
+            return newPrincipal;
+        }
+
+        class CurrentPrincipalRewriter : IDisposable
+        {
+            readonly IPrincipal _originalPrincipal;
+
+            public CurrentPrincipalRewriter(IPrincipal newPrincipal)
+            {
+                if (newPrincipal == null) return;
+
+                _originalPrincipal = Thread.CurrentPrincipal;
+                Thread.CurrentPrincipal = newPrincipal;
             }
 
             public void Dispose()
             {
-                if (_shouldRewrite)
+                if (_originalPrincipal != null)
                 {
-                    Thread.CurrentPrincipal = _originalClaimsPrincipal;
+                    Thread.CurrentPrincipal = _originalPrincipal;
                 }
             }
         }

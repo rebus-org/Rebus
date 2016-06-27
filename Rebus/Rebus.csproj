@@ -183,6 +183,7 @@
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
+    <Compile Include="Serialization\GenericJsonSerializer.cs" />
     <Compile Include="Testing\Events\FakeBusDisposed.cs" />
     <Compile Include="Testing\Events\FakeBusEvent.cs" />
     <Compile Include="Testing\Events\MessageDeferred.cs" />

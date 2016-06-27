@@ -991,6 +991,7 @@
 * Added Azure tables-based timeout storage - thanks [jeffreyabecker]
 * Added experimental Azure blobs- and tables-based saga storage - thanks [jeffreyabecker]
 * Added Rebus message handler convention to the StructureMap integration - thanks [jeffreyabecker]
+* Created `Rebus.Recipes` convenience package with helpful extensions for identity propagation and consistent persistence configurations - thanks [jeffreyabecker]
 
 ---
 

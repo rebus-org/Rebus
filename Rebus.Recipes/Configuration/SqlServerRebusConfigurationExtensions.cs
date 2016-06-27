@@ -28,8 +28,8 @@ namespace Rebus.Recipes.Configuration
         /// <param name="automaticallyCreateTables">should rebus auto-create tables?</param>
         /// <param name="isCenteralizedSubscriptions">is it safe to treat this as a centeralized location for subscriptions?</param>
         /// <returns>the rebus configuration</returns>
-        public static RebusConfigurer UseSqlServer(this RebusConfigurer config, string connectionStringOrName, string queueName, 
-            string queueTableName = "RebusMessageQueue",
+        public static RebusConfigurer UseSqlServer(this RebusConfigurer config, string connectionStringOrName, string queueName,
+            string queueTableName = "RebusMessages",
             string sagaDataTableName = "RebusSaga",
             string sagaIndexTableName = "RebusSagaIndex",
             string subscriptionsTableName = "RebusSubscriptions",
@@ -37,24 +37,19 @@ namespace Rebus.Recipes.Configuration
             string dataBusTableName = "RebusDataBus",
             bool enableDataBus = true,
             bool automaticallyCreateTables = true,
-            bool isCenteralizedSubscriptions = false
-            )
+            bool isCenteralizedSubscriptions = false)
         {
-            return config.Transport(t=>t.UseSqlServer(connectionStringOrName, queueTableName, queueName))
-                .Sagas(s=>s.StoreInSqlServer(connectionStringOrName, sagaDataTableName, sagaIndexTableName, automaticallyCreateTables))
-                .Subscriptions(s=>s.StoreInSqlServer(connectionStringOrName, subscriptionsTableName, isCenteralizedSubscriptions, automaticallyCreateTables))
+            return config
+                .Transport(t => t.UseSqlServer(connectionStringOrName, queueTableName, queueName))
+                .Sagas(s => s.StoreInSqlServer(connectionStringOrName, sagaDataTableName, sagaIndexTableName, automaticallyCreateTables))
+                .Subscriptions(s => s.StoreInSqlServer(connectionStringOrName, subscriptionsTableName, isCenteralizedSubscriptions, automaticallyCreateTables))
                 .Timeouts(t => t.StoreInSqlServer(connectionStringOrName, timeoutTableName, automaticallyCreateTables))
                 .Options(o =>
                 {
                     if (enableDataBus)
                     {
-
-                        o.EnableDataBus().Register(d =>
-                        {
-                            var rebusLoggerFactory = d.Get<IRebusLoggerFactory>();
-                            var connectionProvider = new DbConnectionProvider(connectionStringOrName, rebusLoggerFactory);
-                            return new SqlServerDataBusStorage(connectionProvider, dataBusTableName, automaticallyCreateTables, rebusLoggerFactory);
-                        });
+                        o.EnableDataBus()
+                            .StoreInSqlServer(connectionStringOrName, dataBusTableName, automaticallyCreateTables);
                     }
                 });
         }
@@ -64,7 +59,6 @@ namespace Rebus.Recipes.Configuration
         /// </summary>
         /// <param name="config">the rebus configuration</param>
         /// <param name="connectionStringOrName">the connectionstring or name of the connectionstring to use for sql server</param>
-        
         /// <param name="queueTableName">the name of the queue table in the database</param>
         /// <param name="sagaDataTableName">the name of the saga data table in the database</param>
         /// <param name="sagaIndexTableName">the name of the saga index table in the database</param>
@@ -76,7 +70,7 @@ namespace Rebus.Recipes.Configuration
         /// <param name="isCenteralizedSubscriptions">is it safe to treat this as a centeralized location for subscriptions?</param>
         /// <returns>the rebus configuration</returns>
         public static RebusConfigurer UseSqlServerAsOneWayClient(this RebusConfigurer config, string connectionStringOrName,
-            string queueTableName = "RebusMessageQueue",
+            string queueTableName = "RebusMessages",
             string sagaDataTableName = "RebusSaga",
             string sagaIndexTableName = "RebusSagaIndex",
             string subscriptionsTableName = "RebusSubscriptions",
@@ -84,24 +78,18 @@ namespace Rebus.Recipes.Configuration
             string dataBusTableName = "RebusDataBus",
             bool enableDataBus = true,
             bool automaticallyCreateTables = true,
-            bool isCenteralizedSubscriptions = false
-            )
+            bool isCenteralizedSubscriptions = false)
         {
-            return config.Transport(t => t.UseSqlServerAsOneWayClient(connectionStringOrName, queueTableName))
-
+            return config
+                .Transport(t => t.UseSqlServerAsOneWayClient(connectionStringOrName, queueTableName))
                 .Subscriptions(s => s.StoreInSqlServer(connectionStringOrName, subscriptionsTableName, isCenteralizedSubscriptions, automaticallyCreateTables))
                 .Timeouts(t => t.StoreInSqlServer(connectionStringOrName, timeoutTableName, automaticallyCreateTables))
                 .Options(o =>
                 {
                     if (enableDataBus)
                     {
-
-                        o.EnableDataBus().Register(d =>
-                        {
-                            var rebusLoggerFactory = d.Get<IRebusLoggerFactory>();
-                            var connectionProvider = new DbConnectionProvider(connectionStringOrName, rebusLoggerFactory);
-                            return new SqlServerDataBusStorage(connectionProvider, dataBusTableName, automaticallyCreateTables, rebusLoggerFactory);
-                        });
+                        o.EnableDataBus()
+                            .StoreInSqlServer(connectionStringOrName, dataBusTableName, automaticallyCreateTables);
                     }
                 });
         }
