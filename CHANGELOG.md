@@ -992,6 +992,8 @@
 * Added experimental Azure blobs- and tables-based saga storage - thanks [jeffreyabecker]
 * Added Rebus message handler convention to the StructureMap integration - thanks [jeffreyabecker]
 * Created `Rebus.Recipes` convenience package with helpful extensions for identity propagation and consistent persistence configurations - thanks [jeffreyabecker]
+* Fixed subtle MSMQ receive blocked thread timing quirks
+* Fixed exception on message deferral for very short intervals - thanks [jeffreyabecker]
 
 ---
 
