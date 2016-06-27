@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 
@@ -25,5 +26,35 @@ namespace Rebus.Persistence.SqlServer
         /// Marks that all work has been successfully done and the <see cref="SqlConnection"/> may have its transaction committed or whatever is natural to do at this time
         /// </summary>
         Task Complete();
+
+        /// <summary>
+        /// Gets information about the columns in the table given by <paramref name="dataTableName"/>
+        /// </summary>
+        IEnumerable<DbColumn> GetColumns(string dataTableName);
+    }
+
+    /// <summary>
+    /// Represents a SQL Server column
+    /// </summary>
+    public class DbColumn
+    {
+        /// <summary>
+        /// Gets the name of the column
+        /// </summary>
+        public string Name { get; }
+        
+        /// <summary>
+        /// Gets the SQL datatype of the column
+        /// </summary>
+        public SqlDbType Type { get; }
+
+        /// <summary>
+        /// Creates the column
+        /// </summary>
+        public DbColumn(string name, SqlDbType type)
+        {
+            Name = name;
+            Type = type;
+        }
     }
 }

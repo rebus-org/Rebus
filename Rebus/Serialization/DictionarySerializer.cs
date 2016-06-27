@@ -15,23 +15,23 @@ namespace Rebus.Serialization
         /// <summary>
         /// Serializes the given dictionary into a JSON string
         /// </summary>
-        public string SerializeToString(Dictionary<string, string> headers)
+        public string SerializeToString(Dictionary<string, string> dictionary)
         {
-            return JsonConvert.SerializeObject(headers, _settings);
+            return JsonConvert.SerializeObject(dictionary, _settings);
         }
 
         /// <summary>
         /// Deserializes the given JSON string into a dictionary
         /// </summary>
-        public Dictionary<string, string> DeserializeFromString(string headers)
+        public Dictionary<string, string> DeserializeFromString(string jsonText)
         {
             try
             {
-                return JsonConvert.DeserializeObject<Dictionary<string, string>>(headers, _settings);
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(jsonText, _settings);
             }
             catch (Exception exception)
             {
-                throw new JsonSerializationException($"Could not deserialize JSON text as headers: '{headers}'", exception);
+                throw new JsonSerializationException($"Could not deserialize JSON text as dictionary: '{jsonText}'", exception);
             }
         } 
     }

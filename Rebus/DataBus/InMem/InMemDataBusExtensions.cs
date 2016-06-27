@@ -14,6 +14,7 @@ namespace Rebus.DataBus.InMem
         /// </summary>
         public static void StoreInMemory(this StandardConfigurer<IDataBusStorage> configurer, InMemDataStore inMemDataStore)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (inMemDataStore == null) throw new ArgumentNullException(nameof(inMemDataStore));
 
             configurer.Register(c => new InMemDataBusStorage(inMemDataStore));

@@ -11,5 +11,10 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
         {
             return new InMemDataBusStorage(_inMemDataStore);
         }
+
+        public void CleanUp()
+        {
+            
+        }
     }
 }

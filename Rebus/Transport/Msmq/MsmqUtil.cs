@@ -140,7 +140,7 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
         /// of the currently executing process will get <see cref="MessageQueueAccessRights.GenericWrite"/> permissions to it,
         /// and the local administrators group will get <see cref="MessageQueueAccessRights.FullControl"/>.
         /// </summary>
-        public static void EnsureQueueExists(string inputQueuePath, ILog log = null)
+        public static void EnsureQueueExists(string inputQueuePath, ILog log = null, Action<MessageQueue> permissionsCallback = null)
         {
             if (MessageQueue.Exists(inputQueuePath)) return;
 
@@ -149,13 +149,16 @@ in order to specify a private queue named 'someQueue' on the machine with IP 10.
                 log?.Info("Queue '{0}' does not exist - it will be created now", inputQueuePath);
 
                 var newQueue = MessageQueue.Create(inputQueuePath, true);
-
-                newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name,
-                    MessageQueueAccessRights.GenericWrite);
-
                 var administratorAccountName = GetAdministratorsGroupAccountName();
 
+                newQueue.SetPermissions(Thread.CurrentPrincipal.Identity.Name, MessageQueueAccessRights.GenericWrite);
                 newQueue.SetPermissions(administratorAccountName, MessageQueueAccessRights.FullControl);
+
+                if (permissionsCallback != null)
+                {
+                    log?.Info("Custom MessageQueue callback will be invoked");
+                    permissionsCallback.Invoke(newQueue);
+                }
             }
             catch (MessageQueueException exception)
             {

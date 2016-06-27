@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Messaging;
+using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -21,11 +23,26 @@ namespace Rebus.Tests.Integration
 
         protected override void SetUp()
         {
+            MsmqUtil.Delete(InputQueueName);
+
             _handlerActivator = new BuiltinHandlerActivator();
 
             _bus = Configure.With(_handlerActivator)
                 .Logging(l => l.Console())
-                .Transport(t => t.UseMsmq(InputQueueName))
+                .Transport(t =>
+                {
+                    t.UseMsmq(InputQueueName)
+                        .OnCreated(queue =>
+                        {
+                            queue.ResetPermissions();
+
+                            var user = new SecurityIdentifier(WellKnownSidType.WorldSid, null)
+                                .Translate(typeof(NTAccount))
+                                .ToString();
+
+                            queue.SetPermissions(user, MessageQueueAccessRights.FullControl);
+                        });
+                })
                 .Routing(r => r.TypeBased().Map<string>(InputQueueName))
                 .Options(o => o.SetNumberOfWorkers(1))
                 .Start();
@@ -35,7 +52,7 @@ namespace Rebus.Tests.Integration
 
         protected override void TearDown()
         {
-            MsmqUtil.Delete(InputQueueName);
+            //MsmqUtil.Delete(InputQueueName);
         }
 
         [Test]

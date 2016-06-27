@@ -11,27 +11,39 @@ namespace Rebus.Transport.Msmq
         /// <summary>
         /// Configures Rebus to use MSMQ to transport messages, receiving messages from the specified <paramref name="inputQueueName"/>
         /// </summary>
-        public static void UseMsmq(this StandardConfigurer<ITransport> configurer, string inputQueueName)
+        public static MsmqTransportConfigurationBuilder UseMsmq(this StandardConfigurer<ITransport> configurer, string inputQueueName)
         {
+            var builder = new MsmqTransportConfigurationBuilder();
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(inputQueueName, rebusLoggerFactory);
+                var transport = new MsmqTransport(inputQueueName, rebusLoggerFactory);
+                builder.Configure(transport);
+                return transport;
             });
+
+            return builder;
         }
 
         /// <summary>
         /// Configures Rebus to use MSMQ to transport messages as a one-way client (i.e. will not be able to receive any messages)
         /// </summary>
-        public static void UseMsmqAsOneWayClient(this StandardConfigurer<ITransport> configurer)
+        public static MsmqTransportConfigurationBuilder UseMsmqAsOneWayClient(this StandardConfigurer<ITransport> configurer)
         {
+            var builder = new MsmqTransportConfigurationBuilder();
+
             configurer.Register(c =>
             {
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new MsmqTransport(null, rebusLoggerFactory);
+                var transport = new MsmqTransport(null, rebusLoggerFactory);
+                builder.Configure(transport);
+                return transport;
             });
 
             OneWayClientBackdoor.ConfigureOneWayClient(configurer);
+
+            return builder;
         }
     }
 }

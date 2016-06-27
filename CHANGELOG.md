@@ -952,7 +952,48 @@
 * Added ability for in-mem subscription storage to share a subscriber store and become "centralized" (can be used in conjunction with in-mem transport to emulate in memory everything that can be achieved with a real multicast-enabled transport like RabbitMQ, Azure Service Bus, etc.)
 
 
+# 0.99.59
 
+* Fixed MSMQ mangled message receive so that the message is not "lost"
+* Added cancellation support to the `Receive` operation of the transport - thanks [Rzpeg]
+
+# 0.99.60
+
+* Changed data type of the SQL Server saga storage `[data]` column to `VARBINARY(MAX)` because `NVARCHAR(MAX)` was extremely slow! (existing tables with `NVARCHAR(MAX)` data should still work fine - a simple schema check is made at startup)
+* Added Azure blobs-based data bus storage
+
+# 0.99.61
+
+* Added ability configure prefetch count with RabbitMQ
+* Added a few additional defensive RabbitMQ reconnection measures, like e.g. throw out prefetched messages if the connection is lost
+
+# 0.99.62
+
+* Added simple metadata API to data bus
+
+# 0.99.63
+
+* Maintain time of last read access in all data bus storages
+* Made `DataBusAttachment` serializable with all currently supported serializers (JSON.NET, Jil, Wire, and Protobuf)
+
+# 0.99.64
+
+* Fixed potential locked-file issue when multiple readers are reading the same data with the data bus
+
+# 0.99.65
+
+* Added MSMQ transport configuration builder to allow for customizing the `MessageQueue`, e.g. by setting/changing permissions
+
+# 0.99.66
+
+* Added file system-based saga storage and timeout storage - thanks [jeffreyabecker]
+* Added Azure tables-based subscription storage - thanks [jeffreyabecker]
+* Added Azure tables-based timeout storage - thanks [jeffreyabecker]
+* Added experimental Azure blobs- and tables-based saga storage - thanks [jeffreyabecker]
+* Added Rebus message handler convention to the StructureMap integration - thanks [jeffreyabecker]
+* Created `Rebus.Recipes` convenience package with helpful extensions for identity propagation and consistent persistence configurations - thanks [jeffreyabecker]
+* Fixed subtle MSMQ receive blocked thread timing quirks
+* Fixed exception on message deferral for very short intervals - thanks [jeffreyabecker]
 
 ---
 
@@ -971,6 +1012,7 @@
 [hagbarddenstore]: https://github.com/hagbarddenstore
 [Hangsolow]: https://github.com/Hangsolow
 [jasperdk]: https://github.com/jasperdk
+[jeffreyabecker]: https://github.com/jeffreyabecker
 [joshua5822]: https://github.com/joshua5822
 [jsvahn]: https://github.com/jsvahn
 [kevbite]: https://github.com/kevbite

@@ -126,8 +126,7 @@ SELECT
     [id],
     [headers],
     [body]
-FROM [{_tableName
-                            }] WITH (UPDLOCK, READPAST, ROWLOCK)
+FROM [{_tableName}] WITH (UPDLOCK, READPAST, ROWLOCK)
 WHERE [due_time] <= @current_time 
 ORDER BY [due_time] ASC
 ";

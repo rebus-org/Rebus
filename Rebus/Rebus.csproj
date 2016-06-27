@@ -85,6 +85,7 @@
     <Compile Include="DataBus\IDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataBusStorage.cs" />
     <Compile Include="DataBus\InMem\InMemDataStore.cs" />
+    <Compile Include="DataBus\MetadataKeys.cs" />
     <Compile Include="DataBus\SqlServer\SqlServerDataBusConfigurationExtensions.cs" />
     <Compile Include="DataBus\SqlServer\SqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\DecryptMessagesIncomingStep.cs" />
@@ -101,8 +102,14 @@
     <Compile Include="Handlers\Reordering\ReorderingConfiguration.cs" />
     <Compile Include="Injection\Injectionist.cs" />
     <Compile Include="Messages\HeaderAttribute.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemExclusiveLock.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemSagaIndex.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorage.cs" />
     <Compile Include="Persistence\FileSystem\FileSystemSagaSnapshotStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemSagaStorage.cs" />
+    <Compile Include="Persistence\FileSystem\FileSystemSagaStorageConfigurationExtensions.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemTimeoutManager.cs" />
+    <Compile Include="Persistence\FileSystem\FilesystemTimeoutStorageConfigurationExtensions.cs" />
     <Compile Include="Persistence\FileSystem\ReaderWriterLockSlimExtensions.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriberStore.cs" />
     <Compile Include="Persistence\InMem\InMemorySubscriptionStorageExtensions.cs" />
@@ -177,6 +184,7 @@
     <Compile Include="Sagas\SagaDataCorrelationProperties.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
     <Compile Include="Serialization\ObjectSerializer.cs" />
+    <Compile Include="Serialization\GenericJsonSerializer.cs" />
     <Compile Include="Testing\Events\FakeBusDisposed.cs" />
     <Compile Include="Testing\Events\FakeBusEvent.cs" />
     <Compile Include="Testing\Events\MessageDeferred.cs" />
@@ -210,6 +218,7 @@
     <Compile Include="Transport\FileSystem\FileSystemTransport.cs" />
     <Compile Include="Transport\FileSystem\FileSystemTransportConfigurationExtensions.cs" />
     <Compile Include="Config\OneWayClientBusDecorator.cs" />
+    <Compile Include="Transport\Msmq\MsmqTransportConfigurationBuilder.cs" />
     <Compile Include="Transport\SqlServer\DisabledTimeoutManager.cs" />
     <Compile Include="Transport\TransactionContextExtensions.cs" />
     <Compile Include="Workers\IWorker.cs" />

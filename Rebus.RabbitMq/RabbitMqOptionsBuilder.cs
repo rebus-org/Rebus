@@ -37,6 +37,20 @@ namespace Rebus.RabbitMq
         }
 
         /// <summary>
+        /// Sets max number of messages to prefetch
+        /// </summary>
+        public RabbitMqOptionsBuilder Prefetch(int maxNumberOfMessagesToPrefetch)
+        {
+            if (maxNumberOfMessagesToPrefetch <= 0)
+            {
+                throw new ArgumentException($"Cannot set 'max messages to prefetch' to {maxNumberOfMessagesToPrefetch} - it must be at least 1!");
+            }
+
+            MaxNumberOfMessagesToPrefetch = maxNumberOfMessagesToPrefetch;
+            return this;
+        }
+
+        /// <summary>
         /// Configures which names to use for the two types of necessary exchanges
         /// </summary>
         public RabbitMqOptionsBuilder ExchangeNames(
@@ -57,6 +71,9 @@ namespace Rebus.RabbitMq
             return this;
         }
 
+        /// <summary>
+        /// Adds the given custom properties to be added to the RabbitMQ client connection when it is established
+        /// </summary>
         public RabbitMqOptionsBuilder AddClientProperties(IDictionary<string, string> additionalProperties)
         {
             foreach (var kvp in additionalProperties)
@@ -72,6 +89,8 @@ namespace Rebus.RabbitMq
 
         internal string DirectExchangeName { get; private set; }
         internal string TopicExchangeName { get; private set; }
+
+        internal int? MaxNumberOfMessagesToPrefetch { get; private set; }
 
         internal void Configure(RabbitMqTransport transport)
         {
@@ -100,6 +119,11 @@ namespace Rebus.RabbitMq
             if (TopicExchangeName != null)
             {
                 transport.SetTopicExchangeName(TopicExchangeName);
+            }
+
+            if (MaxNumberOfMessagesToPrefetch != null)
+            {
+                transport.SetMaxMessagesToPrefetch(MaxNumberOfMessagesToPrefetch.Value);
             }
         }
     }

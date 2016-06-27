@@ -40,36 +40,27 @@ namespace Rebus.Persistence.SqlServer
 
         string EnsureMarsIsEnabled(string connectionString)
         {
-            var connectionStringParameters = connectionString.Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                .Select(kvpString =>
-                {
-                    var tokens = kvpString.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            var connectionStringSettings = connectionString.Split(new [] {";"}, StringSplitOptions.RemoveEmptyEntries)
+                .Select(kvp => kvp.Split(new [] {"="}, StringSplitOptions.RemoveEmptyEntries))
+                .ToDictionary(kvp => kvp[0], kvp => string.Join("=", kvp.Skip(1)), StringComparer.InvariantCultureIgnoreCase);
 
-                    return new
-                    {
-                        Key = tokens[0],
-                        Value = string.Join("=", tokens.Skip(1))
-                    };
-                })
-                .ToDictionary(a => a.Key, a => a.Value, StringComparer.InvariantCultureIgnoreCase);
-
-            if (!connectionStringParameters.ContainsKey("MultipleActiveResultSets"))
+            if (!connectionStringSettings.ContainsKey("MultipleActiveResultSets"))
             {
-                _log.Info("Supplied connection string does not have MARS enabled - the connection string will be modified to enable MARS!");
-                return connectionString + ";MultipleActiveResultSets=true";
+                _log.Info("Supplied connection string will be modified to enable MARS");
+
+                connectionStringSettings["MultipleActiveResultSets"] = "True";
             }
 
-            return connectionString;
+            return string.Join("; ", connectionStringSettings.Select(kvp => $"{kvp.Key}={kvp.Value}"));
         }
 
         static string GetConnectionString(string connectionStringOrConnectionStringName)
         {
             var connectionStringSettings = ConfigurationManager.ConnectionStrings[connectionStringOrConnectionStringName];
 
-            if (connectionStringSettings != null)
-                return connectionStringSettings.ConnectionString;
-
-            return connectionStringOrConnectionStringName;
+            return connectionStringSettings != null 
+                ? connectionStringSettings.ConnectionString 
+                : connectionStringOrConnectionStringName;
         }
 
         /// <summary>

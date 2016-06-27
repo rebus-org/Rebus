@@ -117,7 +117,7 @@ namespace Rebus.Workers.ThreadBased
                 // if we didn't get to do our thing, pause the thread a very short while to avoid thrashing too much
                 if (!operation.CanContinue())
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(1);
                     return;
                 }
 
@@ -127,13 +127,20 @@ namespace Rebus.Workers.ThreadBased
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
-                        var result = await TryReceiveTransportMessage(transactionContext);
+                        var result = await TryReceiveTransportMessage(transactionContext, _cancellationTokenSource.Token);
 
                         if (result.Exception != null)
                         {
+                            if (result.Exception is TaskCanceledException || result.Exception is OperationCanceledException)
+                            {
+                                // this is normal - we're being shut down so we just return quickly
+                                transactionContext.Dispose();
+                                return;
+                            }
+
                             _log.Warn("An error occurred when attempting to receive transport message: {0}", result.Exception);
+
                             // error: finish the tx and wait....
-                            await transactionContext.Complete();
                             transactionContext.Dispose();
 
                             await _backoffStrategy.WaitError();
@@ -183,14 +190,18 @@ namespace Rebus.Workers.ThreadBased
             }
         }
 
-        async Task<ReceiveResult> TryReceiveTransportMessage(DefaultTransactionContext transactionContext)
+        async Task<ReceiveResult> TryReceiveTransportMessage(DefaultTransactionContext transactionContext, CancellationToken cToken)
         {
             try
             {
-                var message = await _transport.Receive(transactionContext);
+                var message = await _transport.Receive(transactionContext, cToken);
 
                 return new ReceiveResult(message);
             }
+            //catch (TaskCanceledException tex)
+            //{
+            //    return new ReceiveResult(tex, true);
+            //}
             catch (Exception exception)
             {
                 return new ReceiveResult(exception);

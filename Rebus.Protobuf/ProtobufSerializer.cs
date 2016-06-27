@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using ProtoBuf.Meta;
+using Rebus.DataBus;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Messages.Control;
@@ -28,6 +29,9 @@ namespace Rebus.Protobuf
             var unsubscribeRequestType = _runtimeTypeModel.Add(typeof (UnsubscribeRequest), true);
             unsubscribeRequestType.AddField(1, Reflect.Path<UnsubscribeRequest>(r => r.Topic));
             unsubscribeRequestType.AddField(2, Reflect.Path<UnsubscribeRequest>(r => r.SubscriberAddress));
+
+            var dataBusAttachmentType = _runtimeTypeModel.Add(typeof(DataBusAttachment), true);
+            dataBusAttachmentType.AddField(1, Reflect.Path<DataBusAttachment>(r => r.Id));
         }
 
         public ProtobufSerializer()
