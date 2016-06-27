@@ -5,7 +5,6 @@ using Rebus.Logging;
 using Rebus.Sagas;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
-using System.Data.SqlClient;
 using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer

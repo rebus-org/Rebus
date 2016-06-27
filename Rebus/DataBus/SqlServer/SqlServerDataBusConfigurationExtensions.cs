@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
@@ -23,6 +24,23 @@ namespace Rebus.DataBus.SqlServer
             {
                 var loggerFactory = c.Get<IRebusLoggerFactory>();
                 var connectionProvider = new DbConnectionProvider(connectionStringOrConnectionStringName, loggerFactory);
+                return new SqlServerDataBusStorage(connectionProvider, tableName, automaticallyCreateTables, loggerFactory);
+            });
+        }
+
+        /// <summary>
+        /// Configures the data bus to store data in a central SQL Server 
+        /// </summary>
+        public static void StoreInSqlServer(this StandardConfigurer<IDataBusStorage> configurer, Func<Task<IDbConnection>> connectionFactory, string tableName, bool automaticallyCreateTables = true)
+        {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
+            if (tableName == null) throw new ArgumentNullException(nameof(tableName));
+
+            configurer.Register(c =>
+            {
+                var loggerFactory = c.Get<IRebusLoggerFactory>();
+                var connectionProvider = new DbConnectionFactoryProvider(connectionFactory, loggerFactory);
                 return new SqlServerDataBusStorage(connectionProvider, tableName, automaticallyCreateTables, loggerFactory);
             });
         }

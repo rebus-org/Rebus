@@ -994,6 +994,8 @@
 * Created `Rebus.Recipes` convenience package with helpful extensions for identity propagation and consistent persistence configurations - thanks [jeffreyabecker]
 * Fixed subtle MSMQ receive blocked thread timing quirks
 * Fixed exception on message deferral for very short intervals - thanks [jeffreyabecker]
+* Added configuration API for using user-provided DB connection with SQL Server - thanks [zabulus]
+
 
 ---
 
