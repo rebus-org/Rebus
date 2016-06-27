@@ -128,7 +128,7 @@ namespace Rebus.AzureStorage.Transport
             return timeToBeReceived;
         }
 
-        public static TimeSpan? GetQueueVisibilityDelayOrNull(Dictionary<string, string> headers)
+        internal static TimeSpan? GetQueueVisibilityDelayOrNull(Dictionary<string, string> headers)
         {
             string deferredUntilDateTimeOffsetString;
 
