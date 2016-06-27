@@ -183,6 +183,7 @@
     <Compile Include="SharedCounter.cs" />
     <Compile Include="Testing\TestFakeBus.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
+    <Compile Include="Threading\TestParallelOperationsManager.cs" />
     <Compile Include="Timeouts\TestExternalTimeoutManager.cs" />
     <Compile Include="Timeouts\TestInternalTimeoutManager.cs" />
     <Compile Include="Timers\CompareAsyncTasks.cs" />
@@ -256,6 +257,7 @@
     <Compile Include="Transport\SqlServer\SqlTransportTests.cs" />
     <Compile Include="Transport\SqlServer\TestDbConnectionProvider.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransport.cs" />
+    <Compile Include="Workers\TestUnluckyContinuations.cs" />
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
     <Compile Include="Workers\ThreadWorkerUnitTests.cs" />
   </ItemGroup>

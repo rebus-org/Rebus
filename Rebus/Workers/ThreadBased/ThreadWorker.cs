@@ -117,7 +117,7 @@ namespace Rebus.Workers.ThreadBased
                 // if we didn't get to do our thing, pause the thread a very short while to avoid thrashing too much
                 if (!operation.CanContinue())
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(1);
                     return;
                 }
 

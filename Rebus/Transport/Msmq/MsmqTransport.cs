@@ -197,17 +197,16 @@ namespace Rebus.Transport.Msmq
 
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(2), messageQueueTransaction);
+                var message = queue.Receive(TimeSpan.FromSeconds(0.1), messageQueueTransaction);
+
                 if (message == null)
                 {
                     messageQueueTransaction.Abort();
                     return null;
                 }
 
-                context.OnCommitted(async () =>
-                {
-                    messageQueueTransaction.Commit();
-                });
+                context.OnCommitted(async () => messageQueueTransaction.Commit());
+                context.OnDisposed(() => message.Dispose());
 
                 var headers = _extensionSerializer.Deserialize(message.Extension, message.Id);
                 var body = new byte[message.BodyStream.Length];
@@ -225,8 +224,9 @@ namespace Rebus.Transport.Msmq
 
                 if (exception.MessageQueueErrorCode == MessageQueueErrorCode.InvalidHandle)
                 {
-                    _log.Info("Queue handle for '{0}' was invalid - will try to reinitialize the queue", _inputQueueName);
+                    _log.Warn("Queue handle for '{0}' was invalid - will try to reinitialize the queue", _inputQueueName);
                     ReinitializeInputQueue();
+                    return null;
                 }
 
                 if (exception.MessageQueueErrorCode == MessageQueueErrorCode.QueueDeleted)

@@ -63,8 +63,6 @@ namespace Rebus.Tests.Extensions
             }
         }
 
-
-
         public static IEnumerable<TItem> InRandomOrder<TItem>(this IEnumerable<TItem> items)
         {
             var random = new Random(DateTime.Now.GetHashCode());
@@ -83,6 +81,31 @@ namespace Rebus.Tests.Extensions
             });
 
             return list;
+        }
+
+        public static Task WaitAsync(this ManualResetEvent resetEvent)
+        {
+            var completionSource = new TaskCompletionSource<object>();
+
+            ThreadPool.QueueUserWorkItem(_ =>
+            {
+                resetEvent.WaitOne();
+                completionSource.SetResult(new object());
+            });
+
+            return completionSource.Task;
+        }
+
+        public static T GetNextOrThrow<T>(this ConcurrentQueue<T> queue)
+        {
+            T next;
+
+            if (!queue.TryDequeue(out next))
+            {
+                throw new ApplicationException("Could not dequeue next item!");
+            }
+
+            return next;
         }
     }
 }
