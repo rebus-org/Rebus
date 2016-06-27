@@ -6,6 +6,7 @@ using Rebus.Sagas;
 using Rebus.Subscriptions;
 using Rebus.Timeouts;
 using System.Data.SqlClient;
+using System.Threading.Tasks;
 
 namespace Rebus.Persistence.SqlServer
 {
@@ -42,8 +43,8 @@ namespace Rebus.Persistence.SqlServer
         /// <summary>
         /// Configures Rebus to store saga snapshots in SQL Server
         /// </summary>
-        public static void StoreInSqlServer(this StandardConfigurer<ISagaSnapshotStorage> configurer,
-            Func<SqlConnection> connectionFactory, string tableName, bool automaticallyCreateTables = true)
+        public static void StoreInSqlServer(this StandardConfigurer<ISagaSnapshotStorage> configurer, 
+            Func<Task<IDbConnection>> connectionFactory, string tableName, bool automaticallyCreateTables = true)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
@@ -95,7 +96,7 @@ namespace Rebus.Persistence.SqlServer
         /// Configures Rebus to use SQL Server to store sagas, using the tables specified to store data and indexed properties respectively.
         /// </summary>
         public static void StoreInSqlServer(this StandardConfigurer<ISagaStorage> configurer,
-            Func<SqlConnection> connectionFactory, string dataTableName, string indexTableName,
+            Func<Task<IDbConnection>> connectionFactory, string dataTableName, string indexTableName,
             bool automaticallyCreateTables = true)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
@@ -151,7 +152,7 @@ namespace Rebus.Persistence.SqlServer
         /// default behavior.
         /// </summary>
         public static void StoreInSqlServer(this StandardConfigurer<ISubscriptionStorage> configurer,
-            Func<SqlConnection> connectionFactory, string tableName, bool isCentralized = false, bool automaticallyCreateTables = true)
+            Func<Task<IDbConnection>> connectionFactory, string tableName, bool isCentralized = false, bool automaticallyCreateTables = true)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
@@ -201,7 +202,7 @@ namespace Rebus.Persistence.SqlServer
         /// Configures Rebus to use SQL Server to store timeouts.
         /// </summary>
         public static void StoreInSqlServer(this StandardConfigurer<ITimeoutManager> configurer,
-            Func<SqlConnection> connectionFactory, string tableName, bool automaticallyCreateTables = true)
+            Func<Task<IDbConnection>> connectionFactory, string tableName, bool automaticallyCreateTables = true)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
             if (connectionFactory == null) throw new ArgumentNullException(nameof(connectionFactory));
