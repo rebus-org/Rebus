@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -78,12 +79,13 @@ namespace Rebus.Tests.Workers
             _activator.Handle<string>(async message =>
             {
                 var id = Interlocked.Increment(ref idCounter);
+                var stopwatch = Stopwatch.StartNew();
 
                 Console.WriteLine($"operation {id} (msg: {message}) sleeping 1s...");
 
                 await Task.Delay(1000);
 
-                Console.WriteLine($"operation {id} done sleeping - setting reset event");
+                Console.WriteLine($"operation {id} done sleeping (sleeping 1s actually took {stopwatch.Elapsed.TotalSeconds:0.##}) s) - setting reset event");
 
                 var resetEvent = resetEventsQueue.GetNextOrThrow();
 
