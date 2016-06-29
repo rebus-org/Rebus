@@ -79,6 +79,27 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
         }
 
         [Test]
+        public void HeadersAreCopied()
+        {
+            var originalHeaders = new Dictionary<string, string>();
+            var message = new Message(originalHeaders, "hej");
+
+            var transportMessage = _serializer.Serialize(message).Result;
+            var transportMessageHeaders = transportMessage.Headers;
+
+            var roundtrippedMessage = _serializer.Deserialize(transportMessage).Result;
+            var roundtrippedMessageHeaders = roundtrippedMessage.Headers;
+
+            originalHeaders["key"] = "HEJ!";
+            transportMessageHeaders["key"] = "MED!";
+            roundtrippedMessageHeaders["key"] = "DIG!";
+
+            Assert.That(originalHeaders["key"], Is.EqualTo("HEJ!"));
+            Assert.That(transportMessageHeaders["key"], Is.EqualTo("MED!"));
+            Assert.That(roundtrippedMessageHeaders["key"], Is.EqualTo("DIG!"));
+        }
+
+        [Test]
         public async Task CanRoundtripInternalMessages_DataBusAttachment()
         {
             var message = new DataBusAttachment("bimmelim!!!");
@@ -119,13 +140,21 @@ That's {roundtrips / (double)numberOfSeconds:0.#} roundtrips/s");
         [TestCase(5)]
         [TestCase("hej")]
         [TestCase(56.5)]
+        [TestCase(56.5f)]
         public async Task CanRoundtripSomeBasicValues(object originalMessage)
         {
-            Console.WriteLine("Roundtripping {0}", originalMessage.GetType());
+            try
+            {
+                Console.WriteLine("Roundtripping {0}", originalMessage.GetType());
 
-            var roundtrippedMessage = await Roundtrip(originalMessage);
+                var roundtrippedMessage = await Roundtrip(originalMessage);
 
-            Assert.That(roundtrippedMessage, Is.EqualTo(originalMessage));
+                Assert.That(roundtrippedMessage, Is.EqualTo(originalMessage));
+            }
+            catch (NotSupportedException)
+            {
+                Console.WriteLine($"Serialization of '{originalMessage.GetType()}' instance is not supported by {_serializer.GetType()}");
+            }
         }
 
         [Test]

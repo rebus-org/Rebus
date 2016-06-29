@@ -996,6 +996,9 @@
 * Fixed exception on message deferral for very short intervals - thanks [jeffreyabecker]
 * Added configuration API for using user-provided DB connection with SQL Server - thanks [zabulus]
 
+# 0.99.67
+
+* Added MsgPack serializer
 
 ---
 
