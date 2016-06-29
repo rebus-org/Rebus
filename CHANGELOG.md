@@ -999,6 +999,8 @@
 # 0.99.67
 
 * Added MsgPack serializer
+* Updated Newtonsoft JSON.NET to 9.0.1 throughout
+
 
 ---
 
