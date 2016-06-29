@@ -6,14 +6,23 @@ using MsgPack;
 using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Serialization;
+#pragma warning disable 1998
 
 namespace Rebus.MsgPack
 {
+    /// <summary>
+    /// Implementation of <see cref="ISerializer"/> that uses MsgPack to serialize messages
+    /// </summary>
     public class MsgPackSerializer : ISerializer
     {
         const string MsgPackContentType = "application/x-msgpack";
         readonly ObjectPacker _packer = new ObjectPacker();
 
+        /// <summary>
+        /// Serializes the given logical message to a transport message using MsgPack. Adds the
+        /// <see cref="Headers.ContentType"/> with the <code>application/x-msgpack</code> value
+        /// and sets the <see cref="Headers.Type"/> to the short assembly-qualified .NET type name of the message body
+        /// </summary>
         public async Task<TransportMessage> Serialize(Message message)
         {
             var headers = message.Headers.Clone();
@@ -27,6 +36,12 @@ namespace Rebus.MsgPack
             return new TransportMessage(headers, bytes);
         }
 
+        /// <summary>
+        /// Deserializes the given transport message to a logical message using MsgPack. Throws if the
+        /// required <see cref="Headers.ContentType"/> does not have the required <code>application/x-msgpack</code> value
+        /// or of the .NET type of the message cannot be resolved from the <see cref="Headers.Type"/> header (which
+        /// should carry the short assembly-qualified .NET type name of the message body)
+        /// </summary>
         public async Task<Message> Deserialize(TransportMessage transportMessage)
         {
             var headers = transportMessage.Headers;
