@@ -30,7 +30,7 @@ namespace Rebus.Transport.InMem
 
             if (_outputEventsToConsole)
             {
-                Console.WriteLine("Created in-mem network '{0}'", _networkId);
+                Console.WriteLine($"Created in-mem network '{_networkId}'");
             }
         }
 
@@ -39,7 +39,8 @@ namespace Rebus.Transport.InMem
         /// </summary>
         public void Reset()
         {
-            Console.WriteLine("Resetting in-mem network '{0}'", _networkId);
+            Console.WriteLine($"Resetting in-mem network '{_networkId}'");
+
             _queues.Clear();
         }
 
@@ -55,7 +56,9 @@ namespace Rebus.Transport.InMem
 
             if (_outputEventsToConsole && !alwaysQuiet)
             {
-                Console.WriteLine("{0} ---> {1} ({2})", msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", destinationAddress, _networkId);
+                var messageId = msg.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
+
+                Console.WriteLine($"{messageId} ---> {destinationAddress} ({_networkId})");
             }
 
             var messageQueue = _queues
@@ -71,24 +74,31 @@ namespace Rebus.Transport.InMem
         {
             if (inputQueueName == null) throw new ArgumentNullException(nameof(inputQueueName));
 
-            InMemTransportMessage message;
-
             var messageQueue = _queues.GetOrAdd(inputQueueName, address => new ConcurrentQueue<InMemTransportMessage>());
 
-            if (!messageQueue.TryDequeue(out message)) return null;
-
-            if (MessageIsExpired(message))
+            while (true)
             {
-                Console.WriteLine("{0} EXP> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
-                return null;
-            }
+                InMemTransportMessage message;
+                if (!messageQueue.TryDequeue(out message)) return null;
 
-            if (_outputEventsToConsole)
-            {
-                Console.WriteLine("{0} ---> {1} ({2})", inputQueueName, message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>", _networkId);
-            }
+                var messageId = message.Headers.GetValueOrNull(Headers.MessageId) ?? "<no message ID>";
 
-            return message;
+                if (MessageIsExpired(message))
+                {
+                    if (_outputEventsToConsole)
+                    {
+                        Console.WriteLine($"{inputQueueName} EXPIRED> {messageId} ({_networkId})");
+                    }
+                    continue;
+                }
+
+                if (_outputEventsToConsole)
+                {
+                    Console.WriteLine($"{inputQueueName} ---> {messageId} ({_networkId})");
+                }
+
+                return message;
+            }
         }
 
         bool MessageIsExpired(InMemTransportMessage message)
