@@ -156,7 +156,7 @@
     <Compile Include="Integration\TestTypeHeader.cs" />
     <Compile Include="LocalAddin.cs" />
     <Compile Include="LogLine.cs" />
-    <Compile Include="Performance\TestDispatchPerformance.cs" />
+    <Compile Include="Profiling\TestDispatchPerformance.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaStorageBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaStorageConcurrencyHandling.cs" />
     <Compile Include="Persistence\Filesystem\FilesystemSagaStorageFactory.cs" />
@@ -172,6 +172,7 @@
     <Compile Include="Pipeline\TestAbortMessagePipeline.cs" />
     <Compile Include="Pipeline\TestOrdinaryLogLevels.cs" />
     <Compile Include="Pipeline\TestPipelineStepConcatenator.cs" />
+    <Compile Include="Profiling\TestProfiler.cs" />
     <Compile Include="Routing\TestTransportMessageOperations.cs" />
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
     <Compile Include="Routing\TestTypeBasedRouter.cs" />

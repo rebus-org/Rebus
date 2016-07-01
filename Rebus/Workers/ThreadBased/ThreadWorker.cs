@@ -114,16 +114,16 @@ namespace Rebus.Workers.ThreadBased
         {
             using (var operation = _parallelOperationsManager.TryBegin())
             {
-                // if we didn't get to do our thing, pause the thread a very short while to avoid thrashing too much
+                // if we didn't get to do our thing, let the OS decide what to do next.... we don't hog the processor
                 if (!operation.CanContinue())
                 {
-                    Thread.Sleep(1);
+                    Thread.Yield();
                     return;
                 }
 
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    transactionContext.GetOrAdd("CancellationToken", () => _cancellationTokenSource.Token);
+                    transactionContext.Items["CancellationToken"] = _cancellationTokenSource.Token;
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {
@@ -162,7 +162,6 @@ namespace Rebus.Workers.ThreadBased
                         _backoffStrategy.Reset();
 
                         var context = new IncomingStepContext(message, transactionContext);
-
                         var stagedReceiveSteps = _pipeline.ReceivePipeline();
 
                         await _pipelineInvoker.Invoke(context, stagedReceiveSteps);

@@ -13,14 +13,15 @@ using Rebus.Profiling;
 using Rebus.Serialization;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
+
 #pragma warning disable 1998
 
-namespace Rebus.Tests.Performance
+namespace Rebus.Tests.Profiling
 {
     [TestFixture]
     public class TestDispatchPerformance : FixtureBase
     {
-        [TestCase(10000, 100)]
+        [TestCase(10000, 20)]
         public void TakeTime(int numberOfMessages, int numberOfSamples)
         {
             var profilerStats = new PipelineStepProfilerStats();
@@ -91,7 +92,7 @@ Stats:
                 var stopwatch = Stopwatch.StartNew();
 
                 adapter.Bus.Advanced.Workers.SetNumberOfWorkers(1);
-                gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(10));
+                gotAllMessages.WaitOrDie(TimeSpan.FromSeconds(30));
 
                 return stopwatch.Elapsed;
             }

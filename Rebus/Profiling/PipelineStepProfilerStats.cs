@@ -39,7 +39,21 @@ namespace Rebus.Profiling
         /// </summary>
         public List<StepStat> GetStats()
         {
-            return _stats.Select(kvp => new StepStat(kvp.Key, kvp.Value)).ToList();
+            var stats = _stats
+                .Select(kvp => new
+                {
+                    Type = kvp.Key,
+                    Elapsed = kvp.Value
+                })
+                .ToList();
+
+            if (!stats.Any()) return new List<StepStat>();
+
+            var totalSeconds = stats.Sum(s => s.Elapsed.TotalSeconds);
+
+            return stats
+                .Select(s => new StepStat(s.Type, s.Elapsed, 100* s.Elapsed.TotalSeconds/totalSeconds))
+                .ToList();
         }
 
         /// <summary>
@@ -47,11 +61,12 @@ namespace Rebus.Profiling
         /// </summary>
         public class StepStat
         {
-            internal StepStat(Type stepType, TimeSpan elapsed)
+            internal StepStat(Type stepType, TimeSpan elapsed, double percentage)
             {
                 if (stepType == null) throw new ArgumentNullException(nameof(stepType));
                 StepType = stepType;
                 Elapsed = elapsed;
+                Percentage = percentage;
             }
 
             /// <summary>
@@ -65,9 +80,14 @@ namespace Rebus.Profiling
             public TimeSpan Elapsed { get; }
 
             /// <summary>
+            /// Gets the percentage of time spent in this particular step
+            /// </summary>
+            public double Percentage { get; }
+
+            /// <summary>
             /// Gets a string representation of this stat on the form "type: elapsed"
             /// </summary>
-            public override string ToString() => $"{StepType}: {Elapsed}";
+            public override string ToString() => $"{StepType}: {Elapsed} ({Percentage:0.0} %)";
         }
     }
 }

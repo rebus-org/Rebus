@@ -58,6 +58,13 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                 .Where(l => l.HasSaga)
                 .ToList();
 
+            // maybe short-circuit? this makes it slightly faster
+            if (!handlerInvokersForSagas.Any())
+            {
+                await next();
+                return;
+            }
+
             var message = context.Load<Message>();
             var label = message.GetMessageLabel();
 

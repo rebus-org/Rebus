@@ -30,9 +30,7 @@ namespace Rebus.Pipeline.Receive
         {
             var transportMessage = context.Load<TransportMessage>();
             var message = await _serializer.Deserialize(transportMessage);
-            
             context.Save(message);
-            
             await next();
         }
     }
