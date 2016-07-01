@@ -118,26 +118,28 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
             if (!headers.TryGetValue(Headers.DeferredUntil, out deferredUntil))
             {
                 await next();
-                return;
-            }
-
-            if (!headers.ContainsKey(Headers.DeferredRecipient))
-            {
-                throw new ApplicationException(
-                    $"Received message {headers[Headers.MessageId]} with the '{Headers.DeferredUntil}' header" +
-                    $" set to '{headers[Headers.DeferredUntil]}', but the message had no" +
-                    $" '{Headers.DeferredRecipient}' header!");
-            }
-
-            if (UsingExternalTimeoutManager)
-            {
-                var transactionContext = context.Load<ITransactionContext>();
-
-                await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext);
+                //return;don't return here! for some reason it is faster to have an "else"
             }
             else
             {
-                await StoreMessageUntilDue(deferredUntil, headers, transportMessage);
+                if (!headers.ContainsKey(Headers.DeferredRecipient))
+                {
+                    throw new ApplicationException(
+                        $"Received message {headers[Headers.MessageId]} with the '{Headers.DeferredUntil}' header" +
+                        $" set to '{headers[Headers.DeferredUntil]}', but the message had no" +
+                        $" '{Headers.DeferredRecipient}' header!");
+                }
+
+                if (UsingExternalTimeoutManager)
+                {
+                    var transactionContext = context.Load<ITransactionContext>();
+
+                    await ForwardMessageToExternalTimeoutManager(transportMessage, transactionContext);
+                }
+                else
+                {
+                    await StoreMessageUntilDue(deferredUntil, headers, transportMessage);
+                }
             }
         }
 
