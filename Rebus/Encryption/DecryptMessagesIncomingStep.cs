@@ -12,6 +12,7 @@ namespace Rebus.Encryption
     /// Incoming message step that checks for the prensence of the <see cref="EncryptionHeaders.ContentEncryption"/> header, decrypting
     /// the message body if it is present.
     /// </summary>
+    [StepDocumentation("Decrypts the body of the incoming message if it has the '" + EncryptionHeaders.ContentEncryption + "' header")]
     public class DecryptMessagesIncomingStep : IIncomingStep
     {
         readonly IEncryptor _encryptor;
@@ -21,6 +22,7 @@ namespace Rebus.Encryption
         /// </summary>
         public DecryptMessagesIncomingStep(IEncryptor encryptor)
         {
+            if (encryptor == null) throw new ArgumentNullException(nameof(encryptor));
             _encryptor = encryptor;
         }
 

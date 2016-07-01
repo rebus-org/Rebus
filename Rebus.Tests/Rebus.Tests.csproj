@@ -104,6 +104,7 @@
     <Compile Include="DataBus\TestFileSystemDataBusStorage.cs" />
     <Compile Include="DataBus\TestSqlServerDataBusStorage.cs" />
     <Compile Include="Encryption\TestCustomEncryption.cs" />
+    <Compile Include="Encryption\TestDisableEncryption.cs" />
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />

@@ -15,5 +15,9 @@ namespace Rebus.Encryption
         /// </summary>
         public const string ContentInitializationVector = "rbs2-encryption-iv";
 
+        /// <summary>
+        /// Special header that can be added to a message in order to disable encryption for that particular message
+        /// </summary>
+        public const string DisableEncryptionHeader = "rbs2-disable-encryption";
     }
 }
