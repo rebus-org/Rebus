@@ -150,6 +150,7 @@
     <Compile Include="Bugs\InheritedMessageCanInitiateSagaToo.cs" />
     <Compile Include="Integration\TestSecondLevelRetries.cs" />
     <Compile Include="Integration\TestShutdownWithPendingTasks.cs" />
+    <Compile Include="Integration\TestSlowContinuations.cs" />
     <Compile Include="Integration\TestSqlSagaStorageSpeed.cs" />
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
