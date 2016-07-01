@@ -70,7 +70,7 @@ as part of this:
         {
             var sharedCounter = new SharedCounter(3, "Message counter")
             {
-                Delay = TimeSpan.FromSeconds(1)
+                Delay = TimeSpan.FromSeconds(2)
             };
 
             Using(sharedCounter);
