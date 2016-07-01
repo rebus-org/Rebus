@@ -156,6 +156,9 @@
     <Compile Include="Pipeline\Send\ValidateOutgoingMessageStep.cs" />
     <Compile Include="Pipeline\StepContext.cs" />
     <Compile Include="Pipeline\StepDocumentationAttribute.cs" />
+    <Compile Include="Profiling\PipelineStepProfiler.cs" />
+    <Compile Include="Profiling\PipelineStepProfilerStats.cs" />
+    <Compile Include="Profiling\StatsContext.cs" />
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
     <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />

@@ -37,6 +37,12 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
         /// </summary>
         public HandleDeferredMessagesStep(ITimeoutManager timeoutManager, ITransport transport, Options options, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
+            if (timeoutManager == null) throw new ArgumentNullException(nameof(timeoutManager));
+            if (transport == null) throw new ArgumentNullException(nameof(transport));
+            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
+
             _timeoutManager = timeoutManager;
             _transport = transport;
             _options = options;
