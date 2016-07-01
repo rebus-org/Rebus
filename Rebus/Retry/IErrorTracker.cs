@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Rebus.Retry
 {
@@ -31,5 +32,10 @@ namespace Rebus.Retry
         /// Should get a full, detailed error description for the message ID (i.e. could be timestamps and full stack traces for all failed deliveries)
         /// </summary>
         string GetFullErrorDescription(string messageId);
+
+        /// <summary>
+        /// Gets all caught exceptions for the message ID
+        /// </summary>
+        IEnumerable<Exception> GetExceptions(string messageId);
     }
 }

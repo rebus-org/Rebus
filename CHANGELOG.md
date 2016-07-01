@@ -1001,6 +1001,7 @@
 * Added MsgPack serializer
 * Updated Newtonsoft JSON.NET to 9.0.1 throughout
 * Added ability to skip encryption of a particular message by adding the `rbs2-disable-encryption` header (can be found as a constant in `EncryptionHeaders.DisableEncryptionHeader`)
+* Provide real `Exception`s in `IFailed<TMessage>`
 
 ---
 

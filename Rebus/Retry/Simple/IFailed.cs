@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Rebus.Retry.Simple
@@ -21,5 +22,10 @@ namespace Rebus.Retry.Simple
         /// Gets the headers of the message that failed
         /// </summary>
         Dictionary<string, string> Headers { get; }
+
+        /// <summary>
+        /// Gets all exceptions that were caught leading to this failed message
+        /// </summary>
+        IEnumerable<Exception> Exceptions { get; }
     }
 }

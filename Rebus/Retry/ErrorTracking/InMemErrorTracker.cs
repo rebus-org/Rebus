@@ -108,6 +108,23 @@ namespace Rebus.Retry.ErrorTracking
         }
 
         /// <summary>
+        /// Gets all caught exceptions for the message ID
+        /// </summary>
+        public IEnumerable<Exception> GetExceptions(string messageId)
+        {
+            ErrorTracking errorTracking;
+
+            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
+            {
+                return Enumerable.Empty<Exception>();
+            }
+
+            return errorTracking.Errors
+                .Select(e => e.Exception)
+                .ToList();
+        }
+
+        /// <summary>
         /// Cleans up whichever tracking wr have done for the given <paramref name="messageId"/>
         /// </summary>
         public void CleanUp(string messageId)

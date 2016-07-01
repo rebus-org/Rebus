@@ -106,7 +106,7 @@ namespace Rebus.Tests.Integration
             };
             var body = Encoding.UTF8.GetBytes(brokenJsonString);
             var transportMessage = new TransportMessage(headers, body);
-            var inMemTransportMessage = new InMemTransportMessage(transportMessage);  
+            var inMemTransportMessage = new InMemTransportMessage(transportMessage);
             _network.Deliver(InputQueueName, inMemTransportMessage);
 
             await Task.Delay(1000);
@@ -130,7 +130,7 @@ namespace Rebus.Tests.Integration
                 throw new ApplicationException("1st level!!");
             });
 
-            var headersOfFailedMessage = new Dictionary<string,string>();
+            var headersOfFailedMessage = new Dictionary<string, string>();
 
             _activator.Handle<IFailed<string>>(async failed =>
             {
@@ -146,9 +146,21 @@ namespace Rebus.Tests.Integration
                 }
 
                 Console.WriteLine();
-                Console.WriteLine("----------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("ERROR DESCRIPTION:");
+                Console.WriteLine();
                 Console.WriteLine(failed.ErrorDescription);
-                Console.WriteLine("----------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("CAUGHT EXCEPTIONS:");
+                Console.WriteLine();
+                Console.WriteLine(string.Join(Environment.NewLine + Environment.NewLine, failed.Exceptions));
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
+                Console.WriteLine("-------------------------------------------------------------------------------------------------------------------------------------------------------------");
                 Console.WriteLine();
 
                 counter.Decrement();
@@ -163,8 +175,8 @@ namespace Rebus.Tests.Integration
 
             counter.WaitForResetEvent();
 
-            Console.WriteLine(string.Join(Environment.NewLine , headersOfFailedMessage.Select(kvp =>
-                $"    {kvp.Key}: {kvp.Value}")));
+            Console.WriteLine(string.Join(Environment.NewLine, headersOfFailedMessage.Select(kvp =>
+               $"    {kvp.Key}: {kvp.Value}")));
 
             Assert.That(headersOfFailedMessage["custom-header"], Is.EqualTo("with-a-custom-value"));
         }

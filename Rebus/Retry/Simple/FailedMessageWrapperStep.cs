@@ -34,9 +34,10 @@ which is then detected by this wrapper step.")]
 
                 var messageId = originalMessage.GetMessageId();
                 var fullErrorDescription = _errorTracker.GetFullErrorDescription(messageId) ?? "(not available in the error tracker!)";
+                var exceptions = _errorTracker.GetExceptions(messageId);
                 var headers = originalMessage.Headers;
                 var body = originalMessage.Body;
-                var wrappedBody = WrapInFailed(headers, body, fullErrorDescription);
+                var wrappedBody = WrapInFailed(headers, body, fullErrorDescription, exceptions);
 
                 context.Save(new Message(headers, wrappedBody));
             }
@@ -46,7 +47,7 @@ which is then detected by this wrapper step.")]
 
         static readonly ConcurrentDictionary<Type, MethodInfo> WrapperMethods = new ConcurrentDictionary<Type, MethodInfo>();
 
-        object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription)
+        object WrapInFailed(Dictionary<string, string> headers, object body, string errorDescription, IEnumerable<Exception> exceptions)
         {
             if (headers == null) throw new ArgumentNullException(nameof(headers));
             if (body == null) throw new ArgumentNullException(nameof(body));
@@ -62,7 +63,7 @@ which is then detected by this wrapper step.")]
 
                         return genericWrapMethod.MakeGenericMethod(type);
                     })
-                    .Invoke(this, new[] { headers, body, errorDescription });
+                    .Invoke(this, new[] { headers, body, errorDescription, exceptions });
             }
             catch (Exception exception)
             {
@@ -70,9 +71,9 @@ which is then detected by this wrapper step.")]
             }
         }
 
-        IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription)
+        IFailed<TMessage> Wrap<TMessage>(Dictionary<string, string> headers, TMessage body, string errorDescription, IEnumerable<Exception> exceptions)
         {
-            return new FailedMessageWrapper<TMessage>(headers, body, errorDescription);
+            return new FailedMessageWrapper<TMessage>(headers, body, errorDescription, exceptions);
         }
     }
 }

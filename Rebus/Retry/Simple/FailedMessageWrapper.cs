@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rebus.Retry.Simple
 {
@@ -19,6 +20,11 @@ namespace Rebus.Retry.Simple
         public string ErrorDescription { get; }
 
         /// <summary>
+        /// Gets all exceptions that were caught leading to this <see cref="IFailed{TMessage}"/>
+        /// </summary>
+        public IEnumerable<Exception> Exceptions { get; }
+
+        /// <summary>
         /// Gets the headers of the message that failed
         /// </summary>
         public Dictionary<string, string> Headers { get; }
@@ -26,14 +32,16 @@ namespace Rebus.Retry.Simple
         /// <summary>
         /// Constructs the wrapper with the given message
         /// </summary>
-        public FailedMessageWrapper(Dictionary<string, string> headers, TMessage message, string errorDescription)
+        public FailedMessageWrapper(Dictionary<string, string> headers, TMessage message, string errorDescription, IEnumerable<Exception> exceptions)
         {
             if (headers == null) throw new ArgumentNullException(nameof(headers));
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (errorDescription == null) throw new ArgumentNullException(nameof(errorDescription));
+            if (exceptions == null) throw new ArgumentNullException(nameof(exceptions));
             Headers = headers;
             Message = message;
             ErrorDescription = errorDescription;
+            Exceptions = exceptions.ToArray();
         }
 
         /// <summary>
