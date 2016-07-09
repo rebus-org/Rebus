@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using RabbitMQ.Client;
 using Rebus.Logging;
@@ -10,14 +11,18 @@ namespace Rebus.RabbitMq
     class ConnectionManager : IDisposable
     {
         readonly object _activeConnectionLock = new object();
-        readonly ConnectionFactory _connectionFactory;
+        readonly ConnectionFactory[] _connectionFactories;
         readonly ILog _log;
 
         IConnection _activeConnection;
+        int _activeConnectionIndex;
         bool _disposed;
 
         public ConnectionManager(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
             if (inputQueueAddress != null)
@@ -29,13 +34,28 @@ namespace Rebus.RabbitMq
                 _log.Info("Initializing RabbitMQ connection manager for one-way transport");
             }
 
-            _connectionFactory = new ConnectionFactory
+            _connectionFactories = connectionString.Split(";,".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                .Select(uri => new ConnectionFactory
+                {
+                    Uri = uri.Trim(),
+                    AutomaticRecoveryEnabled = true,
+                    NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
+                    ClientProperties = CreateClientProperties(inputQueueAddress)
+                })
+                .ToArray();
+
+            if (_connectionFactories.Length == 0)
             {
-                Uri = connectionString,
-                ClientProperties = CreateClientProperties(inputQueueAddress),
-                AutomaticRecoveryEnabled = true,
-                NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
-            };
+                throw new ArgumentException($"Please remember to specify at least one connection string for a RabbitMQ server somewhere. You can also add multiple connection strings separated by ; or , which Rebus will use in failover scenarios");
+            }
+
+            //_connectionFactory = new ConnectionFactory
+            //{
+            //    Uri = connectionString,
+            //    ClientProperties = CreateClientProperties(inputQueueAddress),
+            //    AutomaticRecoveryEnabled = true,
+            //    NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
+            //};
         }
 
         public IConnection GetConnection()
@@ -72,8 +92,19 @@ namespace Rebus.RabbitMq
 
                 try
                 {
-                    _log.Info("Creating new RabbitMQ connection");
-                    _activeConnection = _connectionFactory.CreateConnection();
+                    var indexToUse = _activeConnectionIndex++;
+                    _activeConnectionIndex %= _connectionFactories.Length;
+
+                    if (_connectionFactories.Length > 1)
+                    {
+                        _log.Info("Creating new RabbitMQ connection (from connection with index {0})", indexToUse);
+                    }
+                    else
+                    {
+                        _log.Info("Creating new RabbitMQ connection");
+                    }
+
+                    _activeConnection = _connectionFactories[indexToUse].CreateConnection();
 
                     return _activeConnection;
                 }
@@ -118,9 +149,12 @@ namespace Rebus.RabbitMq
 
         public void AddClientProperties(Dictionary<string, string> additionalClientProperties)
         {
-            foreach (var kvp in additionalClientProperties)
+            foreach (var connectionFactory in _connectionFactories)
             {
-                _connectionFactory.ClientProperties[kvp.Key] = kvp.Value;
+                foreach (var kvp in additionalClientProperties)
+                {
+                    connectionFactory.ClientProperties[kvp.Key] = kvp.Value;
+                }
             }
         }
 

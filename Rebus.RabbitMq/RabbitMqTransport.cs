@@ -41,23 +41,26 @@ namespace Rebus.RabbitMq
         QueueingBasicConsumer _consumer;
         ushort _maxMessagesToPrefetch;
 
-        /// <summary>
-        /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
-        /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, ushort maxMessagesToPrefetch = 50)
-        {
-            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
-            _maxMessagesToPrefetch = maxMessagesToPrefetch;
-            _log = rebusLoggerFactory.GetCurrentClassLogger();
-            Address = inputQueueAddress;
-        }
-
         bool _declareExchanges = true;
         bool _declareInputQueue = true;
         bool _bindInputQueue = true;
 
         string _directExchangeName = RabbitMqOptionsBuilder.DefaultDirectExchangeName;
         string _topicExchangeName = RabbitMqOptionsBuilder.DefaultTopicExchangeName;
+
+        /// <summary>
+        /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
+        /// </summary>
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, ushort maxMessagesToPrefetch = 50)
+        {
+            if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+
+            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
+            _maxMessagesToPrefetch = maxMessagesToPrefetch;
+            _log = rebusLoggerFactory.GetCurrentClassLogger();
+            Address = inputQueueAddress;
+        }
 
         /// <summary>
         /// Stores the client properties to be haded to RabbitMQ when the connection is established
@@ -203,7 +206,7 @@ namespace Rebus.RabbitMq
         {
             if (Address == null)
             {
-                throw new InvalidOperationException("This RabbitMQ transport does not have an input queue, hence it is not possible to reveive anything");
+                throw new InvalidOperationException("This RabbitMQ transport does not have an input queue - therefore, it is not possible to reveive anything");
             }
 
             try
@@ -284,8 +287,10 @@ namespace Rebus.RabbitMq
                         {
                             _consumer = InitializeConsumer();
                         }
-                        catch
+                        catch(Exception exception)
                         {
+                            _log.Warn("Could not initialize consumer: {0} - waiting 2 seconds", exception);
+
                             Thread.Sleep(2000);
                         }
                     }

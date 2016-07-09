@@ -32,6 +32,8 @@ namespace Rebus.Retry.ErrorTracking
         /// </summary>
         public InMemErrorTracker(int maxDeliveryAttempts, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
             _maxDeliveryAttempts = maxDeliveryAttempts;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
             _cleanupOldTrackedErrorsTask = asyncTaskFactory.Create(BackgroundTaskName, CleanupOldTrackedErrors, intervalSeconds: 60);
@@ -80,12 +82,9 @@ namespace Rebus.Retry.ErrorTracking
         {
             ErrorTracking errorTracking;
 
-            if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
-            {
-                return "Could not get error details for the message";
-            }
-
-            return $"{errorTracking.Errors.Count()} unhandled exceptions";
+            return _trackedErrors.TryGetValue(messageId, out errorTracking)
+                ? $"{errorTracking.Errors.Count()} unhandled exceptions"
+                : "Could not get error details for the message";
         }
 
         /// <summary>
@@ -152,15 +151,9 @@ namespace Rebus.Retry.ErrorTracking
                 AddError(exception);
             }
 
-            public int ErrorCount
-            {
-                get { return _caughtExceptions.Count; }
-            }
+            public int ErrorCount => _caughtExceptions.Count;
 
-            public IEnumerable<CaughtException> Errors
-            {
-                get { return _caughtExceptions; }
-            }
+            public IEnumerable<CaughtException> Errors => _caughtExceptions;
 
             public ErrorTracking AddError(Exception caughtException)
             {
@@ -173,9 +166,7 @@ namespace Rebus.Retry.ErrorTracking
                 get
                 {
                     var timeOfMostRecentError = _caughtExceptions.Max(e => e.Time);
-
                     var elapsedSinceLastError = timeOfMostRecentError.ElapsedUntilNow();
-
                     return elapsedSinceLastError;
                 }
             }
@@ -185,6 +176,7 @@ namespace Rebus.Retry.ErrorTracking
         {
             public CaughtException(Exception exception)
             {
+                if (exception == null) throw new ArgumentNullException(nameof(exception));
                 Exception = exception;
                 Time = RebusTime.Now;
             }
@@ -209,6 +201,5 @@ namespace Rebus.Retry.ErrorTracking
                 _disposed = true;
             }
         }
-
     }
 }

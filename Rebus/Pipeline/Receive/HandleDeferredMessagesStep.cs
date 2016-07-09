@@ -87,10 +87,6 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                         transportMessage.Headers[Headers.MessageId],
                         returnAddress);
 
-                    Console.WriteLine("Sending due message {0} to {1}",
-                        transportMessage.Headers[Headers.MessageId],
-                        returnAddress);
-
                     using (var context = new DefaultTransactionContext())
                     {
                         await _transport.Send(returnAddress, transportMessage, context);
