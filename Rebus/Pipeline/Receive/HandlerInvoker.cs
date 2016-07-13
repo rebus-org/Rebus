@@ -14,7 +14,7 @@ namespace Rebus.Pipeline.Receive
     /// </summary>
     public abstract class HandlerInvoker
     {
-        static readonly ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>> CanBeInitiatedByCache = new ConcurrentDictionary<Type, ConcurrentDictionary<Type, bool>>();
+        static readonly ConcurrentDictionary<string, bool> CanBeInitiatedByCache = new ConcurrentDictionary<string, bool>();
 
         /// <summary>
         /// Gets whether a message of the given type is allowed to cause a new saga data instance to be created
@@ -23,8 +23,7 @@ namespace Rebus.Pipeline.Receive
         {
             // checks if IAmInitiatedBy<TMessage> is implemented by the saga
             return CanBeInitiatedByCache
-                .GetOrAdd(Handler.GetType(), _ => new ConcurrentDictionary<Type, bool>())
-                .GetOrAdd(messageType, _ =>
+                .GetOrAdd($"{Handler.GetType().FullName}::{messageType.FullName}", _ =>
                 {
                     var implementedInterfaces = Saga.GetType().GetInterfaces();
 
@@ -95,6 +94,10 @@ namespace Rebus.Pipeline.Receive
         /// </summary>
         public HandlerInvoker(string messageId, Func<Task> action, object handler, ITransactionContext transactionContext)
         {
+            if (messageId == null) throw new ArgumentNullException(nameof(messageId));
+            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (handler == null) throw new ArgumentNullException(nameof(handler));
+            if (transactionContext == null) throw new ArgumentNullException(nameof(transactionContext));
             _messageId = messageId;
             _action = action;
             _handler = handler;
@@ -118,8 +121,10 @@ namespace Rebus.Pipeline.Receive
         {
             get
             {
-                if (!HasSaga) throw new InvalidOperationException(
-                    $"Attempted to get {_handler} as saga, it's not a saga!");
+                if (!HasSaga)
+                {
+                    throw new InvalidOperationException($"Attempted to get {_handler} as saga, it's not a saga!");
+                }
 
                 return (Saga)_handler;
             }
@@ -145,6 +150,10 @@ namespace Rebus.Pipeline.Receive
             }
         }
 
+        const string SagaDataPropertyName = nameof(Saga<ConcreteSagaData>.Data); //< for refactoring tools to better see it
+
+        class ConcreteSagaData : SagaData { } //< in order to be able to declare the const above
+
         /// <summary>
         /// Sets a saga instance on the handler
         /// </summary>
@@ -155,11 +164,11 @@ namespace Rebus.Pipeline.Receive
                 throw new InvalidOperationException($"Attempted to set {sagaData} as saga data on handler {_handler}, but the handler is not a saga!");
             }
 
-            var dataProperty = _handler.GetType().GetProperty("Data");
+            var dataProperty = _handler.GetType().GetProperty(SagaDataPropertyName);
 
             if (dataProperty == null)
             {
-                throw new ApplicationException($"Could not find the 'Data' property on {_handler}...");
+                throw new ApplicationException($"Could not find the '{SagaDataPropertyName}' property on {_handler}...");
             }
 
             dataProperty.SetValue(_handler, sagaData);

@@ -87,6 +87,7 @@
     <Compile Include="Assumptions\TestTask.cs" />
     <Compile Include="Auditing\TestMessageAuditing.cs" />
     <Compile Include="Bugs\CustomHeadersAreCloned.cs" />
+    <Compile Include="Bugs\DoesNotDispatchWrongSagaDataType.cs" />
     <Compile Include="Bugs\DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler.cs" />
     <Compile Include="Bugs\DoesNotOverwriteSagaIdWhenInitiatingNewSaga.cs" />
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
