@@ -46,16 +46,13 @@ namespace Rebus.RabbitMq
 
             if (_connectionFactories.Length == 0)
             {
-                throw new ArgumentException($"Please remember to specify at least one connection string for a RabbitMQ server somewhere. You can also add multiple connection strings separated by ; or , which Rebus will use in failover scenarios");
+                throw new ArgumentException("Please remember to specify at least one connection string for a RabbitMQ server somewhere. You can also add multiple connection strings separated by ; or , which Rebus will use in failover scenarios");
             }
 
-            //_connectionFactory = new ConnectionFactory
-            //{
-            //    Uri = connectionString,
-            //    ClientProperties = CreateClientProperties(inputQueueAddress),
-            //    AutomaticRecoveryEnabled = true,
-            //    NetworkRecoveryInterval = TimeSpan.FromSeconds(50),
-            //};
+            if (_connectionFactories.Length > 1)
+            {
+                _log.Info("RabbitMQ transport has {0} connection strings available", _connectionFactories.Length);
+            }
         }
 
         public IConnection GetConnection()

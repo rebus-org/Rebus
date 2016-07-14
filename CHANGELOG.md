@@ -1006,6 +1006,7 @@
 # 0.99.68
 
 * Added optional Jil configuration `Options` parameter, allowing for customizing serialization settings - thanks [Rzpeg]
+* Make RabbitMQ transport accept multiple connection strings separated by , or ; which will then be cycled on connection failures
 
 ---
 
