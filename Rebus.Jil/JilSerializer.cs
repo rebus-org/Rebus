@@ -18,6 +18,16 @@ namespace Rebus.Jil
     {
         const string JsonUtf8ContentType = "application/json;charset=utf-8";
         static readonly Encoding Encoding = Encoding.UTF8;
+        private readonly Options _jilOptions;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="jilOptions"></param>
+        public JilSerializer(Options jilOptions = null)
+        {
+            _jilOptions = jilOptions;
+        }
 
         /// <summary>
         /// Serializes the given <see cref="Message"/> into a <see cref="TransportMessage"/>
@@ -25,7 +35,7 @@ namespace Rebus.Jil
         public async Task<TransportMessage> Serialize(Message message)
         {
             var body = message.Body;
-            var jsonText = JSON.Serialize(body);
+            var jsonText = JSON.Serialize(body, _jilOptions);
             var bytes = Encoding.GetBytes(jsonText);
             var headers = message.Headers.Clone();
             var messageType = body.GetType();
@@ -51,8 +61,8 @@ namespace Rebus.Jil
             var messageType = GetMessageType(headers);
             var bodyString = Encoding.GetString(transportMessage.Body);
             var bodyObject = messageType != null 
-                ? JSON.Deserialize(bodyString, messageType)
-                : JSON.DeserializeDynamic(bodyString);
+                ? JSON.Deserialize(bodyString, messageType, _jilOptions)
+                : JSON.DeserializeDynamic(bodyString, _jilOptions);
             return new Message(headers, bodyObject);
         }
 
