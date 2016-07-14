@@ -1003,6 +1003,10 @@
 * Added ability to skip encryption of a particular message by adding the `rbs2-disable-encryption` header (can be found as a constant in `EncryptionHeaders.DisableEncryptionHeader`)
 * Provide real `Exception`s in `IFailed<TMessage>`
 
+# 0.99.68
+
+* Added optional Jil configuration `Options` parameter, allowing for customizing serialization settings - thanks [Rzpeg]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

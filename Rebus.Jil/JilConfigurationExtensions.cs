@@ -1,6 +1,8 @@
-﻿using Jil;
+﻿using System;
+using Jil;
 using Rebus.Config;
 using Rebus.Serialization;
+using Options = Jil.Options;
 
 namespace Rebus.Jil
 {
@@ -10,14 +12,16 @@ namespace Rebus.Jil
     public static class JilConfigurationExtensions
     {
         /// <summary>
-        /// Configures Rebus to use the simple and extremely fast Jil JSON serializer.
-        /// Pass an Options object to specify the particulars (such as DateTime formats) of
-        /// the JSON being deserialized.  If omitted Options.Default is used, unless JSON.SetDefaultOptions(Options) has been
-        /// called with a different Options object.
+        /// Configures Rebus to use the simple and extremely fast Jil JSON serializer. Pass an <see cref="Options"/> object to specify 
+        /// the particulars (such as <see cref="DateTime"/>/<see cref="DateTimeOffset"/> formats) of  the JSON being serialized/deserialized.
+        /// If omitted <see cref="Options.Default"/> is used, unless <see cref="JSON.SetDefaultOptions"/> has been called with a different 
+        /// <see cref="Options"/> object.
         /// </summary>
-        public static void UseJil(this StandardConfigurer<ISerializer> configurer, global::Jil.Options jilOptions = null)
+        public static void UseJil(this StandardConfigurer<ISerializer> configurer, Options options = null)
         {
-            configurer.Register(c => new JilSerializer(jilOptions));
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+            configurer.Register(c => new JilSerializer(options));
         }
     }
 }

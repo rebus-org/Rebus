@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 using Rebus.Config;
 using Rebus.Serialization;
 using JsonSerializer = Rebus.Serialization.JsonSerializer;
@@ -14,9 +15,11 @@ namespace Rebus.NewtonsoftJson
         /// Configures Rebus to use Newtonsoft JSON.NET to serialize messages, using the specified <see cref="JsonSerializerSettings"/>.
         /// This allows you to customize almost every aspect of how messages are actually serialized/deserialized.
         /// </summary>
-        public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer, JsonSerializerSettings settings)
+        public static void UseNewtonsoftJson(this StandardConfigurer<ISerializer> configurer, JsonSerializerSettings settings = null)
         {
-            configurer.Register(c => new JsonSerializer(settings));
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+
+            configurer.Register(c => new JsonSerializer(settings ?? new JsonSerializerSettings()));
         }
     }
 }
