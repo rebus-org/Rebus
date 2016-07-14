@@ -27,7 +27,11 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
         /// <summary>
         /// properties ignored by auto-setter (the one that automatically sets the correlation ID on a new saga data instance)
         /// </summary>
-        static readonly string[] IgnoredProperties = { IdPropertyName, RevisionPropertyName };
+        static readonly string[] IgnoredProperties =
+        {
+            //IdPropertyName,
+            RevisionPropertyName
+        };
 
         readonly SagaHelper _sagaHelper = new SagaHelper();
         readonly ISagaStorage _sagaStorage;
@@ -134,15 +138,18 @@ Afterwards, all the created/loaded saga data is updated appropriately.")]
                 if (canBeInitiatedByThisMessageType)
                 {
                     var newSagaData = _sagaHelper.CreateNewSagaData(sagaInvoker.Saga);
-                    sagaInvoker.SetSagaData(newSagaData);
-                    _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
-                    newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
 
                     // if there's exacly one correlation property that points to a property on the saga data, we can set it
                     if (correlationPropertiesRelevantForMessage.Length == 1)
                     {
                         TrySetCorrelationPropertyValue(newSagaData, correlationPropertiesRelevantForMessage[0], body);
                     }
+
+                    sagaInvoker.SetSagaData(newSagaData);
+
+                    _log.Debug("Created new saga data with ID {0} for message {1}", newSagaData.Id, label);
+
+                    newlyCreatedSagaData.Add(new RelevantSagaInfo(newSagaData, correlationProperties, sagaInvoker.Saga));
                 }
                 else
                 {

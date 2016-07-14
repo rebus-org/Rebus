@@ -179,6 +179,8 @@
     <Compile Include="Routing\TestHeaderBasedRouting.cs" />
     <Compile Include="Routing\TestTypeBasedRouter.cs" />
     <Compile Include="Sagas\TestConflictResolution.cs" />
+    <Compile Include="Sagas\TestIdCorrelation\DefaultSagaData.cs" />
+    <Compile Include="Sagas\TestIdCorrelation\Scenario1.cs" />
     <Compile Include="Sagas\TestMarkAsUnchanged.cs" />
     <Compile Include="Sagas\TestMarkAsComplete.cs" />
     <Compile Include="Serialization\Default\BigObject.cs" />
