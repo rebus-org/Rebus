@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
@@ -12,6 +13,7 @@ using Rebus.Handlers;
 using Rebus.Tests.Extensions;
 using Rebus.Transport;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Contracts.Activation
 {
@@ -25,6 +27,53 @@ namespace Rebus.Tests.Contracts.Activation
 
             DisposableHandler.Reset();
             SomeHandler.Reset();
+            StaticHandler.Reset();
+        }
+
+        class StaticHandler : IHandleMessages<StaticHandlerMessage>
+        {
+            public static readonly ConcurrentQueue<object> HandledMessages = new ConcurrentQueue<object>();
+
+            public async Task Handle(StaticHandlerMessage message)
+            {
+                HandledMessages.Enqueue(message);
+            }
+
+            public static void Reset()
+            {
+                object obj;
+                while (HandledMessages.TryDequeue(out obj)) ;
+            }
+        }
+
+        class StaticHandlerMessage
+        {
+            public StaticHandlerMessage(string text)
+            {
+                Text = text;
+            }
+
+            public string Text { get; }
+        }
+
+        [Test]
+        public void IntegrationTest()
+        {
+            _factory.RegisterHandlerType<StaticHandler>();
+
+            var activator = _factory.GetActivator();
+
+            Configure.With(activator)
+                .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "container-integration-test"))
+                .Start();
+
+            var bus = _factory.GetBus();
+
+            bus.SendLocal(new StaticHandlerMessage("hej med dig")).Wait();
+
+            Thread.Sleep(2000);
+
+            Assert.That(StaticHandler.HandledMessages.Cast<StaticHandlerMessage>().Single().Text, Is.EqualTo("hej med dig"));
         }
 
         [Test, Description("Some container adapters were implemented in a way that would double-resolve handlers because of lazy evaluation of an IEnumerable")]
