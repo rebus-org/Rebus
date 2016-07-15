@@ -60,8 +60,14 @@ namespace Rebus.RavenDb.Sagas
                     return null;
 
                 var existingSagaDataDocument = await session.LoadAsync<SagaDataDocument>(sagaDataDocumentId);
+                var sagaData = existingSagaDataDocument?.SagaData;
 
-                return existingSagaDataDocument?.SagaData;
+                if (!sagaDataType.IsInstanceOfType(sagaData))
+                {
+                    return null;
+                }
+
+                return sagaData;
             }
 
         }

@@ -41,7 +41,14 @@ namespace Rebus.Persistence.FileSystem
                 var index = new FilesystemSagaIndex(_basePath);
                 if (propertyName == IdPropertyName)
                 {
-                    return index.FindById((Guid) propertyValue);
+                    var sagaData = index.FindById((Guid) propertyValue);
+
+                    if (!sagaDataType.IsInstanceOfType(sagaData))
+                    {
+                        return null;
+                    }
+
+                    return sagaData;
                 }
                 return index.Find(sagaDataType, propertyName, propertyValue);
             }

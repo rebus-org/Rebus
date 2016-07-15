@@ -256,7 +256,14 @@ WHERE [index].[saga_type] = @saga_type
 
                         try
                         {
-                            return (ISagaData)JsonConvert.DeserializeObject(value, Settings);
+                            var sagaData = (ISagaData)JsonConvert.DeserializeObject(value, Settings);
+
+                            if (!sagaDataType.IsInstanceOfType(sagaData))
+                            {
+                                return null;
+                            }
+
+                            return sagaData;
                         }
                         catch (Exception exception)
                         {

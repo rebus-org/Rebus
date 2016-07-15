@@ -4,5 +4,5 @@ using Rebus.Tests.Contracts.Sagas;
 namespace Rebus.RavenDb.Tests.Sagas
 {
     [TestFixture, Category(TestCategory.RavenDb)]
-    public class BasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<RavenDbSagaStorageFactory> { }
+    public class RavenDbBasicLoadAndSaveAndFindOperations : BasicLoadAndSaveAndFindOperations<RavenDbSagaStorageFactory> { }
 }

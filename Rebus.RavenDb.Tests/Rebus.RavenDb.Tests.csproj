@@ -86,7 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Sagas\BasicLoadAndSaveAndFindOperations.cs" />
+    <Compile Include="Sagas\RavenDbBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Sagas\BiggerTest\TestRavenDbSagaStorageMoreThoroughly.cs" />
     <Compile Include="Sagas\Models\BasicSagaData.cs" />
     <Compile Include="Sagas\RavenDbSagaStorageFactory.cs" />

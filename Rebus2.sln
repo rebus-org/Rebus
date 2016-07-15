@@ -218,6 +218,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MsgPack", "Rebus.MsgP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MsgPack.Tests", "Rebus.MsgPack.Tests\Rebus.MsgPack.Tests.csproj", "{ADC481AA-3042-41BA-B182-EB11CD085926}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "runemand", "runemand\runemand.csproj", "{15EDD297-C997-4106-BA90-C6BBB6663C5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -472,6 +474,10 @@ Global
 		{ADC481AA-3042-41BA-B182-EB11CD085926}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ADC481AA-3042-41BA-B182-EB11CD085926}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ADC481AA-3042-41BA-B182-EB11CD085926}.Release|Any CPU.Build.0 = Release|Any CPU
+		{15EDD297-C997-4106-BA90-C6BBB6663C5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15EDD297-C997-4106-BA90-C6BBB6663C5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15EDD297-C997-4106-BA90-C6BBB6663C5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15EDD297-C997-4106-BA90-C6BBB6663C5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -575,5 +581,6 @@ Global
 		{78FC1AC9-976C-47D3-AC83-F2677AD39079} = {F585FD2F-C8BB-4BCC-BBF1-2B3790DA81B2}
 		{B7FFF4B4-EFE2-44F9-B7AB-19B206FB6B90} = {78FC1AC9-976C-47D3-AC83-F2677AD39079}
 		{ADC481AA-3042-41BA-B182-EB11CD085926} = {78FC1AC9-976C-47D3-AC83-F2677AD39079}
+		{15EDD297-C997-4106-BA90-C6BBB6663C5D} = {1ABDD7C1-1F8D-402D-8692-3E4B66962DE0}
 	EndGlobalSection
 EndGlobal

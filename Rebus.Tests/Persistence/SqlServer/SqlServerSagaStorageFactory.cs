@@ -20,6 +20,11 @@ namespace Rebus.Tests.Persistence.SqlServer
         const string IndexTableName = "RebusSagaIndex";
         const string DataTableName = "RebusSagaData";
 
+        public SqlServerSagaStorageFactory()
+        {
+            CleanUp();
+        }
+
         public ISagaStorage GetSagaStorage()
         {
             var consoleLoggerFactory = new ConsoleLoggerFactory(true);

@@ -87,7 +87,15 @@ namespace Rebus.AzureStorage.Sagas
                     ? (string)propertyValue
                     : ((Guid)propertyValue).ToString("N");
 
-                return await ReadSaga(sagaId, sagaDataType);
+                var sagaData = await ReadSaga(sagaId, sagaDataType);
+
+                // in this case, we need to filter on the saga data type
+                if (!sagaDataType.IsInstanceOfType(sagaData))
+                {
+                    return null;
+                }
+
+                return sagaData;
             }
             var query = CreateFindQuery(sagaDataType, propertyName, propertyValue);
             var sagas = await _tableReference.ExecuteQueryAsync(query, DefaultTableRequestOptions, DefaultOperationContext);
@@ -334,7 +342,6 @@ namespace Rebus.AzureStorage.Sagas
 
         public static TableQuery<DynamicTableEntity> CreateFindQuery(Type sagaDataType, string propertyName, object propertyValue)
         {
-
             var prefixCondition = TableQuery.GenerateFilterCondition("RowKey",
                 QueryComparisons.Equal,
                 $"{propertyName}_{(propertyValue == null ? "" : propertyValue.ToString())}");

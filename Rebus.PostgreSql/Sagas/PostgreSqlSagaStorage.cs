@@ -117,7 +117,11 @@ CREATE INDEX ON ""{_indexTableName}"" (""saga_id"");
                 {
                     if (propertyName == IdPropertyName)
                     {
-                        command.CommandText = $@"SELECT s.""data"" FROM ""{_dataTableName}"" s WHERE s.""id"" = @id";
+                        command.CommandText = $@"
+SELECT s.""data"" 
+    FROM ""{_dataTableName}"" s 
+    WHERE s.""id"" = @id
+";
                         command.Parameters.Add("id", NpgsqlDbType.Uuid).Value = ToGuid(propertyValue);
                     }
                     else
@@ -141,7 +145,14 @@ SELECT s.""data""
 
                     try
                     {
-                        return (ISagaData) _objectSerializer.Deserialize(data);
+                        var sagaData = (ISagaData) _objectSerializer.Deserialize(data);
+
+                        if (!sagaDataType.IsInstanceOfType(sagaData))
+                        {
+                            return null;
+                        }
+
+                        return sagaData;
                     }
                     catch (Exception exception)
                     {

@@ -57,7 +57,7 @@
   <ItemGroup>
     <Compile Include="MongoDbSagaIntegrationTest.cs" />
     <Compile Include="MongoTestHelper.cs" />
-    <Compile Include="Sagas\BasicLoadAndSaveAndFindOperations.cs" />
+    <Compile Include="Sagas\MongoDbBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Sagas\ConcurrencyHandling.cs" />
     <Compile Include="Sagas\MongoDbSnapshotStorageFactory.cs" />
     <Compile Include="Sagas\SagaIntegrationTests.cs" />

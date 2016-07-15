@@ -30,6 +30,52 @@ namespace Rebus.Tests.Contracts.Sagas
         }
 
         [Test]
+        public async Task IncludesTypeAsFindCriteria_CorrelationById()
+        {
+            var knownId = Guid.NewGuid();
+            var correlationProperties = new[] { new TestCorrelationProperty(nameof(ISagaData.Id), typeof(Data1)) };
+            await _sagaStorage.Insert(new Data1 { Id = knownId }, correlationProperties);
+
+            var resultLookingForData1 = await _sagaStorage.Find(typeof(Data1), nameof(ISagaData.Id), knownId);
+            var resultLookingForData2 = await _sagaStorage.Find(typeof(Data2), nameof(ISagaData.Id), knownId);
+
+            Assert.That(resultLookingForData1, Is.Not.Null);
+            Assert.That(resultLookingForData2, Is.Null);
+        }
+
+        [Test]
+        public async Task IncludesTypeAsFindCriteria_CorrelationByCustomProperty()
+        {
+            const string knownCorrelationId = "known-correlation-property-id";
+            var correlationProperties = new[] { new TestCorrelationProperty(nameof(Data1.CorrelationId), typeof(Data1)) };
+            await _sagaStorage.Insert(new Data1 { Id = Guid.NewGuid(), CorrelationId = knownCorrelationId }, correlationProperties);
+
+            var resultLookingForData1 = await _sagaStorage.Find(typeof(Data1), nameof(Data1.CorrelationId), knownCorrelationId);
+            var resultLookingForData2 = await _sagaStorage.Find(typeof(Data2), nameof(Data1.CorrelationId), knownCorrelationId);
+
+            Assert.That(resultLookingForData1, Is.Not.Null);
+            Assert.That(resultLookingForData2, Is.Null);
+        }
+
+        class Data1 : SagaData { public string CorrelationId { get; set; } }
+        class Data2 : SagaData { public string CorrelationId { get; set; } }
+
+        [Test]
+        public async Task CanSpecifySagaDataId()
+        {
+            var knownId = Guid.NewGuid();
+            var correlationProperties = new[] { new TestCorrelationProperty(nameof(ISagaData.Id), typeof(Data1)) };
+            await _sagaStorage.Insert(new DataWithCustomId { Id = knownId }, correlationProperties);
+
+            var foundSagaData = await _sagaStorage.Find(typeof(DataWithCustomId), nameof(ISagaData.Id), knownId);
+
+            Assert.That(foundSagaData, Is.Not.Null);
+            Assert.That(foundSagaData.Id, Is.EqualTo(knownId));
+        }
+
+        class DataWithCustomId : SagaData { }
+
+        [Test]
         public void ChecksRevisionOnFirstInsert()
         {
             var ex = Assert.Throws<AggregateException>(() =>
