@@ -90,7 +90,7 @@
     <Compile Include="Bugs\DoesNotDispatchWrongSagaDataType.cs" />
     <Compile Include="Bugs\DoesNotEnlistInOtherBusTransactionContext.cs" />
     <Compile Include="Bugs\DoesNotImmediatelyDispatchAsFailedAfterDeferringInSecondLevelRetryHandler.cs" />
-    <Compile Include="Bugs\DoesNotOverwriteSagaIdWhenInitiatingNewSaga.cs" />
+    <Compile Include="Bugs\AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId.cs" />
     <Compile Include="Bugs\InMemSagaPersisterCorrelation.cs" />
     <Compile Include="Bugs\OneWayClientMustSetRecipientWhenDeferring.cs" />
     <Compile Include="Contracts\DataBus\Factories\FileSystemDataBusStorageFactory.cs" />

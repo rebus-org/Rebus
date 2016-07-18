@@ -80,8 +80,7 @@ namespace Rebus.Tests
 
             while (_disposables.TryPop(out disposable))
             {
-                Console.WriteLine("Disposing {0}", disposable);
-                
+                Console.WriteLine($"Disposing {disposable}");
                 disposable.Dispose();
             }
         }

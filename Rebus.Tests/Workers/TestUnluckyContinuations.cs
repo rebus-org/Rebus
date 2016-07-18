@@ -112,7 +112,7 @@ namespace Rebus.Tests.Workers
                     allDone.Set();
                 });
 
-            Task.Delay(4000)
+            Task.Delay(4500)
                 .ContinueWith(t =>
                 {
                     Console.WriteLine("TIME IS OUT!");

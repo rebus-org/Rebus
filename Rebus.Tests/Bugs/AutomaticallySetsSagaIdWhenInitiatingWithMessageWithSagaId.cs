@@ -9,7 +9,7 @@ using Rebus.Transport.InMem;
 namespace Rebus.Tests.Bugs
 {
     [TestFixture]
-    public class DoesNotOverwriteSagaIdWhenInitiatingNewSaga : FixtureBase
+    public class AutomaticallySetsSagaIdWhenInitiatingWithMessageWithSagaId : FixtureBase
     {
         BuiltinHandlerActivator _activator;
 
@@ -35,7 +35,7 @@ namespace Rebus.Tests.Bugs
 
             counter.WaitForResetEvent();
 
-            Assert.That(fields.InitialSagaId, Is.Not.EqualTo(fields.SagaIdPropertyFromMessage));
+            Assert.That(fields.InitialSagaId, Is.EqualTo(fields.SagaIdPropertyFromMessage));
         }
 
         class Fields
