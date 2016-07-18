@@ -30,17 +30,7 @@ namespace Rebus.Pipeline
             }
 
             return step();
-
-            //return Invoke(context, receivePipeline, 0);
         }
-
-        // experimental recursive pipeline buildup - slightly slower than imperative
-        //static Task Invoke(IncomingStepContext context, IIncomingStep[] receivePipeline, int index)
-        //{
-        //    if (index == receivePipeline.Length) return Noop;
-
-        //    return receivePipeline[index].Process(context, () => Invoke(context, receivePipeline, index + 1));
-        //}
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
