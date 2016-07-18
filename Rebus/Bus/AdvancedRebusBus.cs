@@ -64,9 +64,9 @@ namespace Rebus.Bus
                 await _rebusBus.SendTransportMessage(timeoutManagerAddress, transportMessage);
             }
 
-            static TransportMessage GetCloneOfCurrentTransportMessage(Dictionary<string, string> optionalAdditionalHeaders)
+            TransportMessage GetCloneOfCurrentTransportMessage(Dictionary<string, string> optionalAdditionalHeaders)
             {
-                var transactionContext = AmbientTransactionContext.Current;
+                var transactionContext = _rebusBus.GetCurrentTransactionContext(mustBelongToThisBus: false);
 
                 if (transactionContext == null)
                 {

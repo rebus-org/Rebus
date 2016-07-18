@@ -24,17 +24,9 @@ namespace Rebus.Transport
         bool _disposed;
 
         /// <summary>
-        /// Constructs the transaction context
-        /// </summary>
-        public DefaultTransactionContext()
-        {
-            Items = new ConcurrentDictionary<string, object>();
-        }
-
-        /// <summary>
         /// Stash of items that can carry stuff for later use in the transaction
         /// </summary>
-        public ConcurrentDictionary<string, object> Items { get; }
+        public ConcurrentDictionary<string, object> Items { get; } = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Registers a listener to be called when the queue transaction is committed. This hook is reserved for the queue transaction

@@ -74,7 +74,7 @@ namespace Rebus.Transport.InMem
                 return nextMessage.ToTransportMessage();
             }
 
-            await Task.Delay(20);
+            await Task.Delay(5, cancellationToken);
             
             return null;
         }

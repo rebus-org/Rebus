@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -27,11 +28,12 @@ namespace Rebus.Workers.ThreadBased
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
         readonly TimeSpan _workerShutdownTimeout;
+        readonly RebusBus _owningBus;
 
         volatile bool _keepWorking = true;
         bool _disposed;
 
-        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory, TimeSpan workerShutdownTimeout)
+        internal ThreadWorker(ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, string workerName, ThreadWorkerSynchronizationContext threadWorkerSynchronizationContext, ParallelOperationsManager parallelOperationsManager, IBackoffStrategy backoffStrategy, IRebusLoggerFactory rebusLoggerFactory, TimeSpan workerShutdownTimeout, RebusBus owningBus)
         {
             Name = workerName;
 
@@ -43,6 +45,7 @@ namespace Rebus.Workers.ThreadBased
             _parallelOperationsManager = parallelOperationsManager;
             _backoffStrategy = backoffStrategy;
             _workerShutdownTimeout = workerShutdownTimeout;
+            _owningBus = owningBus;
             _workerThread = new Thread(ThreadStart)
             {
                 Name = workerName,
@@ -124,6 +127,7 @@ namespace Rebus.Workers.ThreadBased
                 using (var transactionContext = new DefaultTransactionContext())
                 {
                     transactionContext.Items["CancellationToken"] = _cancellationTokenSource.Token;
+                    transactionContext.Items["OwningBus"] = _owningBus;
                     AmbientTransactionContext.Current = transactionContext;
                     try
                     {

@@ -108,7 +108,7 @@ namespace Rebus.Bus
         public async Task Defer(TimeSpan delay, object message, Dictionary<string, string> optionalHeaders = null)
         {
             var logicalMessage = CreateMessage(message, Operation.Defer, optionalHeaders);
-            
+
             logicalMessage.SetDeferHeaders(RebusTime.Now + delay, _transport.Address);
 
             var timeoutManagerAddress = GetTimeoutManagerAddress();
@@ -123,7 +123,7 @@ namespace Rebus.Bus
         public async Task Reply(object replyMessage, Dictionary<string, string> optionalHeaders = null)
         {
             // reply is slightly different from Send and Publish in that it REQUIRES a transaction context to be present
-            var currentTransactionContext = AmbientTransactionContext.Current;
+            var currentTransactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
 
             if (currentTransactionContext == null)
             {
@@ -370,7 +370,7 @@ namespace Rebus.Bus
 
         async Task InnerSend(IEnumerable<string> destinationAddresses, Message logicalMessage)
         {
-            var currentTransactionContext = AmbientTransactionContext.Current;
+            var currentTransactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
 
             if (currentTransactionContext != null)
             {
@@ -381,7 +381,6 @@ namespace Rebus.Bus
                 using (var context = new DefaultTransactionContext())
                 {
                     await SendUsingTransactionContext(destinationAddresses, logicalMessage, context);
-
                     await context.Complete();
                 }
             }
@@ -396,14 +395,20 @@ namespace Rebus.Bus
 
         async Task SendTransportMessage(string destinationAddress, TransportMessage transportMessage)
         {
-            var transactionContext = AmbientTransactionContext.Current;
+            var transactionContext = GetCurrentTransactionContext(mustBelongToThisBus: true);
 
             if (transactionContext == null)
             {
-                throw new InvalidOperationException($"Attempted to send {transportMessage.GetMessageLabel()} to {destinationAddress} outside of a transaction context!");
+                using (var context = new DefaultTransactionContext())
+                {
+                    await _transport.Send(destinationAddress, transportMessage, context);
+                    await context.Complete();
+                }
             }
-
-            await _transport.Send(destinationAddress, transportMessage, transactionContext);
+            else
+            {
+                await _transport.Send(destinationAddress, transportMessage, transactionContext);
+            }
         }
 
         bool _disposing;
@@ -512,6 +517,33 @@ namespace Rebus.Bus
                     _workers.Remove(lastWorker);
                 }
             }
+        }
+
+        ITransactionContext GetCurrentTransactionContext(bool mustBelongToThisBus)
+        {
+            var transactionContext = AmbientTransactionContext.Current;
+
+            // if there's no context, there's no context
+            if (transactionContext == null) return null;
+
+            // if the context is not required to belong to this bus instance, just return it
+            if (!mustBelongToThisBus) return transactionContext;
+
+            // if there's a context but there's no OwningBus, just return the context (the user created it)
+            object owningBus;
+            if (!transactionContext.Items.TryGetValue("OwningBus", out owningBus))
+            {
+                return transactionContext;
+            }
+
+            // if there's a CurrentThread and it is the calling thread
+            if (Equals(owningBus, this))
+            {
+                return transactionContext;
+            }
+
+            // another thread created this context
+            return null;
         }
 
         /// <summary>

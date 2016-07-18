@@ -160,7 +160,7 @@ namespace Rebus.Config
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
                 var backoffStrategy = c.Get<IBackoffStrategy>();
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, _options.MaxParallelism, backoffStrategy, rebusLoggerFactory, _options.WorkerShutdownTimeout);
+                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, backoffStrategy, rebusLoggerFactory, _options, c.Get<RebusBus>);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
@@ -229,19 +229,21 @@ namespace Rebus.Config
             // configuration hack - keep these two bad boys around to have them available at the last moment before returning the built bus instance...
             Action startAction = null;
 
+            PossiblyRegisterDefault(c => new RebusBus(
+                c.Get<IWorkerFactory>(),
+                c.Get<IRouter>(),
+                c.Get<ITransport>(),
+                c.Get<IPipeline>(),
+                c.Get<IPipelineInvoker>(),
+                c.Get<ISubscriptionStorage>(),
+                _options,
+                c.Get<IRebusLoggerFactory>(),
+                c.Get<BusLifetimeEvents>(),
+                c.Get<IDataBus>()));
+
             PossiblyRegisterDefault<IBus>(c =>
             {
-                var bus = new RebusBus(
-                    c.Get<IWorkerFactory>(),
-                    c.Get<IRouter>(),
-                    c.Get<ITransport>(),
-                    c.Get<IPipeline>(),
-                    c.Get<IPipelineInvoker>(),
-                    c.Get<ISubscriptionStorage>(),
-                    _options,
-                    c.Get<IRebusLoggerFactory>(),
-                    c.Get<BusLifetimeEvents>(),
-                    c.Get<IDataBus>());
+                var bus = c.Get<RebusBus>();
 
                 bus.Disposed += () =>
                 {

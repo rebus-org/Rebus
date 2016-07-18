@@ -6,6 +6,7 @@ using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 using Ploeh.AutoFixture.NUnit2;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Pipeline;
 using Rebus.Threading;
@@ -30,6 +31,7 @@ namespace Rebus.Tests.Workers
             var backOff = A.Fake<IBackoffStrategy>();
             var logFactory = A.Fake<IRebusLoggerFactory>();
             var log = A.Fake<ILog>();
+            var owningBus = A.Fake<RebusBus>();
 
             var timeout = TimeSpan.FromSeconds(5);
 
@@ -41,7 +43,7 @@ namespace Rebus.Tests.Workers
                 .Returns(true); 
 
             // system under test
-            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout);
+            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout, owningBus);
 
             // act
 
@@ -81,6 +83,7 @@ namespace Rebus.Tests.Workers
             var logFactory = A.Fake<IRebusLoggerFactory>();
             var log = A.Fake<ILog>();
             var timeout = TimeSpan.FromSeconds(5);
+            var owningBus = A.Fake<RebusBus>();
 
             A.CallTo(() => logFactory.GetCurrentClassLogger())
                 .Returns(log);
@@ -90,7 +93,7 @@ namespace Rebus.Tests.Workers
                 .Returns(false);
 
             // system under test
-            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout);
+            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout, owningBus);
 
             // act
 
@@ -129,6 +132,7 @@ namespace Rebus.Tests.Workers
             var logFactory = A.Fake<IRebusLoggerFactory>();
             var log = A.Fake<ILog>();
             var timeout = TimeSpan.FromSeconds(10);
+            var owningBus = A.Fake<RebusBus>();
 
             A.CallTo(() => logFactory.GetCurrentClassLogger())
                 .Returns(log);
@@ -150,7 +154,7 @@ namespace Rebus.Tests.Workers
             });
 
             // system under test
-            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout);
+            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout, owningBus);
 
             // act
 
@@ -188,6 +192,7 @@ namespace Rebus.Tests.Workers
             var logFactory = A.Fake<IRebusLoggerFactory>();
             var log = A.Fake<ILog>();
             var timeout = TimeSpan.FromSeconds(10);
+            var owningBus = A.Fake<RebusBus>();
 
             A.CallTo(() => logFactory.GetCurrentClassLogger())
                 .Returns(log);
@@ -196,7 +201,7 @@ namespace Rebus.Tests.Workers
                 .Throws(() => new OperationCanceledException("test"));
 
             // system under test
-            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout);
+            var sut = new ThreadWorker(transport, pipeline, pipelineInvoker, workerName, context, manager, backOff, logFactory, timeout, owningBus);
 
 
             // act
