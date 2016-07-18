@@ -11,12 +11,13 @@ namespace Rebus.Pipeline
     /// </summary>
     public class DefaultPipelineInvoker : IPipelineInvoker
     {
-        static readonly Func<Task> TerminationStep = () => Task.FromResult(0);
+        static readonly Task<int> Noop = Task.FromResult(0);
+        static readonly Func<Task> TerminationStep = () => Noop;
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IIncomingStep"/> steps, passing the given <see cref="IncomingStepContext"/> to each step as it is invoked
         /// </summary>
-        public async Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline)
+        public Task Invoke(IncomingStepContext context, IEnumerable<IIncomingStep> pipeline)
         {
             var receivePipeline = GetPipeline(pipeline);
             var step = TerminationStep;
@@ -28,13 +29,23 @@ namespace Rebus.Pipeline
                 step = () => stepToInvoke.Process(context, nextStep);
             }
 
-            await step();
+            return step();
+
+            //return Invoke(context, receivePipeline, 0);
         }
+
+        // experimental recursive pipeline buildup - slightly slower than imperative
+        //static Task Invoke(IncomingStepContext context, IIncomingStep[] receivePipeline, int index)
+        //{
+        //    if (index == receivePipeline.Length) return Noop;
+
+        //    return receivePipeline[index].Process(context, () => Invoke(context, receivePipeline, index + 1));
+        //}
 
         /// <summary>
         /// Invokes the pipeline of <see cref="IOutgoingStep"/> steps, passing the given <see cref="OutgoingStepContext"/> to each step as it is invoked
         /// </summary>
-        public async Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline)
+        public Task Invoke(OutgoingStepContext context, IEnumerable<IOutgoingStep> pipeline)
         {
             var receivePipeline = GetPipeline(pipeline);
             var step = TerminationStep;
@@ -46,7 +57,7 @@ namespace Rebus.Pipeline
                 step = () => stepToInvoke.Process(context, nextStep);
             }
 
-            await step();
+            return step();
         }
 
         static TStepType[] GetPipeline<TStepType>(IEnumerable<TStepType> pipeline)

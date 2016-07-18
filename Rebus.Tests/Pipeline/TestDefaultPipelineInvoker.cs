@@ -24,6 +24,9 @@ namespace Rebus.Tests.Pipeline
         ///     Execution took 19,5 s
         /// With recursive invocation:
         ///     Execution took 21,6 s
+        /// 
+        /// 2016/07/18:
+        ///     Execution took 23,5 s
         /// </summary>
         [Test, Ignore("takes a long time")]
         public void CheckTiming()
@@ -43,7 +46,7 @@ namespace Rebus.Tests.Pipeline
                 invoker.Invoke(stepContext, pipeline).Wait();
             });
 
-            Console.WriteLine("Execution took {0:0.0} s", stopwatch.Elapsed.TotalSeconds);
+            Console.WriteLine($"Execution took {stopwatch.Elapsed.TotalSeconds:0.0} s");
         }
 
         ITransactionContext GetFakeTransactionContext()
@@ -130,10 +133,9 @@ namespace Rebus.Tests.Pipeline
                 GetActionList(context).Add($"leave {_name}");
             }
 
-            List<string> GetActionList(StepContext context)
+            static List<string> GetActionList(StepContext context)
             {
-                return context.Load<List<string>>()
-                       ?? context.Save(new List<string>());
+                return context.Load<List<string>>() ?? context.Save(new List<string>());
             }
         }
     }
