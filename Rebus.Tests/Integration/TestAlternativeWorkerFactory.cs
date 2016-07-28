@@ -66,7 +66,7 @@ namespace Rebus.Tests.Integration
                 activator.Handle<string>(async s => events.Enqueue(s));
 
                 Configure.With(activator)
-                    .Logging(l => l.Console(minLevel:LogLevel.Info))
+                    .Logging(l => l.Console(minLevel: LogLevel.Info))
                     .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "bimse"))
                     .Options(o =>
                     {
@@ -124,7 +124,7 @@ namespace Rebus.Tests.Integration
             readonly TplAsyncTask _workerTask;
             readonly ILog _log;
 
-            bool _workerStopped;
+            CancellationTokenSource _workerStopped = new CancellationTokenSource();
 
             public AsyncTaskWorker(string name, ITransport transport, IPipeline pipeline, IPipelineInvoker pipelineInvoker, int maxParallelismPerWorker, IRebusLoggerFactory rebusLoggerFactory)
             {
@@ -146,10 +146,8 @@ namespace Rebus.Tests.Integration
 
             async Task DoWork()
             {
-                using (var op = _parallelOperationsManager.TryBegin())
+                using (var op = _parallelOperationsManager.PeekOperation(_workerStopped.Token))
                 {
-                    if (!op.CanContinue()) return;
-
                     using (var transactionContext = new DefaultTransactionContext())
                     {
                         AmbientTransactionContext.Current = transactionContext;
@@ -202,17 +200,12 @@ namespace Rebus.Tests.Integration
 
             void DisposeTask()
             {
-                if (_workerStopped) return;
+                if (_workerStopped.IsCancellationRequested)
+                    return;
 
-                try
-                {
-                    _workerTask.Dispose();
-                    _log.Debug("Worker {0} stopped", Name);
-                }
-                finally
-                {
-                    _workerStopped = true;
-                }
+                _workerStopped.Cancel();
+                _workerTask.Dispose();
+                _log.Debug("Worker {0} stopped", Name);
             }
         }
     }

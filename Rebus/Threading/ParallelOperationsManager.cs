@@ -28,14 +28,10 @@ namespace Rebus.Threading
         /// <summary>
         /// Begins another async operation and returns an <see cref="IDisposable"/> that must be disposed in order to mark the end of the async operation
         /// </summary>
-        public ParallelOperation TryBegin()
+        public ParallelOperation PeekOperation(CancellationToken cancellationToken)
         {
-            if (!_semaphore.Wait(TimeSpan.Zero))
-            {
-                return new ParallelOperation(false, this);
-            }
-
-            return new ParallelOperation(true, this);
+            _semaphore.Wait(cancellationToken);
+            return new ParallelOperation(this);
         }
 
         void OperationStarted()
@@ -54,16 +50,11 @@ namespace Rebus.Threading
         /// </summary>
         public class ParallelOperation : IDisposable
         {
-            readonly bool _canContinue;
             readonly ParallelOperationsManager _parallelOperationsManager;
 
-            internal ParallelOperation(bool canContinue, ParallelOperationsManager parallelOperationsManager)
+            internal ParallelOperation(ParallelOperationsManager parallelOperationsManager)
             {
-                _canContinue = canContinue;
                 _parallelOperationsManager = parallelOperationsManager;
-
-                if (!_canContinue) return;
-
                 _parallelOperationsManager.OperationStarted();
             }
 
@@ -72,17 +63,7 @@ namespace Rebus.Threading
             /// </summary>
             public void Dispose()
             {
-                if (!_canContinue) return;
-
                 _parallelOperationsManager.OperationFinished();
-            }
-
-            /// <summary>
-            /// Gets whether the token was successfully acquired
-            /// </summary>
-            public bool CanContinue()
-            {
-                return _canContinue;
             }
         }
     }
