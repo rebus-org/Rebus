@@ -102,6 +102,11 @@ namespace Rebus.Workers.ThreadBased
                     TryReceiveNewMessage();
                 }
             }
+            catch(OperationCanceledException)
+            {
+                _log.Debug("Stopping worker {0}", Name);
+                _keepWorking = false;
+            }
             catch (ThreadAbortException)
             {
                 _log.Debug("Aborting worker {0}", Name);
@@ -115,15 +120,8 @@ namespace Rebus.Workers.ThreadBased
 
         async void TryReceiveNewMessage()
         {
-            using (var operation = _parallelOperationsManager.TryBegin())
+            using (var operation = _parallelOperationsManager.PeekOperation(_cancellationTokenSource.Token))
             {
-                // if we didn't get to do our thing, let the OS decide what to do next.... we don't hog the processor
-                if (!operation.CanContinue())
-                {
-                    Thread.Yield();
-                    return;
-                }
-
                 using (var transactionContext = new DefaultTransactionContext())
                 {
                     transactionContext.Items["CancellationToken"] = _cancellationTokenSource.Token;
