@@ -1013,6 +1013,7 @@
 # 0.99.70
 
 * Update AWS SDK version to latest (AWSSDK.Core 3.1.9.1, AWSSDK.SQS 3.1.0.12) - thanks [gertjvr]
+* Make RabbitMQ transport tolerate incoming message without ID (try to assign from RabbitMQ ID and ultimately calculate Knuth hash from message body)
 
 ---
 

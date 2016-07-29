@@ -320,22 +320,55 @@ namespace Rebus.RabbitMq
         /// <returns>the TransportMessage</returns>
         static TransportMessage CreateTransportMessage(BasicDeliverEventArgs result)
         {
-            var headers = result.BasicProperties.Headers
-                   .ToDictionary(kvp => kvp.Key, kvp =>
-                   {
-                       var headerValue = kvp.Value;
+            var basicProperties = result.BasicProperties;
 
-                       if (headerValue is byte[])
-                       {
-                           var stringHeaderValue = HeaderValueEncoding.GetString((byte[])headerValue);
+            var headers = basicProperties.Headers != null
+                ? basicProperties.Headers
+                    .ToDictionary(kvp => kvp.Key, kvp =>
+                    {
+                        var headerValue = kvp.Value;
 
-                           return stringHeaderValue;
-                       }
+                        if (headerValue is byte[])
+                        {
+                            var stringHeaderValue = HeaderValueEncoding.GetString((byte[]) headerValue);
 
-                       return headerValue.ToString();
-                   });
+                            return stringHeaderValue;
+                        }
+
+                        return headerValue.ToString();
+                    })
+                : new Dictionary<string, string>();
+
+            if (!headers.ContainsKey(Headers.MessageId))
+            {
+                AddMessageId(headers, result);
+            }
 
             return new TransportMessage(headers, result.Body);
+        }
+
+        static void AddMessageId(Dictionary<string, string> headers, BasicDeliverEventArgs result)
+        {
+            var basicProperties = result.BasicProperties;
+
+            if (basicProperties.IsMessageIdPresent())
+            {
+                headers[Headers.MessageId] = basicProperties.MessageId;
+                return;
+            }
+
+            var pseudoMessageId = GenerateMessageIdFromBodyContents(result.Body);
+
+            headers[Headers.MessageId] = pseudoMessageId;
+        }
+
+        static string GenerateMessageIdFromBodyContents(byte[] body)
+        {
+            if (body == null) return "MESSAGE-BODY-IS-NULL";
+
+            var base64String = Convert.ToBase64String(body);
+
+            return $"knuth-{Knuth.CalculateHash(base64String)}";
         }
 
         /// <summary>
