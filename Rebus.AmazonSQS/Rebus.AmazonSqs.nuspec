@@ -14,8 +14,9 @@
     <tags>rebus amazon amazonwebservices amazon-sqs-messages</tags>
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/little_rebusbus2_copy-200x200.png</iconUrl>
     <dependencies>
-        <dependency id="Rebus" version="[$version$, 1)" />
-        <dependency id="AWSSDK" version="2.3.55.0" />
+      <dependency id="Rebus" version="[$version$, 1)" />
+      <dependency id="AWSSDK.Core" version="3.1.9.1" />
+      <dependency id="AWSSDK.SQS" version="3.1.0.12" />
     </dependencies>
   </metadata>
   <files>
