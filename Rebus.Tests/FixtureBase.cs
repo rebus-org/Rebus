@@ -100,5 +100,15 @@ namespace Rebus.Tests
                 disposable.Dispose();
             }
         }
+
+        /// <summary>
+        /// Prints the text with a fairly precise timestamp
+        /// </summary>
+        public static void Printt(string message)
+        {
+            var now = DateTime.Now;
+            var text = $"{now:HH:mm:ss}.{now.Millisecond:000}: {message}";
+            Console.WriteLine(text);
+        }
     }
 }

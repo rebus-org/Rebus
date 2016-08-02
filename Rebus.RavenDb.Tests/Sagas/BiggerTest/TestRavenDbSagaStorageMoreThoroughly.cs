@@ -61,7 +61,7 @@ namespace Rebus.RavenDb.Tests.Sagas.BiggerTest
 
             await Task.WhenAll(messages.Select(m => _activator.Bus.SendLocal(m)));
 
-            await MeasuredDelay(15000);
+            await MeasuredDelay(10000);
 
             using (var session = _documentStore.OpenSession())
             {
@@ -127,6 +127,8 @@ namespace Rebus.RavenDb.Tests.Sagas.BiggerTest
 
         public async Task Handle(Message1 message)
         {
+            FixtureBase.Printt($"Saga {Data.Id} handling {message}");
+
             if (IsNew)
             {
                 Data.CorrelationId1 = message.CorrelationId;
@@ -138,8 +140,11 @@ namespace Rebus.RavenDb.Tests.Sagas.BiggerTest
 
         public async Task Handle(Message2 message)
         {
+            FixtureBase.Printt($"Saga {Data.Id} handling {message}");
+
             if (IsNew)
             {
+
                 Data.CorrelationId1 = message.CorrelationId;
                 Data.CorrelationId2 = message.CorrelationId;
             }

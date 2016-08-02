@@ -79,17 +79,16 @@ namespace Rebus.Tests.Workers
             _activator.Handle<string>(async message =>
             {
                 var id = Interlocked.Increment(ref idCounter);
-                var stopwatch = Stopwatch.StartNew();
 
-                Console.WriteLine($"operation {id} (msg: {message}) sleeping 1s...");
+                Printt($"operation {id} (msg: {message}) sleeping 1s...");
 
-                await Task.Delay(1000);
+                await MeasuredDelay(1000);
 
-                Console.WriteLine($"operation {id} done sleeping (sleeping 1s actually took {stopwatch.Elapsed.TotalSeconds:0.##}) s) - setting reset event");
+                Printt($"operation {id} done sleeping - setting reset event");
 
                 var resetEvent = resetEventsQueue.GetNextOrThrow();
 
-                Console.WriteLine($"operation {id} set the reset event");
+                Printt($"operation {id} set the reset event");
 
                 resetEvent.Set();
             });
@@ -107,7 +106,7 @@ namespace Rebus.Tests.Workers
             Task.WhenAll(resetEvents.Select(r => r.WaitAsync()))
                 .ContinueWith(t =>
                 {
-                    Console.WriteLine("HANDLE TASKS DONE!");
+                    Printt("HANDLE TASKS DONE!");
                     doneThing = "HandleTasks";
                     allDone.Set();
                 });
@@ -115,7 +114,7 @@ namespace Rebus.Tests.Workers
             Task.Delay(4500)
                 .ContinueWith(t =>
                 {
-                    Console.WriteLine("TIME IS OUT!");
+                    Printt("TIME IS OUT!");
                     doneThing = "TIMEOUT!";
                     allDone.Set();
                 });
