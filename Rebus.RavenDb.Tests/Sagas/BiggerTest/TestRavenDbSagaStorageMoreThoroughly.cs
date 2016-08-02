@@ -61,7 +61,7 @@ namespace Rebus.RavenDb.Tests.Sagas.BiggerTest
 
             await Task.WhenAll(messages.Select(m => _activator.Bus.SendLocal(m)));
 
-            await Task.Delay(10000);
+            await MeasuredDelay(15000);
 
             using (var session = _documentStore.OpenSession())
             {

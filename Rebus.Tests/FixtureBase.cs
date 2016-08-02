@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Time;
 
@@ -47,6 +49,20 @@ namespace Rebus.Tests
             var tempFile = Path.GetTempFileName();
             Using(new FileDeleter(tempFile));
             return tempFile;
+        }
+
+        protected Task MeasuredDelay(int milliseconds)
+        {
+            return MeasuredDelay(TimeSpan.FromMilliseconds(milliseconds));
+        }
+
+        protected async Task MeasuredDelay(TimeSpan delay)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            await Task.Delay(delay);
+
+            Console.WriteLine($"Measured delay of {delay} took {stopwatch.Elapsed.TotalSeconds:0.0} s");
         }
 
         class FileDeleter : IDisposable
