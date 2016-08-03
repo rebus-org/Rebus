@@ -89,8 +89,10 @@ namespace Rebus.Workers.ThreadPoolBased
                     return;
                 }
 
-                // fire!
+                // fire! (disable warning because it is intentionally NOT waiting for it to finish)
+#pragma warning disable 4014
                 ProcessMessage(context, transportMessage, parallelOperation, token);
+#pragma warning restore 4014
             }
             catch (AggregateException aggregateException)
             {
