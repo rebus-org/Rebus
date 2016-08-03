@@ -38,15 +38,17 @@ namespace Rebus.Tests.Workers
                 .Transport(t => t.UseInMemoryTransport(new InMemNetwork(), "threadpool-workers-test"))
                 .Options(o =>
                 {
-                    o.Register<IWorkerFactory>(c =>
-                    {
-                        var transport = c.Get<ITransport>();
-                        var loggerFactory = c.Get<IRebusLoggerFactory>();
-                        var pipeline = c.Get<IPipeline>();
-                        var pipelineInvoker = c.Get<IPipelineInvoker>();
-                        var options = c.Get<Options>();
-                        return new ThreadPoolWorkerFactory(transport, loggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>);
-                    });
+                    o.UseThreadPoolMessageDispatch();
+
+                    //o.Register<IWorkerFactory>(c =>
+                    //{
+                    //    var transport = c.Get<ITransport>();
+                    //    var loggerFactory = c.Get<IRebusLoggerFactory>();
+                    //    var pipeline = c.Get<IPipeline>();
+                    //    var pipelineInvoker = c.Get<IPipelineInvoker>();
+                    //    var options = c.Get<Options>();
+                    //    return new ThreadPoolWorkerFactory(transport, loggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>);
+                    //});
 
                     o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(1);

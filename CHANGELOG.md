@@ -1018,6 +1018,7 @@
 # 0.99.71
 
 * Fix bug in RavenDB saga persister that would not properly guard saga data against race conditions in the face of concurrent updates
+* Add thread pool-based worker factory that can be enabled by going `UseThreadPoolMessageDispatch` on the options configurer
 
 ---
 
