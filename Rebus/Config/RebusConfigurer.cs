@@ -26,6 +26,7 @@ using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
 using Rebus.Workers.ThreadBased;
+using Rebus.Workers.ThreadPoolBased;
 
 namespace Rebus.Config
 {
@@ -132,10 +133,16 @@ namespace Rebus.Config
         {
             VerifyRequirements();
 
+            _injectionist.Register(c => _options);
+
             PossiblyRegisterDefault<IRebusLoggerFactory>(c => new ConsoleLoggerFactory(true));
 
             //PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TimerAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
-            PossiblyRegisterDefault<IAsyncTaskFactory>(c => new TplAsyncTaskFactory(c.Get<IRebusLoggerFactory>()));
+            PossiblyRegisterDefault<IAsyncTaskFactory>(c =>
+            {
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new TplAsyncTaskFactory(rebusLoggerFactory);
+            });
 
             PossiblyRegisterDefault<IRouter>(c =>
             {
@@ -153,14 +160,24 @@ namespace Rebus.Config
 
             PossiblyRegisterDefault<IBackoffStrategy>(c => new SimpleConstantPollingBackoffStrategy());
 
+            //PossiblyRegisterDefault<IWorkerFactory>(c =>
+            //{
+            //    var transport = c.Get<ITransport>();
+            //    var pipeline = c.Get<IPipeline>();
+            //    var pipelineInvoker = c.Get<IPipelineInvoker>();
+            //    var backoffStrategy = c.Get<IBackoffStrategy>();
+            //    var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+            //    return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, backoffStrategy, rebusLoggerFactory, _options, c.Get<RebusBus>);
+            //});
+
             PossiblyRegisterDefault<IWorkerFactory>(c =>
             {
                 var transport = c.Get<ITransport>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
                 var pipeline = c.Get<IPipeline>();
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
-                var backoffStrategy = c.Get<IBackoffStrategy>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new ThreadWorkerFactory(transport, pipeline, pipelineInvoker, backoffStrategy, rebusLoggerFactory, _options, c.Get<RebusBus>);
+                var options = c.Get<Options>();
+                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>);
             });
 
             PossiblyRegisterDefault<IErrorTracker>(c =>

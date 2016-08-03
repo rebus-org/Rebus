@@ -1017,7 +1017,7 @@
 
 # 0.99.71
 
-* Fixed bug in RavenDB saga persister that would not properly guard saga data against race conditions in the face of concurrent updates
+* Fix bug in RavenDB saga persister that would not properly guard saga data against race conditions in the face of concurrent updates
 
 ---
 

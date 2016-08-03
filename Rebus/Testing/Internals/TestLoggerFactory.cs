@@ -62,7 +62,7 @@ namespace Rebus.Testing.Internals
             {
                 try
                 {
-                    return String.Format(message, objs);
+                    return string.Format(message, objs);
                 }
                 catch
                 {

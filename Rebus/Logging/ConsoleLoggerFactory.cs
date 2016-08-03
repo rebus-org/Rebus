@@ -16,10 +16,11 @@ namespace Rebus.Logging
         /// </summary>
         public class LogStatement
         {
-            internal LogStatement(LogLevel level, string text, object[] args)
+            internal LogStatement(LogLevel level, string text, object[] args, Type type)
             {
                 Level = level;
                 Args = args;
+                Type = type;
                 Text = text;
             }
 
@@ -37,6 +38,11 @@ namespace Rebus.Logging
             /// The values to use for string interpolation
             /// </summary>
             public object[] Args { get; private set; }
+
+            /// <summary>
+            /// The type to which this particular logger belongs
+            /// </summary>
+            public Type Type { get; set; }
         }
 
         static readonly ConcurrentDictionary<Type, ILog> Loggers = new ConcurrentDictionary<Type, ILog>();
@@ -204,7 +210,7 @@ namespace Rebus.Logging
             void Write(LogLevel level, string message, object[] objs)
             {
                 if ((int)level < (int)_factory.MinLevel) return;
-                if (_factory.AbortedByFilter(new LogStatement(level, message, objs))) return;
+                if (_factory.AbortedByFilter(new LogStatement(level, message, objs, _type))) return;
 
                 var levelString = LevelString(level);
 

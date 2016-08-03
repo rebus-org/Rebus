@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Extensions
 {
@@ -44,6 +45,14 @@ namespace Rebus.Tests.Extensions
             {
                 action();
             }
+        }
+
+        public static IDisposable Interval(this TimeSpan delay, Action action)
+        {
+            var timer = new Timer(delay.TotalMilliseconds);
+            timer.Elapsed += (sender, args) => action();
+            timer.Start();
+            return timer;
         }
 
         public static async Task WaitUntil<T>(this ConcurrentQueue<T> queue, Func<ConcurrentQueue<T>, bool> criteria, int? timeoutSeconds = 5)

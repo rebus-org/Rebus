@@ -317,6 +317,8 @@
     <Compile Include="Transport\SqlServer\SqlServerTransportConfigurationExtensions.cs" />
     <Compile Include="Workers\IWorkerFactory.cs" />
     <Compile Include="Workers\ThreadBased\ThreadWorkerFactory.cs" />
+    <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorker.cs" />
+    <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

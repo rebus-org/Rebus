@@ -1,3 +1,4 @@
+using System;
 using Rebus.Injection;
 using Rebus.Logging;
 
@@ -13,6 +14,7 @@ namespace Rebus.Config
 
         internal RebusLoggingConfigurer(Injectionist injectionist)
         {
+            if (injectionist == null) throw new ArgumentNullException(nameof(injectionist));
             _injectionist = injectionist;
         }
 
@@ -59,6 +61,7 @@ namespace Rebus.Config
         /// </summary>
         public void Use(IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _injectionist.Register(c => rebusLoggerFactory);
         }
     }
