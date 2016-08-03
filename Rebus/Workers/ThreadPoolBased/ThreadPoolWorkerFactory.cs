@@ -10,6 +10,10 @@ using Rebus.Transport;
 
 namespace Rebus.Workers.ThreadPoolBased
 {
+    /// <summary>
+    /// Implementation of <see cref="IWorkerFactory"/> that uses worker threads to do synchronous receive of messages, dispatching
+    /// received messages to the threadpool.
+    /// </summary>
     public class ThreadPoolWorkerFactory : IWorkerFactory, IDisposable
     {
         readonly ITransport _transport;
@@ -21,6 +25,9 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
 
+        /// <summary>
+        /// Creates the worker factory
+        /// </summary>
         public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
@@ -49,6 +56,9 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
+        /// <summary>
+        /// Creates a new worker with the given <paramref name="workerName"/>
+        /// </summary>
         public IWorker CreateWorker(string workerName)
         {
             if (workerName == null) throw new ArgumentNullException(nameof(workerName));
@@ -60,6 +70,10 @@ namespace Rebus.Workers.ThreadPoolBased
             return worker;
         }
 
+        /// <summary>
+        /// Disposes the worke factory, blocking until all work has finished being done (i.e. waits for all message handling continuations
+        /// to have been executed)
+        /// </summary>
         public void Dispose()
         {
             if (!_parallelOperationsManager.HasPendingTasks) return;
