@@ -1015,6 +1015,10 @@
 * Update AWS SDK version to latest (AWSSDK.Core 3.1.9.1, AWSSDK.SQS 3.1.0.12) - thanks [gertjvr]
 * Make RabbitMQ transport tolerate incoming message without ID (try to assign from RabbitMQ ID and ultimately calculate Knuth hash from message body)
 
+# 0.99.71
+
+* Fixed bug in RavenDB saga persister that would not properly guard saga data against race conditions in the face of concurrent updates
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

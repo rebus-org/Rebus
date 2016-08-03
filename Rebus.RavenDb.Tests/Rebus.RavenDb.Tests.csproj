@@ -89,7 +89,9 @@
     <Compile Include="Sagas\RavenDbBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Sagas\BiggerTest\TestRavenDbSagaStorageMoreThoroughly.cs" />
     <Compile Include="Sagas\Models\BasicSagaData.cs" />
+    <Compile Include="Sagas\RavenDbConcurrencyHandling.cs" />
     <Compile Include="Sagas\RavenDbSagaStorageFactory.cs" />
+    <Compile Include="Sagas\TestRavenDbSagaDataConcurrencyOperations.cs" />
     <Compile Include="Sagas\TestRavenDbSagaStorage.cs" />
     <Compile Include="Sagas\TestRavenDbSagaStorageConcurrency.cs" />
     <Compile Include="Subscriptions\RavenDbSubscriptionStorageFactory.cs" />
