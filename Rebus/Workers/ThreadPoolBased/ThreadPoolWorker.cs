@@ -89,10 +89,8 @@ namespace Rebus.Workers.ThreadPoolBased
                     return;
                 }
 
-                Task.Run(async () =>
-                {
-                    await ProcessMessage(context, transportMessage, parallelOperation, token);
-                }, token);
+                // fire!
+                ProcessMessage(context, transportMessage, parallelOperation, token);
             }
             catch (AggregateException aggregateException)
             {
