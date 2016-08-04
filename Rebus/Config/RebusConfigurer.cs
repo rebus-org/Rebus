@@ -177,7 +177,8 @@ namespace Rebus.Config
             //    var pipeline = c.Get<IPipeline>();
             //    var pipelineInvoker = c.Get<IPipelineInvoker>();
             //    var options = c.Get<Options>();
-            //    return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>);
+            //    var busLifetimeEvents = c.Get<BusLifetimeEvents>();
+            //    return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents);
             //});
 
             PossiblyRegisterDefault<IErrorTracker>(c =>
