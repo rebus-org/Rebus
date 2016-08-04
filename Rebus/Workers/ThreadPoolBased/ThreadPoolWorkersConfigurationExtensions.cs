@@ -15,6 +15,7 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <summary>
         /// Replaces the default worker factory with one that uses the .NET thread pool to dispatch messages
         /// </summary>
+        [Obsolete("This configuration method is going away when thread pool-based workers become default")]
         public static void UseThreadPoolMessageDispatch(this OptionsConfigurer configurer)
         {
             if (configurer == null) throw new ArgumentNullException(nameof(configurer));
@@ -27,7 +28,8 @@ namespace Rebus.Workers.ThreadPoolBased
                 var pipelineInvoker = c.Get<IPipelineInvoker>();
                 var options = c.Get<Options>();
                 var busLifetimeEvents = c.Get<BusLifetimeEvents>();
-                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents);
+                var backoffStrategy = c.Get<ISyncBackoffStrategy>();
+                return new ThreadPoolWorkerFactory(transport, rebusLoggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>, busLifetimeEvents, backoffStrategy);
             });
         }
     }

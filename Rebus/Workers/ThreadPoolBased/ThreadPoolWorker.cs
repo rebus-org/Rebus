@@ -21,10 +21,11 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly RebusBus _owningBus;
         readonly Options _options;
+        readonly ISyncBackoffStrategy _backoffStrategy;
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options, ISyncBackoffStrategy backoffStrategy)
         {
             Name = name;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
@@ -34,6 +35,7 @@ namespace Rebus.Workers.ThreadPoolBased
             _parallelOperationsManager = parallelOperationsManager;
             _owningBus = owningBus;
             _options = options;
+            _backoffStrategy = backoffStrategy;
             _workerThread = new Thread(Run)
             {
                 Name = name,
@@ -67,6 +69,8 @@ namespace Rebus.Workers.ThreadPoolBased
                 catch (Exception exception)
                 {
                     _log.Error(exception, "Unhandled exception in worker!!");
+
+                    _backoffStrategy.WaitError();
                 }
             }
 
@@ -88,9 +92,11 @@ namespace Rebus.Workers.ThreadPoolBased
                 {
                     context.Dispose();
                     parallelOperation.Dispose();
-                    Thread.Sleep(20);
+                    _backoffStrategy.Wait();
                     return;
                 }
+
+                _backoffStrategy.Reset();
 
                 // fire asynchronously to the thread pool! (disable warning because it is intentionally NOT waiting for it to finish)
                 ProcessMessage(context, transportMessage, parallelOperation, token);

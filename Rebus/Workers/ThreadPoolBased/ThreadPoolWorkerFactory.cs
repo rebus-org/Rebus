@@ -22,13 +22,14 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly IPipelineInvoker _pipelineInvoker;
         readonly Options _options;
         readonly Func<RebusBus> _busGetter;
+        readonly ISyncBackoffStrategy _backoffStrategy;
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly ILog _log;
 
         /// <summary>
         /// Creates the worker factory
         /// </summary>
-        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents)
+        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents, ISyncBackoffStrategy backoffStrategy)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
@@ -37,12 +38,14 @@ namespace Rebus.Workers.ThreadPoolBased
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (busGetter == null) throw new ArgumentNullException(nameof(busGetter));
             if (busLifetimeEvents == null) throw new ArgumentNullException(nameof(busLifetimeEvents));
+            if (backoffStrategy == null) throw new ArgumentNullException(nameof(backoffStrategy));
             _transport = transport;
             _rebusLoggerFactory = rebusLoggerFactory;
             _pipeline = pipeline;
             _pipelineInvoker = pipelineInvoker;
             _options = options;
             _busGetter = busGetter;
+            _backoffStrategy = backoffStrategy;
             _parallelOperationsManager = new ParallelOperationsManager(options.MaxParallelism);
             _log = _rebusLoggerFactory.GetCurrentClassLogger();
 
@@ -68,7 +71,7 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var owningBus = _busGetter();
 
-            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipeline, _pipelineInvoker, _parallelOperationsManager, owningBus, _options);
+            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipeline, _pipelineInvoker, _parallelOperationsManager, owningBus, _options, _backoffStrategy);
 
             return worker;
         }

@@ -1023,6 +1023,7 @@
 # 0.99.72
 
 * Respect worker shutdown timeout also when stopping the worker
+* Back off slightly when there is no work to do
 
 ---
 

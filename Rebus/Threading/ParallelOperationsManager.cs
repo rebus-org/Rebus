@@ -9,43 +9,36 @@ namespace Rebus.Threading
     /// </summary>
     public class ParallelOperationsManager
     {
+        readonly int _maxParallelism;
         readonly SemaphoreSlim _semaphore;
-        long _currentParallelOperationsCount;
 
         /// <summary>
         /// Constructs the container with the given max number of parallel async operations to allow
         /// </summary>
         public ParallelOperationsManager(int maxParallelism)
         {
+            _maxParallelism = maxParallelism;
             _semaphore = new SemaphoreSlim(maxParallelism, maxParallelism);
         }
 
         /// <summary>
         /// Gets whether any async tasks are currently waiting to be completed
         /// </summary>
-        public virtual bool HasPendingTasks => Interlocked.Read(ref _currentParallelOperationsCount) > 0;
+        public virtual bool HasPendingTasks => _semaphore.CurrentCount != _maxParallelism;
 
         /// <summary>
         /// Begins another async operation and returns an <see cref="IDisposable"/> that must be disposed in order to mark the end of the async operation
         /// </summary>
         public ParallelOperation TryBegin()
         {
-            if (!_semaphore.Wait(TimeSpan.Zero))
-            {
-                return new ParallelOperation(false, this);
-            }
+            var canContinue = _semaphore.Wait(TimeSpan.Zero);
 
-            return new ParallelOperation(true, this);
+            return new ParallelOperation(canContinue, this);
         }
 
-        void OperationStarted()
-        {
-            Interlocked.Increment(ref _currentParallelOperationsCount);
-        }
 
         void OperationFinished()
         {
-            Interlocked.Decrement(ref _currentParallelOperationsCount);
             _semaphore.Release(1);
         }
 
@@ -61,10 +54,6 @@ namespace Rebus.Threading
             {
                 _canContinue = canContinue;
                 _parallelOperationsManager = parallelOperationsManager;
-
-                if (!_canContinue) return;
-
-                _parallelOperationsManager.OperationStarted();
             }
 
             /// <summary>

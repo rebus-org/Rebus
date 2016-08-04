@@ -197,7 +197,7 @@ namespace Rebus.Transport.Msmq
 
             try
             {
-                var message = queue.Receive(TimeSpan.FromSeconds(0.1), messageQueueTransaction);
+                var message = queue.Receive(TimeSpan.FromSeconds(0.5), messageQueueTransaction);
 
                 if (message == null)
                 {
