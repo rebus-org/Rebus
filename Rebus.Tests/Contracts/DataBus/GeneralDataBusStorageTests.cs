@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using NUnit.Framework;
+using Rebus.Compression;
 using Rebus.DataBus;
 using Rebus.Tests.Extensions;
 using Rebus.Time;
@@ -107,7 +109,15 @@ namespace Rebus.Tests.Contracts.DataBus
 
             var readMetadata = await _storage.ReadMetadata(knownId);
 
-            Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("3"));
+            // special case: zipped data has different size (and is actually bigger in this case :))
+            if (_storage is ZippingDataBusStorageDecorator)
+            {
+                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("23"));
+            }
+            else
+            {
+                Assert.That(readMetadata[MetadataKeys.Length], Is.EqualTo("3"));
+            }
             Assert.That(readMetadata[MetadataKeys.SaveTime], Is.EqualTo(fakeTime.ToString("O")));
         }
 
@@ -116,6 +126,31 @@ namespace Rebus.Tests.Contracts.DataBus
         {
             const string knownId = "known id";
             const string originalData = "this is some data";
+
+            using (var source = new MemoryStream(Encoding.UTF8.GetBytes(originalData)))
+            {
+                await _storage.Save(knownId, source);
+            }
+
+            using (var destination = new MemoryStream())
+            {
+                using (var source = await _storage.Read(knownId))
+                {
+                    await source.CopyToAsync(destination);
+                }
+
+                var readData = Encoding.UTF8.GetString(destination.ToArray());
+
+                Assert.That(readData, Is.EqualTo(originalData));
+            }
+        }
+
+        [Test]
+        public async Task CanSaveAndLoadBiggerPieceOfData()
+        {
+            const string knownId = "known id";
+
+            var originalData = string.Join("/", Enumerable.Range(0, 10000));
 
             using (var source = new MemoryStream(Encoding.UTF8.GetBytes(originalData)))
             {

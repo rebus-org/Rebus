@@ -1,4 +1,5 @@
 ﻿using Rebus.Config;
+using Rebus.DataBus;
 using Rebus.Serialization;
 
 namespace Rebus.Compression
@@ -21,5 +22,29 @@ namespace Rebus.Compression
         {
             configurer.Decorate<ISerializer>(c => new ZippingSerializerDecorator(c.Get<ISerializer>(), new Zipper(), bodySizeThresholdBytes));
         }
+
+        /// <summary>
+        /// Enables GZIP of the saved data bus data. Set <paramref name="dataCompressionMode"/> to control when data is gzipped - if <see cref="DataCompressionMode.AlwaysCompress"/>
+        /// is selected the data will always be GZIPped, whereas selecting <see cref="DataCompressionMode.CompressWhenContentEncodingIsGzip"/> makes the data be GZIPped
+        /// only when <see cref="MetadataKeys.ContentEncoding"/> = "gzip" is detected among the metadata for the stored data.
+        /// Please note that GZIPping the data requires that it can be fully contained in memory because the underlying streaming APIs do not support lazy-reading a
+        /// GZIP stream.
+        /// </summary>
+        public static StandardConfigurer<IDataBusStorage> UseCompression(this StandardConfigurer<IDataBusStorage> configurer, DataCompressionMode dataCompressionMode = DefaultDataCompressionMode)
+        {
+            configurer.Decorate(c =>
+            {
+                var dataBusStorage = c.Get<IDataBusStorage>();
+
+                return new ZippingDataBusStorageDecorator(dataBusStorage, dataCompressionMode);
+            });
+
+            return configurer;
+        }
+
+        /// <summary>
+        /// Specifies the default data compression mode.
+        /// </summary>
+        public const DataCompressionMode DefaultDataCompressionMode = DataCompressionMode.CompressWhenContentEncodingIsGzip;
     }
 }

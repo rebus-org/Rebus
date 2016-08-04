@@ -71,6 +71,8 @@
     <Compile Include="Bus\BusLifetimeEvents.cs" />
     <Compile Include="Bus\IBus.cs" />
     <Compile Include="Bus\IInitializable.cs" />
+    <Compile Include="Compression\DataCompressionMode.cs" />
+    <Compile Include="Compression\ZippingDataBusStorageDecorator.cs" />
     <Compile Include="Compression\ZippingSerializerDecorator.cs" />
     <Compile Include="Config\OneWayClientBackdoor.cs" />
     <Compile Include="DataBus\DataBusAttachment.cs" />

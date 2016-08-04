@@ -19,5 +19,10 @@
         /// Metadata key of the ISO8601-encoding time of when the data was last read
         /// </summary>
         public const string ReadTime = "Rbs2DataBusReadTime";
+
+        /// <summary>
+        /// Optional header that might contain an encoding of the contents, e.g."gzip" for gzipped data.
+        /// </summary>
+        public const string ContentEncoding = "Rbs2ContentEncoding";
     }
 }

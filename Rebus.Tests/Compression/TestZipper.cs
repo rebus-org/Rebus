@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using NUnit.Framework;
@@ -22,9 +23,23 @@ Hej med dig min ven, det her er en lang tekst med en del gentagelser.";
         }
 
         [Test]
+        public void CanRoundtripBigBigString()
+        {
+            var bigString = string.Join("/", Enumerable.Range(0, 1000000));
+            var bigStringBytes = Encoding.UTF8.GetBytes(bigString);
+            var compressedBytes = _zipper.Zip(bigStringBytes);
+
+            Console.WriteLine($"{bigStringBytes.Length/1024} kB => {compressedBytes.Length/1024} kB");
+
+            var roundtrippedBytes = _zipper.Unzip(compressedBytes);
+            var roundtrippedString = Encoding.UTF8.GetString(roundtrippedBytes);
+
+            Assert.That(roundtrippedString, Is.EqualTo(bigString));
+        }
+
+        [Test]
         public void CanRoundtripSomeBytes()
         {
-
             var uncompressedBytes = Encoding.UTF8.GetBytes(Text);
             var compressedBytes = _zipper.Zip(uncompressedBytes);
 

@@ -1025,6 +1025,10 @@
 * Respect worker shutdown timeout also when stopping the worker
 * Back off slightly when there is no work to do
 
+# 0.99.73
+
+* Add GZIPping capability to data bus storage - can be enabled by attaching `.UseCompression()` in the data bus configuration builder
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo

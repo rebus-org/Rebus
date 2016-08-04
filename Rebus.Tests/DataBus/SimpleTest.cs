@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Bus;
+using Rebus.Compression;
 using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.DataBus.FileSystem;
@@ -43,6 +44,7 @@ namespace Rebus.Tests.DataBus
                 .Options(o =>
                 {
                     o.EnableDataBus()
+                        .UseCompression()
                         .StoreInMemory(_inMemDataStore);
                 })
                 .Start();

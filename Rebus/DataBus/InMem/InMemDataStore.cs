@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using Rebus.Extensions;
 
 namespace Rebus.DataBus.InMem
@@ -12,6 +13,11 @@ namespace Rebus.DataBus.InMem
     public class InMemDataStore
     {
         readonly ConcurrentDictionary<string, InMemBlob> _data = new ConcurrentDictionary<string, InMemBlob>();
+
+        /// <summary>
+        /// Gets the total size in bytes 
+        /// </summary>
+        public long SizeBytes => _data.Values.Sum(kvp => kvp.Data.Length);
 
         /// <summary>
         /// Saves the given bytes under the given ID
