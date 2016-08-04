@@ -3,6 +3,7 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Rebus.Bus;
+using Rebus.Config;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Pipeline;
@@ -19,10 +20,11 @@ namespace Rebus.Workers.ThreadPoolBased
         readonly IPipelineInvoker _pipelineInvoker;
         readonly ParallelOperationsManager _parallelOperationsManager;
         readonly RebusBus _owningBus;
+        readonly Options _options;
         readonly Thread _workerThread;
         readonly ILog _log;
 
-        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus)
+        internal ThreadPoolWorker(string name, ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, ParallelOperationsManager parallelOperationsManager, RebusBus owningBus, Options options)
         {
             Name = name;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
@@ -31,6 +33,7 @@ namespace Rebus.Workers.ThreadPoolBased
             _pipelineInvoker = pipelineInvoker;
             _parallelOperationsManager = parallelOperationsManager;
             _owningBus = owningBus;
+            _options = options;
             _workerThread = new Thread(Run)
             {
                 Name = name,
@@ -89,10 +92,8 @@ namespace Rebus.Workers.ThreadPoolBased
                     return;
                 }
 
-                // fire! (disable warning because it is intentionally NOT waiting for it to finish)
-#pragma warning disable 4014
+                // fire asynchronously to the thread pool! (disable warning because it is intentionally NOT waiting for it to finish)
                 ProcessMessage(context, transportMessage, parallelOperation, token);
-#pragma warning restore 4014
             }
             catch (AggregateException aggregateException)
             {
@@ -116,7 +117,10 @@ namespace Rebus.Workers.ThreadPoolBased
             }
         }
 
-        async Task ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage, IDisposable parallelOperation, CancellationToken token)
+        /// <summary>
+        /// This bad boy is async void because we fire it asynchronously to the thread pool. We keep tight control over it via the passed-in <paramref name="parallelOperation"/>
+        /// </summary>
+        async void ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage, IDisposable parallelOperation, CancellationToken token)
         {
             using (parallelOperation)
             using (context)
@@ -140,6 +144,12 @@ namespace Rebus.Workers.ThreadPoolBased
                         _log.Error(exception, "An error occurred when attempting to complete the transaction context");
                     }
                 }
+                catch (ThreadAbortException exception)
+                {
+                    context.Abort();
+
+                    _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
+                }
                 catch (Exception exception)
                 {
                     context.Abort();
@@ -161,7 +171,13 @@ namespace Rebus.Workers.ThreadPoolBased
         public void Dispose()
         {
             Stop();
-            _workerThread.Join();
+
+            if (!_workerThread.Join(_options.WorkerShutdownTimeout))
+            {
+                _log.Warn($"The '{Name}' worker did not shut down within {_options.WorkerShutdownTimeout.TotalSeconds} seconds!");
+
+                _workerThread.Abort();
+            }
         }
     }
 }

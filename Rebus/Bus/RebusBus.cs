@@ -436,6 +436,8 @@ namespace Rebus.Bus
 
                 SetNumberOfWorkers(0);
 
+                _busLifetimeEvents.RaiseWorkersStopped();
+
                 Disposed();
             }
             finally

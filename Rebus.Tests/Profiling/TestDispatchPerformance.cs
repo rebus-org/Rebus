@@ -58,7 +58,7 @@ Stats:
                     {
                         o.SetNumberOfWorkers(0);
                         o.SetMaxParallelism(1);
-
+                        
                         o.Decorate<IPipeline>(c => new PipelineStepProfiler(c.Get<IPipeline>(), profilerStats));
                     })
                     .Start();

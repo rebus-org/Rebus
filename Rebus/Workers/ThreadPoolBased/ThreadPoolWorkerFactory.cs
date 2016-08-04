@@ -14,7 +14,7 @@ namespace Rebus.Workers.ThreadPoolBased
     /// Implementation of <see cref="IWorkerFactory"/> that uses worker threads to do synchronous receive of messages, dispatching
     /// received messages to the threadpool.
     /// </summary>
-    public class ThreadPoolWorkerFactory : IWorkerFactory, IDisposable
+    public class ThreadPoolWorkerFactory : IWorkerFactory
     {
         readonly ITransport _transport;
         readonly IRebusLoggerFactory _rebusLoggerFactory;
@@ -28,7 +28,7 @@ namespace Rebus.Workers.ThreadPoolBased
         /// <summary>
         /// Creates the worker factory
         /// </summary>
-        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter)
+        public ThreadPoolWorkerFactory(ITransport transport, IRebusLoggerFactory rebusLoggerFactory, IPipeline pipeline, IPipelineInvoker pipelineInvoker, Options options, Func<RebusBus> busGetter, BusLifetimeEvents busLifetimeEvents)
         {
             if (transport == null) throw new ArgumentNullException(nameof(transport));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
@@ -36,6 +36,7 @@ namespace Rebus.Workers.ThreadPoolBased
             if (pipelineInvoker == null) throw new ArgumentNullException(nameof(pipelineInvoker));
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (busGetter == null) throw new ArgumentNullException(nameof(busGetter));
+            if (busLifetimeEvents == null) throw new ArgumentNullException(nameof(busLifetimeEvents));
             _transport = transport;
             _rebusLoggerFactory = rebusLoggerFactory;
             _pipeline = pipeline;
@@ -54,6 +55,8 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 throw new ArgumentOutOfRangeException($"Cannot use '{options.WorkerShutdownTimeout}' as worker shutdown timeout as it");
             }
+
+            busLifetimeEvents.WorkersStopped += WaitForContinuationsToFinish;
         }
 
         /// <summary>
@@ -65,16 +68,15 @@ namespace Rebus.Workers.ThreadPoolBased
 
             var owningBus = _busGetter();
 
-            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipeline, _pipelineInvoker, _parallelOperationsManager, owningBus);
+            var worker = new ThreadPoolWorker(workerName, _transport, _rebusLoggerFactory, _pipeline, _pipelineInvoker, _parallelOperationsManager, owningBus, _options);
 
             return worker;
         }
 
         /// <summary>
-        /// Disposes the worke factory, blocking until all work has finished being done (i.e. waits for all message handling continuations
-        /// to have been executed)
+        /// Blocks until all work has finished being done (i.e. waits for all message handling continuations to have been executed)
         /// </summary>
-        public void Dispose()
+        void WaitForContinuationsToFinish()
         {
             if (!_parallelOperationsManager.HasPendingTasks) return;
 
@@ -84,7 +86,7 @@ namespace Rebus.Workers.ThreadPoolBased
             if (!_parallelOperationsManager.HasPendingTasks) return;
 
             // let the world know that we are waiting for something to finish
-            _log.Info("Waiting for continuations to finish...");
+            _log.Info("Waiting for message handler continuations to finish...");
 
             var stopwatch = Stopwatch.StartNew();
             var workerShutdownTimeout = _options.WorkerShutdownTimeout;
