@@ -9,7 +9,6 @@ using Rebus.Bus;
 using Rebus.Compression;
 using Rebus.Config;
 using Rebus.DataBus;
-using Rebus.DataBus.FileSystem;
 using Rebus.DataBus.InMem;
 using Rebus.Routing.TypeBased;
 using Rebus.Tests.Extensions;
@@ -44,7 +43,7 @@ namespace Rebus.Tests.DataBus
                 .Options(o =>
                 {
                     o.EnableDataBus()
-                        .UseCompression()
+                        .UseCompression(DataCompressionMode.Always)
                         .StoreInMemory(_inMemDataStore);
                 })
                 .Start();

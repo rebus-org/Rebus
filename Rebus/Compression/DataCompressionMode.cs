@@ -11,12 +11,12 @@ namespace Rebus.Compression
         /// Always compresses data. Please note that this requires that data can be kept in memory as this
         /// is required by the streaming APIs used when compressing data
         /// </summary>
-        AlwaysCompress,
+        Always,
 
         /// <summary>
         /// Compresses data when the <see cref="MetadataKeys.ContentEncoding"/> key is detected among the metadata
         /// of the save data and the value is "gzip"
         /// </summary>
-        CompressWhenContentEncodingIsGzip
+        Explicit
     }
 }

@@ -66,7 +66,7 @@ namespace Rebus.Compression
         {
             metadata = metadata?.Clone() ?? new Dictionary<string, string>();
 
-            if (_dataCompressionMode == DataCompressionMode.CompressWhenContentEncodingIsGzip)
+            if (_dataCompressionMode == DataCompressionMode.Explicit)
             {
                 string contentEncoding;
 

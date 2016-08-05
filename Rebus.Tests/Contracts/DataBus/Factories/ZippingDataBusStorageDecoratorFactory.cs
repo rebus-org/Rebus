@@ -22,7 +22,7 @@ namespace Rebus.Tests.Contracts.DataBus.Factories
 
         public IDataBusStorage Create()
         {
-            return new ZippingDataBusStorageDecorator(new InMemDataBusStorage(_inMemDataStore), DataCompressionMode.AlwaysCompress);
+            return new ZippingDataBusStorageDecorator(new InMemDataBusStorage(_inMemDataStore), DataCompressionMode.Always);
         }
 
         public void CleanUp()
