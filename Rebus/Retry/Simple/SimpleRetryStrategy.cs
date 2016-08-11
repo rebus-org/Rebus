@@ -1,5 +1,4 @@
-﻿using Rebus.Logging;
-using Rebus.Transport;
+﻿using System;
 
 namespace Rebus.Retry.Simple
 {
@@ -8,24 +7,22 @@ namespace Rebus.Retry.Simple
     /// </summary>
     public class SimpleRetryStrategy : IRetryStrategy
     {
-        readonly ITransport _transport;
         readonly SimpleRetryStrategySettings _simpleRetryStrategySettings;
         readonly IErrorTracker _errorTracker;
-        readonly IRebusLoggerFactory _rebusLoggerFactory;
+        readonly IErrorHandler _errorHandler;
 
         /// <summary>
         /// Constructs the retry strategy with the given settings, creating an error queue with the configured name if necessary
         /// </summary>
-        public SimpleRetryStrategy(ITransport transport, SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker, IRebusLoggerFactory rebusLoggerFactory)
+        public SimpleRetryStrategy(SimpleRetryStrategySettings simpleRetryStrategySettings, IErrorTracker errorTracker, IErrorHandler errorHandler)
         {
-            _transport = transport;
+            if (simpleRetryStrategySettings == null) throw new ArgumentNullException(nameof(simpleRetryStrategySettings));
+            if (errorTracker == null) throw new ArgumentNullException(nameof(errorTracker));
+            if (errorHandler == null) throw new ArgumentNullException(nameof(errorHandler));
+
             _simpleRetryStrategySettings = simpleRetryStrategySettings;
             _errorTracker = errorTracker;
-            _rebusLoggerFactory = rebusLoggerFactory;
-
-            var errorQueueAddress = _simpleRetryStrategySettings.ErrorQueueAddress;
-            
-            _transport.CreateQueue(errorQueueAddress);
+            _errorHandler = errorHandler;
         }
 
         /// <summary>
@@ -33,7 +30,7 @@ namespace Rebus.Retry.Simple
         /// </summary>
         public IRetryStrategyStep GetRetryStep()
         {
-            return new SimpleRetryStrategyStep(_transport, _simpleRetryStrategySettings, _errorTracker, _rebusLoggerFactory);
+            return new SimpleRetryStrategyStep(_simpleRetryStrategySettings, _errorTracker, _errorHandler);
         }
     }
 }

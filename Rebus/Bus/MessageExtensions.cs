@@ -80,6 +80,14 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Gets the message ID from the message
+        /// </summary>
+        public static string GetMessageId(this TransportMessage message)
+        {
+            return message.Headers.GetValue(Headers.MessageId);
+        }
+
+        /// <summary>
         /// Gets a nice label for the message, consisting of message type and ID if possible
         /// </summary>
         public static string GetMessageLabel(this Message message)

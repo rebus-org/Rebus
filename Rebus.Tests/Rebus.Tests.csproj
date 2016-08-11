@@ -112,6 +112,7 @@
     <Compile Include="Integration\TestCannotSendFailedMessageWrapper.cs" />
     <Compile Include="Integration\TestCentralizedInMemSubscriptionStorage.cs" />
     <Compile Include="Integration\TestCorrelationIdFlow.cs" />
+    <Compile Include="Integration\TestCustomErrorHandler.cs" />
     <Compile Include="Integration\TestErrorOnReceive.cs" />
     <Compile Include="Integration\TestImprovedInjectionistExceptions.cs" />
     <Compile Include="Integration\TestSagasAndPolymorphicCorrelation.cs" />

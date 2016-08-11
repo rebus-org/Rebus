@@ -14,6 +14,7 @@ using Rebus.Pipeline.Receive;
 using Rebus.Pipeline.Send;
 using Rebus.Retry;
 using Rebus.Retry.ErrorTracking;
+using Rebus.Retry.PoisonQueues;
 using Rebus.Retry.Simple;
 using Rebus.Routing;
 using Rebus.Routing.TypeBased;
@@ -204,13 +205,20 @@ namespace Rebus.Config
                 return new InMemErrorTracker(settings.MaxDeliveryAttempts, rebusLoggerFactory, asyncTaskFactory);
             });
 
+            PossiblyRegisterDefault<IErrorHandler>(c =>
+            {
+                var settings = c.Get<SimpleRetryStrategySettings>();
+                var transport = c.Get<ITransport>();
+                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
+                return new PoisonQueueErrorHandler(settings, transport, rebusLoggerFactory);
+            });
+
             PossiblyRegisterDefault<IRetryStrategy>(c =>
             {
-                var transport = c.Get<ITransport>();
                 var simpleRetryStrategySettings = c.Get<SimpleRetryStrategySettings>();
                 var errorTracker = c.Get<IErrorTracker>();
-                var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
-                return new SimpleRetryStrategy(transport, simpleRetryStrategySettings, errorTracker, rebusLoggerFactory);
+                var errorHandler = c.Get<IErrorHandler>();
+                return new SimpleRetryStrategy(simpleRetryStrategySettings, errorTracker, errorHandler);
             });
 
             PossiblyRegisterDefault(c => new SimpleRetryStrategySettings());

@@ -162,8 +162,10 @@
     <Compile Include="Profiling\PipelineStepProfilerStats.cs" />
     <Compile Include="Profiling\StatsContext.cs" />
     <Compile Include="Retry\ErrorTracking\InMemErrorTracker.cs" />
+    <Compile Include="Retry\IErrorHandler.cs" />
     <Compile Include="Retry\IErrorTracker.cs" />
     <Compile Include="Retry\IRetryStrategyStep.cs" />
+    <Compile Include="Retry\PoisonQueues\PoisonQueueErrorHandler.cs" />
     <Compile Include="Retry\Simple\FailedMessageWrapper.cs" />
     <Compile Include="Retry\Simple\FailedMessageWrapperStep.cs" />
     <Compile Include="Retry\Simple\IFailed.cs" />
