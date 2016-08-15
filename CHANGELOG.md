@@ -1030,6 +1030,10 @@
 * Add GZIPping capability to data bus storage - can be enabled by attaching `.UseCompression()` in the data bus configuration builder
 * Factor forwarding of failed messages to error queues out into `PoisonQueueErrorHandler` which implements `IErrorHandler`. Make room for customizing what to do about failed messages.
 
+# 0.99.74
+
+* Mark assemblies as CLS compliant becase VB.NET and F# programmers are most welcome too - thanks [NKnusperer]
+
 ---
 
 [AndreaCuneo]: https://github.com/AndreaCuneo
@@ -1060,6 +1064,7 @@
 [mgibas]: https://github.com/mgibas
 [mortenherman]: https://github.com/mortenherman
 [MrMDavidson]: https://github.com/MrMDavidson
+[NKnusperer]: https://github.com/NKnusperer
 [oguzhaneren]: https://github.com/oguzhaneren
 [PeteProgrammer]: https://github.com/PeteProgrammer
 [pruiz]: https://github.com/pruiz
