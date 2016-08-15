@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 // to COM components.  If you need to access a type in this assembly from 
 // COM, set the ComVisible attribute to true on that type.
 [assembly: ComVisible(false)]
-[assembly: CLSCompliant(false)]
+[assembly: CLSCompliant(true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("ddbf60ee-1293-4bab-bca6-e6b3cfb13c67")]
