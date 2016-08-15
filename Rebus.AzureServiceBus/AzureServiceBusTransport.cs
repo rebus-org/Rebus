@@ -71,7 +71,7 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, BusLifetimeEvents busLifetimeEvents)
+        public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
@@ -91,6 +91,9 @@ namespace Rebus.AzureServiceBus
                 : TimeSpan.FromSeconds(5);
         }
 
+        /// <summary>
+        /// Initializes the transport by ensuring that the input queue has been created
+        /// </summary>
         public void Initialize()
         {
             if (_inputQueueAddress != null)
@@ -128,6 +131,9 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public bool AutomaticallyRenewPeekLock { get; set; }
 
+        /// <summary>
+        /// Creates a queue with the given address
+        /// </summary>
         public void CreateQueue(string address)
         {
             if (DoNotCreateQueuesEnabled)
@@ -161,8 +167,15 @@ namespace Rebus.AzureServiceBus
             }
         }
 
+        /// <summary>
+        /// Gets/sets whether partitioning should be enabled on new queues. Only takes effect for queues created
+        /// after the property has been enabled
+        /// </summary>
         public bool PartitioningEnabled { get; set; }
 
+        /// <summary>
+        /// Sends the given message to the queue with the given <paramref name="destinationAddress"/>
+        /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             GetOutgoingMessages(context)
@@ -182,6 +195,9 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
+        /// <summary>
+        /// Receives the next message from the input queue. Returns null if no message was available
+        /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
@@ -452,8 +468,14 @@ namespace Rebus.AzureServiceBus
             return queueClient;
         }
 
+        /// <summary>
+        /// Gets the address of the input queue for the transport
+        /// </summary>
         public string Address => _inputQueueAddress;
 
+        /// <summary>
+        /// Releases prefetched messages and cached queue clients
+        /// </summary>
         public void Dispose()
         {
             if (_disposed) return;
@@ -489,6 +511,10 @@ namespace Rebus.AzureServiceBus
             }
         }
 
+        /// <summary>
+        /// Gets "subscriber addresses" by getting one single magic "queue name", which is then
+        /// interpreted as a publish operation to a topic when the time comes to send to that "queue"
+        /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             var normalizedTopic = topic.ToValidAzureServiceBusEntityName();
@@ -588,6 +614,9 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public bool IsCentralized => true;
 
+        /// <summary>
+        /// Gets/sets whether to skip creating queues
+        /// </summary>
         public bool DoNotCreateQueuesEnabled { get; set; }
     }
 }

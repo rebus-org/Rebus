@@ -29,6 +29,7 @@ namespace Rebus.MongoDb.Timeouts
             _timeouts = database.GetCollection<Timeout>(collectionName);
         }
 
+        /// <inheritdoc />
         public async Task Defer(DateTimeOffset approximateDueTime, Dictionary<string, string> headers, byte[] body)
         {
             var newTimeout = new Timeout(headers, body, approximateDueTime.UtcDateTime);
@@ -36,6 +37,7 @@ namespace Rebus.MongoDb.Timeouts
             await _timeouts.InsertOneAsync(newTimeout).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         public async Task<DueMessagesResult> GetDueMessages()
         {
             var now = RebusTime.Now.UtcDateTime;

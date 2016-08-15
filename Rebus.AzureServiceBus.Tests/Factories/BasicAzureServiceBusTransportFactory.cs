@@ -4,7 +4,6 @@ using System.Configuration;
 using System.IO;
 using Microsoft.ServiceBus;
 using Microsoft.ServiceBus.Messaging;
-using Rebus.Bus;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Tests.Contracts.Transports;
@@ -15,15 +14,9 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 {
     public class BasicAzureServiceBusTransportFactory : ITransportFactory
     {
-        public static string ConnectionString
-        {
-            get
-            {
-                return ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
-                       ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
-                       ?? Throw("Could not find Azure Service Bus connection string!");
-            }
-        }
+        public static string ConnectionString => ConnectionStringFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "asb_connection_string.txt"))
+                                                 ?? ConnectionStringFromEnvironmentVariable("rebus2_asb_connection_string")
+                                                 ?? Throw("Could not find Azure Service Bus connection string!");
 
         static string Throw(string message)
         {
@@ -70,7 +63,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
             var asyncTaskFactory = new TplAsyncTaskFactory(consoleLoggerFactory);
             if (inputQueueAddress == null)
             {
-                var transport = new AzureServiceBusTransport(ConnectionString, null, consoleLoggerFactory, asyncTaskFactory, new BusLifetimeEvents());
+                var transport = new AzureServiceBusTransport(ConnectionString, null, consoleLoggerFactory, asyncTaskFactory);
 
                 transport.Initialize();
 
@@ -79,7 +72,7 @@ namespace Rebus.AzureServiceBus.Tests.Factories
 
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () =>
             {
-                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress, consoleLoggerFactory, asyncTaskFactory, new BusLifetimeEvents());
+                var transport = new BasicAzureServiceBusTransport(ConnectionString, inputQueueAddress, consoleLoggerFactory, asyncTaskFactory);
 
                 transport.PurgeInputQueue();
 

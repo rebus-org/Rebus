@@ -25,6 +25,9 @@ namespace Rebus.StructureMap
             _container = container;
         }
 
+        /// <summary>
+        /// Returns all relevant handler instances for the given message
+        /// </summary>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var container = transactionContext.GetOrAdd("nested-structuremap-container", () =>
@@ -37,6 +40,9 @@ namespace Rebus.StructureMap
             return container.GetAllInstances<IHandleMessages<TMessage>>();
         }
 
+        /// <summary>
+        /// Sets the bus instance that this <see cref="IContainerAdapter"/> should be able to inject when resolving handler instances
+        /// </summary>
         public void SetBus(IBus bus)
         {
             _container.Configure(x =>

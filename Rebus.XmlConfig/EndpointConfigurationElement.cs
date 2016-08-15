@@ -8,11 +8,13 @@ namespace Rebus.XmlConfig
     /// </summary>
     public class EndpointConfigurationElement : ConfigurationElementCollection, IEnumerable<EndpointMapping>
     {
+        /// <inheritdoc />
         protected override ConfigurationElement CreateNewElement()
         {
             return new EndpointMapping();
         }
 
+        /// <inheritdoc />
         protected override object GetElementKey(ConfigurationElement element)
         {
             return ((EndpointMapping)element).Messages;

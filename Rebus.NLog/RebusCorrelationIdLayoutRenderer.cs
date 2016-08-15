@@ -9,9 +9,15 @@ using Rebus.Pipeline;
 
 namespace Rebus.NLog
 {
+    /// <summary>
+    /// Layout renderer for NLog that can enrich log lines with the correlation ID of the message currently being handled
+    /// </summary>
     [LayoutRenderer(ItemName)]
     public class RebusCorrelationIdLayoutRenderer : LayoutRenderer
     {
+        /// <summary>
+        /// Gets the name of the correlation ID item
+        /// </summary>
         public const string ItemName = "rebus-correlation-id";
 
         /// <summary>
@@ -44,15 +50,13 @@ namespace Rebus.NLog
             namedItemFactory.RegisterDefinition(ItemName, typeof (RebusCorrelationIdLayoutRenderer));
         }
 
+        /// <inheritdoc />
         protected override void Append(StringBuilder builder, LogEventInfo logEvent)
         {
             var context = MessageContext.Current;
-            if (context == null) return;
 
-            var correlationId = context
-                .IncomingStepContext
-                .Load<TransportMessage>()
-                .Headers.GetValueOrNull(Headers.CorrelationId);
+            var correlationId = context?.IncomingStepContext
+                .Load<TransportMessage>().Headers.GetValueOrNull(Headers.CorrelationId);
 
             if (correlationId == null) return;
 

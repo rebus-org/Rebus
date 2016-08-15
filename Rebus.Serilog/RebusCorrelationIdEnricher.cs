@@ -1,4 +1,5 @@
-﻿using Rebus.Extensions;
+﻿using System;
+using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Pipeline;
 using Serilog.Core;
@@ -14,23 +15,29 @@ namespace Rebus.Serilog
     {
         readonly string _propertyName;
 
+        /// <summary>
+        /// Creates the enricher, using the specified <paramref name="propertyName"/> as the name of the field
+        /// </summary>
         public RebusCorrelationIdEnricher(string propertyName)
         {
+            if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
             _propertyName = propertyName;
         }
 
+        /// Enriches the <paramref name="logEvent"/> with a log event property that has the correlation ID
+        /// of the message currently being handled if possible. Otherwise, no property is added.
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory factory)
         {
             var messageContext = MessageContext.Current;
-            if (messageContext == null) return;
 
-            var correlationid = messageContext
-                .TransportMessage.Headers
+            var correlationid = messageContext?.TransportMessage.Headers
                 .GetValueOrNull(Headers.CorrelationId);
 
             if (correlationid == null) return;
 
-            logEvent.AddOrUpdateProperty(factory.CreateProperty(_propertyName, correlationid));
+            var logEventProperty = factory.CreateProperty(_propertyName, correlationid);
+
+            logEvent.AddOrUpdateProperty(logEventProperty);
         }
     }
 }

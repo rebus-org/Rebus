@@ -25,8 +25,7 @@ namespace Rebus.Forklift.AzureServiceBus
 
         protected override void DoRun()
         {
-            var busLifetimeEvents = new BusLifetimeEvents();
-            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory, new TplAsyncTaskFactory(LoggerFactory), busLifetimeEvents))
+            using (var transport = new AzureServiceBusTransport(GetConnectionString(ConnectionStringName), InputQueue, LoggerFactory, new TplAsyncTaskFactory(LoggerFactory)))
             {
                 var returnToSourceQueue = new ReturnToSourceQueue(transport)
                 {

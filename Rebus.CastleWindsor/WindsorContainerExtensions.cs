@@ -45,7 +45,7 @@ namespace Rebus.CastleWindsor
         }
 
         /// <summary>
-        /// Automatically picks up all handler types from the assembly containing <see cref="THandler"/> and registers them in the container
+        /// Automatically picks up all handler types from the assembly containing <typeparamref name="THandler"/> and registers them in the container
         /// </summary>
         public static IWindsorContainer AutoRegisterHandlersFromAssemblyOf<THandler>(this IWindsorContainer container) where THandler : IHandleMessages
         {

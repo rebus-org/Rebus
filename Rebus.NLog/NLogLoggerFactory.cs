@@ -37,24 +37,12 @@ namespace Rebus.NLog
 
             public void Error(Exception exception, string message, params object[] objs)
             {
-                _logger.ErrorException(SafeFormat(message, objs), exception);
+                _logger.Error(exception, message, objs);
             }
 
             public void Error(string message, params object[] objs)
             {
                 _logger.Error(message, objs);
-            }
-
-            string SafeFormat(string message, object[] objs)
-            {
-                try
-                {
-                    return string.Format(message, objs);
-                }
-                catch
-                {
-                    return message;
-                }
             }
         }
     }

@@ -9,6 +9,7 @@ using Rebus.Extensions;
 using Rebus.Messages;
 using Rebus.Messages.Control;
 using Rebus.Serialization;
+#pragma warning disable 1998
 
 namespace Rebus.Protobuf
 {

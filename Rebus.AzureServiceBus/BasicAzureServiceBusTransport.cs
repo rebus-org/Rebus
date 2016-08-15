@@ -17,6 +17,9 @@ using Rebus.Transport;
 
 namespace Rebus.AzureServiceBus
 {
+    /// <summary>
+    /// Implementation of <see cref="ITransport"/> that uses Azure Service Bus queues to send/receive messages.
+    /// </summary>
     public class BasicAzureServiceBusTransport : ITransport, IInitializable, IDisposable
     {
         const string OutgoingMessagesKey = "azure-service-bus-transport";
@@ -41,7 +44,6 @@ namespace Rebus.AzureServiceBus
         readonly ConcurrentDictionary<string, QueueClient> _queueClients = new ConcurrentDictionary<string, QueueClient>(StringComparer.InvariantCultureIgnoreCase);
         readonly NamespaceManager _namespaceManager;
         readonly string _connectionString;
-        readonly IRebusLoggerFactory _rebusLoggerFactory;
         readonly IAsyncTaskFactory _asyncTaskFactory;
         readonly string _inputQueueAddress;
 
@@ -59,13 +61,12 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Constructs the transport, connecting to the service bus pointed to by the connection string.
         /// </summary>
-        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory, BusLifetimeEvents busLifetimeEvents)
+        public BasicAzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
             
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
-            _rebusLoggerFactory = rebusLoggerFactory;
             _asyncTaskFactory = asyncTaskFactory;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
 
@@ -80,6 +81,9 @@ namespace Rebus.AzureServiceBus
                 : TimeSpan.FromSeconds(5);
         }
 
+        /// <summary>
+        /// Initializes the transport by ensuring that the input queue has been created
+        /// </summary>
         public void Initialize()
         {
             _log.Info("Initializing Azure Service Bus transport with queue '{0}'", _inputQueueAddress);
@@ -117,6 +121,9 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public bool AutomaticallyRenewPeekLock { get; set; }
 
+        /// <summary>
+        /// Creates a queue with the given address
+        /// </summary>
         public void CreateQueue(string address)
         {
             if (DoNotCreateQueuesEnabled)
@@ -148,6 +155,9 @@ namespace Rebus.AzureServiceBus
             }
         }
 
+        /// <summary>
+        /// Sends the given message to the queue with the given <paramref name="destinationAddress"/>
+        /// </summary>
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             GetOutgoingMessages(context)
@@ -166,6 +176,9 @@ namespace Rebus.AzureServiceBus
                 .On<ServerBusyException>(e => e.IsTransient);
         }
 
+        /// <summary>
+        /// Receives the next message from the input queue. Returns null if no message was available
+        /// </summary>
         public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (_inputQueueAddress == null)
@@ -383,14 +396,25 @@ namespace Rebus.AzureServiceBus
             return queueClient;
         }
 
-        public string Address
-        {
-            get { return _inputQueueAddress; }
-        }
+        /// <summary>
+        /// Gets the address of the input queue for the transport
+        /// </summary>
+        public string Address => _inputQueueAddress;
 
+        /// <summary>
+        /// Gets/sets whether partitioning should be enabled on new queues. Only takes effect for queues created
+        /// after the property has been enabled
+        /// </summary>
         public bool PartitioningEnabled { get; set; }
+
+        /// <summary>
+        /// Gets/sets whether to skip creating queues
+        /// </summary>
         public bool DoNotCreateQueuesEnabled { get; set; }
 
+        /// <summary>
+        /// Releases prefetched messages and cached queue clients
+        /// </summary>
         public void Dispose()
         {
             DisposePrefetchedMessages();

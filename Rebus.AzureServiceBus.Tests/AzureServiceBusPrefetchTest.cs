@@ -146,13 +146,13 @@ namespace Rebus.AzureServiceBus.Tests
 
             if (_mode == AzureServiceBusMode.Basic)
             {
-                var basicTransport = new BasicAzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory, busLifetimeEvents);
+                var basicTransport = new BasicAzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
                 Using(basicTransport);
                 basicTransport.Initialize();
                 basicTransport.PurgeInputQueue();
                 return basicTransport;
             }
-            var transport = new AzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory, busLifetimeEvents);
+            var transport = new AzureServiceBusTransport(connectionString, _queueName, consoleLoggerFactory, asyncTaskFactory);
             Using(transport);
             transport.Initialize();
             transport.PurgeInputQueue();

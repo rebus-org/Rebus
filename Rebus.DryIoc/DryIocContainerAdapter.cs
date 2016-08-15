@@ -14,6 +14,9 @@ using Rebus.Transport;
 
 namespace Rebus.DryIoc
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that uses DryIoC to get handler instances
+    /// </summary>
     public class DryIocContainerAdapter : IContainerAdapter
     {
         readonly IContainer _container;

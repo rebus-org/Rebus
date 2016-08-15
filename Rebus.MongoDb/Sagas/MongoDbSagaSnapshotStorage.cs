@@ -22,6 +22,9 @@ namespace Rebus.MongoDb.Sagas
             _snapshots = mongoDatabase.GetCollection<BsonDocument>(collectionName);
         }
 
+        /// <summary>
+        /// Saves a snapshot of the given saga data
+        /// </summary>
         public async Task Save(ISagaData sagaData, Dictionary<string, string> sagaAuditMetadata)
         {
             var document = new BsonDocument

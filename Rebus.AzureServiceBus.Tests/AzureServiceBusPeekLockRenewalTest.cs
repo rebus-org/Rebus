@@ -38,7 +38,7 @@ namespace Rebus.AzureServiceBus.Tests
 
         protected override void SetUp()
         {
-            _transport = new AzureServiceBusTransport(ConnectionString, QueueName, _consoleLoggerFactory, new TplAsyncTaskFactory(_consoleLoggerFactory), new BusLifetimeEvents());
+            _transport = new AzureServiceBusTransport(ConnectionString, QueueName, _consoleLoggerFactory, new TplAsyncTaskFactory(_consoleLoggerFactory));
 
             Using(_transport);
 

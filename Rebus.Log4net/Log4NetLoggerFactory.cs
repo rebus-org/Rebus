@@ -10,6 +10,7 @@ namespace Rebus.Log4net
     /// </summary>
     public class Log4NetLoggerFactory : AbstractRebusLoggerFactory
     {
+        /// <inheritdoc />
         protected override ILog GetLogger(Type type)
         {
             return new Log4NetLogger(LogManager.GetLogger(type));

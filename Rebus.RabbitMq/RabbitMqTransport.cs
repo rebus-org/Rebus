@@ -16,6 +16,7 @@ using Rebus.Transport;
 using RabbitMQ.Client.Events;
 using Rebus.Exceptions;
 using Headers = Rebus.Messages.Headers;
+// ReSharper disable EmptyGeneralCatchClause
 
 #pragma warning disable 1998
 
@@ -71,40 +72,61 @@ namespace Rebus.RabbitMq
             _connectionManager.AddClientProperties(additionalClientProperties);
         }
 
+        /// <summary>
+        /// Sets whether the exchange should be declared
+        /// </summary>
         public void SetDeclareExchanges(bool value)
         {
             _declareExchanges = value;
         }
 
+        /// <summary>
+        /// Sets whether the endpoint's input queue should be declared
+        /// </summary>
         public void SetDeclareInputQueue(bool value)
         {
             _declareInputQueue = value;
         }
 
+        /// <summary>
+        /// Sets whether a binding for the input queue should be declared
+        /// </summary>
         public void SetBindInputQueue(bool value)
         {
             _bindInputQueue = value;
         }
 
+        /// <summary>
+        /// Sets the name of the exchange used to send point-to-point messages
+        /// </summary>
         public void SetDirectExchangeName(string directExchangeName)
         {
             _directExchangeName = directExchangeName;
         }
 
+        /// <summary>
+        /// Sets the name of the exchange used to do publish/subscribe messaging
+        /// </summary>
         public void SetTopicExchangeName(string topicExchangeName)
         {
             _topicExchangeName = topicExchangeName;
         }
 
+        /// <summary>
+        /// Configures how many messages to prefetch
+        /// </summary>
         public void SetMaxMessagesToPrefetch(int maxMessagesToPrefetch)
         {
-            if (maxMessagesToPrefetch <= 0)
+            if (maxMessagesToPrefetch < 0)
             {
-                throw new ArgumentException($"Cannot set 'max messages to prefetch' to {maxMessagesToPrefetch} - it must be at least 1!");
+                throw new ArgumentException($"Cannot set 'max messages to prefetch' to {maxMessagesToPrefetch}");
             }
             _maxMessagesToPrefetch = (ushort)maxMessagesToPrefetch;
         }
 
+        /// <summary>
+        /// Initializes the transport by creating the input queue
+        /// </summary>
         public void Initialize()
         {
             if (Address == null) { return; }
@@ -112,6 +134,9 @@ namespace Rebus.RabbitMq
             CreateQueue(Address);
         }
 
+        /// <summary>
+        /// Creates a queue with the given name and binds it to a topic with the same name in the direct exchange
+        /// </summary>
         public void CreateQueue(string address)
         {
             var connection = _connectionManager.GetConnection();
@@ -157,6 +182,7 @@ namespace Rebus.RabbitMq
                 arguments: arguments);
         }
 
+        /// <inheritdoc />
         public async Task Send(string destinationAddress, TransportMessage message, ITransactionContext context)
         {
             var outgoingMessages = context.GetOrAdd(OutgoingMessagesItemsKey, () =>
@@ -171,6 +197,7 @@ namespace Rebus.RabbitMq
             outgoingMessages.Enqueue(new OutgoingMessage(destinationAddress, message));
         }
 
+        /// <inheritdoc />
         public string Address { get; }
 
         /// <summary>
@@ -203,6 +230,7 @@ namespace Rebus.RabbitMq
             }
         }
 
+        /// <inheritdoc />
         public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (Address == null)
@@ -323,22 +351,19 @@ namespace Rebus.RabbitMq
         {
             var basicProperties = result.BasicProperties;
 
-            var headers = basicProperties.Headers != null
-                ? basicProperties.Headers
-                    .ToDictionary(kvp => kvp.Key, kvp =>
-                    {
-                        var headerValue = kvp.Value;
+            var headers = basicProperties.Headers?.ToDictionary(kvp => kvp.Key, kvp =>
+                          {
+                              var headerValue = kvp.Value;
 
-                        if (headerValue is byte[])
-                        {
-                            var stringHeaderValue = HeaderValueEncoding.GetString((byte[]) headerValue);
+                              if (headerValue is byte[])
+                              {
+                                  var stringHeaderValue = HeaderValueEncoding.GetString((byte[]) headerValue);
 
-                            return stringHeaderValue;
-                        }
+                                  return stringHeaderValue;
+                              }
 
-                        return headerValue.ToString();
-                    })
-                : new Dictionary<string, string>();
+                              return headerValue.ToString();
+                          }) ?? new Dictionary<string, string>();
 
             if (!headers.ContainsKey(Headers.MessageId))
             {
@@ -529,6 +554,7 @@ namespace Rebus.RabbitMq
             public TransportMessage TransportMessage { get; }
         }
 
+        /// <inheritdoc />
         public void Dispose()
         {
             if (_consumer?.Model != null && _consumer.Model.IsOpen)
@@ -539,11 +565,18 @@ namespace Rebus.RabbitMq
             _connectionManager.Dispose();
         }
 
+        /// <summary>
+        /// Gets "subscriber addresses" as one single magic "queue address", which will be interpreted
+        /// as a proper pub/sub topic when the time comes to send to it
+        /// </summary>
         public async Task<string[]> GetSubscriberAddresses(string topic)
         {
             return new[] { $"{topic}@{_topicExchangeName}" };
         }
 
+        /// <summary>
+        /// Registers the queue address as a subscriber of the given topic by creating an appropriate binding
+        /// </summary>
         public async Task RegisterSubscriber(string topic, string subscriberAddress)
         {
             var connection = _connectionManager.GetConnection();
@@ -554,6 +587,9 @@ namespace Rebus.RabbitMq
             }
         }
 
+        /// <summary>
+        /// Unregisters the queue address as a subscriber of the given topic by removing the appropriate binding
+        /// </summary>
         public async Task UnregisterSubscriber(string topic, string subscriberAddress)
         {
             var connection = _connectionManager.GetConnection();
@@ -564,6 +600,9 @@ namespace Rebus.RabbitMq
             }
         }
 
+        /// <summary>
+        /// Gets whether this transport is centralized (it always is, as RabbitMQ's bindings are used to do proper pub/sub messaging)
+        /// </summary>
         public bool IsCentralized => true;
     }
 }

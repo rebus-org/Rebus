@@ -13,6 +13,9 @@ using Rebus.Transport;
 
 namespace Rebus.LightInject
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that uses LightInject to get handler instances
+    /// </summary>
     public class LightInjectContainerAdapter : IContainerAdapter
     {
         readonly IServiceContainer _serviceContainer;

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Threading.Tasks;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -19,15 +20,17 @@ namespace Rebus.MongoDb.Sagas
 
         /// <summary>
         /// Constructs the saga storage to use the given database. If specified, the given <paramref name="collectionNameResolver"/> will
-        /// be used to get names for each type of saga data that needs to be persisted. By default, the saga data's <see cref="Type.Name"/>
+        /// be used to get names for each type of saga data that needs to be persisted. By default, the saga data's <see cref="MemberInfo.Name"/>
         /// will be used.
         /// </summary>
         public MongoDbSagaStorage(IMongoDatabase mongoDatabase, Func<Type, string> collectionNameResolver = null)
         {
+            if (mongoDatabase == null) throw new ArgumentNullException(nameof(mongoDatabase));
             _mongoDatabase = mongoDatabase;
             _collectionNameResolver = collectionNameResolver ?? (type => type.Name);
         }
 
+        /// <inheritdoc />
         public async Task<ISagaData> Find(Type sagaDataType, string propertyName, object propertyValue)
         {
             var collection = GetCollection(sagaDataType);
@@ -46,6 +49,7 @@ namespace Rebus.MongoDb.Sagas
             return sagaData;
         }
 
+        /// <inheritdoc />
         public async Task Insert(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             if (sagaData.Id == Guid.Empty)
@@ -63,6 +67,7 @@ namespace Rebus.MongoDb.Sagas
             await collection.InsertOneAsync(sagaData.ToBsonDocument()).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         public async Task Update(ISagaData sagaData, IEnumerable<ISagaCorrelationProperty> correlationProperties)
         {
             var collection = GetCollection(sagaData.GetType());
@@ -81,6 +86,7 @@ namespace Rebus.MongoDb.Sagas
             }
         }
 
+        /// <inheritdoc />
         public async Task Delete(ISagaData sagaData)
         {
             var collection = GetCollection(sagaData.GetType());
