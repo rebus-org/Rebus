@@ -51,13 +51,14 @@ namespace Rebus.RabbitMq
         /// <summary>
         /// Constructs the transport with a connection to the RabbitMQ instance specified by the given connection string
         /// </summary>
-        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, ushort maxMessagesToPrefetch = 50)
+        public RabbitMqTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, int maxMessagesToPrefetch = 50)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
             if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+						if (maxMessagesToPrefetch <= 0) throw new ArgumentException($"Cannot set 'maxMessagesToPrefetch' to {maxMessagesToPrefetch} - it must be at least 1!");
 
-            _connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
-            _maxMessagesToPrefetch = maxMessagesToPrefetch;
+						_connectionManager = new ConnectionManager(connectionString, inputQueueAddress, rebusLoggerFactory);
+            _maxMessagesToPrefetch = (ushort)maxMessagesToPrefetch;
             _log = rebusLoggerFactory.GetCurrentClassLogger();
             Address = inputQueueAddress;
         }
