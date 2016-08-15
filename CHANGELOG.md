@@ -1033,6 +1033,7 @@
 # 0.99.74
 
 * Mark assemblies as CLS compliant becase VB.NET and F# programmers are most welcome too - thanks [NKnusperer]
+* Update Serilog dependency to 2.1.0
 
 ---
 
