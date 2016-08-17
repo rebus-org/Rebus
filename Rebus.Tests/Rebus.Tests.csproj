@@ -160,6 +160,7 @@
     <Compile Include="Integration\TestStartingAgainAndAgain.cs" />
     <Compile Include="Integration\TestTypeBasedRouting.cs" />
     <Compile Include="Integration\TestTypeHeader.cs" />
+    <Compile Include="Integration\TestWorkerAndParallelismConfiguration.cs" />
     <Compile Include="LocalAddin.cs" />
     <Compile Include="LogLine.cs" />
     <Compile Include="Profiling\TestDispatchPerformance.cs" />

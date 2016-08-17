@@ -1034,6 +1034,7 @@
 
 * Mark assemblies as CLS compliant becase VB.NET and F# programmers are most welcome too - thanks [NKnusperer]
 * Update Serilog dependency to 2.1.0
+* Limit number of workers to match max parallelism
 
 ---
 

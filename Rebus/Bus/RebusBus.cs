@@ -473,6 +473,14 @@ namespace Rebus.Bus
         {
             if (desiredNumberOfWorkers == GetNumberOfWorkers()) return;
 
+            if (desiredNumberOfWorkers > _options.MaxParallelism)
+            {
+                _log.Warn("Attempted to set number of workers to {0}, but the max allowed parallelism is {1}",
+                    desiredNumberOfWorkers, _options.MaxParallelism);
+
+                desiredNumberOfWorkers = _options.MaxParallelism;
+            }
+
             _log.Info("Setting number of workers to {0}", desiredNumberOfWorkers);
             while (desiredNumberOfWorkers > GetNumberOfWorkers())
             {
