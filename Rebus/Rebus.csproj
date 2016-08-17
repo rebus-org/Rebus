@@ -324,7 +324,7 @@
     <Compile Include="Workers\ThreadBased\ThreadWorkerFactory.cs" />
     <Compile Include="Workers\ThreadPoolBased\DefaultSyncBackoffStrategy.cs" />
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorker.cs" />
-    <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkersConfigurationExtensions.cs" />
+    <Compile Include="Workers\ThreadPoolBased\DedicatedRebusWorkersConfigurationExtensions.cs" />
     <Compile Include="Workers\ThreadPoolBased\ThreadPoolWorkerFactory.cs" />
   </ItemGroup>
   <ItemGroup />

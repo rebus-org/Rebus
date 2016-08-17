@@ -269,7 +269,7 @@
     <Compile Include="Transport\SqlServer\SqlTransportTests.cs" />
     <Compile Include="Transport\SqlServer\TestDbConnectionProvider.cs" />
     <Compile Include="Transport\SqlServer\TestSqlServerTransport.cs" />
-    <Compile Include="Workers\TestThreadPoolBasedWorkers.cs" />
+    <Compile Include="Workers\TestClassisDedicatedRebusWorkers.cs" />
     <Compile Include="Workers\TestUnluckyContinuations.cs" />
     <Compile Include="Workers\ThreadWorkerIntegrationTests.cs" />
     <Compile Include="Workers\ThreadWorkerUnitTests.cs" />

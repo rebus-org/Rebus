@@ -9,7 +9,6 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.Msmq;
-using Rebus.Workers.ThreadPoolBased;
 
 namespace Rebus.Tests.Workers
 {
@@ -33,8 +32,6 @@ namespace Rebus.Tests.Workers
                 {
                     o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(5);
-
-                    o.UseThreadPoolMessageDispatch();
                 })
                 .Start();
         }

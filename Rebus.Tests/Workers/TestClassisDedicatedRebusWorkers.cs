@@ -18,7 +18,7 @@ using Rebus.Workers.ThreadPoolBased;
 namespace Rebus.Tests.Workers
 {
     [TestFixture]
-    public class TestThreadPoolBasedWorkers : FixtureBase
+    public class TestClassisDedicatedRebusWorkers : FixtureBase
     {
         BuiltinHandlerActivator _activator;
         InMemNetwork _network;
@@ -40,17 +40,7 @@ namespace Rebus.Tests.Workers
                 .Transport(t => t.UseInMemoryTransport(_network, "threadpool-workers-test"))
                 .Options(o =>
                 {
-                    o.UseThreadPoolMessageDispatch();
-
-                    //o.Register<IWorkerFactory>(c =>
-                    //{
-                    //    var transport = c.Get<ITransport>();
-                    //    var loggerFactory = c.Get<IRebusLoggerFactory>();
-                    //    var pipeline = c.Get<IPipeline>();
-                    //    var pipelineInvoker = c.Get<IPipelineInvoker>();
-                    //    var options = c.Get<Options>();
-                    //    return new ThreadPoolWorkerFactory(transport, loggerFactory, pipeline, pipelineInvoker, options, c.Get<RebusBus>);
-                    //});
+                    o.UseClassicRebusWorkersMessageDispatch();
 
                     o.SetNumberOfWorkers(0);
                     o.SetMaxParallelism(1);
