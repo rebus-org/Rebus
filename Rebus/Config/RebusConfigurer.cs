@@ -26,7 +26,6 @@ using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Timeouts;
 using Rebus.Transport;
 using Rebus.Workers;
-using Rebus.Workers.ThreadBased;
 using Rebus.Workers.ThreadPoolBased;
 
 namespace Rebus.Config

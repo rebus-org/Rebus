@@ -5,7 +5,6 @@ using Npgsql;
 using NpgsqlTypes;
 using Rebus.Extensions;
 using Rebus.Logging;
-using Rebus.Messages.Control;
 using Rebus.Subscriptions;
 
 namespace Rebus.PostgreSql.Subscriptions

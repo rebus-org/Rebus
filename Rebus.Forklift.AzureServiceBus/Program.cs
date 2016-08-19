@@ -3,7 +3,6 @@ using System.Configuration;
 using GoCommando;
 using GoCommando.Attributes;
 using Rebus.AzureServiceBus;
-using Rebus.Bus;
 using Rebus.Forklift.Common;
 using Rebus.Threading.TaskParallelLibrary;
 

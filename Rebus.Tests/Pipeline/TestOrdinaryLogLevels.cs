@@ -4,7 +4,6 @@ using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Logging;
-using Rebus.Transport.InMem;
 using Rebus.Transport.SqlServer;
 
 #pragma warning disable 1998
