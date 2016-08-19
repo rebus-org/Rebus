@@ -4,7 +4,6 @@ using Rebus.Logging;
 using Rebus.Persistence.FileSystem;
 using Rebus.Sagas;
 using Rebus.Tests.Contracts.Sagas;
-using Rebus.Tests.Transport.FileSystem;
 
 namespace Rebus.Tests.Persistence.Filesystem
 {

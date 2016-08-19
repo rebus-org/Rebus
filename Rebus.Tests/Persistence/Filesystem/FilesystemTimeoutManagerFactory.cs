@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Persistence.FileSystem;
 using Rebus.Tests.Contracts.Timeouts;
-using Rebus.Tests.Persistence.SqlServer;
 using Rebus.Timeouts;
 
 namespace Rebus.Tests.Persistence.Filesystem

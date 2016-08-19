@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.AzureStorage.Transport;
 using Rebus.Messages;
-using Rebus.Tests;
 using Rebus.Tests.Contracts.Transports;
 using Rebus.Time;
 

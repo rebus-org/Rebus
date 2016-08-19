@@ -1,7 +1,6 @@
 using Rebus.Config;
 using Rebus.DataBus;
 using Rebus.DataBus.SqlServer;
-using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Transport.SqlServer;
 

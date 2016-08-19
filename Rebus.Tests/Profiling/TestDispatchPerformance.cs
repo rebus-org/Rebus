@@ -13,7 +13,6 @@ using Rebus.Profiling;
 using Rebus.Serialization;
 using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
-using Rebus.Workers.ThreadPoolBased;
 
 #pragma warning disable 1998
 

@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using Rebus.Sagas;
