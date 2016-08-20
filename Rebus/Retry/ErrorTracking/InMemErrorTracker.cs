@@ -84,7 +84,7 @@ namespace Rebus.Retry.ErrorTracking
 
             return _trackedErrors.TryGetValue(messageId, out errorTracking)
                 ? $"{errorTracking.Errors.Count()} unhandled exceptions"
-                : "Could not get error details for the message";
+                : null;
         }
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace Rebus.Retry.ErrorTracking
 
             if (!_trackedErrors.TryGetValue(messageId, out errorTracking))
             {
-                return "Could not get error details for the message";
+                return null;
             }
 
             var fullExceptionInfo = string.Join(Environment.NewLine, errorTracking.Errors.Select(e =>

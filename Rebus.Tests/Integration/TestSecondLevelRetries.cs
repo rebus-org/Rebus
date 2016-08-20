@@ -9,6 +9,7 @@ using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Retry.Simple;
+using Rebus.Tests.Extensions;
 using Rebus.Transport.InMem;
 #pragma warning disable 1998
 
@@ -92,6 +93,34 @@ namespace Rebus.Tests.Integration
             await _bus.SendLocal("hej med dig!");
 
             counter.WaitForResetEvent();
+        }
+
+        [Test]
+        public async Task IncludesFullErrorDetailsWhenSecondLevelRetriesFailToo()
+        {
+            var counter = new SharedCounter(1);
+
+            Using(counter);
+
+            _activator.Handle<string>(async str =>
+            {
+                throw new ApplicationException("1st level!!");
+            });
+
+            _activator.Handle<IFailed<string>>(async failed =>
+            {
+                throw new ApplicationException("2nd level!!");
+            });
+
+            await _bus.SendLocal("hej med dig!");
+
+            var transportMessage = await _network.WaitForNextMessageFrom("error");
+            var errorDetails = transportMessage.Headers[Headers.ErrorDetails];
+
+            Console.WriteLine(errorDetails);
+
+            Assert.That(errorDetails, Is.StringContaining("1st level!!"));
+            Assert.That(errorDetails, Is.StringContaining("2nd level!!"));
         }
 
         [Test]

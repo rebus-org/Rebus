@@ -75,7 +75,7 @@ If the maximum number of delivery attempts is reached, the message is moved to t
                 }
 
                 // change the identifier to track by to perform this 2nd level of delivery attempts
-                var secondLevelMessageId = messageId + "-2nd-level";
+                var secondLevelMessageId = GetSecondLevelMessageId(messageId);
 
                 if (_errorTracker.HasFailedTooManyTimes(secondLevelMessageId))
                 {
@@ -93,6 +93,11 @@ If the maximum number of delivery attempts is reached, the message is moved to t
             }
 
             await DispatchWithTrackerIdentifier(next, messageId, transactionContext, new[] { messageId });
+        }
+
+        static string GetSecondLevelMessageId(string messageId)
+        {
+            return messageId + "-2nd-level";
         }
 
         async Task DispatchWithTrackerIdentifier(Func<Task> next, string identifierToTrackMessageBy, ITransactionContext transactionContext, string[] identifiersToClearOnSuccess)
@@ -118,9 +123,26 @@ If the maximum number of delivery attempts is reached, the message is moved to t
 
         string GetErrorDescriptionFor(string messageId, bool brief = false)
         {
-            return brief
-                ? _errorTracker.GetShortErrorDescription(messageId)
-                : _errorTracker.GetFullErrorDescription(messageId);
+            var secondLevelMessageId = GetSecondLevelMessageId(messageId);
+
+            if (brief)
+            {
+                var secondLevelErrorDescription = _errorTracker.GetShortErrorDescription(secondLevelMessageId);
+                var firstLevelErrorDescription = _errorTracker.GetShortErrorDescription(messageId);
+
+                return secondLevelErrorDescription == null
+                    ? firstLevelErrorDescription
+                    : string.Join(Environment.NewLine, firstLevelErrorDescription, secondLevelErrorDescription);
+            }
+            else
+            {
+                var secondLevelErrorDescription = _errorTracker.GetFullErrorDescription(secondLevelMessageId);
+                var firstLevelErrorDescription = _errorTracker.GetFullErrorDescription(messageId);
+
+                return secondLevelErrorDescription == null
+                    ? firstLevelErrorDescription
+                    : string.Join(Environment.NewLine, firstLevelErrorDescription, secondLevelErrorDescription);
+            }
         }
 
         async Task MoveMessageToErrorQueue(TransportMessage transportMessage, ITransactionContext transactionContext, string errorDescription)

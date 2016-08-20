@@ -1033,7 +1033,7 @@
 # 0.99.74
 
 * Mark assemblies as CLS compliant becase VB.NET and F# programmers are most welcome too - thanks [NKnusperer]
-* Update Serilog dependency to 2.1.0
+* Update Serilog dependency to 2.1.0 - thanks [NKnusperer]
 * Limit number of workers to match max parallelism
 * Make thread pool-based workers default (old strategy can still be had by calling `o.UseClassicRebusWorkersMessageDispatch()`)
 * Update NLog dependency to 4.3.7 - thanks [SvenVandenbrande]

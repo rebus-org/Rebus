@@ -1,18 +1,43 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
+using Rebus.Messages;
+using Rebus.Transport.InMem;
 using Timer = System.Timers.Timer;
 
 namespace Rebus.Tests.Extensions
 {
     public static class TestEx
     {
+        public static async Task<TransportMessage> WaitForNextMessageFrom(this InMemNetwork network, string queueName, int timeoutSeconds = 5)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (true)
+            {
+                var nextMessage = network.GetNextOrNull(queueName);
+
+                if (nextMessage != null)
+                {
+                    return nextMessage.ToTransportMessage();
+                }
+
+                await Task.Delay(100);
+
+                if (stopwatch.Elapsed < TimeSpan.FromSeconds(timeoutSeconds))
+                    continue;
+
+                throw new TimeoutException($"Did not receive message from queue '{queueName}' within {timeoutSeconds} s timeout");
+            }
+        }
+
         public static string ToNormalizedJson(this string jsonText)
         {
             return JsonConvert.DeserializeObject<JObject>(jsonText).ToString();
@@ -35,7 +60,7 @@ namespace Rebus.Tests.Extensions
             if (!resetEvent.WaitOne(timeout))
             {
                 throw new AssertionException(
-                    $"Reset event was not set within {timeout} timeout - {errorMessage ?? (errorMessageFactory != null ? errorMessageFactory() : null) ?? "..."}");
+                    $"Reset event was not set within {timeout} timeout - {errorMessage ?? errorMessageFactory?.Invoke() ?? "..."}");
             }
         }
 
