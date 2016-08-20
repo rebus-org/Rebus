@@ -55,7 +55,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MongoDbSagaIntegrationTest.cs" />
     <Compile Include="MongoTestHelper.cs" />
     <Compile Include="Sagas\MongoDbBasicLoadAndSaveAndFindOperations.cs" />
     <Compile Include="Sagas\ConcurrencyHandling.cs" />

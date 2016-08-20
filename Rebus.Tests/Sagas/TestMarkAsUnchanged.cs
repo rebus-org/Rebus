@@ -8,6 +8,7 @@ using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Sagas;
 using Rebus.Transport.InMem;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Sagas
 {
@@ -77,7 +78,7 @@ namespace Rebus.Tests.Sagas
                 Data.String = GetString(message);
                 Data.InvocationCount++;
 
-                Console.Write("REVISION {0} - ", Data.Revision);
+                Console.Write($"REVISION {Data.Revision} - ");
                 _registeredRevisions.Enqueue(Data.Revision);
 
                 if (message.EndsWith("ignore!"))
