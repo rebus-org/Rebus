@@ -93,7 +93,7 @@ namespace Rebus.AzureStorage.Transport
         {
             if (_inputQueueName == null)
             {
-                throw new InvalidOperationException("This Azure Storage Queues transport does not have an input queue, hence it is not possible to reveive anything");
+                throw new InvalidOperationException("This Azure Storage Queues transport does not have an input queue, hence it is not possible to receive anything");
             }
             var inputQueue = GetQueue(_inputQueueName);
 
