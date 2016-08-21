@@ -4,6 +4,20 @@
         <name>SimpleInjector.Extensions.LifetimeScoping</name>
     </assembly>
     <members>
+        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope">
+            <summary>
+            Thread and container specific cache for services that are registered with one of the 
+            <see cref="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">RegisterLifetimeScope</see> extension method overloads.
+            </summary>
+        </member>
+        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">
+            <summary>
+            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged 
+            resources.
+            </summary>
+            <param name="disposing">True to release both managed and unmanaged resources; false to release 
+            only unmanaged resources.</param>
+        </member>
         <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScopeLifestyle">
             <summary>
             Defines a lifestyle that caches instances during the lifetime of an explicitly defined scope using the
@@ -86,20 +100,6 @@
             </summary>
             <param name="container">The container for which the delegate gets created.</param>
             <returns>A <see cref="T:System.Func`1"/> delegate. This method never returns null.</returns>
-        </member>
-        <member name="T:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope">
-            <summary>
-            Thread and container specific cache for services that are registered with one of the 
-            <see cref="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">RegisterLifetimeScope</see> extension method overloads.
-            </summary>
-        </member>
-        <member name="M:SimpleInjector.Extensions.LifetimeScoping.LifetimeScope.Dispose(System.Boolean)">
-            <summary>
-            Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged 
-            resources.
-            </summary>
-            <param name="disposing">True to release both managed and unmanaged resources; false to release 
-            only unmanaged resources.</param>
         </member>
         <member name="T:SimpleInjector.SimpleInjectorLifetimeScopeExtensions">
             <summary>
