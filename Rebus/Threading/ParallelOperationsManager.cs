@@ -50,6 +50,8 @@ namespace Rebus.Threading
             readonly bool _canContinue;
             readonly ParallelOperationsManager _parallelOperationsManager;
 
+            bool _disposed;
+
             internal ParallelOperation(bool canContinue, ParallelOperationsManager parallelOperationsManager)
             {
                 _canContinue = canContinue;
@@ -62,8 +64,12 @@ namespace Rebus.Threading
             public void Dispose()
             {
                 if (!_canContinue) return;
+                if (_disposed) return;
 
                 _parallelOperationsManager.OperationFinished();
+
+                // guard against ever accidentally finishing the operation more than once
+                _disposed = true;
             }
 
             /// <summary>

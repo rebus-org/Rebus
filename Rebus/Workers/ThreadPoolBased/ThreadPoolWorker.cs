@@ -83,28 +83,67 @@ namespace Rebus.Workers.ThreadPoolBased
 
             if (!parallelOperation.CanContinue()) return;
 
+            Fly(token, parallelOperation);
+        }
+
+        async void Fly(CancellationToken token, IDisposable parallelOperation)
+        {
             try
             {
-                var context = new DefaultTransactionContext();
-                var transportMessage = _transport.Receive(context, token).Result;
-
-                if (transportMessage == null)
+                using (parallelOperation)
+                using (var context = new DefaultTransactionContext())
                 {
-                    context.Dispose();
-                    parallelOperation.Dispose();
-                    _backoffStrategy.Wait();
-                    return;
+                    var transportMessage = await _transport.Receive(context, token);
+
+                    if (transportMessage == null)
+                    {
+                        context.Dispose();
+                        parallelOperation.Dispose();
+                        _backoffStrategy.Wait();
+                        return;
+                    }
+
+                    _backoffStrategy.Reset();
+
+                    try
+                    {
+                        context.Items["CancellationToken"] = token;
+                        context.Items["OwningBus"] = _owningBus;
+                        AmbientTransactionContext.Current = context;
+
+                        var incomingSteps = _pipeline.ReceivePipeline();
+                        var stepContext = new IncomingStepContext(transportMessage, context);
+                        await _pipelineInvoker.Invoke(stepContext, incomingSteps);
+
+                        try
+                        {
+                            await context.Complete();
+                        }
+                        catch (Exception exception)
+                        {
+                            _log.Error(exception, "An error occurred when attempting to complete the transaction context");
+                        }
+                    }
+                    catch (ThreadAbortException exception)
+                    {
+                        context.Abort();
+
+                        _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
+                    }
+                    catch (Exception exception)
+                    {
+                        context.Abort();
+
+                        _log.Error(exception, $"Unhandled exception while handling message {transportMessage.GetMessageLabel()}");
+                    }
+                    finally
+                    {
+                        AmbientTransactionContext.Current = null;
+                    }
                 }
-
-                _backoffStrategy.Reset();
-
-                // fire asynchronously to the thread pool! (disable warning because it is intentionally NOT waiting for it to finish)
-                ProcessMessage(context, transportMessage, parallelOperation, token);
             }
             catch (AggregateException aggregateException)
             {
-                parallelOperation.Dispose();
-
                 var baseException = aggregateException.GetBaseException();
 
                 if (baseException is TaskCanceledException || baseException is OperationCanceledException)
@@ -115,57 +154,6 @@ namespace Rebus.Workers.ThreadPoolBased
                 }
 
                 throw;
-            }
-            catch
-            {
-                parallelOperation.Dispose();
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// This bad boy is async void because we fire it asynchronously to the thread pool. We keep tight control over it via the passed-in <paramref name="parallelOperation"/>
-        /// </summary>
-        async void ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage, IDisposable parallelOperation, CancellationToken token)
-        {
-            using (parallelOperation)
-            using (context)
-            {
-                try
-                {
-                    context.Items["CancellationToken"] = token;
-                    context.Items["OwningBus"] = _owningBus;
-                    AmbientTransactionContext.Current = context;
-
-                    var incomingSteps = _pipeline.ReceivePipeline();
-                    var stepContext = new IncomingStepContext(transportMessage, context);
-                    await _pipelineInvoker.Invoke(stepContext, incomingSteps);
-
-                    try
-                    {
-                        await context.Complete();
-                    }
-                    catch (Exception exception)
-                    {
-                        _log.Error(exception, "An error occurred when attempting to complete the transaction context");
-                    }
-                }
-                catch (ThreadAbortException exception)
-                {
-                    context.Abort();
-
-                    _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
-                }
-                catch (Exception exception)
-                {
-                    context.Abort();
-
-                    _log.Error(exception, $"Unhandled exception while handling message {transportMessage.GetMessageLabel()}");
-                }
-                finally
-                {
-                    AmbientTransactionContext.Current = null;
-                }
             }
         }
 

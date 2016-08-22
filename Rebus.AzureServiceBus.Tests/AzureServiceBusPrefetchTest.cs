@@ -110,7 +110,7 @@ namespace Rebus.AzureServiceBus.Tests
                 })
                 .Options(o =>
                 {
-                    o.SetNumberOfWorkers(5);
+                    o.SetNumberOfWorkers(1);
                     o.SetMaxParallelism(10);
                 })
                 .Start();
