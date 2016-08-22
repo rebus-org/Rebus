@@ -81,7 +81,11 @@ namespace Rebus.Workers.ThreadPoolBased
         {
             var parallelOperation = _parallelOperationsManager.TryBegin();
 
-            if (!parallelOperation.CanContinue()) return;
+            if (!parallelOperation.CanContinue())
+            {
+                _backoffStrategy.Wait();
+                return;
+            }
 
             Fly(token, parallelOperation);
         }
