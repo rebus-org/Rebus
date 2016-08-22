@@ -1037,6 +1037,7 @@
 * Limit number of workers to match max parallelism
 * Make thread pool-based workers default (old strategy can still be had by calling `o.UseClassicRebusWorkersMessageDispatch()`)
 * Update NLog dependency to 4.3.7 - thanks [SvenVandenbrande]
+* Update SimpleInjector dependency to 3.2.0 - thanks [SvenVandenbrande]
 
 ---
 
