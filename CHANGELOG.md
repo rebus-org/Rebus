@@ -1039,6 +1039,11 @@
 * Update NLog dependency to 4.3.7 - thanks [SvenVandenbrande]
 * Update SimpleInjector dependency to 3.2.0 - thanks [SvenVandenbrande]
 * Make adjustment to new thread pool-based workers that makes better use of async receive APIs of transports
+* Update Wire dependency to 0.8.0
+
+
+
+
 
 ---
 
