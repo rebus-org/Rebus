@@ -87,10 +87,10 @@ namespace Rebus.Workers.ThreadPoolBased
                 return;
             }
 
-            Fly(token, parallelOperation);
+            TryAsyncReceive(token, parallelOperation);
         }
 
-        async void Fly(CancellationToken token, IDisposable parallelOperation)
+        async void TryAsyncReceive(CancellationToken token, IDisposable parallelOperation)
         {
             try
             {
@@ -111,7 +111,6 @@ namespace Rebus.Workers.ThreadPoolBased
 
                     try
                     {
-                        context.Items["CancellationToken"] = token;
                         context.Items["OwningBus"] = _owningBus;
                         AmbientTransactionContext.Current = context;
 
@@ -127,6 +126,16 @@ namespace Rebus.Workers.ThreadPoolBased
                         {
                             _log.Error(exception, "An error occurred when attempting to complete the transaction context");
                         }
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        context.Abort();
+                        // it's fine
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        context.Abort();
+                        // it's fine
                     }
                     catch (ThreadAbortException exception)
                     {
