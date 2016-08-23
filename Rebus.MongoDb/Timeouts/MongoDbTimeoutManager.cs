@@ -72,6 +72,7 @@ namespace Rebus.MongoDb.Timeouts
 
                     await _timeouts.DeleteOneAsync(filter).ConfigureAwait(false);
 
+
                     timeoutsNotCompleted.Remove(timeout.Id);
                 }))
                 .ToList();
