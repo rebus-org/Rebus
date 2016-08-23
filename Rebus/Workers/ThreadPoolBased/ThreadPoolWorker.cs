@@ -58,14 +58,6 @@ namespace Rebus.Workers.ThreadPoolBased
                 {
                     TryReceiveNextMessage(token);
                 }
-                catch (TaskCanceledException)
-                {
-                    // it's fine
-                }
-                catch (OperationCanceledException)
-                {
-                    // it's fine
-                }
                 catch (Exception exception)
                 {
                     _log.Error(exception, "Unhandled exception in worker!!");
@@ -97,7 +89,7 @@ namespace Rebus.Workers.ThreadPoolBased
                 using (parallelOperation)
                 using (var context = new DefaultTransactionContext())
                 {
-                    var transportMessage = await _transport.Receive(context, token);
+                    var transportMessage = await ReceiveTransportMessage(token, context);
 
                     if (transportMessage == null)
                     {
@@ -109,64 +101,74 @@ namespace Rebus.Workers.ThreadPoolBased
 
                     _backoffStrategy.Reset();
 
-                    try
-                    {
-                        context.Items["OwningBus"] = _owningBus;
-                        AmbientTransactionContext.Current = context;
-
-                        var incomingSteps = _pipeline.ReceivePipeline();
-                        var stepContext = new IncomingStepContext(transportMessage, context);
-                        await _pipelineInvoker.Invoke(stepContext, incomingSteps);
-
-                        try
-                        {
-                            await context.Complete();
-                        }
-                        catch (Exception exception)
-                        {
-                            _log.Error(exception, "An error occurred when attempting to complete the transaction context");
-                        }
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        context.Abort();
-                        // it's fine
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        context.Abort();
-                        // it's fine
-                    }
-                    catch (ThreadAbortException exception)
-                    {
-                        context.Abort();
-
-                        _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
-                    }
-                    catch (Exception exception)
-                    {
-                        context.Abort();
-
-                        _log.Error(exception, $"Unhandled exception while handling message {transportMessage.GetMessageLabel()}");
-                    }
-                    finally
-                    {
-                        AmbientTransactionContext.Current = null;
-                    }
+                    await ProcessMessage(context, transportMessage);
                 }
             }
-            catch (AggregateException aggregateException)
+            catch (TaskCanceledException)
             {
-                var baseException = aggregateException.GetBaseException();
+                // it's fine - just a sign that we are shutting down
+            }
+            catch (OperationCanceledException)
+            {
+                // it's fine - just a sign that we are shutting down
+            }
+            catch (Exception exception)
+            {
+                _log.Error(exception, "Unhandled exception in thread pool worker");
+            }
+        }
 
-                if (baseException is TaskCanceledException || baseException is OperationCanceledException)
+        async Task<TransportMessage> ReceiveTransportMessage(CancellationToken token, DefaultTransactionContext context)
+        {
+            try
+            {
+                return await _transport.Receive(context, token);
+            }
+            catch (Exception exception)
+            {
+                _log.Warn("An error occurred when attempting to receive the next message: {0}", exception);
+
+                _backoffStrategy.WaitError();
+
+                return null;
+            }
+        }
+
+        async Task ProcessMessage(DefaultTransactionContext context, TransportMessage transportMessage)
+        {
+            try
+            {
+                context.Items["OwningBus"] = _owningBus;
+                AmbientTransactionContext.Current = context;
+
+                var incomingSteps = _pipeline.ReceivePipeline();
+                var stepContext = new IncomingStepContext(transportMessage, context);
+                await _pipelineInvoker.Invoke(stepContext, incomingSteps);
+
+                try
                 {
-                    var info = ExceptionDispatchInfo.Capture(baseException);
-
-                    info.Throw();
+                    await context.Complete();
                 }
+                catch (Exception exception)
+                {
+                    _log.Error(exception, "An error occurred when attempting to complete the transaction context");
+                }
+            }
+            catch (ThreadAbortException exception)
+            {
+                context.Abort();
 
-                throw;
+                _log.Error(exception, $"Worker was killed while handling message {transportMessage.GetMessageLabel()}");
+            }
+            catch (Exception exception)
+            {
+                context.Abort();
+
+                _log.Error(exception, $"Unhandled exception while handling message {transportMessage.GetMessageLabel()}");
+            }
+            finally
+            {
+                AmbientTransactionContext.Current = null;
             }
         }
 
