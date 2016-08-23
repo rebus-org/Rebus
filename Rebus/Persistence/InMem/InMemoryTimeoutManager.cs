@@ -45,9 +45,14 @@ namespace Rebus.Persistence.InMem
                     .ToHashSet();
 
                 var result = new DueMessagesResult(keyValuePairsToRemove
-                    .Select(kvp => new DueMessage(kvp.Value.Headers, kvp.Value.Body,
-                        () => keyValuePairsToRemove.Remove(kvp))),
-                    () =>
+                        .Select(kvp =>
+                        {
+                            var dueMessage = new DueMessage(kvp.Value.Headers, kvp.Value.Body,
+                                async () => keyValuePairsToRemove.Remove(kvp));
+
+                            return dueMessage;
+                        }),
+                    async () =>
                     {
                         // put back if the result was not completed
                         foreach (var kvp in keyValuePairsToRemove)

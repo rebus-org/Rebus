@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Rebus.Messages;
 
 namespace Rebus.Timeouts
@@ -11,14 +12,16 @@ namespace Rebus.Timeouts
     /// </summary>
     public class DueMessage
     {
-        readonly Action _completeAction;
+        readonly Func<Task> _completeAction;
 
         /// <summary>
         /// Constructs the due message with the given headers and body, storing the given <paramref name="completeAction"/> to be
         /// executed when the message's <see cref="MarkAsCompleted"/> method is called.
         /// </summary>
-        public DueMessage(Dictionary<string, string> headers, byte[] body, Action completeAction = null)
+        public DueMessage(Dictionary<string, string> headers, byte[] body, Func<Task> completeAction = null)
         {
+            if (headers == null) throw new ArgumentNullException(nameof(headers));
+            if (body == null) throw new ArgumentNullException(nameof(body));
             _completeAction = completeAction;
             Headers = headers;
             Body = body;
@@ -37,11 +40,11 @@ namespace Rebus.Timeouts
         /// <summary>
         /// Marks the due message as successfully handled, which should probably be done when the message has been safely sent to the proper recipient
         /// </summary>
-        public void MarkAsCompleted()
+        public async Task MarkAsCompleted()
         {
             if (_completeAction == null) return;
 
-            _completeAction();
+            await _completeAction();
         }
 
         /// <summary>

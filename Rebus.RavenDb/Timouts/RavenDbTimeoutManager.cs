@@ -57,12 +57,12 @@ namespace Rebus.RavenDb.Timouts
                 .ToList();
 
             var dueMessages = timeouts
-                .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, () =>
+                .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, async () =>
                 {
                     session.Advanced.Defer(new DeleteCommandData {Key = timeout.Id});
                 }));
 
-            return new DueMessagesResult(dueMessages, () =>
+            return new DueMessagesResult(dueMessages, async () =>
             {
                 try
                 {

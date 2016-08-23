@@ -77,7 +77,7 @@ namespace Rebus.Persistence.FileSystem
                     Timeout = JsonConvert.DeserializeObject<Timeout>(File.ReadAllText(f)),
                     File = f
                 })
-                .Select(a => new DueMessage(a.Timeout.Headers, a.Timeout.Body, () =>
+                .Select(a => new DueMessage(a.Timeout.Headers, a.Timeout.Body, async () =>
                 {
                     if (File.Exists(a.File))
                     {
@@ -86,7 +86,7 @@ namespace Rebus.Persistence.FileSystem
                 }))
                 .ToList();
 
-            return new DueMessagesResult(items, () => { lockItem.Dispose(); });
+            return new DueMessagesResult(items, async () => { lockItem.Dispose(); });
         }
 
         class Timeout

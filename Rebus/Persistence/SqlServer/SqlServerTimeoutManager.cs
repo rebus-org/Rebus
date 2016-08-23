@@ -142,13 +142,13 @@ ORDER BY [due_time] ASC
                             var headers = JsonConvert.DeserializeObject<Dictionary<string, string>>(headersString, _headerSerializationSettings);
                             var body = (byte[])reader["body"];
 
-                            var sqlTimeout = new DueMessage(headers, body, () =>
+                            var sqlTimeout = new DueMessage(headers, body, async () =>
                             {
                                 using (var deleteCommand = connection.CreateCommand())
                                 {
                                     deleteCommand.CommandText = $"DELETE FROM [{_tableName}] WHERE [id] = @id";
                                     deleteCommand.Parameters.Add("id", SqlDbType.Int).Value = id;
-                                    deleteCommand.ExecuteNonQuery();
+                                    await deleteCommand.ExecuteNonQueryAsync();
                                 }
                             });
 

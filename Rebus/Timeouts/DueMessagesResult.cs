@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Rebus.Timeouts
 {
@@ -11,16 +12,14 @@ namespace Rebus.Timeouts
     /// </summary>
     public class DueMessagesResult : IEnumerable<DueMessage>, IDisposable
     {
-        static readonly DueMessagesResult EmptyResult = new DueMessagesResult(Enumerable.Empty<DueMessage>());
-
         readonly List<DueMessage> _dueMessages;
-        
-        Action _cleanupAction;
+
+        Func<Task> _cleanupAction;
 
         /// <summary>
         /// Constructs the result, wrapping the given list of due messages, performing the given action when the instance is disposed
         /// </summary>
-        public DueMessagesResult(IEnumerable<DueMessage> dueMessages, Action cleanupAction = null)
+        public DueMessagesResult(IEnumerable<DueMessage> dueMessages, Func<Task> cleanupAction = null)
         {
             _cleanupAction = cleanupAction;
             _dueMessages = dueMessages.ToList();
@@ -29,9 +28,14 @@ namespace Rebus.Timeouts
         /// <summary>
         /// Gets an empty due messages result
         /// </summary>
-        public static DueMessagesResult Empty
+        public static readonly DueMessagesResult Empty = new DueMessagesResult(Enumerable.Empty<DueMessage>());
+
+        /// <summary>
+        /// Completes the result by running the clean-up action
+        /// </summary>
+        public async Task Complete()
         {
-            get { return EmptyResult; }
+            await CleanUp();
         }
 
         /// <summary>
@@ -39,16 +43,7 @@ namespace Rebus.Timeouts
         /// </summary>
         public void Dispose()
         {
-            if (_cleanupAction == null) return;
-
-            try
-            {
-                _cleanupAction();
-            }
-            finally
-            {
-                _cleanupAction = null;
-            }
+            CleanUp().Wait();
         }
 
 
@@ -63,6 +58,20 @@ namespace Rebus.Timeouts
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        async Task CleanUp()
+        {
+            if (_cleanupAction == null) return;
+
+            try
+            {
+                await _cleanupAction();
+            }
+            finally
+            {
+                _cleanupAction = null;
+            }
         }
     }
 }

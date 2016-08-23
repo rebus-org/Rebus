@@ -25,6 +25,9 @@ namespace Rebus.MongoDb.Timeouts
         /// </summary>
         public MongoDbTimeoutManager(IMongoDatabase database, string collectionName, IRebusLoggerFactory rebusLoggerFactory)
         {
+            if (database == null) throw new ArgumentNullException(nameof(database));
+            if (collectionName == null) throw new ArgumentNullException(nameof(collectionName));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
             _log = rebusLoggerFactory.GetCurrentClassLogger();
             _timeouts = database.GetCollection<Timeout>(collectionName);
         }
@@ -45,8 +48,10 @@ namespace Rebus.MongoDb.Timeouts
 
             while (dueTimeouts.Count < 100)
             {
-                var dueTimeout = await _timeouts.FindOneAndUpdateAsync(Builders<Timeout>.Filter.Lte(t => t.DueTimeUtc, now),
-                                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, now.AddMinutes(1))).ConfigureAwait(false);
+                var filter = Builders<Timeout>.Filter.Lte(t => t.DueTimeUtc, now);
+                var update = Builders<Timeout>.Update.Set(t => t.DueTimeUtc, now.AddMinutes(1));
+
+                var dueTimeout = await _timeouts.FindOneAndUpdateAsync(filter, update).ConfigureAwait(false);
 
                 if (dueTimeout == null)
                 {
@@ -62,7 +67,11 @@ namespace Rebus.MongoDb.Timeouts
                 .Select(timeout => new DueMessage(timeout.Headers, timeout.Body, async () =>
                 {
                     _log.Debug("Completing timeout for message with ID {0} (doc ID {1})", timeout.Headers.GetValue(Headers.MessageId), timeout.Id);
-                    await _timeouts.DeleteOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id)).ConfigureAwait(false);
+
+                    var filter = Builders<Timeout>.Filter.Eq(t => t.Id, timeout.Id);
+
+                    await _timeouts.DeleteOneAsync(filter).ConfigureAwait(false);
+
                     timeoutsNotCompleted.Remove(timeout.Id);
                 }))
                 .ToList();
@@ -77,10 +86,12 @@ namespace Rebus.MongoDb.Timeouts
                             timeoutNotCompleted.Headers.GetValue(Headers.MessageId), timeoutNotCompleted.Id,
                             timeoutNotCompleted.OriginalDueTimeUtc);
 
-                        await _timeouts.UpdateOneAsync(Builders<Timeout>.Filter.Eq(t => t.Id, timeoutNotCompleted.Id),
-                            Builders<Timeout>.Update.Set(t => t.DueTimeUtc, timeoutNotCompleted.OriginalDueTimeUtc)).ConfigureAwait(false);
+                        var filter = Builders<Timeout>.Filter.Eq(t => t.Id, timeoutNotCompleted.Id);
+                        var update = Builders<Timeout>.Update.Set(t => t.DueTimeUtc, timeoutNotCompleted.OriginalDueTimeUtc);
+
+                        await _timeouts.UpdateOneAsync(filter, update).ConfigureAwait(false);
                     }
-                    catch(Exception exception)
+                    catch (Exception exception)
                     {
                         _log.Warn("Could not set due time for timeout with doc ID {0}: {1}", timeoutNotCompleted.Id, exception);
                     }

@@ -94,13 +94,13 @@ FOR UPDATE;
                             var headers = _dictionarySerializer.DeserializeFromString((string) reader["headers"]);
                             var body = (byte[]) reader["body"];
 
-                            dueMessages.Add(new DueMessage(headers, body, () =>
+                            dueMessages.Add(new DueMessage(headers, body, async () =>
                             {
                                 using (var deleteCommand = connection.CreateCommand())
                                 {
                                     deleteCommand.CommandText = $@"DELETE FROM ""{_tableName}"" WHERE ""id"" = @id";
                                     deleteCommand.Parameters.Add("id", NpgsqlDbType.Bigint).Value = id;
-                                    deleteCommand.ExecuteNonQuery();
+                                    await deleteCommand.ExecuteNonQueryAsync();
                                 }
                             }));
                         }

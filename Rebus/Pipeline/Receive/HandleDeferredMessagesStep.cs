@@ -94,8 +94,10 @@ This is done by checking if the incoming message has a '" + Headers.DeferredUnti
                         await context.Complete();
                     }
 
-                    dueMessage.MarkAsCompleted();
+                    await dueMessage.MarkAsCompleted();
                 }
+
+                await result.Complete();
             }
         }
 

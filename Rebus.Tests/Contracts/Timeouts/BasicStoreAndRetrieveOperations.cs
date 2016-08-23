@@ -93,7 +93,7 @@ namespace Rebus.Tests.Contracts.Timeouts
                 Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1), "Did not get the expected number of timeouts - debug info: {0}", _factory.GetDebugInfo());
             
                 // mark as complete
-                dueTimeoutsInTheFuture[0].MarkAsCompleted();
+                await dueTimeoutsInTheFuture[0].MarkAsCompleted();
             }
             
             using (var result = await _timeoutManager.GetDueMessages())
@@ -127,7 +127,7 @@ namespace Rebus.Tests.Contracts.Timeouts
                 Assert.That(dueTimeoutsInTheFuture.Count, Is.EqualTo(1));
                 Assert.That(dueTimeoutsInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u"));
 
-                dueTimeoutsInTheFuture[0].MarkAsCompleted();
+                await dueTimeoutsInTheFuture[0].MarkAsCompleted();
             }
 
             RebusTimeMachine.FakeIt(evenFurtherIntoTheFuture);
@@ -138,7 +138,7 @@ namespace Rebus.Tests.Contracts.Timeouts
                 Assert.That(dueTimeoutsFurtherIntoInTheFuture.Count, Is.EqualTo(1));
                 Assert.That(dueTimeoutsFurtherIntoInTheFuture[0].Headers[Headers.MessageId], Is.EqualTo("i know u too"));
 
-                dueTimeoutsFurtherIntoInTheFuture[0].MarkAsCompleted();
+                await dueTimeoutsFurtherIntoInTheFuture[0].MarkAsCompleted();
             }
         }
 
