@@ -22,6 +22,7 @@ namespace Rebus.Tests.Transport.SqlServer
         const string QueueName = "input";
         readonly string _tableName = "messages" + TestConfig.Suffix;
         SqlServerTransport _transport;
+        CancellationToken _cancellationToken;
 
         protected override void SetUp()
         {
@@ -36,6 +37,8 @@ namespace Rebus.Tests.Transport.SqlServer
             Using(_transport);
 
             _transport.Initialize();
+
+            _cancellationToken = new CancellationTokenSource().Token;
         }
 
         [Test]
@@ -50,7 +53,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
             using (var context = new DefaultTransactionContext())
             {
-                var transportMessage = await _transport.Receive(context);
+                var transportMessage = await _transport.Receive(context, _cancellationToken);
 
                 await context.Complete();
 
@@ -70,7 +73,7 @@ namespace Rebus.Tests.Transport.SqlServer
 
             using (var context = new DefaultTransactionContext())
             {
-                var transportMessage = await _transport.Receive(context);
+                var transportMessage = await _transport.Receive(context, _cancellationToken);
 
                 Assert.That(transportMessage, Is.Null);
             }
@@ -111,7 +114,7 @@ namespace Rebus.Tests.Transport.SqlServer
                     {
                         using (var context = new DefaultTransactionContext())
                         {
-                            var msg = await _transport.Receive(context);
+                            var msg = await _transport.Receive(context, _cancellationToken);
                             await context.Complete();
 
                             Interlocked.Increment(ref receivedMessages);

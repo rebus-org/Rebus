@@ -24,9 +24,9 @@ namespace Rebus.Threading
         /// <summary>
         /// Grabs the semaphore and releases an <see cref="IDisposable"/> that will release it again when disposed
         /// </summary>
-        public async Task<IDisposable> Enter(CancellationToken cToken = default(CancellationToken)) 
+        public async Task<IDisposable> Enter(CancellationToken cancellationToken) 
         {
-            await _semaphore.WaitAsync(cToken); // Task.Wait(CancellationToken) will throw an exception if the token is cancelled.
+            await _semaphore.WaitAsync(cancellationToken);
 
             return new Releaser(_semaphore);
         }

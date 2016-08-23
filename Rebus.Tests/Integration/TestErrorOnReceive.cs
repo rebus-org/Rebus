@@ -86,14 +86,14 @@ namespace Rebus.Tests.Integration
 
             public bool Fail { get; set; }
 
-            public Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+            public Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
             {
                 if (Fail)
                 {
                     throw new ApplicationException("THIS IS A FAKE ERROR CAUSED BY HAVING THE FAIL TOGGLE = TRUE");
                 }
 
-                return _transport.Receive(context);
+                return _transport.Receive(context, cancellationToken);
             }
         }
     }

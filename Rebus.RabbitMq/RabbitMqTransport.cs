@@ -231,7 +231,7 @@ namespace Rebus.RabbitMq
         }
 
         /// <inheritdoc />
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             if (Address == null)
             {

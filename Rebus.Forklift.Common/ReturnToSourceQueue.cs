@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Rebus.Bus;
 using Rebus.Messages;
 using Rebus.Transport;
@@ -113,7 +114,7 @@ namespace Rebus.Forklift.Common
             {
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    var transportMessage = _transport.Receive(transactionContext).Result;
+                    var transportMessage = _transport.Receive(transactionContext, new CancellationTokenSource().Token).Result;
 
                     if (transportMessage == null) break;
 

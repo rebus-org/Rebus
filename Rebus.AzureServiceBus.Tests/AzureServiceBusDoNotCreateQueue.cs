@@ -21,6 +21,12 @@ namespace Rebus.AzureServiceBus.Tests
     public class BasicAzureServiceBusBasicReceiveOnly : FixtureBase
     {
         static readonly string QueueName = TestConfig.QueueName("input");
+        CancellationToken _cancellationToken;
+
+        protected override void SetUp()
+        {
+            _cancellationToken = new CancellationTokenSource().Token;
+        }
 
         [Test]
         [TestCase(AzureServiceBusMode.Basic, 5)]
@@ -66,7 +72,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 
@@ -78,7 +84,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 
@@ -90,7 +96,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 
@@ -102,7 +108,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 
@@ -119,7 +125,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 
@@ -131,7 +137,7 @@ namespace Rebus.AzureServiceBus.Tests
             using (var transactionContext = new DefaultTransactionContext())
             {
                 var sw = System.Diagnostics.Stopwatch.StartNew();
-                var msg = await transport.Receive(transactionContext);
+                var msg = await transport.Receive(transactionContext, _cancellationToken);
                 sw.Stop();
                 await transactionContext.Complete();
 

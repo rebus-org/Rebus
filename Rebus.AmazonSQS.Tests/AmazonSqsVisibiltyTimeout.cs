@@ -27,9 +27,11 @@ namespace Rebus.AmazonSQS.Tests
                 await outputQueue.Send(inputqueueName, MessageWith("hej"), context);
             });
 
+            var cancellationToken = new CancellationTokenSource().Token;
+
             await WithContext(async context =>
             {
-                var transportMessage = await inputQueue.Receive(context);
+                var transportMessage = await inputQueue.Receive(context, cancellationToken);
 
                 Assert.That(transportMessage, Is.Not.Null, "Expected to receive the message that we just sent");
 
@@ -39,7 +41,7 @@ namespace Rebus.AmazonSQS.Tests
                 // pretend that another thread attempts to receive from the same input queue
                 await WithContext(async innerContext =>
                 {
-                    var innerMessage = await inputQueue.Receive(innerContext);
+                    var innerMessage = await inputQueue.Receive(innerContext, cancellationToken);
 
                     Assert.That(innerMessage, Is.Null, "Did not expect to receive a message here because its peek lock should have been renewed automatically");
                 });

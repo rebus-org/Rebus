@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -11,10 +12,12 @@ namespace Rebus.Tests.Contracts.Transports
     public abstract class MessageExpiration<TTransportFactory> : FixtureBase where TTransportFactory : ITransportFactory, new()
     {
         TTransportFactory _factory;
+        CancellationToken _cancellationToken;
 
         protected override void SetUp()
         {
             _factory = new TTransportFactory();
+            _cancellationToken = new CancellationTokenSource().Token;
         }
 
         protected override void TearDown()
@@ -44,7 +47,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext);
+                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Not.Null);
@@ -83,7 +86,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext);
+                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Null);
@@ -114,7 +117,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             using (var transactionContext = new DefaultTransactionContext())
             {
-                var transportMessage = await transport.Receive(transactionContext);
+                var transportMessage = await transport.Receive(transactionContext, _cancellationToken);
                 await transactionContext.Complete();
 
                 Assert.That(transportMessage, Is.Not.Null);

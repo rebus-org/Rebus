@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using NUnit.Framework;
 using Rebus.Logging;
 using Rebus.Messages;
@@ -17,6 +18,7 @@ namespace Rebus.Tests.Transport.Msmq
     {
         readonly string _queueName = TestConfig.QueueName("input");
         MsmqTransport _transport;
+        CancellationToken _cancellationToken;
 
         protected override void SetUp()
         {
@@ -26,6 +28,8 @@ namespace Rebus.Tests.Transport.Msmq
             Using(_transport);
 
             Console.WriteLine(_queueName);
+
+            _cancellationToken = new CancellationTokenSource().Token;
         }
 
         protected override void TearDown()
@@ -100,7 +104,7 @@ namespace Rebus.Tests.Transport.Msmq
         {
             using (var context = new DefaultTransactionContext())
             {
-                var transportMessage = _transport.Receive(context).Result;
+                var transportMessage = _transport.Receive(context, _cancellationToken).Result;
 
                 context.Complete().Wait();
 

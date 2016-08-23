@@ -179,7 +179,7 @@ namespace Rebus.AzureServiceBus
         /// <summary>
         /// Receives the next message from the input queue. Returns null if no message was available
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             if (_inputQueueAddress == null)
             {

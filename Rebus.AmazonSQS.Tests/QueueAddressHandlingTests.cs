@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Transport;
@@ -101,12 +102,12 @@ namespace Rebus.AmazonSQS.Tests
         {
             await WithContext(async (context) => { await outputTransport.Send(destinationQueueUrlOrName, MessageWith("hallo"), context); });
 
-            await WithContext(async (context) =>
-                                    {
-                                        var received = await destinationTransport.Receive(context);
+            await WithContext(async context =>
+            {
+                var received = await destinationTransport.Receive(context, new CancellationTokenSource().Token);
 
-                                        Assert.AreEqual("hallo", GetStringBody(received));
-                                    });
+                Assert.AreEqual("hallo", GetStringBody(received));
+            });
         }
 
 

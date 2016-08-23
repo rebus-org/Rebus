@@ -120,7 +120,7 @@ immediately when calling bus.....Forward");
                 context.OnCommitted(async () => networkToUse.Deliver(destinationAddress, message.ToInMemTransportMessage()));
             }
 
-            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+            public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
             {
                 var networkToUse = context.GetOrAdd(CurrentNetworkConnectionKey, () => _network);
 

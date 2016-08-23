@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -14,9 +15,11 @@ namespace Rebus.Tests.Contracts.Transports
         readonly Encoding _defaultEncoding = Encoding.UTF8;
 
         TTransportFactory _factory;
+        CancellationToken _cancellationToken;
 
         protected override void SetUp()
         {
+            _cancellationToken = new CancellationTokenSource().Token;
             _factory = new TTransportFactory();
         }
 
@@ -42,7 +45,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await receiver.Receive(context);
+                var transportMessage = await receiver.Receive(context, _cancellationToken);
 
                 Assert.That(transportMessage, Is.Not.Null);
 
@@ -59,7 +62,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await emptyQueue.Receive(context);
+                var transportMessage = await emptyQueue.Receive(context, _cancellationToken);
 
                 Assert.That(transportMessage, Is.Null);
             });
@@ -81,7 +84,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await input2.Receive(context);
+                var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
@@ -105,7 +108,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await input2.Receive(context);
+                var transportMessage = await input2.Receive(context, _cancellationToken);
 
                 Assert.That(transportMessage, Is.Null);
             });
@@ -127,7 +130,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await input2.Receive(context);
+                var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
@@ -135,7 +138,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await input2.Receive(context);
+                var transportMessage = await input2.Receive(context, _cancellationToken);
                 var stringBody = GetStringBody(transportMessage);
 
                 Assert.That(stringBody, Is.EqualTo("hej"));
@@ -143,7 +146,7 @@ namespace Rebus.Tests.Contracts.Transports
 
             await WithContext(async context =>
             {
-                var transportMessage = await input2.Receive(context);
+                var transportMessage = await input2.Receive(context, _cancellationToken);
 
                 Assert.That(transportMessage, Is.Null);
             });
@@ -185,7 +188,7 @@ namespace Rebus.Tests.Contracts.Transports
             {
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    var msg = await input.Receive(transactionContext);
+                    var msg = await input.Receive(transactionContext, _cancellationToken);
 
                     if (msg != null)
                     {

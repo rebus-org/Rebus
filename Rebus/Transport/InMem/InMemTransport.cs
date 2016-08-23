@@ -57,26 +57,21 @@ namespace Rebus.Transport.InMem
         /// <summary>
         /// Receives the next message from the queue identified by the configured <see cref="Address"/>, returning null if none was available
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (_inputQueueAddress == null) throw new InvalidOperationException("This in-mem transport is initialized without an input queue, hence it is not possible to receive anything!");
 
             var nextMessage = _network.GetNextOrNull(_inputQueueAddress);
-            
-            if (nextMessage != null)
+
+            if (nextMessage == null) return null;
+
+            context.OnAborted(() =>
             {
-                context.OnAborted(() =>
-                {
-                    _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
-                });
+                _network.Deliver(_inputQueueAddress, nextMessage, alwaysQuiet: true);
+            });
 
-                return nextMessage.ToTransportMessage();
-            }
-
-            await Task.Delay(5, cancellationToken);
-            
-            return null;
+            return nextMessage.ToTransportMessage();
         }
 
         /// <summary>

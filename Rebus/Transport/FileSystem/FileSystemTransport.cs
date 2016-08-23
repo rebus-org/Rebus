@@ -82,7 +82,7 @@ namespace Rebus.Transport.FileSystem
         /// Receives the next message from the logical input queue by loading the next file from the corresponding directory,
         /// deserializing it, deleting it when the transaction is committed.
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             string fullPath = null;
             try
@@ -169,10 +169,7 @@ namespace Rebus.Transport.FileSystem
         /// For other transports, this is a global "address", but for this transport the address space is confined to the base directory.
         /// Therefore, the global address is the same as the input queue name.
         /// </summary>
-        public string Address
-        {
-            get { return _inputQueue; }
-        }
+        public string Address => _inputQueue;
 
         /// <summary>
         /// Ensures that the "queue" is initialized (i.e. that the corresponding subdirectory exists).

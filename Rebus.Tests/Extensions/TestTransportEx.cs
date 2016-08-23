@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using Rebus.Messages;
@@ -13,6 +14,7 @@ namespace Rebus.Tests.Extensions
         {
             var stopwatch = Stopwatch.StartNew();
             var timeout = TimeSpan.FromSeconds(timeoutSeconds);
+            var source = new CancellationTokenSource();
 
             while (stopwatch.Elapsed < timeout)
             {
@@ -20,7 +22,7 @@ namespace Rebus.Tests.Extensions
 
                 using (var transactionContext = new DefaultTransactionContext())
                 {
-                    receivedTransportMessage = await transport.Receive(transactionContext);
+                    receivedTransportMessage = await transport.Receive(transactionContext, source.Token);
 
                     await transactionContext.Complete();
                 }

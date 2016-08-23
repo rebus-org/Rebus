@@ -89,7 +89,7 @@ namespace Rebus.AzureStorage.Transport
         /// <summary>
         /// Receives the next message (if any) from the transport's input queue <see cref="ITransport.Address"/>
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             if (_inputQueueName == null)
             {
@@ -104,6 +104,7 @@ namespace Rebus.AzureStorage.Transport
             context.OnCompleted(async () =>
             {
                 // if we get this far, don't pass on the cancellation token
+                // ReSharper disable once MethodSupportsCancellation
                 await inputQueue.DeleteMessageAsync(cloudQueueMessage);
             });
 
@@ -172,10 +173,7 @@ namespace Rebus.AzureStorage.Transport
             public byte[] Body { get; set; }
         }
 
-        public string Address
-        {
-            get { return _inputQueueName; }
-        }
+        public string Address => _inputQueueName;
 
         public void Initialize()
         {
