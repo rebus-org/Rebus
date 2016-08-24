@@ -13,6 +13,7 @@ using Rebus.Tests;
 using Rebus.Tests.Extensions;
 using Rebus.Threading.TaskParallelLibrary;
 using Rebus.Transport;
+#pragma warning disable 1998
 
 namespace Rebus.AzureServiceBus.Tests
 {
@@ -185,33 +186,6 @@ namespace Rebus.AzureServiceBus.Tests
 
             gotMessage.WaitOrDie(TimeSpan.FromSeconds(10));
 
-
-        }
-    }
-
-    public class NotCreatingQueueTest : FixtureBase
-    {
-        [TestCase(AzureServiceBusMode.Basic)]
-        [TestCase(AzureServiceBusMode.Standard)]
-        public void ShouldNotCreateInputQueueWhenConfiguredNotTo(AzureServiceBusMode mode)
-        {
-            var manager = NamespaceManager.CreateFromConnectionString(StandardAzureServiceBusTransportFactory.ConnectionString);
-            var queueName = Guid.NewGuid().ToString("N");
-
-            Assert.IsFalse(manager.QueueExists(queueName));
-
-            var recieverActivator = new BuiltinHandlerActivator();
-            var bus = Configure.With(recieverActivator)
-                .Logging(l => l.ColoredConsole())
-                .Transport(t =>
-                    t.UseAzureServiceBus(StandardAzureServiceBusTransportFactory.ConnectionString, queueName, mode)
-                        .DoNotCreateQueues())
-                .Start();
-           
-                Assert.IsFalse(manager.QueueExists(queueName));
-           
-            Using(recieverActivator);
-            Using(bus);
 
         }
     }
