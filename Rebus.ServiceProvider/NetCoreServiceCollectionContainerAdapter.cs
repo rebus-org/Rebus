@@ -13,10 +13,19 @@ using Rebus.Extensions;
 
 namespace Rebus.ServiceProvider
 {
+    /// <summary>
+    /// Implementation of <see cref="IContainerAdapter"/> that is backed by an ASP.NET Core Service Provider
+    /// </summary>
+    /// <seealso cref="Rebus.Activation.IContainerAdapter" />
     public class NetCoreServiceCollectionContainerAdapter : IContainerAdapter
     {
         readonly IServiceCollection _services;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="NetCoreServiceCollectionContainerAdapter"/> class.
+        /// </summary>
+        /// <param name="services">The services.</param>
+        /// <exception cref="System.ArgumentNullException"></exception>
         public NetCoreServiceCollectionContainerAdapter(IServiceCollection services)
         {
             if (services == null)
@@ -25,6 +34,13 @@ namespace Rebus.ServiceProvider
             _services = services;
         }
 
+        /// <summary>
+        /// Resolves all handlers for the given <typeparamref name="TMessage"/> message type
+        /// </summary>
+        /// <typeparam name="TMessage"></typeparam>
+        /// <param name="message"></param>
+        /// <param name="transactionContext"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<IHandleMessages<TMessage>>> GetHandlers<TMessage>(TMessage message, ITransactionContext transactionContext)
         {
             var resolvedHandlerInstances = GetAllHandlersInstances<TMessage>();
@@ -40,6 +56,10 @@ namespace Rebus.ServiceProvider
             return resolvedHandlerInstances;
         }
 
+        /// <summary>
+        /// Sets the bus instance that this <see cref="T:Rebus.Activation.IContainerAdapter" /> should be able to inject when resolving handler instances
+        /// </summary>
+        /// <param name="bus"></param>
         public void SetBus(IBus bus)
         {
             _services.AddSingleton<IBus>(bus);
