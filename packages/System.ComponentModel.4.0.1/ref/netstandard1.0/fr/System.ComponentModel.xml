@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.ComponentModel</name>
+  </assembly>
+  <members>
+    <member name="T:System.IServiceProvider">
+      <summary>Définit un mécanisme de récupération d'un objet service, c'est-à-dire un objet qui assure la prise en charge personnalisée d'autres objets.</summary>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="M:System.IServiceProvider.GetService(System.Type)">
+      <summary>Obtient l'objet service du type spécifié.</summary>
+      <returns>Objet service de type <paramref name="serviceType" />.ou null s'il n'y a pas d'objet service de type <paramref name="serviceType" />.</returns>
+      <param name="serviceType">Objet spécifiant le type d'objet service à obtenir. </param>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="T:System.ComponentModel.CancelEventArgs">
+      <summary>Fournit des données pour un événement annulable.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.ComponentModel.CancelEventArgs" /> avec la propriété <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> définie avec la valeur false.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor(System.Boolean)">
+      <summary>Initialise une nouvelle instance de la classe <see cref="T:System.ComponentModel.CancelEventArgs" /> avec la propriété <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> définie avec la valeur indiquée.</summary>
+      <param name="cancel">true pour annuler l'événement ; sinon, false. </param>
+    </member>
+    <member name="P:System.ComponentModel.CancelEventArgs.Cancel">
+      <summary>Obtient ou définit une valeur indiquant si l'événement doit être annulé.</summary>
+      <returns>true si l'événement doit être annulé ; sinon, false.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IChangeTracking">
+      <summary>Définit le mécanisme permettant de rechercher dans l'objet des modifications et de réinitialiser l'état changé.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IChangeTracking.AcceptChanges">
+      <summary>Rétablit l'état inchangé de l'objet en acceptant les modifications.</summary>
+    </member>
+    <member name="P:System.ComponentModel.IChangeTracking.IsChanged">
+      <summary>Obtient l'état changé de l'objet.</summary>
+      <returns>true si le contenu de l'objet a changé depuis le dernier appel à <see cref="M:System.ComponentModel.IChangeTracking.AcceptChanges" /> ; sinon, false.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IEditableObject">
+      <summary>Fournit des fonctionnalités permettant de valider ou de restaurer des modifications apportées à un objet utilisé comme source de données.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.BeginEdit">
+      <summary>Commence la modification d'un objet.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.CancelEdit">
+      <summary>Ignore les modifications apportées depuis le dernier appel <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" />.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.EndEdit">
+      <summary>Exécute un push sur des modifications apportées depuis le dernier appel <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" /> ou <see cref="M:System.ComponentModel.IBindingList.AddNew" /> dans l'objet sous-jacent.</summary>
+    </member>
+    <member name="T:System.ComponentModel.IRevertibleChangeTracking">
+      <summary>Fournit une prise en charge de l'annulation des modifications</summary>
+    </member>
+    <member name="M:System.ComponentModel.IRevertibleChangeTracking.RejectChanges">
+      <summary>Rétablit l'état inchangé de l'objet en rejetant les modifications.</summary>
+    </member>
+  </members>
+</doc>

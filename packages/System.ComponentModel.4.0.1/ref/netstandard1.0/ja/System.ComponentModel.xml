@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.ComponentModel</name>
+  </assembly>
+  <members>
+    <member name="T:System.IServiceProvider">
+      <summary>サービス オブジェクト、つまり、他のオブジェクトにカスタム サポートを提供するオブジェクトを取得するための機構を定義します。</summary>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="M:System.IServiceProvider.GetService(System.Type)">
+      <summary>指定した型のサービス オブジェクトを取得します。</summary>
+      <returns>
+        <paramref name="serviceType" /> 型のサービス オブジェクト。または<paramref name="serviceType" /> 型のサービス オブジェクトがない場合は null。</returns>
+      <param name="serviceType">取得対象となるサービスの型を指定するオブジェクト。</param>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="T:System.ComponentModel.CancelEventArgs">
+      <summary>キャンセルできるイベントのデータを提供します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor">
+      <summary>
+        <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> プロパティを false に設定して、<see cref="T:System.ComponentModel.CancelEventArgs" /> クラスの新しいインスタンスを初期化します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor(System.Boolean)">
+      <summary>
+        <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> プロパティを特定の値に設定して、<see cref="T:System.ComponentModel.CancelEventArgs" /> クラスの新しいインスタンスを初期化します。</summary>
+      <param name="cancel">イベントをキャンセルする場合は true。それ以外の場合は false。</param>
+    </member>
+    <member name="P:System.ComponentModel.CancelEventArgs.Cancel">
+      <summary>イベントをキャンセルするかどうかを示す値を取得または設定します。</summary>
+      <returns>イベントを取り消す場合は true。それ以外の場合は false。</returns>
+    </member>
+    <member name="T:System.ComponentModel.IChangeTracking">
+      <summary>オブジェクトが変更されたかどうかの問い合わせと、変更されたステータスのリセットを行うための機構を定義します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.IChangeTracking.AcceptChanges">
+      <summary>変更を受け入れることによって、オブジェクトの状態を、変更されていない状態にリセットします。</summary>
+    </member>
+    <member name="P:System.ComponentModel.IChangeTracking.IsChanged">
+      <summary>オブジェクトの変更されたステータスを取得します。</summary>
+      <returns>
+        <see cref="M:System.ComponentModel.IChangeTracking.AcceptChanges" /> の最後の呼び出し以降にオブジェクトの内容が変更されている場合は true。それ以外の場合は false。</returns>
+    </member>
+    <member name="T:System.ComponentModel.IEditableObject">
+      <summary>データ ソースとして使用されるオブジェクトの変更をコミットまたはロールバックする機能を提供します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.BeginEdit">
+      <summary>オブジェクトの編集を開始します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.CancelEdit">
+      <summary>最後に <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" /> が呼び出された後に行われた変更を破棄します。</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.EndEdit">
+      <summary>対象となるオブジェクトに、最後に <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" /> または <see cref="M:System.ComponentModel.IBindingList.AddNew" /> を呼び出した後に行われた変更を適用します。</summary>
+    </member>
+    <member name="T:System.ComponentModel.IRevertibleChangeTracking">
+      <summary>変更のロールバックをサポートします。</summary>
+    </member>
+    <member name="M:System.ComponentModel.IRevertibleChangeTracking.RejectChanges">
+      <summary>変更を拒否することによって、オブジェクトの状態を、変更されていない状態にリセットします。</summary>
+    </member>
+  </members>
+</doc>

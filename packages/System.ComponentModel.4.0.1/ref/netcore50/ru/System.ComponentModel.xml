@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.ComponentModel</name>
+  </assembly>
+  <members>
+    <member name="T:System.IServiceProvider">
+      <summary>Определяет механизм извлечения объекта обслуживания (объекта, обеспечивающего настраиваемую поддержку других объектов).</summary>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="M:System.IServiceProvider.GetService(System.Type)">
+      <summary>Возвращает объект обслуживания указанного типа.</summary>
+      <returns>Объект обслуживания типа <paramref name="serviceType" />.-или- null, если объекта обслуживания типа <paramref name="serviceType" /> не существует.</returns>
+      <param name="serviceType">Объект, определяющий тип объекта обслуживания, который необходимо получить. </param>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="T:System.ComponentModel.CancelEventArgs">
+      <summary>Предоставляет данные для отменяемого события.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.ComponentModel.CancelEventArgs" />, устанавливая свойство <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> равным false.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor(System.Boolean)">
+      <summary>Инициализирует новый экземпляр класса <see cref="T:System.ComponentModel.CancelEventArgs" />, устанавливая свойство <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> в заданное значение.</summary>
+      <param name="cancel">true для отмены события; в противном случае — false. </param>
+    </member>
+    <member name="P:System.ComponentModel.CancelEventArgs.Cancel">
+      <summary>Возвращает или задает значение, показывающее, следует ли отменить событие.</summary>
+      <returns>Значение true, если событие следует отменить, в противном случае — значение false.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IChangeTracking">
+      <summary>Определяет механизм для запроса изменений объекта и сброса измененного состояния.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IChangeTracking.AcceptChanges">
+      <summary>Сбрасывает состояние объекта в неизмененное, принимая изменения.</summary>
+    </member>
+    <member name="P:System.ComponentModel.IChangeTracking.IsChanged">
+      <summary>Возвращает измененное состояние объекта.</summary>
+      <returns>Значение true, если содержание объекта было изменено с момента последнего вызова метода <see cref="M:System.ComponentModel.IChangeTracking.AcceptChanges" />; в противном случае — значение false.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IEditableObject">
+      <summary>Предоставляет функциональные возможности для фиксации изменений объекта, используемого в качестве источника данных, или отказа от этих изменений.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.BeginEdit">
+      <summary>Начинает редактирование объекта.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.CancelEdit">
+      <summary>Уничтожает изменения, выполненные после последнего вызова метода <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" />.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.EndEdit">
+      <summary>Помещает в базовый объект изменения, выполненные с момента последнего вызова метода <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" /> или <see cref="M:System.ComponentModel.IBindingList.AddNew" />.</summary>
+    </member>
+    <member name="T:System.ComponentModel.IRevertibleChangeTracking">
+      <summary>Обеспечивает поддержку отката изменений.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IRevertibleChangeTracking.RejectChanges">
+      <summary>Восстанавливает неизмененное состояние объекта, отменяя изменения.</summary>
+    </member>
+  </members>
+</doc>

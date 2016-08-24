@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<doc>
+  <assembly>
+    <name>System.ComponentModel</name>
+  </assembly>
+  <members>
+    <member name="T:System.IServiceProvider">
+      <summary>서비스 개체 즉, 다른 개체에 대한 사용자 지정 지원을 제공하는 개체를 검색하는 메커니즘을 정의합니다.</summary>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="M:System.IServiceProvider.GetService(System.Type)">
+      <summary>지정된 형식의 서비스 개체를 가져옵니다.</summary>
+      <returns>
+        <paramref name="serviceType" /> 형식의 서비스 개체입니다.또는 <paramref name="serviceType" /> 형식의 서비스 개체가 없으면 null입니다.</returns>
+      <param name="serviceType">가져올 서비스 개체의 형식을 지정하는 개체입니다. </param>
+      <filterpriority>2</filterpriority>
+    </member>
+    <member name="T:System.ComponentModel.CancelEventArgs">
+      <summary>취소할 수 있는 이벤트에 대한 데이터를 제공합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor">
+      <summary>false로 설정된 <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> 속성을 사용하여 <see cref="T:System.ComponentModel.CancelEventArgs" /> 클래스의 새 인스턴스를 초기화합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.CancelEventArgs.#ctor(System.Boolean)">
+      <summary>지정된 값으로 설정된 <see cref="P:System.ComponentModel.CancelEventArgs.Cancel" /> 속성을 사용하여 <see cref="T:System.ComponentModel.CancelEventArgs" /> 클래스의 새 인스턴스를 초기화합니다.</summary>
+      <param name="cancel">이벤트를 취소하려면 true로 설정하고, 그렇지 않으면 false로 설정합니다. </param>
+    </member>
+    <member name="P:System.ComponentModel.CancelEventArgs.Cancel">
+      <summary>이벤트를 취소해야 할지 여부를 나타내는 값을 가져오거나 설정합니다.</summary>
+      <returns>이벤트를 취소해야 하면 true이고, 그렇지 않으면 false입니다.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IChangeTracking">
+      <summary>개체에서 변경 내용을 쿼리하고 변경된 상태를 다시 설정하는 메커니즘을 정의합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IChangeTracking.AcceptChanges">
+      <summary>수정을 허용하여 개체의 상태를 변경되지 않은 상태로 다시 설정합니다.</summary>
+    </member>
+    <member name="P:System.ComponentModel.IChangeTracking.IsChanged">
+      <summary>개체의 변경된 상태를 가져옵니다.</summary>
+      <returns>개체의 내용이 <see cref="M:System.ComponentModel.IChangeTracking.AcceptChanges" />를 마지막으로 호출한 이후 변경되었으면 true이고, 그렇지 않으면 false입니다.</returns>
+    </member>
+    <member name="T:System.ComponentModel.IEditableObject">
+      <summary>데이터 소스로 사용되는 개체에 대한 변경 내용을 커밋하거나 롤백하는 기능을 제공합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.BeginEdit">
+      <summary>개체에 대한 편집을 시작합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.CancelEdit">
+      <summary>마지막으로 <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" />가 호출된 이후 변경된 내용을 취소합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IEditableObject.EndEdit">
+      <summary>마지막으로 <see cref="M:System.ComponentModel.IEditableObject.BeginEdit" /> 또는 <see cref="M:System.ComponentModel.IBindingList.AddNew" />가 호출된 이후 변경된 내용을 내부 개체에 적용합니다.</summary>
+    </member>
+    <member name="T:System.ComponentModel.IRevertibleChangeTracking">
+      <summary>변경 내용의 롤백을 지원합니다.</summary>
+    </member>
+    <member name="M:System.ComponentModel.IRevertibleChangeTracking.RejectChanges">
+      <summary>수정을 거부하여 개체를 변경되지 않은 상태로 다시 설정합니다.</summary>
+    </member>
+  </members>
+</doc>
