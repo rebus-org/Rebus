@@ -1,15 +1,14 @@
-﻿using Rebus.Activation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Rebus.Bus;
-using Rebus.Handlers;
-using Rebus.Transport;
 using Microsoft.Extensions.DependencyInjection;
-using Rebus.Pipeline;
+using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Extensions;
+using Rebus.Handlers;
+using Rebus.Pipeline;
+using Rebus.Transport;
 
 namespace Rebus.ServiceProvider
 {
