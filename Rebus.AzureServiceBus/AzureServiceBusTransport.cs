@@ -74,6 +74,8 @@ namespace Rebus.AzureServiceBus
         public AzureServiceBusTransport(string connectionString, string inputQueueAddress, IRebusLoggerFactory rebusLoggerFactory, IAsyncTaskFactory asyncTaskFactory)
         {
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
+            if (rebusLoggerFactory == null) throw new ArgumentNullException(nameof(rebusLoggerFactory));
+            if (asyncTaskFactory == null) throw new ArgumentNullException(nameof(asyncTaskFactory));
 
             _namespaceManager = NamespaceManager.CreateFromConnectionString(connectionString);
             _connectionString = connectionString;
@@ -122,7 +124,12 @@ namespace Rebus.AzureServiceBus
         /// </summary>
         public void PrefetchMessages(int numberOfMessagesToPrefetch)
         {
-            _prefetchingEnabled = true;
+            if (numberOfMessagesToPrefetch < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(numberOfMessagesToPrefetch), numberOfMessagesToPrefetch, "Must prefetch zero or more messages");
+            }
+
+            _prefetchingEnabled = numberOfMessagesToPrefetch > 0;
             _numberOfMessagesToPrefetch = numberOfMessagesToPrefetch;
         }
 
