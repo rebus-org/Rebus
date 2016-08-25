@@ -2,8 +2,6 @@ obj
 bin
 deploy
 deploy/*
-packages
-packages/*
 _ReSharper.*
 *.csproj.user
 *.resharper.user
@@ -26,3 +24,7 @@ azure_storage_connection_string.txt
 _NCrunch_*
 *.user
 *.backup
+
+# MS Guideline
+**/packages/*
+!**/packages/build/
