@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Rebus.Activation;
@@ -36,7 +37,7 @@ namespace Rebus.ServiceProvider.Tests
                 .ForEach(i => _serviceCollection.AddTransient(i, typeof(THandler)));
         }
 
-        Type[] GetHandlerInterfaces(Type type)
+        static IEnumerable<Type> GetHandlerInterfaces(Type type)
         {
             return type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IHandleMessages<>))

@@ -138,9 +138,7 @@ namespace Rebus.Tests.Integration
             var inMemTransportMessage = new InMemTransportMessage(transportMessage);
             _network.Deliver(InputQueueName, inMemTransportMessage);
 
-            await Task.Delay(1000);
-
-            var failedMessage = _network.GetNextOrNull("error");
+            var failedMessage = await _network.WaitForNextMessageFrom("error");
 
             Assert.That(failedMessage, Is.Not.Null);
             var bodyString = Encoding.UTF8.GetString(failedMessage.Body);

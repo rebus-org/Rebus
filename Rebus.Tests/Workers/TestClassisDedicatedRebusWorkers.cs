@@ -106,23 +106,9 @@ namespace Rebus.Tests.Workers
             doneHandlingMessage.WaitOrDie(TimeSpan.FromSeconds(6), "Did not finish handling the message within expected timeframe");
 
             // wait for message to pop up in the expected queue
-            var stopwatch = Stopwatch.StartNew();
-            while (true)
-            {
-                var message = _network.GetNextOrNull(queueName);
+            var transportMessage = await _network.WaitForNextMessageFrom(queueName);
 
-                if (message != null)
-                {
-                    Assert.That(Encoding.UTF8.GetString(message.Body), Is.EqualTo(@"""JAJA DET VIRKER!"""));
-                    break;
-                }
-
-                await Task.Delay(100);
-
-                if (stopwatch.Elapsed < TimeSpan.FromSeconds(3)) continue;
-
-                throw new AssertionException("Did not receive reply message within 3 s timeout");
-            }
+            Assert.That(Encoding.UTF8.GetString(transportMessage.Body), Is.EqualTo(@"""JAJA DET VIRKER!"""));
         }
 
         [Test]
