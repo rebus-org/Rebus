@@ -8,7 +8,6 @@ using Rebus.AmazonSQS.Config;
 using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Logging;
-using Rebus.Tests;
 using Rebus.Tests.Integration.ManyMessages;
 using Rebus.Threading.TaskParallelLibrary;
 
@@ -24,9 +23,7 @@ namespace Rebus.AmazonSQS.Tests
 
             builtinHandlerActivator.Handle(handler);
 
-            var queueName = TestConfig.QueueName(inputQueueAddress);
-
-            PurgeQueue(queueName);
+            PurgeQueue(inputQueueAddress);
 
             var bus = Configure.With(builtinHandlerActivator)
                 .Transport(
@@ -34,14 +31,12 @@ namespace Rebus.AmazonSQS.Tests
                     {
                         var amazonSqsConfig = new AmazonSQSConfig
                         {
-                            RegionEndpoint =
-                                RegionEndpoint.GetBySystemName(
-                                    AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
+                            RegionEndpoint = RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
                         };
 
                         t.UseAmazonSqs(AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId,
                             AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
-                            amazonSqsConfig, queueName);
+                            amazonSqsConfig, inputQueueAddress);
                     })
                 .Options(o =>
                 {
@@ -55,22 +50,20 @@ namespace Rebus.AmazonSQS.Tests
             return bus;
         }
 
-        static void PurgeQueue(string queueName)
+        public static void PurgeQueue(string queueName)
         {
             var consoleLoggerFactory = new ConsoleLoggerFactory(false);
 
             var amazonSqsConfig = new AmazonSQSConfig
             {
-                RegionEndpoint =
-                                RegionEndpoint.GetBySystemName(
-                                    AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
+                RegionEndpoint = RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
             };
 
             var transport = new AmazonSqsTransport(
-                queueName, 
-                AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId, 
-                AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey, 
-                amazonSqsConfig, consoleLoggerFactory, 
+                queueName,
+                AmazonSqsTransportFactory.ConnectionInfo.AccessKeyId,
+                AmazonSqsTransportFactory.ConnectionInfo.SecretAccessKey,
+                amazonSqsConfig, consoleLoggerFactory,
                 new TplAsyncTaskFactory(consoleLoggerFactory));
 
             transport.Purge();

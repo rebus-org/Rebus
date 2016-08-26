@@ -5,9 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Tests.Extensions;
 using Timer = System.Timers.Timer;
+#pragma warning disable 1998
 
 namespace Rebus.Tests.Integration.ManyMessages
 {
@@ -42,21 +42,22 @@ namespace Rebus.Tests.Integration.ManyMessages
             var sentMessages = 0;
             var receivedMessages = 0;
             var stopWatch = new Stopwatch();
-            var bus1 = _busFactory.GetBus<MessageWithId>(TestConfig.QueueName("input1"),
-                async msg =>
-                {
-                    idCounts.AddOrUpdate(msg.Id, 1, (id, old) => old + 1);
+            var inputQueueAddress = TestConfig.QueueName("input1");
 
-                    Interlocked.Increment(ref receivedMessages);
+            var bus1 = _busFactory.GetBus<MessageWithId>(inputQueueAddress, async msg =>
+                 {
+                     idCounts.AddOrUpdate(msg.Id, 1, (id, old) => old + 1);
 
-                    if (receivedMessages >= messageCount)
-                    {
-                        stopWatch.Stop();
-                        Console.WriteLine("DONE: took time:" + stopWatch.ElapsedMilliseconds+"ms");
-                        allMessagesReceived.Set();
+                     Interlocked.Increment(ref receivedMessages);
 
-                    }
-                });
+                     if (receivedMessages >= messageCount)
+                     {
+                         stopWatch.Stop();
+                         Console.WriteLine("DONE: took time:" + stopWatch.ElapsedMilliseconds + "ms");
+                         allMessagesReceived.Set();
+
+                     }
+                 });
 
             var messagesToSend = Enumerable.Range(0, messageCount)
                 .Select(id => new MessageWithId(id))
@@ -109,11 +110,5 @@ namespace Rebus.Tests.Integration.ManyMessages
                 return $"<msg {Id}>";
             }
         }
-    }
-
-    public interface IBusFactory
-    {
-        IBus GetBus<TMessage>(string inputQueueAddress, Func<TMessage, Task> handler);
-        void Cleanup();
     }
 }

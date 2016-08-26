@@ -9,6 +9,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using Rebus.Messages;
+using Rebus.Transport;
 using Rebus.Transport.InMem;
 using Timer = System.Timers.Timer;
 
@@ -16,6 +17,33 @@ namespace Rebus.Tests.Extensions
 {
     public static class TestEx
     {
+        public static async Task<TransportMessage> WaitForNextMessage(this ITransport transport, int timeoutSeconds = 5)
+        {
+            var stopwatch = Stopwatch.StartNew();
+
+            while (true)
+            {
+                using (var context = new DefaultTransactionContext())
+                {
+                    var nextMessage = await transport.Receive(context, new CancellationToken());
+
+                    if (nextMessage != null)
+                    {
+                        return nextMessage;
+                    }
+
+                    await context.Complete();
+                }
+
+                await Task.Delay(100);
+
+                if (stopwatch.Elapsed < TimeSpan.FromSeconds(timeoutSeconds))
+                    continue;
+
+                throw new TimeoutException($"Did not receive message from transport with address '{transport.Address}' within {timeoutSeconds} s timeout");
+            }
+        }
+
         public static async Task<TransportMessage> WaitForNextMessageFrom(this InMemNetwork network, string queueName, int timeoutSeconds = 5)
         {
             var stopwatch = Stopwatch.StartNew();

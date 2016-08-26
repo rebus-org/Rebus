@@ -58,6 +58,7 @@
     <Compile Include="AmazonSqsMessageExpiration.cs" />
     <Compile Include="AmazonSqsSimpleSend.cs" />
     <Compile Include="AmazonSqsTransportFactory.cs" />
+    <Compile Include="AmazonSqsTrivialMessageRoundtrip.cs" />
     <Compile Include="AmazonSqsVisibiltyTimeout.cs" />
     <Compile Include="Category.cs" />
     <Compile Include="DeferMessageTest.cs" />

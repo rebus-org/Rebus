@@ -124,6 +124,16 @@ namespace Rebus.Workers.ThreadPoolBased
             {
                 return await _transport.Receive(context, token);
             }
+            catch (TaskCanceledException)
+            {
+                // it's fine - just a sign that we are shutting down
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                // it's fine - just a sign that we are shutting down
+                throw;
+            }
             catch (Exception exception)
             {
                 _log.Warn("An error occurred when attempting to receive the next message: {0}", exception);

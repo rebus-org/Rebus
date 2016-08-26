@@ -17,15 +17,9 @@ namespace Rebus.AmazonSQS.Tests
     {
         static ConnectionInfo _connectionInfo;
 
-        internal static ConnectionInfo ConnectionInfo
-        {
-            get
-            {
-                return _connectionInfo ?? (_connectionInfo = ConnectionInfoFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "sqs_connectionstring.txt"))
-                                                             ?? ConnectionInfoFromEnvironmentVariable("rebus2_asqs_connection_string")
-                                                             ?? Throw("Could not find Amazon Sqs connetion Info!"));
-            }
-        }
+        internal static ConnectionInfo ConnectionInfo => _connectionInfo ?? (_connectionInfo = ConnectionInfoFromFileOrNull(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "sqs_connectionstring.txt"))
+                                                                                               ?? ConnectionInfoFromEnvironmentVariable("rebus2_asqs_connection_string")
+                                                                                               ?? Throw("Could not find Amazon Sqs connetion Info!"));
 
 
         public ITransport Create(string inputQueueAddress, TimeSpan peeklockDuration)
@@ -38,7 +32,7 @@ namespace Rebus.AmazonSQS.Tests
             return _queuesToDelete.GetOrAdd(inputQueueAddress, () => CreateTransport(inputQueueAddress, peeklockDuration));
         }
 
-        static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
+        public static AmazonSqsTransport CreateTransport(string inputQueueAddress, TimeSpan peeklockDuration)
         {
             var amazonSqsConfig = new AmazonSQSConfig
             {

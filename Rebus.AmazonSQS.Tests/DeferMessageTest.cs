@@ -15,10 +15,11 @@ using Rebus.Tests.Extensions;
 
 namespace Rebus.AmazonSQS.Tests
 {
-    [TestFixture]
+    [TestFixture, Category(Category.AmazonSqs)]
     public class DeferMessageTest : SqsFixtureBase
     {
         BuiltinHandlerActivator _activator;
+        RebusConfigurer _configurer;
 
         protected override void SetUp()
         {
@@ -31,31 +32,40 @@ namespace Rebus.AmazonSQS.Tests
                 RegionEndpoint = RegionEndpoint.GetBySystemName(AmazonSqsTransportFactory.ConnectionInfo.RegionEndpoint)
             };
 
+            var queueName = TestConfig.QueueName("defertest");
+
+            AmazonSqsManyMessagesTransportFactory.PurgeQueue(queueName);
+
             _activator = Using(new BuiltinHandlerActivator());
 
-            Configure.With(_activator)
-                .Transport(t => t.UseAmazonSqs(accessKeyId, secretAccessKey, amazonSqsConfig, TestConfig.QueueName("defertest")))
-                .Options(o => o.LogPipeline())
-                .Start();
+            _configurer = Configure.With(_activator)
+                .Transport(t => t.UseAmazonSqs(accessKeyId, secretAccessKey, amazonSqsConfig, queueName))
+                .Options(o => o.LogPipeline());
         }
 
         [Test]
         public async Task CanDeferMessage()
         {
-            var stopwatch = Stopwatch.StartNew();
             var gotTheMessage = new ManualResetEvent(false);
+
+            var receiveTime = DateTime.MaxValue;
 
             _activator.Handle<string>(async str =>
             {
-                stopwatch.Stop();
+                receiveTime = DateTime.UtcNow;
                 gotTheMessage.Set();
             });
 
-            await _activator.Bus.Defer(TimeSpan.FromSeconds(4), "hej med dig!");
+            var bus = _configurer.Start();
 
-            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(8));
+            await bus.Defer(TimeSpan.FromSeconds(10), "hej med dig!");
 
-            Assert.That(stopwatch.Elapsed, Is.GreaterThan(TimeSpan.FromSeconds(4)));
+            gotTheMessage.WaitOrDie(TimeSpan.FromSeconds(20));
+
+            var now = DateTime.UtcNow;
+            var elapsed = now - receiveTime;
+
+            Assert.That(elapsed, Is.GreaterThan(TimeSpan.FromSeconds(8)));
         }
     }
 }

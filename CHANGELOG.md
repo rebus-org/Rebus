@@ -1041,6 +1041,7 @@
 * Make adjustment to new thread pool-based workers that makes better use of async receive APIs of transports
 * Update Wire dependency to 0.8.0
 * Update Autofac dependency to 4.0.1
+* Fix bug in Amazon SQS transport that would cause it to be unable to receive messages if the last created queue was not the transport's own input queue
 
 
 
