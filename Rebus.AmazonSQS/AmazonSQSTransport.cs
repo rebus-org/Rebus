@@ -229,20 +229,21 @@ namespace Rebus.AmazonSQS
                                 var transportMessage = message.TransportMessage;
                                 var headers = transportMessage.Headers;
                                 var messageId = headers[Headers.MessageId];
+
                                 var body = GetBody(transportMessage.Body);
+                                var messageAttributes = CreateAttributesFromHeaders(headers);
+                                var delaySeconds = GetDelaySeconds(headers);
 
                                 return new SendMessageBatchRequestEntry(messageId, body)
                                 {
-                                    MessageAttributes = CreateAttributesFromHeaders(headers),
-                                    DelaySeconds = GetDelaySeconds(headers),
+                                    MessageAttributes = messageAttributes,
+                                    DelaySeconds = delaySeconds,
                                 };
                             })
                             .ToList();
 
                         var destinationUrl = GetDestinationQueueUrlByName(batch.Key, context);
-
                         var request = new SendMessageBatchRequest(destinationUrl, entries);
-
                         var response = await client.SendMessageBatchAsync(request);
 
                         if (response.Failed.Any())
@@ -252,7 +253,6 @@ namespace Rebus.AmazonSQS
                             throw new AggregateException(failed);
                         }
                     })
-
                 );
         }
 
