@@ -21,6 +21,6 @@
   </metadata>
   <files>
     <file src="bin\Release\Rebus.ServiceProvider.dll" target="lib\net451" />
-    <file src="bin\Release\Rebus.ServiceProvider.xml" target="lib\net451" >
+    <file src="bin\Release\Rebus.ServiceProvider.xml" target="lib\net451" />
   </files>
 </package>
