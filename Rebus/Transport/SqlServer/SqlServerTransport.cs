@@ -39,6 +39,7 @@ namespace Rebus.Transport.SqlServer
 
         const string CurrentConnectionKey = "sql-server-transport-current-connection";
         const int RecipientColumnSize = 200;
+        const int OperationCancelledNumber = 3980;
 
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
@@ -282,15 +283,23 @@ VALUES
 
                     selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueName;
 
-                    using (var reader = await selectCommand.ExecuteReaderAsync(cancellationToken))
+                    try
                     {
-                        if (!await reader.ReadAsync(cancellationToken)) return null;
+                        using (var reader = await selectCommand.ExecuteReaderAsync(cancellationToken))
+                        {
+                            if (!await reader.ReadAsync(cancellationToken)) return null;
 
-                        var headers = reader["headers"];
-                        var headersDictionary = HeaderSerializer.Deserialize((byte[])headers);
-                        var body = (byte[])reader["body"];
+                            var headers = reader["headers"];
+                            var headersDictionary = HeaderSerializer.Deserialize((byte[]) headers);
+                            var body = (byte[]) reader["body"];
 
-                        receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                            receivedTransportMessage = new TransportMessage(headersDictionary, body);
+                        }
+                    }
+                    catch (SqlException sqlException) when (sqlException.Number == OperationCancelledNumber)
+                    {
+                        // ADO.NET does not throw the right exception when the task gets cancelled - therefore we need to do this:
+                        throw new TaskCanceledException("Receive operation was cancelled", sqlException);
                     }
                 }
 
