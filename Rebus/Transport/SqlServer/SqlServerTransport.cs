@@ -122,9 +122,8 @@ namespace Rebus.Transport.SqlServer
 
                 _log.Info("Table '{0}' does not exist - it will be created now", _tableName);
 
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $@"
+                ExecuteCommands(connection, $@"
+
 CREATE TABLE [dbo].[{_tableName}]
 (
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
@@ -134,21 +133,15 @@ CREATE TABLE [dbo].[{_tableName}]
     [visible] [datetime2] NOT NULL,
 	[headers] [varbinary](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
-    CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
+    CONSTRAINT [PK_{_tableName}] PRIMARY KEY CLUSTERED 
     (
 	    [recipient] ASC,
 	    [priority] ASC,
 	    [id] ASC
     )
 )
-";
 
-                    Execute(command);
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $@"
+----
 
 CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{_tableName}] ON [dbo].[{_tableName}]
 (
@@ -159,26 +152,29 @@ CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{_tableName}] ON [dbo].[{_tableName}]
 	[id] ASC
 )
 
-";
-
-                    Execute(command);
-                }
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = $@"
+----
 
 CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{_tableName}] ON [dbo].[{_tableName}]
 (
     [expiration] ASC
 )
 
-";
+");
+
+                connection.Complete().Wait();
+            }
+        }
+
+        static void ExecuteCommands(IDbConnection connection, string sqlCommands)
+        {
+            foreach (var sqlCommand in sqlCommands.Split(new[] {"----"}, StringSplitOptions.RemoveEmptyEntries))
+            {
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sqlCommand;
 
                     Execute(command);
                 }
-
-                connection.Complete().Wait();
             }
         }
 
@@ -248,7 +244,7 @@ VALUES
         /// <summary>
         /// Receives the next message by querying the messages table for a message with a recipient matching this transport's <see cref="Address"/>
         /// </summary>
-        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken )
+        public async Task<TransportMessage> Receive(ITransactionContext context, CancellationToken cancellationToken)
         {
             using (await _bottleneck.Enter(cancellationToken))
             {
@@ -290,8 +286,8 @@ VALUES
                             if (!await reader.ReadAsync(cancellationToken)) return null;
 
                             var headers = reader["headers"];
-                            var headersDictionary = HeaderSerializer.Deserialize((byte[]) headers);
-                            var body = (byte[]) reader["body"];
+                            var headersDictionary = HeaderSerializer.Deserialize((byte[])headers);
+                            var body = (byte[])reader["body"];
 
                             receivedTransportMessage = new TransportMessage(headersDictionary, body);
                         }
