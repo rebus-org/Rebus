@@ -29,6 +29,14 @@ namespace Rebus.Persistence.SqlServer
         }
 
         /// <summary>
+        /// Gets the names of all indexes in the current database
+        /// </summary>
+        public static List<string> GetIndexNames(this SqlConnection connection, SqlTransaction transaction = null)
+        {
+            return GetNamesFrom(connection, transaction, "sys.indexes");
+        }
+
+        /// <summary>
         /// Gets the names of all tables in the current database
         /// </summary>
         public static Dictionary<string, SqlDbType> GetColumns(this SqlConnection connection, string tableName, SqlTransaction transaction = null)

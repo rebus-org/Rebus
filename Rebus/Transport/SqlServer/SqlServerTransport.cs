@@ -123,8 +123,8 @@ namespace Rebus.Transport.SqlServer
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}]
+                    command.CommandText = $@"
+CREATE TABLE [dbo].[{_tableName}]
 (
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
@@ -140,16 +140,16 @@ CREATE TABLE [dbo].[{0}]
 	    [id] ASC
     )
 )
-", _tableName);
+";
 
                     Execute(command);
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText = $@"
 
-CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
+CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{_tableName}] ON [dbo].[{_tableName}]
 (
 	[recipient] ASC,
 	[priority] ASC,
@@ -158,21 +158,21 @@ CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
 	[id] ASC
 )
 
-", _tableName);
+";
 
                     Execute(command);
                 }
 
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
+                    command.CommandText = $@"
 
-CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
+CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{_tableName}] ON [dbo].[{_tableName}]
 (
     [expiration] ASC
 )
 
-", _tableName);
+";
 
                     Execute(command);
                 }

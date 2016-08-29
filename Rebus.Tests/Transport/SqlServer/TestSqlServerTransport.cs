@@ -146,7 +146,7 @@ namespace Rebus.Tests.Transport.SqlServer
             Assert.That(transportMessage.Headers.GetValue("recognizzle"), Is.EqualTo("hej"));
         }
 
-        TransportMessage RecognizableMessage(int id = 0)
+        static TransportMessage RecognizableMessage(int id = 0)
         {
             var headers = new Dictionary<string, string>
             {

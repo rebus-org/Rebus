@@ -38,7 +38,41 @@ namespace Rebus.Tests
 
         public static string DatabaseName => $"rebus2_test_{TestConfig.Suffix}".TrimEnd('_');
 
+        public static void Execute(string sql)
+        {
+            using (var connection = new SqlConnection(ConnectionString))
+            {
+                connection.Open();
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = sql;
+                    command.ExecuteNonQuery();
+                }
+            }
+        }
+
         public static void DropTable(string tableName)
+        {
+            DropObject($"DROP TABLE [{tableName}]", connection =>
+            {
+                var tableNames = connection.GetTableNames();
+
+                return tableNames.Contains(tableName, StringComparer.InvariantCultureIgnoreCase);
+            });
+        }
+
+        public static void DropIndex(string tableName, string indexName)
+        {
+            DropObject($"DROP INDEX [{indexName}] ON [{tableName}]", connection =>
+            {
+                var indexNames = connection.GetIndexNames();
+
+                return indexNames.Contains(indexName, StringComparer.InvariantCultureIgnoreCase);
+            });
+        }
+
+        static void DropObject(string sqlCommand, Func<SqlConnection, bool> executeCriteria)
         {
             try
             {
@@ -46,15 +80,14 @@ namespace Rebus.Tests
                 {
                     connection.Open();
 
-                    if (!connection.GetTableNames().Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
-
-                    Console.WriteLine("Dropping table {0}", tableName);
+                    var shouldExecute = executeCriteria(connection);
+                    if (!shouldExecute) return;
 
                     try
                     {
                         using (var command = connection.CreateCommand())
                         {
-                            command.CommandText = $"DROP TABLE [{tableName}]";
+                            command.CommandText = sqlCommand;
                             command.ExecuteNonQuery();
                         }
                     }
@@ -70,9 +103,10 @@ namespace Rebus.Tests
             {
                 DumpWho();
 
-                throw new ApplicationException($"Could not drop table '{tableName}'", exception);
+                throw new ApplicationException($"Could not execute '{sqlCommand}'", exception);
             }
         }
+
 
         static void DumpWho()
         {
