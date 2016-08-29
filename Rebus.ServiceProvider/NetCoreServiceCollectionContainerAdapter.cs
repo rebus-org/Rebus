@@ -9,6 +9,7 @@ using Rebus.Extensions;
 using Rebus.Handlers;
 using Rebus.Pipeline;
 using Rebus.Transport;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Rebus.ServiceProvider
 {
@@ -31,6 +32,14 @@ namespace Rebus.ServiceProvider
                 throw new ArgumentNullException(nameof(services));
 
             _services = services;
+
+            var serviceProvider = _services.BuildServiceProvider();
+            var applicationLifetime = serviceProvider.GetService<IApplicationLifetime>();
+
+            if (applicationLifetime != null)
+            {
+                applicationLifetime.ApplicationStopping.Register(DisposeBus);
+            }
         }
 
         /// <summary>
@@ -63,6 +72,14 @@ namespace Rebus.ServiceProvider
         {
             _services.AddSingleton<IBus>(bus);
             _services.AddTransient<IMessageContext>((s) => MessageContext.Current);
+        }
+
+        void DisposeBus()
+        {
+            var serviceProvider = _services.BuildServiceProvider();
+            var bus = serviceProvider.GetService<IBus>();
+
+            bus.Dispose();
         }
 
         List<IHandleMessages<TMessage>> GetAllHandlersInstances<TMessage>()

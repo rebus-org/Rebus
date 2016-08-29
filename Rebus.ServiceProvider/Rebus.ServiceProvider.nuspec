@@ -16,10 +16,11 @@
     <dependencies>
         <dependency id="Rebus" version="[$version$, 1)" />
         <dependency id="Microsoft.Extensions.DependencyInjection" version="1.0.0" />
+        <dependency id="Microsoft.AspNetCore.Hosting.Abstractions" version="1.0.0" />
     </dependencies>
   </metadata>
   <files>
-    <file src="bin\Release\Rebus.ServiceProvider.dll" target="lib\NET45" />
-    <file src="bin\Release\Rebus.ServiceProvider.xml" target="lib\NET45" />
+    <file src="bin\Release\Rebus.ServiceProvider.dll" target="lib\net451" />
+    <file src="bin\Release\Rebus.ServiceProvider.xml" target="lib\net451" >
   </files>
 </package>
